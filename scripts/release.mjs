@@ -5,6 +5,9 @@
 //   release/manifest.json                    the version, and the file name and SHA-256 of the package
 //   release/SHA256SUMS                       `<sha256>  <file>` for every other file here (`sha256sum -c SHA256SUMS`)
 // Inside the package, provenance.json holds the commit and the SHA-256 of every other file of the package.
+// The commit is the source commit: the parent of the v<version> tag. The release workflow writes the new version into
+// package.json and package-lock.json, builds, and only then commits that change and tags it, so the tag's own commit
+// differs from the source commit in those two files and in nothing else.
 // release/ always holds only the current release (it is wiped first) and only files, because the workflow
 // publishes the files at its top level.
 import { execFileSync, execSync } from 'node:child_process'

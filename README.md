@@ -110,7 +110,7 @@ default and equals the sizes the toolkit had before density existed.
 ## Use a release
 
 Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/toolkit/releases) (tag
-`v<version>`). The repository is public: no login is needed. Each release holds three files:
+`v<version>`). The repository is public: no login is needed to download. Each release holds three files:
 
 - `acaprino-toolkit-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
   `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
@@ -119,14 +119,20 @@ Every merge of `develop` into `main` publishes a [GitHub Release](https://github
 - `SHA256SUMS`: `<sha256>  <file>` for every other file of the release.
 
 ```bash
-gh release download v<version> --repo acaprino/toolkit    # or download the three files from the release page
+# once for each of the three files, or take them from the release page
+curl -LO https://github.com/acaprino/toolkit/releases/download/v<version>/<file>
 sha256sum -c SHA256SUMS                                   # PowerShell: Get-FileHash -Algorithm SHA256 <file>
 npm i ./acaprino-toolkit-<version>.tgz
 ```
 
+If you are signed in to the GitHub CLI (`gh auth login`), `gh release download v<version> --repo acaprino/toolkit`
+fetches the three files at once.
+
 `sha256sum -c` has to say `OK` for the package and for `manifest.json`. Inside the package, `provenance.json` is
-`{ "package": "@acaprino/toolkit", "version", "commit", "files": { "<path>": "<sha256>" } }`: the commit the release was
-built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked file by file.
+`{ "package": "@acaprino/toolkit", "version", "commit", "files": { "<path>": "<sha256>" } }`: the source commit the
+release was built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked
+file by file. `commit` is the parent of the `v<version>` tag: the tag's own commit ("release v<version>") only changes the
+version in `package.json` and `package-lock.json`, and the package was built with that version already written.
 The release is built by `npm run release` (`scripts/release.mjs`: build, typecheck, tests, then pack). To try it
 locally, `npm run release -- --skip-test` fills `release/` (not committed) without the tests.
 
