@@ -1,5 +1,5 @@
-// SmoothUI (MIT) toast 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/toast.json)
-// Park UI (MIT) toast 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts)
+// SmoothUI (MIT) toast 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toast.json)
+// Park UI (MIT) toast 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts)
 //
 // From SmoothUI the surface of a notice is left: the dark card (the ink, with the paper as its text, as in the approved
 // preview), with the text, the action and the close button on one row, the quick choices on a second one. Park's

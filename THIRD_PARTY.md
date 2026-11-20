@@ -1,6 +1,6 @@
-# Third-party code in `@acaprino/toolkit`
+# Third-party code in `@acaprino/sigrid`
 
-`@acaprino/toolkit` is the design system shared by the owner's apps: theme engine, tokens, primitives and motion. The
+`@acaprino/sigrid` is the design system shared by the owner's apps: theme engine, tokens, primitives and motion. The
 behaviour of the components rests on a headless library, the form comes from Park UI's recipes, the motion takes its
 durations and curves from Fluent 2's tokens, the motion code and the rest of the look are ours, on top of SmoothUI pieces copied into the package and adapted. An app's product components (in the
 app's own package, with its own `THIRD_PARTY.md`) are not listed here.
@@ -75,7 +75,7 @@ colors (the theme engine stays), its input border (Park's gray step 7 is lighter
 token, WCAG 1.4.11), its 16px text in selects (14px here), its animations (the motion is the toolkit's own, only with `animated`), the spinner of
 its loading button (a loop: `loading` keeps the size and may show the caller's `loadingText` instead).
 
-Each file carries the comment `// Park UI (MIT) <recipe> 102769c — recipe translated to Tailwind for @acaprino/toolkit (<URL>)`.
+Each file carries the comment `// Park UI (MIT) <recipe> 102769c — recipe translated to Tailwind for @acaprino/sigrid (<URL>)`.
 The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Park UI recipe | Source |
@@ -208,13 +208,13 @@ Two npm dependencies, installed and unmodified, never copied into `src/` (`src/i
 - License: **MIT** (full text below)
 - Decision: ADR-0009 v3 (Accepted, 2026-11-08)
 
-The files below are copied from the SmoothUI registry and **adapted** for `@acaprino/toolkit`: same public API as before,
+The files below are copied from the SmoothUI registry and **adapted** for `@acaprino/sigrid`: same public API as before,
 tokens from `src/styles/theme.css`, animations off by default (the `animated` prop, never with `prefers-reduced-motion`),
 no springs, loops or decorative effects. Since the Park restyle (2026-11-19) their form (sizes, variants, corners,
 elevation) is Park UI's (see above): what stays from SmoothUI is the structure, the `data-slot`s and the API. `Toasts.tsx`
 keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `internal/chips.tsx`
 and `internal/attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
-for @acaprino/toolkit (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
+for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Slug SmoothUI | Source |
 |---|---|---|

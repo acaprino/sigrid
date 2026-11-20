@@ -1,5 +1,5 @@
-// SmoothUI (MIT) tooltip 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/tooltip.json)
-// Park UI (MIT) tooltip 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts)
+// SmoothUI (MIT) tooltip 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/tooltip.json)
+// Park UI (MIT) tooltip 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts)
 // From Park's `tooltip` recipe comes the form: a solid ink card with l2 corners, the sm elevation, 12px semibold text,
 // 8px by 6px of padding.
 // From SmoothUI we keep the primitive (Base UI's `Tooltip`: Root, Trigger with `render`, Portal, Positioner, Popup) and the

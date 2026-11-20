@@ -1,5 +1,5 @@
-// SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/popover.json)
-// Park UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)
+// SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/popover.json)
+// Park UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)
 // From Park's `popover` recipe comes the form: l3 corners, the lg elevation in place of a border, 16px of padding, 320px
 // wide (Park's `xs`), the title 16px medium.
 // From SmoothUI we keep the primitive (Base UI's `Popover`: Root, Trigger, Portal, Positioner, Popup), the structure of

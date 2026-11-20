@@ -1,4 +1,4 @@
-// Park UI (MIT) kbd 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts)
+// Park UI (MIT) kbd 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts)
 // The form is Park's `kbd` recipe, its plain variant (R5): a key hint is 12px text in medium weight, muted, with no box,
 // hidden on a phone (narrow and with a finger), where there is no keyboard to press it on. Inside a button it takes
 // the button's own text colour, so it stays readable on a fill. `size` is kept for callers: every size draws the same.

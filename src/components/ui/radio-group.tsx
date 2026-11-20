@@ -1,4 +1,4 @@
-// SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/radio-group.json)
+// SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/radio-group.json)
 // From SmoothUI's RadioGroup we keep: Base UI's Root and Radio (`role="radiogroup"`/`role="radio"` with
 // `aria-checked`, a single Tab stop, arrows that move focus and select, wrapping at the ends), the Radio
 // rendered as a real `<button type="button">` (`nativeButton`), the Indicator with the filled dot and the optional label.

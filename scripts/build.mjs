@@ -48,4 +48,4 @@ run('typescript/bin/tsc', ['-p', 'tsconfig.json'])
 run('@tailwindcss/cli/dist/index.mjs', ['-i', 'src/styles/entry.css', '-o', 'dist/styles.css'])
 
 for (const f of readdirSync(`${root}src/styles/fonts`)) cpSync(`${root}src/styles/fonts/${f}`, `${root}dist/fonts/${f}`)
-console.log('@acaprino/toolkit: dist/index.js, dist/index.d.ts, dist/styles.css, dist/fonts/')
+console.log('@acaprino/sigrid: dist/index.js, dist/index.d.ts, dist/styles.css, dist/fonts/')

@@ -1,5 +1,5 @@
-// SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/checkbox.json)
-// Park UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)
+// SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)
+// Park UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)
 // From Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid
 // variant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`
 // token (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the ink, as before: the accent is kept for the

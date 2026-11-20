@@ -1,7 +1,7 @@
 // Release build: the "build" of .github/release.json, run by the shared release workflow (and by hand to try it).
 // Builds, checks, then packs the toolkit into release/ with the proof of what is in it.
 // Usage: npm run release [-- --skip-test]     (--skip-test is for trying it locally: the release workflow runs the tests)
-//   release/acaprino-toolkit-<version>.tgz   the package, installable with `npm i ./file.tgz` or from any URL
+//   release/acaprino-sigrid-<version>.tgz   the package, installable with `npm i ./file.tgz` or from any URL
 //   release/manifest.json                    the version, and the file name and SHA-256 of the package
 //   release/SHA256SUMS                       `<sha256>  <file>` for every other file here (`sha256sum -c SHA256SUMS`)
 // Inside the package, provenance.json holds the commit and the SHA-256 of every other file of the package.

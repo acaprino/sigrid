@@ -1,4 +1,4 @@
-// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/dialog.json)
+// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)
 // SmoothUI's props (`open`, `onOpenChange`, `title`, `description`, `footer`, `children`) match ours;
 // plus returning focus. No animation: our `Dialog` has no `animated` prop.
 import type * as React from 'react'

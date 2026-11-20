@@ -1,5 +1,5 @@
-// SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/smooth-button.json)
-// Park UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)
+// SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)
+// Park UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)
 // From SmoothButton we keep: the plain `<button>` with `type="button"` by default and `asChild` without Radix's Slot
 // (here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size
 // names stay (the ones the package uses).

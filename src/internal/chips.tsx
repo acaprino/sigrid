@@ -1,4 +1,4 @@
-// Park UI (MIT) tags-input 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts)
+// Park UI (MIT) tags-input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts)
 //
 // From Park's `tags-input` recipe (md) comes the look: the field 40px tall with l2 corners and 6px of side padding,
 // 6px between the chips, each chip 28px tall with l1 corners and its own 20px remove button. What the field does rests

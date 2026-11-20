@@ -1,5 +1,5 @@
-// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/dialog.json)
-// Park UI (MIT) dialog 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts)
+// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)
+// Park UI (MIT) dialog 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts)
 // From Park's `dialog` recipe comes the form: the window on the raised sheet with l3 corners and the lg elevation in
 // place of a border, 16px of padding (24px from 768px) and as much between its parts; the backdrop is the toolkit's one
 // backdrop (`BACKDROP`: the elevation's `drop` color at 40%, the same for every overlay that dims); the close button is a 36px plain icon button (Park's sm), muted at rest and

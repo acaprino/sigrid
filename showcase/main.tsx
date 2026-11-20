@@ -1108,7 +1108,7 @@ function App() {
   return (
     <div className="min-h-screen bg-paper text-ink">
       <header className="flex items-center gap-4 border-b border-line bg-paper px-6 py-3">
-        <h1 className="text-base font-semibold">Toolkit showcase</h1>
+        <h1 className="text-base font-semibold">Sigrid UI showcase</h1>
         <div className="ml-auto flex items-center gap-4">
           <div className="w-56">
             <Select aria-label="Theme" options={THEMES.map((t) => ({ value: t.id, label: t.label }))} value={theme} onValueChange={(v) => isThemeId(v) && setTheme(v)} />

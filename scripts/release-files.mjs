@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export const PACKAGE_NAME = '@acaprino/toolkit'
+export const PACKAGE_NAME = '@acaprino/sigrid'
 /** The proof inside the package: it lists every other file, so it cannot list itself. */
 export const PROVENANCE_FILE = 'provenance.json'
 

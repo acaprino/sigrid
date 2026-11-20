@@ -1,4 +1,4 @@
-# @acaprino/toolkit: component inventory
+# @acaprino/sigrid: component inventory
 
 Extracted 2026-11-20 (Marionette step `design-system-extract`, intent `ui.component-inventory`) from the code of
 `design/toolkit/src` at commit `a7f94d5`, from the showcase (`design/toolkit/showcase/`, `npm run showcase`; screenshots

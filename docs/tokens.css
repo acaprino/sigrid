@@ -1,5 +1,5 @@
 /*
- * @acaprino/toolkit: the design tokens as the code holds them (extracted 2026-11-20, Marionette step
+ * @acaprino/sigrid: the design tokens as the code holds them (extracted 2026-11-20, Marionette step
  * `design-system-extract`). A reference, not a stylesheet the package loads: the live sources stay
  * `src/styles/theme.css` (first paint, Tailwind `@theme`), `src/theme-engine.ts` (`themeTokens`, `shapeOf`,
  * `elevationOf`), `src/theme-catalog.ts` (themes and fonts) and `src/internal/motion-impl.tsx` (durations).
