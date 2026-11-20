@@ -27,6 +27,8 @@ applyTheme(document.documentElement, { theme: BASE_THEME, scheme: 'light' })
 applyDensity(document.documentElement, 'normal') // or 'compact', 'large', or your own DensityDef
 ```
 
+To depend on a published version instead of a checkout, see [Use a release](#use-a-release) below.
+
 ## The four layers
 
 1. **Behaviour: Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component: notices, date picker,
@@ -104,6 +106,35 @@ default and equals the sizes the toolkit had before density existed.
   scale classes they do not read (text sizes, radii, shadows, weights, icons, border with shadow, boxed key hints,
   loops and effects) are checked against DESIGN.md by `test/design-rules.test.ts`. CI runs both (`.github/workflows/ci.yml`,
   job `toolkit`). An exception needs a `design-check-ignore-next-line <rule>: <cause>` comment.
+
+## Use a release
+
+Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/toolkit/releases) (tag
+`v<version>`). The repository is public: no login is needed to download. Each release holds three files:
+
+- `acaprino-toolkit-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
+  `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
+  `provenance.json`.
+- `manifest.json`: `{ "version", "packages": [{ "name", "file", "sha256" }] }`, the SHA-256 of the package.
+- `SHA256SUMS`: `<sha256>  <file>` for every other file of the release.
+
+```bash
+# once for each of the three files, or take them from the release page
+curl -LO https://github.com/acaprino/toolkit/releases/download/v<version>/<file>
+sha256sum -c SHA256SUMS                                   # PowerShell: Get-FileHash -Algorithm SHA256 <file>
+npm i ./acaprino-toolkit-<version>.tgz
+```
+
+If you are signed in to the GitHub CLI (`gh auth login`), `gh release download v<version> --repo acaprino/toolkit`
+fetches the three files at once.
+
+`sha256sum -c` has to say `OK` for the package and for `manifest.json`. Inside the package, `provenance.json` is
+`{ "package": "@acaprino/toolkit", "version", "commit", "files": { "<path>": "<sha256>" } }`: the source commit the
+release was built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked
+file by file. `commit` is the parent of the `v<version>` tag: the tag's own commit ("release v<version>") only changes the
+version in `package.json` and `package-lock.json`, and the package was built with that version already written.
+The release is built by `npm run release` (`scripts/release.mjs`: build, typecheck, tests, then pack). To try it
+locally, `npm run release -- --skip-test` fills `release/` (not committed) without the tests.
 
 ## Build and test
 

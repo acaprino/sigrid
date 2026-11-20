@@ -1,0 +1,9 @@
+{
+  "app": "toolkit",
+  "tagPrefix": "v",
+  "files": ["package.json", "package-lock.json"],
+  "runner": "ubuntu-latest",
+  "prepare": ["npm ci"],
+  "build": "npm run release",
+  "assets": "files"
+}
