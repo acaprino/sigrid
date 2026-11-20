@@ -1,5 +1,5 @@
-// SmoothUI (MIT) select 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/select.json)
-// Park UI (MIT) select 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts)
+// SmoothUI (MIT) select 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/select.json)
+// Park UI (MIT) select 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts)
 // From Park's `select` recipe comes the form: its outline variant at the md size for the button (40px, l2 corners, 12px
 // of side padding, a border and no fill, as the fields; 36px at `size="sm"`; R4: a border, never a shadow too; open, the
 // border is the ink), and its list (l2 corners, md elevation in place

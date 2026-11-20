@@ -1,5 +1,5 @@
-// SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/drawer.json)
-// Park UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)
+// SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)
+// Park UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)
 // From Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the
 // backdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).
 // From SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the

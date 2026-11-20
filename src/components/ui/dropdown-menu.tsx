@@ -1,5 +1,5 @@
-// SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/dropdown-menu.json)
-// Park UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)
+// SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dropdown-menu.json)
+// Park UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)
 // From Park's `menu` recipe comes the form (md): the card with l3 corners and the md elevation in place of a border,
 // 4px of padding and 2px between items; items 40px tall with l2 corners and a quiet fill on the highlighted one.
 // From SmoothUI we keep the primitive (Base UI's `Menu`: Portal, Positioner, Popup, Item, Separator, SubmenuRoot) and

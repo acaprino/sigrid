@@ -7,7 +7,8 @@ import { DEFAULT_FONT, FONTS } from '../src/theme-catalog'
 import type { ThemeDef } from '../src/theme-catalog'
 import { DEFAULT_THEME, THEMES, themeTokens } from './fixtures/sample-themes'
 import type { ThemeId } from './fixtures/sample-themes'
-import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, contrast, isAccentColor, ownTheme, pickTextStep, themeTone, toHex, tokensFor } from '../src/theme-engine'
+import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, contrast, fromHex, isAccentColor, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
+import { PALETTE_COMBOS, paletteTheme } from '../src/palette'
 import type { OwnTheme, ThemeTone } from '../src/theme-engine'
 import { palettes } from './theme-tokens'
 
@@ -26,6 +27,26 @@ const mix = (fg: string, bg: string, alpha: number) =>
 const SCHEMES = ['light', 'dark'] as const
 const CASES = THEMES.flatMap((t) => SCHEMES.map((scheme) => [`${t.id} ${scheme === 'light' ? 'light' : 'dark'}`, t.id, scheme] as const))
 const AA = 4.5
+
+test('adjacent tones have distinct surface lightness after rendering in both schemes', () => {
+  const presets = THEMES.filter(t => ['neutro', 'nord', 'catppuccin', 'rosepine', 'everforest'].includes(t.id))
+  const generated = PALETTE_COMBOS.map(combo => paletteTheme({ seed: '#ee832e', combo }))
+  for (const theme of [...presets, ...generated]) for (const scheme of SCHEMES) {
+    const steps = (['calm', 'balanced', 'vivid'] as const).map(tone => tokensFor(theme, scheme, presetTone(tone)).colors)
+    for (const [low, high] of [[steps[0]!, steps[1]!], [steps[1]!, steps[2]!]] as const) {
+      const lightness = (c: Record<string, string>, role: string) => fromHex(c[role]!).L
+      const name = theme.label + ' ' + scheme
+      expect(lightness(low, 'sidebar-paper') - lightness(high, 'sidebar-paper'), name).toBeGreaterThan(0.01)
+      const selectionStep = lightness(high, 'selected') - lightness(low, 'selected')
+      expect(scheme === 'light' ? -selectionStep : selectionStep, name).toBeGreaterThan(0.025)
+      expect(low['primary'], name).not.toBe(high['primary'])
+    }
+    for (const c of steps) {
+      expect(ratio(c['primary']!, c['primary-foreground']!)).toBeGreaterThanOrEqual(AA)
+      expect(ratio(c['sidebar-selected']!, c['sidebar-selected-ink']!)).toBeGreaterThanOrEqual(AA)
+    }
+  }
+})
 
 describe('the catalog', () => {
   test('16 calm themes aimed at focus, work, calm and study, then 10 with a strong accent, the last 4 in two colors, and 8 curated palettes; Neutral is the default and there are 4 palette profiles', () => {
@@ -523,11 +544,10 @@ describe('the user\'s own theme', () => {
       expect(chroma(at('vivid').colors['primary']!), `${scheme}: fill`).toBeGreaterThan(chroma(at('faded').colors['primary']!))
       expect(chroma(at('vivid').colors['selected']!), `${scheme}: selected item`).toBeGreaterThan(chroma(at('faded').colors['selected']!))
       for (const k of ['paper', 'raised', 'ink', 'line']) expect(at('vivid').colors[k], k).toBe(at().colors[k])
-      // The tone tints the large areas too (owner, 2026-11-20: «cambiando tono non vedo cambiamenti»): in light the sidebar
-      // and the lanes go from gray to the theme's colour; in dark they stay the neutral anthracite.
+      // The sidebar and lanes deepen in both schemes. Even a near-gray has visible steps.
       for (const k of ['paper-2', 'sidebar-paper']) {
         if (scheme === 'light') expect(chroma(at('vivid').colors[k]!), k).toBeGreaterThan(chroma(at('faded').colors[k]!))
-        else expect(at('vivid').colors[k], k).toBe(at().colors[k])
+        expect(lum(at('vivid').colors[k]!), k).toBeLessThan(lum(at('faded').colors[k]!))
       }
     }
   })

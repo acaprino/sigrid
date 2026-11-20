@@ -1,4 +1,4 @@
-// Park UI (MIT) date-picker 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts)
+// Park UI (MIT) date-picker 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts)
 //
 // From Park's `date-picker` recipe (and its component, which draws each day as a plain icon button) comes the look: the
 // title between two plain arrows, the weekday row in semibold muted text, the days as 36px plain buttons (Park's sm)

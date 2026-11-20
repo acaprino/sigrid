@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Acaprino Toolkit
+name: Sigrid UI
 description: Shared design system of the owner's apps, ADHD first. Two mood colours set each theme; one accent shows where to look and what to click.
 x-zsd:
   profile: "0.1"
@@ -9,16 +9,16 @@ x-zsd:
     method: hybrid
     captured: 2026-11-20
     paths:
-      - design/toolkit/src/styles/theme.css
-      - design/toolkit/src/theme-engine.ts
-      - design/toolkit/src/theme-catalog.ts
-      - design/toolkit/src/styles/fonts.css
-      - design/toolkit/src/components/ui
-      - design/toolkit/src/components
-      - design/toolkit/src/internal
-      - design/toolkit/docs/tokens.css
-      - design/toolkit/docs/component-inventory.md
-      - design/toolkit/showcase
+      - src/styles/theme.css
+      - src/theme-engine.ts
+      - src/theme-catalog.ts
+      - src/styles/fonts.css
+      - src/components/ui
+      - src/components
+      - src/internal
+      - docs/tokens.css
+      - docs/component-inventory.md
+      - showcase
   review:
     status: draft
   intent:
@@ -73,23 +73,23 @@ x-zsd:
       - "The checkbox keeps l1; --radius-check defaults to 9999px, so an app can round its own boxes (an app setting)."
       - "Two font roles: the interface stack and the monospace stack of inline code."
   implementation:
-    token-source: design/toolkit/src/styles/theme.css
+    token-source: src/styles/theme.css
     component-sources:
-      - design/toolkit/src/components/ui
-      - design/toolkit/src/components
-      - design/toolkit/src/internal
+      - src/components/ui
+      - src/components
+      - src/internal
     style-sources:
-      - design/toolkit/src/theme-engine.ts
-      - design/toolkit/src/theme-catalog.ts
-      - design/toolkit/src/styles/theme.css
+      - src/theme-engine.ts
+      - src/theme-catalog.ts
+      - src/styles/theme.css
     font-assets:
-      - design/toolkit/src/styles/fonts.css
+      - src/styles/fonts.css
     image-assets: []
     icon-assets:
       - lucide-react
       - "@fluentui/react-icons"
       - "the device's colour emoji (the Emoji pack, no package)"
-    checks: design/toolkit/design-check.config.json
+    checks: design-check.config.json
   unresolved:
     - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
     - "Interface measurements at phone widths are not recorded."
@@ -391,7 +391,7 @@ components:
     size: 1px
 ---
 
-# Acaprino Toolkit
+# Sigrid UI
 
 ## Overview
 

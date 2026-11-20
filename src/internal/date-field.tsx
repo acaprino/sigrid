@@ -1,4 +1,4 @@
-// Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)
+// Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)
 // From Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of
 // side padding); the card is Park's date-picker content (l3 corners, the lg elevation).
 // The date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker

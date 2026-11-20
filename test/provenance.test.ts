@@ -23,7 +23,7 @@ const srcFiles = walk(join(root, 'src'))
 const codeFiles = srcFiles.filter((f) => /\.(tsx?|css)$/.test(f))
 const SMOOTH = {
   name: 'SmoothUI',
-  header: /\/\/ SmoothUI \(MIT\) ([a-z0-9-]+) 4\.0\.0 — adapted for @acaprino\/toolkit \(https:\/\/smoothui\.dev\/r\/base-nova\/\1\.json\)/,
+  header: /\/\/ SmoothUI \(MIT\) ([a-z0-9-]+) 4\.0\.0 — adapted for @acaprino\/sigrid \(https:\/\/smoothui\.dev\/r\/base-nova\/\1\.json\)/,
   mark: '// SmoothUI (MIT)',
   url: (slug: string) => `https://smoothui.dev/r/base-nova/${slug}.json`,
 }
@@ -32,7 +32,7 @@ const PARK_COMMIT = '102769cc91a9d36753dbc5893c74b7954b495efe'
 const FLUENT_COMMIT = 'a568b4db7806f8642ab4ad296d2c80ad512de8a8'
 const PARK = {
   name: 'Park UI',
-  header: /\/\/ Park UI \(MIT\) ([a-z0-9-]+) 102769c — recipe translated to Tailwind for @acaprino\/toolkit \(https:\/\/github\.com\/chakra-ui\/park-ui\/blob\/102769c\/packages\/preset\/src\/recipes\/\1\.ts\)/,
+  header: /\/\/ Park UI \(MIT\) ([a-z0-9-]+) 102769c — recipe translated to Tailwind for @acaprino\/sigrid \(https:\/\/github\.com\/chakra-ui\/park-ui\/blob\/102769c\/packages\/preset\/src\/recipes\/\1\.ts\)/,
   mark: '// Park UI (MIT)',
   url: (slug: string) => `https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/${slug}.ts`,
 }
