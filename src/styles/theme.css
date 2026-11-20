@@ -1,0 +1,659 @@
+/* The first paint of the toolkit: a plain gray baseline (`BASE_THEME`), in light (`@theme`) and for the dark system
+   (the block below). It names every colour token; an app paints its own default theme over it. Imported by an app (with Tailwind compiled by it) and by entry.css (precompiled styles.css). */
+@theme {
+  --color-paper: #fbf7ef;
+  --color-paper-2: #eeeeee;
+  --color-sidebar-paper: #e9e9e9;
+  --color-ink: #161616;
+  --color-ink-soft: #3d3d3d;
+  /* Muted text: at least 4.5:1 on paper, paper-2 and raised (test/contrast.test.ts). */
+  --color-ink-mute: #5b5b5b;
+  --color-line: #dcdcdc;
+  --color-accent: #1f1f1f;
+  --color-accent-hover: #151515;
+  --color-accent-soft: #ebebeb;
+  --color-raised: #fefcf8;
+
+  /* Park UI's corners: three nested levels, l1/l2/l3 = 2/4/6px. `sm` is l1 (what sits inside a control: a key, a
+     menu item, a small box), `md` is l2 (controls: buttons, fields, selects, labels), `lg` is l3 (what holds controls:
+     cards, windows, menus, toasts, the segmented group). There is no fourth level: `xl` is l3 too. */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+
+  /* Park UI's elevation (its `shadows` tokens): a soft drop and a 1px ring, in place of a border. The values change
+     with the scheme, so each one is a variable the theme engine writes (`--elevation-*`, below for the first paint):
+     Tailwind copies a shadow token into its utility at build time, and a literal value here could never follow the
+     scheme. `xs`: the surface button, the fields with a fill, the chosen item of a segmented control, the cards of a
+     board. `sm`: the tooltip. `md`: the cards of the page, menus and select lists. `lg`: popovers, windows, toasts,
+     the calendar. `float`: what is being dragged. */
+  --shadow-xs: var(--elevation-xs);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+  --shadow-float: var(--elevation-float);
+
+  /* Park UI's type scale (its text styles): text 14px/20px (`sm`), titles 16px/24px (`base`, Park's `md`), labels and
+     keys 12px/18px (`2xs`, Park's `xs`). `xs` is the 13px step of the approved preview, for dates and counts beside a
+     14px title. The sizes are the same with a finger: a touch layout does not shrink (and a field at 16px keeps iOS
+     from zooming the page on focus: the fields use `text-base` below 860px). */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.5;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1.125 / 0.8125);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+
+  /* The two font roles of DESIGN.md: the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
+     monospace faces: DESIGN.md `code-sm`). */
+  --font-sans: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* `md:` is the point where the sidebar stops being a drawer. */
+  --breakpoint-md: 860px;
+
+  /* Semantic names that the shadcn/ui primitives use internally, mapped onto the paper:
+     they are not part of the vocabulary for whoever builds screens (use paper/ink/accent). */
+  --color-background: #fbf7ef;
+  --color-foreground: #161616;
+  --color-card: #fefcf8;
+  --color-card-foreground: #161616;
+  --color-popover: #fefcf8;
+  --color-popover-foreground: #161616;
+  /* The solid button: the accent as a fill, with light text. */
+  --color-primary: #1f1f1f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #eeeeee;
+  --color-secondary-foreground: #161616;
+  --color-muted: #eeeeee;
+  --color-muted-foreground: #5b5b5b; /* placeholders and descriptions of the primitives: the same value as ink-mute */
+  --color-destructive: #ad2a1e;
+  --color-destructive-soft: #fef1ef;
+  --color-border: #dcdcdc;
+  /* Border of the controls (checkbox, fields, textarea, selects): at least 3:1 on paper, paper-2 and raised
+     (WCAG 1.4.11, test/contrast.test.ts). Decorative dividers stay `line`/`border`. */
+  --color-input: #858585;
+  /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
+     the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
+  --color-ring: #1f1f1f;
+  /* Ink of the icons inside the shapes of areas and projects: the background is a user color, so the same in
+     both palettes (test/contrast.test.ts). */
+  --color-mark-ink-light: #ffffff;
+  --color-mark-ink-dark: #1b1916;
+  --color-destructive-foreground: #ffffff;
+  --color-selected: #d4d4d4;
+  --color-selected-ink: #161616;
+  --color-sidebar-ink: #3d3d3d;
+  --color-sidebar-mute: #5b5b5b;
+  --color-sidebar-selected: #d4d4d4;
+  --color-sidebar-selected-ink: #161616;
+  --color-mark-1: #605553;
+  --color-mark-icon-1: #4d4240;
+  --color-mark-2: #605553;
+  --color-mark-icon-2: #4d4240;
+  --color-mark-3: #5f5651;
+  --color-mark-icon-3: #4c433e;
+  --color-mark-4: #5e5651;
+  --color-mark-icon-4: #4b433e;
+  --color-mark-5: #5d574f;
+  --color-mark-icon-5: #4a443c;
+  --color-mark-6: #575950;
+  --color-mark-icon-6: #44463d;
+  --color-mark-7: #545a53;
+  --color-mark-icon-7: #414740;
+  --color-mark-8: #515b55;
+  --color-mark-icon-8: #3e4842;
+  --color-mark-9: #525a5a;
+  --color-mark-icon-9: #3f4747;
+  --color-mark-10: #4f5b5c;
+  --color-mark-icon-10: #3c4749;
+  --color-mark-11: #525960;
+  --color-mark-icon-11: #3f464d;
+  --color-mark-12: #56585c;
+  --color-mark-icon-12: #434548;
+  --color-mark-13: #555861;
+  --color-mark-icon-13: #42454d;
+  --color-mark-14: #575760;
+  --color-mark-icon-14: #44444d;
+  --color-mark-15: #5b565e;
+  --color-mark-icon-15: #47434b;
+  --color-mark-16: #5d555c;
+  --color-mark-icon-16: #4a4248;
+  --color-mark-17: #5f5558;
+  --color-mark-icon-17: #4c4245;
+  --color-mark-18: #605556;
+  --color-mark-icon-18: #4d4243;
+  --color-sidebar-accent: #1f1f1f;
+  --color-sidebar-accent-ink: #fbf7ef;
+  --color-sidebar-mark-1: #605553;
+  --color-sidebar-mark-icon-1: #4d4240;
+  --color-sidebar-mark-2: #605553;
+  --color-sidebar-mark-icon-2: #4d4240;
+  --color-sidebar-mark-3: #5f5651;
+  --color-sidebar-mark-icon-3: #4c433e;
+  --color-sidebar-mark-4: #5e5651;
+  --color-sidebar-mark-icon-4: #4b433e;
+  --color-sidebar-mark-5: #5d574f;
+  --color-sidebar-mark-icon-5: #4a443c;
+  --color-sidebar-mark-6: #575950;
+  --color-sidebar-mark-icon-6: #44463d;
+  --color-sidebar-mark-7: #545a53;
+  --color-sidebar-mark-icon-7: #414740;
+  --color-sidebar-mark-8: #515b55;
+  --color-sidebar-mark-icon-8: #3e4842;
+  --color-sidebar-mark-9: #525a5a;
+  --color-sidebar-mark-icon-9: #3f4747;
+  --color-sidebar-mark-10: #4f5b5c;
+  --color-sidebar-mark-icon-10: #3c4749;
+  --color-sidebar-mark-11: #525960;
+  --color-sidebar-mark-icon-11: #3f464d;
+  --color-sidebar-mark-12: #56585c;
+  --color-sidebar-mark-icon-12: #434548;
+  --color-sidebar-mark-13: #555861;
+  --color-sidebar-mark-icon-13: #42454d;
+  --color-sidebar-mark-14: #575760;
+  --color-sidebar-mark-icon-14: #44444d;
+  --color-sidebar-mark-15: #5b565e;
+  --color-sidebar-mark-icon-15: #47434b;
+  --color-sidebar-mark-16: #5d555c;
+  --color-sidebar-mark-icon-16: #4a4248;
+  --color-sidebar-mark-17: #5f5558;
+  --color-sidebar-mark-icon-17: #4c4245;
+  --color-sidebar-mark-18: #605556;
+  --color-sidebar-mark-icon-18: #4d4243;
+  --color-drop: #161616;
+}
+
+/* The elevation of the first paint, in light: the drop and the ring are the engine's `drop` color (the ink, in light)
+   at Park's alpha steps (its gray a4, a6 and a7: 9%, 15% and 19%), so the shadow takes the tint of the theme's grays.
+   `applyTheme` writes the same values (`elevationOf` in src/theme-engine.ts). */
+@layer theme {
+  :root,
+  :host {
+    --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
+    --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+    --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+    --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+    --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  }
+}
+
+/* Neutral in dark. It follows the system (`prefers-color-scheme`, which the browser engine takes from the OS setting): no
+   window permission and no JavaScript. It redefines all the colors of the light theme with the same names; the contrast
+   ratios are the same ones checked for light (test/contrast.test.ts, which proves the two palettes). Intended
+   differences: the accent as text is lightened to read on dark, while the solid button (`primary`) is a deep tone
+   of the accent with light text; the sheets (`raised`) are the lightest level; the sheets' shadow is deeper. */
+@layer theme {
+  @media (prefers-color-scheme: dark) {
+    :root,
+    :host {
+      --color-paper: #1e1e1e;
+      --color-paper-2: #171717;
+      --color-sidebar-paper: #171717;
+      --color-ink: #e4e4e4;
+      --color-ink-soft: #bebebe;
+      --color-ink-mute: #9b9b9b;
+      --color-line: #353535;
+      --color-accent: #dedede;
+      --color-accent-hover: #cfcfcf;
+      --color-accent-soft: #2b2b2b;
+      --color-raised: #2a2a2a;
+
+      /* In dark a drop of ink would be a glow: the drop is the engine's near-black `drop` and the ring is the ink inside
+         the edge (Park's dark shadows: black a8 and an inset gray a8). */
+      --elevation-xs: 0 1px 1px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 55%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+
+      --color-background: #1e1e1e;
+      --color-foreground: #e4e4e4;
+      --color-card: #2a2a2a;
+      --color-card-foreground: #e4e4e4;
+      --color-popover: #2a2a2a;
+      --color-popover-foreground: #e4e4e4;
+      --color-primary: #dedede;
+      --color-primary-foreground: #0d0d0d;
+      --color-secondary: #171717;
+      --color-secondary-foreground: #e4e4e4;
+      --color-muted: #171717;
+      --color-muted-foreground: #9b9b9b;
+      --color-destructive: #ff9a8d;
+      --color-destructive-soft: #3d2420;
+      --color-border: #353535;
+      --color-input: #747474;
+      --color-ring: #dedede;
+      --color-mark-ink-light: #ffffff;
+      --color-mark-ink-dark: #1b1916;
+      --color-destructive-foreground: #17161a;
+      --color-selected: #333333;
+      --color-selected-ink: #f2f2f2;
+      --color-sidebar-ink: #bebebe;
+      --color-sidebar-mute: #9b9b9b;
+      --color-sidebar-selected: #333333;
+      --color-sidebar-selected-ink: #f2f2f2;
+      --color-mark-1: #a19593;
+      --color-mark-icon-1: #b4a8a5;
+      --color-mark-2: #a19592;
+      --color-mark-icon-2: #b4a8a5;
+      --color-mark-3: #a09690;
+      --color-mark-icon-3: #b3a8a3;
+      --color-mark-4: #9f9690;
+      --color-mark-icon-4: #b2a9a2;
+      --color-mark-5: #9e978e;
+      --color-mark-icon-5: #b1aaa1;
+      --color-mark-6: #979a90;
+      --color-mark-icon-6: #a9aca2;
+      --color-mark-7: #949b92;
+      --color-mark-icon-7: #a6ada5;
+      --color-mark-8: #919b95;
+      --color-mark-icon-8: #a3aea8;
+      --color-mark-9: #929a9a;
+      --color-mark-icon-9: #a4adad;
+      --color-mark-10: #8e9b9d;
+      --color-mark-icon-10: #a1aeb0;
+      --color-mark-11: #9199a1;
+      --color-mark-icon-11: #a4acb4;
+      --color-mark-12: #96989c;
+      --color-mark-icon-12: #a8abaf;
+      --color-mark-13: #9598a2;
+      --color-mark-icon-13: #a7aab5;
+      --color-mark-14: #9797a1;
+      --color-mark-icon-14: #aaaab4;
+      --color-mark-15: #9b969f;
+      --color-mark-icon-15: #aea8b2;
+      --color-mark-16: #9e959c;
+      --color-mark-icon-16: #b1a7af;
+      --color-mark-17: #a19598;
+      --color-mark-icon-17: #b3a7ab;
+      --color-mark-18: #a19596;
+      --color-mark-icon-18: #b4a7a8;
+      --color-sidebar-accent: #dedede;
+      --color-sidebar-accent-ink: #1e1e1e;
+      --color-sidebar-mark-1: #a19593;
+      --color-sidebar-mark-icon-1: #b4a8a5;
+      --color-sidebar-mark-2: #a19592;
+      --color-sidebar-mark-icon-2: #b4a8a5;
+      --color-sidebar-mark-3: #a09690;
+      --color-sidebar-mark-icon-3: #b3a8a3;
+      --color-sidebar-mark-4: #9f9690;
+      --color-sidebar-mark-icon-4: #b2a9a2;
+      --color-sidebar-mark-5: #9e978e;
+      --color-sidebar-mark-icon-5: #b1aaa1;
+      --color-sidebar-mark-6: #979a90;
+      --color-sidebar-mark-icon-6: #a9aca2;
+      --color-sidebar-mark-7: #949b92;
+      --color-sidebar-mark-icon-7: #a6ada5;
+      --color-sidebar-mark-8: #919b95;
+      --color-sidebar-mark-icon-8: #a3aea8;
+      --color-sidebar-mark-9: #929a9a;
+      --color-sidebar-mark-icon-9: #a4adad;
+      --color-sidebar-mark-10: #8e9b9d;
+      --color-sidebar-mark-icon-10: #a1aeb0;
+      --color-sidebar-mark-11: #9199a1;
+      --color-sidebar-mark-icon-11: #a4acb4;
+      --color-sidebar-mark-12: #96989c;
+      --color-sidebar-mark-icon-12: #a8abaf;
+      --color-sidebar-mark-13: #9598a2;
+      --color-sidebar-mark-icon-13: #a7aab5;
+      --color-sidebar-mark-14: #9797a1;
+      --color-sidebar-mark-icon-14: #aaaab4;
+      --color-sidebar-mark-15: #9b969f;
+      --color-sidebar-mark-icon-15: #aea8b2;
+      --color-sidebar-mark-16: #9e959c;
+      --color-sidebar-mark-icon-16: #b1a7af;
+      --color-sidebar-mark-17: #a19598;
+      --color-sidebar-mark-icon-17: #b3a7ab;
+      --color-sidebar-mark-18: #a19596;
+      --color-sidebar-mark-icon-18: #b4a7a8;
+      --color-drop: #060606;
+    }
+  }
+}
+
+/* The theme and font chosen in Settings → Appearance are not here: `applyTheme` and `applyFont` (src/themes.ts)
+   put on the root the variables computed by `themeTokens` (src/theme-engine.ts) and the attributes `data-theme`,
+   `data-scheme`, `data-font`. The two blocks above are Neutral in light and in dark, for the first paint: they are generated
+   and checked by test/first-paint.test.ts (`UPDATE_THEME_CSS=1` rewrites them). */
+
+/* Priority colors (`--prio-N`: the dot on the row, at least 3:1 on paper, paper 2 and raised of every theme;
+   `--prio-N-bg`/`--prio-N-ink`: the pressed button of the picker, at least 4.5:1; test/priority-colors.test.tsx): P1 red,
+   P2 yellow, P3 light blue, "None" without color. They sit in the same rules as the labels, below.
+   Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its
+   name (`tagHue` in `src/internal/tag.tsx`), so the same name has the same color everywhere and on every device,
+   without an extra datum. Each pair passes 4.5:1 (test/tag-colors.test.ts). Selectors in `:where()`: zero specificity,
+   and an element with `data-scheme` (the theme thumbnails) takes its palette. */
+@layer theme {
+  :where(:root:not([data-scheme]), [data-scheme="light"]) {
+    --tag-1-bg: #fde8e4;
+    --tag-1-ink: #a3291b;
+    --tag-2-bg: #fdf0d5;
+    --tag-2-ink: #7a4a00;
+    --tag-3-bg: #eef3d9;
+    --tag-3-ink: #4d5e12;
+    --tag-4-bg: #e1f2e6;
+    --tag-4-ink: #1f6b3c;
+    --tag-5-bg: #ddf1f1;
+    --tag-5-ink: #155e63;
+    --tag-6-bg: #e2ecfa;
+    --tag-6-ink: #1d4f91;
+    --tag-7-bg: #ece6fb;
+    --tag-7-ink: #5133a6;
+    --tag-8-bg: #fbe4f0;
+    --tag-8-ink: #9a2464;
+    --prio-1: #d23a29;
+    --prio-1-bg: #fde8e4;
+    --prio-1-ink: #a3291b;
+    --prio-2: #b07800;
+    --prio-2-bg: #fdf0d5;
+    --prio-2-ink: #7a4a00;
+    --prio-3: #2a86cc;
+    --prio-3-bg: #e0eefa;
+    --prio-3-ink: #1a5590;
+  }
+  @media (prefers-color-scheme: dark) {
+    :where(:root:not([data-scheme])) {
+      --tag-1-bg: #4a221c;
+      --tag-1-ink: #ffb4a6;
+      --tag-2-bg: #43321a;
+      --tag-2-ink: #f6c977;
+      --tag-3-bg: #343a1c;
+      --tag-3-ink: #cfdc8a;
+      --tag-4-bg: #1e3a28;
+      --tag-4-ink: #98dbac;
+      --tag-5-bg: #173a3b;
+      --tag-5-ink: #8fd6d8;
+      --tag-6-bg: #1c2f4d;
+      --tag-6-ink: #a9c8f5;
+      --tag-7-bg: #2f2752;
+      --tag-7-ink: #c8b8fa;
+      --tag-8-bg: #48203a;
+      --tag-8-ink: #f5aed2;
+      --prio-1: #ff8574;
+      --prio-1-bg: #4a221c;
+      --prio-1-ink: #ffb4a6;
+      --prio-2: #f2c14e;
+      --prio-2-bg: #43321a;
+      --prio-2-ink: #f6c977;
+      --prio-3: #62b4f2;
+      --prio-3-bg: #17324d;
+      --prio-3-ink: #a6d2f7;
+    }
+  }
+  :where([data-scheme="dark"]) {
+    --tag-1-bg: #4a221c;
+    --tag-1-ink: #ffb4a6;
+    --tag-2-bg: #43321a;
+    --tag-2-ink: #f6c977;
+    --tag-3-bg: #343a1c;
+    --tag-3-ink: #cfdc8a;
+    --tag-4-bg: #1e3a28;
+    --tag-4-ink: #98dbac;
+    --tag-5-bg: #173a3b;
+    --tag-5-ink: #8fd6d8;
+    --tag-6-bg: #1c2f4d;
+    --tag-6-ink: #a9c8f5;
+    --tag-7-bg: #2f2752;
+    --tag-7-ink: #c8b8fa;
+    --tag-8-bg: #48203a;
+    --tag-8-ink: #f5aed2;
+    --prio-1: #ff8574;
+    --prio-1-bg: #4a221c;
+    --prio-1-ink: #ffb4a6;
+    --prio-2: #f2c14e;
+    --prio-2-bg: #43321a;
+    --prio-2-ink: #f6c977;
+    --prio-3: #62b4f2;
+    --prio-3-bg: #17324d;
+    --prio-3-ink: #a6d2f7;
+  }
+  /* The color of a pill: `data-tag-hue` is set by `tagColorAttrs`, `TAG_COLOR` reads the two variables. */
+  [data-tag-hue="1"] {
+    --tag-bg: var(--tag-1-bg);
+    --tag-ink: var(--tag-1-ink);
+  }
+  [data-tag-hue="2"] {
+    --tag-bg: var(--tag-2-bg);
+    --tag-ink: var(--tag-2-ink);
+  }
+  [data-tag-hue="3"] {
+    --tag-bg: var(--tag-3-bg);
+    --tag-ink: var(--tag-3-ink);
+  }
+  [data-tag-hue="4"] {
+    --tag-bg: var(--tag-4-bg);
+    --tag-ink: var(--tag-4-ink);
+  }
+  [data-tag-hue="5"] {
+    --tag-bg: var(--tag-5-bg);
+    --tag-ink: var(--tag-5-ink);
+  }
+  [data-tag-hue="6"] {
+    --tag-bg: var(--tag-6-bg);
+    --tag-ink: var(--tag-6-ink);
+  }
+  [data-tag-hue="7"] {
+    --tag-bg: var(--tag-7-bg);
+    --tag-ink: var(--tag-7-ink);
+  }
+  [data-tag-hue="8"] {
+    --tag-bg: var(--tag-8-bg);
+    --tag-ink: var(--tag-8-ink);
+  }
+  /* The eighteen colors of areas, projects and folders adapted to the active theme (`markHueAttrs` in `colors.ts`). */
+  [data-mark-hue="1"] { --mark-dot: var(--color-mark-1); --mark-icon: var(--color-mark-icon-1); }
+  [data-mark-hue="2"] { --mark-dot: var(--color-mark-2); --mark-icon: var(--color-mark-icon-2); }
+  [data-mark-hue="3"] { --mark-dot: var(--color-mark-3); --mark-icon: var(--color-mark-icon-3); }
+  [data-mark-hue="4"] { --mark-dot: var(--color-mark-4); --mark-icon: var(--color-mark-icon-4); }
+  [data-mark-hue="5"] { --mark-dot: var(--color-mark-5); --mark-icon: var(--color-mark-icon-5); }
+  [data-mark-hue="6"] { --mark-dot: var(--color-mark-6); --mark-icon: var(--color-mark-icon-6); }
+  [data-mark-hue="7"] { --mark-dot: var(--color-mark-7); --mark-icon: var(--color-mark-icon-7); }
+  [data-mark-hue="8"] { --mark-dot: var(--color-mark-8); --mark-icon: var(--color-mark-icon-8); }
+  [data-mark-hue="9"] { --mark-dot: var(--color-mark-9); --mark-icon: var(--color-mark-icon-9); }
+  [data-mark-hue="10"] { --mark-dot: var(--color-mark-10); --mark-icon: var(--color-mark-icon-10); }
+  [data-mark-hue="11"] { --mark-dot: var(--color-mark-11); --mark-icon: var(--color-mark-icon-11); }
+  [data-mark-hue="12"] { --mark-dot: var(--color-mark-12); --mark-icon: var(--color-mark-icon-12); }
+  [data-mark-hue="13"] { --mark-dot: var(--color-mark-13); --mark-icon: var(--color-mark-icon-13); }
+  [data-mark-hue="14"] { --mark-dot: var(--color-mark-14); --mark-icon: var(--color-mark-icon-14); }
+  [data-mark-hue="15"] { --mark-dot: var(--color-mark-15); --mark-icon: var(--color-mark-icon-15); }
+  [data-mark-hue="16"] { --mark-dot: var(--color-mark-16); --mark-icon: var(--color-mark-icon-16); }
+  [data-mark-hue="17"] { --mark-dot: var(--color-mark-17); --mark-icon: var(--color-mark-icon-17); }
+  [data-mark-hue="18"] { --mark-dot: var(--color-mark-18); --mark-icon: var(--color-mark-icon-18); }
+}
+
+@layer base {
+  /* Native scrollbars, boxes and menus follow the theme. */
+  :root {
+    color-scheme: light dark;
+  }
+  [data-scheme="light"] {
+    color-scheme: light;
+  }
+  [data-scheme="dark"] {
+    color-scheme: dark;
+  }
+  /* A `border` without a color (sheets, windows, menus and shadcn popovers) takes the divider, not `currentColor` as
+     Tailwind 4 wants: that would be the ink, a dark line on the paper and almost white in dark. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    -webkit-font-smoothing: antialiased;
+    /* Native feel: the interface is not a document. Its text is not selected by dragging and the pointer stays an arrow;
+       what the user writes or reads as content stays selectable (below). */
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+  }
+  /* Content, not interface: fields, notes, titles of the user's things, comments. `data-selectable` marks a piece of
+     content that is not a field. */
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]),
+  [data-selectable],
+  [data-slot="markdown"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]) {
+    cursor: text;
+  }
+  :is(input:is([type="checkbox"], [type="radio"], [type="file"], [type="button"], [type="submit"], [type="range"], [type="color"])) {
+    cursor: default;
+  }
+
+  /* Scrollbars: a light ink pill on a transparent track (it sits on the paper and on the sidebar),
+     without arrows. The color comes only from `--color-ink`, so it follows every theme and every accent without an extra
+     token (test/scrollbars.test.ts). It gets darker when passing over the scrolling area, then over the pill, then
+     when dragging it. Only with a precise pointer: with a finger the system's overlay bars stay (in Chrome for
+     Android a `::-webkit-scrollbar` style would turn them into bars that take up space). With Windows forced colors
+     the system's bars stay. */
+  @media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background-color: transparent;
+    }
+    ::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    ::-webkit-scrollbar-thumb {
+      min-width: 32px;
+      min-height: 32px;
+      border: 3px solid transparent;
+      border-radius: 9999px;
+      background-clip: padding-box;
+      background-color: color-mix(in oklab, var(--color-ink) 18%, transparent);
+    }
+    :hover::-webkit-scrollbar-thumb {
+      background-color: color-mix(in oklab, var(--color-ink) 30%, transparent);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      border-width: 2px;
+      background-color: color-mix(in oklab, var(--color-ink) 45%, transparent);
+    }
+    ::-webkit-scrollbar-thumb:active {
+      border-width: 2px;
+      background-color: color-mix(in oklab, var(--color-ink) 58%, transparent);
+    }
+    @media (prefers-contrast: more) {
+      ::-webkit-scrollbar-thumb,
+      :hover::-webkit-scrollbar-thumb {
+        background-color: color-mix(in oklab, var(--color-ink) 55%, transparent);
+      }
+      ::-webkit-scrollbar-thumb:hover,
+      ::-webkit-scrollbar-thumb:active {
+        background-color: color-mix(in oklab, var(--color-ink) 72%, transparent);
+      }
+    }
+  }
+  /* Firefox has no `::-webkit-scrollbar`. In Chromium `scrollbar-color` would turn off the rules above: that is why it sits
+     only where that selector does not exist. */
+  @media (forced-colors: none) {
+    @supports not selector(::-webkit-scrollbar) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklab, var(--color-ink) 30%, transparent) transparent;
+      }
+    }
+  }
+}
+
+/* The theme's shape: the same for every theme (the sketch design/bozzetti/lista-attivita.html), except the sidebar
+   (light or solid) and the sheets' shadow, deeper in dark. Outside the layers on purpose: these rules must win
+   over the components' utilities without rewriting them one by one. Each variable has as its fallback the value that `applyTheme`
+   writes, so before the script sets the choice (and in tests) nothing changes; `test/themes.test.ts` checks that
+   each one is used here or in @theme. */
+
+/* Icons: the theme's stroke and caps. Only those with the default stroke (2): an icon with a deliberately chosen stroke
+   (the check mark, the big "+") keeps it. */
+svg.lucide[stroke-width="2"] {
+  stroke-width: var(--icon-stroke, 1.75);
+  stroke-linecap: var(--icon-cap, round);
+  stroke-linejoin: var(--icon-join, round);
+}
+
+/* Solid and bordered buttons: the theme's radius (Park's l2). */
+[data-slot="button"]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]) {
+  border-radius: var(--radius-button, 4px);
+}
+[data-slot="badge"] {
+  border-radius: var(--radius-chip, 4px);
+}
+/* A list that scrolls fades out on the edge where it goes on, never where it ends (`data-scroll-shade`, or
+   `data-scroll-shade="x"` for a row that scrolls sideways): a row cut by the edge reads as "there is more", not as a
+   mistake. The fade follows the list's own scroll (`scroll(self)`); a list that does not scroll has no timeline, so no
+   fade. Where scroll timelines are missing, or with reduced motion, the list is simply cut. */
+@property --shade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --shade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes scroll-shade {
+  from { --shade-top: 0px; --shade-bottom: 28px; }
+  10% { --shade-top: 28px; }
+  90% { --shade-bottom: 28px; }
+  to { --shade-top: 28px; --shade-bottom: 0px; }
+}
+@property --shade-left {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --shade-right {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes scroll-shade-x {
+  from { --shade-left: 0px; --shade-right: 28px; }
+  10% { --shade-left: 28px; }
+  90% { --shade-right: 28px; }
+  to { --shade-left: 28px; --shade-right: 0px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-scroll-shade] {
+    mask-image: linear-gradient(to bottom, transparent, black var(--shade-top), black calc(100% - var(--shade-bottom)), transparent);
+    animation: scroll-shade linear both;
+    animation-timeline: scroll(self);
+  }
+  [data-scroll-shade="x"] {
+    mask-image: linear-gradient(to right, transparent, black var(--shade-left), black calc(100% - var(--shade-right)), transparent);
+    animation: scroll-shade-x linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+/* With Windows forced colors (high-contrast themes) Tailwind's focus ring is a shadow and disappears, and
+   `outline-none` also removes the outline: here the outline comes back, in the system color. Outside the layers, so that it
+   wins over the utilities (`outline-none` sits in `@layer utilities`). */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

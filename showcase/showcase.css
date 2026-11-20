@@ -1,0 +1,54 @@
+/* The showcase compiles Tailwind itself, like an app: the toolkit's fonts and theme, the toolkit's sources and this
+   folder. `source(none)`: nothing else is scanned (the tests would bring in words such as "transition"). */
+@import "tailwindcss" source(none);
+@import "../src/styles/fonts.css";
+@import "../src/styles/theme.css";
+@source "../src";
+@source "./";
+@source not "../src/internal/motion-impl.tsx";
+
+/* Forced states, for the showcase only: an element with `data-force="hover"` (or `active`, `focus`) is drawn as if the
+   pointer were on it, as if it were pressed, or as if it had keyboard focus. The components' own classes are not
+   touched: the variants they use are redefined here, so every state can be seen at once, side by side. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+  &[data-force~="hover"] {
+    @slot;
+  }
+}
+@custom-variant active {
+  &:active {
+    @slot;
+  }
+  &[data-force~="active"] {
+    @slot;
+  }
+}
+@custom-variant focus {
+  &:focus {
+    @slot;
+  }
+  &[data-force~="focus"] {
+    @slot;
+  }
+}
+@custom-variant focus-visible {
+  &:focus-visible {
+    @slot;
+  }
+  &[data-force~="focus"] {
+    @slot;
+  }
+}
+@custom-variant focus-within {
+  &:focus-within {
+    @slot;
+  }
+  &[data-force~="focus"] {
+    @slot;
+  }
+}

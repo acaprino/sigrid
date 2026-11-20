@@ -1,0 +1,564 @@
+---
+version: alpha
+name: Acaprino Toolkit
+description: Shared design system of the owner's apps, ADHD first. Two mood colours set each theme; one accent shows where to look and what to click.
+x-zsd:
+  profile: "0.1"
+  kind: project
+  source:
+    method: hybrid
+    captured: 2026-11-20
+    paths:
+      - design/toolkit/src/styles/theme.css
+      - design/toolkit/src/theme-engine.ts
+      - design/toolkit/src/theme-catalog.ts
+      - design/toolkit/src/styles/fonts.css
+      - design/toolkit/src/components/ui
+      - design/toolkit/src/components
+      - design/toolkit/src/internal
+      - design/toolkit/docs/tokens.css
+      - design/toolkit/docs/component-inventory.md
+      - design/toolkit/showcase
+  review:
+    status: draft
+  intent:
+    audience: People who use the owner's apps to plan their day and deal with what comes in, many with ADHD.
+    primary-task: Capture, sort and act on items with one clear action at a time.
+    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
+    density: comfortable
+    theme: light and dark; each app passes its own theme definitions (the toolkit ships none, only the parametric engine and a gray baseline); each theme has two mood colours and one accent, and the user can make a palette of their own from one base colour
+    references:
+      - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
+      - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
+      - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
+      - "Owner rules of 2026-11-20 (R1 to R10 in the body)."
+      - "Owner revision of 2026-11-20, later the same day: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
+      - "Owner revision of 2026-11-20, evening: the colours belong to the app («il toolkit deve solo avere utilities di theming parametrico»): the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icon packs are Lucide, Fluent Color and Emoji."
+  preferences:
+    must-use:
+      - "R1: the chosen row of a list or of the navigation uses the theme's selection tint and stronger text, so the eye finds where it is; one selection tint for each view."
+      - "R2: the accent tells the ADHD eye where to look and what to click: the primary action, add actions, the current selection, the icons of the main views, progress, today and unread state, and focus. Everything else stays neutral, so the accent keeps its pull."
+      - "R3: one solid primary button on each screen; other actions are outline or text buttons."
+      - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
+      - "R5: counts are plain tabular numbers; key hints are plain 12px text, hidden at phone widths; pills only for labels."
+      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the icon pack the user chose in Settings, line or coloured; an empty slot keeps alignment."
+      - "R11: the default tone is Vivid: the accent's fills, the selection and the data colours more saturated, the lightness as the theme was designed (owner, 2026-11-20, from a comparison board). The settings offer three tones, Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and the lanes, so the three read apart at a glance (owner, 2026-11-20: «cambiando tono non vedo cambiamenti»)."
+      - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
+      - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
+      - "R7: radii 2, 4 and 6px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 40, 36 or 32px; icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every focusable control."
+      - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
+      - "R10: data colours of projects, areas, labels and events appear as 8px dots."
+    must-avoid:
+      - Side rails and accent bars on rows, cards or fields.
+      - A border and a shadow on the same element.
+      - Key hints drawn as boxes.
+      - Pills or badges for counts.
+      - Sparkles, bolts or info icons as decoration.
+      - Gradients.
+      - Glass or blur effects.
+      - Emoji in the interface, except the Emoji icon pack when the user picks it (R6).
+      - Looping animation, except loading skeletons.
+      - Colour values outside the theme engine.
+      - Data colours as filled blocks.
+    preserve:
+      - "Park UI native form: md controls are 40px with 14px text; the light sidebar is the default and the dark column stays an option."
+      - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
+      - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
+      - "Motion: the toolkit's own short tweens, only after a gesture, on by default so the segment thumb slides (owner, 2026-11-20), no springs, everything works with motion off or reduced."
+      - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
+      - "Accessibility exception to R7 (approved): with a coarse pointer every control grows to 44px (test/targets.test.tsx)."
+      - "Exception to R10 (approved): the colour picker shows 24px filled swatches; in a picker the colour is the content, not a data label."
+      - "One backdrop for every overlay that dims (sheet, drawer, dialog, viewer): the drop colour at 40%."
+      - "The checkbox keeps l1; --radius-check defaults to 9999px, so an app can round its own boxes (an app setting)."
+      - "Two font roles: the interface stack and the monospace stack of inline code."
+  implementation:
+    token-source: design/toolkit/src/styles/theme.css
+    component-sources:
+      - design/toolkit/src/components/ui
+      - design/toolkit/src/components
+      - design/toolkit/src/internal
+    style-sources:
+      - design/toolkit/src/theme-engine.ts
+      - design/toolkit/src/theme-catalog.ts
+      - design/toolkit/src/styles/theme.css
+    font-assets:
+      - design/toolkit/src/styles/fonts.css
+    image-assets: []
+    icon-assets:
+      - lucide-react
+      - "@fluentui/react-icons"
+      - "the device's colour emoji (the Emoji pack, no package)"
+    checks: design/toolkit/design-check.config.json
+  unresolved:
+    - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
+    - "Interface measurements at phone widths are not recorded."
+    - "The colour values below are an app's default theme from before 2026-11-19, not the toolkit's: the toolkit ships only the gray baseline (`BASE_THEME`); restate them as roles, or as the baseline's values."
+  layout:
+    content-max: 1152px
+    viewport-min: 320px
+  breakpoints:
+    md: 860px
+  border:
+    width-default: 1px
+    color-control: "{colors.control-border}"
+    color-divider: "{colors.divider}"
+  elevation:
+    xs: "0 1px 2px #14171726, 0 0 1px #14171730"
+    sm: "0 2px 4px #14171717, 0 0 1px #14171717"
+    md: "0 4px 8px #14171717, 0 0 1px #14171717"
+    lg: "0 8px 16px #14171717, 0 0 1px #14171717"
+    float: "0 16px 24px #14171717, 0 4px 8px #14171717, 0 0 1px #14171726"
+    xs-dark: "0 1px 1px #05060678, inset 0 0 1px #E3E5E554"
+    sm-dark: "0 2px 4px #05060678, inset 0 0 1px #E3E5E554"
+    md-dark: "0 4px 8px #05060678, inset 0 0 1px #E3E5E554"
+    lg-dark: "0 8px 16px #05060678, inset 0 0 1px #E3E5E554"
+    float-dark: "0 16px 24px #0506068C, inset 0 0 1px #E3E5E554"
+  motion:
+    duration-card: 140ms
+    duration-mark: 160ms
+    duration-popup: 200ms
+    duration-sheet: 200ms
+    duration-row: 220ms
+    duration-toast: 240ms
+    duration-press: 100ms
+    duration-tooltip: 120ms
+    duration-follow: 140ms
+    duration-turn: 160ms
+    duration-slide: 180ms
+    duration-list: 200ms
+    easing-standard: ease-out
+    easing-gesture: "cubic-bezier(0.2, 0, 0, 1)"
+    tooltip-delay: 500ms
+  icons:
+    size-md: 16px
+    size-sm: 14px
+    dot: 8px
+    stroke: 1.75
+    cap: round
+  layers:
+    tooltip: 45
+    overlay: 50
+    toasts: 70
+  accessibility:
+    target-min: "{spacing.touch-target}"
+    focus-width: 2px
+    focus-offset: 2px
+    focus-color: "{colors.accent-text}"
+    contrast-text: 4.5
+    contrast-control: 3
+  modes:
+    dark:
+      colors:
+        primary: "#267C77"
+        primary-hover: "#116E6A"
+        on-primary: "#F6FEFD"
+        accent-text: "#81C6C1"
+        accent-soft: "#0C3230"
+        selected: "#1A3634"
+        on-selected: "#DBF0EE"
+        surface: "#171919"
+        on-surface: "#E3E5E5"
+        surface-ground: "#101313"
+        surface-raised: "#242727"
+        text-soft: "#BCBEBE"
+        text-muted: "#989A9A"
+        divider: "#2F3232"
+        control-border: "#6E7171"
+        destructive: "#FF9A8D"
+        on-destructive: "#17161A"
+        destructive-soft: "#3D2420"
+        subtle-fill: "#232525"
+        backdrop: "#05060666"
+colors:
+  primary: "#006F6B"
+  primary-hover: "#00615D"
+  on-primary: "#FFFFFF"
+  accent-text: "#006F6B"
+  accent-soft: "#D4F3F0"
+  selected: "#CEEEEB"
+  on-selected: "#00504D"
+  surface: "#FAFCFC"
+  on-surface: "#141717"
+  surface-ground: "#F0F3F3"
+  surface-raised: "#FFFFFF"
+  text-soft: "#3B3E3E"
+  text-muted: "#616464"
+  divider: "#DEE0E0"
+  control-border: "#87898A"
+  destructive: "#AD2A1E"
+  on-destructive: "#FFFFFF"
+  destructive-soft: "#FEF1EF"
+  subtle-fill: "#ECEEEE"
+  backdrop: "#14171766"
+typography:
+  headline-md:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 16px
+    fontWeight: 600
+    lineHeight: 1.5
+    letterSpacing: 0px
+  body-lg:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: 0px
+  body-md:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.43
+    letterSpacing: 0px
+  body-sm:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 13px
+    fontWeight: 400
+    lineHeight: 1.38
+    letterSpacing: 0px
+  label-md:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 14px
+    fontWeight: 600
+    lineHeight: 1.43
+    letterSpacing: 0px
+  label-sm:
+    fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
+    fontSize: 12px
+    fontWeight: 500
+    lineHeight: 1.5
+    letterSpacing: 0px
+  code-sm:
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace"
+    fontSize: 13px
+    fontWeight: 400
+    lineHeight: 1.38
+    letterSpacing: 0px
+spacing:
+  hairline: 2px
+  xs: 4px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 24px
+  section: 32px
+  control-xs: 32px
+  control-sm: 36px
+  control-md: 40px
+  touch-target: 44px
+  pad-xs: 10px
+  pad-md: 14px
+rounded:
+  l1: 2px
+  l2: 4px
+  l3: 6px
+  full: 9999px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-hover}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  button-outline:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  button-secondary:
+    backgroundColor: "{colors.subtle-fill}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  button-ghost:
+    textColor: "{colors.text-soft}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  button-destructive:
+    backgroundColor: "{colors.destructive-soft}"
+    textColor: "{colors.destructive}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  input:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.md}"
+    height: "{spacing.control-md}"
+  checkbox-checked:
+    backgroundColor: "{colors.on-surface}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.l1}"
+  segment-thumb:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.label-md}"
+    rounded: "{rounded.l3}"
+    padding: "{spacing.pad-md}"
+    height: "{spacing.control-md}"
+  label-pill:
+    backgroundColor: "{colors.subtle-fill}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.label-sm}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.sm}"
+  key-hint:
+    textColor: "{colors.text-muted}"
+    typography: "{typography.label-sm}"
+  menu:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l3}"
+    padding: "{spacing.xs}"
+  menu-item-highlighted:
+    backgroundColor: "{colors.surface-ground}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.sm}"
+    height: "{spacing.control-md}"
+  overlay-card:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.on-surface}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l3}"
+    padding: "{spacing.lg}"
+  tooltip:
+    backgroundColor: "{colors.on-surface}"
+    textColor: "{colors.surface}"
+    typography: "{typography.label-sm}"
+    rounded: "{rounded.l2}"
+    padding: "{spacing.sm}"
+  toast:
+    backgroundColor: "{colors.on-surface}"
+    textColor: "{colors.surface}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l3}"
+    padding: "{spacing.lg}"
+  calendar-day-selected:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l2}"
+    height: "{spacing.control-sm}"
+  accent-label:
+    backgroundColor: "{colors.accent-soft}"
+    textColor: "{colors.accent-text}"
+    typography: "{typography.label-sm}"
+    rounded: "{rounded.l2}"
+  selection-row:
+    backgroundColor: "{colors.selected}"
+    textColor: "{colors.on-selected}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.l2}"
+  backdrop:
+    backgroundColor: "{colors.backdrop}"
+  description:
+    textColor: "{colors.text-muted}"
+    typography: "{typography.body-md}"
+  control-boundary:
+    backgroundColor: "{colors.control-border}"
+    size: 1px
+  separator:
+    backgroundColor: "{colors.divider}"
+    size: 1px
+---
+
+# Acaprino Toolkit
+
+## Overview
+
+The toolkit is the shared design system of the owner's apps. Ark UI and Base UI supply behaviour, Park UI recipes the form, the theme engine every colour. Apps pass their own themes; these values are examples. The owner rules R1 to R13 are in `x-zsd.preferences`.
+
+### Implementation
+
+Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Use the showcase (`npm run showcase`) to see each component in each state.
+
+## Colors
+
+- `primary`: Use for the fill of the one solid action, the chosen calendar day and main-view icons.
+- `primary-hover`: Use for the solid action under the pointer.
+- `on-primary`: Use for text on `primary` and `primary-hover`.
+- `accent-text`: Use for today, unread, add actions, progress and the focus ring.
+- `accent-soft`: Use for the accent tint behind accent text.
+- `selected`: Use for the current selection and the navigation's chosen row, one tint per view.
+- `on-selected`: Use for text on `selected`.
+- `surface`: Use for the page, inputs and outline buttons.
+- `on-surface`: Use for body text, checked boxes, the tooltip and the toast surface.
+- `surface-ground`: Use for lanes, the segment track, quiet fills and highlighted items.
+- `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb.
+- `text-soft`: Use for secondary text and the label of the plain button.
+- `text-muted`: Use for placeholders, descriptions, metadata and key hints. It keeps 4.5:1.
+- `divider`: Use for decorative lines only. It stays below 3:1.
+- `control-border`: Use for the border of inputs, selects, checkboxes and outline buttons. It keeps 3:1.
+- `destructive`: Use for destructive text and invalid borders.
+- `on-destructive`: Use for text on a filled `destructive` surface.
+- `destructive-soft`: Use for the fill of the destructive button.
+- `subtle-fill`: Use for quiet fills: the secondary button, label pills and chips (`QUIET_CHIP`). The code draws it as the ink at 6%: the value is that fill over `surface`.
+- `backdrop`: Use behind every overlay that dims the page (`BACKDROP`). It is the drop colour at 40%.
+
+### Data colours
+
+Eighteen user colours and eight label pairs come from the engine. Show them as dots of `x-zsd.icons.dot` size. Each dot keeps 3:1.
+
+Approved exception: the colour picker (`Swatches`) shows filled swatches.
+
+## Typography
+
+- `headline-md`: Use for dialog, sheet and empty-state titles.
+- `body-lg`: Use for field text below the `md` breakpoint, so phones do not zoom.
+- `body-md`: Use for body text, menu items and field text.
+- `body-sm`: Use for dates and counts beside a title.
+- `label-md`: Use for button and segment labels.
+- `label-sm`: Use for badges, key hints, tooltips and section labels.
+- `code-sm`: Use for inline code in notes (`font-mono`).
+
+Use weights 400, 500 and 600 only. Use tabular numbers for counts.
+
+## Layout
+
+Use the `xs` to `section` spacing steps. Put controls at `control-md`; use `control-sm` and `control-xs` only in dense rows. Park padding values `pad-md`, `pad-xs` and `hairline` stay inside controls and lists.
+
+### Responsive behavior
+
+Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer every control grows to `touch-target` (approved exception to R7). Key hints disappear on a phone (narrow and coarse).
+
+## Elevation & Depth
+
+Raised surfaces use a shadow from `x-zsd.elevation` and no border. Inputs, selects and outline buttons use a border and no shadow.
+
+- Use `xs` for the segment thumb, board cards and file tiles.
+- Use `sm` for the tooltip, `md` for menus and select lists.
+- Use `lg` for popovers, dialogs, sheets, toasts and the date card.
+- Use `float` for a dragged item.
+
+The shadow colour is the ink in light mode and a near black in dark mode. In dark mode an inner ring of `on-surface` replaces the outer ring.
+
+## Shapes
+
+- `l1`: Use for parts inside a control: checkbox, chip, select item.
+- `l2`: Use for controls: buttons, fields, selects, badges, menu items, the tooltip.
+- `l3`: Use for surfaces that hold controls: menus, popovers, dialogs, toasts, the segment group, file tiles.
+- `full`: Use for avatars, dots, radios and switches only.
+
+The checkbox keeps `l1`. `--radius-check` defaults to `full`, so an app can round its own boxes.
+
+## Components
+
+### Button
+
+Use `button-primary` for the one solid action of a screen and `button-primary-hover` under the pointer. Use `button-outline` or `button-secondary` for other actions, `button-ghost` for the weakest, and `button-destructive` for a delete. Disabled buttons drop to half opacity and take no pointer.
+
+With `loading` a button keeps its size and focus and ignores clicks; `loadingText` can replace the label. There is no spinner.
+
+### Input
+
+Use `input` with a visible label. An invalid value turns the border `destructive`. Selects, date fields and the chips field use the same border and height.
+
+### Select
+
+With `invalid` the border is `destructive`. With `disabled` the select drops to half opacity.
+
+### Checkbox
+
+Use `checkbox-checked` for the checked and indeterminate boxes. The fill is ink, not the accent.
+
+### Segment
+
+Use `segment-thumb` for the chosen item of a single-choice group. The thumb slides only with `animated`.
+
+### Label
+
+Use `label-pill` for a user label, with a dot in its colour. Never use a pill for a count.
+
+### Accent
+
+Use `accent-label` only for today or unread state.
+
+### Selection
+
+Use `selection-row` with stronger text for the current selection and the navigation's chosen row, one tint for each view. A hovered item uses `surface-ground`.
+
+### Description
+
+Use `description` for the sentence under a title.
+
+### Control
+
+Use `control-boundary` as the border colour of inputs, selects, checkboxes and outline buttons.
+
+### Separator
+
+Use `separator` for decorative lines between groups.
+
+### Key
+
+Use `key-hint` after an action label. Inside a filled button the hint takes the button text colour.
+
+### Menu
+
+Use `menu` for menus and select lists, and `menu-item-highlighted` for the item under the pointer or keyboard. Put destructive items last, after a separator.
+
+### Overlay and backdrop
+
+Use `overlay-card` for popovers, dialogs, sheets and the date card. Dialog and sheet titles use `headline-md`. Use `backdrop` behind them.
+
+### Tooltip
+
+Use `tooltip` to repeat the name of an icon-only button. It never holds new information.
+
+### Toast
+
+Use `toast` for the result of an action. Undo and quick choices sit in the toast; Esc does not close it.
+
+### Calendar
+
+Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` dash under the number.
+
+## Do's and Don'ts
+
+- Do keep one solid primary action on each screen.
+- Do give navigation items and headings an icon (R6).
+- Do show data colours as dots.
+- Do write key hints as plain text.
+- Do not add a rail or an accent bar to a row.
+- Do not put a count in a pill.
+- Do not add a colour outside the theme engine.
+
+## Motion
+
+Motion runs only after a gesture, `animated` on by default. Popups enter in `duration-popup`, sheets in `duration-sheet`, toasts move in `duration-toast`. Gestures use `easing-gesture` and their own `duration-*` tokens; there are no springs. With reduced motion every state changes at once. Nothing loops, except loading skeletons.
+
+## Iconography
+
+Use the chosen icon pack (R6); Lucide, the default, keeps the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button an accessible name and a tooltip. A row without an icon keeps an empty slot.
+
+## Imagery
+
+Thumbnails show the image of an attachment, cropped to a square. The image has an empty alternative text because the row names it.
+
+## Accessibility
+
+Every focusable control shows the ring of `x-zsd.accessibility`: width, offset and colour. Inside the inverted toast the ring takes the toast text colour. Text keeps 4.5:1 and control borders and rings keep 3:1 on every surface of every theme; `test/contrast.test.ts` and `test/theme-engine.test.ts` check this. Hidden inputs show focus through their label.
+
+### Review checks
+
+Open items stay in `x-zsd.unresolved`. Each approved deviation from Ark UI or Park UI names its decision in `docs/component-inventory.md`.

@@ -1,0 +1,154 @@
+/*
+ * @acaprino/toolkit: the design tokens as the code holds them (extracted 2026-11-20, Marionette step
+ * `design-system-extract`). A reference, not a stylesheet the package loads: the live sources stay
+ * `src/styles/theme.css` (first paint, Tailwind `@theme`), `src/theme-engine.ts` (`themeTokens`, `shapeOf`,
+ * `elevationOf`), `src/theme-catalog.ts` (themes and fonts) and `src/internal/motion-impl.tsx` (durations).
+ * Every value below names the file it was read from. Colours are those of the default theme (Neutral, `neutro`) in
+ * light and dark: every other theme is computed by the engine from `theme-catalog.ts` with the same rules, so its
+ * values differ while the names and the guarantees do not. Values the code does not define are listed at the end as
+ * gaps, not invented.
+ */
+
+/* ———— Colour, light (src/styles/theme.css `@theme`, = themeTokens('neutro', 'light')) ———— */
+:root {
+  /* Surfaces */
+  --color-paper: #fafcfc;          /* the page */
+  --color-paper-2: #f0f3f3;        /* lanes, headers, quiet fills, the segment track */
+  --color-sidebar-paper: #edf0f0;  /* the light sidebar (Park's ground) */
+  --color-raised: #ffffff;         /* sheets, cards, menus, popovers, the segment thumb */
+  /* Ink: three levels, each >= 4.5:1 on paper, paper-2, raised and the sidebar (test/contrast.test.ts) */
+  --color-ink: #141717;
+  --color-ink-soft: #3b3e3e;
+  --color-ink-mute: #616464;
+  /* Lines */
+  --color-line: #dee0e0;           /* decorative dividers: < 3:1 on purpose */
+  --color-input: #87898a;          /* control borders: >= 3:1 (approved deviation from Park's step-7 border) */
+  /* Accent: text, fill, tint */
+  --color-accent: #006f6b;         /* accent as text: >= 4.5:1 on every background and on accent-soft */
+  --color-accent-hover: #00615d;   /* the solid button under the pointer */
+  --color-accent-soft: #d4f3f0;    /* the accent tint */
+  --color-primary: #006f6b;        /* the solid button fill (light: = accent) */
+  --color-primary-foreground: #ffffff;
+  --color-selected: #ceeeeb;       /* the selection tint */
+  --color-selected-ink: #00504d;
+  /* Focus */
+  --color-ring: #141717;           /* the focus ring: the ink (before the polish pass; rule 8 asks for accent text) */
+  /* Fixed for every theme (src/theme-engine.ts FIXED) */
+  --color-destructive: #ad2a1e;
+  --color-destructive-soft: #fef1ef;
+  --color-destructive-foreground: #ffffff;
+  --color-mark-ink-light: #ffffff;
+  --color-mark-ink-dark: #1b1916;
+  /* The shadow colour (src/theme-engine.ts `drop`: the ink in light) */
+  --color-drop: #141717;
+  /* shadcn aliases kept for the primitives (theme.css): background = paper, foreground = ink, card = popover =
+     raised, secondary = muted = paper-2, muted-foreground = ink-mute, border = line. */
+  /* Data colours: 18 user colours adapted per theme, as dots (`--color-mark-N`, >= 3:1) and icons
+     (`--color-mark-icon-N`, >= 3.5:1); 8 label pairs `--tag-N-bg`/`--tag-N-ink` (>= 4.5:1); 3 priority dots
+     `--prio-N` (>= 3:1). Values: src/styles/theme.css. */
+}
+
+/* ———— Colour, dark (src/styles/theme.css `prefers-color-scheme: dark`, = themeTokens('neutro', 'dark')) ———— */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #171919;
+    --color-paper-2: #101313;
+    --color-sidebar-paper: #101313;
+    --color-raised: #242727;
+    --color-ink: #e3e5e5;
+    --color-ink-soft: #bcbebe;
+    --color-ink-mute: #989a9a;
+    --color-line: #2f3232;
+    --color-input: #6e7171;
+    --color-accent: #81c6c1;
+    --color-accent-hover: #116e6a;
+    --color-accent-soft: #0c3230;
+    --color-primary: #267c77;
+    --color-primary-foreground: #f6fefd;
+    --color-selected: #1a3634;
+    --color-selected-ink: #dbf0ee;
+    --color-ring: #e3e5e5;
+    --color-destructive: #ff9a8d;
+    --color-destructive-soft: #3d2420;
+    --color-destructive-foreground: #17161a;
+    --color-drop: #050606;
+  }
+}
+
+/* ———— Typography (src/styles/theme.css `@theme`, src/theme-catalog.ts FONTS, src/styles/fonts.css) ———— */
+:root {
+  --font-sans: "IBM Plex Sans", "Inter", system-ui, sans-serif;  /* 12 more stacks in theme-catalog.ts FONTS */
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;  /* inline code (DESIGN.md code-sm) */
+  --text-2xs: 0.75rem;   --text-2xs--line-height: 1.5;              /* 12/18: labels, keys, captions */
+  --text-xs: 0.8125rem;  --text-xs--line-height: calc(1.125 / 0.8125); /* 13/18: dates and counts beside a title */
+  --text-sm: 0.875rem;   --text-sm--line-height: calc(1.25 / 0.875);  /* 14/20: body and controls (md and up) */
+  --text-base: 1rem;     --text-base--line-height: 1.5;               /* 16/24: titles; fields below 860px */
+  /* Weights loaded: 400, 500, 600, 700 (IBM Plex Sans, fonts.css). Weights used by the components: 400, 500, 600. */
+}
+
+/* ———— Spacing (Tailwind 4 default: --spacing: 0.25rem, a 4px step; not redefined by the toolkit) ———— */
+:root {
+  --spacing: 0.25rem;
+  /* Control padding in use (src/components/ui/*): 10px (xs button), 12px (sm button, field, select), 14px (md
+     button, segment item); between items of a list 2px (menu, select: Park's gap 0.5); overlay padding 16px, 24px
+     from 768px (dialog). */
+}
+
+/* ———— Shape (src/theme-engine.ts `shapeOf`, src/styles/theme.css `@theme`) ———— */
+:root {
+  --radius-sm: 2px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
+  --radius-md: 4px;      /* Park l2: controls (buttons, fields, selects, badges, menu items) */
+  --radius-lg: 6px;      /* Park l3: what holds controls (cards, menus, popovers, dialogs, toasts, the segment group) */
+  --radius-xl: 6px;      /* = l3: there is no fourth level */
+  --radius-button: 4px;
+  --radius-chip: 4px;
+  --radius-check: 9999px; /* round boxes an app may give its own checkboxes; the toolkit's Checkbox uses rounded-sm */
+  --icon-stroke: 1.75;
+  --icon-cap: round;
+  --icon-join: round;
+  --row-py: 10px;
+  --nav-py: 8px;
+  --border-width: 1px;
+}
+
+/* ———— Elevation (src/theme-engine.ts `elevationOf`; Park's shadows tokens) ———— */
+:root {
+  --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
+  --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+  --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+  --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
+  --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  /* Dark: 0 Npx 2Npx drop at 47% (float 55%), with `inset 0 0 1px` ink at 33% in place of the outer ring. */
+}
+
+/* ———— Layers (src/components/ui/*, src/internal/overlay.ts) ———— */
+:root {
+  /* an app's own drawer: 40 (outside the toolkit); tooltip: 45; dialogs, sheets, menus, selects, popovers, date card: 50;
+     toasts: 70 (TOASTS_LAYER). */
+}
+
+/* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ———— */
+:root {
+  /* Durations (DURATION_MS): toast 240ms, row 220ms, sheet 200ms, popup 200ms, mark 160ms, card 140ms; ease-out.
+     Gestures (GESTURE_MS, easing cubic-bezier(0.2, 0, 0, 1)): press 100ms, tooltip 120ms, follow 140ms, turn 160ms,
+     slide 180ms, list 200ms. No springs. Tooltip delay 500ms (TOOLTIP_DELAY_MS). */
+}
+
+/* ———— Breakpoints and sizes (src/styles/theme.css, src/internal/media.ts) ———— */
+:root {
+  /* --breakpoint-md: 860px (the sidebar stops being a drawer). Phone = (width < 860px) and (pointer: coarse).
+     Control heights: 40px (md), 36px (sm), 32px (xs), 44px (button lg, and every control with a coarse pointer). */
+}
+
+/*
+ * Gaps (not defined by the source; left open for the owner):
+ * - no `--text-lg` / `--text-xl` / `--text-2xl` of the toolkit: Tailwind's defaults (18/20/24px) are reachable and
+ *   three components use `text-lg` (18px), which no token names;
+ * - no z-index scale as tokens: the layers are literal utilities in each component;
+ * - no named spacing scale beyond Tailwind's 4px step; no letter-spacing tokens (one literal 0.07em, attachments
+ *   heading);
+ * - no token for the focus ring's width and offset (each component writes its own: 3px box-shadow at 50%, 2px
+ *   outline with offset 1px, 2px or 6px);
+ * - no 12-step (Park/Radix) palette: the engine computes each role in OKLCH, so "step 11" and "step 12" have no
+ *   names in the code.
+ */

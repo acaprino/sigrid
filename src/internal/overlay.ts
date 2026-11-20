@@ -1,0 +1,64 @@
+import type { RefObject } from 'react'
+
+/** Marks the stack of notices: it lets a modal window recognize it (see `ignoreToasts`). */
+export const TOASTS_ATTR = 'data-toasts'
+
+/**
+ * The one backdrop of every overlay that dims the page (the owner's decision of 2026-11-20): dialog, sheet, drawer,
+ * the attachment viewer and an app's own drawer. The theme engine's `drop` colour (the ink in light, a near-black in
+ * dark) at 40%: DESIGN.md `colors.backdrop`.
+ */
+export const BACKDROP = 'bg-drop/40'
+
+/** The layer of notices: above every backdrop and sheet (windows use `z-50`), even when a modal is open. */
+export const TOASTS_LAYER = 'z-[70]'
+
+/**
+ * The space the stack of notices takes at the bottom (its height and the 16px from below), written by `Toasts` on the
+ * document root: 0px without notices. Sheets reserve it so the notices do not cover their foot.
+ */
+export const TOASTS_ROOM_VAR = '--toasts-room'
+
+/**
+ * The bottom padding of a sheet, at every width: 1.5rem (the sheet's `p-6`) or the space of the notices, if greater.
+ * Without notices the variable is 0px and the sheet does not change. It used to apply only below 860px: above that, the
+ * stack centered at the bottom covered the foot of the sheet on the right (the controls an app puts there).
+ */
+export const SHEET_TOASTS_ROOM = 'pb-[max(1.5rem,calc(var(--toasts-room,0px)_+_0.5rem))]'
+
+/**
+ * The space an app's bottom bar takes at the bottom of the window (for example a tab bar on the phone, with the safe
+ * area): the app sets it on the root (`0px` or unset without a bar), and the stack of notices sits that much higher.
+ * The toolkit only reads it (`Toasts`).
+ */
+export const BOTTOM_BAR_ROOM_VAR = '--bottom-bar-room'
+
+const inToasts = (target: EventTarget | null): boolean => target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
+
+/**
+ * For the `onInteractOutside` of a modal window: a click on a notice (or focus arriving there) does not close it.
+ * The notice sits outside the window but the window was not «left»: the user is just undoing the last action.
+ * The caller's handler, if there is one, speaks first and can decide.
+ */
+export function ignoreToasts<E extends Event>(next?: (event: E) => void) {
+  return (event: E) => {
+    next?.(event)
+    if (!event.defaultPrevented && inToasts(event.target)) event.preventDefault()
+  }
+}
+
+/**
+ * For the `onCloseAutoFocus` of a window opened from state (without a Radix `Trigger` that can take focus back):
+ * first the caller's handler, which can decide (`preventDefault`); otherwise, focus goes to `restoreFocusTo`.
+ * Without either of the two, Radix's behavior remains.
+ */
+export function restoreFocus<E extends Event>(next?: (event: E) => void, restoreFocusTo?: RefObject<HTMLElement | null> | undefined) {
+  return (event: E) => {
+    next?.(event)
+    const target = restoreFocusTo?.current
+    if (!event.defaultPrevented && target) {
+      event.preventDefault()
+      target.focus()
+    }
+  }
+}

@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  toolkit:
+    name: design checks, typecheck and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: install
+        run: npm ci
+
+      # DESIGN.md is a valid zero-slop-design file (tools/zero-slop-design, a copy of the tool: no npm package).
+      - name: lint DESIGN.md
+        run: npm run design:lint
+
+      # New code with a colour, palette class, arbitrary size, font or effect that DESIGN.md does not permit fails.
+      - name: check the code against DESIGN.md
+        run: npm run design:check
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: test
+        run: npm test

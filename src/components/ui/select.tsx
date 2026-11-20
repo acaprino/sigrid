@@ -1,0 +1,131 @@
+// SmoothUI (MIT) select 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/select.json)
+// Park UI (MIT) select 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts)
+// From Park's `select` recipe comes the form: its outline variant at the md size for the button (40px, l2 corners, 12px
+// of side padding, a border and no fill, as the fields; 36px at `size="sm"`; R4: a border, never a shadow too; open, the
+// border is the ink), and its list (l2 corners, md elevation in place
+// of a border, 4px of padding, items 40px tall with l1 corners and a quiet fill on the highlighted one). The text is
+// 14px, not Park's 16px (the type scale of the app). The button's border stays `border-input` (3:1, WCAG 1.4.11):
+// Park's outline border is lighter.
+// From SmoothUI we keep the data API (`options`: `{ value, label }`, `value`/`onValueChange`, `aria-label`, `id` on the
+// button), the shape (button with an arrow, card with the list and the check mark on the chosen item) and the classes
+// of the card. SmoothUI's hand-made listbox (createPortal + computed position) is replaced by the primitive
+// `Select` from Base UI (Root, Trigger, Value, Icon, Portal, Positioner, Popup, List, Item, ItemText, ItemIndicator): so
+// keyboard (arrows, type-ahead, Enter, Esc), ARIA roles and the portal nested in a modal sheet come from the
+// primitive. Removed: springs, staggering and hover shift: no animation (the component has no `animated`).
+// States from Park's recipe (the owner's decision of 2026-11-20): `disabled` is the toolkit's disabled look (half
+// opacity, no pointer, out of the Tab order: Base UI's `disabled`), `invalid` sets `aria-invalid` and turns the 3:1
+// control border into the destructive colour, also while the list is open (Park's `_invalid`).
+// A value that is not among the options leaves the button empty (like the previous `<option hidden>`) and cannot be chosen.
+import * as React from "react"
+import { Select as SelectPrimitive } from "@base-ui/react/select"
+import { Check, ChevronDown } from "lucide-react"
+import { cn } from "../../lib/utils"
+import { FOCUS_RING } from "../../lib/focus"
+import { usePortalContainer } from "../PortalContainer"
+
+/**
+ * An option: a value and its label. An app can add its own fields (`O extends SelectOption`) and draw them before the
+ * label with `renderMark` (a coloured shape, for example): the mark is the app's, the list is the toolkit's.
+ */
+export type SelectOption = { value: string; label: string }
+export type SelectGroup<O extends SelectOption = SelectOption> = { label: string; options: O[] }
+
+export type SelectProps<O extends SelectOption = SelectOption> = {
+  options: O[]
+  value: string
+  onValueChange: (value: string) => void
+  id?: string
+  "aria-label"?: string
+  className?: string
+  size?: "sm" | "default"
+  /** Grouped options, with a non-selectable heading (Base UI's `Select.Group`), after `options`. */
+  groups?: SelectGroup<O>[] | undefined
+  /** The button text when the value is not among the options (default: empty, as before). */
+  placeholder?: string | undefined
+  /** The mark drawn before an option's label in the list (`aria-hidden`), or null for none. Absent: no mark. */
+  renderMark?: ((option: O) => React.ReactNode) | undefined
+  /** The value cannot be changed: half opacity, no pointer, not reachable with Tab (Base UI's `disabled`). */
+  disabled?: boolean | undefined
+  /** The value is not accepted: `aria-invalid` and the control border in the destructive colour. */
+  invalid?: boolean | undefined
+}
+
+const ITEM_CLASS =
+  "relative flex min-h-10 cursor-default items-center gap-2 rounded-sm py-2 pr-8 pl-2 text-sm outline-none select-none pointer-coarse:min-h-11 data-[highlighted]:bg-paper-2 data-[disabled]:opacity-50"
+
+function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
+  return (
+    <SelectPrimitive.Item value={o.value} data-slot="select-item" className={ITEM_CLASS}>
+      {renderMark ? renderMark(o) : null}
+      <SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
+        <Check className="size-4" aria-hidden />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  )
+}
+
+function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid = false, ...aria }: SelectProps<O>) {
+  const container = usePortalContainer()
+  const all = groups ? [...options, ...groups.flatMap((g) => g.options)] : options
+  const label = all.find((o) => o.value === value)?.label ?? placeholder ?? ""
+  return (
+    <SelectPrimitive.Root
+      value={value}
+      disabled={disabled}
+      onValueChange={(next) => {
+        if (typeof next === "string" && next !== value) onValueChange(next)
+      }}
+    >
+      <SelectPrimitive.Trigger
+        id={id}
+        aria-label={aria["aria-label"]}
+        aria-invalid={invalid || undefined}
+        data-slot="select-trigger"
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent pr-2.5 pl-3 text-left text-sm pointer-coarse:min-h-11",
+          invalid ? "border-destructive" : "data-[popup-open]:border-ink",
+          disabled && "pointer-events-none cursor-not-allowed opacity-50",
+          FOCUS_RING,
+          size === "sm" ? "h-9 w-auto" : "h-10",
+          className,
+        )}
+      >
+        <SelectPrimitive.Value data-slot="select-value" className="truncate">
+          {() => label}
+        </SelectPrimitive.Value>
+        <SelectPrimitive.Icon className="shrink-0 text-ink-mute" aria-hidden>
+          <ChevronDown className="size-4" />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+      <SelectPrimitive.Portal container={container}>
+        <SelectPrimitive.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-50 outline-none">
+          <SelectPrimitive.Popup
+            data-slot="select-content"
+            className="flex max-h-80 min-w-[max(var(--anchor-width),10rem)] flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md outline-none"
+          >
+            <SelectPrimitive.List>
+              {options.map((o) => (
+                <OptionItem key={o.value} o={o} renderMark={renderMark} />
+              ))}
+              {groups?.map((g) =>
+                g.options.length ? (
+                  <SelectPrimitive.Group key={g.label} data-slot="select-group" className="mt-1 first:mt-0">
+                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className="flex h-10 items-center px-2 text-sm font-medium text-ink-mute">
+                      {g.label}
+                    </SelectPrimitive.GroupLabel>
+                    {g.options.map((o) => (
+                      <OptionItem key={o.value} o={o} renderMark={renderMark} />
+                    ))}
+                  </SelectPrimitive.Group>
+                ) : null,
+              )}
+            </SelectPrimitive.List>
+          </SelectPrimitive.Popup>
+        </SelectPrimitive.Positioner>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
+  )
+}
+
+export { Select }

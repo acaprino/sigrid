@@ -1,0 +1,103 @@
+/**
+ * The theme and the font on an element: how a choice (a theme definition in a scheme, with its own colours, a tone or a
+ * palette; a font) becomes CSS variables and attributes. Parametric: the app passes its own theme definitions. The
+ * blocks of `styles/theme.css` carry `BASE_THEME` for the first paint, before the script sets the
+ * choice (`test/first-paint.test.ts` keeps them equal to the computation); an app paints its own default over them.
+ */
+import { DEFAULT_FONT, FONTS } from './theme-catalog'
+import type { FontDef, FontId, ThemeDef } from './theme-catalog'
+import { themeTokens, tokensFor } from './theme-engine'
+import type { OwnTheme, ThemeScheme, ThemeTokens, ThemeTone } from './theme-engine'
+import { paletteTheme } from './palette'
+import type { PalettePick } from './palette'
+
+export type { ThemeScheme } from './theme-engine'
+
+/** A theme in one of the two schemes: what is seen. */
+export interface ThemePick {
+  readonly theme: ThemeDef
+  readonly scheme: ThemeScheme
+  /** The user's own theme on top of this one (an accent, and how the rest follows); absent or null, the theme as it is. */
+  readonly own?: OwnTheme | null
+  /** The tone of the colors (more or less saturated, lighter or darker); absent or null, as the theme was designed. */
+  readonly tone?: ThemeTone | null
+  /** The user's palette from one base colour: when present it replaces the theme and its own colours. */
+  readonly palette?: PalettePick | null
+}
+
+/** The tokens of a pick: the palette from one colour when there is one, otherwise the theme with its own colours. */
+function tokensOf(pick: ThemePick): ThemeTokens {
+  return pick.palette ? tokensFor(paletteTheme(pick.palette), pick.scheme, pick.tone) : themeTokens(pick.theme, pick.scheme, pick.own, pick.tone)
+}
+
+/** A plain gray theme with no accent: the toolkit's baseline for the first paint and the names of the variables. */
+export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
+
+/** The root attributes that carry the theme and the font: another document that shows part of the app copies them (`copyTheme`). */
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-rows', 'data-selection', 'data-sidebar', 'data-font'] as const
+
+/** The font variable, written by `applyFont`. */
+export const FONT_VARIABLE = '--font-sans'
+
+/** The names of the variables that `applyTheme` and `applyFont` write: they are the same for every theme and scheme. */
+export const THEME_VARIABLES: readonly string[] = (() => {
+  const t = themeTokens(BASE_THEME, 'light')
+  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), FONT_VARIABLE]
+})()
+
+export function isFontId(value: unknown): value is FontId {
+  return FONTS.some((f) => f.id === value)
+}
+export function fontById(id: FontId): FontDef {
+  return (FONTS as readonly FontDef[]).find((f) => f.id === id) ?? FONTS[0]
+}
+
+/** The CSS variables of a theme in a scheme, as an inline style (the picker's thumbnails, or the root). */
+export function themeVariables(pick: ThemePick): Record<string, string> {
+  const t = tokensOf(pick)
+  return { ...Object.fromEntries(Object.entries(t.colors).map(([k, v]) => [`--color-${k}`, v])), ...t.shape }
+}
+
+/**
+ * Puts a theme in a scheme on an element: the color and shape variables as an inline style, and the attributes
+ * (`data-theme`, `data-scheme` and the shape ones). On the document root it also updates the browser bar's
+ * color (`<meta name="theme-color">`) with the paper.
+ */
+export function applyTheme(el: HTMLElement, pick: ThemePick): void {
+  const t = tokensOf(pick)
+  for (const [k, v] of Object.entries(themeVariables(pick))) el.style.setProperty(k, v)
+  el.setAttribute('data-theme', t.theme)
+  el.setAttribute('data-scheme', t.scheme)
+  for (const [k, v] of Object.entries(t.attributes)) el.setAttribute(k, v)
+  if (el === el.ownerDocument.documentElement) {
+    for (const meta of el.ownerDocument.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) meta.content = t.colors['paper']!
+  }
+}
+
+/**
+ * Puts a font on an element: `--font-sans` (which `body` and the `font-sans` class use) and `data-font`. IBM Plex Sans,
+ * the default, removes both: the one from `@theme` applies.
+ */
+export function applyFont(el: HTMLElement, font: FontId): void {
+  if (font === DEFAULT_FONT) {
+    el.style.removeProperty(FONT_VARIABLE)
+    el.removeAttribute('data-font')
+    return
+  }
+  el.style.setProperty(FONT_VARIABLE, fontById(font).stack)
+  el.setAttribute('data-font', font)
+}
+
+/** Copies the theme and font of one element onto another (separate windows copy those of the main one). */
+export function copyTheme(from: HTMLElement, to: HTMLElement): void {
+  for (const name of THEME_ATTRIBUTES) {
+    const value = from.getAttribute(name)
+    if (value === null) to.removeAttribute(name)
+    else to.setAttribute(name, value)
+  }
+  for (const name of THEME_VARIABLES) {
+    const value = from.style.getPropertyValue(name)
+    if (value === '') to.style.removeProperty(name)
+    else to.style.setProperty(name, value)
+  }
+}

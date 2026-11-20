@@ -1,0 +1,27 @@
+{
+  "root": "src",
+  "known": "design-check.known.json",
+  "ignore": [
+    "theme-engine.ts",
+    "theme-catalog.ts",
+    "colors.ts",
+    "styles/theme.css"
+  ],
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".css"
+  ],
+  "rules": {
+    "color-value": "error",
+    "color-function": "error",
+    "palette-class": "error",
+    "dimension-value": "error",
+    "font-family": "error",
+    "avoid-gradient": "error",
+    "avoid-blur": "error",
+    "avoid-emoji": "error",
+    "exception-reason": "error",
+    "avoid-shadow": "off"
+  }
+}

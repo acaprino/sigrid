@@ -1,0 +1,22 @@
+/* Only for dist/styles.css (a page that does not compile Tailwind itself): an app compiles Tailwind by importing theme.css. */
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./theme.css";
+@source "../";
+/* The Motion piece has no classes, but words like Motion's properties would make motion utilities appear. */
+@source not "../internal/motion-impl.tsx";
+/* The showcase (development only) is not part of the package: its classes stay out of the distributed CSS. */
+@source not "../../showcase";
+/* Nor are the design documents: they name classes the rules forbid, as examples. */
+@source not "../../docs";
+@source not "../../DESIGN.md";
+/* Nor is the copy of the design-check tool (tools/zero-slop-design). */
+@source not "../../tools";
+/* Tailwind also reads the package root by itself, tests included: the tests say "transition" to forbid it, and the
+   word would become the `.transition` utility (motion) in the distributed CSS. */
+@source not inline("transition");
+@source inline("{bg,text,border}-{paper,paper-2,ink,ink-soft,ink-mute,line,accent,accent-soft,raised}");
+@source inline("{p,px,py,pt,pb,m,mx,my,mt,mb,gap,space-y,space-x}-{0,1,2,3,4,5,6,8,10,12}");
+@source inline("{flex,inline-flex,grid,block,hidden,items-center,items-start,justify-between,justify-end,flex-col,flex-1,w-full,h-full,min-h-screen,min-w-0,truncate,shrink-0,grow}");
+/* Text sizes: the toolkit's scale only (R7: 2xs, xs, sm, base). */
+@source inline("{text-2xs,text-xs,text-sm,text-base,font-medium,font-semibold,rounded-sm,rounded-md,rounded-lg,shadow-float,grid-cols-2,grid-cols-3}");
