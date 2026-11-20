@@ -4,7 +4,8 @@ A design system for React apps: the single source of truth for colours, tokens, 
 knows nothing of any app: no app's name, concepts or product components, and nothing of a desktop shell. An app builds
 its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
 MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`. It is not on npm:
-use it from the repository (`npm ci`, `npm run build`, then a `file:` dependency on this folder).
+use it from a GitHub Release (see "Use a release") or from the repository (`npm ci`, `npm run build`, then a `file:`
+dependency on this folder).
 
 ## The four layers
 
@@ -59,6 +60,29 @@ Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.
   scale classes they do not read (text sizes, radii, shadows, weights, icons, border with shadow, boxed key hints,
   loops and effects) are checked against DESIGN.md by `test/design-rules.test.ts`. CI runs both (`.github/workflows/ci.yml`,
   job `toolkit`). An exception needs a `design-check-ignore-next-line <rule>: <cause>` comment.
+
+## Use a release
+
+Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/toolkit/releases) (tag
+`v<version>`). The repository is public: no login is needed. Each release holds three files:
+
+- `acaprino-toolkit-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
+  `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
+  `provenance.json`.
+- `manifest.json`: `{ "version", "packages": [{ "name", "file", "sha256" }] }`, the SHA-256 of the package.
+- `SHA256SUMS`: `<sha256>  <file>` for every other file of the release.
+
+```bash
+gh release download v<version> --repo acaprino/toolkit    # or download the three files from the release page
+sha256sum -c SHA256SUMS                                   # PowerShell: Get-FileHash -Algorithm SHA256 <file>
+npm i ./acaprino-toolkit-<version>.tgz
+```
+
+`sha256sum -c` has to say `OK` for the package and for `manifest.json`. Inside the package, `provenance.json` is
+`{ "package": "@acaprino/toolkit", "version", "commit", "files": { "<path>": "<sha256>" } }`: the commit the release was
+built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked file by file.
+The release is built by `npm run release` (`scripts/release.mjs`: build, typecheck, tests, then pack). To try it
+locally, `npm run release -- --skip-test` fills `release/` (not committed) without the tests.
 
 ## Build and test
 
