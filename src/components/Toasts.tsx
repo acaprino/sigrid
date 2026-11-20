@@ -89,8 +89,12 @@ type ColumnState = {
   motion: Motion
   /** True once the notices that were there at mount are in: from then on a new one enters animated. */
   settled: { current: boolean }
+  /** The notices already shown: one of them drawn again (the column redrawn when Motion arrives) does not enter again. */
+  shown: { current: Set<string> }
   close: ((id: string) => void) | undefined
   measured: (id: string, height: number | null) => void
+  /** True once every notice shown has a measured height: their places are then the real ones. */
+  sized: boolean
 }
 
 const ColumnContext = createContext<ColumnState | null>(null)
@@ -123,7 +127,17 @@ function Notice({ id }: { id: string }) {
   const spot = column.spots.get(id)
   const last = useRef<Spot>(spot ?? { index: 0, y: 0 })
   if (spot) last.current = spot
-  const [enter] = useState(() => column.settled.current)
+  const [enter] = useState(() => column.settled.current && !column.shown.current.has(id))
+  // Until the column knows the height of its notices, one that does not enter is put in its place, it does not glide
+  // there: the heights are measured after the notices mount (later still if the styles arrive late), and what was
+  // already on the page must not move when the page (or Motion) arrives.
+  const [placed, setPlaced] = useState(false)
+  useEffect(() => {
+    if (column.sized) setPlaced(true)
+  }, [column.sized])
+  // Remembered until the caller drops it from its items (the column forgets it then), not until this card unmounts:
+  // the column redrawn by Motion unmounts every card and mounts it again a moment later.
+  useEffect(() => void column.shown.current.add(id), [column.shown, id])
   const why = useRef<'closed' | 'pushed'>('closed')
   const gone = !spot || !toast.visible
   if (gone && column.pushed.has(id)) why.current = 'pushed'
@@ -253,7 +267,7 @@ function Notice({ id }: { id: string }) {
     // The place above this one: where a pushed-out notice goes.
     const beyond = y - ((card.current?.offsetHeight ?? 0) + GAP)
     return (
-      <motion.NoticeCard {...root} ref={card} style={style} y={y} enter={enter} leaving={leaving} beyond={beyond}>
+      <motion.NoticeCard {...root} ref={card} style={style} y={y} enter={enter} still={!enter && !placed} leaving={leaving} beyond={beyond}>
         {body}
       </motion.NoticeCard>
     )
@@ -350,6 +364,10 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   // What the store holds: the id of each notice given to it and still wanted, with the time it was last given.
   const made = useRef(new Map<string, string>())
   const settled = useRef(false)
+  const shownOnce = useRef(new Set<string>())
+  useEffect(() => {
+    for (const id of shownOnce.current) if (!items.some((item) => item.id === id)) shownOnce.current.delete(id)
+  })
   const later = useRef(new Set<ReturnType<typeof setTimeout>>())
   const wanted = { ids: shown.map((t) => t.id), duration: armed && !paused && durationMs !== undefined ? durationMs : Infinity, leaveMs }
   const latest = useRef(wanted)
@@ -424,7 +442,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   }, [inline])
 
   const byId = useMemo(() => new Map(items.map((t) => [t.id, t])), [items])
-  const state: ColumnState = { items: byId, spots, pushed, paused, armed, durationMs, motion, settled, close: onDismiss ? (id) => dismiss.current?.(id) : undefined, measured }
+  const state: ColumnState = { items: byId, spots, pushed, paused, armed, durationMs, motion, settled, shown: shownOnce, close: onDismiss ? (id) => dismiss.current?.(id) : undefined, measured, sized: shown.every((t) => (heights.get(t.id) ?? 0) > 0) }
   const column = (
     <Toaster
       ref={region}

@@ -12,7 +12,7 @@ import { FOCUS_RING } from '../../lib/focus'
 // `state-transition` nor any other transition: without `animated` the field has no motion styles. `pointer-coarse:min-h-11`
 // keeps the 44 px with touch. No default `type` (SmoothUI sets `text`): the attribute stays whatever is passed.
 const INPUT_CLASS = cn(
-  'h-10 w-full min-w-0 rounded-md pointer-coarse:min-h-11 border border-input bg-transparent px-3 py-1 text-base file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+  'h-(--control-md) w-full min-w-0 rounded-md pointer-coarse:min-h-11 border border-input bg-transparent px-(--pad-sm) py-1 text-base file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
   FOCUS_RING,
   'aria-invalid:border-destructive',
 )

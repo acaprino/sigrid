@@ -51,7 +51,7 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
 }
 
 const ITEM_CLASS =
-  "relative flex min-h-10 cursor-default items-center gap-2 rounded-sm py-2 pr-8 pl-2 text-sm outline-none select-none pointer-coarse:min-h-11 data-[highlighted]:bg-paper-2 data-[disabled]:opacity-50"
+  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-sm py-(--row-pad) pr-8 pl-2 text-sm outline-none select-none data-[highlighted]:bg-paper-2 data-[disabled]:opacity-50"
 
 function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
   return (
@@ -83,11 +83,11 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         aria-invalid={invalid || undefined}
         data-slot="select-trigger"
         className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent pr-2.5 pl-3 text-left text-sm pointer-coarse:min-h-11",
+          "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
           invalid ? "border-destructive" : "data-[popup-open]:border-ink",
           disabled && "pointer-events-none cursor-not-allowed opacity-50",
           FOCUS_RING,
-          size === "sm" ? "h-9 w-auto" : "h-10",
+          size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
           className,
         )}
       >
@@ -111,7 +111,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
               {groups?.map((g) =>
                 g.options.length ? (
                   <SelectPrimitive.Group key={g.label} data-slot="select-group" className="mt-1 first:mt-0">
-                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className="flex h-10 items-center px-2 text-sm font-medium text-ink-mute">
+                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className="flex h-(--row-height) items-center px-2 text-sm font-medium text-ink-mute">
                       {g.label}
                     </SelectPrimitive.GroupLabel>
                     {g.options.map((o) => (

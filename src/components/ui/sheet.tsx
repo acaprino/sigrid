@@ -5,7 +5,7 @@
 // From SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the
 // drag direction per side and the content marked `Drawer.Content` (a mouse drag that starts
 // there does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the
-// staggering of the children with Motion, the handle of the bottom side. The entrance (24 px from the right, 200 ms) exists only with
+// staggering of the children with Motion, the handle of the bottom side. The entrance (32 px from the right, 200 ms) exists only with
 // `animated` true and never with prefers-reduced-motion (`useMotion`); without it, the DOM has no motion styles.
 import * as React from "react"
 import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
@@ -119,6 +119,7 @@ function SheetContent({
   latest.current = { motion, onCloseAutoFocus, initialFocus: props.initialFocus }
   const popup = React.useRef<HTMLDivElement | null>(null)
   const before = React.useRef<Element | null>(null)
+  const entered = React.useRef<Element | null>(null)
   // Stable reference: React calls it once when the sheet mounts (the opening, a user gesture) and not on
   // every render; the Motion piece that arrives after opening does not make an already open sheet move.
   const enter = React.useCallback(
@@ -130,7 +131,9 @@ function SheetContent({
       // right away would go elsewhere. Here it goes right away to the requested element; Base UI then finds it already inside and does not move it.
       const initial = latest.current.initialFocus
       if (initial && typeof initial === "object") initial.current?.focus()
-      if (side === "right") latest.current.motion?.enterSheet(el)
+      // Once per element: a reference called again on the same sheet (React does it in development) is not a new opening.
+      if (side === "right" && entered.current !== el) latest.current.motion?.enterSheet(el)
+      entered.current = el
     },
     [side]
   )
@@ -170,7 +173,7 @@ function SheetContent({
         >
           {children}
           {showCloseButton && (
-            <SheetPrimitive.Close className={cn("absolute top-3 right-3 flex size-9 items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none", FOCUS_RING)}>
+            <SheetPrimitive.Close className={cn("absolute top-3 right-3 flex size-(--control-sm) items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none", FOCUS_RING)}>
               <XIcon className="size-4" />
               <span className="sr-only">Close</span>
             </SheetPrimitive.Close>

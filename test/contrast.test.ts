@@ -226,7 +226,7 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
     const line = (file: string, needle: string) => readFileSync(`${root}${file}`, 'utf8').split('\n').find((l) => l.includes(needle)) ?? ''
     // The native `<select>`s became Base UI's Select: the border sits on its button.
     expect(line('src/components/ui/select.tsx', 'flex w-full items-center justify-between')).toContain('border-input')
-    expect(line('src/internal/chips.tsx', 'flex min-h-10 w-full')).toContain('border-input')
+    expect(line('src/internal/chips.tsx', 'flex min-h-(--control-md) w-full')).toContain('border-input')
   })
 })
 

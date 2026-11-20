@@ -94,6 +94,23 @@
      from 768px (dialog). */
 }
 
+/* ———— Density (src/density.ts `DENSITIES`, src/styles/theme.css; added after the extraction) ———— */
+/* `applyDensity` writes `--density-*` on the root and `data-density`; theme.css derives the tokens below from them.
+   `normal` (the default, and the value before any script runs) is the toolkit as extracted. */
+:root {
+  --touch-target: 44px;  /* with a coarse pointer every --control-* and --row-height is max(--touch-target, what the density asks) */
+  --control-md: 40px;    /* compact 36px, large 44px: Button default/lg/icon, Input, Select, DateField, segment item */
+  --control-sm: 36px;    /* compact 32px, large 40px: Button sm, Select sm, time field, close buttons, calendar cells */
+  --control-xs: 32px;    /* compact 28px, large 36px: Button xs, the swatches of the base colour */
+  --pad-md: 14px;        /* compact 12px, large 16px: Button default, segment item */
+  --pad-sm: 12px;        /* compact 10px, large 14px: Button sm, fields, Select (left) */
+  --pad-xs: 10px;        /* compact 8px, large 12px: Button xs, Select (right) */
+  --row-height: 40px;    /* compact 32px, large 48px: least height of a menu or select item, height of their labels */
+  --row-pad: 8px;        /* compact 4px, large 12px: padding above and below a menu or select item */
+  /* A definition's measures are kept inside DENSITY_LIMITS: control 24 to 64px, pad 4 to 32px, row height 24 to 72px,
+     row pad 0 to 24px. */
+}
+
 /* ———— Shape (src/theme-engine.ts `shapeOf`, src/styles/theme.css `@theme`) ———— */
 :root {
   --radius-sm: 2px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
@@ -106,8 +123,6 @@
   --icon-stroke: 1.75;
   --icon-cap: round;
   --icon-join: round;
-  --row-py: 10px;
-  --nav-py: 8px;
   --border-width: 1px;
 }
 
@@ -129,9 +144,15 @@
 
 /* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ———— */
 :root {
-  /* Durations (DURATION_MS): toast 240ms, row 220ms, sheet 200ms, popup 200ms, mark 160ms, card 140ms; ease-out.
-     Gestures (GESTURE_MS, easing cubic-bezier(0.2, 0, 0, 1)): press 100ms, tooltip 120ms, follow 140ms, turn 160ms,
-     slide 180ms, list 200ms. No springs. Tooltip delay 500ms (TOOLTIP_DELAY_MS). */
+  /* Values: Fluent 2's motion tokens (Microsoft, MIT; THIRD_PARTY.md). FLUENT_DURATIONS: faster 100ms, fast 150ms,
+     normal 200ms. FLUENT_CURVES: decelerateMid cubic-bezier(0, 0, 0, 1) for what enters, accelerateMin
+     cubic-bezier(0.8, 0, 0.78, 1) for what leaves, easyEase cubic-bezier(0.33, 0, 0.67, 1) for what moves in place.
+     Durations (DURATION_MS): toast 200ms, row 200ms, sheet 200ms, land 150ms, popup 150ms (CARD_DURATION_MS), mark 100ms.
+     Gestures (GESTURE_MS): press 100ms, tooltip 100ms, follow 100ms, leave 100ms, release 150ms, turn 150ms,
+     slide 150ms, enter 200ms, list 200ms. Travel (TRAVEL_PX): hint 4px, card 8px, row 8px, notice 24px,
+     sheet 32px.
+     Pressed scale 0.96 (PRESS_SCALE), check mark from 0.5. A floating surface is held unseen for one frame, then
+     enters from the side it was placed on. No springs. Tooltip delay 500ms (TOOLTIP_DELAY_MS). */
 }
 
 /* ———— Breakpoints and sizes (src/styles/theme.css, src/internal/media.ts) ———— */

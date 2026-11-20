@@ -15,7 +15,7 @@ import * as React from "react"
 import { Menu } from "@base-ui/react/menu"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { useMotion } from "../../internal/motion"
+import { useEntrance } from "../../internal/motion"
 import { usePortalContainer } from "../PortalContainer"
 
 /** The open state of the menu, for the button's `data-state`, and its immediate reading for the keyboard. */
@@ -85,15 +85,9 @@ function DropdownMenuTrigger({ asChild, children, onKeyDown, ...props }: Dropdow
   )
 }
 
-/** A short entrance of the card (fade and a touch of scale), only with `animated`. */
+/** A short entrance of the card (a fade, a few pixels from the side of its button), only with `animated`. */
 function useEnter(animated: boolean | undefined) {
-  const motion = useMotion(animated)
-  return React.useCallback(
-    (el: HTMLElement | null) => {
-      if (el && motion) motion.enterPopup(el)
-    },
-    [motion]
-  )
+  return useEntrance<HTMLElement>(animated, (motion, el) => motion.enterPopup(el))
 }
 
 type DropdownMenuContentProps = Menu.Popup.Props &
@@ -156,7 +150,7 @@ function DropdownMenuGroup({ ...props }: Menu.Group.Props) {
 }
 
 const ITEM =
-  "relative flex min-h-10 cursor-default items-center gap-2 rounded-md px-2 py-2 text-sm pointer-coarse:min-h-11 outline-hidden select-none data-highlighted:bg-paper-2 data-highlighted:text-ink focus-visible:bg-paper-2 focus-visible:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-md px-2 py-(--row-pad) text-sm outline-hidden select-none data-highlighted:bg-paper-2 data-highlighted:text-ink focus-visible:bg-paper-2 focus-visible:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 
 type DropdownMenuItemProps = Menu.Item.Props & {
   inset?: boolean | undefined
@@ -228,7 +222,7 @@ function DropdownMenuLabel({ className, inset, ...props }: React.ComponentProps<
     <div
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn("flex h-10 items-center px-2 text-sm font-medium text-ink-mute data-[inset]:pl-8", className)}
+      className={cn("flex h-(--row-height) items-center px-2 text-sm font-medium text-ink-mute data-[inset]:pl-8", className)}
       {...props}
     />
   )

@@ -1,6 +1,7 @@
 // The toolkit's showcase: every exported component, in its variants, sizes and states, under the theme and scheme
-// chosen at the top (also from the address: `?theme=ambra&scheme=dark`), and a strip of the main controls in six
-// palettes side by side. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
+// chosen at the top (also from the address: `?theme=amber-bold&scheme=dark`), and a strip of the main controls in six
+// palettes side by side. The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour
+// (`<colour>-<combination>`, such as `blue-clean`): an app's themes live in the app. `?animated=1` turns motion on. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
 // at once. What only opens on a gesture opens from the address: `?open=menu`, `popover`, `select`, `tooltip`, `date`,
 // `datetime`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with commas).
 // Not shown: `DesktopSurface` (a separate system window of the desktop shell) and the headless re-exports
@@ -16,6 +17,7 @@ import {
   AttachmentViewer,
   AttachmentsSection,
   BACKDROP,
+  BASE_THEME,
   Badge,
   Button,
   CALENDAR_WORDS,
@@ -67,18 +69,23 @@ import {
   TAG_COLOR,
   TAG_HUES,
   TAG_PILL,
-  THEMES,
   Textarea,
   Thumbnail,
   Toasts,
   ToggleGroup,
   ToggleGroupItem,
   Tooltip,
+  DENSITIES,
+  PALETTE_COMBOS,
+  applyDensity,
   applyTheme,
-  isThemeId,
+  isDensityId,
   markHueAttrs,
+  paletteTheme,
+  useMotion,
   type AttachmentView,
-  type ThemeId,
+  type DensityId,
+  type ThemeDef,
   type ThemeScheme,
   type ToastItem,
 } from '../src/index'
@@ -87,11 +94,31 @@ import {
 
 const params = new URLSearchParams(location.search)
 const OPEN = new Set((params.get('open') ?? '').split(',').filter(Boolean))
-const initialTheme: ThemeId = isThemeId(params.get('theme')) ? (params.get('theme') as ThemeId) : 'neutro'
+
+/** The base colours of the showcase's palettes: six of the toolkit's free colours, far apart in hue. */
+const SEEDS = COLORS.filter((_, i) => i % 3 === 1)
+
+/**
+ * The themes of the showcase, made only of what the toolkit has: its gray baseline, and for each base colour the three
+ * palettes the toolkit builds from it. The id is what the address carries (`base`, `blue-clean`, `amber-bold`…).
+ */
+const THEMES: readonly ThemeDef[] = [
+  BASE_THEME,
+  ...SEEDS.flatMap((seed) =>
+    PALETTE_COMBOS.map((combo) => ({ ...paletteTheme({ seed, combo }), id: `${COLOR_NAMES[seed].toLowerCase()}-${combo}`, label: `${COLOR_NAMES[seed]}, ${combo}` })),
+  ),
+]
+type ThemeId = string
+const isThemeId = (value: unknown): value is ThemeId => THEMES.some((t) => t.id === value)
+const themeById = (id: ThemeId): ThemeDef => THEMES.find((t) => t.id === id) ?? BASE_THEME
+const initialTheme: ThemeId = isThemeId(params.get('theme')) ? (params.get('theme') as ThemeId) : BASE_THEME.id
 const initialScheme: ThemeScheme = params.get('scheme') === 'dark' ? 'dark' : 'light'
+/** `?density=compact|normal|large`: one of the toolkit's presets; anything else is `normal`. */
+const givenDensity = params.get('density')
+const initialDensity: DensityId = isDensityId(givenDensity) ? givenDensity : 'normal'
 
 /** The palettes of the strip: three accents far apart, each in light and dark. */
-const STRIP: ThemeId[] = ['neutro', 'professionale', 'ambra']
+const STRIP: ThemeId[] = [BASE_THEME.id, 'blue-clean', 'amber-bold']
 
 /* ———— Layout helpers ———— */
 
@@ -599,7 +626,7 @@ function Selects() {
   )
 }
 
-function Menus() {
+function Menus({ animated }: { animated: boolean }) {
   const [done, setDone] = React.useState(true)
   const [sort, setSort] = React.useState('date')
   const open = OPEN.has('menu')
@@ -611,7 +638,7 @@ function Menus() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline">Actions</Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
+            <DropdownMenuContent align="start" className="w-64" animated={animated}>
               <DropdownMenuLabel>Task</DropdownMenuLabel>
               <DropdownMenuGroup>
                 <Forced attrs={{ 'data-highlighted': '' }}>
@@ -655,7 +682,27 @@ function Menus() {
   )
 }
 
-function Popovers() {
+/** The hover background that glides from row to row, over rows of two heights (with animations only). */
+function HoverRows({ animated }: { animated: boolean }) {
+  const motion = useMotion(animated)
+  const [list, setList] = React.useState<HTMLUListElement | null>(null)
+  return (
+    <Section id="hover" title="Hover background" note="With animations one background follows the mouse from row to row, also between rows of different heights; without, each row has its own.">
+      <Row label="rows">
+        <ul ref={setList} data-sample="hover-rows" className="relative flex w-64 flex-col gap-0.5">
+          {motion ? <motion.HoverHighlight container={list} selector="[data-hover-row]" className="absolute rounded-md bg-ink/5" /> : null}
+          {['Today', 'Upcoming', 'Kitchen renovation', 'Quarterly report', 'Done'].map((name, i) => (
+            <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm ${i === 2 || i === 3 ? 'h-7 pl-6' : 'h-9'} ${motion ? '' : 'hover:bg-ink/5'}`}>
+              {name}
+            </li>
+          ))}
+        </ul>
+      </Row>
+    </Section>
+  )
+}
+
+function Popovers({ animated }: { animated: boolean }) {
   const open = OPEN.has('popover')
   return (
     <Section id="popover" title="Popover and Tooltip" note="`?open=popover` opens the card; `?open=tooltip` focuses the button with a hint.">
@@ -668,7 +715,7 @@ function Popovers() {
                 Notifications
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" data-sample="popover">
+            <PopoverContent align="start" data-sample="popover" animated={animated}>
               <PopoverHeader>
                 <PopoverTitle>3 tasks due today</PopoverTitle>
                 <PopoverDescription>One of them is late.</PopoverDescription>
@@ -678,7 +725,7 @@ function Popovers() {
         </div>
       </Row>
       <Row label="tooltip">
-        <Tooltip label="Search">
+        <Tooltip label="Search" animated={animated}>
           <Button variant="ghost" size="icon" aria-label="Search" data-open-target="tooltip">
             <Search aria-hidden="true" />
           </Button>
@@ -979,7 +1026,7 @@ function Overlays({ animated }: { animated: boolean }) {
 function ThemePanel({ theme, scheme }: { theme: ThemeId; scheme: ThemeScheme }) {
   const ref = React.useRef<HTMLDivElement>(null)
   React.useLayoutEffect(() => {
-    if (ref.current) applyTheme(ref.current, { theme, scheme })
+    if (ref.current) applyTheme(ref.current, { theme: themeById(theme), scheme })
   }, [theme, scheme])
   const label = THEMES.find((t) => t.id === theme)?.label ?? theme
   return (
@@ -1035,14 +1082,21 @@ function Strip() {
 function App() {
   const [theme, setTheme] = React.useState<ThemeId>(initialTheme)
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
+  const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') === '1')
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, { theme, scheme })
+    applyTheme(document.documentElement, { theme: themeById(theme), scheme })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
     history.replaceState(null, '', `?${next.toString()}`)
   }, [theme, scheme])
+  React.useLayoutEffect(() => {
+    applyDensity(document.documentElement, density)
+    const next = new URLSearchParams(location.search)
+    next.set('density', density)
+    history.replaceState(null, '', `?${next.toString()}`)
+  }, [density])
   // What only opens on a gesture: the showcase makes the gesture once, after the first paint.
   React.useEffect(() => {
     const press = (target: string) => document.querySelector<HTMLElement>(`[data-open-target="${target}"] button, button[data-open-target="${target}"]`)
@@ -1063,6 +1117,13 @@ function App() {
             <ToggleGroupItem value="light">Light</ToggleGroupItem>
             <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
           </ToggleGroup>
+          <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
+            {DENSITIES.map((d) => (
+              <ToggleGroupItem key={d.id} value={d.id}>
+                {d.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
           <div className="flex items-center gap-2">
             <Checkbox id="animated" checked={animated} onCheckedChange={(c) => setAnimated(c === true)} />
             <label htmlFor="animated" className="text-sm">
@@ -1081,8 +1142,9 @@ function App() {
         <Radios />
         <Toggles animated={animated} />
         <Selects />
-        <Menus />
-        <Popovers />
+        <Menus animated={animated} />
+        <Popovers animated={animated} />
+        <HoverRows animated={animated} />
         <Keys />
         <Empties />
         <Dates animated={animated} />

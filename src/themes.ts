@@ -4,6 +4,7 @@
  * blocks of `styles/theme.css` carry `BASE_THEME` for the first paint, before the script sets the
  * choice (`test/first-paint.test.ts` keeps them equal to the computation); an app paints its own default over them.
  */
+import { DENSITY_VARIABLES } from './density'
 import { DEFAULT_FONT, FONTS } from './theme-catalog'
 import type { FontDef, FontId, ThemeDef } from './theme-catalog'
 import { themeTokens, tokensFor } from './theme-engine'
@@ -33,16 +34,16 @@ function tokensOf(pick: ThemePick): ThemeTokens {
 /** A plain gray theme with no accent: the toolkit's baseline for the first paint and the names of the variables. */
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
-/** The root attributes that carry the theme and the font: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-rows', 'data-selection', 'data-sidebar', 'data-font'] as const
+/** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-rows', 'data-selection', 'data-sidebar', 'data-font', 'data-density'] as const
 
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
 
-/** The names of the variables that `applyTheme` and `applyFont` write: they are the same for every theme and scheme. */
+/** The names of the variables that `applyTheme`, `applyFont` and `applyDensity` write: they are the same for every theme, scheme and density. */
 export const THEME_VARIABLES: readonly string[] = (() => {
   const t = themeTokens(BASE_THEME, 'light')
-  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), FONT_VARIABLE]
+  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), FONT_VARIABLE, ...DENSITY_VARIABLES]
 })()
 
 export function isFontId(value: unknown): value is FontId {
@@ -88,7 +89,7 @@ export function applyFont(el: HTMLElement, font: FontId): void {
   el.setAttribute('data-font', font)
 }
 
-/** Copies the theme and font of one element onto another (separate windows copy those of the main one). */
+/** Copies the theme, font and density of one element onto another (separate windows copy those of the main one). */
 export function copyTheme(from: HTMLElement, to: HTMLElement): void {
   for (const name of THEME_ATTRIBUTES) {
     const value = from.getAttribute(name)

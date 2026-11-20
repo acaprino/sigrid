@@ -25,7 +25,7 @@ x-zsd:
     audience: People who use the owner's apps to plan their day and deal with what comes in, many with ADHD.
     primary-task: Capture, sort and act on items with one clear action at a time.
     character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
-    density: comfortable
+    density: "configurable: compact, normal (default), large"
     theme: light and dark; each app passes its own theme definitions (the toolkit ships none, only the parametric engine and a gray baseline); each theme has two mood colours and one accent, and the user can make a palette of their own from one base colour
     references:
       - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
@@ -45,7 +45,7 @@ x-zsd:
       - "R11: the default tone is Vivid: the accent's fills, the selection and the data colours more saturated, the lightness as the theme was designed (owner, 2026-11-20, from a comparison board). The settings offer three tones, Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and the lanes, so the three read apart at a glance (owner, 2026-11-20: «cambiando tono non vedo cambiamenti»)."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
-      - "R7: radii 2, 4 and 6px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 40, 36 or 32px; icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 2, 4 and 6px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 40, 36 or 32px (compact density 36, 32 or 28px; large 44, 40 or 36px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every focusable control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours of projects, areas, labels and events appear as 8px dots."
@@ -62,12 +62,12 @@ x-zsd:
       - Colour values outside the theme engine.
       - Data colours as filled blocks.
     preserve:
-      - "Park UI native form: md controls are 40px with 14px text; the light sidebar is the default and the dark column stays an option."
+      - "Park UI native form: md controls are 40px (normal density) with 14px text; the light sidebar is the default and the dark column stays an option."
       - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
       - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
-      - "Motion: the toolkit's own short tweens, only after a gesture, on by default so the segment thumb slides (owner, 2026-11-20), no springs, everything works with motion off or reduced."
+      - "Motion: short Fluent 2 tweens, only after a gesture, on by default so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
-      - "Accessibility exception to R7 (approved): with a coarse pointer every control grows to 44px (test/targets.test.tsx)."
+      - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; in a picker the colour is the content, not a data label."
       - "One backdrop for every overlay that dims (sheet, drawer, dialog, viewer): the drop colour at 40%."
       - "The checkbox keeps l1; --radius-check defaults to 9999px, so an app can round its own boxes (an app setting)."
@@ -115,20 +115,23 @@ x-zsd:
     lg-dark: "0 8px 16px #05060678, inset 0 0 1px #E3E5E554"
     float-dark: "0 16px 24px #0506068C, inset 0 0 1px #E3E5E554"
   motion:
-    duration-card: 140ms
-    duration-mark: 160ms
-    duration-popup: 200ms
-    duration-sheet: 200ms
-    duration-row: 220ms
-    duration-toast: 240ms
     duration-press: 100ms
-    duration-tooltip: 120ms
-    duration-follow: 140ms
-    duration-turn: 160ms
-    duration-slide: 180ms
+    duration-tooltip: 100ms
+    duration-follow: 100ms
+    duration-leave: 100ms
+    duration-mark: 100ms
+    duration-release: 150ms
+    duration-turn: 150ms
+    duration-popup: 150ms
+    duration-slide: 150ms
+    duration-land: 150ms
     duration-list: 200ms
-    easing-standard: ease-out
-    easing-gesture: "cubic-bezier(0.2, 0, 0, 1)"
+    duration-row: 200ms
+    duration-sheet: 200ms
+    duration-toast: 200ms
+    easing-enter: "cubic-bezier(0,0,0,1)"
+    easing-exit: "cubic-bezier(.8,0,.78,1)"
+    easing-move: "cubic-bezier(0.33,0,0.67,1)"
     tooltip-delay: 500ms
   icons:
     size-md: 16px
@@ -140,6 +143,9 @@ x-zsd:
     tooltip: 45
     overlay: 50
     toasts: 70
+  density:
+    compact: "controls 36/32/28px, pads 12/10/8px, row 32px, row-pad 4px"
+    large: "controls 44/40/36px, pads 16/14/12px, row 48px, row-pad 12px"
   accessibility:
     target-min: "{spacing.touch-target}"
     focus-width: 2px
@@ -247,7 +253,10 @@ spacing:
   control-md: 40px
   touch-target: 44px
   pad-xs: 10px
+  pad-sm: 12px
   pad-md: 14px
+  row-height: 40px
+  row-pad: 8px
 rounded:
   l1: 2px
   l2: 4px
@@ -435,11 +444,11 @@ Use weights 400, 500 and 600 only. Use tabular numbers for counts.
 
 ## Layout
 
-Use the `xs` to `section` spacing steps. Put controls at `control-md`; use `control-sm` and `control-xs` only in dense rows. Park padding values `pad-md`, `pad-xs` and `hairline` stay inside controls and lists.
+Use the `xs` to `section` spacing steps. Controls use `control-md`; dense rows `control-sm`, `control-xs`. `pad-md`, `pad-sm`, `pad-xs`, `hairline` stay inside controls; rows use `row-height`, `row-pad`. `x-zsd.density` holds compact and large.
 
 ### Responsive behavior
 
-Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer every control grows to `touch-target` (approved exception to R7). Key hints disappear on a phone (narrow and coarse).
+Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer controls and rows grow to `touch-target` (approved exception to R7). Key hints disappear on a phone (narrow and coarse).
 
 ## Elevation & Depth
 
@@ -545,7 +554,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Motion
 
-Motion runs only after a gesture, `animated` on by default. Popups enter in `duration-popup`, sheets in `duration-sheet`, toasts move in `duration-toast`. Gestures use `easing-gesture` and their own `duration-*` tokens; there are no springs. With reduced motion every state changes at once. Nothing loops, except loading skeletons.
+Motion needs a gesture and `animated` (default off). Fluent 2 tokens: `easing-enter` in, `easing-exit` out, `easing-move` in place. Things slide and fade; only a pressed button (0.96) and check mark (0.5) scale. Reduced motion: states change at once. No loops but skeletons.
 
 ## Iconography
 

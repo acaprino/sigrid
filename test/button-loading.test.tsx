@@ -72,7 +72,7 @@ test('loadingText replaces the label while loading; both share one grid cell so 
   expect(layers()[1]!.className).not.toContain('invisible')
   // The size classes stay the same.
   expect(b.getAttribute('data-size')).toBe('default')
-  expect(b.className.split(' ')).toEqual(expect.arrayContaining(['h-10', 'min-w-10', 'px-3.5']))
+  expect(b.className.split(' ')).toEqual(expect.arrayContaining(['h-(--control-md)', 'min-w-(--control-md)', 'px-(--pad-md)']))
 })
 
 test('no spinner and no looping animation while loading (motion rules)', () => {

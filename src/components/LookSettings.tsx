@@ -1,6 +1,7 @@
 import { memo, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { COLORS, COLOR_NAMES } from '../colors'
+import { densityOf, type DensityDef } from '../density'
 import { ICON_PACKS, Icon, type IconPack } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
 import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
@@ -11,6 +12,7 @@ import { themeVariables, type ThemePick } from '../themes'
 // The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,
 // three tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app
 // passes its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.
+// The density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.
 
 /** A choice's name and, below it, what it is for. */
 export interface ChoiceText {
@@ -150,7 +152,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   const id = useId()
   return (
     <div className="flex items-center gap-3">
-      <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className={`size-10 shrink-0 rounded-lg border border-input bg-raised p-1 pointer-coarse:size-11 ${FOCUS_RING}`} />
+      <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className={`size-(--control-md) shrink-0 rounded-lg border border-input bg-raised p-1 pointer-coarse:size-11 ${FOCUS_RING}`} />
       <label htmlFor={id} className="text-sm">
         {label}
       </label>
@@ -182,7 +184,7 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
           aria-checked={!palette}
           tabIndex={palette ? -1 : 0}
           onClick={() => onPalette(null)}
-          className={`flex h-8 items-center rounded-full border bg-raised px-3 text-xs pointer-coarse:min-h-11 ${FOCUS_RING} ${palette ? 'border-line hover:border-input' : 'border-primary ring-1 ring-primary'}`}
+          className={`flex h-(--control-xs) items-center rounded-full border bg-raised px-3 text-xs pointer-coarse:min-h-11 ${FOCUS_RING} ${palette ? 'border-line hover:border-input' : 'border-primary ring-1 ring-primary'}`}
         >
           {text.theme}
         </button>
@@ -197,7 +199,7 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
             tabIndex={palette?.seed === c ? 0 : -1}
             onClick={() => pick(c)}
             style={{ background: c }}
-            className={`size-8 rounded-full border pointer-coarse:size-11 ${FOCUS_RING} ${palette?.seed === c ? 'border-ink ring-2 ring-ink ring-offset-2 ring-offset-paper' : 'border-line'}`}
+            className={`size-(--control-xs) rounded-full border pointer-coarse:size-11 ${FOCUS_RING} ${palette?.seed === c ? 'border-ink ring-2 ring-ink ring-offset-2 ring-offset-paper' : 'border-line'}`}
           />
         ))}
       </div>
@@ -353,6 +355,56 @@ export function ThemeCatalogChoice({ themes, chosen, scheme, tone, onTheme, text
           )
         })}
       </div>
+    </ChoiceGroup>
+  )
+}
+
+export interface DensityText {
+  readonly label: string
+  readonly hint: string
+  /** Each density's name and note, by id. A density without words here shows its own label. */
+  readonly densities: Readonly<Record<string, ChoiceText>>
+}
+
+/** Three rows of a list at a density, at a quarter of their size: the height of a row and the room between two. */
+function DensityPreview({ density }: { density: DensityDef }) {
+  const d = densityOf(density)
+  return (
+    <span data-slot="density-preview" className="flex h-full flex-col justify-center px-2.5" style={{ gap: d.row.pad / 4 }}>
+      {['w-10', 'w-14', 'w-8'].map((width) => (
+        <span key={width} className="flex shrink-0 items-center gap-1.5" style={{ height: d.row.height / 4 }}>
+          <span className="size-2 shrink-0 rounded-full border border-input" />
+          <span className={`h-1 rounded-full bg-input ${width}`} />
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/**
+ * The density, among the ones the app offers (the toolkit's presets, `DENSITIES`, or its own definitions): each card
+ * draws three rows to scale. `chosen` is the id on the page; the app applies the one picked (`applyDensity`).
+ */
+export function DensityChoice<D extends DensityDef>({ densities, chosen, onDensity, text }: { densities: readonly D[]; chosen: string; onDensity: (density: D) => void; text: DensityText }) {
+  const id = useId()
+  return (
+    <ChoiceGroup id={id} label={text.label} hint={text.hint}>
+      <ChoiceCards labelledBy={id}>
+        {densities.map((d) => (
+          <ChoiceCard
+            key={d.id}
+            choice={chosen === d.id}
+            name={text.densities[d.id]?.name ?? d.label}
+            note={text.densities[d.id]?.note ?? ''}
+            onChoose={() => onDensity(d)}
+            preview={
+              <ChoicePreview kind={`density-${d.id}`}>
+                <DensityPreview density={d} />
+              </ChoicePreview>
+            }
+          />
+        ))}
+      </ChoiceCards>
     </ChoiceGroup>
   )
 }

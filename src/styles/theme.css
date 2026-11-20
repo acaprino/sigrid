@@ -320,6 +320,37 @@
    `data-scheme`, `data-font`. The two blocks above are Neutral in light and in dark, for the first paint: they are generated
    and checked by test/first-paint.test.ts (`UPDATE_THEME_CSS=1` rewrites them). */
 
+/* Density (src/density.ts): `applyDensity` writes the measures of the chosen density on the root as `--density-*` and
+   its id as `data-density`. Here they become the tokens the components use: the three control heights, the three side
+   paddings of a control, and the least height and the padding of a list or menu row. The value after the comma is
+   `normal`, for the first paint and for a page that never sets a density (test/density.test.ts keeps it equal to the
+   preset). With a coarse pointer a control and a row are never shorter than `--touch-target`, whatever the density
+   asks: the floor is here, above every definition, and a density that asks for more gets more on touch as well.
+   An element with `data-density` (a preview) computes its own tokens from the measures written on it. */
+@layer theme {
+  :root {
+    --touch-target: 44px;
+  }
+  :where(:root, [data-density]) {
+    --control-md: var(--density-control-md, 40px);
+    --control-sm: var(--density-control-sm, 36px);
+    --control-xs: var(--density-control-xs, 32px);
+    --pad-md: var(--density-pad-md, 14px);
+    --pad-sm: var(--density-pad-sm, 12px);
+    --pad-xs: var(--density-pad-xs, 10px);
+    --row-height: var(--density-row-height, 40px);
+    --row-pad: var(--density-row-pad, 8px);
+  }
+  @media (pointer: coarse) {
+    :where(:root, [data-density]) {
+      --control-md: max(var(--touch-target), var(--density-control-md, 40px));
+      --control-sm: max(var(--touch-target), var(--density-control-sm, 36px));
+      --control-xs: max(var(--touch-target), var(--density-control-xs, 32px));
+      --row-height: max(var(--touch-target), var(--density-row-height, 40px));
+    }
+  }
+}
+
 /* Priority colors (`--prio-N`: the dot on the row, at least 3:1 on paper, paper 2 and raised of every theme;
    `--prio-N-bg`/`--prio-N-ink`: the pressed button of the picker, at least 4.5:1; test/priority-colors.test.tsx): P1 red,
    P2 yellow, P3 light blue, "None" without color. They sit in the same rules as the labels, below.

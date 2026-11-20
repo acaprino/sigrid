@@ -1,6 +1,7 @@
 // A theme in a scheme and a font on the root: `applyTheme` and `applyFont` set the variables and the attributes,
 // `copyTheme` carries them to another root (separate windows). The colors themselves are tested by test/theme-engine.test.ts.
 import { describe, expect, test } from 'vitest'
+import { DENSITY_VARIABLES } from '../src/density'
 import { DEFAULT_FONT } from '../src/theme-catalog'
 import { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables } from '../src/themes'
 import { sampleTheme, themeTokens } from './fixtures/sample-themes'
@@ -62,7 +63,7 @@ describe('applyTheme', () => {
 
   test('always writes the same variables, whatever the theme and the scheme', () => {
     for (const pick of [{ theme: BASE_THEME, scheme: 'light' }, { theme: BASE_THEME, scheme: 'dark' }, { theme: sampleTheme('notte'), scheme: 'dark' }, { theme: sampleTheme('inchiostro'), scheme: 'light' }] as const) {
-      expect([...Object.keys(themeVariables(pick)), FONT_VARIABLE].sort()).toEqual([...THEME_VARIABLES].sort())
+      expect([...Object.keys(themeVariables(pick)), FONT_VARIABLE, ...DENSITY_VARIABLES].sort()).toEqual([...THEME_VARIABLES].sort())
     }
   })
 })

@@ -7,7 +7,7 @@
 // name (`label`, the same as its `aria-label`), not free content; no Provider (each
 // hint has its own delay, 500 ms), no controlled state. Removed: SmoothUI's CSS transitions
 // (the opacity and transform transition with the entrance scale): with `animated` true (off by default, never with
-// prefers-reduced-motion) the card fades in from just smaller than its size in 120 ms (`enterTooltip` in `motion-impl`).
+// prefers-reduced-motion) the card fades in a few pixels from its button in 100 ms (`enterTooltip` in `motion-impl`).
 // Base UI places and labels it.
 // The hint does not capture the pointer (`pointer-events-none`, `disableHoverablePopup`), closes on click on the
 // button and with Esc, and sits below sheets and windows (`z-[45]`: above the drawer, z-40, below the sheets, z-50). The accessible
@@ -16,7 +16,7 @@
 import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import { cn } from "../../lib/utils"
-import { useMotion } from "../../internal/motion"
+import { useEntrance } from "../../internal/motion"
 import { usePortalContainer } from "../PortalContainer"
 
 /** The delay before the hint appears, on pointer hover. On focus (Tab) it appears right away, as in Base UI. */
@@ -44,13 +44,7 @@ export type TooltipProps = {
  */
 function Tooltip({ label, children, side = "bottom", sideOffset = 6, delay = TOOLTIP_DELAY_MS, animated, className }: TooltipProps) {
   const container = usePortalContainer()
-  const motion = useMotion(animated)
-  const enter = React.useCallback(
-    (el: HTMLDivElement | null) => {
-      if (el && motion) motion.enterTooltip(el)
-    },
-    [motion]
-  )
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterTooltip(el))
   return (
     <TooltipPrimitive.Root disableHoverablePopup>
       <TooltipPrimitive.Trigger delay={delay} render={children} />

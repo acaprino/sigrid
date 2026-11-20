@@ -13,7 +13,7 @@ as installed) and from Park UI's recipes (`packages/preset/src/recipes/*.ts` at 
 - R4 border or shadow, never both: inputs and outline buttons a border; raised surfaces (cards, toasts, menus, popovers, file tiles, the segment thumb) a shadow.
 - R5 counts are plain tabular numbers; key hints plain 12px text, hidden at phone widths; pills only for labels.
 - R6 an icon only when it tells something; an empty slot rather than a repeated icon; no decorative sparkles, bolts or info icons.
-- R7 radii 2/4/6 (round only for avatars, dots, switches); 4px spacing grid; heights 40/36/32; icons 16/14; weights 400/500/600; text sizes from tokens.
+- R7 radii 2/4/6 (round only for avatars, dots, switches); 4px spacing grid; heights 40/36/32 (at normal density; 36/32/28 at compact, 44/40/36 at large: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
 - R8 focus ring 2px in the accent-text colour, 2px offset, at least 3:1 in every theme, on every focusable control.
 - R9 accent text at least 4.5:1 on both page backgrounds in every theme; step 12 where step 11 falls short.
 - R10 data colours (projects, areas, labels, events) as 8px dots only.
@@ -91,9 +91,9 @@ Behaviour: Ark UI carries Calendar/DateField/DateTimeField (DatePicker), ChipsIn
 
 | Axis | Values in the code | Inconsistencies |
 |---|---|---|
-| Control heights | Button 40/36/32 (`lg` 40 since F14); Input 40; Textarea 1 line = 40; Select 40/36; DateField trigger 40; ToggleGroup item 40; Menu and Select items min 40; ChipsInput control min 40 | Button `lg` 44 (F14); the time input of DateTimeField is 36 beside a 36 button (consistent) |
+| Control heights (at normal density; since density, `--control-md/sm/xs` and `--row-height`) | Button 40/36/32 (`lg` 40 since F14); Input 40; Textarea 1 line = 40; Select 40/36; DateField trigger 40; ToggleGroup item 40; Menu and Select items min 40; ChipsInput control min 40 | Button `lg` 44 (F14); the time input of DateTimeField is 36 beside a 36 button (consistent) |
 | Small parts | Checkbox 18; Radio 16; Kbd 18/20/22; Badge 20; chip 28 with a 20px remove; Thumbnail 64/40 | Radio 16 vs Checkbox 18 (F23) |
-| Side padding | Button 14/12/10 (md/sm/xs); Input 12; Select 12 left, 10 right; DateField 12; segment item 14; menu item 8; select item 8 (+32 for the check); chips control 6 | Select's 10px right edge holds the chevron (approved: Park's indicator) |
+| Side padding (at normal density; `--pad-md/sm/xs`) | Button 14/12/10 (md/sm/xs); Input 12; Select 12 left, 10 right; DateField 12; segment item 14; menu item 8; select item 8 (+32 for the check); chips control 6 | Select's 10px right edge holds the chevron (approved: Park's indicator) |
 | Radii | Controls `rounded-md` (l2, 4px): Button, Input, Textarea, Select trigger, DateField, Badge, Kbd, menu items, select list, tooltip; `rounded-sm` (l1): Checkbox, select items, chip; `rounded-lg` (l3): menu, popover, toasts, date card, segment group and items, attachment tiles; Dialog `rounded-xl` (alias of l3) | Dialog names `xl` where the others name `lg` (same 6px) — F25 fixed with it |
 | Elevation | xs: secondary button, select trigger, segment thumb; sm: tooltip, viewer page; md: menu, select list; lg: popover, dialog, sheet, toasts, date card | xs on bordered controls (F03) |
 | Focus | see F01 (five forms) | F01 |
@@ -110,7 +110,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - **Purpose**: an action. One solid button per screen (R3); the others outline, plain (`ghost`) or text (`link`).
 - **Variants**: `default` (Park solid), `outline` (Park outline), `secondary` (Park subtle in the gray), `ghost` (Park plain, one step quieter: medium weight, soft ink), `destructive` (Park subtle in red), `link` (ours). `QUIET_CHIP` (constant, before `SUBTLE_ACCENT`, Q9): the neutral quiet chip, Park subtle in the gray, for chips.
 - **Sizes**: `xs` 32, `sm` 36, `default` 40, `lg` 44; `icon-xs/sm/icon/lg` square at the same heights; 44 minimum with a coarse pointer.
-- **States**: rest, hover, active (pressed), focus-visible, disabled (`opacity-50`, no pointer), invalid (`aria-invalid`: red border), loading (`loading`: same size, `aria-busy` and `aria-disabled`, focus kept, clicks and pointer ignored; `loadingText` takes the label's place in one grid cell, so the width is the wider of the two; no spinner, no loop: F29, Q3). With `animated`: pressed scale 0.97, no hover scale.95 (spring), never with reduced motion.
+- **States**: rest, hover, active (pressed), focus-visible, disabled (`opacity-50`, no pointer), invalid (`aria-invalid`: red border), loading (`loading`: same size, `aria-busy` and `aria-disabled`, focus kept, clicks and pointer ignored; `loadingText` takes the label's place in one grid cell, so the width is the wider of the two; no spinner, no loop: F29, Q3). With `animated`: pressed scale 0.96 (down in 100 ms, back in 150 ms), no hover scale, never with reduced motion.
 - **Tokens**: `primary`, `primary-foreground`, `accent-hover`, `ink`, `ink-soft`, `line`, `destructive`, `destructive-soft`, `ring`, `radius-md` (`--radius-button`), `shadow-xs` (secondary), `text-sm`/`text-base`, weight 600 (500 for ghost and link).
 - **Composition**: `<button>` or the child with `asChild` (Base UI `useRender`); icons 16px; may hold a `Kbd`.
 - **Accessibility**: `type="button"` by default; icon-only buttons need `aria-label` (and a `Tooltip`). Focus F01; Kbd inside F02.
@@ -165,7 +165,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 
 - **Purpose**: an on/off choice in a list or a form.
 - **Variants**: one (Park solid in ink). **Size**: 18px (Park sm), touch area 30px (56 with a finger).
-- **States**: unchecked, checked, indeterminate × rest, hover (none), focus-visible, disabled, invalid; `animated`: the mark pops once after a click.
+- **States**: unchecked, checked, indeterminate × rest, hover (none), focus-visible, disabled, invalid; `animated`: the mark is stamped once after a click (from half size, 100 ms).
 - **Tokens**: `input` (border at rest), `ink` (fill), `paper` (mark), `ring`, `destructive`, `radius-sm`.
 - **Composition**: Base UI `Checkbox.Root` as `<button>` + `Indicator` + a 12px stroked mark.
 - **Accessibility**: Space toggles, Enter does not (WAI-ARIA); `<label htmlFor>` names it.
@@ -199,7 +199,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 ### ToggleGroup
 
 - **Purpose**: a single choice shown as a segmented control (view, scheme).
-- **Variants**: one (Park segment-group md). `animated`: the thumb slides (180 ms).
+- **Variants**: one (Park segment-group md). `animated`: the thumb slides (150 ms).
 - **States**: pressed (raised thumb, semibold, ink), unpressed (ink-mute, hover ink), focus-visible, disabled.
 - **Tokens**: `paper-2` (track), `line` (inner ring), `raised` + `shadow-xs` (thumb), `ink`, `ink-mute`, `ring`, `radius-lg`, `text-sm`, 500/600.
 - **Composition**: Base UI `ToggleGroup` + `Toggle`; `Highlight` from the motion chunk.
@@ -226,7 +226,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 
 - **Purpose**: the actions of a row or a button ("…").
 - **Parts**: `DropdownMenu`, `Trigger` (`asChild`), `Content`, `Group`, `Label`, `Item` (`variant` default/destructive, `inset`, `onSelect`), `CheckboxItem`, `RadioGroup`, `RadioItem`, `Separator`, `Shortcut`, `Sub`, `SubTrigger`, `SubContent`, `Portal`.
-- **States**: item rest, highlighted (`paper-2`), disabled (`opacity-50`), destructive (red text, red 10% highlight), checked (check / dot), sub open; content `data-state` open/closed; `animated`: the card fades in.
+- **States**: item rest, highlighted (`paper-2`), disabled (`opacity-50`), destructive (red text, red 10% highlight), checked (check / dot), sub open; content `data-state` open/closed; `animated`: the card fades in from the side it was placed on, flipped or not (8px, 150 ms).
 - **Tokens**: `popover`, `shadow-md`, `paper-2`, `muted-foreground` (icons), `destructive`, `border` (separator), `radius-lg` (card), `radius-md` (items), `text-sm`; shortcut `text-xs` `tracking-widest` (F05).
 - **Composition**: Base UI `Menu`; lucide `Check`, `ChevronRight`, `Circle`.
 - **Accessibility**: Enter/Space/ArrowDown open with focus on the first item; arrows do not wrap; type-ahead; Esc returns focus; the trigger carries `data-state`.

@@ -1,6 +1,6 @@
 // @vitest-environment node
 // The toolkit rests on Ark UI for behaviour (with Base UI under the primitives not moved yet), on Park UI's recipes for
-// form and on SmoothUI for part of the look; the motion is its own: INV-007 (provenance and dependencies) and
+// form and on SmoothUI for part of the look; the motion is its own code on Fluent 2's token values: INV-007 (provenance and dependencies) and
 // INV-008 (no decorative components, no infinite motion, no springs). An app's product package
 // has its own provenance test for its product components.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -28,6 +28,8 @@ const SMOOTH = {
   url: (slug: string) => `https://smoothui.dev/r/base-nova/${slug}.json`,
 }
 const PARK_COMMIT = '102769cc91a9d36753dbc5893c74b7954b495efe'
+/** The commit of microsoft/fluentui at which the motion token values were read. */
+const FLUENT_COMMIT = 'a568b4db7806f8642ab4ad296d2c80ad512de8a8'
 const PARK = {
   name: 'Park UI',
   header: /\/\/ Park UI \(MIT\) ([a-z0-9-]+) 102769c — recipe translated to Tailwind for @acaprino\/toolkit \(https:\/\/github\.com\/chakra-ui\/park-ui\/blob\/102769c\/packages\/preset\/src\/recipes\/\1\.ts\)/,
@@ -181,6 +183,58 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     expect(text).toContain('Copyright (c) 2024 Eduardo Calvo')
     expect(text).toContain('Permission is hereby granted, free of charge, to any person obtaining a copy')
     expect(text).toContain('4.0.0')
+  })
+
+  test('THIRD_PARTY.md has a Fluent 2 section: MIT, the files and commit read, token values only; the constants equal Fluent\'s', async () => {
+    const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
+    const start = text.indexOf('\n## Fluent 2 (Microsoft)\n')
+    expect(start, 'section Fluent 2').toBeGreaterThan(-1)
+    const next = text.indexOf('\n## ', start + 1)
+    const section = text.slice(start, next === -1 ? undefined : next)
+    expect(section).toContain('https://github.com/microsoft/fluentui')
+    expect(section).toContain(FLUENT_COMMIT)
+    expect(section).toContain('packages/tokens/src/global/durations.ts')
+    expect(section).toContain('packages/tokens/src/global/curves.ts')
+    expect(section).toContain('**MIT**')
+    expect(section).toContain('Copyright (c) Microsoft Corporation')
+    expect(section).toContain('Permission is hereby granted, free of charge, to any person obtaining a copy')
+    expect(section).toContain('not installed')
+    // The note of Fluent UI's licence is about its fonts and icons: none comes with the token values.
+    expect(section).toContain('No font of Fluent is used anywhere in the toolkit, and no icon comes with these token values.')
+    expect(section).toContain('https://aka.ms/fluentui-assets-license')
+    // Values, not code: the tokens package is not a dependency. The only package of Fluent installed is its icons,
+    // listed with their own licence (plain MIT, from fluentui-system-icons) under «Icon packs».
+    expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual(['@fluentui/react-icons'])
+    const iconsAt = text.indexOf('\n## Icon packs\n')
+    const icons = text.slice(iconsAt, text.indexOf('\n## ', iconsAt + 1))
+    expect(iconsAt).toBeGreaterThan(-1)
+    expect(icons).toContain('`@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation"')
+    expect(icons).toContain('`lucide-react` (ISC')
+    // The token values as they are in Fluent's two files at that commit; the toolkit declares only the ones it uses.
+    const durations: Record<string, number> = { ultraFast: 50, faster: 100, fast: 150, normal: 200, gentle: 250, slow: 300, slower: 400, ultraSlow: 500 }
+    const curves: Record<string, readonly number[]> = {
+      accelerateMax: [0.9, 0.1, 1, 0.2],
+      accelerateMid: [1, 0, 1, 1],
+      accelerateMin: [0.8, 0, 0.78, 1],
+      decelerateMax: [0.1, 0.9, 0.2, 1],
+      decelerateMid: [0, 0, 0, 1],
+      decelerateMin: [0.33, 0, 0.1, 1],
+      easyEaseMax: [0.8, 0, 0.2, 1],
+      easyEase: [0.33, 0, 0.67, 1],
+      linear: [0, 0, 1, 1],
+    }
+    const { FLUENT_CURVES, FLUENT_DURATIONS } = await import('../src/internal/motion-impl')
+    expect(Object.keys(FLUENT_DURATIONS).length).toBeGreaterThan(0)
+    expect(Object.keys(FLUENT_CURVES).length).toBeGreaterThan(0)
+    for (const [name, ms] of Object.entries(FLUENT_DURATIONS)) {
+      expect(ms, name).toBe(durations[name])
+      // The section lists each token used with its value.
+      expect(section, name).toContain(`\`duration${name[0]!.toUpperCase()}${name.slice(1)}\` ${ms}ms`)
+    }
+    for (const [name, points] of Object.entries(FLUENT_CURVES)) {
+      expect(points, name).toEqual(curves[name])
+      expect(section, name).toContain(`\`curve${name[0]!.toUpperCase()}${name.slice(1)}\` cubic-bezier(${points.join(',')})`)
+    }
   })
 
   test('THIRD_PARTY.md has a Park UI section: MIT, the commit read, recipes translated to Tailwind and nothing installed', () => {

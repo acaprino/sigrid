@@ -3,9 +3,31 @@
 A design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
 knows nothing of any app: no app's name, concepts or product components, and nothing of a desktop shell. An app builds
 its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
-MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`. It is not on npm:
-use it from a GitHub Release (see "Use a release") or from the repository (`npm ci`, `npm run build`, then a `file:`
-dependency on this folder).
+MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
+
+## Use it
+
+It is not on npm. Clone it next to your app, build it, and depend on the folder:
+
+```bash
+git clone https://github.com/acaprino/toolkit.git
+cd toolkit && npm ci && npm run build
+```
+
+```jsonc
+// your app's package.json
+"dependencies": { "@acaprino/toolkit": "file:../toolkit" }
+```
+
+```tsx
+import '@acaprino/toolkit/theme.css'   // in your Tailwind entry, with an @source on the toolkit's src
+import { BASE_THEME, applyTheme, applyDensity, Button } from '@acaprino/toolkit'
+
+applyTheme(document.documentElement, { theme: BASE_THEME, scheme: 'light' })
+applyDensity(document.documentElement, 'normal') // or 'compact', 'large', or your own DensityDef
+```
+
+To depend on a published version instead of a checkout, see [Use a release](#use-a-release) below.
 
 ## The four layers
 
@@ -15,7 +37,8 @@ dependency on this folder).
    `PopoverPrimitive` are re-exported so an app composes them with the toolkit's single copy.
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
    levels and elevation of every primitive in `src/components/ui/`.
-3. **Motion of its own**: short decelerating tweens (100 to 240 ms, no springs), only with the `animated` prop, never
+3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
+   decelerates, leaving accelerates, moving in place eases; no springs), only with the `animated` prop, never
    with `prefers-reduced-motion`, only in answer to a gesture. `motion` (14.6.0) is imported by
    `src/internal/motion-impl.tsx` alone, a chunk loaded lazily (`useMotion`, `preloadMotion`): with animations off it
    never reaches the browser.
@@ -25,13 +48,34 @@ dependency on this folder).
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
+## Density
+
+Density is data, like the themes (`src/density.ts`). The toolkit ships three presets, `DENSITIES`; `normal` is the
+default and equals the sizes the toolkit had before density existed.
+
+| | control heights (md/sm/xs) | side padding (md/sm/xs) | row height | row padding |
+|---|---|---|---|---|
+| `compact` | 36 / 32 / 28px | 12 / 10 / 8px | 32px | 4px |
+| `normal` | 40 / 36 / 32px | 14 / 12 / 10px | 40px | 8px |
+| `large` | 44 / 40 / 36px | 16 / 14 / 12px | 48px | 12px |
+
+- `applyDensity(root, density)` takes a preset id or a `DensityDef` (an app's own, or a preset with some measures
+  changed: `densityWith('compact', { row: { height: 28 } })`). It writes the measures on the element as `--density-*`
+  and the id as `data-density`; `copyTheme` carries both to another document.
+- `src/styles/theme.css` turns them into the tokens the primitives read: `--control-md`, `--control-sm`,
+  `--control-xs`, `--pad-md`, `--pad-sm`, `--pad-xs`, `--row-height` and `--row-pad` (`h-(--control-md)`,
+  `px-(--pad-sm)`, `min-h-(--row-height)`…). Before any script runs they are `normal`.
+- Two rules sit above every definition: each measure is brought inside `DENSITY_LIMITS` (a control is never shorter
+  than 24px), and with a coarse pointer every control height and the row height are at least `--touch-target`, 44px
+  (a density that asks for more gets more on touch too).
+- `DensityChoice` is the settings control, of the same family as the other look settings; the app stores the choice.
+
 ## What it exports
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider` (where overlays mount for part of an app drawn in
-  another document), the
-  generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
@@ -47,13 +91,15 @@ Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.
 
 - `DESIGN.md`: the design file (zero-slop-design format): the tokens of the default theme in light and dark, the
   owner's rules R1 to R10 of 2026-11-20 (accent in four places only, border or shadow, plain key hints and counts,
-  icons that inform, radii 2/4/6, heights 40/36/32, 2px accent focus ring, data colours as dots…), the approved
+  icons that inform, radii 2/4/6, heights 40/36/32 at normal density, 2px accent focus ring, data colours as dots…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: every component in its variants, sizes and states (hover, pressed and focus forced with
   `data-force`), in light and dark and in several palettes. `npm run showcase` serves it (Vite, development only, not
-  part of the package); `?theme=ambra&scheme=dark&open=menu` picks the theme and opens what opens on a gesture.
+  part of the package); `?theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the theme (`base`, or a
+  palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`; the toolbar
+  has a switch for it too), opens what opens on a gesture and turns motion on.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
   findings in `design-check.known.json`) use the copy of the tool in `tools/zero-slop-design/` (v0.2.1, MIT); the

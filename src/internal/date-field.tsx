@@ -18,7 +18,7 @@ import { CALENDAR_WORDS, Calendar } from '../components/ui/calendar'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Input } from '../components/ui/input'
-import { useMotion } from './motion'
+import { useEntrance } from './motion'
 import { cn } from '../lib/utils'
 import { FOCUS_RING } from '../lib/focus'
 
@@ -39,7 +39,7 @@ const dayText = (day: CalendarDate) => longDate.format(new Date(day.year, day.mo
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
 const TRIGGER_CLASS = cn(
-  'flex h-10 w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-input bg-transparent px-3 py-1 text-left text-base md:text-sm',
+  'flex h-(--control-md) w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-input bg-transparent px-(--pad-sm) py-1 text-left text-base md:text-sm',
   FOCUS_RING,
 )
 
@@ -65,18 +65,14 @@ type FieldShellProps = {
 }
 
 function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, onOpen, onPressSelected, animated, children }: FieldShellProps) {
-  const motion = useMotion(animated)
   const key = selected?.toString() ?? ''
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const value = React.useMemo(() => (selected ? [selected] : []), [key])
   const ids = React.useMemo(() => (id ? { trigger: id } : undefined), [id])
   // The card mounts when it opens: with `animated` it enters with a short fade (never with prefers-reduced-motion).
-  const entered = React.useCallback(
-    (el: HTMLDivElement | null) => {
-      if (el && motion) motion.enterPopup(el)
-    },
-    [motion],
-  )
+  // The card enters from the side of the field it is really on (measured: the placement attribute comes too late).
+  const control = React.useRef<HTMLDivElement>(null)
+  const entered = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, control.current))
   return (
     <DatePicker.Root
       ids={ids}
@@ -101,7 +97,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
       unmountOnExit
       className="min-w-0"
     >
-      <DatePicker.Control>
+      <DatePicker.Control ref={control}>
         <DatePicker.Trigger data-slot="date-field" className={TRIGGER_CLASS}>
           <CalendarIcon className="size-4 shrink-0 text-ink-soft" aria-hidden />
           <span className={cn('truncate', text ? undefined : 'text-ink-soft')}>{text ?? placeholder}</span>
@@ -245,7 +241,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder = 'No
           step={60}
           value={typed}
           disabled={!withTime}
-          className="h-9 w-28"
+          className="h-(--control-sm) w-28"
           onChange={(e) => {
             const next = e.target.value
             setTyped(next)
