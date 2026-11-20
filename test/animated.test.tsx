@@ -6,7 +6,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { useState, type ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Checkbox, Toasts } from '../src'
-import { preloadMotion } from '../src/internal/motion'
+import { preloadMotion, useEntrance } from '../src/internal/motion'
 
 const noop = () => {}
 
@@ -110,31 +110,88 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
     await preloadMotion()
     systemMotion(false)
   })
-  test('the declared durations are all under 250 ms, and they are the ones Motion receives', async () => {
-    const { DURATION_MS, ROW_EXIT } = await import('../src/internal/motion-impl')
-    for (const [k, ms] of Object.entries(DURATION_MS)) expect(ms, k).toBeLessThan(250)
-    // The duration in seconds of each animation (read from JSON: writing the property name here would make Tailwind,
-    // which also scans `test/`, generate a CSS class with motion).
-    const seconds = (animation: object) => Number(/"duration":([0-9.]+)/.exec(JSON.stringify(animation))![1])
+  /** The curve as a function of time: the progress (0..1) at `t` (0..1) of a cubic Bézier through the four values. */
+  const progress = ([x1, y1, x2, y2]: readonly number[], t: number) => {
+    const at = (a: number, b: number, u: number) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u
+    let low = 0
+    let high = 1
+    for (let i = 0; i < 40; i++) {
+      const mid = (low + high) / 2
+      if (at(x1!, x2!, mid) < t) low = mid
+      else high = mid
+    }
+    return at(y1!, y2!, low)
+  }
+  // The duration in seconds of each animation (read from JSON: writing the property name here would make Tailwind,
+  // which also scans `test/`, generate a CSS class with motion).
+  const seconds = (animation: object) => Number(/"duration":([0-9.]+)/.exec(JSON.stringify(animation))![1])
+  test('every declared duration is one of Fluent\'s, under 250 ms, and it is the one Motion receives', async () => {
+    const { CARD_DURATION_MS, DURATION_MS, FLUENT_DURATIONS, GESTURE_MS, ROW_EXIT } = await import('../src/internal/motion-impl')
+    const tokens: number[] = Object.values(FLUENT_DURATIONS)
+    const all = { ...DURATION_MS, ...GESTURE_MS, card: CARD_DURATION_MS }
+    for (const [name, ms] of Object.entries(all)) {
+      expect(ms, name).toBeLessThan(250)
+      // No duration is a one-off: each is a token of the scale.
+      expect(tokens, name).toContain(ms)
+    }
     expect(seconds(ROW_EXIT) * 1000).toBeCloseTo(DURATION_MS.row, 6)
   })
-  test('the column of notices moves with the list transition, over before a leaving notice leaves the DOM', async () => {
+  test('the notices that stay move with the list transition; one that leaves is gone before it leaves the DOM', async () => {
     const { DURATION_MS, GESTURE_MS, MOTION, NOTICES } = await import('../src/internal/motion-impl')
     expect(NOTICES.transition).toEqual(MOTION.list)
+    expect(NOTICES.entering).toEqual(MOTION.enter)
+    expect(NOTICES.leaving).toEqual(MOTION.leave)
     expect(DURATION_MS.toast).toBeLessThan(250)
-    expect(GESTURE_MS.list).toBeLessThanOrEqual(DURATION_MS.toast)
+    expect(GESTURE_MS.leave).toBeLessThan(DURATION_MS.toast)
   })
-  test('every gesture is a short decelerating tween: under 250 ms, never a spring, never repeated', async () => {
-    const { EASE_OUT, GESTURE_MS, LIST_ITEM, MOTION } = await import('../src/internal/motion-impl')
-    for (const [name, ms] of Object.entries(GESTURE_MS)) expect(ms, name).toBeLessThan(250)
+  test('what enters decelerates, what leaves accelerates, what moves in place eases at both ends', async () => {
+    const { FLUENT_CURVES, GESTURE_MS, LIST_ITEM, MOTION, ROW_EXIT } = await import('../src/internal/motion-impl')
+    const kinds = {
+      enter: ['enter', 'press', 'release'],
+      leave: ['leave'],
+      move: ['list', 'slide', 'follow', 'turn'],
+    } as const
+    // Every transition is of one kind, and takes its duration from the declared gestures.
+    expect(Object.keys(MOTION).sort()).toEqual(Object.values(kinds).flat().sort())
     for (const [name, transition] of Object.entries(MOTION)) {
-      expect(transition.ease, name).toEqual(EASE_OUT)
       expect(transition.duration * 1000, name).toBeCloseTo(GESTURE_MS[name as keyof typeof GESTURE_MS], 6)
       expect(JSON.stringify(transition), name).not.toMatch(/repeat|spring|stiffness/)
     }
-    // Fast start, soft landing: the curve never overshoots its end.
-    expect(EASE_OUT.every((v) => v >= 0 && v <= 1)).toBe(true)
-    expect(LIST_ITEM.transition).toMatchObject(MOTION.list)
+    for (const name of kinds.enter) expect(MOTION[name].ease, name).toEqual(FLUENT_CURVES.decelerateMid)
+    for (const name of kinds.leave) expect(MOTION[name].ease, name).toEqual(FLUENT_CURVES.accelerateMin)
+    for (const name of kinds.move) expect(MOTION[name].ease, name).toEqual(FLUENT_CURVES.easyEase)
+    // The shape of each curve, whatever its numbers: where it is at the middle of its time, and that it never goes
+    // back or past its end.
+    const half = (curve: readonly number[]) => progress(curve, 0.5)
+    expect(half(FLUENT_CURVES.decelerateMid)).toBeGreaterThan(0.75) // most of the way early, then it settles
+    expect(half(FLUENT_CURVES.accelerateMin)).toBeLessThan(0.25) // hardly moved yet, then it is gone
+    expect(half(FLUENT_CURVES.easyEase)).toBeCloseTo(0.5, 2) // the same at both ends
+    expect(progress(FLUENT_CURVES.easyEase, 0.1)).toBeLessThan(0.1) // a gentle start
+    expect(progress(FLUENT_CURVES.easyEase, 0.9)).toBeGreaterThan(0.9) // a gentle end
+    for (const [name, curve] of Object.entries(FLUENT_CURVES)) {
+      expect(curve.every((v) => v >= 0 && v <= 1), name).toBe(true)
+      let before = 0
+      for (let t = 0.05; t < 1; t += 0.05) {
+        const now = progress(curve, t)
+        expect(now, `${name} at ${t}`).toBeGreaterThanOrEqual(before)
+        expect(now, `${name} at ${t}`).toBeLessThanOrEqual(1)
+        before = now
+      }
+    }
+    // A list: the new item enters, the others make room as a movement in place.
+    expect(LIST_ITEM.transition).toMatchObject(MOTION.enter)
+    expect(LIST_ITEM.transition.layout).toEqual(MOTION.list)
+    // A row that closes up: the row leaves (its fade accelerates), the room it took closes as a movement in place.
+    expect(ROW_EXIT.transition.ease).toEqual(FLUENT_CURVES.easyEase)
+    expect(ROW_EXIT.transition.opacity.ease).toEqual(FLUENT_CURVES.accelerateMin)
+  })
+  test('what goes down under the finger is not slower than what comes back, nor that than what travels together', async () => {
+    const { GESTURE_MS } = await import('../src/internal/motion-impl')
+    expect(GESTURE_MS.press).toBeLessThan(GESTURE_MS.release)
+    expect(GESTURE_MS.release).toBeLessThanOrEqual(GESTURE_MS.slide)
+    expect(GESTURE_MS.slide).toBeLessThan(GESTURE_MS.list)
+    // What leaves a list is gone before the others have closed up over its place.
+    expect(GESTURE_MS.leave).toBeLessThan(GESTURE_MS.list)
   })
   // No test measures real time (neither a millisecond ceiling nor a fake clock: Motion's frame loop runs on jsdom's
   // real timers and a fake clock leaves it half done). The order of events is tested, which does not depend on how
@@ -147,11 +204,132 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
     expect(screen.queryByText('Done')).not.toBeNull() // the exit is in progress
     await waitFor(() => expect(screen.queryByText('Done')).toBeNull(), { timeout: 3000, interval: 5 })
   })
-  test('a list item slides into place: `layout` with the list transition; it comes down 8px and leaves giving a little', async () => {
-    const { LIST_ITEM, MOTION } = await import('../src/internal/motion-impl')
+  test('a list item slides into place: `layout` with the list transition; it comes down a little and leaves with a quick fade', async () => {
+    const { LIST_ITEM, MOTION, TRAVEL_PX } = await import('../src/internal/motion-impl')
     expect(LIST_ITEM.transition.layout).toEqual(MOTION.list)
-    expect(LIST_ITEM.initial).toEqual({ opacity: 0, y: -8 })
-    expect(LIST_ITEM.exit).toEqual({ opacity: 0, scale: 0.98 })
+    expect(LIST_ITEM.initial).toEqual({ opacity: 0, y: -TRAVEL_PX.row })
+    expect(LIST_ITEM.exit).toEqual({ opacity: 0, transition: MOTION.leave })
+    // In the plane: a list item is never resized on its way in or out.
+    expect(JSON.stringify(LIST_ITEM)).not.toMatch(/scale/)
+  })
+  test('what opens enters once, from the side it was placed on, and ends on its own style', async () => {
+    const { CARD_DURATION_MS, FLUENT_CURVES, GESTURE_MS, TRAVEL_PX, enterPopup, enterTooltip, enterSheet, landCard, popCheck } = await import('../src/internal/motion-impl')
+    type Call = { el: Element; keyframes: Keyframe[]; options: KeyframeAnimationOptions; cancel: ReturnType<typeof vi.fn> }
+    const calls: Call[] = []
+    const original = Element.prototype.animate
+    Element.prototype.animate = function (this: Element, keyframes: Keyframe[], options: KeyframeAnimationOptions) {
+      const cancel = vi.fn()
+      calls.push({ el: this, keyframes, options, cancel })
+      return { cancel } as unknown as Animation
+    } as Element['animate']
+    const frame = () => new Promise<void>((done) => requestAnimationFrame(() => done()))
+    /** A surface in its positioner, in the page; the side is written where each positioning library writes it. */
+    const at = (side: string | null, attribute = 'data-side') => {
+      const positioner = document.body.appendChild(document.createElement('div'))
+      const el = positioner.appendChild(document.createElement('div'))
+      if (side) (attribute === 'data-side' ? el : positioner).setAttribute(attribute, side)
+      return el
+    }
+    /** The hold (unseen, no movement) and the entrance played on `el`. */
+    const of = (el: Element) => {
+      const mine = calls.filter((c) => c.el === el)
+      return { hold: mine.find((c) => c.keyframes.length === 2), entrance: mine.find((c) => c.keyframes.length === 1), count: mine.length }
+    }
+    const start = (el: Element) => of(el).entrance?.keyframes[0]!['transform']
+    try {
+      // A floating surface is placed after it mounts, and may be flipped for lack of room: asked to open below, it ends
+      // above. Until the next frame it is only held unseen; then it enters from the side it really is on.
+      const flipped = at('bottom')
+      enterPopup(flipped)
+      expect(of(flipped).count).toBe(1)
+      expect(of(flipped).hold!.keyframes).toEqual([{ opacity: 0 }, { opacity: 0 }])
+      flipped.setAttribute('data-side', 'top')
+      await frame()
+      expect(of(flipped).hold!.cancel).toHaveBeenCalledTimes(1)
+      expect(start(flipped)).toBe(`translateY(${TRAVEL_PX.card}px)`)
+      expect(of(flipped).entrance!.options.duration).toBe(CARD_DURATION_MS)
+      // A side that is not there yet when it mounts (the other library writes it on the positioner, later).
+      const late = at(null)
+      enterPopup(late)
+      late.parentElement!.setAttribute('data-placement', 'bottom-start')
+      // Below its button it comes down from it, above it comes up; beside it, from that side.
+      const right = at('right')
+      enterPopup(right)
+      const hint = at('left')
+      enterTooltip(hint)
+      // With its anchor given the side is measured, whatever the attribute says: this library writes it a few frames
+      // late and keeps the one of the last opening until then. Here it still says below, and the card is above.
+      const rect = (top: number, bottom: number) => () => ({ top, bottom, left: 0, right: 100, width: 100, height: bottom - top, x: 0, y: top, toJSON: () => ({}) })
+      const stale = at('bottom-start', 'data-placement')
+      const field = document.body.appendChild(document.createElement('div'))
+      field.getBoundingClientRect = rect(400, 440)
+      stale.getBoundingClientRect = rect(96, 396)
+      enterPopup(stale, field)
+      // An anchor that is not laid out tells nothing: the attribute is read.
+      const unplaced = at('top')
+      enterPopup(unplaced, document.body.appendChild(document.createElement('div')))
+      // A logical side follows the direction of the text.
+      const logical = at('inline-start')
+      enterPopup(logical)
+      const logicalRtl = at('inline-start')
+      logicalRtl.style.direction = 'rtl'
+      enterPopup(logicalRtl)
+      const logicalEnd = at('inline-end')
+      enterPopup(logicalEnd)
+      // With no side known it does not guess: it only fades.
+      const nowhere = at(null)
+      enterTooltip(nowhere)
+      // Closed before the frame: nothing is played on what is gone.
+      const gone = at('bottom')
+      enterPopup(gone)
+      gone.parentElement!.remove()
+      await frame()
+      expect(start(late)).toBe(`translateY(-${TRAVEL_PX.card}px)`)
+      expect(start(right)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
+      expect(start(hint)).toBe(`translateX(${TRAVEL_PX.hint}px)`)
+      expect(of(hint).entrance!.options.duration).toBe(GESTURE_MS.tooltip)
+      expect(start(logical)).toBe(`translateX(${TRAVEL_PX.card}px)`)
+      expect(start(logicalRtl)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
+      expect(start(logicalEnd)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
+      expect(start(stale)).toBe(`translateY(${TRAVEL_PX.card}px)`)
+      expect(start(unplaced)).toBe(`translateY(${TRAVEL_PX.card}px)`)
+      expect(start(nowhere)).toBe('none')
+      expect(of(gone).entrance).toBeUndefined()
+      // What has no anchor enters at once, with no hold.
+      for (const [enter, el] of [[enterSheet, at(null)], [landCard, at(null)], [popCheck, at(null)]] as const) {
+        enter(el)
+        expect(of(el).count).toBe(1)
+        expect(of(el).entrance).toBeDefined()
+      }
+      const entrances = calls.filter((c) => c.keyframes.length === 1)
+      expect(entrances).toHaveLength(13)
+      for (const { keyframes, options } of entrances) {
+        // Only the start is given, transparent: the end is the element's own style, whatever it is by then (a sheet
+        // being dragged keeps its place). Only transform and opacity move.
+        expect(keyframes[0]!.opacity).toBe(0)
+        expect(keyframes[0]!.offset).toBe(0)
+        expect(Object.keys(keyframes[0]!).sort()).toEqual(['offset', 'opacity', 'transform'])
+        // Once, on the entering curve (it decelerates), leaving nothing behind (no fill, no repetition).
+        expect(options.easing).toBe(`cubic-bezier(${FLUENT_CURVES.decelerateMid.join(', ')})`)
+        expect(Number(options.duration)).toBeLessThan(250)
+        expect(Object.keys(options).sort()).toEqual(['duration', 'easing'])
+      }
+      // Only the check mark is resized (it is stamped): everything else moves in the plane.
+      expect(entrances.filter(({ keyframes }) => /scale/.test(String(keyframes[0]!['transform'])))).toHaveLength(1)
+    } finally {
+      Element.prototype.animate = original
+      document.body.replaceChildren()
+    }
+  })
+  test('the further a surface travels the larger it is: all on the 4px grid, none across the screen', async () => {
+    const { TRAVEL_PX } = await import('../src/internal/motion-impl')
+    for (const [name, px] of Object.entries(TRAVEL_PX)) {
+      expect(px % 4, name).toBe(0)
+      expect(px, name).toBeLessThanOrEqual(32)
+    }
+    expect(TRAVEL_PX.hint).toBeLessThan(TRAVEL_PX.card)
+    expect(TRAVEL_PX.card).toBeLessThan(TRAVEL_PX.notice)
+    expect(TRAVEL_PX.notice).toBeLessThan(TRAVEL_PX.sheet)
   })
   test('Toasts: a leaving notice can no longer be clicked, “Undo” with a double click fires only once', async () => {
     const onUndo = vi.fn()
@@ -191,5 +369,27 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
     } finally {
       wa.restore()
     }
+  })
+  test('an entrance is played once per opening: not again on a render, a new `ref`, or when Motion comes with it open', () => {
+    const enter = vi.fn()
+    function Surface({ animated, open }: { animated: boolean; open: boolean }) {
+      const entered = useEntrance<HTMLDivElement>(animated, (_motion, el) => enter(el))
+      // A caller's `ref` that is a new function at every render, as an inline one is.
+      return open ? <div data-testid="surface" ref={(el) => entered(el)} /> : null
+    }
+    // Open before animations are on (the Motion chunk not asked for yet): it is simply there.
+    const { rerender } = render(<Surface animated={false} open />)
+    expect(enter).not.toHaveBeenCalled()
+    // Animations turned on, renders, new refs: it is already open and must not move.
+    rerender(<Surface animated open />)
+    rerender(<Surface animated open />)
+    expect(enter).not.toHaveBeenCalled()
+    // Closed and opened again: the gesture. Once.
+    rerender(<Surface animated open={false} />)
+    rerender(<Surface animated open />)
+    expect(enter).toHaveBeenCalledTimes(1)
+    expect(enter).toHaveBeenLastCalledWith(screen.getByTestId('surface'))
+    rerender(<Surface animated open />)
+    expect(enter).toHaveBeenCalledTimes(1)
   })
 })

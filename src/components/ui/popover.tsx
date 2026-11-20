@@ -12,7 +12,7 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 import { cn } from "../../lib/utils"
-import { useMotion } from "../../internal/motion"
+import { useEntrance } from "../../internal/motion"
 import { usePortalContainer } from "../PortalContainer"
 
 type PopoverState = { open: boolean; anchor: Element | null; setAnchor: (el: Element | null) => void }
@@ -75,14 +75,14 @@ function PopoverContent({
 }: PopoverContentProps) {
   const container = usePortalContainer()
   const state = React.useContext(PopoverStateContext)
-  const motion = useMotion(animated)
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el))
   const refs = React.useCallback(
     (el: HTMLDivElement | null) => {
-      if (el && motion) motion.enterPopup(el)
+      enter(el)
       if (typeof ref === "function") ref(el)
       else if (ref) ref.current = el
     },
-    [motion, ref]
+    [enter, ref]
   )
   return (
     <PopoverPrimitive.Portal container={container}>

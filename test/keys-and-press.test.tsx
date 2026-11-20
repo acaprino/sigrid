@@ -1,7 +1,7 @@
 // The key hints, and the press gesture of the button, which exists only with `animated` and without
 // prefers-reduced-motion. Off, the DOM is the one from before. (An app's
 // own uses of these motions are tested in the app's package.)
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Button } from '../src'
 import { Kbd, Shortcut } from '../src/components/ui/kbd'
@@ -89,12 +89,52 @@ describe('the button\'s press gesture', () => {
 
   test('`pressable` goes down when pressed, stays still under the pointer, and gives the element back clean', async () => {
     const { pressable, PRESS_SCALE } = await import('../src/internal/motion-impl')
-    expect(PRESS_SCALE).toEqual({ hover: 1, tap: 0.97 })
-    render(<button type="button">Plain</button>)
+    // Still under the pointer; pressed, it goes down by little: seen, never a bounce.
+    expect(PRESS_SCALE.hover).toBe(1)
+    expect(PRESS_SCALE.tap).toBeLessThan(1)
+    expect(PRESS_SCALE.tap).toBeGreaterThanOrEqual(0.95)
+    render(
+      <>
+        <button type="button">Plain</button>
+        <button type="button" aria-disabled="true">
+          Busy
+        </button>
+      </>,
+    )
     const el = screen.getByRole('button', { name: 'Plain' })
+    const busy = screen.getByRole('button', { name: 'Busy' })
     const stop = pressable(el)
+    const stopBusy = pressable(busy)
+    /** The scale Motion has written on the element, or null when it is at rest with nothing written. */
+    const scale = (b: HTMLElement) => {
+      const found = /scale\(([\d.]+)\)/.exec(b.style.transform)?.[1] ?? (b.style.getPropertyValue('scale') || null)
+      return found === null ? null : Number(found)
+    }
+    const pointer = { pointerType: 'mouse', isPrimary: true, button: 0 }
     expect(el.getAttribute('style')).toBeNull() // at rest nothing is written on the element
+    // Under the pointer it stays as it is: a desktop button does not grow on hover.
+    fireEvent.pointerEnter(el, { pointerType: 'mouse' })
+    expect(el.getAttribute('style')).toBeNull()
+    // Pressed, it goes down to the declared scale and stays there while held.
+    fireEvent.pointerDown(el, pointer)
+    await waitFor(() => expect(scale(el)).toBeCloseTo(PRESS_SCALE.tap, 5), { timeout: 3000, interval: 5 })
+    // Released, it comes all the way back.
+    fireEvent.pointerUp(window, pointer)
+    await waitFor(() => expect(scale(el) ?? 1).toBe(1), { timeout: 3000, interval: 5 })
+    // A button that is busy or disabled does not answer.
+    fireEvent.pointerDown(busy, pointer)
+    fireEvent.pointerUp(window, pointer)
+    await new Promise((done) => setTimeout(done, 60))
+    expect(busy.getAttribute('style')).toBeNull()
+    // The cleanup stops a movement still running and leaves nothing on the element, then or later.
+    fireEvent.pointerDown(el, pointer)
     stop()
+    stopBusy()
+    expect(el.style.transform).toBe('')
     expect(el.style.getPropertyValue('scale')).toBe('')
+    await new Promise((done) => setTimeout(done, 60))
+    expect(el.style.transform).toBe('')
+    expect(el.style.getPropertyValue('scale')).toBe('')
+    fireEvent.pointerUp(window, pointer)
   })
 })

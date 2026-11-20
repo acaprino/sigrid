@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 // Optional animations (ADR-0009): only in response to a gesture, under 250 ms, off by default. A component animates
 // only if the caller passes `animated` and the system does not ask for less motion. Motion lives in a separate chunk
@@ -89,4 +89,23 @@ export function useMotion(animated: boolean | undefined): Impl | null {
     }
   }, [want])
   return want ? impl : null
+}
+
+/**
+ * The `ref` of a surface that enters when it opens (a menu, a popover, a hint): `enter` is called once per element,
+ * when it mounts, which is the user's gesture. The reference is stable and remembers the element it has seen: a later
+ * render, a caller's `ref` that changes, or Motion arriving (or the system no longer asking for less motion) with the
+ * surface already open do not play the entrance again.
+ */
+export function useEntrance<T extends Element>(animated: boolean | undefined, enter: (motion: Impl, el: T) => void): (el: T | null) => void {
+  const motion = useMotion(animated)
+  const latest = useRef({ motion, enter })
+  latest.current = { motion, enter }
+  const seen = useRef<T | null>(null)
+  return useCallback((el: T | null) => {
+    if (!el || el === seen.current) return
+    seen.current = el
+    const { motion, enter } = latest.current
+    if (motion) enter(motion, el)
+  }, [])
 }

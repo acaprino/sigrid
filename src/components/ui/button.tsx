@@ -51,18 +51,19 @@ const buttonVariants = cva(
         link: "font-medium text-ink underline-offset-4 hover:underline",
       },
       size: {
-        // Park md: a control is 40px tall (44px with a finger, from the base classes).
-        default: "h-10 min-w-10 px-3.5",
+        // Park md: a control is 40px tall (44px with a finger, from the base classes). The heights and the side padding
+        // are the density tokens (`src/density.ts`): 40/36/32px and 14/12/10px at `normal`.
+        default: "h-(--control-md) min-w-(--control-md) px-(--pad-md)",
         // Park xs and sm: only inside a dense row.
-        xs: "h-8 min-w-8 px-2.5",
-        sm: "h-9 min-w-9 px-3",
+        xs: "h-(--control-xs) min-w-(--control-xs) px-(--pad-xs)",
+        sm: "h-(--control-sm) min-w-(--control-sm) px-(--pad-sm)",
         // R7 caps a control at 40px: `lg` keeps its name for compatibility and differs from `default` only by its 16px label.
-        lg: "h-10 min-w-10 px-4 text-base",
-        icon: "size-10",
-        "icon-xs": "size-8",
-        "icon-sm": "size-9",
+        lg: "h-(--control-md) min-w-(--control-md) px-4 text-base",
+        icon: "size-(--control-md)",
+        "icon-xs": "size-(--control-xs)",
+        "icon-sm": "size-(--control-sm)",
         // As `icon` (R7): kept for compatibility.
-        "icon-lg": "size-10",
+        "icon-lg": "size-(--control-md)",
       },
     },
     defaultVariants: {
@@ -80,7 +81,7 @@ export type ButtonProps = React.ComponentProps<"button"> &
     animated?: boolean | undefined
     /** Scale under the pointer, with `animated`. Default 1: still. */
     hoverScale?: number | undefined
-    /** Scale while pressed, with `animated`. Default 0.97. */
+    /** Scale while pressed, with `animated`. Default 0.96. */
     tapScale?: number | undefined
     /**
      * Waiting for the result of its action: the button keeps its size, is `aria-busy="true"` and `aria-disabled="true"`,

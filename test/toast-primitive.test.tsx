@@ -401,6 +401,25 @@ describe('with animations', () => {
     expect(column()).toEqual(['Notice 2', 'Notice 1'])
   })
 
+  test('animations turned on with notices already shown: they stay where they are, and only a new one enters', async () => {
+    await preloadMotion()
+    fakeMatchMedia(false)
+    // Without animations first (or with the Motion chunk still on its way): the notice is simply there.
+    const { rerender } = render(<Toasts max={3} inline items={[notice(1)]} />)
+    await settle()
+    rerender(<Toasts max={3} inline animated items={[notice(1)]} />)
+    // Motion is here now: the column is drawn by it, but a notice the user was already reading does not come in again.
+    await waitFor(() => expect(screen.queryByText('Notice 1')).not.toBeNull())
+    expect(card('Notice 1').style.opacity).not.toBe('0')
+    await settle()
+    expect(card('Notice 1').style.opacity).not.toBe('0')
+    // The next one is a change the user made: it enters.
+    rerender(<Toasts max={3} inline animated items={[notice(1), notice(2)]} />)
+    await waitFor(() => expect(screen.queryByText('Notice 2')).not.toBeNull())
+    expect(Number(card('Notice 2').style.opacity)).toBeLessThan(1)
+    await waitFor(() => expect(card('Notice 2').style.opacity).toBe('1'), { timeout: 3000, interval: 5 })
+  })
+
   test('a fourth pushes the oldest out: it stays in the DOM, inert, while it leaves from the top, then it is gone', async () => {
     await preloadMotion()
     fakeMatchMedia(false)
@@ -452,10 +471,18 @@ describe('with animations', () => {
   test('the column moves with the list transition, from and to the declared places', async () => {
     const { NOTICES, MOTION, DURATION_MS } = await import('../src/internal/motion-impl')
     expect(NOTICES.transition).toEqual(MOTION.list)
-    // In from 26px below, a little smaller; closed, 14px down; pushed out by a fourth, 10px above the place over the last.
-    expect(NOTICES.enter).toEqual({ opacity: 0, y: 26, scale: 0.96 })
-    expect(NOTICES.close).toEqual({ opacity: 0, y: 14, scale: 0.94 })
-    expect(NOTICES.pushed).toEqual({ opacity: 0, y: -10, scale: 0.94 })
+    expect(NOTICES.entering).toEqual(MOTION.enter)
+    expect(NOTICES.leaving).toEqual(MOTION.leave)
+    // In from below; closed, a little down; pushed out by a newer one, a little above the place over the last. A notice
+    // enters from further than it leaves by, and keeps its size all the way.
+    expect(NOTICES.enter.opacity).toBe(0)
+    expect(NOTICES.enter.y).toBeGreaterThan(0)
+    expect(NOTICES.close.opacity).toBe(0)
+    expect(NOTICES.close.y).toBeGreaterThan(0)
+    expect(NOTICES.close.y).toBeLessThan(NOTICES.enter.y)
+    expect(NOTICES.pushed.opacity).toBe(0)
+    expect(NOTICES.pushed.y).toBe(-NOTICES.close.y)
+    expect(JSON.stringify(NOTICES)).not.toMatch(/scale/)
     // How long Ark keeps a leaving notice in the DOM: under 250 ms like every other declared duration.
     expect(DURATION_MS.toast).toBeLessThan(250)
   })

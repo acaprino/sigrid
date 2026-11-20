@@ -89,8 +89,8 @@ function Box({ value, onChange }: Pick<ChipsInputProps, 'value' | 'onChange'>) {
     if (!same(next, value)) onChange(next)
   }
   return (
-    // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field
-    <TagsInput.Control className={cn('flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-md border border-input px-1.5 py-[5px] pointer-coarse:py-0', FOCUS_WITHIN_RING)}>
+    // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field; with the density it is half of what the control height leaves (30px: the chip and the two borders)
+    <TagsInput.Control className={cn('flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 rounded-md border border-input px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0', FOCUS_WITHIN_RING)}>
       {value.map((tag, index) => (
         <TagsInput.Item key={tag} index={index} value={tag} className="inline-flex">
           <TagsInput.ItemPreview asChild>

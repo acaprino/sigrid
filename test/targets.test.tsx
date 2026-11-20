@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import { Button, Checkbox, Input } from '../src'
+import { DENSITIES, DENSITY_LIMITS } from '../src/density'
 
 // Round 3, M-12: every control has an area of at least 24x24 px (44 with a coarse pointer) without changing the look
 // on the desktop. (An app's own row controls, and their areas, are tested in the app's package.)
@@ -13,15 +14,17 @@ const noop = () => {}
 const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 
 describe('hit areas: 24px on every pointer, 44px on a coarse one, same look on a desktop', () => {
-  test('every Button size is at least 24px (6) tall and, when square, wide', () => {
+  test('every Button size is at least 24px tall and, when square, wide, at every density', () => {
     for (const size of ['default', 'xs', 'sm', 'lg', 'icon', 'icon-xs', 'icon-sm', 'icon-lg'] as const) {
       const { unmount } = render(<Button size={size}>x</Button>)
       const own = classes(screen.getByRole('button')).filter((c) => !c.includes(':'))
-      const height = own.map((c) => /^(?:h|size)-(\d+)$/.exec(c)).find(Boolean)
-      expect(height, size).toBeTruthy()
-      expect(Number(height![1]), size).toBeGreaterThanOrEqual(6)
+      // The height is a density token (`--control-md`, `-sm`, `-xs`): its px in each preset, and the least a definition may ask.
+      const token = own.map((c) => /^(?:h|size)-\(--control-(md|sm|xs)\)$/.exec(c)).find(Boolean)
+      expect(token, size).toBeTruthy()
+      for (const d of DENSITIES) expect(d.control[token![1] as 'md' | 'sm' | 'xs'], `${size} ${d.id}`).toBeGreaterThanOrEqual(24)
       unmount()
     }
+    expect(DENSITY_LIMITS.control.min).toBeGreaterThanOrEqual(24)
   })
 
   test('on a coarse pointer a Button and an Input are at least 44px (11)', () => {

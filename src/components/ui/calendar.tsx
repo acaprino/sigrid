@@ -9,7 +9,7 @@
 // Ark gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,
 // Home and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the
 // title that opens the months and then the years, and the announcement of the month when it changes.
-// Ours: the sizes (`--cell-size` 2.25rem, 2.75rem with a finger; the days outside the month softer), the names in English (see `CALENDAR_WORDS`), a real `<button>` for each day (Space
+// Ours: the sizes (`--cell-size` is the density token `--control-sm`, 2.25rem at `normal`, 2.75rem with a finger; the days outside the month softer), the names in English (see `CALENDAR_WORDS`), a real `<button>` for each day (Space
 // chooses too), the weekday headers left readable by screen readers, with the full name in `abbr`, and Home and End
 // for the start and the end of the week, as in the APG date grid (Ark's go to the start and the end of the month).
 import * as React from 'react'
@@ -136,7 +136,7 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
     requestAnimationFrame(() => grid.current?.querySelector<HTMLElement>('[data-part="table-cell-trigger"][data-focus]')?.focus({ preventScroll: true }))
   }
   return (
-    <div ref={root} data-slot="calendar" className={cn('w-fit p-4 [--cell-size:2.25rem] pointer-coarse:[--cell-size:2.75rem]', className)}>
+    <div ref={root} data-slot="calendar" className={cn('w-fit p-4 [--cell-size:var(--control-sm)] pointer-coarse:[--cell-size:2.75rem]', className)}>
       <DatePicker.View view="day" className="flex flex-col gap-3">
         <Header view="day" />
         <DatePicker.Table ref={grid} onKeyDown={weekEdge} className="w-full border-collapse">
@@ -144,7 +144,7 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
           <DatePicker.TableHead aria-hidden={false}>
             <DatePicker.TableRow className="flex gap-1">
               {picker.weekDays.map((day) => (
-                <DatePicker.TableHeader key={day.long} scope="col" abbr={day.long} className="flex h-9 flex-1 select-none items-center justify-center font-semibold text-sm text-ink-mute">
+                <DatePicker.TableHeader key={day.long} scope="col" abbr={day.long} className="flex h-(--cell-size) flex-1 select-none items-center justify-center pointer-coarse:h-9 font-semibold text-sm text-ink-mute">
                   {day.short}
                 </DatePicker.TableHeader>
               ))}

@@ -1,8 +1,8 @@
 # Third-party code in `@acaprino/toolkit`
 
 `@acaprino/toolkit` is the design system shared by the owner's apps: theme engine, tokens, primitives and motion. The
-behaviour of the components rests on a headless library, the form comes from Park UI's recipes, the motion and the rest
-of the look are ours, on top of SmoothUI pieces copied into the package and adapted. An app's product components (in the
+behaviour of the components rests on a headless library, the form comes from Park UI's recipes, the motion takes its
+durations and curves from Fluent 2's tokens, the motion code and the rest of the look are ours, on top of SmoothUI pieces copied into the package and adapted. An app's product components (in the
 app's own package, with its own `THIRD_PARTY.md`) are not listed here.
 
 - **Ark UI** (`@ark-ui/react`, an npm dependency) is the base for behaviour: state, keyboard, focus, ARIA. The
@@ -13,7 +13,7 @@ app's own package, with its own `THIRD_PARTY.md`) are not listed here.
   corner levels and elevation follow Park's recipes, translated by hand to Tailwind classes. Park itself is Panda CSS
   only and is **not installed**. Colors stay the theme engine's, never Park's palettes.
 - **SmoothUI** for the look of some primitives. A file can rest on SmoothUI and Park UI: it then carries both headers
-  and is listed in both tables. The motion is the toolkit's own (`src/internal/motion-impl.tsx`, short tweens, no
+  and is listed in both tables. The motion code is the toolkit's own (`src/internal/motion-impl.tsx`, short tweens, no
   springs): nothing of Unlumen UI is used any more (rewritten on 2026-11-20). A file moved onto Ark keeps its SmoothUI header for as long as its look is still the one adapted from
   SmoothUI; it loses it when nothing of SmoothUI is left in it.
 
@@ -137,6 +137,69 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Fluent 2 (Microsoft)
+
+- Project: Fluent UI, https://github.com/microsoft/fluentui (design language: Fluent 2, https://fluent2.microsoft.design)
+- Package read: `@fluentui/tokens`, **not installed**: the values are written in the toolkit, the package is not a
+  dependency
+- Commit read: `a568b4db7806f8642ab4ad296d2c80ad512de8a8`
+- Files read: `packages/tokens/src/global/durations.ts` and `packages/tokens/src/global/curves.ts`
+- License: **MIT** (full text below)
+
+What is taken: the **values** of the motion tokens the toolkit uses, and nothing else. No code of Fluent is copied
+or adapted, no component, no style, no animation. They are the constants `FLUENT_DURATIONS` and `FLUENT_CURVES` in
+`src/internal/motion-impl.tsx`, with Fluent's names; `test/provenance.test.ts` keeps them equal to Fluent's.
+
+- Durations: `durationFaster` 100ms, `durationFast` 150ms, `durationNormal` 200ms. Fluent's longer ones (250 to
+  500 ms) are left out: every duration of the toolkit stays under 250 ms. `durationUltraFast` (50ms) has no use here.
+- Curves: `curveDecelerateMid` cubic-bezier(0,0,0,1), `curveAccelerateMin` cubic-bezier(0.8,0,0.78,1),
+  `curveEasyEase` cubic-bezier(0.33,0,0.67,1).
+
+Which token each movement uses is the toolkit's own choice, by the kind of movement the tokens are named for: what
+enters decelerates, what leaves accelerates, what moves in place eases at both ends. The rules of the toolkit stay:
+only with `animated`, never with `prefers-reduced-motion`, only after a gesture, no springs, nothing that loops.
+
+The note at the end of Fluent UI's licence is about the fonts and icons referenced in Fluent UI React, not its
+tokens.
+No font of Fluent is used anywhere in the toolkit, and no icon comes with these token values.
+
+### Fluent UI license
+
+```
+MIT License
+
+Copyright (c) Microsoft Corporation.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE
+
+NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to the terms listed at https://aka.ms/fluentui-assets-license
+```
+
+
+## Icon packs
+
+Two npm dependencies, installed and unmodified, never copied into `src/` (`src/icons.tsx` picks between them):
+
+- `lucide-react` (ISC, Lucide contributors): the default pack.
+- `@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation", repository
+  https://github.com/microsoft/fluentui-system-icons): the optional `fluent` pack. Its repository's licence is plain
+  MIT, without the fonts-and-icons note of the Fluent UI repository.
 
 ## SmoothUI
 

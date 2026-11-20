@@ -6,6 +6,7 @@
 // Theme engine, catalog and colours: the single source of truth for colours.
 export { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from './colors'
 export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, type ThemePick } from './themes'
+export { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId, type Density, type DensityDef, type DensityId, type DensityOverride } from './density'
 export { DEFAULT_FONT, FONTS, type FontDef, type FontId, type PaletteProfile, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 export { FIXED, contrast, fit, luminance, over, themeTokens, toHex, tokensFor, type Oklch, type ThemeScheme, type ThemeTokens } from './theme-engine'
 export { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, OWN_BACKGROUNDS, OWN_SECONDS, OWN_SIDEBARS, OWN_TINTS, TONE_INTENSITIES, TONE_LIGHTS, TONE_PRESETS, isAccentColor, ownTheme, presetTone, themeTone, tonePresetOf, type OwnTheme, type ThemeTone, type TonePreset } from './theme-engine'
@@ -40,7 +41,7 @@ export { Toasts, type ToastAction, type ToastItem, type ToastsProps } from './co
 
 // Look settings: the base colour, the combination, the tone, the icon pack and the ready-made themes, as cards with a
 // preview each; the app passes its words.
-export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, IconPackChoice, PaletteComboChoice, PaletteStrip, ThemeCatalogChoice, TonePresetChoice, TonePreview, radioArrows, type BaseColorText, type ChoiceText, type IconPackText, type PaletteComboText, type ThemeCatalogText, type TonePresetText } from './components/LookSettings'
+export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, DensityChoice, IconPackChoice, PaletteComboChoice, PaletteStrip, ThemeCatalogChoice, TonePresetChoice, TonePreview, radioArrows, type BaseColorText, type ChoiceText, type DensityText, type IconPackText, type PaletteComboText, type ThemeCatalogText, type TonePresetText } from './components/LookSettings'
 
 // Motion: the hook and the loader; Motion itself stays in a separate chunk, loaded only with animations on.
 export { loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'

@@ -424,7 +424,7 @@ function shapeOf(scheme: ThemeScheme): Record<string, string> {
     '--radius-sm': '2px', '--radius-md': '4px', '--radius-lg': '6px', '--radius-xl': '6px',
     '--radius-button': '4px', '--radius-check': '9999px', '--radius-chip': '4px',
     '--icon-stroke': '1.75', '--icon-cap': 'round', '--icon-join': 'round',
-    '--row-py': '10px', '--nav-py': '8px', '--border-width': '1px',
+    '--border-width': '1px',
     ...elevationOf(scheme),
   }
 }
