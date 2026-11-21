@@ -16,20 +16,26 @@ import * as React from 'react'
 import { DatePicker, useDatePickerContext, type DatePickerRootProps } from '@ark-ui/react/date-picker'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { DEFAULT_WORDS, type Words as ToolkitWords } from '../../words'
 import { FOCUS_RING } from '../../lib/focus'
 
 type Words = NonNullable<DatePickerRootProps['translations']>
 type View = 'day' | 'month' | 'year'
 
-const SPAN: Record<View, string> = { day: 'month', month: 'year', year: 'decade' }
+const SPAN = { day: 'month', month: 'year', year: 'decade' } as const satisfies Record<View, string>
 
-/** The names Ark's parts take, in English. A day is named by its full date («Saturday, November 7, 2026»). */
-export const CALENDAR_WORDS: Words = {
-  dayCell: (state) => state.valueText,
-  prevTrigger: (view) => `Previous ${SPAN[view]}`,
-  nextTrigger: (view) => `Next ${SPAN[view]}`,
-  content: 'Calendar',
+/** The names Ark's parts take, from the toolkit's words. A day is named by its full date («Saturday, November 7, 2026»), in the field's locale. */
+export function calendarWords(words: ToolkitWords): Words {
+  return {
+    dayCell: (state) => state.valueText,
+    prevTrigger: (view) => words.date.previous(SPAN[view]),
+    nextTrigger: (view) => words.date.next(SPAN[view]),
+    content: words.date.calendar,
+  }
 }
+
+/** The names in English: the toolkit's placeholders (`calendarWords` gives an app's). */
+export const CALENDAR_WORDS: Words = calendarWords(DEFAULT_WORDS)
 
 const NAV_CLASS = cn(
   'inline-flex size-(--cell-size) shrink-0 select-none items-center justify-center rounded-md p-0 text-ink-soft hover:bg-ink/6 hover:text-foreground disabled:pointer-events-none disabled:opacity-50',

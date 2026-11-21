@@ -370,9 +370,10 @@ box with the TagsInput. `Sheet` takes `modal={false}`: a panel beside the page, 
 `shortcut`, plain text after the name (R5). `DateField` and `DateTimeField` take `min`, `max`, `disabled`, `locale`
 and `words`.
 
-Open: the toolkit's own words are English (`Close`, `Remove label …`, `Clear the date`, the calendar's names). The
-date fields, the search box and the combobox take the caller's words; the other components do not yet, so an app
-in another language cannot translate them.
+Words (owner, 2026-11-21: «il contenuto dei componenti lo imposta l'app, mica sigrid»; the toolkit has at most
+placeholders, and lets an app make them multilingual): every word a component says by itself is in `src/words.tsx`
+(`DEFAULT_WORDS`, English placeholders, about seventy in twelve groups) and an app replaces them with
+`WordsProvider`, all or some. Before, they were written in the components.
 
 Also added: an app's own icon meanings (`IconPackProvider`'s `icons`) and the status colours `success`, `warning` and
 `highlight` (`theme-engine.ts` `STATUS`). `Select` takes `aria-describedby` and `aria-invalid`, so it sits in a

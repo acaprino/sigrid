@@ -3,6 +3,7 @@ import { Download, Minus, Plus } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../components/ui/sheet'
 import { cn } from '../lib/utils'
+import { useWords } from '../words'
 import { FOCUS_RING_INSET } from '../lib/focus'
 
 /** A page of the document: the measures reserve its place before the image arrives. */
@@ -57,13 +58,15 @@ function nearestStep(zoom: number): number {
  * package opens and draws the document, provides the pages with their measures, provides the image when `onNeedPage`
  * asks for it and chooses the zoom. A page asks for its image only when it is close to entering the view.
  */
-export function AttachmentViewer({ open, onOpenChange, title, status, pages = [], zoom = 1, onZoomChange, onNeedPage, onOpenOriginal, originalLabel = 'Open the original', animated }: AttachmentViewerProps) {
+export function AttachmentViewer({ open, onOpenChange, title, status, pages = [], zoom = 1, onZoomChange, onNeedPage, onOpenOriginal, originalLabel: ownOriginalLabel, animated }: AttachmentViewerProps) {
+  const words = useWords().viewer
+  const originalLabel = ownOriginalLabel ?? words.openOriginal
   const [current, setCurrent] = useState(0)
   const step = nearestStep(zoom)
   const at = VIEWER_ZOOMS.indexOf(step as (typeof VIEWER_ZOOMS)[number])
   const ready = status.kind === 'ready'
   const total = ready ? pages.length : 0
-  const position = ready && total > 0 ? `Page ${Math.min(current + 1, total)} of ${total}` : ' '
+  const position = ready && total > 0 ? words.page(Math.min(current + 1, total), total) : ' '
 
   const header = (
     <div className="flex shrink-0 items-center gap-1 border-b border-line px-4 py-3 pr-14 pointer-coarse:py-2">
@@ -74,14 +77,14 @@ export function AttachmentViewer({ open, onOpenChange, title, status, pages = []
         <SheetDescription className="text-xs text-ink-mute">{position}</SheetDescription>
       </div>
       {ready && onZoomChange ? (
-        <div className="flex shrink-0 items-center" role="group" aria-label="Zoom">
-          <Button variant="ghost" size="icon-sm" aria-label="Zoom out" disabled={at <= 0} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.max(0, at - 1)] ?? 1)}>
+        <div className="flex shrink-0 items-center" role="group" aria-label={words.zoom}>
+          <Button variant="ghost" size="icon-sm" aria-label={words.zoomOut} disabled={at <= 0} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.max(0, at - 1)] ?? 1)}>
             <Minus aria-hidden="true" />
           </Button>
           <span className="min-w-10 text-center text-xs text-ink-soft tabular-nums" aria-live="polite">
             {percent(step)}
           </span>
-          <Button variant="ghost" size="icon-sm" aria-label="Zoom in" disabled={at >= VIEWER_ZOOMS.length - 1} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.min(VIEWER_ZOOMS.length - 1, at + 1)] ?? 1)}>
+          <Button variant="ghost" size="icon-sm" aria-label={words.zoomIn} disabled={at >= VIEWER_ZOOMS.length - 1} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.min(VIEWER_ZOOMS.length - 1, at + 1)] ?? 1)}>
             <Plus aria-hidden="true" />
           </Button>
         </div>
@@ -143,6 +146,7 @@ type PageColumnProps = {
 
 /** The pages one below the other. With zoom above 1 the column widens and also scrolls sideways. */
 function PageColumn({ pages, zoom, onNeedPage, onCurrent }: PageColumnProps) {
+  const words = useWords().viewer
   const root = useRef<HTMLDivElement>(null)
   const latest = useRef({ onNeedPage, onCurrent })
   latest.current = { onNeedPage, onCurrent }
@@ -197,7 +201,7 @@ function PageColumn({ pages, zoom, onNeedPage, onCurrent }: PageColumnProps) {
       ref={root}
       className={cn('flex-1 overflow-auto overscroll-contain bg-paper-2 p-3 sm:p-4', FOCUS_RING_INSET)}
       tabIndex={0}
-      aria-label="Pages of the document"
+      aria-label={words.pages}
       onScroll={(event) => {
         const stage = event.currentTarget
         if (stage.scrollHeight > 0) place.current = stage.scrollTop / stage.scrollHeight
@@ -209,7 +213,7 @@ function PageColumn({ pages, zoom, onNeedPage, onCurrent }: PageColumnProps) {
             key={index}
             data-page={index}
             role="img"
-            aria-label={`Page ${index + 1} of ${pages.length}`}
+            aria-label={words.page(index + 1, pages.length)}
             // A page is a raised sheet: the sm shadow (with its 1px edge), no extra ring (R4).
             className="relative w-full overflow-hidden rounded-sm bg-raised shadow-sm"
             style={{ aspectRatio: `${Math.max(page.width, 1)} / ${Math.max(page.height, 1)}` }}

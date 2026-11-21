@@ -5,6 +5,7 @@
 import { useId } from 'react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { useWords } from '../words'
 
 export type DurationParts = { hours: number; minutes: number }
 
@@ -13,11 +14,11 @@ export type DurationFieldProps = {
   onChange: (value: DurationParts | null) => void
 }
 
-const PRESETS: { label: string; value: DurationParts }[] = [
-  { label: '15m', value: { hours: 0, minutes: 15 } },
-  { label: '30m', value: { hours: 0, minutes: 30 } },
-  { label: '1h', value: { hours: 1, minutes: 0 } },
-  { label: '2h', value: { hours: 2, minutes: 0 } },
+const PRESETS: DurationParts[] = [
+  { hours: 0, minutes: 15 },
+  { hours: 0, minutes: 30 },
+  { hours: 1, minutes: 0 },
+  { hours: 2, minutes: 0 },
 ]
 
 /** The number written in an input: empty or non-numeric counts as zero (the field does not validate, Rust does). */
@@ -27,6 +28,7 @@ function read(text: string): number {
 }
 
 export function DurationField({ value, onChange }: DurationFieldProps) {
+  const words = useWords()
   const hoursId = useId()
   const minutesId = useId()
   const hours = value ? String(value.hours) : ''
@@ -35,21 +37,21 @@ export function DurationField({ value, onChange }: DurationFieldProps) {
     <div className="flex flex-wrap items-center gap-2">
       <Input id={hoursId} type="number" inputMode="numeric" min={0} max={24} step={1} value={hours} onChange={(e) => onChange({ hours: read(e.target.value), minutes: value?.minutes ?? 0 })} className="w-16" />
       <label htmlFor={hoursId} className="text-xs text-ink-soft">
-        hours
+        {words.duration.hours}
       </label>
       <Input id={minutesId} type="number" inputMode="numeric" min={0} max={59} step={5} value={minutes} onChange={(e) => onChange({ hours: value?.hours ?? 0, minutes: read(e.target.value) })} className="w-16" />
       <label htmlFor={minutesId} className="text-xs text-ink-soft">
-        minutes
+        {words.duration.minutes}
       </label>
       <span className="flex flex-wrap gap-1">
         {PRESETS.map((preset) => (
           // The pressed shortcut is the current selection: the selection tint (R1, R2).
-          <Button key={preset.label} type="button" variant="secondary" size="xs" aria-pressed={value !== null && value.hours === preset.value.hours && value.minutes === preset.value.minutes} className="aria-pressed:bg-selected aria-pressed:text-selected-ink" onClick={() => onChange(preset.value)}>
-            {preset.label}
+          <Button key={`${preset.hours}:${preset.minutes}`} type="button" variant="secondary" size="xs" aria-pressed={value !== null && value.hours === preset.hours && value.minutes === preset.minutes} className="aria-pressed:bg-selected aria-pressed:text-selected-ink" onClick={() => onChange(preset)}>
+            {words.duration.short(preset.hours, preset.minutes)}
           </Button>
         ))}
         <Button type="button" variant="ghost" size="xs" onClick={() => onChange(null)}>
-          None
+          {words.duration.none}
         </Button>
       </span>
     </div>

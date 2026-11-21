@@ -28,6 +28,7 @@ import { Button } from './ui/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
+import { useWords } from '../words'
 import { FOCUS_RING } from '../lib/focus'
 
 /** An extra action on a notice (a quick choice after a gesture): `pressed` marks it as already chosen. */
@@ -118,6 +119,7 @@ const NO_ARK_PLACEMENT: CSSProperties = {
 /** A notice of the column: Ark's toast root (without its `status` role and Tab stop), in its place. */
 function Notice({ id }: { id: string }) {
   const column = useContext(ColumnContext)!
+  const words = useWords()
   const toast = useToastContext()
   // What it showed last: a notice that leaves is no longer in `items`, but it stays in the DOM while it goes.
   const current = column.items.get(id)
@@ -206,7 +208,7 @@ function Notice({ id }: { id: string }) {
             aria-keyshortcuts={item.undo.hint}
             onClick={out ? undefined : item.undo.onClick}
           >
-            {item.undo.label ?? 'Undo'}
+            {item.undo.label ?? words.common.undo}
             {item.undo.hint ? (
               // A key hint (R5): plain 12px text in the toast's own colour, only with a fine pointer.
               <kbd aria-hidden="true" data-slot="toast-hint" className="hidden font-sans text-2xs leading-none font-medium any-pointer-fine:inline">
@@ -281,6 +283,7 @@ function Notice({ id }: { id: string }) {
 }
 
 function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: ToastItem[]; max: number; inline: boolean; durationMs: number | undefined; onDismiss: ((id: string) => void) | undefined; motion: Motion }) {
+  const words = useWords()
   // Ark's toaster store, one per column. `pause` and `resume` are the region's (pointer or focus inside): Ark would resume
   // each notice with the time it had left, here the time starts over and is driven by `paused` below.
   const [store] = useState(() => ({ ...createToaster({ placement: 'bottom-end', overlap: false, max: Number.MAX_SAFE_INTEGER, gap: GAP, hotkey: ['F6'], pauseOnPageIdle: false, removeDelay: 0 }), pause() {}, resume() {} }))
@@ -448,7 +451,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
       ref={region}
       toaster={store}
       role="status"
-      aria-label="Notices"
+      aria-label={words.common.notices}
       aria-relevant="additions"
       data-paused={paused || undefined}
       {...{ [TOASTS_ATTR]: '' }}

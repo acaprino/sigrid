@@ -83,6 +83,13 @@ default and equals the sizes the toolkit had before density existed.
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
+- Words: a component's content is the app's. The few words a component says by itself (the name of a close
+  button, «Page 2 of 5», the announcement of a label added) are English placeholders in `DEFAULT_WORDS`. An app
+  replaces them, all or some, once for the whole tree and in any language: `<WordsProvider words={{ common: {
+  close: 'Chiudi' }, date: { noDate: 'Nessuna data' } }}>`. A word that takes a value is a function (`page: (page,
+  total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
+  wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
+  as their last argument, and `useWords()` gives them to an app's own component.
 - Icons: `Icon` draws a meaning (`today`, `settings`) with the pack the user chose (`IconPackProvider`). An app adds
   the meanings of its own with `icons`: `<IconPackProvider pack={pack} icons={{ inbox: { lucide: Inbox, fluent:
   MailInboxColor, emoji: '\u{1F4E5}' } }}>`, then `<Icon name="inbox" />`. The line drawing is required; a pack left

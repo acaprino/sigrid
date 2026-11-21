@@ -12,11 +12,14 @@ export { FIXED, STATUS, contrast, fit, luminance, over, themeTokens, toHex, toke
 export { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, OWN_BACKGROUNDS, OWN_SECONDS, OWN_SIDEBARS, OWN_TINTS, TONE_INTENSITIES, TONE_LIGHTS, TONE_PRESETS, isAccentColor, ownTheme, presetTone, themeTone, tonePresetOf, type OwnTheme, type ThemeTone, type TonePreset } from './theme-engine'
 export { cn } from './lib/utils'
 
+// The words the components say by themselves: English placeholders an app replaces, in any language.
+export { DEFAULT_WORDS, WordsProvider, useWords, withWords, type CalendarSpan, type Words, type WordsOverride } from './words'
+
 // Primitives.
 export { Avatar, initials, type AvatarProps } from './components/ui/avatar'
 export { Badge, badgeVariants } from './components/ui/badge'
 export { Button, QUIET_CHIP, buttonVariants, type ButtonProps } from './components/ui/button'
-export { CALENDAR_WORDS, Calendar, type CalendarProps } from './components/ui/calendar'
+export { CALENDAR_WORDS, Calendar, calendarWords, type CalendarProps } from './components/ui/calendar'
 export { Checkbox } from './components/ui/checkbox'
 export { Combobox, type ComboboxOption, type ComboboxProps } from './components/ui/combobox'
 export { Count, type CountProps } from './components/ui/count'

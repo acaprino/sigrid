@@ -24,6 +24,7 @@ import { Tooltip } from '../components/ui/tooltip'
 import { cn } from '../lib/utils'
 import { FOCUS_RING, FOCUS_WITHIN_RING } from '../lib/focus'
 import { TAG_PILL, tagColorAttrs } from './tag-color'
+import { useWords, type Words } from '../words'
 
 export type ChipsInputProps = {
   /** The id of the writing input, for the field's label. */
@@ -38,7 +39,7 @@ export type ChipsInputProps = {
   suggestions?: readonly string[] | undefined
   /** The text being typed: with it the caller filters (and may fetch) and passes the new `suggestions`. */
   onQuery?: ((text: string) => void) | undefined
-  /** The name of the list of suggestions for screen readers. Default «Suggestions». */
+  /** The name of the list of suggestions for screen readers. Absent: the toolkit's words («Suggestions»). */
   suggestionsLabel?: string | undefined
 }
 
@@ -57,18 +58,19 @@ function clean(tags: string[]): string[] {
 
 const same = (a: string[], b: string[]) => a.length === b.length && a.every((tag, i) => tag === b[i])
 
-const removeName = (tag: string) => `Remove label ${tag}`
-
-/** What Ark's parts are called and what it announces, in English. */
-const WORDS: NonNullable<TagsInputRootProps['translations']> = {
-  deleteTagTriggerLabel: removeName,
-  tagAdded: (tag) => `Label ${tag} added`,
-  tagsPasted: (tags) => (tags.length === 1 ? '1 label added' : `${tags.length} labels added`),
-  tagDeleted: (tag) => `Label ${tag} removed`,
-  tagSelected: (tag) => `Label ${tag} selected. Delete or Backspace removes it.`,
-  noTagsSelected: 'No label selected',
-  inputLabel: (count) => (count === 1 ? '1 label' : `${count} labels`),
-  clearTriggerLabel: 'Remove all labels',
+/** What Ark's parts are called and what it announces, from the toolkit's words. */
+function tagWords(words: Words): NonNullable<TagsInputRootProps['translations']> {
+  const w = words.labels
+  return {
+    deleteTagTriggerLabel: w.remove,
+    tagAdded: w.added,
+    tagsPasted: (tags) => w.pasted(tags.length),
+    tagDeleted: w.removed,
+    tagSelected: w.selected,
+    noTagsSelected: w.noneSelected,
+    inputLabel: w.count,
+    clearTriggerLabel: w.removeAll,
+  }
 }
 
 /** With suggestions the typed text is kept here, for both of Ark's machines: the box tells it when it changes the text itself. */
@@ -76,6 +78,7 @@ type Typed = { set: (text: string) => void }
 
 function Box({ value, onChange, typed }: Pick<ChipsInputProps, 'value' | 'onChange'> & { typed?: Typed | undefined }) {
   const tags = useTagsInputContext()
+  const removeName = useWords().labels.remove
   /** The last key was an Esc kept from the sheet. */
   const held = useRef(false)
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -147,6 +150,8 @@ function Box({ value, onChange, typed }: Pick<ChipsInputProps, 'value' | 'onChan
  */
 export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel }: ChipsInputProps) {
   const ids = useMemo(() => ({ input: id }), [id])
+  const words = useWords()
+  const translations = useMemo(() => tagWords(words), [words])
   if (suggestions !== undefined) return <SuggestingChips id={id} value={value} onChange={onChange} placeholder={placeholder} suggestions={suggestions} onQuery={onQuery} suggestionsLabel={suggestionsLabel} />
   return (
     <TagsInput.Root
@@ -159,7 +164,7 @@ export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQu
       editable={false}
       addOnPaste
       blurBehavior="add"
-      translations={WORDS}
+      translations={translations}
       {...(placeholder === undefined ? {} : { placeholder })}
       className="min-w-0"
     >
@@ -171,8 +176,10 @@ export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQu
 const POSITIONING = { placement: 'bottom-start', sameWidth: true, gutter: 4, strategy: 'fixed' } as const
 
 /** The labels field with a list of suggestions under it: the two Ark machines share the text box and what is typed. */
-function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel = 'Suggestions' }: Omit<ChipsInputProps, 'placeholder' | 'suggestions'> & { placeholder: string | undefined; suggestions: readonly string[] }) {
+function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel }: Omit<ChipsInputProps, 'placeholder' | 'suggestions'> & { placeholder: string | undefined; suggestions: readonly string[] }) {
   const ids = useMemo(() => ({ input: id }), [id])
+  const words = useWords()
+  const translations = useMemo(() => tagWords(words), [words])
   const [pending, setPending] = useState('')
   const [open, setOpen] = useState(false)
   // Callers rebuild the lists on every render: the collection follows their content, so the list keeps the row
@@ -233,7 +240,7 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
         editable={false}
         addOnPaste
         blurBehavior="add"
-        translations={WORDS}
+        translations={translations}
         {...(placeholder === undefined ? {} : { placeholder })}
         className="min-w-0"
       >
@@ -247,7 +254,7 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
         <Combobox.Positioner className="z-50">
           <Combobox.Content
             data-slot="chips-suggestions"
-            aria-label={suggestionsLabel}
+            aria-label={suggestionsLabel ?? words.labels.suggestions}
             hidden={items.length === 0}
             // Esc closes the list (Ark hears it first): it must not go on to the sheet that holds the field.
             onKeyDown={(e) => {

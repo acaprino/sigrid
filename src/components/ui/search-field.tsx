@@ -6,17 +6,19 @@ import * as React from "react"
 import { Search, X } from "lucide-react"
 import { Input } from "./input"
 import { cn } from "../../lib/utils"
+import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 
 export type SearchFieldProps = Omit<React.ComponentProps<"input">, "type" | "value" | "onChange" | "defaultValue"> & {
   /** The text searched for. */
   value: string
   onValueChange: (value: string) => void
-  /** The name of the button that empties the field. Default «Clear the search». */
+  /** The name of the button that empties the field. Absent: the toolkit's words («Clear the search»). */
   clearLabel?: string | undefined
 }
 
-function SearchField({ value, onValueChange, clearLabel = "Clear the search", className, ref, disabled, ...props }: SearchFieldProps) {
+function SearchField({ value, onValueChange, clearLabel, className, ref, disabled, ...props }: SearchFieldProps) {
+  const words = useWords()
   const own = React.useRef<HTMLInputElement | null>(null)
   const setRef = React.useCallback(
     (el: HTMLInputElement | null) => {
@@ -43,7 +45,7 @@ function SearchField({ value, onValueChange, clearLabel = "Clear the search", cl
         <button
           type="button"
           data-slot="search-field-clear"
-          aria-label={clearLabel}
+          aria-label={clearLabel ?? words.search.clear}
           onClick={() => {
             onValueChange("")
             own.current?.focus()

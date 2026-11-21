@@ -12,6 +12,7 @@ import * as React from "react"
 import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/react/combobox"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 
 export type ComboboxOption = {
@@ -38,9 +39,9 @@ export type ComboboxProps<O extends ComboboxOption = ComboboxOption> = {
   "aria-describedby"?: string | undefined
   "aria-invalid"?: boolean | "true" | "false" | undefined
   placeholder?: string | undefined
-  /** What the list says when nothing matches. Default «No results». */
+  /** What the list says when nothing matches. Absent: the toolkit's words («No results»). */
   emptyText?: string | undefined
-  /** The name of the button that opens the list. Default «Show the options». */
+  /** The name of the button that opens the list. Absent: the toolkit's words («Show the options»). */
   triggerLabel?: string | undefined
   disabled?: boolean | undefined
   invalid?: boolean | undefined
@@ -57,14 +58,15 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   onQuery,
   id,
   placeholder,
-  emptyText = "No results",
-  triggerLabel = "Show the options",
+  emptyText,
+  triggerLabel,
   disabled,
   invalid: invalidProp = false,
   required,
   className,
   ...aria
 }: ComboboxProps<O>) {
+  const words = useWords()
   const invalid = invalidProp || aria["aria-invalid"] === true || aria["aria-invalid"] === "true"
   // What was typed since the list opened: empty again when it closes, so the next opening shows every option.
   const [query, setQuery] = React.useState("")
@@ -125,7 +127,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         />
         <ComboboxPrimitive.Trigger
           data-slot="combobox-trigger"
-          aria-label={triggerLabel}
+          aria-label={triggerLabel ?? words.combobox.trigger}
           // Out of the Tab order: the box opens the list with the arrows, and this button is for the pointer.
           tabIndex={-1}
           className="absolute inset-y-0 right-0 flex w-(--control-md) items-center justify-center text-ink-mute hover:text-ink disabled:pointer-events-none disabled:opacity-50"
@@ -144,7 +146,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         >
           {shown.length === 0 ? (
             <ComboboxPrimitive.Empty data-slot="combobox-empty" className="flex min-h-(--row-height) items-center px-2 text-ink-mute">
-              {emptyText}
+              {emptyText ?? words.combobox.empty}
             </ComboboxPrimitive.Empty>
           ) : null}
           {shown.map((option) => (

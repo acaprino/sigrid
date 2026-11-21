@@ -11,6 +11,7 @@ import * as React from "react"
 import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
 import { XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
 import { BACKDROP, TOASTS_ATTR } from "../../internal/overlay"
@@ -119,6 +120,7 @@ function SheetContent({
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
   const modal = React.useContext(ModalContext)
+  const words = useWords()
   React.useLayoutEffect(() => setSide(side), [setSide, side])
   const motion = useMotion(animated)
   // The latest value of what the stable references below read.
@@ -183,7 +185,7 @@ function SheetContent({
           {showCloseButton && (
             <SheetPrimitive.Close className={cn("absolute top-3 right-3 flex size-(--control-sm) items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none", FOCUS_RING)}>
               <XIcon className="size-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{words.common.close}</span>
             </SheetPrimitive.Close>
           )}
         </SheetPrimitive.Popup>

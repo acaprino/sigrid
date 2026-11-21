@@ -16,6 +16,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
 
 import { cn } from "../../lib/utils"
+import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 import { BACKDROP, ignoreToasts } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
@@ -108,6 +109,7 @@ function DialogContent({
 }) {
   // Inside part of the app drawn in another document (`PortalContainerProvider`) the dialog opens in that document.
   const container = usePortalContainer()
+  const words = useWords()
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterDialog(el))
   const autoFocus = props.initialFocus === undefined
   const popupRef = React.useCallback((el: HTMLDivElement | null) => {
@@ -144,7 +146,7 @@ function DialogContent({
             )}
           >
             <XIcon aria-hidden="true" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{words.common.close}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
