@@ -34,23 +34,3 @@ describe('safeThumbnail: only JPEG or PNG base64 data URLs reach src', () => {
     expect(safeThumbnail(undefined)).toBeNull()
   })
 })
-
-const row = (over: Partial<TaskRowData> & { id: string }): TaskRowData => ({ title: `Task ${over.id}`, done: false, priority: 4, tags: [], ...over })
-
-function stackProps(over: Partial<StackProps> = {}): StackProps {
-  return {
-    items: [],
-    count: 0,
-    draft: '',
-    onDraftChange: noop,
-    onCapture: noop,
-    onDrop: noop,
-    onPick: noop,
-    onNow: noop,
-    onDelete: noop,
-    autoFocus: false,
-    ...over,
-  }
-}
-
-const listItemOf = (title: string) => screen.getAllByRole('listitem').find((li) => within(li).queryByText(title))!

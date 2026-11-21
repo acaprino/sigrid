@@ -341,6 +341,6 @@ describe('the dark palette', () => {
   })
 })
 
-// Icons inside the shapes (ADR-0011): the background color is user data, the same in both palettes, so
+// Icons inside the shapes: the background color is user data, the same in both palettes, so
 // are the two inks. Each of the seven colors has an ink with at least 3:1.
 

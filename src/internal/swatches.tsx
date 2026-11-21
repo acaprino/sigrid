@@ -15,7 +15,7 @@ function nameOf(color: string, index: number, words: Words): string {
 }
 
 /**
- * Color choice for an area or a project: the SmoothUI/Base UI RadioGroup (`components/ui/radio-group`) with solid
+ * Color choice for what the user colours (a folder, a group): the SmoothUI/Base UI RadioGroup (`components/ui/radio-group`) with solid
  * swatches. Like any radio group: a single Tab stop (the chosen color, or the first), the arrows move and choose
  * wrapping around the ends, Home and End go to the first and the last.
  */

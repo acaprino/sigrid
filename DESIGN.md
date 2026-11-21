@@ -22,8 +22,8 @@ x-zsd:
   review:
     status: draft
   intent:
-    audience: People who use the owner's apps to plan their day and deal with what comes in, many with ADHD.
-    primary-task: Capture, sort and act on items with one clear action at a time.
+    audience: People who use the owner's apps (a to-do app, a mail app, whatever comes next), many with ADHD.
+    primary-task: Find, read and act on the items of an app, with one clear action at a time.
     character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
     theme: light and dark; each app passes its own theme definitions (the toolkit ships none, only the parametric engine and a gray baseline); each theme has two mood colours and one accent, and the user can make a palette of their own from one base colour
@@ -48,7 +48,7 @@ x-zsd:
       - "R7: radii 2, 4 and 6px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 40, 36 or 32px (compact density 36, 32 or 28px; large 44, 40 or 36px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every focusable control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
-      - "R10: data colours of projects, areas, labels and events appear as 8px dots."
+      - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
     must-avoid:
       - Side rails and accent bars on rows, cards or fields.
       - A border and a shadow on the same element.

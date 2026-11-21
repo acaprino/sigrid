@@ -286,11 +286,11 @@ export interface IconPackText {
   readonly packs: Readonly<Record<IconPack, ChoiceText>>
 }
 
-/** Five icons of a pack, in the accent: how the pack looks beside the views. */
+/** Five icons of a pack, in the accent: how the pack looks beside the rows of the app. */
 function IconsPreview({ pack }: { pack: IconPack }) {
   return (
     <span className="flex h-full items-center justify-center gap-3 text-accent">
-      {(['today', 'upcoming', 'reminders', 'done', 'settings'] as const).map((n) => (
+      {(['notifications', 'labels', 'date', 'data', 'settings'] as const).map((n) => (
         <Icon key={n} name={n} pack={pack} className="size-4" />
       ))}
     </span>

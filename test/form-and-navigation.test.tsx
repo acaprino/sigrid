@@ -220,7 +220,7 @@ describe('NavList and NavItem (R1, R6)', () => {
     const spy = vi.fn()
     render(
       <NavList aria-label="Mail folders">
-        <NavItem current icon={<Icon name="today" />} end={<Count value={3} />}>
+        <NavItem current icon={<Icon name="date" />} end={<Count value={3} />}>
           Inbox
         </NavItem>
         <NavItem onClick={spy}>Sent</NavItem>
@@ -243,7 +243,7 @@ describe('NavList and NavItem (R1, R6)', () => {
   test('a row without an icon keeps the empty slot (R6); no rail and no bar (R1); 44px with a coarse pointer', () => {
     render(
       <NavList aria-label="Places">
-        <NavItem icon={<Icon name="today" />}>Today</NavItem>
+        <NavItem icon={<Icon name="date" />}>Today</NavItem>
         <NavItem>Plain</NavItem>
       </NavList>,
     )

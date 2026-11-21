@@ -7,7 +7,7 @@
 
 export type SidebarKind = 'tenue' | 'piena' | 'scura'
 
-/** How the 18 colors of areas, projects and icons adapt to the theme's character. */
+/** How the 18 free colors (marks and their icons) adapt to the theme's character. */
 export type PaletteProfile = 'mono' | 'calm' | 'crisp' | 'soft'
 
 export interface ThemeDef {

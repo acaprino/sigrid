@@ -6,7 +6,7 @@ import { ChipsInput } from '../src/internal/chips'
 // The labels field (chips) on Ark UI's TagsInput, with Park's `tags-input` form. No motion. (How an app shows labels
 // elsewhere is tested in the app's package.)
 
-// ADR-0013: the labels of steps («2/5») and of duration («1h 30m») carry an icon before the text; the others do not.
+// The labels of steps («2/5») and of duration («1h 30m») carry an icon before the text; the others do not.
 
 function Chips({ initial = [] as string[], spy }: { initial?: string[]; spy?: (v: string[]) => void }) {
   const [tags, setTags] = useState(initial)

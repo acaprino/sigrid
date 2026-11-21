@@ -24,7 +24,7 @@ export function palettes(css: string = themeCss): { light: Record<string, string
   const clean = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const at = clean.indexOf(DARK_MARKER)
   if (at < 0) throw new Error(`theme.css has no ${DARK_MARKER} block`)
-  // The dark block ends where the next layer begins (the priority and label colors).
+  // The dark block ends where the next layer begins (the label colors).
   const next = clean.indexOf('@layer', at)
   return { light: colorTokens(clean.slice(0, at)), dark: colorTokens(clean.slice(at, next < 0 ? undefined : next)) }
 }

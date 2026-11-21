@@ -1,5 +1,5 @@
-// The «Duration» field of the task details (ADR-0013, §3.3): hours and minutes in two number inputs, four shortcuts and
-// «None». The field does not add, convert or check the total: it sends hours and minutes as they are and Rust decides
+// A duration field: hours and minutes in two number inputs, four shortcuts and
+// «None». The field does not add, convert or check the total: it sends hours and minutes as they are and the app decides
 // (up to 24 hours, minutes from 0 to 59; zero and zero means «None»). Two inputs have no syntax to get wrong, and the
 // shortcuts cover the frequent cases with one click.
 import { useId } from 'react'
@@ -21,7 +21,7 @@ const PRESETS: DurationParts[] = [
   { hours: 2, minutes: 0 },
 ]
 
-/** The number written in an input: empty or non-numeric counts as zero (the field does not validate, Rust does). */
+/** The number written in an input: empty or non-numeric counts as zero (the field does not validate, the app does). */
 function read(text: string): number {
   const n = Number.parseInt(text, 10)
   return Number.isFinite(n) && n >= 0 ? n : 0
