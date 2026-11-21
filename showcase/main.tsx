@@ -18,6 +18,7 @@ import {
   AttachmentsSection,
   BACKDROP,
   BASE_THEME,
+  ThemeGallery,
   MotionProvider,
   Badge,
   Button,
@@ -1157,6 +1158,9 @@ function App() {
         <main className="mx-auto max-w-6xl px-6 pb-24">
           <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
           <Tokens />
+          <Section id="theme-gallery" title="Theme gallery">
+            <ThemeGallery themes={THEMES} selected={theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
+          </Section>
           <Buttons animated={animated} />
           <Badges />
           <Fields />
