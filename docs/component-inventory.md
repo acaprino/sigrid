@@ -13,7 +13,7 @@ as installed) and from Park UI's recipes (`packages/preset/src/recipes/*.ts` at 
 - R4 border or shadow, never both: inputs and outline buttons a border; raised surfaces (cards, toasts, menus, popovers, file tiles, the segment thumb) a shadow.
 - R5 counts are plain tabular numbers; key hints plain 12px text, hidden at phone widths; pills only for labels.
 - R6 an icon only when it tells something; an empty slot rather than a repeated icon; no decorative sparkles, bolts or info icons.
-- R7 radii 4/6/10 (2/4/6 when this inventory was made) (round only for avatars, dots, switches); 4px spacing grid; heights 40/36/32 (at normal density; 36/32/28 at compact, 44/40/36 at large: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
+- R7 radii 4/6/10 (2/4/6 when this inventory was made) (round only for avatars, dots, switches); 4px spacing grid; heights 36/32/28 (at normal density; 32/28/24 at compact, 40/36/32 at large; 40/36/32 at normal when this inventory was made: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
 - R8 focus ring 2px in the accent-text colour, 2px offset, at least 3:1 in every theme, on every focusable control.
 - R9 accent text at least 4.5:1 on both page backgrounds in every theme; step 12 where step 11 falls short.
 - R10 data colours (projects, areas, labels, events) as 8px dots only.

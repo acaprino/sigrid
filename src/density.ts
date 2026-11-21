@@ -30,13 +30,14 @@ export interface DensityOverride {
 }
 
 /**
- * The three presets. `normal` is Park UI's md form (40/36/32px controls, 14/12/10px side padding, 40px menu rows);
- * `compact` and `large` move every height one 4px step, every side padding one 2px step, and a row two steps.
+ * The three presets. `normal` is a 4px step under Park UI's md form (36/32/28px controls, 12/10/8px side padding; Park's
+ * are 40/36/32px and 14/12/10px, which is `large` here), with Park's 40px menu rows; `compact` and `large` move every
+ * height one 4px step, every side padding one 2px step, and a row two steps.
  */
 export const DENSITIES = [
-  { id: 'compact', label: 'Compact', control: { md: 36, sm: 32, xs: 28 }, pad: { md: 12, sm: 10, xs: 8 }, row: { height: 32, pad: 4 } },
-  { id: 'normal', label: 'Normal', control: { md: 40, sm: 36, xs: 32 }, pad: { md: 14, sm: 12, xs: 10 }, row: { height: 40, pad: 8 } },
-  { id: 'large', label: 'Large', control: { md: 44, sm: 40, xs: 36 }, pad: { md: 16, sm: 14, xs: 12 }, row: { height: 48, pad: 12 } },
+  { id: 'compact', label: 'Compact', control: { md: 32, sm: 28, xs: 24 }, pad: { md: 10, sm: 8, xs: 6 }, row: { height: 32, pad: 4 } },
+  { id: 'normal', label: 'Normal', control: { md: 36, sm: 32, xs: 28 }, pad: { md: 12, sm: 10, xs: 8 }, row: { height: 40, pad: 8 } },
+  { id: 'large', label: 'Large', control: { md: 40, sm: 36, xs: 32 }, pad: { md: 14, sm: 12, xs: 10 }, row: { height: 48, pad: 12 } },
 ] as const satisfies readonly DensityDef[]
 
 export type DensityId = (typeof DENSITIES)[number]['id']

@@ -110,7 +110,7 @@ default and equals the sizes the toolkit had before density existed.
 
 - `DESIGN.md`: the design file (zero-slop-design format): the tokens of the default theme in light and dark, the
   owner's rules R1 to R10 of 2026-11-20 (accent in four places only, border or shadow, plain key hints and counts,
-  icons that inform, radii 4/6/10, heights 40/36/32 at normal density, 2px accent focus ring, data colours as dots…), the approved
+  icons that inform, radii 4/6/10, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.

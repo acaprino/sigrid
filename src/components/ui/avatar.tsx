@@ -1,7 +1,7 @@
 // Park UI (MIT) avatar 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/avatar.ts)
 // From Park's `avatar` recipe comes the form (its subtle variant, its full shape): a round tile with the picture
 // cropped to fill it, or the initials in medium weight when there is no picture. Ours: three sizes on the toolkit's
-// control heights (40, 36 and 32px at normal density; Park's go from 24 to 64px), 12px initials below 40px, and a
+// control heights (36, 32 and 28px at normal density; Park's go from 24 to 64px), 12px initials below the largest, and a
 // neutral fill for every person: the quiet gray of the label pills, with the ink. A person's colour is not a fill
 // (R10: data colours are dots); an app that gives people a colour puts a dot beside the name.
 // Behaviour: Ark UI's Avatar, which shows the initials until the picture has loaded and again if it fails.

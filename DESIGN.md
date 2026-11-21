@@ -45,7 +45,7 @@ x-zsd:
       - "R11: the default tone is Vivid: the accent's fills, the selection and the data colours more saturated, the lightness as the theme was designed (owner, 2026-11-20, from a comparison board). The settings offer three tones, Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and the lanes, so the three read apart at a glance (owner, 2026-11-20: «cambiando tono non vedo cambiamenti»)."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
-      - "R7: radii 4, 6 and 10px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 40, 36 or 32px (compact density 36, 32 or 28px; large 44, 40 or 36px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 4, 6 and 10px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36, 32 or 28px (compact 32, 28 or 24px; large 40, 36 or 32px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every focusable control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours of projects, areas, labels and events appear as 8px dots."
@@ -62,7 +62,7 @@ x-zsd:
       - Colour values outside the theme engine.
       - Data colours as filled blocks.
     preserve:
-      - "Park UI native form: md controls are 40px (normal density) with 14px text; the light sidebar is the default and the dark column stays an option."
+      - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default and the dark column stays an option."
       - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
       - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
       - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
@@ -144,8 +144,8 @@ x-zsd:
     overlay: 50
     toasts: 70
   density:
-    compact: "controls 36/32/28px, pads 12/10/8px, row 32px, row-pad 4px"
-    large: "controls 44/40/36px, pads 16/14/12px, row 48px, row-pad 12px"
+    compact: "controls 32/28/24px, pads 10/8/6px, row 32px, row-pad 4px"
+    large: "controls 40/36/32px, pads 14/12/10px, row 48px, row-pad 12px"
   accessibility:
     target-min: "{spacing.touch-target}"
     focus-width: 2px
@@ -231,7 +231,7 @@ typography:
   label-md:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 14px
-    fontWeight: 600
+    fontWeight: 500
     lineHeight: 1.43
     letterSpacing: 0px
   label-sm:
@@ -254,13 +254,13 @@ spacing:
   lg: 16px
   xl: 24px
   section: 32px
-  control-xs: 32px
-  control-sm: 36px
-  control-md: 40px
+  control-xs: 28px
+  control-sm: 32px
+  control-md: 36px
   touch-target: 44px
-  pad-xs: 10px
-  pad-sm: 12px
-  pad-md: 14px
+  pad-xs: 8px
+  pad-sm: 10px
+  pad-md: 12px
   row-height: 40px
   row-pad: 8px
 rounded:

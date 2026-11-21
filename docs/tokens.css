@@ -107,15 +107,15 @@
 
 /* ———— Density (src/density.ts `DENSITIES`, src/styles/theme.css; added after the extraction) ———— */
 /* `applyDensity` writes `--density-*` on the root and `data-density`; theme.css derives the tokens below from them.
-   `normal` (the default, and the value before any script runs) is the toolkit as extracted. */
+   `normal` (the default, and the value before any script runs) is one 4px step under the toolkit as extracted (36/32/28px controls). */
 :root {
   --touch-target: 44px;  /* with a coarse pointer every --control-* and --row-height is max(--touch-target, what the density asks) */
-  --control-md: 40px;    /* compact 36px, large 44px: Button default/lg/icon, Input, Select, DateField, segment item */
-  --control-sm: 36px;    /* compact 32px, large 40px: Button sm, Select sm, time field, close buttons, calendar cells */
-  --control-xs: 32px;    /* compact 28px, large 36px: Button xs, the swatches of the base colour */
-  --pad-md: 14px;        /* compact 12px, large 16px: Button default, segment item */
-  --pad-sm: 12px;        /* compact 10px, large 14px: Button sm, fields, Select (left) */
-  --pad-xs: 10px;        /* compact 8px, large 12px: Button xs, Select (right) */
+  --control-md: 36px;    /* compact 32px, large 40px: Button default/lg/icon, Input, Select, DateField, segment item */
+  --control-sm: 32px;    /* compact 28px, large 36px: Button sm, Select sm, time field, close buttons, calendar cells */
+  --control-xs: 28px;    /* compact 24px, large 32px: Button xs, the swatches of the base colour */
+  --pad-md: 12px;        /* compact 10px, large 14px: Button default, segment item */
+  --pad-sm: 10px;        /* compact 8px, large 12px: Button sm, fields, Select (left) */
+  --pad-xs: 8px;         /* compact 6px, large 10px: Button xs, Select (right) */
   --row-height: 40px;    /* compact 32px, large 48px: least height of a menu or select item, height of their labels */
   --row-pad: 8px;        /* compact 4px, large 12px: padding above and below a menu or select item */
   /* A definition's measures are kept inside DENSITY_LIMITS: control 24 to 64px, pad 4 to 32px, row height 24 to 72px,
@@ -169,7 +169,7 @@
 /* ———— Breakpoints and sizes (src/styles/theme.css, src/internal/media.ts) ———— */
 :root {
   /* --breakpoint-md: 860px (the sidebar stops being a drawer). Phone = (width < 860px) and (pointer: coarse).
-     Control heights: 40px (md), 36px (sm), 32px (xs), 44px (button lg, and every control with a coarse pointer). */
+     Control heights: 36px (md), 32px (sm), 28px (xs), 44px (every control with a coarse pointer). */
 }
 
 /*

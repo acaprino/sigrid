@@ -344,20 +344,20 @@
     --touch-target: 44px;
   }
   :where(:root, [data-density]) {
-    --control-md: var(--density-control-md, 40px);
-    --control-sm: var(--density-control-sm, 36px);
-    --control-xs: var(--density-control-xs, 32px);
-    --pad-md: var(--density-pad-md, 14px);
-    --pad-sm: var(--density-pad-sm, 12px);
-    --pad-xs: var(--density-pad-xs, 10px);
+    --control-md: var(--density-control-md, 36px);
+    --control-sm: var(--density-control-sm, 32px);
+    --control-xs: var(--density-control-xs, 28px);
+    --pad-md: var(--density-pad-md, 12px);
+    --pad-sm: var(--density-pad-sm, 10px);
+    --pad-xs: var(--density-pad-xs, 8px);
     --row-height: var(--density-row-height, 40px);
     --row-pad: var(--density-row-pad, 8px);
   }
   @media (pointer: coarse) {
     :where(:root, [data-density]) {
-      --control-md: max(var(--touch-target), var(--density-control-md, 40px));
-      --control-sm: max(var(--touch-target), var(--density-control-sm, 36px));
-      --control-xs: max(var(--touch-target), var(--density-control-xs, 32px));
+      --control-md: max(var(--touch-target), var(--density-control-md, 36px));
+      --control-sm: max(var(--touch-target), var(--density-control-sm, 32px));
+      --control-xs: max(var(--touch-target), var(--density-control-xs, 28px));
       --row-height: max(var(--touch-target), var(--density-row-height, 40px));
     }
   }

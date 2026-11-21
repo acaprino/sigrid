@@ -3,12 +3,14 @@
 // From SmoothButton we keep: the plain `<button>` with `type="button"` by default and `asChild` without Radix's Slot
 // (here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size
 // names stay (the ones the package uses).
-// From Park's `button` recipe comes the form: l2 corners, semibold label, and its variants and sizes under our names.
+// From Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is
+// medium (Park's is semibold: lighter here).
 // Variants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1
 // control border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is
 // `QUIET_CHIP` below, for an app's chips: it is not a public variant.
-// Sizes: `default` is Park's md (40px), `sm` its sm (36px), `xs` its xs (32px); `lg` is 40px with a 16px label (Park's lg
-// is 44px: R7 allows 40, 36 and 32); the `icon-*` sizes are the same heights, square. Colors are the theme engine's
+// Sizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36
+// and 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same
+// heights, square. Colors are the theme engine's
 // tokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).
 // The variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).
 // Motion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed
@@ -29,7 +31,7 @@ import { useMotion } from "../../internal/motion"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-semibold whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
@@ -45,19 +47,19 @@ const buttonVariants = cva(
         // Park subtle, in the neutral gray: a quiet fill, no border and no shadow (R4: a control has a border or a
         // shadow, never both; Park's surface added both).
         secondary: "bg-ink/6 text-ink hover:bg-ink/9 active:bg-ink/12",
-        // Park plain: text only; a quiet fill under the pointer. A step quieter than Park's (medium, soft ink): here it
+        // Park plain: text only; a quiet fill under the pointer. A step quieter than Park's (soft ink): here it
         // is the weakest action of a row, next to a solid or a surface one.
-        ghost: "font-medium text-ink-soft hover:bg-ink/6 hover:text-ink active:bg-ink/9",
-        link: "font-medium text-ink underline-offset-4 hover:underline",
+        ghost: "text-ink-soft hover:bg-ink/6 hover:text-ink active:bg-ink/9",
+        link: "text-ink underline-offset-4 hover:underline",
       },
       size: {
-        // Park md: a control is 40px tall (44px with a finger, from the base classes). The heights and the side padding
-        // are the density tokens (`src/density.ts`): 40/36/32px and 14/12/10px at `normal`.
+        // A control is 36px tall (44px with a finger, from the base classes). The heights and the side padding are the
+        // density tokens (`src/density.ts`): 36/32/28px and 12/10/8px at `normal`.
         default: "h-(--control-md) min-w-(--control-md) px-(--pad-md)",
         // Park xs and sm: only inside a dense row.
         xs: "h-(--control-xs) min-w-(--control-xs) px-(--pad-xs)",
         sm: "h-(--control-sm) min-w-(--control-sm) px-(--pad-sm)",
-        // R7 caps a control at 40px: `lg` keeps its name for compatibility and differs from `default` only by its 16px label.
+        // R7 caps a control at the default height: `lg` keeps its name for compatibility and differs from `default` only by its 16px label.
         lg: "h-(--control-md) min-w-(--control-md) px-4 text-base",
         icon: "size-(--control-md)",
         "icon-xs": "size-(--control-xs)",

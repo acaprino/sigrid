@@ -51,9 +51,9 @@ function tokenOf(el: Element, utility: string): string | undefined {
   return own.map((c) => new RegExp(`^${utility}-\\((--[a-z-]+)\\)$`).exec(c)?.[1]).find(Boolean)
 }
 
-const COMPACT = { control: [36, 32, 28], pad: [12, 10, 8], row: [32, 4] }
-const NORMAL = { control: [40, 36, 32], pad: [14, 12, 10], row: [40, 8] }
-const LARGE = { control: [44, 40, 36], pad: [16, 14, 12], row: [48, 12] }
+const COMPACT = { control: [32, 28, 24], pad: [10, 8, 6], row: [32, 4] }
+const NORMAL = { control: [36, 32, 28], pad: [12, 10, 8], row: [40, 8] }
+const LARGE = { control: [40, 36, 32], pad: [14, 12, 10], row: [48, 12] }
 const measures = (d: DensityDef) => ({ control: [d.control.md, d.control.sm, d.control.xs], pad: [d.pad.md, d.pad.sm, d.pad.xs], row: [d.row.height, d.row.pad] })
 
 describe('the presets', () => {
@@ -64,7 +64,7 @@ describe('the presets', () => {
     for (const bad of ['comfortable', 'spacious', '', null, undefined, 3, 'constructor']) expect(isDensityId(bad), String(bad)).toBe(false)
   })
 
-  test('normal is the toolkit before density; compact is one step smaller, large one step larger', () => {
+  test('normal is a step under the md form of Park UI; compact is one step smaller, large one step larger', () => {
     expect(measures(densityById('compact'))).toEqual(COMPACT)
     expect(measures(densityById('normal'))).toEqual(NORMAL)
     expect(measures(densityById('large'))).toEqual(LARGE)
@@ -78,12 +78,12 @@ describe('the presets', () => {
   })
 })
 
-describe('normal is pixel-identical to the toolkit before density', () => {
+describe('normal is what the toolkit is before any script runs', () => {
   test('theme.css gives every token the value of normal before any script runs', () => {
     expect(tokens(null)).toEqual({
       '--touch-target': 44,
-      '--control-md': 40, '--control-sm': 36, '--control-xs': 32,
-      '--pad-md': 14, '--pad-sm': 12, '--pad-xs': 10,
+      '--control-md': 36, '--control-sm': 32, '--control-xs': 28,
+      '--pad-md': 12, '--pad-sm': 10, '--pad-xs': 8,
       '--row-height': 40, '--row-pad': 8,
     })
     expect(tokens('normal')).toEqual(tokens(null))
@@ -96,10 +96,10 @@ describe('normal is pixel-identical to the toolkit before density', () => {
     }
   })
 
-  test('the Button sizes are 40, 36 and 32px tall with 14, 12 and 10px of side padding, as before', () => {
+  test('the Button sizes are 36, 32 and 28px tall with 12, 10 and 8px of side padding', () => {
     const t = tokens(null)
     // size -> [height, min width, side padding]; the square sizes have no padding; `lg` keeps its fixed 16px (px-4).
-    const before = { default: [40, 40, 14], sm: [36, 36, 12], xs: [32, 32, 10], lg: [40, 40, null], icon: [40, 40, null], 'icon-sm': [36, 36, null], 'icon-xs': [32, 32, null], 'icon-lg': [40, 40, null] } as const
+    const before = { default: [36, 36, 12], sm: [32, 32, 10], xs: [28, 28, 8], lg: [36, 36, null], icon: [36, 36, null], 'icon-sm': [32, 32, null], 'icon-xs': [28, 28, null], 'icon-lg': [36, 36, null] } as const
     for (const [size, [height, width, pad]] of Object.entries(before)) {
       const { unmount } = render(<Button size={size as keyof typeof before}>x</Button>)
       const el = screen.getByRole('button')
@@ -112,7 +112,7 @@ describe('normal is pixel-identical to the toolkit before density', () => {
     }
   })
 
-  test('a field is 40px tall with 12px of side padding, as before', () => {
+  test('a field is 36px tall with 10px of side padding', () => {
     const t = tokens(null)
     render(
       <>
@@ -120,17 +120,17 @@ describe('normal is pixel-identical to the toolkit before density', () => {
         <Textarea aria-label="note" />
       </>,
     )
-    expect(t[tokenOf(screen.getByLabelText('field'), 'h')!]).toBe(40)
-    expect(t[tokenOf(screen.getByLabelText('field'), 'px')!]).toBe(12)
-    expect(t[tokenOf(screen.getByLabelText('note'), 'px')!]).toBe(12)
+    expect(t[tokenOf(screen.getByLabelText('field'), 'h')!]).toBe(36)
+    expect(t[tokenOf(screen.getByLabelText('field'), 'px')!]).toBe(10)
+    expect(t[tokenOf(screen.getByLabelText('note'), 'px')!]).toBe(10)
   })
 
-  test('the other primitives read the same tokens where they had 40, 36 and 32px', () => {
+  test('the other primitives read the same tokens for their heights and paddings', () => {
     const line = (file: string, needle: string) => source(file).split('\n').find((l) => l.includes(needle)) ?? ''
     const has = (file: string, needle: string, ...tokens: string[]) => {
       for (const token of tokens) expect(line(file, needle), `${file}: ${token}`).toContain(token)
     }
-    // Select: the button 40px (36 when `sm`), 12px left and 10px right; an item at least 40px with 8px above and below.
+    // Select: the button 36px (32 when `sm`), 10px left and 8px right; an item at least 40px with 8px above and below.
     has('src/components/ui/select.tsx', 'flex w-full items-center justify-between', 'pr-(--pad-xs)', 'pl-(--pad-sm)')
     has('src/components/ui/select.tsx', 'size === "sm"', '"h-(--control-sm) w-auto"', '"h-(--control-md)"')
     has('src/components/ui/select.tsx', 'relative flex min-h-', 'min-h-(--row-height)', 'py-(--row-pad)')
@@ -138,18 +138,18 @@ describe('normal is pixel-identical to the toolkit before density', () => {
     // Menu: an item at least 40px with 8px above and below, a label 40px.
     has('src/components/ui/dropdown-menu.tsx', '"relative flex min-h-', 'min-h-(--row-height)', 'py-(--row-pad)')
     has('src/components/ui/dropdown-menu.tsx', 'font-medium text-ink-mute data-[inset]', 'h-(--row-height)')
-    // Segment item: 40px, 14px of side padding.
+    // Segment item: 36px, 12px of side padding.
     has('src/components/ui/toggle-group.tsx', '"inline-flex h-', 'h-(--control-md)', 'min-w-(--control-md)', 'px-(--pad-md)')
-    // Date field: the surface of Input; the time field 36px.
+    // Date field: the surface of Input; the time field 32px.
     has('src/internal/date-field.tsx', "'flex h-", 'h-(--control-md)', 'px-(--pad-sm)')
     has('src/internal/date-field.tsx', 'w-28', 'h-(--control-sm)')
-    // The close button of a dialog and of a sheet: 36px.
+    // The close button of a dialog and of a sheet: 32px.
     has('src/components/ui/dialog.tsx', 'absolute top-3 right-3', 'size-(--control-sm)')
     has('src/components/ui/sheet.tsx', 'absolute top-3 right-3', 'size-(--control-sm)')
-    // Calendar cells: 36px. Chips box: at least 40px, its padding what a 28px chip and the two borders leave (5px).
+    // Calendar cells: 32px. Chips box: at least 36px, its padding what a 28px chip and the two borders leave (3px).
     has('src/components/ui/calendar.tsx', 'data-slot="calendar"', '[--cell-size:var(--control-sm)]')
     has('src/internal/chips.tsx', '<TagsInput.Control', 'min-h-(--control-md)', 'py-[calc((var(--control-md)_-_30px)/2)]')
-    expect((tokens(null)['--control-md']! - 30) / 2).toBe(5)
+    expect((tokens(null)['--control-md']! - 30) / 2).toBe(3)
   })
 })
 
@@ -169,8 +169,8 @@ describe('applyDensity', () => {
   })
 
   test('each preset changes the tokens the components read', () => {
-    expect(tokens('compact')).toMatchObject({ '--control-md': 36, '--control-sm': 32, '--control-xs': 28, '--pad-md': 12, '--pad-sm': 10, '--pad-xs': 8, '--row-height': 32, '--row-pad': 4 })
-    expect(tokens('large')).toMatchObject({ '--control-md': 44, '--control-sm': 40, '--control-xs': 36, '--pad-md': 16, '--pad-sm': 14, '--pad-xs': 12, '--row-height': 48, '--row-pad': 12 })
+    expect(tokens('compact')).toMatchObject({ '--control-md': 32, '--control-sm': 28, '--control-xs': 24, '--pad-md': 10, '--pad-sm': 8, '--pad-xs': 6, '--row-height': 32, '--row-pad': 4 })
+    expect(tokens('large')).toMatchObject({ '--control-md': 40, '--control-sm': 36, '--control-xs': 32, '--pad-md': 14, '--pad-sm': 12, '--pad-xs': 10, '--row-height': 48, '--row-pad': 12 })
   })
 
   test('always writes the same variables, whatever the density', () => {
@@ -185,17 +185,17 @@ describe('applyDensity', () => {
       applyDensity(el, 'compact')
       applyDensity(el, bad as unknown as Density)
       expect(el.getAttribute('data-density'), String(bad)).toBe('normal')
-      expect(el.style.getPropertyValue('--density-control-md'), String(bad)).toBe('40px')
+      expect(el.style.getPropertyValue('--density-control-md'), String(bad)).toBe('36px')
     }
   })
 
   test("an app's own definition: a preset with some measures changed", () => {
-    const mine = densityWith('compact', { id: 'dense', label: 'Dense', control: { md: 32 }, row: { height: 28 } })
-    expect(measures(mine)).toEqual({ control: [32, 32, 28], pad: [12, 10, 8], row: [28, 4] })
+    const mine = densityWith('compact', { id: 'dense', label: 'Dense', control: { md: 28 }, row: { height: 28 } })
+    expect(measures(mine)).toEqual({ control: [28, 28, 24], pad: [10, 8, 6], row: [28, 4] })
     const el = document.createElement('div')
     applyDensity(el, mine)
     expect(el.getAttribute('data-density')).toBe('dense')
-    expect(el.style.getPropertyValue('--density-control-md')).toBe('32px')
+    expect(el.style.getPropertyValue('--density-control-md')).toBe('28px')
     expect(el.style.getPropertyValue('--density-row-height')).toBe('28px')
     // The presets are not touched.
     expect(measures(densityById('compact'))).toEqual(COMPACT)
@@ -205,7 +205,7 @@ describe('applyDensity', () => {
     const wild = { id: 'wild', label: 'Wild', control: { md: 4, sm: 500, xs: 30.4 }, pad: { md: -8, sm: Number.NaN, xs: 99 }, row: { height: 2, pad: -1 } } as DensityDef
     expect(measures(densityOf(wild))).toEqual({
       control: [DENSITY_LIMITS.control.min, DENSITY_LIMITS.control.max, 30],
-      pad: [DENSITY_LIMITS.pad.min, 12, DENSITY_LIMITS.pad.max],
+      pad: [DENSITY_LIMITS.pad.min, 10, DENSITY_LIMITS.pad.max],
       row: [DENSITY_LIMITS.rowHeight.min, DENSITY_LIMITS.rowPad.min],
     })
     expect(measures(densityOf({ id: 'empty' }))).toEqual(NORMAL)
