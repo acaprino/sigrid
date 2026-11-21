@@ -189,9 +189,9 @@ function Section({ id, title, note, children }: { id: string; title: string; not
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[8rem_1fr] items-start gap-4">
-      <div className="pt-2 text-2xs font-medium text-ink-mute">{label}</div>
-      <div className="flex flex-wrap items-start gap-4">{children}</div>
+    <div className="grid grid-cols-1 items-start gap-2 md:grid-cols-[8rem_1fr] md:gap-4">
+      <div className="text-2xs font-medium text-ink-mute md:pt-2">{label}</div>
+      <div className="flex min-w-0 flex-wrap items-start gap-4">{children}</div>
     </div>
   )
 }
@@ -1331,10 +1331,10 @@ function App() {
   return (
     <MotionProvider animated={animated}>
       <div className="min-h-screen bg-paper text-ink">
-        <header className="flex items-center gap-4 border-b border-line bg-paper px-6 py-3">
+        <header className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-line bg-paper px-4 py-3 md:px-6">
           <h1 className="text-base font-semibold">Sigrid UI showcase</h1>
-          <div className="ml-auto flex items-center gap-4">
-            <div className="w-56">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 md:ml-auto">
+            <div className="w-56 max-w-full">
               <Select aria-label="Theme" options={THEMES.map((t) => ({ value: t.id, label: t.label }))} value={theme} onValueChange={(v) => isThemeId(v) && setTheme(v)} />
             </div>
             <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
@@ -1356,7 +1356,7 @@ function App() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-6 pb-24">
+        <main className="mx-auto max-w-6xl px-4 pb-24 md:px-6">
           <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
           <Tokens />
           <Section id="theme-gallery" title="Theme gallery">
