@@ -1,4 +1,4 @@
-// SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/empty.json)
+// SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)
 // From SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s
 // (`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no
 // illustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,

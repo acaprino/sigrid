@@ -1,4 +1,4 @@
-// @acaprino/toolkit: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for
+// @acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for
 // behaviour, Park UI recipes for form, Base UI under the primitives not moved yet), motion in a lazy chunk, and the
 // generic fields and surfaces built on them. No app concepts: each app builds its product components on top of
 // this.
@@ -44,7 +44,7 @@ export { Toasts, type ToastAction, type ToastItem, type ToastsProps } from './co
 export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, DensityChoice, IconPackChoice, PaletteComboChoice, PaletteStrip, ThemeCatalogChoice, TonePresetChoice, TonePreview, radioArrows, type BaseColorText, type ChoiceText, type DensityText, type IconPackText, type PaletteComboText, type ThemeCatalogText, type TonePresetText } from './components/LookSettings'
 
 // Motion: the hook and the loader; Motion itself stays in a separate chunk, loaded only with animations on.
-export { loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'
+export { MotionProvider, loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'
 
 // Fields, content and behaviour helpers.
 export { AttachmentMarks, AttachmentsSection, stateText, summarize, typedUrl, type AttachmentMarksInput, type AttachmentState, type AttachmentSummary, type AttachmentView, type AttachmentsSectionProps } from './internal/attachments'

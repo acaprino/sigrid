@@ -1,5 +1,5 @@
 {
-  "app": "toolkit",
+  "app": "Sigrid",
   "tagPrefix": "v",
   "files": ["package.json", "package-lock.json"],
   "runner": "ubuntu-latest",

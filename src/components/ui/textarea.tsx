@@ -1,5 +1,5 @@
-// SmoothUI (MIT) textarea 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/textarea.json)
-// Park UI (MIT) textarea 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts)
+// SmoothUI (MIT) textarea 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/textarea.json)
+// Park UI (MIT) textarea 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts)
 import * as React from 'react'
 import { Input as InputPrimitive } from '@base-ui/react/input'
 import { cn } from '../../lib/utils'

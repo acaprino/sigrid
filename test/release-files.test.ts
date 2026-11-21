@@ -13,7 +13,7 @@ import { manifestOf, provenanceOf } from '../scripts/release-files.mjs'
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 const dirs: string[] = []
 const temp = () => {
-  const dir = mkdtempSync(join(tmpdir(), 'toolkit-release-files-'))
+  const dir = mkdtempSync(join(tmpdir(), 'sigrid-release-files-'))
   dirs.push(dir)
   return dir
 }
@@ -26,19 +26,19 @@ describe('provenanceOf', () => {
   test('lists the SHA-256 of every file, without provenance.json, with the version and the commit', () => {
     const dir = temp()
     mkdirSync(join(dir, 'dist'))
-    writeFileSync(join(dir, 'package.json'), '{"name":"@acaprino/toolkit"}')
+    writeFileSync(join(dir, 'package.json'), '{"name":"@acaprino/sigrid"}')
     writeFileSync(join(dir, 'dist', 'index.js'), 'export {}\n')
     writeFileSync(join(dir, 'provenance.json'), 'a stale one from an earlier run')
 
     const provenance = provenanceOf(dir, ['package.json', 'dist/index.js', 'provenance.json'], { version: '1.2.3', commit: 'abc123' })
 
     expect(provenance).toEqual({
-      package: '@acaprino/toolkit',
+      package: '@acaprino/sigrid',
       version: '1.2.3',
       commit: 'abc123',
       files: {
         'dist/index.js': sha256('export {}\n'),
-        'package.json': sha256('{"name":"@acaprino/toolkit"}'),
+        'package.json': sha256('{"name":"@acaprino/sigrid"}'),
       },
     })
   })
@@ -62,7 +62,7 @@ describe('manifestOf', () => {
   test('names the toolkit package with the file and the SHA-256 of its tarball', () => {
     expect(manifestOf('1.2.3', [{ file: 'a.tgz', sha256: 'x' }])).toEqual({
       version: '1.2.3',
-      packages: [{ name: '@acaprino/toolkit', file: 'a.tgz', sha256: 'x' }],
+      packages: [{ name: '@acaprino/sigrid', file: 'a.tgz', sha256: 'x' }],
     })
   })
 })

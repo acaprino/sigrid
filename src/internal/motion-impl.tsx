@@ -28,6 +28,7 @@
 // helpers the chunk goes from 94 to 157 kB minified (esbuild), and it only reaches the browser with animations on.
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import { animate, hover, press } from 'motion'
+import { animate as animateStyle } from 'motion/mini'
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m, useIsPresent, type HTMLMotionProps } from 'motion/react'
 
 export { m }
@@ -51,9 +52,6 @@ export const FLUENT_CURVES = {
   /** What moves from one place to another on the page: a gentle start and a gentle end. */
   easyEase: [0.33, 0, 0.67, 1],
 } as const
-
-/** The entering curve for the Web Animations below. */
-const CSS_ENTER = `cubic-bezier(${FLUENT_CURVES.decelerateMid.join(', ')})`
 
 /**
  * Durations in milliseconds of what enters or leaves once: all under 250 ms (test/animated.test.tsx). `toast` is how
@@ -207,28 +205,28 @@ export function Leaving({ children }: { children: (leaving: boolean) => ReactNod
 }
 
 /**
- * One entrance on the existing element (Web Animations): from `from` to whatever the element's own style is, on the
- * entering curve. Only the start is given: the end is the computed style, so a style that changes meanwhile (a sheet
- * being dragged) is followed, not overridden. No extra node, no style left behind.
+ * End on the element's own declaration. An empty final CSS keyframe resolves to the underlying style.
+ * The individual translate/scale properties compose with the positioning or drag transform of the primitive.
  */
-function play(el: Element, from: Keyframe, ms: number): void {
+function enterStyle(el: Element, property: 'opacity' | 'translate' | 'scale', from: string, ms: number): void {
   if (typeof el.animate !== 'function') return
-  el.animate([{ ...from, offset: 0 }], { duration: ms, easing: CSS_ENTER })
+  const rest = (el as HTMLElement).style.getPropertyValue(property)
+  animateStyle(el, { [property]: [from, rest] }, { duration: s(ms), ease: FLUENT_CURVES.decelerateMid })
 }
 
 /**
  * The entrance of a floating surface: it fades in coming `px` from the side of what opened it. That side is known only
  * once the positioning library has placed the surface (it may have flipped it for lack of room), which happens after
- * it mounts: so it is held unseen for one frame, then the side is found and the entrance played. If no frame comes (a
- * hidden page) the hold ends by itself and the surface is simply there.
+ * it mounts. Start the fade immediately and measure the offset on the next frame.
  */
 function playFromAnchor(el: Element, anchor: Element | null | undefined, px: number, ms: number): void {
   if (typeof el.animate !== 'function') return
-  const hold = el.animate([{ opacity: 0 }, { opacity: 0 }], { duration: ms })
+  enterStyle(el, 'opacity', '0', ms)
   const frame = el.ownerDocument.defaultView?.requestAnimationFrame ?? requestAnimationFrame
   frame(() => {
-    hold.cancel?.()
-    if (el.isConnected) play(el, { opacity: 0, transform: fromSide(sideOf(el, anchor), px) }, ms)
+    if (!el.isConnected) return
+    const delta = fromSide(sideOf(el, anchor), px)
+    if (delta) enterStyle(el, 'translate', delta, ms)
   })
 }
 
@@ -255,21 +253,27 @@ function sideOf(el: Element, anchor: Element | null | undefined): string {
 
 /** Where a surface on that side starts: `px` nearer to its anchor. With no side known it starts in place and only fades. */
 function fromSide(side: string, px: number): string {
-  if (side === 'bottom') return `translateY(${-px}px)`
-  if (side === 'top') return `translateY(${px}px)`
-  if (side === 'right') return `translateX(${-px}px)`
-  if (side === 'left') return `translateX(${px}px)`
-  return 'none'
+  if (side === 'bottom') return `0px ${-px}px`
+  if (side === 'top') return `0px ${px}px`
+  if (side === 'right') return `${-px}px 0px`
+  if (side === 'left') return `${px}px 0px`
+  return ''
 }
 
 /** The mark of a Checkbox just checked: stamped once, growing from half its size as it fades in. */
 export function popCheck(el: Element): void {
-  play(el, { opacity: 0, transform: 'scale(0.5)' }, DURATION_MS.mark)
+  enterStyle(el, 'opacity', '0', DURATION_MS.mark)
+  enterStyle(el, 'scale', '0.5', DURATION_MS.mark)
 }
 
-/** A side sheet opening: it slides in the last stretch from the right edge, fading in. */
-export function enterSheet(el: Element): void {
-  play(el, { opacity: 0, transform: `translateX(${TRAVEL_PX.sheet}px)` }, DURATION_MS.sheet)
+/** The panel enters from its own edge. Its swipe transform remains under the finger. */
+export function enterSheet(el: Element, side: 'left' | 'right' | 'top' | 'bottom' = 'right'): void {
+  enterStyle(el, 'opacity', '0', DURATION_MS.sheet)
+  enterStyle(el, 'translate', fromSide(side, -TRAVEL_PX.sheet), DURATION_MS.sheet)
+}
+
+export function enterDialog(el: Element): void {
+  enterStyle(el, 'opacity', '0', DURATION_MS.popup)
 }
 
 /** Duration of the entrance of the card of a menu or popover, in milliseconds (under 250). */
@@ -297,7 +301,8 @@ export const ROW_EXIT = {
 
 /** The card just placed in a column of the board: it comes down a little into its place, only once. */
 export function landCard(el: Element): void {
-  play(el, { opacity: 0, transform: `translateY(${-TRAVEL_PX.card}px)` }, DURATION_MS.land)
+  enterStyle(el, 'opacity', '0', DURATION_MS.land)
+  enterStyle(el, 'translate', `0px ${-TRAVEL_PX.card}px`, DURATION_MS.land)
 }
 
 // --- Gestures on an element that already exists (no remount when the chunk arrives). ---
@@ -315,10 +320,14 @@ export const PRESS_SCALE = { hover: 1, tap: 0.96 } as const
  * nothing listens to the pointer and nothing is written on the element until it is pressed. Returns the cleanup, which
  * also stops a movement still running. A disabled button does not move.
  */
-export function pressable(el: HTMLElement, { hoverScale = PRESS_SCALE.hover, tapScale = PRESS_SCALE.tap }: { hoverScale?: number; tapScale?: number } = {}): () => void {
+export function pressable(el: HTMLElement, { hoverScale = PRESS_SCALE.hover, tapScale }: { hoverScale?: number; tapScale?: number } = {}): () => void {
   const idle = (target: Element) => target.matches(':disabled, [aria-disabled="true"]')
   let running: { stop: () => void } | null = null
-  const to = (scale: number, transition: (typeof MOTION)['press' | 'release']) => void (running = animate(el, { scale }, transition))
+  let previousStyle: { scale: string; transform: string } | undefined
+  const to = (scale: number, transition: (typeof MOTION)['press' | 'release']) => {
+    previousStyle ??= { scale: el.style.scale, transform: el.style.transform }
+    running = animate(el, { scale }, transition)
+  }
   let over = false
   const stopHover =
     hoverScale === 1
@@ -332,17 +341,44 @@ export function pressable(el: HTMLElement, { hoverScale = PRESS_SCALE.hover, tap
             to(1, MOTION.release)
           }
         })
+  const down = () => {
+    // Measure the layout box, unaffected by any unfinished press. Limit travel to 2px at each edge.
+    const size = Math.max(el.offsetWidth, el.offsetHeight, 1)
+    to(tapScale ?? Math.max(PRESS_SCALE.tap, 1 - 4 / size), MOTION.press)
+  }
+  const up = () => to(over ? hoverScale : 1, MOTION.release)
   const stopPress = press(el, (target) => {
     if (idle(target)) return
-    to(tapScale, MOTION.press)
-    return () => to(over ? hoverScale : 1, MOTION.release)
+    down()
+    return up
   })
+  // Motion press handles Enter. Space activates native buttons on release and scrolls on links.
+  let spaceHeld = false
+  const releaseSpace = () => {
+    if (!spaceHeld) return
+    spaceHeld = false
+    up()
+  }
+  const keyDown = (event: KeyboardEvent) => {
+    if (event.key !== ' ' || event.repeat || event.defaultPrevented || idle(el) || !el.matches('button')) return
+    spaceHeld = true
+    down()
+  }
+  const keyUp = (event: KeyboardEvent) => { if (event.key === ' ') releaseSpace() }
+  el.addEventListener('keydown', keyDown)
+  el.addEventListener('keyup', keyUp)
+  el.addEventListener('focusout', releaseSpace)
   return () => {
+    el.removeEventListener('keydown', keyDown)
+    el.removeEventListener('keyup', keyUp)
+    el.removeEventListener('focusout', releaseSpace)
     stopHover()
     stopPress()
     running?.stop()
-    el.style.removeProperty('scale')
-    el.style.removeProperty('transform')
+    if (previousStyle) {
+      el.style.scale = previousStyle.scale
+      el.style.transform = previousStyle.transform
+    }
   }
 }
 

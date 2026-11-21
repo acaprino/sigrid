@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Acaprino Toolkit
+name: Sigrid UI
 description: Shared design system of the owner's apps, ADHD first. Two mood colours set each theme; one accent shows where to look and what to click.
 x-zsd:
   profile: "0.1"
@@ -9,16 +9,16 @@ x-zsd:
     method: hybrid
     captured: 2026-11-20
     paths:
-      - design/toolkit/src/styles/theme.css
-      - design/toolkit/src/theme-engine.ts
-      - design/toolkit/src/theme-catalog.ts
-      - design/toolkit/src/styles/fonts.css
-      - design/toolkit/src/components/ui
-      - design/toolkit/src/components
-      - design/toolkit/src/internal
-      - design/toolkit/docs/tokens.css
-      - design/toolkit/docs/component-inventory.md
-      - design/toolkit/showcase
+      - src/styles/theme.css
+      - src/theme-engine.ts
+      - src/theme-catalog.ts
+      - src/styles/fonts.css
+      - src/components/ui
+      - src/components
+      - src/internal
+      - docs/tokens.css
+      - docs/component-inventory.md
+      - showcase
   review:
     status: draft
   intent:
@@ -65,7 +65,7 @@ x-zsd:
       - "Park UI native form: md controls are 40px (normal density) with 14px text; the light sidebar is the default and the dark column stays an option."
       - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
       - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
-      - "Motion: short Fluent 2 tweens, only after a gesture, on by default so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
+      - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; in a picker the colour is the content, not a data label."
@@ -73,23 +73,23 @@ x-zsd:
       - "The checkbox keeps l1; --radius-check defaults to 9999px, so an app can round its own boxes (an app setting)."
       - "Two font roles: the interface stack and the monospace stack of inline code."
   implementation:
-    token-source: design/toolkit/src/styles/theme.css
+    token-source: src/styles/theme.css
     component-sources:
-      - design/toolkit/src/components/ui
-      - design/toolkit/src/components
-      - design/toolkit/src/internal
+      - src/components/ui
+      - src/components
+      - src/internal
     style-sources:
-      - design/toolkit/src/theme-engine.ts
-      - design/toolkit/src/theme-catalog.ts
-      - design/toolkit/src/styles/theme.css
+      - src/theme-engine.ts
+      - src/theme-catalog.ts
+      - src/styles/theme.css
     font-assets:
-      - design/toolkit/src/styles/fonts.css
+      - src/styles/fonts.css
     image-assets: []
     icon-assets:
       - lucide-react
       - "@fluentui/react-icons"
       - "the device's colour emoji (the Emoji pack, no package)"
-    checks: design/toolkit/design-check.config.json
+    checks: design-check.config.json
   unresolved:
     - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
     - "Interface measurements at phone widths are not recorded."
@@ -391,7 +391,7 @@ components:
     size: 1px
 ---
 
-# Acaprino Toolkit
+# Sigrid UI
 
 ## Overview
 
@@ -554,7 +554,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Motion
 
-Motion needs a gesture and `animated` (default off). Fluent 2 tokens: `easing-enter` in, `easing-exit` out, `easing-move` in place. Things slide and fade; only a pressed button (0.96) and check mark (0.5) scale. Reduced motion: states change at once. No loops but skeletons.
+`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states immediately.
 
 ## Iconography
 

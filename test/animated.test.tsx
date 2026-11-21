@@ -214,13 +214,12 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
   })
   test('what opens enters once, from the side it was placed on, and ends on its own style', async () => {
     const { CARD_DURATION_MS, FLUENT_CURVES, GESTURE_MS, TRAVEL_PX, enterPopup, enterTooltip, enterSheet, landCard, popCheck } = await import('../src/internal/motion-impl')
-    type Call = { el: Element; keyframes: Keyframe[]; options: KeyframeAnimationOptions; cancel: ReturnType<typeof vi.fn> }
+    type Call = { el: Element; keyframes: Record<string, string[]>; options: KeyframeAnimationOptions }
     const calls: Call[] = []
     const original = Element.prototype.animate
-    Element.prototype.animate = function (this: Element, keyframes: Keyframe[], options: KeyframeAnimationOptions) {
-      const cancel = vi.fn()
-      calls.push({ el: this, keyframes, options, cancel })
-      return { cancel } as unknown as Animation
+    Element.prototype.animate = function (this: Element, keyframes: Record<string, string[]>, options: KeyframeAnimationOptions) {
+      calls.push({ el: this, keyframes, options })
+      return { cancel: vi.fn() } as unknown as Animation
     } as Element['animate']
     const frame = () => new Promise<void>((done) => requestAnimationFrame(() => done()))
     /** A surface in its positioner, in the page; the side is written where each positioning library writes it. */
@@ -230,24 +229,17 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
       if (side) (attribute === 'data-side' ? el : positioner).setAttribute(attribute, side)
       return el
     }
-    /** The hold (unseen, no movement) and the entrance played on `el`. */
-    const of = (el: Element) => {
-      const mine = calls.filter((c) => c.el === el)
-      return { hold: mine.find((c) => c.keyframes.length === 2), entrance: mine.find((c) => c.keyframes.length === 1), count: mine.length }
-    }
-    const start = (el: Element) => of(el).entrance?.keyframes[0]!['transform']
+    const track = (el: Element, property: string) => calls.find(c => c.el === el && property in c.keyframes)
+    const start = (el: Element) => track(el, 'translate')?.keyframes['translate']?.[0]
     try {
-      // A floating surface is placed after it mounts, and may be flipped for lack of room: asked to open below, it ends
-      // above. Until the next frame it is only held unseen; then it enters from the side it really is on.
       const flipped = at('bottom')
       enterPopup(flipped)
-      expect(of(flipped).count).toBe(1)
-      expect(of(flipped).hold!.keyframes).toEqual([{ opacity: 0 }, { opacity: 0 }])
+      expect(track(flipped, 'opacity')?.keyframes).toEqual({ opacity: ['0', ''] })
+      expect(start(flipped)).toBeUndefined()
       flipped.setAttribute('data-side', 'top')
       await frame()
-      expect(of(flipped).hold!.cancel).toHaveBeenCalledTimes(1)
-      expect(start(flipped)).toBe(`translateY(${TRAVEL_PX.card}px)`)
-      expect(of(flipped).entrance!.options.duration).toBe(CARD_DURATION_MS)
+      expect(start(flipped)).toBe(`0px ${TRAVEL_PX.card}px`)
+      expect(track(flipped, 'translate')!.options.duration).toBe(CARD_DURATION_MS)
       // A side that is not there yet when it mounts (the other library writes it on the positioner, later).
       const late = at(null)
       enterPopup(late)
@@ -284,38 +276,38 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
       enterPopup(gone)
       gone.parentElement!.remove()
       await frame()
-      expect(start(late)).toBe(`translateY(-${TRAVEL_PX.card}px)`)
-      expect(start(right)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
-      expect(start(hint)).toBe(`translateX(${TRAVEL_PX.hint}px)`)
-      expect(of(hint).entrance!.options.duration).toBe(GESTURE_MS.tooltip)
-      expect(start(logical)).toBe(`translateX(${TRAVEL_PX.card}px)`)
-      expect(start(logicalRtl)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
-      expect(start(logicalEnd)).toBe(`translateX(-${TRAVEL_PX.card}px)`)
-      expect(start(stale)).toBe(`translateY(${TRAVEL_PX.card}px)`)
-      expect(start(unplaced)).toBe(`translateY(${TRAVEL_PX.card}px)`)
-      expect(start(nowhere)).toBe('none')
-      expect(of(gone).entrance).toBeUndefined()
-      // What has no anchor enters at once, with no hold.
-      for (const [enter, el] of [[enterSheet, at(null)], [landCard, at(null)], [popCheck, at(null)]] as const) {
-        enter(el)
-        expect(of(el).count).toBe(1)
-        expect(of(el).entrance).toBeDefined()
+      expect(start(late)).toBe(`0px -${TRAVEL_PX.card}px`)
+      expect(start(right)).toBe(`-${TRAVEL_PX.card}px 0px`)
+      expect(start(hint)).toBe(`${TRAVEL_PX.hint}px 0px`)
+      expect(track(hint, 'translate')!.options.duration).toBe(GESTURE_MS.tooltip)
+      expect(start(logical)).toBe(`${TRAVEL_PX.card}px 0px`)
+      expect(start(logicalRtl)).toBe(`-${TRAVEL_PX.card}px 0px`)
+      expect(start(logicalEnd)).toBe(`-${TRAVEL_PX.card}px 0px`)
+      expect(start(stale)).toBe(`0px ${TRAVEL_PX.card}px`)
+      expect(start(unplaced)).toBe(`0px ${TRAVEL_PX.card}px`)
+      expect(start(nowhere)).toBeUndefined()
+      expect(track(nowhere, 'opacity')).toBeDefined()
+      expect(start(gone)).toBeUndefined()
+      for (const [side, offset] of [['left', '-32px 0px'], ['right', '32px 0px'], ['top', '0px -32px'], ['bottom', '0px 32px']] as const) {
+        const panel = at(null)
+        enterSheet(panel, side)
+        expect(start(panel)).toBe(offset)
+        expect(track(panel, 'transform')).toBeUndefined() // the primitive owns the swipe transform
       }
-      const entrances = calls.filter((c) => c.keyframes.length === 1)
-      expect(entrances).toHaveLength(13)
-      for (const { keyframes, options } of entrances) {
-        // Only the start is given, transparent: the end is the element's own style, whatever it is by then (a sheet
-        // being dragged keeps its place). Only transform and opacity move.
-        expect(keyframes[0]!.opacity).toBe(0)
-        expect(keyframes[0]!.offset).toBe(0)
-        expect(Object.keys(keyframes[0]!).sort()).toEqual(['offset', 'opacity', 'transform'])
-        // Once, on the entering curve (it decelerates), leaving nothing behind (no fill, no repetition).
-        expect(options.easing).toBe(`cubic-bezier(${FLUENT_CURVES.decelerateMid.join(', ')})`)
+      const card = at(null)
+      card.style.opacity = '0.7'
+      landCard(card)
+      expect(track(card, 'opacity')?.keyframes).toEqual({ opacity: ['0', '0.7'] })
+      expect(start(card)).toBe(`0px -${TRAVEL_PX.card}px`)
+      const mark = at(null)
+      popCheck(mark)
+      expect(track(mark, 'scale')?.keyframes).toEqual({ scale: ['0.5', ''] })
+      expect(calls.filter(c => c.keyframes['scale'])).toHaveLength(1)
+      for (const { options } of calls) {
+        expect(String(options.easing).replace(/\s/g, '')).toBe(`cubic-bezier(${FLUENT_CURVES.decelerateMid.join(',')})`)
+        expect(options.iterations).toBe(1)
         expect(Number(options.duration)).toBeLessThan(250)
-        expect(Object.keys(options).sort()).toEqual(['duration', 'easing'])
       }
-      // Only the check mark is resized (it is stamped): everything else moves in the plane.
-      expect(entrances.filter(({ keyframes }) => /scale/.test(String(keyframes[0]!['transform'])))).toHaveLength(1)
     } finally {
       Element.prototype.animate = original
       document.body.replaceChildren()
@@ -364,7 +356,7 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
       expect(wa.calls).toEqual([]) // already checked on mount: still
       render(<Checkbox animated aria-label="Complete" />)
       fireEvent.click(screen.getByRole('checkbox', { name: 'Complete' }))
-      expect(wa.calls.length).toBe(1)
+      expect(wa.calls.length).toBe(2)
       expect(wa.calls[0]!.duration).toBeLessThan(250)
     } finally {
       wa.restore()

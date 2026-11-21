@@ -1,4 +1,4 @@
-// Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)
+// Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)
 //
 // A zone that takes a file: dropped on it, or chosen with the system picker, so dragging is never the only way (WCAG
 // 2.5.7). The look is the attachments zone's (Park's `file-upload` recipe): the raised sheet with l3 corners and a 2px

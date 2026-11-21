@@ -1,5 +1,5 @@
-// SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/badge.json)
-// Park UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)
+// SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/badge.json)
+// Park UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)
 // From Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,
 // tabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its
 // outline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).
@@ -15,7 +15,7 @@ import { FOCUS_RING } from "../../lib/focus"
 
 const badgeVariants = cva(
   cn(
-    "inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border border-transparent px-2 text-2xs leading-none font-medium whitespace-nowrap tabular-nums motion-safe:transition-[color,box-shadow] aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3.5",
+    "inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border border-transparent px-2 text-2xs leading-none font-medium whitespace-nowrap tabular-nums aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3.5",
     FOCUS_RING
   ),
   {

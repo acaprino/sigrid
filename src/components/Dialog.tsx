@@ -1,6 +1,6 @@
-// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/dialog.json)
+// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)
 // SmoothUI's props (`open`, `onOpenChange`, `title`, `description`, `footer`, `children`) match ours;
-// plus returning focus. No animation: our `Dialog` has no `animated` prop.
+// plus returning focus and the toolkit's motion preference.
 import type * as React from 'react'
 import { useCallback, useRef, type RefObject } from 'react'
 import {
@@ -37,6 +37,7 @@ export type DialogProps = {
    * Without it, it is a window in the center of the page: the short confirmations.
    */
   drawer?: boolean | undefined
+  animated?: boolean | undefined
 }
 
 /**
@@ -76,12 +77,12 @@ function useCloseFocus(open: boolean, onCloseAutoFocus: DialogProps['onCloseAuto
 }
 
 /** Modal window on a raised surface: area name, profile, confirmations. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, restoreFocusTo, onCloseAutoFocus, drawer = false }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, restoreFocusTo, onCloseAutoFocus, drawer = false, animated }: DialogProps) {
   const finalFocus = useCloseFocus(open, onCloseAutoFocus, restoreFocusTo)
   // Like `TaskSheet`: the sheet gives focus back by itself to whoever had it before it opened.
   if (drawer) return (
     <Sheet open={open} onOpenChange={(next) => onOpenChange(next)}>
-      <SheetContent side="right" className={cn('w-full gap-5 overflow-hidden bg-raised p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>
+      <SheetContent side="right" animated={animated} className={cn('w-full gap-5 overflow-hidden bg-raised p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>
         <SheetHeader className="shrink-0 p-0 pr-6">
           <SheetTitle>{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
@@ -93,7 +94,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   )
   return (
     <DialogRoot open={open} onOpenChange={(next) => onOpenChange(next)}>
-      <DialogContent className="bg-raised" finalFocus={finalFocus}>
+      <DialogContent animated={animated} className="bg-raised" finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}

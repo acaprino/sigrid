@@ -1,9 +1,9 @@
 {
-  "name": "@acaprino/toolkit",
+  "name": "@acaprino/sigrid",
   "version": "1.0.1",
   "private": true,
   "license": "MIT",
-  "repository": "github:acaprino/toolkit",
+  "repository": "github:acaprino/sigrid",
   "description": "A design system for React apps: theme engine and colours, tokens and fonts, primitives on Ark UI and Base UI with Park UI's form, and its own short, opt-in motion.",
   "type": "module",
   "main": "./dist/index.js",

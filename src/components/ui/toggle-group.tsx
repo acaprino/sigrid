@@ -1,5 +1,5 @@
-// SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/toolkit (https://smoothui.dev/r/base-nova/toggle-group.json)
-// Park UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)
+// SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)
+// Park UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)
 // From Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline
 // ring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item
 // as a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).

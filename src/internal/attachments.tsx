@@ -1,4 +1,4 @@
-// Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/toolkit (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)
+// Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)
 //
 // «Attachments» (a section of an entry's details): the list of the attachments and the zone to add one. From Park's `file-upload`
 // recipe comes the look: the zone on the raised sheet with l3 corners and a 2px dashed border that turns solid (in the

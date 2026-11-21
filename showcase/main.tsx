@@ -1,7 +1,7 @@
 // The toolkit's showcase: every exported component, in its variants, sizes and states, under the theme and scheme
 // chosen at the top (also from the address: `?theme=amber-bold&scheme=dark`), and a strip of the main controls in six
 // palettes side by side. The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour
-// (`<colour>-<combination>`, such as `blue-clean`): an app's themes live in the app. `?animated=1` turns motion on. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
+// (`<colour>-<combination>`, such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
 // at once. What only opens on a gesture opens from the address: `?open=menu`, `popover`, `select`, `tooltip`, `date`,
 // `datetime`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with commas).
 // Not shown: `DesktopSurface` (a separate system window of the desktop shell) and the headless re-exports
@@ -18,6 +18,7 @@ import {
   AttachmentsSection,
   BACKDROP,
   BASE_THEME,
+  MotionProvider,
   Badge,
   Button,
   CALENDAR_WORDS,
@@ -74,6 +75,7 @@ import {
   Toasts,
   ToggleGroup,
   ToggleGroupItem,
+  TonePresetChoice,
   Tooltip,
   DENSITIES,
   PALETTE_COMBOS,
@@ -82,11 +84,14 @@ import {
   isDensityId,
   markHueAttrs,
   paletteTheme,
+  presetTone,
+  tonePresetOf,
   useMotion,
   type AttachmentView,
   type DensityId,
   type ThemeDef,
   type ThemeScheme,
+  type ThemeTone,
   type ToastItem,
 } from '../src/index'
 
@@ -1023,11 +1028,11 @@ function Overlays({ animated }: { animated: boolean }) {
 
 /* ———— The palette strip ———— */
 
-function ThemePanel({ theme, scheme }: { theme: ThemeId; scheme: ThemeScheme }) {
+function ThemePanel({ theme, scheme, tone }: { theme: ThemeId; scheme: ThemeScheme; tone: ThemeTone | null }) {
   const ref = React.useRef<HTMLDivElement>(null)
   React.useLayoutEffect(() => {
-    if (ref.current) applyTheme(ref.current, { theme: themeById(theme), scheme })
-  }, [theme, scheme])
+    if (ref.current) applyTheme(ref.current, { theme: themeById(theme), scheme, tone })
+  }, [theme, scheme, tone])
   const label = THEMES.find((t) => t.id === theme)?.label ?? theme
   return (
     <div ref={ref} data-panel={`${theme}-${scheme}`} className="flex flex-col gap-4 rounded-lg bg-paper p-4 text-ink shadow-xs">
@@ -1067,11 +1072,17 @@ function ThemePanel({ theme, scheme }: { theme: ThemeId; scheme: ThemeScheme }) 
   )
 }
 
-function Strip() {
+function Strip({ theme, scheme, tone, onTone }: { theme: ThemeId; scheme: ThemeScheme; tone: ThemeTone | null; onTone: (tone: ThemeTone | null) => void }) {
   return (
     <Section id="palettes" title="Palettes" note="The main controls in three palettes, in light and dark, side by side.">
-      <div className="grid grid-cols-3 gap-4">
-        {(['light', 'dark'] as const).flatMap((scheme) => STRIP.map((theme) => <ThemePanel key={`${theme}-${scheme}`} theme={theme} scheme={scheme} />))}
+      <TonePresetChoice theme={themeById(theme)} scheme={scheme} palette={null} tone={tone} onTone={onTone}
+        text={{ label: 'Tone', hint: '', presets: {
+          calm: { name: 'Calm', note: 'Muted accents' },
+          balanced: { name: 'Balanced', note: 'Moderate contrast between colours' },
+          vivid: { name: 'Vivid', note: 'Saturated accents' },
+        } }} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {(['light', 'dark'] as const).flatMap((scheme) => STRIP.map((theme) => <ThemePanel key={`${theme}-${scheme}`} theme={theme} scheme={scheme} tone={tone} />))}
       </div>
     </Section>
   )
@@ -1083,14 +1094,24 @@ function App() {
   const [theme, setTheme] = React.useState<ThemeId>(initialTheme)
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
-  const [animated, setAnimated] = React.useState(params.get('animated') === '1')
+  const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
+  const [tone, setTone] = React.useState(() => {
+    const initial = params.get('tone')
+    return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
+  })
+  React.useEffect(() => {
+    const next = new URLSearchParams(location.search)
+    next.set('animated', animated ? '1' : '0')
+    history.replaceState(null, '', `?${next.toString()}${location.hash}`)
+  }, [animated])
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, { theme: themeById(theme), scheme })
+    applyTheme(document.documentElement, { theme: themeById(theme), scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
+    next.set('tone', tonePresetOf(tone))
     history.replaceState(null, '', `?${next.toString()}`)
-  }, [theme, scheme])
+  }, [theme, scheme, tone])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -1106,55 +1127,57 @@ function App() {
     if (OPEN.has('tooltip')) press('tooltip')?.focus()
   }, [])
   return (
-    <div className="min-h-screen bg-paper text-ink">
-      <header className="flex items-center gap-4 border-b border-line bg-paper px-6 py-3">
-        <h1 className="text-base font-semibold">Toolkit showcase</h1>
-        <div className="ml-auto flex items-center gap-4">
-          <div className="w-56">
-            <Select aria-label="Theme" options={THEMES.map((t) => ({ value: t.id, label: t.label }))} value={theme} onValueChange={(v) => isThemeId(v) && setTheme(v)} />
+    <MotionProvider animated={animated}>
+      <div className="min-h-screen bg-paper text-ink">
+        <header className="flex items-center gap-4 border-b border-line bg-paper px-6 py-3">
+          <h1 className="text-base font-semibold">Sigrid UI showcase</h1>
+          <div className="ml-auto flex items-center gap-4">
+            <div className="w-56">
+              <Select aria-label="Theme" options={THEMES.map((t) => ({ value: t.id, label: t.label }))} value={theme} onValueChange={(v) => isThemeId(v) && setTheme(v)} />
+            </div>
+            <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
+              <ToggleGroupItem value="light">Light</ToggleGroupItem>
+              <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+            </ToggleGroup>
+            <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
+              {DENSITIES.map((d) => (
+                <ToggleGroupItem key={d.id} value={d.id}>
+                  {d.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <div className="flex items-center gap-2">
+              <Checkbox id="animated" checked={animated} onCheckedChange={(c) => setAnimated(c === true)} />
+              <label htmlFor="animated" className="text-sm">
+                Animations
+              </label>
+            </div>
           </div>
-          <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
-            <ToggleGroupItem value="light">Light</ToggleGroupItem>
-            <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-          </ToggleGroup>
-          <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
-            {DENSITIES.map((d) => (
-              <ToggleGroupItem key={d.id} value={d.id}>
-                {d.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <div className="flex items-center gap-2">
-            <Checkbox id="animated" checked={animated} onCheckedChange={(c) => setAnimated(c === true)} />
-            <label htmlFor="animated" className="text-sm">
-              Animations
-            </label>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 pb-24">
-        <Strip />
-        <Tokens />
-        <Buttons animated={animated} />
-        <Badges />
-        <Fields />
-        <Checkboxes animated={animated} />
-        <Radios />
-        <Toggles animated={animated} />
-        <Selects />
-        <Menus animated={animated} />
-        <Popovers animated={animated} />
-        <HoverRows animated={animated} />
-        <Keys />
-        <Empties />
-        <Dates animated={animated} />
-        <OtherFields />
-        <Files />
-        <Content />
-        <Notices animated={animated} />
-        <Overlays animated={animated} />
-      </main>
-    </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-6 pb-24">
+          <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
+          <Tokens />
+          <Buttons animated={animated} />
+          <Badges />
+          <Fields />
+          <Checkboxes animated={animated} />
+          <Radios />
+          <Toggles animated={animated} />
+          <Selects />
+          <Menus animated={animated} />
+          <Popovers animated={animated} />
+          <HoverRows animated={animated} />
+          <Keys />
+          <Empties />
+          <Dates animated={animated} />
+          <OtherFields />
+          <Files />
+          <Content />
+          <Notices animated={animated} />
+          <Overlays animated={animated} />
+        </main>
+      </div>
+    </MotionProvider>
   )
 }
 

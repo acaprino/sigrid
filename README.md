@@ -1,6 +1,6 @@
-# @acaprino/toolkit
+# Sigrid UI
 
-A design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
+Sigrid is the shared design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
 knows nothing of any app: no app's name, concepts or product components, and nothing of a desktop shell. An app builds
 its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
 MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
@@ -10,24 +10,28 @@ MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `
 It is not on npm. Clone it next to your app, build it, and depend on the folder:
 
 ```bash
-git clone https://github.com/acaprino/toolkit.git
-cd toolkit && npm ci && npm run build
+git clone https://github.com/acaprino/sigrid.git
+cd sigrid && npm ci && npm run build
 ```
 
 ```jsonc
 // your app's package.json
-"dependencies": { "@acaprino/toolkit": "file:../toolkit" }
+"dependencies": { "@acaprino/sigrid": "file:../sigrid" }
 ```
 
 ```tsx
-import '@acaprino/toolkit/theme.css'   // in your Tailwind entry, with an @source on the toolkit's src
-import { BASE_THEME, applyTheme, applyDensity, Button } from '@acaprino/toolkit'
+import '@acaprino/sigrid/theme.css'   // in your Tailwind entry, with an @source on the toolkit's src
+import { BASE_THEME, applyTheme, applyDensity, Button } from '@acaprino/sigrid'
 
 applyTheme(document.documentElement, { theme: BASE_THEME, scheme: 'light' })
 applyDensity(document.documentElement, 'normal') // or 'compact', 'large', or your own DensityDef
 ```
 
 To depend on a published version instead of a checkout, see [Use a release](#use-a-release) below.
+
+To migrate from `@acaprino/toolkit`, update the dependency name and all imports, including stylesheet imports,
+to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at your checkout. Releases through
+`v1.0.1` carry the original package and tarball names.
 
 ## The four layers
 
@@ -38,7 +42,7 @@ To depend on a published version instead of a checkout, see [Use a release](#use
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
    levels and elevation of every primitive in `src/components/ui/`.
 3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
-   decelerates, leaving accelerates, moving in place eases; no springs), only with the `animated` prop, never
+   decelerates, leaving accelerates, moving in place eases; no springs), enabled app-wide with `<MotionProvider animated={true}>` or per control with the `animated` prop, never
    with `prefers-reduced-motion`, only in answer to a gesture. `motion` (14.6.0) is imported by
    `src/internal/motion-impl.tsx` alone, a chunk loaded lazily (`useMotion`, `preloadMotion`): with animations off it
    never reaches the browser.
@@ -109,10 +113,10 @@ default and equals the sizes the toolkit had before density existed.
 
 ## Use a release
 
-Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/toolkit/releases) (tag
+Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/sigrid/releases) (tag
 `v<version>`). The repository is public: no login is needed to download. Each release holds three files:
 
-- `acaprino-toolkit-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
+- `acaprino-sigrid-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
   `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
   `provenance.json`.
 - `manifest.json`: `{ "version", "packages": [{ "name", "file", "sha256" }] }`, the SHA-256 of the package.
@@ -120,16 +124,16 @@ Every merge of `develop` into `main` publishes a [GitHub Release](https://github
 
 ```bash
 # once for each of the three files, or take them from the release page
-curl -LO https://github.com/acaprino/toolkit/releases/download/v<version>/<file>
+curl -LO https://github.com/acaprino/sigrid/releases/download/v<version>/<file>
 sha256sum -c SHA256SUMS                                   # PowerShell: Get-FileHash -Algorithm SHA256 <file>
-npm i ./acaprino-toolkit-<version>.tgz
+npm i ./acaprino-sigrid-<version>.tgz
 ```
 
-If you are signed in to the GitHub CLI (`gh auth login`), `gh release download v<version> --repo acaprino/toolkit`
+If you are signed in to the GitHub CLI (`gh auth login`), `gh release download v<version> --repo acaprino/sigrid`
 fetches the three files at once.
 
 `sha256sum -c` has to say `OK` for the package and for `manifest.json`. Inside the package, `provenance.json` is
-`{ "package": "@acaprino/toolkit", "version", "commit", "files": { "<path>": "<sha256>" } }`: the source commit the
+`{ "package": "@acaprino/sigrid", "version", "commit", "files": { "<path>": "<sha256>" } }`: the source commit the
 release was built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked
 file by file. `commit` is the parent of the `v<version>` tag: the tag's own commit ("release v<version>") only changes the
 version in `package.json` and `package-lock.json`, and the package was built with that version already written.

@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 
 // Optional animations (ADR-0009): only in response to a gesture, under 250 ms, off by default. A component animates
-// only if the caller passes `animated` and the system does not ask for less motion. Motion lives in a separate chunk
+// when MotionProvider or the control enables it and the system allows motion. Motion lives in a separate chunk
 // (`motion-impl`), loaded the first time it is needed: with animations off it never even reaches the browser.
 
 /** The Motion chunk's module: what `useMotion` returns when a component animates. */
 export type MotionImpl = typeof import('./motion-impl')
+const MotionPreference = createContext(false)
+
+/** Enable motion for a subtree, including its portals. Individual controls can override the preference. */
+export function MotionProvider({ animated, children }: { animated: boolean; children: ReactNode }) {
+  return createElement(MotionPreference.Provider, { value: animated }, children)
+}
 type Impl = MotionImpl
 let impl: Impl | null = null
 let loading: Promise<Impl | null> | null = null
@@ -70,11 +76,12 @@ const never = () => () => {}
 const reduced = () => true
 
 /**
- * The chunk with Motion if this component must animate (`animated` true and `prefers-reduced-motion` not active),
+ * The chunk with Motion when the local or inherited preference is enabled and reduced motion is off,
  * otherwise `null`: with `null` the component renders exactly the usual DOM.
  */
-export function useMotion(animated: boolean | undefined): Impl | null {
-  const on = animated === true
+export function useMotion(animated?: boolean): Impl | null {
+  const preference = useContext(MotionPreference)
+  const on = animated ?? preference
   const noMotion = useSyncExternalStore(on ? subscribe : never, on ? prefersReduced : reduced, reduced)
   const want = on && !noMotion
   const [, setReady] = useState(impl !== null)
@@ -97,15 +104,19 @@ export function useMotion(animated: boolean | undefined): Impl | null {
  * render, a caller's `ref` that changes, or Motion arriving (or the system no longer asking for less motion) with the
  * surface already open do not play the entrance again.
  */
-export function useEntrance<T extends Element>(animated: boolean | undefined, enter: (motion: Impl, el: T) => void): (el: T | null) => void {
+export function useEntrance<T extends Element>(animated: boolean | undefined, enter: (motion: Impl, el: T) => void, open = true): (el: T | null) => void {
   const motion = useMotion(animated)
   const latest = useRef({ motion, enter })
   latest.current = { motion, enter }
   const seen = useRef<T | null>(null)
   return useCallback((el: T | null) => {
+    if (!open) {
+      seen.current = null
+      return
+    }
     if (!el || el === seen.current) return
     seen.current = el
     const { motion, enter } = latest.current
     if (motion) enter(motion, el)
-  }, [])
+  }, [open])
 }
