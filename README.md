@@ -76,6 +76,8 @@ default and equals the sizes the toolkit had before density existed.
 
 ## What it exports
 
+`ThemeGallery` displays an app's themes as keyboard-selectable tiles. Each tile previews its theme in the active scheme and tone. Pass `selected={null}` and a `custom` choice to mark a user-defined palette. The app supplies the labels and handles preference storage.
+
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
   `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`

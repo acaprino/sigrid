@@ -315,7 +315,10 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     const accent0 = fromHex(s.accent)
     const accent = { ...accent0, C: accent0.C * tone.k }
     const fill0 = fromHex(s.fill)
-    const fill = tone.on ? fit({ L: fill0.L + tone.d, C: fill0.C * tone.k, h: fill0.h }) : fill0
+    // A saturated fill can already be at the edge of sRGB. Move its lightness as well,
+    // so two intensities still produce different shades after gamut and contrast correction.
+    const depth = (tone.k - 1) * (light ? -0.12 : 0.065)
+    const fill = tone.on ? fit({ L: fill0.L + tone.d + depth, C: fill0.C * tone.k, h: fill0.h }) : fill0
     const side = fromHex(s.sidebar)
     // The selected item takes the accent's hue, or the theme's second color; in light it sits clearly below the sidebar.
     const [selC, selH] = t.second ? [t.second[0] * tone.k, t.second[1]] : [accent.C, accent.h]
@@ -596,6 +599,25 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   // The tint of the sidebar and the lanes follows the tone in any case: with the page left to the theme, it stays the theme's.
   const shift = custom ? { ...shiftOf({ intensity: chosen?.intensity ?? 'theme', light: chosen?.light ?? 'theme' }), surface: shiftOf(chosen).surface } : shiftOf(chosen)
   const s = startOf(theme, scheme, shift)
+  // The main canvas stays quiet. Give the sidebar, lanes and selections a tonal scale before
+  // computing readable inks. Chroma alone barely moves a gray and can clip on saturated colors.
+  const strength = shift.surface - 1
+  if (theme.accent[0] > 0) {
+    const ground = (base: Oklch) => {
+      // The generated light surfaces already reach the limit for the fixed red on hover.
+      // Use that existing surface as the vivid end, with lighter steps toward the canvas.
+      if (light && !theme.surfaces) return { ...base, L: Math.min(s.paper.L - 0.006, base.L + 0.020 * (2.2 - shift.surface)) }
+      const hue = base.C > 0.004 ? base.h : theme.hue
+      const tint = Math.min(0.022, theme.chroma * 1.6)
+      const chroma = strength < 0 ? base.C * shift.surface : base.C + tint * strength
+      return ok(Math.min(s.paper.L - 0.008, base.L - 0.022 * strength), chroma, hue)
+    }
+    s.paper2 = ground(s.paper2)
+    if (!column) s.sidebar = ground(s.sidebar)
+    // Keep dark selections below the level where their muted labels would erase the text hierarchy.
+    const emphasis = light ? -0.045 * strength : 0.043 * (shift.surface - 2.2)
+    s.selected = { ...s.selected, L: s.selected.L + emphasis }
+  }
   const corrected = new Set<string>()
   const hex = (c: Oklch) => toHex(c)
 
