@@ -58,6 +58,19 @@ const TRIGGER_CLASS = cn(
 const NO_TRIGGER_NAME = () => undefined as unknown as string
 const POSITIONING = { placement: 'bottom-start', gutter: 4, strategy: 'fixed' } as const
 
+// On a phone (narrow and with a finger, as `usePhone`) the card is a sheet at the bottom of the window, not a card under
+// the field: there the calendar is taller than what is left under the field, and it would end below the window. The
+// positioner (Ark writes its place inline, hence the `!`) takes the bottom edge and dims the page behind it with the
+// one backdrop (`BACKDROP`); a tap on the dimmed page is a tap outside the card, so it closes. The card takes the
+// whole width, with the calendar in the middle, and leaves room for the home indicator.
+const PHONE_SHEET = cn(
+  'z-50 max-md:pointer-coarse:fixed! max-md:pointer-coarse:inset-x-0! max-md:pointer-coarse:top-auto! max-md:pointer-coarse:bottom-0! max-md:pointer-coarse:transform-none!',
+  // `bg-drop/40` is `BACKDROP` (internal/overlay.ts), written out: a class built from a constant is not compiled.
+  "max-md:pointer-coarse:before:fixed max-md:pointer-coarse:before:inset-0 max-md:pointer-coarse:before:-z-10 max-md:pointer-coarse:before:bg-drop/40 max-md:pointer-coarse:before:content-['']",
+)
+const PHONE_SHEET_CARD =
+  'max-md:pointer-coarse:max-h-[85dvh] max-md:pointer-coarse:w-full max-md:pointer-coarse:overflow-y-auto max-md:pointer-coarse:rounded-b-none max-md:pointer-coarse:pb-[env(safe-area-inset-bottom)] max-md:pointer-coarse:[&>[data-slot=calendar]]:mx-auto'
+
 type FieldShellProps = {
   id?: string | undefined
   text: string | null
@@ -125,7 +138,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
           <span className={cn('truncate', text ? undefined : 'text-ink-soft')}>{text ?? placeholder}</span>
         </DatePicker.Trigger>
       </DatePicker.Control>
-      <DatePicker.Positioner className="z-50">
+      <DatePicker.Positioner data-slot="date-field-positioner" className={PHONE_SHEET}>
         <DatePicker.Content
           ref={entered}
           data-slot="date-field-content"
@@ -133,7 +146,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
           onKeyDown={(e) => {
             if (e.key === 'Escape') e.stopPropagation()
           }}
-          className="w-fit origin-top-left rounded-lg bg-popover text-popover-foreground shadow-lg outline-hidden"
+          className={cn('w-fit origin-top-left rounded-lg bg-popover text-popover-foreground shadow-lg outline-hidden', PHONE_SHEET_CARD)}
         >
           <Calendar onPressSelected={onPressSelected} />
           {children}
@@ -278,7 +291,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder, min,
           step={60}
           value={typed}
           disabled={!withTime}
-          className="h-(--control-sm) w-28"
+          className="h-(--control-sm) w-28 max-md:w-34"
           onChange={(e) => {
             const next = e.target.value
             setTyped(next)
