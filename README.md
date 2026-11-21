@@ -83,6 +83,12 @@ default and equals the sizes the toolkit had before density existed.
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
+- Icons: `Icon` draws a meaning (`today`, `settings`) with the pack the user chose (`IconPackProvider`). An app adds
+  the meanings of its own with `icons`: `<IconPackProvider pack={pack} icons={{ inbox: { lucide: Inbox, fluent:
+  MailInboxColor, emoji: '\u{1F4E5}' } }}>`, then `<Icon name="inbox" />`. The line drawing is required; a pack left
+  out falls back to it; a name nobody draws is an empty slot of the same size.
+- Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a
+  match inside a text). Fixed for every theme, as the red is; the engine keeps their contrast on every theme.
 - `./theme.css` and `./fonts.css`: to `@import` in an app's own Tailwind CSS (with an `@source` on this package's
   `src`, and `@source not` on `src/internal/motion-impl.tsx`).
 - `./styles.css`: the compiled CSS, for a page that does not compile Tailwind itself.

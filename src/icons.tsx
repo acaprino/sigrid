@@ -4,7 +4,7 @@
 // colours; Emoji is the device's own colour emoji, drawn by the system font, with no package. One line pack is enough:
 // the owner saw no difference between Lucide, Phosphor and Tabler, so the last two left (2026-11-20). Functional chrome
 // (chevrons, ×, the search magnifier) stays Lucide.
-import { createContext, useContext, type ComponentType, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from 'react'
 import {
   AlarmClock,
   ArrowDown,
@@ -352,29 +352,70 @@ const PACKS: Readonly<Record<IconPack, Readonly<Record<IconName, Glyph>>>> = {
   },
 }
 
-const IconPackContext = createContext<IconPack>(DEFAULT_ICON_PACK)
+/**
+ * How an app draws a meaning of its own (a mail app's `inbox`, `reply`): the line drawing is required; a pack left
+ * out falls back to it. `emoji` is the glyph itself, fully qualified (with U+FE0F where the symbol is text by default).
+ */
+export interface IconDrawing {
+  readonly lucide: Glyph
+  readonly fluent?: Glyph | undefined
+  readonly emoji?: string | undefined
+}
 
-/** The pack every `Icon` below draws from: the app passes the user's choice. */
-export function IconPackProvider({ pack, children }: { pack: IconPack; children: ReactNode }) {
-  return <IconPackContext.Provider value={pack}>{children}</IconPackContext.Provider>
+/** An app's own meanings, by name. A name the toolkit already draws keeps the toolkit's drawing. */
+export type IconSet = Readonly<Record<string, IconDrawing>>
+
+/** One component per emoji, made once: a new component at every render would remount the picture. */
+const emojiGlyphs = new Map<string, Glyph>()
+function emojiGlyph(glyph: string): Glyph {
+  let made = emojiGlyphs.get(glyph)
+  if (!made) {
+    made = emoji(glyph)
+    emojiGlyphs.set(glyph, made)
+  }
+  return made
+}
+
+/** The drawing of a name in a pack: the toolkit's, then the app's (its line drawing where the pack has none), or none. */
+function glyphOf(name: string, pack: IconPack, icons: IconSet | undefined): Glyph | undefined {
+  if (isIconName(name)) return PACKS[pack][name]
+  const own = icons && Object.prototype.hasOwnProperty.call(icons, name) ? icons[name] : undefined
+  if (!own) return undefined
+  if (pack === 'fluent') return own.fluent ?? own.lucide
+  if (pack === 'emoji') return own.emoji ? emojiGlyph(own.emoji) : own.lucide
+  return own.lucide
+}
+
+const IconPackContext = createContext<{ readonly pack: IconPack; readonly icons: IconSet | undefined }>({ pack: DEFAULT_ICON_PACK, icons: undefined })
+
+/**
+ * The pack every `Icon` below draws from: the app passes the user's choice, and with `icons` the meanings of its own
+ * (a constant: the same object at every render). A provider without `icons` keeps the ones of the provider above.
+ */
+export function IconPackProvider({ pack, icons, children }: { pack: IconPack; icons?: IconSet | undefined; children: ReactNode }) {
+  const above = useContext(IconPackContext)
+  const own = icons ?? above.icons
+  const value = useMemo(() => ({ pack, icons: own }), [pack, own])
+  return <IconPackContext.Provider value={value}>{children}</IconPackContext.Provider>
 }
 
 /** The pack in use here. */
 export function useIconPack(): IconPack {
-  return useContext(IconPackContext)
+  return useContext(IconPackContext).pack
 }
 
 /**
  * An icon by its meaning, drawn by the pack in context (or by `pack`, for a preview of another pack). Decorative: the
- * label next to it names the thing, so it is hidden from screen readers.
+ * label next to it names the thing, so it is hidden from screen readers. A name nobody draws (from data, or an app's
+ * meaning with no provider above) is an empty slot of the same size, so the row keeps its alignment (R6).
  */
-export function Icon({ name, pack, className }: { name: IconName; pack?: IconPack | undefined; className?: string | undefined }) {
+export function Icon({ name, pack, className }: { name: IconName | (string & {}); pack?: IconPack | undefined; className?: string | undefined }) {
   const current = useContext(IconPackContext)
-  const chosen = pack ?? current
-  const Glyph = PACKS[chosen][name]
+  const chosen = pack ?? current.pack
+  const Glyph = glyphOf(name, chosen, current.icons)
   return (
     <span aria-hidden="true" data-icon={name} data-icon-pack={chosen} className="inline-flex shrink-0">
-      <Glyph className={cn('size-4', className)} />
+      {Glyph ? <Glyph className={cn('size-4', className)} /> : <span data-icon-empty="" className={cn('size-4', className)} />}
     </span>
   )
 }
