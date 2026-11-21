@@ -38,6 +38,10 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
   onValueChange: (value: string) => void
   id?: string
   "aria-label"?: string
+  /** The ids of the texts that describe the select (a `FormField`'s helper or error). */
+  "aria-describedby"?: string | undefined
+  /** As `invalid`: what a `FormField` with an error passes to its control. */
+  "aria-invalid"?: boolean | "true" | "false" | undefined
   className?: string
   size?: "sm" | "default"
   /** Grouped options, with a non-selectable heading (Base UI's `Select.Group`), after `options`. */
@@ -67,7 +71,8 @@ function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMar
   )
 }
 
-function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid = false, animated, ...aria }: SelectProps<O>) {
+function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid: invalidProp = false, animated, ...aria }: SelectProps<O>) {
+  const invalid = invalidProp || aria["aria-invalid"] === true || aria["aria-invalid"] === "true"
   const container = usePortalContainer()
   const trigger = React.useRef<HTMLButtonElement>(null)
   // The primitive can keep its list mounted between openings.
@@ -88,6 +93,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         ref={trigger}
         id={id}
         aria-label={aria["aria-label"]}
+        aria-describedby={aria["aria-describedby"]}
         aria-invalid={invalid || undefined}
         data-slot="select-trigger"
         className={cn(

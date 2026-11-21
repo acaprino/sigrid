@@ -36,6 +36,8 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | File | Ark UI component | Import |
 |---|---|---|
 | `src/components/Toasts.tsx` | `toast` | `@ark-ui/react/toast` |
+| `src/components/ui/switch.tsx` | `switch` | `@ark-ui/react/switch` |
+| `src/components/ui/tabs.tsx` | `tabs` | `@ark-ui/react/tabs` |
 | `src/components/ui/calendar.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
 | `src/internal/date-field.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
 | `src/internal/chips.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
@@ -53,6 +55,10 @@ Notes:
   Kept on top: a native `<button>` per day, the weekday headers readable by screen readers, Home and End for the week.
 - `internal/chips.tsx`: Ark's TagsInput. Kept on top: Backspace in the empty box removes the last label at once, labels
   are compared ignoring case, a chip is not edited in place.
+- `ui/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
+  slides with a CSS transition, only with `animated`.
+- `ui/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
+  part is not used: with `animated` the tint is the toolkit's `Highlight`.
 - `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
 
@@ -93,6 +99,9 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/components/ui/dialog.tsx` | `dialog` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts |
 | `src/components/ui/sheet.tsx` | `drawer` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts |
 | `src/components/ui/tooltip.tsx` | `tooltip` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts |
+| `src/components/ui/switch.tsx` | `switch` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/switch.ts |
+| `src/components/ui/tabs.tsx` | `tabs` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts |
+| `src/components/ui/form-field.tsx` | `field` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts |
 | `src/components/ui/calendar.tsx` | `date-picker` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts |
 | `src/components/Toasts.tsx` | `toast` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts |
 | `src/internal/date-field.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |

@@ -344,7 +344,25 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - No focus-ring token (width, offset, colour as one name) — F01's fix gives the colour a token (`ring` = accent text) and the width/offset a shared class.
 - No 12-step palette names (step 11/12) in the engine — F32's fix states the two-step rule on the engine's scale.
 - No z-index tokens; no letter-spacing tokens; no heading sizes above 16px in the toolkit's own scale.
-- No context menu, no combobox, no switch, no tabs with panels in the toolkit (Ark has them; nothing consumes them yet).
+- No context menu and no combobox in the toolkit (Ark has them; nothing consumes them yet). The switch and the tabs with
+  panels were added on 2026-11-21: see «Added after the review».
+
+## Added after the review (2026-11-21)
+
+For a second app that is to use the toolkit alone (a mail app with its own primitives until now), with the same
+references: Ark UI for behaviour, Park UI's recipes for form, the owner's rules.
+
+| Component | Behaviour | Form | Rules |
+|---|---|---|---|
+| `Switch` | Ark `Switch`; the hidden input is given `role="switch"` | Park `switch` md, solid: 40x20px track, 16px thumb | Off: the `input` border colour (3:1). On: the ink, as the checkbox (R2). No shadow on the thumb (R4). Slides only with `animated`. 44px area with a coarse pointer |
+| `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | Ark `Tabs`: one Tab stop, arrows move and choose (or only move, `activation="manual"`) | Park `tabs` md, subtle: 40px triggers, 14px semibold, l2 | The chosen tab is the selection tint with its ink; Park's `line` variant (a bar) is not offered (R1) |
+| `FormField` | The toolkit's own wiring: `id`, `aria-describedby`, `aria-invalid`, `required` on the one child | Park `field`: 6px gap, 14px medium label, 14px helper and error | The required mark is the ink (R2); the error takes the helper's place and is announced |
+| `Count` | none | 12px tabular figures in the muted ink | R5: never a pill; zero shows nothing (`reserve` keeps the room) |
+| `NavList`, `NavItem` | `<nav>` with a list; a row is a button, or a link with `href`; `aria-current="page"` | A row of the density's height, l2, 14px | R1: the selection tint, no bar. R6: the icon slot stays when empty. `tone="sidebar"` uses the sidebar's own ink and selection |
+
+Also added: an app's own icon meanings (`IconPackProvider`'s `icons`) and the status colours `success`, `warning` and
+`highlight` (`theme-engine.ts` `STATUS`). `Select` takes `aria-describedby` and `aria-invalid`, so it sits in a
+`FormField`.
 
 ## Off-scale values (with locations, before the polish pass)
 
