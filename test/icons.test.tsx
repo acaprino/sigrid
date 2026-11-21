@@ -2,7 +2,7 @@
 // context or from `pack`, and a saved value outside the lists is refused, a pack that left the toolkit among them.
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack } from '../src'
+import { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, type IconPack, type IconSet } from '../src'
 
 test('the packs, in the order Settings shows them: Lucide (the default), Fluent Color, Emoji', () => {
   expect(ICON_PACKS).toEqual(['lucide', 'fluent', 'emoji'])
@@ -87,6 +87,50 @@ test('a pack that left (Phosphor, Tabler, 2026-11-20) is refused when read back,
     expect(isIconPack(saved), String(saved)).toBe(false)
     const { container, unmount } = render(<Icon name="today" pack={isIconPack(saved) ? saved : undefined} />)
     expect(container.firstElementChild!.getAttribute('data-icon-pack')).toBe('lucide')
+    unmount()
+  }
+})
+
+test("an app's own meanings: drawn by the pack in context, the line drawing where a pack has none; the toolkit's names keep the toolkit's drawing", () => {
+  const Line = ({ className }: { className?: string | undefined }) => <svg data-own="line" className={className} />
+  const Colour = ({ className }: { className?: string | undefined }) => <svg data-own="colour" className={className} />
+  const icons: IconSet = {
+    inbox: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}' },
+    reply: { lucide: Line },
+    today: { lucide: Line },
+  }
+  const drawn = (pack: IconPack, name: string) => {
+    const { container, unmount } = render(
+      <IconPackProvider pack={pack} icons={icons}>
+        <IconPackProvider pack={pack}>
+          <Icon name={name} className="size-5" />
+        </IconPackProvider>
+      </IconPackProvider>,
+    )
+    const box = container.firstElementChild!
+    expect(box.getAttribute('data-icon')).toBe(name)
+    const svg = box.querySelector('svg')
+    const found = { own: svg?.getAttribute('data-own') ?? null, image: svg?.querySelector('image') != null, size: svg?.getAttribute('class') }
+    unmount()
+    return found
+  }
+  expect(drawn('lucide', 'inbox')).toEqual({ own: 'line', image: false, size: 'size-5' })
+  expect(drawn('fluent', 'inbox')).toEqual({ own: 'colour', image: false, size: 'size-5' })
+  expect(drawn('emoji', 'inbox')).toEqual({ own: null, image: true, size: 'size-5' })
+  // A pack the app did not draw falls back to its line drawing.
+  expect(drawn('fluent', 'reply').own).toBe('line')
+  expect(drawn('emoji', 'reply').own).toBe('line')
+  // A name of the toolkit is not replaced.
+  expect(drawn('lucide', 'today').own).toBeNull()
+})
+
+test('a name nobody draws is an empty slot of the same size, so the row keeps its alignment', () => {
+  for (const name of ['inbox', 'constructor', '']) {
+    const { container, unmount } = render(<Icon name={name} className="size-5" />)
+    const box = container.firstElementChild!
+    expect(box.querySelector('svg'), name).toBeNull()
+    const slot = box.querySelector('[data-icon-empty]')!
+    expect(slot.getAttribute('class'), name).toBe('size-5')
     unmount()
   }
 })

@@ -22,6 +22,7 @@ import { Input } from '../components/ui/input'
 import { Tooltip } from '../components/ui/tooltip'
 import { limitLabel, overLimitNotice, useDropTarget, type AttachPayload, type DropPayload } from './drop'
 import { kindIcon, kindLabel, type AttachmentKind } from './kinds'
+import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { NeedThumbnail, Thumbnail } from './thumbnail'
 import { cn } from '../lib/utils'
 import { FOCUS_RING } from '../lib/focus'
@@ -72,12 +73,13 @@ export function summarize(input: AttachmentMarksInput): AttachmentSummary {
 
 /** Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero. */
 export function AttachmentMarks(props: AttachmentSummary | { attachments: AttachmentMarksInput }) {
+  const words = useWords()
   const { kinds, count } = 'attachments' in props ? summarize(props.attachments) : props
   if (count <= 0) return null
   const unique = Array.from(new Set(kinds))
   return (
     // `role="img"`: an `aria-label` on a `<span>` without a role is not exposed to assistive technology.
-    <span role="img" aria-label={`${count} attachment${count === 1 ? '' : 's'}`} className="inline-flex items-center gap-1 text-ink-mute">
+    <span role="img" aria-label={words.attachments.count(count)} className="inline-flex items-center gap-1 text-ink-mute">
       {/* One kind only: its mark; several kinds: the paperclip (sketch `lista-attivita.html`), not a row of icons. */}
       <AttachmentIcon kind={unique.length === 1 ? unique[0] : undefined} />
       <span className="text-xs tabular-nums">{count}</span>
@@ -92,14 +94,14 @@ function AttachmentIcon({ kind }: { kind: AttachmentKind | undefined }) {
 }
 
 /** The state in calm words; null for a ready attachment (or a text-only one). */
-export function stateText(state: AttachmentState, maxFileBytes: number): string | null {
+export function stateText(state: AttachmentState, maxFileBytes: number, words: Words = DEFAULT_WORDS): string | null {
   switch (state) {
     case 'arriving':
-      return 'Arriving'
+      return words.attachments.arriving
     case 'notUploaded':
-      return 'Not uploaded yet from the other device'
+      return words.attachments.notUploaded
     case 'overLimit':
-      return `Over the limit of ${limitLabel(maxFileBytes)}`
+      return words.attachments.overLimit(limitLabel(maxFileBytes))
     default:
       return null
   }
@@ -130,15 +132,16 @@ export type AttachmentsSectionProps<A> = {
   onNeedThumbnail: ((id: string) => void) | undefined
   /**
    * What the section says when text is dropped on it (text is not an attachment): the app says where text goes
-   * instead. Absent: a neutral sentence.
+   * instead. Absent: the toolkit's words, a neutral sentence.
    */
   textNotice?: string | undefined
 }
 
-const TEXT_NOTICE = 'Files and links are added here: text is not an attachment.'
-
 /** «Attachments»: the list and the zone to add (drop, «Add a file», a typed link). */
-export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFileBytes, thumbnails, onNeedThumbnail, textNotice = TEXT_NOTICE }: AttachmentsSectionProps<A>) {
+export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFileBytes, thumbnails, onNeedThumbnail, textNotice: ownTextNotice }: AttachmentsSectionProps<A>) {
+  const words = useWords()
+  const said = words.attachments
+  const textNotice = ownTextNotice ?? said.textNotice
   const headingId = useId()
   const linkId = useId()
   const [notice, setNotice] = useState<string | null>(null)
@@ -174,7 +177,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
     onFileReject: ({ files }) => {
       if (!files.length) return
       // The limit comes first: a file over `maxFileBytes` is never sent, the others are.
-      setNotice(overLimitNotice(files.filter((r) => r.errors.includes('FILE_TOO_LARGE')).map((r) => r.file), maxFileBytes))
+      setNotice(overLimitNotice(files.filter((r) => r.errors.includes('FILE_TOO_LARGE')).map((r) => r.file), maxFileBytes, words))
       // Two files with the same name and size in one choice: Ark takes the second for a copy of the first. Both were chosen.
       const twins = files.filter((r) => r.errors.every((e) => e === 'FILE_EXISTS')).map((r) => r.file)
       if (twins.length) onAttach({ kind: 'files', files: twins })
@@ -199,7 +202,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
     e.preventDefault()
     const url = typedUrl(link)
     if (!url) {
-      setNotice('Type a web address, for example https://example.com')
+      setNotice(said.badAddress)
       return
     }
     setLink('')
@@ -209,13 +212,13 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
   return (
     <section aria-labelledby={headingId} className="space-y-3">
       <h3 id={headingId} className="text-2xs font-semibold tracking-[0.07em] text-ink-mute uppercase">
-        Attachments
+        {said.heading}
       </h3>
       {attachments.length ? (
-        <ul ref={listRef} aria-label="Attachments" className="space-y-2">
+        <ul ref={listRef} aria-label={said.heading} className="space-y-2">
           {attachments.map((a, index) => {
             const Icon = kindIcon(a.kind)
-            const said = a.stateLabel !== undefined ? a.stateLabel : stateText(a.state, maxFileBytes)
+            const state = a.stateLabel !== undefined ? a.stateLabel : stateText(a.state, maxFileBytes, words)
             // Under the title: the detail, or the address. Always text: an `href` never becomes a link.
             const detail = a.detail ?? a.href
             const open = a.open
@@ -227,10 +230,10 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                 {a.thumbnail ? (
                   <>
                     <NeedThumbnail id={a.id} when={thumb === undefined || thumb === null} onNeed={onNeedThumbnail} />
-                    <Thumbnail src={thumb} kind={a.kind} size="sheet" label={kindLabel(a.kind)} onOpen={canOpen && open !== null ? () => onAction(open) : undefined} />
+                    <Thumbnail src={thumb} kind={a.kind} size="sheet" label={kindLabel(a.kind, words)} onOpen={canOpen && open !== null ? () => onAction(open) : undefined} />
                   </>
                 ) : (
-                  <Icon role="img" aria-label={kindLabel(a.kind)} className="size-4 shrink-0 text-ink-mute" />
+                  <Icon role="img" aria-label={kindLabel(a.kind, words)} className="size-4 shrink-0 text-ink-mute" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-ink" title={a.title}>
@@ -241,24 +244,24 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                       {detail}
                     </p>
                   ) : null}
-                  {said ? <p className="text-xs text-ink-soft">{said}</p> : null}
+                  {state ? <p className="text-xs text-ink-soft">{state}</p> : null}
                 </div>
                 {canOpen && open !== null ? (
-                  <Button variant="ghost" size="xs" aria-label={`Open: ${a.title}`} onClick={() => onAction(open)}>
-                    Open
+                  <Button variant="ghost" size="xs" aria-label={said.openNamed(a.title)} onClick={() => onAction(open)}>
+                    {said.open}
                   </Button>
                 ) : null}
-                <Tooltip label={`Remove: ${a.title}`}>
+                <Tooltip label={said.removeNamed(a.title)}>
                   <Button
                     variant="ghost"
                     size="xs"
-                    aria-label={`Remove: ${a.title}`}
+                    aria-label={said.removeNamed(a.title)}
                     onClick={() => {
                       removing.current = { id: a.id, index }
                       onAction(a.remove)
                     }}
                   >
-                    Remove
+                    {said.remove}
                   </Button>
                 </Tooltip>
               </li>
@@ -270,7 +273,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
         <div
           {...drop.props}
           role="group"
-          aria-label="Add a file or a link"
+          aria-label={said.add}
           data-slot="file-upload"
           data-drop-active={drop.active}
           // While something is dragged over it the dashed edge turns solid ink: the accent is not for this (R2).
@@ -280,20 +283,20 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
           <FileUpload.HiddenInput />
           <FileUpload.Trigger
             ref={chooseRef}
-            aria-label="Add a file"
+            aria-label={said.addFile}
             data-slot="file-upload-trigger"
             className={cn('flex w-full flex-col items-center justify-center rounded-md px-6 py-4 text-center hover:bg-ink/4', FOCUS_RING)}
           >
-            <span className="block text-sm font-medium text-ink">{drop.active ? 'Drop here: it becomes an attachment' : 'Add a file'}</span>
-            <span className="mt-1 block text-xs text-ink-soft">{`Drag a file or a link here, or press to choose one · at most ${limitLabel(maxFileBytes)}`}</span>
+            <span className="block text-sm font-medium text-ink">{drop.active ? said.dropHere : said.addFile}</span>
+            <span className="mt-1 block text-xs text-ink-soft">{said.hint(limitLabel(maxFileBytes))}</span>
           </FileUpload.Trigger>
           <form onSubmit={onLink} className="flex items-center gap-2 px-1 pb-1">
             <label htmlFor={linkId} className="sr-only">
-              Link
+              {said.link}
             </label>
-            <Input id={linkId} value={link} onChange={(e) => setLink(e.target.value)} placeholder="Paste a link" inputMode="url" />
+            <Input id={linkId} value={link} onChange={(e) => setLink(e.target.value)} placeholder={said.pasteLink} inputMode="url" />
             <Button type="submit" variant="ghost" size="sm" disabled={!link.trim()}>
-              Add link
+              {said.addLink}
             </Button>
           </form>
         </div>

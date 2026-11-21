@@ -174,6 +174,9 @@ x-zsd:
         destructive: "#FF9A8D"
         on-destructive: "#17161A"
         destructive-soft: "#3D2420"
+        success: "#7FD3A0"
+        warning: "#F0B85A"
+        highlight: "#4F3F08"
         subtle-fill: "#232525"
         backdrop: "#05060666"
 colors:
@@ -195,6 +198,9 @@ colors:
   destructive: "#AD2A1E"
   on-destructive: "#FFFFFF"
   destructive-soft: "#FEF1EF"
+  success: "#1C6B3F"
+  warning: "#855000"
+  highlight: "#FFE38A"
   subtle-fill: "#ECEEEE"
   backdrop: "#14171766"
 typography:
@@ -389,6 +395,12 @@ components:
   separator:
     backgroundColor: "{colors.divider}"
     size: 1px
+  status-success:
+    textColor: "{colors.success}"
+  status-warning:
+    textColor: "{colors.warning}"
+  status-match:
+    backgroundColor: "{colors.highlight}"
 ---
 
 # Sigrid UI
@@ -399,7 +411,7 @@ The toolkit is the shared design system of the owner's apps. Ark UI and Base UI 
 
 ### Implementation
 
-Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Use the showcase (`npm run showcase`) to see each component in each state.
+Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run `npm run showcase` to see every state.
 
 ## Colors
 
@@ -538,6 +550,10 @@ Use `tooltip` to repeat the name of an icon-only button. It never holds new info
 
 Use `toast` for the result of an action. Undo and quick choices sit in the toast; Esc does not close it.
 
+### Status
+
+Pair `success` or `warning` with a word. `highlight` marks hits.
+
 ### Calendar
 
 Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` dash under the number.
@@ -562,7 +578,7 @@ Use the chosen icon pack (R6); Lucide, the default, keeps the stroke and caps of
 
 ## Imagery
 
-Thumbnails show the image of an attachment, cropped to a square. The image has an empty alternative text because the row names it.
+Thumbnails show an attachment's image, cropped square. Its alternative text is empty: the row names it.
 
 ## Accessibility
 

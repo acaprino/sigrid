@@ -14,7 +14,8 @@ import * as React from 'react'
 import { DatePicker, useDatePickerContext } from '@ark-ui/react/date-picker'
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date'
 import { CalendarIcon } from 'lucide-react'
-import { CALENDAR_WORDS, Calendar } from '../components/ui/calendar'
+import { Calendar, calendarWords } from '../components/ui/calendar'
+import { useWords } from '../words'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Input } from '../components/ui/input'
@@ -22,7 +23,17 @@ import { useEntrance } from './motion'
 import { cn } from '../lib/utils'
 import { FOCUS_RING } from '../lib/focus'
 
-const longDate = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+const DEFAULT_LOCALE = 'en-US'
+const longDates = new Map<string, Intl.DateTimeFormat>()
+/** One formatter per locale, made once. */
+function longDate(locale: string): Intl.DateTimeFormat {
+  let made = longDates.get(locale)
+  if (!made) {
+    made = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+    longDates.set(locale, made)
+  }
+  return made
+}
 
 /** `YYYY-MM-DD` → a calendar day; null if the string is not a real date. */
 function parseDay(value: string | null | undefined): CalendarDate | null {
@@ -34,8 +45,8 @@ function parseDay(value: string | null | undefined): CalendarDate | null {
   }
 }
 
-/** «November 7, 2026»: the day as the button shows it. */
-const dayText = (day: CalendarDate) => longDate.format(new Date(day.year, day.month - 1, day.day))
+/** «November 7, 2026»: the day as the button shows it, in the field's locale. */
+const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate(locale).format(new Date(day.year, day.month - 1, day.day))
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
 const TRIGGER_CLASS = cn(
@@ -44,7 +55,7 @@ const TRIGGER_CLASS = cn(
 )
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.
-const WORDS = { ...CALENDAR_WORDS, trigger: () => undefined as unknown as string }
+const NO_TRIGGER_NAME = () => undefined as unknown as string
 const POSITIONING = { placement: 'bottom-start', gutter: 4, strategy: 'fixed' } as const
 
 type FieldShellProps = {
@@ -61,10 +72,18 @@ type FieldShellProps = {
   /** See `Calendar`. */
   onPressSelected?: (() => void) | undefined
   animated?: boolean | undefined
+  min?: string | undefined
+  max?: string | undefined
+  disabled?: boolean | undefined
+  locale?: string | undefined
   children: React.ReactNode
 }
 
-function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, onOpen, onPressSelected, animated, children }: FieldShellProps) {
+function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, onOpen, onPressSelected, animated, min, max, disabled, locale = DEFAULT_LOCALE, children }: FieldShellProps) {
+  const toolkit = useWords()
+  const translations = React.useMemo(() => ({ ...calendarWords(toolkit), trigger: NO_TRIGGER_NAME }), [toolkit])
+  const first = parseDay(min)
+  const last = parseDay(max)
   const key = selected?.toString() ?? ''
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const value = React.useMemo(() => (selected ? [selected] : []), [key])
@@ -85,20 +104,23 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
         if (details.open) onOpen?.()
       }}
       closeOnSelect={closeOnSelect}
-      locale="en-US"
+      locale={locale}
+      {...(first ? { min: first } : {})}
+      {...(last ? { max: last } : {})}
+      {...(disabled ? { disabled: true } : {})}
       timeZone={getLocalTimeZone()}
       startOfWeek={1}
       // Six weeks always: the card keeps its height from month to month, and the grid keeps its buttons (see `Calendar`).
       fixedWeeks
       outsideDaySelectable
-      translations={WORDS}
+      translations={translations}
       positioning={POSITIONING}
       lazyMount
       unmountOnExit
       className="min-w-0"
     >
       <DatePicker.Control ref={control}>
-        <DatePicker.Trigger data-slot="date-field" className={TRIGGER_CLASS}>
+        <DatePicker.Trigger data-slot="date-field" className={cn(TRIGGER_CLASS, 'disabled:pointer-events-none disabled:opacity-50')}>
           <CalendarIcon className="size-4 shrink-0 text-ink-soft" aria-hidden />
           <span className={cn('truncate', text ? undefined : 'text-ink-soft')}>{text ?? placeholder}</span>
         </DatePicker.Trigger>
@@ -144,18 +166,28 @@ export type DateFieldProps = {
   value: string | null
   onChange: (value: string | null) => void
   animated?: boolean | undefined
-  /** The button text without a value. Absent: «No date» (`DateField`), «No date and time» (`DateTimeField`). */
+  /** The button text without a value. Absent: the toolkit's words («No date», «No date and time»). */
   placeholder?: string | undefined
+  /** The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen. */
+  min?: string | undefined
+  max?: string | undefined
+  /** The field cannot be opened: half opacity, out of the Tab order. */
+  disabled?: boolean | undefined
+  /** The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`. */
+  locale?: string | undefined
+  /** The words of the card's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). */
+  words?: { clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
 }
 
 /** A local date (the due date): a click or Enter on a day chooses it and closes. */
-export function DateField({ id, value, onChange, animated, placeholder = 'No date' }: DateFieldProps) {
+export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words }: DateFieldProps) {
+  const toolkit = useWords()
   const selected = parseDay(value)
   return (
-    <FieldShell id={id} text={selected ? dayText(selected) : null} placeholder={placeholder} selected={selected} onSelect={(day) => onChange(day.toString())} closeOnSelect animated={animated}>
+    <FieldShell id={id} text={selected ? dayText(selected, locale) : null} placeholder={placeholder ?? toolkit.date.noDate} selected={selected} onSelect={(day) => onChange(day.toString())} closeOnSelect animated={animated} min={min} max={max} disabled={disabled} locale={locale}>
       <div className="flex justify-end border-t border-border px-4 py-2.5">
         <Closing variant="ghost" size="sm" disabled={!selected} onClick={() => onChange(null)}>
-          Clear the date
+          {words?.clear ?? toolkit.date.clear}
         </Closing>
       </div>
     </FieldShell>
@@ -182,7 +214,8 @@ export type DateTimeFieldProps = DateFieldProps
  * checkbox starts on if the time is not the default one. A half-typed time (the empty field while writing) never enters
  * the value: the last valid one stays. «Done» or Esc closes.
  */
-export function DateTimeField({ id, value, onChange, animated, placeholder = 'No date and time' }: DateTimeFieldProps) {
+export function DateTimeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words }: DateTimeFieldProps) {
+  const toolkit = useWords()
   const current = splitDateTime(value)
   // `time` is always a valid time; `typed` is what is seen in the field while writing.
   const [time, setTime] = React.useState(current?.time ?? DEFAULT_TIME)
@@ -199,19 +232,23 @@ export function DateTimeField({ id, value, onChange, animated, placeholder = 'No
     setWithTime(current ? current.time !== DEFAULT_TIME : false)
   }
   const effective = withTime ? time : DEFAULT_TIME
-  const text = current ? `${dayText(current.day)}, ${current.time}` : null
+  const text = current ? `${dayText(current.day, locale)}, ${current.time}` : null
 
   return (
     <FieldShell
       id={id}
       text={text}
-      placeholder={placeholder}
+      placeholder={placeholder ?? toolkit.date.noDateTime}
       selected={current?.day ?? null}
       onSelect={(day) => onChange(`${day.toString()}T${effective}`)}
       closeOnSelect={false}
       onOpen={sync}
       onPressSelected={() => onChange(null)}
       animated={animated}
+      min={min}
+      max={max}
+      disabled={disabled}
+      locale={locale}
     >
       <div className="flex items-center gap-2 border-t border-border px-4 py-2.5">
         <Checkbox
@@ -230,10 +267,10 @@ export function DateTimeField({ id, value, onChange, animated, placeholder = 'No
           }}
         />
         <label htmlFor={withTimeId} className="text-sm">
-          Time
+          {words?.time ?? toolkit.date.time}
         </label>
         <label htmlFor={timeId} className="sr-only">
-          Time of day
+          {words?.timeOfDay ?? toolkit.date.timeOfDay}
         </label>
         <Input
           id={timeId}
@@ -253,7 +290,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder = 'No
           onBlur={() => setTyped(time)}
         />
         <Closing size="sm" variant="secondary" className="ml-auto">
-          Done
+          {words?.done ?? toolkit.date.done}
         </Closing>
       </div>
     </FieldShell>

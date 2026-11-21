@@ -7,7 +7,7 @@ import { DEFAULT_FONT, FONTS } from '../src/theme-catalog'
 import type { ThemeDef } from '../src/theme-catalog'
 import { DEFAULT_THEME, THEMES, themeTokens } from './fixtures/sample-themes'
 import type { ThemeId } from './fixtures/sample-themes'
-import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, contrast, fromHex, isAccentColor, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
+import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, STATUS, contrast, fromHex, isAccentColor, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
 import { PALETTE_COMBOS, paletteTheme } from '../src/palette'
 import type { OwnTheme, ThemeTone } from '../src/theme-engine'
 import { palettes } from './theme-tokens'
@@ -195,6 +195,20 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
     // In the dark the fill is a deeper tone of the accent, which as text stays light.
     else expect(lum(t['primary']!)).toBeLessThan(lum(t['accent']!))
+  })
+
+  test('status: success and warning read on every background and on their soft one; the ink reads on the highlight', () => {
+    const fixed = tk.scheme === 'light' ? STATUS.light : STATUS.dark
+    for (const name of ['success', 'warning'] as const) {
+      expect(t[`${name}-soft`]).toBe(fixed[`${name}-soft`])
+      // A theme may move the colour just enough to hold on its own surfaces: the lightness only.
+      if (!(THEMES.find((x) => x.id === themeId)! as ThemeDef).surfaces) expect(t[name]).toBe(fixed[name])
+      expect(ratio(t[name]!, t[`${name}-soft`]!), `${name} on its soft`).toBeGreaterThanOrEqual(AA)
+      for (const bg of BG) expect(ratio(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
+    }
+    expect(ratio(t['ink']!, t['highlight']!), 'ink on highlight').toBeGreaterThanOrEqual(7)
+    // The highlight is seen on every background it can sit on.
+    for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
   })
 
   test('red: the same for every theme of the scheme, and it holds on every background and with its text', () => {

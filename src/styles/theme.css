@@ -84,6 +84,13 @@
   --color-mark-ink-light: #ffffff;
   --color-mark-ink-dark: #1b1916;
   --color-destructive-foreground: #ffffff;
+  /* Status colours (theme-engine.ts `STATUS`): text colours with a soft background each, and the highlight of a match
+     inside a text, with the ink on it. Meanings, never the only signal. */
+  --color-success: #1c6b3f;
+  --color-success-soft: #eef8f1;
+  --color-warning: #855000;
+  --color-warning-soft: #fdf4e3;
+  --color-highlight: #ffe38a;
   --color-selected: #d4d4d4;
   --color-selected-ink: #161616;
   --color-sidebar-ink: #3d3d3d;
@@ -230,6 +237,11 @@
       --color-mark-ink-light: #ffffff;
       --color-mark-ink-dark: #1b1916;
       --color-destructive-foreground: #17161a;
+      --color-success: #7fd3a0;
+      --color-success-soft: #1c3326;
+      --color-warning: #f0b85a;
+      --color-warning-soft: #3a2c12;
+      --color-highlight: #4f3f08;
       --color-selected: #333333;
       --color-selected-ink: #f2f2f2;
       --color-sidebar-ink: #bebebe;

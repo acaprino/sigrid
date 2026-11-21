@@ -344,7 +344,40 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - No focus-ring token (width, offset, colour as one name) — F01's fix gives the colour a token (`ring` = accent text) and the width/offset a shared class.
 - No 12-step palette names (step 11/12) in the engine — F32's fix states the two-step rule on the engine's scale.
 - No z-index tokens; no letter-spacing tokens; no heading sizes above 16px in the toolkit's own scale.
-- No context menu, no combobox, no switch, no tabs with panels in the toolkit (Ark has them; nothing consumes them yet).
+- No context menu in the toolkit (Ark has one; nothing consumes it yet). The switch, the tabs with panels and the
+  combobox were added on 2026-11-21: see «Added after the review».
+
+## Added after the review (2026-11-21)
+
+For a second app that is to use the toolkit alone (a mail app with its own primitives until now), with the same
+references: Ark UI for behaviour, Park UI's recipes for form, the owner's rules.
+
+| Component | Behaviour | Form | Rules |
+|---|---|---|---|
+| `Switch` | Ark `Switch`; the hidden input is given `role="switch"` | Park `switch` md, solid: 40x20px track, 16px thumb | Off: the `input` border colour (3:1). On: the ink, as the checkbox (R2). No shadow on the thumb (R4). Slides only with `animated`. 44px area with a coarse pointer |
+| `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | Ark `Tabs`: one Tab stop, arrows move and choose (or only move, `activation="manual"`) | Park `tabs` md, subtle: 40px triggers, 14px semibold, l2 | The chosen tab is the selection tint with its ink; Park's `line` variant (a bar) is not offered (R1) |
+| `FormField` | The toolkit's own wiring: `id`, `aria-describedby`, `aria-invalid`, `required` on the one child | Park `field`: 6px gap, 14px medium label, 14px helper and error | The required mark is the ink (R2); the error takes the helper's place and is announced |
+| `Count` | none | 12px tabular figures in the muted ink | R5: never a pill; zero shows nothing (`reserve` keeps the room) |
+| `NavList`, `NavItem` | `<nav>` with a list; a row is a button, or a link with `href`; `aria-current="page"` | A row of the density's height, l2, 14px | R1: the selection tint, no bar. R6: the icon slot stays when empty. `tone="sidebar"` uses the sidebar's own ink and selection |
+
+| `Slider` | Ark `Slider`, one thumb; Up and Down act as Right and Left | Park `slider` md, outline: 8px track, 20px thumb with a 2px border | The track is the `input` colour (3:1), the range and the thumb's border the ink (R2), no shadow on the thumb (R4). 44px area with a coarse pointer |
+| `SearchField` | A native `type="search"` input; a button empties it and gives it the focus back | The toolkit's `Input`, with a 16px magnifier and a 32px clear button | The browser's own clear button is hidden; the caller names the field |
+| `Combobox` | Ark `Combobox`: typing filters, arrows move, Enter chooses, Esc closes the list first | Park `combobox` md: the input, and the select's list (l2, md elevation) | The chosen row carries a check in the ink (R2). The list stays inside the sheet that holds it (no portal) |
+| `Avatar` | Ark `Avatar`: initials until the picture loads, and again if it fails | Park `avatar`, subtle, round: 40, 36 or 32px | A neutral fill for every person: a person's colour is a dot beside the name, never the fill (R10) |
+
+Extended: `ChipsInput` takes `suggestions` (and `onQuery`): a list under the box, on Ark's Combobox sharing the text
+box with the TagsInput. `Sheet` takes `modal={false}`: a panel beside the page, with no backdrop. `Tooltip` takes
+`shortcut`, plain text after the name (R5). `DateField` and `DateTimeField` take `min`, `max`, `disabled`, `locale`
+and `words`.
+
+Words (owner, 2026-11-21: «il contenuto dei componenti lo imposta l'app, mica sigrid»; the toolkit has at most
+placeholders, and lets an app make them multilingual): every word a component says by itself is in `src/words.tsx`
+(`DEFAULT_WORDS`, English placeholders, about seventy in twelve groups) and an app replaces them with
+`WordsProvider`, all or some. Before, they were written in the components.
+
+Also added: an app's own icon meanings (`IconPackProvider`'s `icons`) and the status colours `success`, `warning` and
+`highlight` (`theme-engine.ts` `STATUS`). `Select` takes `aria-describedby` and `aria-invalid`, so it sits in a
+`FormField`.
 
 ## Off-scale values (with locations, before the polish pass)
 

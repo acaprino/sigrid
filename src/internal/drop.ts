@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
+import { DEFAULT_WORDS, type Words } from '../words'
 
 /**
  * What a drag brings in, already read: files, a link or text. Only one, in this order of precedence: a drag with
@@ -61,22 +62,22 @@ export function limitLabel(maxFileBytes: number): string {
 }
 
 /** The message for whoever tried to add files over the limit: one by its name, several by their number. */
-export function overLimitNotice(refused: readonly File[], maxFileBytes: number): string | null {
+export function overLimitNotice(refused: readonly File[], maxFileBytes: number, words: Words = DEFAULT_WORDS): string | null {
   if (!refused.length) return null
   const limit = limitLabel(maxFileBytes)
-  return refused.length === 1 ? `“${refused[0]!.name}” is over the limit of ${limit}: it was not added.` : `${refused.length} files are over the limit of ${limit}: they were not added.`
+  return refused.length === 1 ? words.attachments.fileOverLimit(refused[0]!.name, limit) : words.attachments.filesOverLimit(refused.length, limit)
 }
 
 /**
  * Removes the files over the limit from the payload. `payload` is what is left to send (null if nothing is left),
  * `notice` the message for whoever dragged (null if nothing was refused).
  */
-export function withinLimit(payload: DropPayload, maxFileBytes: number): { payload: DropPayload | null; notice: string | null } {
+export function withinLimit(payload: DropPayload, maxFileBytes: number, words: Words = DEFAULT_WORDS): { payload: DropPayload | null; notice: string | null } {
   if (payload.kind !== 'files') return { payload, notice: null }
   const kept = payload.files.filter((f) => f.size <= maxFileBytes)
   const refused = payload.files.filter((f) => f.size > maxFileBytes)
   if (!refused.length) return { payload, notice: null }
-  return { payload: kept.length ? { kind: 'files', files: kept } : null, notice: overLimitNotice(refused, maxFileBytes) }
+  return { payload: kept.length ? { kind: 'files', files: kept } : null, notice: overLimitNotice(refused, maxFileBytes, words) }
 }
 
 export type DropTarget = {

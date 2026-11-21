@@ -9,6 +9,7 @@ import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
 import type { ThemeDef } from '../theme-catalog'
 import { TONE_PRESETS, presetTone, tonePresetOf, type ThemeScheme, type ThemeTone, type TonePreset } from '../theme-engine'
 import { themeVariables, type ThemePick } from '../themes'
+import { useWords } from '../words'
 
 // The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,
 // three tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app
@@ -181,6 +182,7 @@ export interface BaseColorText {
  */
 export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: PalettePick | null; seed: string; onPalette: (palette: PalettePick | null) => void; text: BaseColorText }) {
   const id = useId()
+  const colorNames: Readonly<Record<string, string | undefined>> = useWords().colors.names
   const pick = (color: string) => onPalette({ seed: color, combo: palette?.combo ?? 'clean' })
   return (
     <ChoiceGroup id={id} label={text.label} hint={text.hint}>
@@ -201,8 +203,8 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
             type="button"
             role="radio"
             aria-checked={palette?.seed === c}
-            aria-label={COLOR_NAMES[c]}
-            title={COLOR_NAMES[c]}
+            aria-label={colorNames[c] ?? COLOR_NAMES[c]}
+            title={colorNames[c] ?? COLOR_NAMES[c]}
             tabIndex={palette?.seed === c ? 0 : -1}
             onClick={() => pick(c)}
             style={{ background: c }}

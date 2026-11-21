@@ -1,5 +1,6 @@
-import { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from '../colors'
+import { COLORS, colorHue, markHueAttrs } from '../colors'
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group'
+import { useWords, type Words } from '../words'
 
 export type SwatchesProps = {
   colors?: readonly string[]
@@ -9,8 +10,8 @@ export type SwatchesProps = {
 }
 
 /** The readable name of a color; an unexpected color takes its number («Color 8»), never the hexadecimal. */
-function nameOf(color: string, index: number): string {
-  return (COLOR_NAMES as Readonly<Record<string, string | undefined>>)[color] ?? `Color ${index + 1}`
+function nameOf(color: string, index: number, words: Words): string {
+  return (words.colors.names as Readonly<Record<string, string | undefined>>)[color] ?? words.colors.numbered(index + 1)
 }
 
 /**
@@ -18,17 +19,18 @@ function nameOf(color: string, index: number): string {
  * swatches. Like any radio group: a single Tab stop (the chosen color, or the first), the arrows move and choose
  * wrapping around the ends, Home and End go to the first and the last.
  */
-export function Swatches({ colors = COLORS, value, onChange, label = 'Color' }: SwatchesProps) {
+export function Swatches({ colors = COLORS, value, onChange, label }: SwatchesProps) {
+  const words = useWords()
   return (
     <RadioGroup
-      aria-label={label}
+      aria-label={label ?? words.colors.group}
       orientation="horizontal"
       className="flex flex-wrap items-center gap-3"
       value={value}
       onValueChange={onChange}
     >
       {colors.map((c, i) => (
-        <RadioGroupItem key={c} value={c} variant="swatch" aria-label={nameOf(c, i)} data-color={c} {...markHueAttrs(c)} style={{ background: colorHue(c) !== null ? `var(--mark-dot, ${c})` : c }} />
+        <RadioGroupItem key={c} value={c} variant="swatch" aria-label={nameOf(c, i, words)} data-color={c} {...markHueAttrs(c)} style={{ background: colorHue(c) !== null ? `var(--mark-dot, ${c})` : c }} />
       ))}
     </RadioGroup>
   )

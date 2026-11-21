@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react'
 import { cn } from '../lib/utils'
+import { useWords } from '../words'
 
 // A small Markdown of our own, for the title and notes of a task. No dependencies and no `innerHTML`: the text becomes
 // React elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the
@@ -171,6 +172,7 @@ export function parseBlocks(src: string): Block[] {
 
 /** The notes: paragraphs, lists, checkboxes (read-only), headings and quotes, with inline Markdown inside. */
 export function MarkdownBlocks({ text, className }: { text: string; className?: string }) {
+  const words = useWords().checklist
   return (
     <div data-slot="markdown" className={cn('space-y-2 text-sm break-words', className)}>
       {parseBlocks(text).map((b, i) => {
@@ -222,7 +224,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
                         ) : null}
                       </span>
                     ) : null}
-                    {it.check !== undefined ? <span className="sr-only">{it.check ? 'Done: ' : 'To do: '}</span> : null}
+                    {it.check !== undefined ? <span className="sr-only">{it.check ? words.done : words.todo}</span> : null}
                     <span className={cn(it.check && 'text-ink-mute line-through')}>
                       <InlineMarkdown text={it.text} />
                     </span>

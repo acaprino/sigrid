@@ -37,6 +37,12 @@
   --color-destructive: #ad2a1e;
   --color-destructive-soft: #fef1ef;
   --color-destructive-foreground: #ffffff;
+  /* Status colours, fixed for every theme (src/theme-engine.ts STATUS; added 2026-11-21) */
+  --color-success: #1c6b3f;
+  --color-success-soft: #eef8f1;
+  --color-warning: #855000;
+  --color-warning-soft: #fdf4e3;
+  --color-highlight: #ffe38a;       /* behind a match inside a text, with the ink on it */
   --color-mark-ink-light: #ffffff;
   --color-mark-ink-dark: #1b1916;
   /* The shadow colour (src/theme-engine.ts `drop`: the ink in light) */
@@ -71,6 +77,11 @@
     --color-destructive: #ff9a8d;
     --color-destructive-soft: #3d2420;
     --color-destructive-foreground: #17161a;
+    --color-success: #7fd3a0;
+    --color-success-soft: #1c3326;
+    --color-warning: #f0b85a;
+    --color-warning-soft: #3a2c12;
+    --color-highlight: #4f3f08;
     --color-drop: #050606;
   }
 }

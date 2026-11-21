@@ -5,6 +5,7 @@
 import { Fragment } from "react"
 import type * as React from "react"
 import { cn } from "../../lib/utils"
+import { useWords } from "../../words"
 
 export type KbdSize = "sm" | "md" | "lg"
 
@@ -36,13 +37,9 @@ export type ShortcutProps = Omit<React.ComponentProps<"span">, "children"> & {
   size?: KbdSize | undefined
 }
 
-/** What a screen reader hears for the whole combination: "Ctrl + Enter", or "G then I" for keys pressed in turn. */
-function spoken(keys: readonly string[], together: boolean): string {
-  return keys.join(together ? " + " : " then ")
-}
-
-/** A combination drawn key by key, announced once as words (`spoken`). */
+/** A combination drawn key by key, announced once as words: «Ctrl + Enter», or «G then I» for keys pressed in turn (the toolkit's words). */
 function Shortcut({ keys, separator = "+", size = "sm", className, ...props }: ShortcutProps) {
+  const words = useWords()
   const parts = keys.map((key, index) => (
     <Fragment key={`${index}-${key}`}>
       {index > 0 ? <span aria-hidden="true" className={HINT_TEXT}>{separator}</span> : null}
@@ -50,7 +47,7 @@ function Shortcut({ keys, separator = "+", size = "sm", className, ...props }: S
     </Fragment>
   ))
   return (
-    <span data-slot="shortcut" role="img" aria-label={spoken(keys, separator === "+")} className={cn("inline-flex items-center gap-1", ON_PHONE_HIDDEN, className)} {...props}>
+    <span data-slot="shortcut" role="img" aria-label={separator === "+" ? words.common.keysTogether(keys) : words.common.keysInSequence(keys)} className={cn("inline-flex items-center gap-1", ON_PHONE_HIDDEN, className)} {...props}>
       {parts}
     </span>
   )

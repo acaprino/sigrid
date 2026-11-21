@@ -26,7 +26,20 @@ import {
   COLORS,
   COLOR_NAMES,
   Calendar,
+  Avatar,
   Checkbox,
+  Combobox,
+  SearchField,
+  Slider,
+  Count,
+  FormField,
+  NavItem,
+  NavList,
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   ChipsInput,
   DateField,
   DateTimeField,
@@ -47,6 +60,7 @@ import {
   DropdownMenuTrigger,
   DurationField,
   Empty,
+  Icon,
   Input,
   Kbd,
   MarkdownBlocks,
@@ -471,6 +485,193 @@ function Fields() {
             <Textarea defaultValue="Call the dentist to reschedule the appointment" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
+      </Row>
+    </Section>
+  )
+}
+
+function Switches({ animated }: { animated: boolean }) {
+  const [sync, setSync] = React.useState(true)
+  return (
+    <Section id="switch" title="Switch" note="An on/off setting that takes effect at once. The track is the control border colour when off and the ink when on; the thumb slides only with animations.">
+      <Row label="states">
+        <Cell label="off">
+          <Switch aria-label="Sample off" animated={animated} />
+        </Cell>
+        <Cell label="on">
+          <Switch aria-label="Sample on" defaultChecked animated={animated} />
+        </Cell>
+        <Cell label="disabled">
+          <Switch aria-label="Sample disabled" disabled />
+        </Cell>
+        <Cell label="disabled on">
+          <Switch aria-label="Sample disabled on" disabled defaultChecked />
+        </Cell>
+        <Cell label="invalid">
+          <Switch aria-label="Sample invalid" invalid />
+        </Cell>
+      </Row>
+      <Row label="with a label">
+        <Switch checked={sync} onCheckedChange={setSync} animated={animated}>
+          Sync on this device
+        </Switch>
+      </Row>
+    </Section>
+  )
+}
+
+function TabSets({ animated }: { animated: boolean }) {
+  const [tab, setTab] = React.useState('general')
+  return (
+    <Section id="tabs" title="Tabs" note="Panels of one view. The chosen tab takes the selection tint, never a bar (R1). Arrows move and choose; a disabled tab is skipped.">
+      <Row label="with panels">
+        <Tabs value={tab} onValueChange={setTab} animated={animated} className="w-96">
+          <TabsList aria-label="Sample settings">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            <TabsTrigger value="later" disabled>
+              Later
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="general">
+            <p className="text-sm text-ink-soft">The general settings.</p>
+          </TabsContent>
+          <TabsContent value="accounts">
+            <p className="text-sm text-ink-soft">The accounts.</p>
+          </TabsContent>
+          <TabsContent value="advanced">
+            <p className="text-sm text-ink-soft">The advanced settings.</p>
+          </TabsContent>
+        </Tabs>
+      </Row>
+    </Section>
+  )
+}
+
+function FormFields() {
+  return (
+    <Section id="form-field" title="FormField" note="A label, one control and a sentence under it: a helper, or the error that takes its place and is announced.">
+      <Row label="states">
+        <FormField label="Name" help="As it appears on your messages." className="w-64">
+          <Input defaultValue="Ada Lovelace" />
+        </FormField>
+        <FormField label="Address" help="Your work address." error="Write an address with an @." required className="w-64">
+          <Input defaultValue="ada.example.com" />
+        </FormField>
+        <FormField label="Density" className="w-48">
+          <Select options={[{ value: 'compact', label: 'Compact' }, { value: 'normal', label: 'Normal' }]} value="normal" onValueChange={() => {}} />
+        </FormField>
+      </Row>
+    </Section>
+  )
+}
+
+function Navigation() {
+  const [place, setPlace] = React.useState('today')
+  const rows = [
+    { id: 'today', icon: 'today', label: 'Today', count: 3 },
+    { id: 'upcoming', icon: 'upcoming', label: 'Upcoming', count: 12 },
+    { id: 'all', icon: 'all', label: 'All', count: 0 },
+    { id: 'plain', icon: null, label: 'A row without an icon', count: 128 },
+  ] as const
+  const list = (tone: 'page' | 'sidebar') => (
+    <NavList aria-label={`Sample places, ${tone}`} tone={tone} className="w-60">
+      {rows.map((row) => (
+        <NavItem key={row.id} current={place === row.id} onClick={() => setPlace(row.id)} icon={row.icon ? <Icon name={row.icon} /> : null} end={<Count value={row.count} label="items" reserve />}>
+          {row.label}
+        </NavItem>
+      ))}
+    </NavList>
+  )
+  return (
+    <Section id="nav-list" title="NavList and Count" note="Rows of a navigation: an icon slot that stays when empty (R6), the selection tint on the current row and no bar (R1), counts as plain tabular numbers (R5).">
+      <Row label="on the page">{list('page')}</Row>
+      <Row label="on the sidebar">
+        <div className="rounded-lg bg-sidebar-paper p-2">{list('sidebar')}</div>
+      </Row>
+      <Row label="status colours">
+        <span className="rounded-md bg-success-soft px-2 py-1 text-sm text-success">Saved</span>
+        <span className="rounded-md bg-warning-soft px-2 py-1 text-sm text-warning">High priority</span>
+        <span className="text-sm">
+          A <mark className="bg-highlight text-ink">match</mark> inside a text
+        </span>
+      </Row>
+    </Section>
+  )
+}
+
+const PEOPLE = [
+  { value: 'ada', label: 'Ada Lovelace', detail: 'ada@example.com' },
+  { value: 'alan', label: 'Alan Turing', detail: 'alan@example.com' },
+  { value: 'grace', label: 'Grace Hopper', detail: 'grace@example.com' },
+  { value: 'linus', label: 'Linus Torvalds', disabled: true },
+]
+
+function Pickers() {
+  const [zoom, setZoom] = React.useState(40)
+  const [query, setQuery] = React.useState('invoice')
+  const [person, setPerson] = React.useState<string | null>('ada')
+  const [labels, setLabels] = React.useState(['Home'])
+  const [panel, setPanel] = React.useState(false)
+  return (
+    <Section id="pickers" title="Slider, SearchField, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a choice from a list filtered while typing; a person as a neutral round tile.">
+      <Row label="slider">
+        <div className="flex w-64 flex-col gap-2">
+          <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
+          <span className="text-2xs text-ink-mute tabular-nums">{zoom}</span>
+        </div>
+        <div className="w-64">
+          <Slider aria-label="Sample disabled" value={70} min={0} max={100} onValueChange={() => {}} disabled />
+        </div>
+      </Row>
+      <Row label="search">
+        <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
+        <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
+      <Row label="combobox">
+        <FormField label="Assignee" className="w-64">
+          <Combobox options={PEOPLE} value={person} onValueChange={setPerson} placeholder="Nobody" />
+        </FormField>
+        <FormField label="Reviewer" error="Choose a person." className="w-64">
+          <Combobox options={PEOPLE} value={null} onValueChange={() => {}} placeholder="Nobody" />
+        </FormField>
+      </Row>
+      <Row label="labels with suggestions">
+        <div className="flex w-80 flex-col gap-1.5">
+          <label htmlFor="suggested-labels" className="text-sm font-medium">
+            Labels
+          </label>
+          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Home', 'Work', 'Waiting', 'Errands', 'Someday']} placeholder="Add a label" />
+        </div>
+      </Row>
+      <Row label="avatar">
+        <Avatar name="Ada Lovelace" />
+        <Avatar name="Alan Turing" size="sm" />
+        <Avatar name="Grace" size="xs" />
+        <Avatar name="Sample picture" src={PIXEL} />
+        <div className="flex items-center gap-2">
+          <Avatar name="Ada Lovelace" size="xs" decorative />
+          <span className="text-sm">Ada Lovelace</span>
+        </div>
+      </Row>
+      <Row label="panel beside the page">
+        <Button variant="outline" onClick={() => setPanel(true)}>
+          Open a panel
+        </Button>
+        <Sheet open={panel} onOpenChange={setPanel} modal={false}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>A panel beside the page</SheetTitle>
+              <SheetDescription>No backdrop: the page under it scrolls and takes clicks.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+        <Tooltip label="Search" shortcut="Ctrl K">
+          <Button variant="outline" size="icon" aria-label="Search">
+            <Icon name="all" />
+          </Button>
+        </Tooltip>
       </Row>
     </Section>
   )
@@ -1166,6 +1367,11 @@ function App() {
           <Fields />
           <Checkboxes animated={animated} />
           <Radios />
+          <Switches animated={animated} />
+          <TabSets animated={animated} />
+          <FormFields />
+          <Navigation />
+          <Pickers />
           <Toggles animated={animated} />
           <Selects />
           <Menus animated={animated} />

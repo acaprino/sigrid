@@ -116,12 +116,24 @@ const atLeast = (bgs: readonly string[], min: number | ((bg: string) => number))
 /** The direction that moves a color away from this background: lighter on dark backgrounds, darker on light ones. */
 const awayFrom = (bg: string): -1 | 1 => (luminance(bg) < 0.18 ? 1 : -1)
 
-/* ———— The destructive red and the ink of the icons: the same for every theme of the same scheme ———— */
+/* ———— The destructive red, the status colours and the ink of the icons: the same for every theme of the same scheme ———— */
 
 export const FIXED = {
   light: { destructive: '#ad2a1e', 'destructive-soft': '#fef1ef' },
   dark: { destructive: '#ff9a8d', 'destructive-soft': '#3d2420' },
   markInk: { 'mark-ink-light': '#ffffff', 'mark-ink-dark': '#1b1916' },
+} as const
+
+/**
+ * The status colours, beside the red: `success` and `warning` are text colours, each with a soft background of its own;
+ * `highlight` is a background for a match inside a text (a search hit), with the ink on it. They are meanings, not
+ * accents: always with a word or an icon, never the only signal. The same for every theme of the same scheme; a
+ * theme whose surfaces would sink one moves its lightness just enough to hold (4.5:1 for the text colours on every
+ * background and on their soft one; 7:1 for the ink on the highlight).
+ */
+export const STATUS = {
+  light: { success: '#1c6b3f', 'success-soft': '#eef8f1', warning: '#855000', 'warning-soft': '#fdf4e3', highlight: '#ffe38a' },
+  dark: { success: '#7fd3a0', 'success-soft': '#1c3326', warning: '#f0b85a', 'warning-soft': '#3a2c12', highlight: '#4f3f08' },
 } as const
 
 export type ThemeScheme = 'light' | 'dark'
@@ -708,6 +720,17 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const destructive = theme.surfaces && !redHolds(fixed.destructive) ? hex(settle(fromHex(fixed.destructive), dir, redHolds).c) : fixed.destructive
   const onDestructive = [white, '#17161a', paper].sort((a, b) => contrast(b, destructive) - contrast(a, destructive))[0]!
 
+  // The status colours: fixed, moved only where a theme's surfaces would sink them.
+  const status = light ? STATUS.light : STATUS.dark
+  const statusText = (name: 'success' | 'warning') => {
+    const soft = status[`${name}-soft`]
+    const holds = (h: string) => contrast(h, soft) >= 4.5 + MARGIN && backgrounds.every((bg) => contrast(h, bg) >= 4.5 + MARGIN)
+    return holds(status[name]) ? status[name] : hex(settle(fromHex(status[name]), dir, holds).c)
+  }
+  // The highlight moves away from the ink (lighter in light, darker in dark) until the ink reads on it.
+  const inkHolds = (h: string) => contrast(ink, h) >= 7 + MARGIN
+  const highlight = inkHolds(status.highlight) ? status.highlight : hex(settle(fromHex(status.highlight), light ? 1 : -1, inkHolds).c)
+
   // The user's colors on the content backgrounds, and again on the bar: a bar with its own colors is dark even in the
   // light scheme, where a color readable on white would sink, so there the colors are adapted as for a dark scheme.
   const marks: Record<string, string> = {}
@@ -727,7 +750,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
     background: paper, foreground: ink, card: raised, 'card-foreground': ink, popover: raised, 'popover-foreground': ink,
     primary, 'primary-foreground': onFill, secondary: paper2, 'secondary-foreground': ink, muted: paper2, 'muted-foreground': inkMute,
     // The focus ring is the accent as text (R8): 2px, offset 2px, at least 3:1 on every background and on the selection.
-    ...fixed, destructive, 'destructive-foreground': onDestructive, border: line, input, ring: accent, ...FIXED.markInk,
+    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent, ...FIXED.markInk,
     selected, 'selected-ink': selectedInk, ...bar, ...marks,
   }
   const attributes: Record<string, string> = {
