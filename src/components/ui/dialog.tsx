@@ -19,6 +19,7 @@ import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 import { BACKDROP, ignoreToasts } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
+import { useEntrance } from "../../internal/motion"
 
 type RootProps = React.ComponentProps<typeof DialogPrimitive.Root>
 type ChangeDetails = Parameters<NonNullable<RootProps["onOpenChange"]>>[1]
@@ -97,18 +98,29 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  ref,
+  animated,
   ...props
 }: Omit<React.ComponentProps<typeof DialogPrimitive.Popup>, "className"> & {
   className?: string
   showCloseButton?: boolean
+  animated?: boolean | undefined
 }) {
   // Inside part of the app drawn in another document (`PortalContainerProvider`) the dialog opens in that document.
   const container = usePortalContainer()
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterDialog(el))
+  const autoFocus = props.initialFocus === undefined
+  const popupRef = React.useCallback((el: HTMLDivElement | null) => {
+    enter(el)
+    if (autoFocus) focusFirst(el)
+    if (typeof ref === "function") return ref(el)
+    if (ref) ref.current = el
+  }, [autoFocus, enter, ref])
   return (
     <DialogPortal container={container}>
       <DialogOverlay />
       <DialogPrimitive.Popup
-        ref={props.initialFocus === undefined ? focusFirst : undefined}
+        ref={popupRef}
         data-slot="dialog-content"
         // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a sheet,
         // a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.

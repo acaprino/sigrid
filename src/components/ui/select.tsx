@@ -11,7 +11,7 @@
 // of the card. SmoothUI's hand-made listbox (createPortal + computed position) is replaced by the primitive
 // `Select` from Base UI (Root, Trigger, Value, Icon, Portal, Positioner, Popup, List, Item, ItemText, ItemIndicator): so
 // keyboard (arrows, type-ahead, Enter, Esc), ARIA roles and the portal nested in a modal sheet come from the
-// primitive. Removed: springs, staggering and hover shift: no animation (the component has no `animated`).
+// primitive. The list uses the shared Motion entrance from the trigger.
 // States from Park's recipe (the owner's decision of 2026-11-20): `disabled` is the toolkit's disabled look (half
 // opacity, no pointer, out of the Tab order: Base UI's `disabled`), `invalid` sets `aria-invalid` and turns the 3:1
 // control border into the destructive colour, also while the list is open (Park's `_invalid`).
@@ -22,6 +22,7 @@ import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 import { usePortalContainer } from "../PortalContainer"
+import { useEntrance } from "../../internal/motion"
 
 /**
  * An option: a value and its label. An app can add its own fields (`O extends SelectOption`) and draw them before the
@@ -32,6 +33,7 @@ export type SelectGroup<O extends SelectOption = SelectOption> = { label: string
 
 export type SelectProps<O extends SelectOption = SelectOption> = {
   options: O[]
+  animated?: boolean | undefined
   value: string
   onValueChange: (value: string) => void
   id?: string
@@ -65,12 +67,17 @@ function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMar
   )
 }
 
-function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid = false, ...aria }: SelectProps<O>) {
+function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid = false, animated, ...aria }: SelectProps<O>) {
   const container = usePortalContainer()
+  const trigger = React.useRef<HTMLButtonElement>(null)
+  // The primitive can keep its list mounted between openings.
+  const [open, setOpen] = React.useState(false)
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, trigger.current), open)
   const all = groups ? [...options, ...groups.flatMap((g) => g.options)] : options
   const label = all.find((o) => o.value === value)?.label ?? placeholder ?? ""
   return (
     <SelectPrimitive.Root
+      onOpenChange={setOpen}
       value={value}
       disabled={disabled}
       onValueChange={(next) => {
@@ -78,6 +85,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
       }}
     >
       <SelectPrimitive.Trigger
+        ref={trigger}
         id={id}
         aria-label={aria["aria-label"]}
         aria-invalid={invalid || undefined}
@@ -101,6 +109,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
       <SelectPrimitive.Portal container={container}>
         <SelectPrimitive.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-50 outline-none">
           <SelectPrimitive.Popup
+            ref={enter}
             data-slot="select-content"
             className="flex max-h-80 min-w-[max(var(--anchor-width),10rem)] flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md outline-none"
           >

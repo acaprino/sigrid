@@ -1,9 +1,10 @@
-import { memo, useId } from 'react'
+import { createContext, memo, useContext, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { COLORS, COLOR_NAMES } from '../colors'
 import { densityOf, type DensityDef } from '../density'
 import { ICON_PACKS, Icon, type IconPack } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
+import { useMotion } from '../internal/motion'
 import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
 import type { ThemeDef } from '../theme-catalog'
 import { TONE_PRESETS, presetTone, tonePresetOf, type ThemeScheme, type ThemeTone, type TonePreset } from '../theme-engine'
@@ -115,17 +116,22 @@ export function ChoiceGroup({ id, label, hint, level = 3, children }: { id?: str
   )
 }
 
+const ChoiceHighlightId = createContext<string | null>(null)
+
 /** The options of a choice as cards side by side: two per row on the phone, three (or two) on wider screens. */
 export function ChoiceCards({ labelledBy, columns = 3, children }: { labelledBy: string; columns?: 2 | 3; children: ReactNode }) {
+  const id = useId()
   return (
     <div role="radiogroup" aria-labelledby={labelledBy} onKeyDown={radioArrows} className={`grid grid-cols-2 gap-2 ${columns === 3 ? 'sm:grid-cols-3' : ''}`}>
-      {children}
+      <ChoiceHighlightId.Provider value={id}>{children}</ChoiceHighlightId.Provider>
     </div>
   )
 }
 
 /** An option: a small preview of what it does, its name and note, and the mark when chosen. */
 export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: boolean; name: string; note: string; onChoose: () => void; preview?: ReactNode }) {
+  const group = useContext(ChoiceHighlightId)
+  const motion = useMotion()
   return (
     <button
       type="button"
@@ -133,8 +139,9 @@ export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: 
       aria-checked={choice}
       tabIndex={choice ? 0 : -1}
       onClick={onChoose}
-      className={`flex flex-col rounded-lg border bg-raised px-3 py-2 text-left pointer-coarse:min-h-11 ${FOCUS_RING} ${choice ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}
+      className={`relative flex flex-col rounded-lg border bg-raised px-3 py-2 text-left pointer-coarse:min-h-11 ${FOCUS_RING} ${choice && !(motion && group) ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}
     >
+      {choice && motion && group ? <motion.Highlight id={group} className="pointer-events-none absolute -inset-px rounded-[inherit] border border-primary ring-1 ring-primary" /> : null}
       {preview}
       <span className="flex w-full items-start justify-between gap-2">
         <span className="min-w-0">

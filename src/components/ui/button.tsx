@@ -29,7 +29,7 @@ import { useMotion } from "../../internal/motion"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-semibold whitespace-nowrap motion-safe:transition-[background-color,border-color,color,box-shadow] pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-semibold whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
@@ -81,7 +81,7 @@ export type ButtonProps = React.ComponentProps<"button"> &
     animated?: boolean | undefined
     /** Scale under the pointer, with `animated`. Default 1: still. */
     hoverScale?: number | undefined
-    /** Scale while pressed, with `animated`. Default 0.96. */
+    /** Override the default press scale (0.96 with at most 2px of travel per edge). */
     tapScale?: number | undefined
     /**
      * Waiting for the result of its action: the button keeps its size, is `aria-busy="true"` and `aria-disabled="true"`,
@@ -116,11 +116,11 @@ function Button({
   // One ref for the caller and for the gestures; without `animated` the state is never set and nothing re-renders.
   const ref = React.useCallback(
     (node: HTMLButtonElement | null) => {
-      if (animated) setEl(node)
+      if (motion) setEl(node)
       if (typeof outer === "function") return outer(node)
       if (outer) outer.current = node
     },
-    [outer, animated]
+    [outer, motion]
   )
   React.useEffect(() => {
     if (!motion || !el) return

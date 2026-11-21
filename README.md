@@ -42,7 +42,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
    levels and elevation of every primitive in `src/components/ui/`.
 3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
-   decelerates, leaving accelerates, moving in place eases; no springs), only with the `animated` prop, never
+   decelerates, leaving accelerates, moving in place eases; no springs), enabled app-wide with `<MotionProvider animated={true}>` or per control with the `animated` prop, never
    with `prefers-reduced-motion`, only in answer to a gesture. `motion` (14.6.0) is imported by
    `src/internal/motion-impl.tsx` alone, a chunk loaded lazily (`useMotion`, `preloadMotion`): with animations off it
    never reaches the browser.

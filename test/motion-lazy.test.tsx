@@ -47,6 +47,15 @@ async function loadModules() {
 
 
 describe('with animations off the chunk does not reach the browser', () => {
+  test('the app preference is inherited and can be disabled on a control', async () => {
+    fakeMatchMedia(false)
+    const { Checkbox, MotionProvider } = await loadModules()
+    const { rerender } = render(<MotionProvider animated><Checkbox animated={false} aria-label="A" /></MotionProvider>)
+    await settle()
+    expect(loads).toBe(0)
+    rerender(<MotionProvider animated><Checkbox aria-label="A" /></MotionProvider>)
+    await waitFor(() => expect(loads).toBe(1))
+  })
   test('without `animated`, or with `animated` false, the chunk is never loaded and nobody reads matchMedia', async () => {
     const media = fakeMatchMedia(false)
     const { Checkbox, Toasts } = await loadModules()
