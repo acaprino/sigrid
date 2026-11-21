@@ -16,7 +16,7 @@ import { THEME_ATTRIBUTES, THEME_VARIABLES, copyTheme } from '../src/themes'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = (file: string) => readFileSync(resolve(root, file), 'utf8')
-const css = source('src/styles/theme.css')
+const css = source('src/styles/theme.css').replace(/\r\n/g, '\n')
 
 /** The declarations of the density tokens in `theme.css`: on every pointer, and the ones a coarse pointer replaces. */
 function tokenRules(): { fine: Record<string, string>; coarse: Record<string, string>; touch: number } {

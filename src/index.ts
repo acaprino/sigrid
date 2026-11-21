@@ -65,3 +65,4 @@ export { TAG_COLOR, TAG_HUES, TAG_PILL, tagColorAttrs, tagHue } from './internal
 export { NeedThumbnail, Thumbnail, safeThumbnail, type ThumbnailProps } from './internal/thumbnail'
 export { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, useIconPack, type IconName, type IconPack } from './icons'
 export { PALETTE_COMBOS, palettePick, paletteTheme, type PaletteCombo, type PalettePick } from './palette'
+export { ThemeGallery, type ThemeGalleryProps } from './components/ThemeGallery'
