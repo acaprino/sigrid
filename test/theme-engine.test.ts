@@ -356,8 +356,8 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
   })
 
-  test('the shape is Park UI\'s: l1/l2/l3 corners of 2/4/6px, rows in the open, round checkboxes, stroke 1.75', () => {
-    expect(tk.shape).toMatchObject({ '--radius-sm': '2px', '--radius-md': '4px', '--radius-lg': '6px', '--radius-xl': '6px', '--radius-button': '4px', '--radius-chip': '4px' })
+  test('the shape: Park UI\'s l1/l2/l3 corners a step rounder, 4/6/10px, rows in the open, round checkboxes, stroke 1.75', () => {
+    expect(tk.shape).toMatchObject({ '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px', '--radius-button': '6px', '--radius-chip': '6px' })
     expect(tk.attributes['data-rows']).toBe('open')
     expect(tk.shape['--radius-check']).toBe('9999px')
     expect(tk.shape['--icon-stroke']).toBe('1.75')

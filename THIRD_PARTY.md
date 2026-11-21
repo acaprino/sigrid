@@ -80,7 +80,7 @@ Notes:
   of Park's code is copied, only the values of its recipes, written as Tailwind classes on our tokens
 
 What is taken: Park's `md` size as the default (controls 40px, text 14px/20px, labels 14px medium; `sm` 36px and `xs`
-32px only inside dense rows), its nested corners l1/l2/l3 = 2/4/6px (`--radius-sm/md/lg` in `src/theme-engine.ts`),
+32px only inside dense rows), its nested corners l1/l2/l3 = 4/6/10px (Park ships 2/4/6px: each level is a step rounder here) (`--radius-sm/md/lg` in `src/theme-engine.ts`),
 its button and badge variants under our names (solid → `default`, subtle in the neutral gray → `secondary` and
 `QUIET_CHIP`, outline, plain → `ghost`; neutral, never the accent, by the owner's rules of 2026-11-20 in
 `DESIGN.md`), its `kbd` plain variant, and its layered shadows (xs/sm/md/lg/xl, a drop and a 1px ring) as the

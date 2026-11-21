@@ -14,13 +14,13 @@
   --color-accent-soft: #ebebeb;
   --color-raised: #fefcf8;
 
-  /* Park UI's corners: three nested levels, l1/l2/l3 = 2/4/6px. `sm` is l1 (what sits inside a control: a key, a
+  /* Park UI's three nested corner levels, each a step rounder than Park ships: l1/l2/l3 = 4/6/10px. `sm` is l1 (what sits inside a control: a key, a
      menu item, a small box), `md` is l2 (controls: buttons, fields, selects, labels), `lg` is l3 (what holds controls:
      cards, windows, menus, toasts, the segmented group). There is no fourth level: `xl` is l3 too. */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius-xl: 6px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 10px;
 
   /* Park UI's elevation (its `shadows` tokens): a soft drop and a 1px ring, in place of a border. The values change
      with the scheme, so each one is a variable the theme engine writes (`--elevation-*`, below for the first paint):
@@ -638,10 +638,10 @@ svg.lucide[stroke-width="2"] {
 
 /* Solid and bordered buttons: the theme's radius (Park's l2). */
 [data-slot="button"]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"], [data-variant="destructive"]) {
-  border-radius: var(--radius-button, 4px);
+  border-radius: var(--radius-button, 6px);
 }
 [data-slot="badge"] {
-  border-radius: var(--radius-chip, 4px);
+  border-radius: var(--radius-chip, 6px);
 }
 /* A list that scrolls fades out on the edge where it goes on, never where it ends (`data-scroll-shade`, or
    `data-scroll-shade="x"` for a row that scrolls sideways): a row cut by the edge reads as "there is more", not as a

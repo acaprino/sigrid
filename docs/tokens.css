@@ -124,12 +124,12 @@
 
 /* ———— Shape (src/theme-engine.ts `shapeOf`, src/styles/theme.css `@theme`) ———— */
 :root {
-  --radius-sm: 2px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
-  --radius-md: 4px;      /* Park l2: controls (buttons, fields, selects, badges, menu items) */
-  --radius-lg: 6px;      /* Park l3: what holds controls (cards, menus, popovers, dialogs, toasts, the segment group) */
-  --radius-xl: 6px;      /* = l3: there is no fourth level */
-  --radius-button: 4px;
-  --radius-chip: 4px;
+  --radius-sm: 4px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
+  --radius-md: 6px;      /* Park l2: controls (buttons, fields, selects, badges, menu items) */
+  --radius-lg: 10px;     /* Park l3: what holds controls (cards, menus, popovers, dialogs, toasts, the segment group) */
+  --radius-xl: 10px;     /* = l3: there is no fourth level */
+  --radius-button: 6px;
+  --radius-chip: 6px;
   --radius-check: 9999px; /* round boxes an app may give its own checkboxes; the toolkit's Checkbox uses rounded-sm */
   --icon-stroke: 1.75;
   --icon-cap: round;

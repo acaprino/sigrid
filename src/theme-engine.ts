@@ -428,16 +428,16 @@ function elevationOf(scheme: ThemeScheme): Record<string, string> {
 }
 
 /**
- * The shape, the same for every theme (Park UI's, as it ships): three nested corner levels l1/l2/l3 = 2/4/6px (`sm`,
- * `md`, `lg`; `xl` is l3 too), 4px buttons and labels (l2), round boxes in `--radius-check` (for an app that rounds its
+ * The shape, the same for every theme (Park UI's three nested corner levels, each a step rounder than Park ships): l1/l2/l3 = 4/6/10px (`sm`,
+ * `md`, `lg`; `xl` is l3 too), 6px buttons and labels (l2), round boxes in `--radius-check` (for an app that rounds its
  * own checkboxes; the toolkit's `Checkbox` keeps l1), 1.75 stroke, rows in the open without a card around the group,
  * and elevation in place of borders.
  * With the scheme only the elevation changes.
  */
 function shapeOf(scheme: ThemeScheme): Record<string, string> {
   return {
-    '--radius-sm': '2px', '--radius-md': '4px', '--radius-lg': '6px', '--radius-xl': '6px',
-    '--radius-button': '4px', '--radius-check': '9999px', '--radius-chip': '4px',
+    '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px',
+    '--radius-button': '6px', '--radius-check': '9999px', '--radius-chip': '6px',
     '--icon-stroke': '1.75', '--icon-cap': 'round', '--icon-join': 'round',
     '--border-width': '1px',
     ...elevationOf(scheme),

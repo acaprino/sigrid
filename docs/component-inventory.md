@@ -13,7 +13,7 @@ as installed) and from Park UI's recipes (`packages/preset/src/recipes/*.ts` at 
 - R4 border or shadow, never both: inputs and outline buttons a border; raised surfaces (cards, toasts, menus, popovers, file tiles, the segment thumb) a shadow.
 - R5 counts are plain tabular numbers; key hints plain 12px text, hidden at phone widths; pills only for labels.
 - R6 an icon only when it tells something; an empty slot rather than a repeated icon; no decorative sparkles, bolts or info icons.
-- R7 radii 2/4/6 (round only for avatars, dots, switches); 4px spacing grid; heights 40/36/32 (at normal density; 36/32/28 at compact, 44/40/36 at large: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
+- R7 radii 4/6/10 (2/4/6 when this inventory was made) (round only for avatars, dots, switches); 4px spacing grid; heights 40/36/32 (at normal density; 36/32/28 at compact, 44/40/36 at large: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
 - R8 focus ring 2px in the accent-text colour, 2px offset, at least 3:1 in every theme, on every focusable control.
 - R9 accent text at least 4.5:1 on both page backgrounds in every theme; step 12 where step 11 falls short.
 - R10 data colours (projects, areas, labels, events) as 8px dots only.
@@ -94,7 +94,7 @@ Behaviour: Ark UI carries Calendar/DateField/DateTimeField (DatePicker), ChipsIn
 | Control heights (at normal density; since density, `--control-md/sm/xs` and `--row-height`) | Button 40/36/32 (`lg` 40 since F14); Input 40; Textarea 1 line = 40; Select 40/36; DateField trigger 40; ToggleGroup item 40; Menu and Select items min 40; ChipsInput control min 40 | Button `lg` 44 (F14); the time input of DateTimeField is 36 beside a 36 button (consistent) |
 | Small parts | Checkbox 18; Radio 16; Kbd 18/20/22; Badge 20; chip 28 with a 20px remove; Thumbnail 64/40 | Radio 16 vs Checkbox 18 (F23) |
 | Side padding (at normal density; `--pad-md/sm/xs`) | Button 14/12/10 (md/sm/xs); Input 12; Select 12 left, 10 right; DateField 12; segment item 14; menu item 8; select item 8 (+32 for the check); chips control 6 | Select's 10px right edge holds the chevron (approved: Park's indicator) |
-| Radii | Controls `rounded-md` (l2, 4px): Button, Input, Textarea, Select trigger, DateField, Badge, Kbd, menu items, select list, tooltip; `rounded-sm` (l1): Checkbox, select items, chip; `rounded-lg` (l3): menu, popover, toasts, date card, segment group and items, attachment tiles; Dialog `rounded-xl` (alias of l3) | Dialog names `xl` where the others name `lg` (same 6px) — F25 fixed with it |
+| Radii | Controls `rounded-md` (l2, 6px): Button, Input, Textarea, Select trigger, DateField, Badge, Kbd, menu items, select list, tooltip; `rounded-sm` (l1): Checkbox, select items, chip; `rounded-lg` (l3): menu, popover, toasts, date card, segment group and items, attachment tiles; Dialog `rounded-xl` (alias of l3) | Dialog names `xl` where the others name `lg` (same 6px) — F25 fixed with it |
 | Elevation | xs: secondary button, select trigger, segment thumb; sm: tooltip, viewer page; md: menu, select list; lg: popover, dialog, sheet, toasts, date card | xs on bordered controls (F03) |
 | Focus | see F01 (five forms) | F01 |
 | Icon sizes | 16 (`size-4`) standard; 12 in Badge, AttachmentMarks, chip remove, Checkbox mark; 20 in Empty, upload, thumbnail placeholder (sheet), viewer states; 8 (dot) menu radio | F16 (the check mark inside an 18px box and the menu radio dot are glyphs, approved) |

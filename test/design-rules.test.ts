@@ -133,7 +133,7 @@ describe('DESIGN.md and the zero-slop-design code check', () => {
   })
 
   test('the permitted values were read from DESIGN.md', () => {
-    expect([...RADII].sort((a, b) => a - b)).toEqual([2, 4, 6, 9999])
+    expect([...RADII].sort((a, b) => a - b)).toEqual([4, 6, 10, 9999])
     expect([...SIZES].sort((a, b) => a - b)).toEqual([12, 13, 14, 16])
     expect([...WEIGHTS].sort()).toEqual([400, 500, 600])
     expect(SHADOWS).toEqual(new Set(['xs', 'sm', 'md', 'lg', 'float']))
@@ -151,7 +151,7 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
     })
   })
 
-  test('corner radii are l1/l2/l3 or round (R7: 2, 4, 6px)', () => {
+  test('corner radii are l1/l2/l3 or round (R7: 4, 6, 10px)', () => {
     check('radius', ({ base }) => {
       const m = /^rounded(?:-(?:[trblse]|tl|tr|bl|br|ss|se|es|ee))?(?:-(none|xs|sm|md|lg|xl|2xl|3xl|4xl|full))?$/.exec(base)
       if (m) return m[1] !== 'none' && !RADII.has(radiusPx(m[1] ?? '') ?? -1)
