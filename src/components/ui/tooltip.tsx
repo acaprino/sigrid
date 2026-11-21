@@ -25,6 +25,8 @@ export const TOOLTIP_DELAY_MS = 500
 export type TooltipProps = {
   /** The hint text: the button's accessible name, in English. */
   label: string
+  /** The key that does the same («Ctrl K»): plain text after the name, never a boxed key (R5). */
+  shortcut?: string | undefined
   /** The button (a single element): it receives the hint's handlers via Base UI's `render`, without an extra node. */
   children: React.ReactElement
   /** Where it sits, if there is room. Default below. */
@@ -42,7 +44,7 @@ export type TooltipProps = {
  * The hint of an icon-only button: it repeats its name on pointer hover and on focus.
  * The button stays the same as before (same `aria-label`, same Tab), without `title`.
  */
-function Tooltip({ label, children, side = "bottom", sideOffset = 6, delay = TOOLTIP_DELAY_MS, animated, className }: TooltipProps) {
+function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, delay = TOOLTIP_DELAY_MS, animated, className }: TooltipProps) {
   const container = usePortalContainer()
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterTooltip(el))
   return (
@@ -66,6 +68,11 @@ function Tooltip({ label, children, side = "bottom", sideOffset = 6, delay = TOO
             )}
           >
             {label}
+            {shortcut ? (
+              <span data-slot="tooltip-shortcut" className="ml-2 font-medium opacity-80">
+                {shortcut}
+              </span>
+            ) : null}
           </TooltipPrimitive.Popup>
         </TooltipPrimitive.Positioner>
       </TooltipPrimitive.Portal>

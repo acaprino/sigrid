@@ -25,7 +25,11 @@ import {
   COLORS,
   COLOR_NAMES,
   Calendar,
+  Avatar,
   Checkbox,
+  Combobox,
+  SearchField,
+  Slider,
   Count,
   FormField,
   NavItem,
@@ -591,6 +595,82 @@ function Navigation() {
         <span className="text-sm">
           A <mark className="bg-highlight text-ink">match</mark> inside a text
         </span>
+      </Row>
+    </Section>
+  )
+}
+
+const PEOPLE = [
+  { value: 'ada', label: 'Ada Lovelace', detail: 'ada@example.com' },
+  { value: 'alan', label: 'Alan Turing', detail: 'alan@example.com' },
+  { value: 'grace', label: 'Grace Hopper', detail: 'grace@example.com' },
+  { value: 'linus', label: 'Linus Torvalds', disabled: true },
+]
+
+function Pickers() {
+  const [zoom, setZoom] = React.useState(40)
+  const [query, setQuery] = React.useState('invoice')
+  const [person, setPerson] = React.useState<string | null>('ada')
+  const [labels, setLabels] = React.useState(['Home'])
+  const [panel, setPanel] = React.useState(false)
+  return (
+    <Section id="pickers" title="Slider, SearchField, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a choice from a list filtered while typing; a person as a neutral round tile.">
+      <Row label="slider">
+        <div className="flex w-64 flex-col gap-2">
+          <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
+          <span className="text-2xs text-ink-mute tabular-nums">{zoom}</span>
+        </div>
+        <div className="w-64">
+          <Slider aria-label="Sample disabled" value={70} min={0} max={100} onValueChange={() => {}} disabled />
+        </div>
+      </Row>
+      <Row label="search">
+        <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
+        <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
+      <Row label="combobox">
+        <FormField label="Assignee" className="w-64">
+          <Combobox options={PEOPLE} value={person} onValueChange={setPerson} placeholder="Nobody" />
+        </FormField>
+        <FormField label="Reviewer" error="Choose a person." className="w-64">
+          <Combobox options={PEOPLE} value={null} onValueChange={() => {}} placeholder="Nobody" />
+        </FormField>
+      </Row>
+      <Row label="labels with suggestions">
+        <div className="flex w-80 flex-col gap-1.5">
+          <label htmlFor="suggested-labels" className="text-sm font-medium">
+            Labels
+          </label>
+          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Home', 'Work', 'Waiting', 'Errands', 'Someday']} placeholder="Add a label" />
+        </div>
+      </Row>
+      <Row label="avatar">
+        <Avatar name="Ada Lovelace" />
+        <Avatar name="Alan Turing" size="sm" />
+        <Avatar name="Grace" size="xs" />
+        <Avatar name="Sample picture" src={PIXEL} />
+        <div className="flex items-center gap-2">
+          <Avatar name="Ada Lovelace" size="xs" decorative />
+          <span className="text-sm">Ada Lovelace</span>
+        </div>
+      </Row>
+      <Row label="panel beside the page">
+        <Button variant="outline" onClick={() => setPanel(true)}>
+          Open a panel
+        </Button>
+        <Sheet open={panel} onOpenChange={setPanel} modal={false}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>A panel beside the page</SheetTitle>
+              <SheetDescription>No backdrop: the page under it scrolls and takes clicks.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+        <Tooltip label="Search" shortcut="Ctrl K">
+          <Button variant="outline" size="icon" aria-label="Search">
+            <Icon name="all" />
+          </Button>
+        </Tooltip>
       </Row>
     </Section>
   )
@@ -1287,6 +1367,7 @@ function App() {
           <TabSets animated={animated} />
           <FormFields />
           <Navigation />
+          <Pickers />
           <Toggles animated={animated} />
           <Selects />
           <Menus animated={animated} />

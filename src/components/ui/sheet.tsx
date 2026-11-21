@@ -41,6 +41,8 @@ const POPUP_SIDE_CLASS: Record<SheetSide, string> = {
 
 /** `SheetContent` declares the side, the root needs the drag direction: it passes through here. */
 const SideContext = React.createContext<(side: SheetSide) => void>(() => {})
+/** The root says whether the sheet is modal: a non-modal one has no backdrop and leaves the page under it usable. */
+const ModalContext = React.createContext(true)
 
 const inToasts = (target: EventTarget | null | undefined): boolean =>
   target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
@@ -50,14 +52,17 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
 }
 
 /**
- * A modal sheet: focus trapped, Esc and a click outside close it, page scrolling is blocked.
+ * A modal sheet: focus trapped, Esc and a click outside close it, page scrolling is blocked. With `modal={false}` it
+ * is a side panel beside the page: no backdrop, the focus is not trapped, the page scrolls and takes clicks, and Esc
+ * or a click outside still close it (`disablePointerDismissal` keeps it open on a click outside).
  * A click on the notifications (which sit above, outside the sheet) does not close it: Base UI closes a modal only on what
  * is behind it, and here a second safeguard also cancels the closing caused by focus moving to the notifications.
  */
 function Sheet({ onOpenChange, ...props }: SheetProps) {
   const [side, setSide] = React.useState<SheetSide>("right")
   return (
-    <SideContext.Provider value={setSide}>
+    <ModalContext.Provider value={props.modal !== false}>
+      <SideContext.Provider value={setSide}>
       <SheetPrimitive.Root
         swipeDirection={SIDE_TO_SWIPE[side]}
         onOpenChange={(open, details) => {
@@ -69,7 +74,8 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
         }}
         {...props}
       />
-    </SideContext.Provider>
+      </SideContext.Provider>
+    </ModalContext.Provider>
   )
 }
 
@@ -112,6 +118,7 @@ function SheetContent({
   ...props
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
+  const modal = React.useContext(ModalContext)
   React.useLayoutEffect(() => setSide(side), [setSide, side])
   const motion = useMotion(animated)
   // The latest value of what the stable references below read.
@@ -153,8 +160,9 @@ function SheetContent({
   }, [])
   return (
     <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Viewport data-slot="sheet-viewport" className={cn("fixed inset-0 z-50 flex", VIEWPORT_SIDE_CLASS[side])}>
+      {modal ? <SheetOverlay /> : null}
+      {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
+      <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>
         <SheetPrimitive.Popup
           ref={enter}
           data-slot="sheet-content"
@@ -165,7 +173,7 @@ function SheetContent({
           // sheet, a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
           render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={state.open ? "open" : "closed"} />}
           className={cn(
-            "relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
+            "pointer-events-auto relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
             POPUP_SIDE_CLASS[side],
             className
           )}
