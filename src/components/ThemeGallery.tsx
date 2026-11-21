@@ -40,9 +40,13 @@ export function ThemeGallery<T extends ThemeDef>({ themes, scheme, tone, label, 
           onClick={() => onTheme(theme)} className={TILE + ' ' + FOCUS_RING}>
           <span style={style} className="block">
             <span className="block bg-primary px-2.5 py-1.5 text-sm font-semibold text-primary-foreground">{theme.label}</span>
-            <span aria-hidden="true" className="flex h-10 bg-paper">
-              <span className="w-1/4 border-r border-line bg-sidebar-paper px-1 pt-2"><span className="block h-2 rounded-sm bg-sidebar-selected" /></span>
-              <span className="flex flex-1 flex-col gap-1.5 p-2"><span className="h-1 w-4/5 rounded-full bg-input" /><span className="h-1 w-1/2 rounded-full bg-input" /></span>
+            <span aria-hidden="true" className="flex h-12 bg-paper">
+              <span className="w-1/5 border-r border-line bg-sidebar-paper px-1 pt-2"><span className="block h-2 rounded-sm bg-sidebar-selected" /></span>
+              <span className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 px-2">
+                <span className="flex w-full items-center gap-1"><span className="size-2 rounded-full border border-input" /><span className="h-1 w-2/3 rounded-full bg-line" /></span>
+                <span className="flex w-full items-center gap-1"><span className="size-2 rounded-full border border-input" /><span className="h-1 w-2/5 rounded-full bg-line" /></span>
+                <span className="mt-0.5 h-1.5 w-1/4 rounded-sm bg-primary" />
+              </span>
             </span>
           </span>
           {checked && <ChosenMark />}
