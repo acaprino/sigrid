@@ -15,7 +15,7 @@ import { FOCUS_RING } from "../../lib/focus"
 
 const badgeVariants = cva(
   cn(
-    "inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border border-transparent px-2 text-2xs leading-none font-medium whitespace-nowrap tabular-nums motion-safe:transition-[color,box-shadow] aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3.5",
+    "inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border border-transparent px-2 text-2xs leading-none font-medium whitespace-nowrap tabular-nums aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3.5",
     FOCUS_RING
   ),
   {

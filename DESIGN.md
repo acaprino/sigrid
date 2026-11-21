@@ -65,7 +65,7 @@ x-zsd:
       - "Park UI native form: md controls are 40px (normal density) with 14px text; the light sidebar is the default and the dark column stays an option."
       - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
       - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
-      - "Motion: short Fluent 2 tweens, only after a gesture, on by default so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
+      - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; in a picker the colour is the content, not a data label."
@@ -554,7 +554,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Motion
 
-Motion needs a gesture and `animated` (default off). Fluent 2 tokens: `easing-enter` in, `easing-exit` out, `easing-move` in place. Things slide and fade; only a pressed button (0.96) and check mark (0.5) scale. Reduced motion: states change at once. No loops but skeletons.
+`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states immediately.
 
 ## Iconography
 

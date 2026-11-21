@@ -121,6 +121,12 @@ describe('the button\'s press gesture', () => {
     // Released, it comes all the way back.
     fireEvent.pointerUp(window, pointer)
     await waitFor(() => expect(scale(el) ?? 1).toBe(1), { timeout: 3000, interval: 5 })
+    // On a wide button Space has the same travel as a pointer. Losing focus releases it.
+    Object.defineProperty(el, 'offsetWidth', { value: 320 })
+    fireEvent.keyDown(el, { key: ' ' })
+    await waitFor(() => expect(scale(el)).toBeCloseTo(0.9875, 5))
+    fireEvent.focusOut(el)
+    await waitFor(() => expect(scale(el) ?? 1).toBe(1))
     // A button that is busy or disabled does not answer.
     fireEvent.pointerDown(busy, pointer)
     fireEvent.pointerUp(window, pointer)
