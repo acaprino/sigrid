@@ -19,4 +19,4 @@
 @source inline("{p,px,py,pt,pb,m,mx,my,mt,mb,gap,space-y,space-x}-{0,1,2,3,4,5,6,8,10,12}");
 @source inline("{flex,inline-flex,grid,block,hidden,items-center,items-start,justify-between,justify-end,flex-col,flex-1,w-full,h-full,min-h-screen,min-w-0,truncate,shrink-0,grow}");
 /* Text sizes: the toolkit's scale only (R7: 2xs, xs, sm, base). */
-@source inline("{text-2xs,text-xs,text-sm,text-base,font-medium,font-semibold,rounded-sm,rounded-md,rounded-lg,shadow-float,grid-cols-2,grid-cols-3}");
+@source inline("{text-2xs,text-xs,text-sm,text-base,text-lg,text-xl,text-2xl,font-medium,font-semibold,rounded-sm,rounded-md,rounded-lg,shadow-float,grid-cols-2,grid-cols-3}");

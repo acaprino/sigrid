@@ -94,6 +94,9 @@
   --text-xs: 0.8125rem;  --text-xs--line-height: calc(1.125 / 0.8125); /* 13/18: dates and counts beside a title */
   --text-sm: 0.875rem;   --text-sm--line-height: calc(1.25 / 0.875);  /* 14/20: body and controls (md and up) */
   --text-base: 1rem;     --text-base--line-height: 1.5;               /* 16/24: titles; fields below 860px */
+  --text-lg: 1.125rem;   --text-lg--line-height: calc(1.75 / 1.125);  /* 18/28: the title of a card or a panel of an app (since 2026-11-22) */
+  --text-xl: 1.25rem;    --text-xl--line-height: calc(1.75 / 1.25);   /* 20/28: the title of a section of an app */
+  --text-2xl: 1.5rem;    --text-2xl--line-height: calc(2 / 1.5);      /* 24/32: the title of a page of an app */
   /* Weights loaded: 400, 500, 600, 700 (IBM Plex Sans, fonts.css). Weights used by the components: 400, 500, 600. */
 }
 
@@ -124,6 +127,7 @@
 
 /* ———— Shape (src/theme-engine.ts `shapeOf`, src/styles/theme.css `@theme`) ———— */
 :root {
+  /* The values of the `soft` shape, the default. A theme may be `sharp` (2/4/6px) or `round` (6/10/14px): `ThemeDef.shape`. */
   --radius-sm: 4px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
   --radius-md: 6px;      /* Park l2: controls (buttons, fields, selects, badges, menu items) */
   --radius-lg: 10px;     /* Park l3: what holds controls (cards, menus, popovers, dialogs, toasts, the segment group) */

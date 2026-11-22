@@ -46,7 +46,7 @@ x-zsd:
       - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
-      - "R7: radii 4, 6 and 10px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36, 32 or 28px (compact 32, 28 or 24px; large 40, 36 or 32px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 4, 6 and 10px, or a theme's `sharp` 2/4/6 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
@@ -67,9 +67,9 @@ x-zsd:
       - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light mode, light in dark."
       - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
-      - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."
+      - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
-      - "One backdrop for every overlay that dims (sheet, drawer, dialog, viewer): the drop colour at 40%."
+      - "One backdrop for every overlay that dims: the drop colour at 40%."
       - "Two font roles: the interface stack and the monospace stack of inline code."
   implementation:
     token-source: src/styles/theme.css
@@ -203,48 +203,53 @@ colors:
   subtle-fill: "#ECEEEE"
   backdrop: "#14171766"
 typography:
+  title-lg:
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.33
+  title-md:
+    fontSize: 20px
+    fontWeight: 600
+    lineHeight: 1.4
+  title-sm:
+    fontSize: 18px
+    fontWeight: 600
+    lineHeight: 1.56
   headline-md:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 16px
     fontWeight: 600
     lineHeight: 1.5
-    letterSpacing: 0px
   body-lg:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 16px
     fontWeight: 400
     lineHeight: 1.5
-    letterSpacing: 0px
   body-md:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 14px
     fontWeight: 400
     lineHeight: 1.43
-    letterSpacing: 0px
   body-sm:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.38
-    letterSpacing: 0px
   label-md:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.43
-    letterSpacing: 0px
   label-sm:
     fontFamily: "IBM Plex Sans, Inter, system-ui, sans-serif"
     fontSize: 12px
     fontWeight: 500
     lineHeight: 1.5
-    letterSpacing: 0px
   code-sm:
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace"
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.38
-    letterSpacing: 0px
 spacing:
   hairline: 2px
   xs: 4px
@@ -443,10 +448,9 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 
 Eighteen user colours and eight label pairs come from the engine. Show them as dots of `x-zsd.icons.dot` size. Each dot keeps 3:1.
 
-Approved exception: the colour picker (`Swatches`) shows filled swatches.
-
 ## Typography
 
+- `title-lg`, `title-md`, `title-sm`: Use for an app's page, section and card titles.
 - `headline-md`: Use for dialog, sheet and empty-state titles.
 - `body-lg`: Use for field text below the `md` breakpoint, so phones do not zoom.
 - `body-md`: Use for body text, menu items and field text.
@@ -543,7 +547,7 @@ Use `menu` for menus and select lists, and `menu-item-highlighted` for the item 
 
 ### Overlay and backdrop
 
-Use `overlay-card` for popovers, dialogs, sheets and the date card. Dialog and sheet titles use `headline-md`. Use `backdrop` behind them.
+Use `overlay-card` for popovers, dialogs, sheets and the date card. Use `backdrop` behind them.
 
 ### Tooltip
 

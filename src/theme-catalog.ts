@@ -7,6 +7,20 @@
 
 export type SidebarKind = 'tenue' | 'piena' | 'scura'
 
+/**
+ * How round the corners of a theme are. The three nested levels (what sits inside a control, a control, what holds
+ * controls) move together, so a preset is a choice of character, not three free numbers: `sharp` 2/4/6px (Park UI as
+ * it ships), `soft` 4/6/10px (the default), `round` 6/10/14px.
+ */
+export type ThemeShape = 'sharp' | 'soft' | 'round'
+export const THEME_SHAPES = ['sharp', 'soft', 'round'] as const satisfies readonly ThemeShape[]
+export const DEFAULT_SHAPE: ThemeShape = 'soft'
+/** The corner radii of each shape, in px: l1, l2, l3. */
+export const SHAPE_RADII: Readonly<Record<ThemeShape, readonly [number, number, number]>> = { sharp: [2, 4, 6], soft: [4, 6, 10], round: [6, 10, 14] }
+export function isThemeShape(value: unknown): value is ThemeShape {
+  return (THEME_SHAPES as readonly unknown[]).includes(value)
+}
+
 /** How the 18 free colors (marks and their icons) adapt to the theme's character. */
 export type PaletteProfile = 'mono' | 'calm' | 'crisp' | 'soft'
 
@@ -21,6 +35,8 @@ export interface ThemeDef {
   readonly accent: readonly [number, number]
   readonly sidebar: SidebarKind
   readonly palette: PaletteProfile
+  /** How round the corners are. Absent: `soft` (4/6/10px). A value that is not a shape counts as absent. */
+  readonly shape?: ThemeShape | undefined
   /**
    * A strong accent: the OKLCH lightness and chroma of the fill (the hue is the accent's). Without it the fill is the
    * accent as text in light, and a deeper tone of it in dark. The engine still guarantees the label and the 3:1.

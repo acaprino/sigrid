@@ -7,7 +7,7 @@ app's own package, with its own `THIRD_PARTY.md`) are not listed here.
 
 - **Ark UI** and **Base UI** (`@ark-ui/react`, `@base-ui/react`, npm dependencies) are the base for behaviour: state,
   keyboard, focus, ARIA. Base UI carries the basic controls and the surfaces that open (dialog, sheet, select, popover,
-  menu, tooltip, checkbox, radio group, toggle group, input, and the re-exported collapsible and field); Ark UI the
+  menu, tooltip, toolbar, checkbox, radio group, toggle group, input, and the re-exported collapsible and field); Ark UI the
   richer parts Base UI does not have (notices, date field and calendar, labels field, upload zone, combobox, slider,
   switch, tabs, avatar). The split is meant to stay (the owner's decision of 2026-11-22: moving the rest onto Ark would
   change the structure of controls that work and are tested, for nothing a user would see). A control moves from one

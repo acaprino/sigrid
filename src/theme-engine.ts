@@ -11,7 +11,7 @@
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import type { SidebarKind, Surfaces, ThemeDef } from './theme-catalog'
+import { DEFAULT_SHAPE, SHAPE_RADII, isThemeShape, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -433,16 +433,16 @@ function elevationOf(scheme: ThemeScheme): Record<string, string> {
 }
 
 /**
- * The shape, the same for every theme (Park UI's three nested corner levels, each a step rounder than Park ships): l1/l2/l3 = 4/6/10px (`sm`,
- * `md`, `lg`; `xl` is l3 too), 6px buttons and labels (l2), round boxes in `--radius-check` (for an app that rounds its
- * own checkboxes; the toolkit's `Checkbox` keeps l1), 1.75 stroke, rows in the open without a card around the group,
- * and elevation in place of borders.
- * With the scheme only the elevation changes.
+ * The shape of a theme: its corners (`ThemeDef.shape`: three nested levels l1/l2/l3 as `sm`, `md`, `lg`; `xl` is l3
+ * too; buttons and labels take l2), round boxes in `--radius-check` (for an app that rounds its own checkboxes; the
+ * toolkit's `Checkbox` keeps l1), 1.75 stroke, rows in the open without a card around the group, and elevation in
+ * place of borders. Without a shape the theme is `soft` (4/6/10px). With the scheme only the elevation changes.
  */
-function shapeOf(scheme: ThemeScheme): Record<string, string> {
+function shapeOf(theme: ThemeDef, scheme: ThemeScheme): Record<string, string> {
+  const [l1, l2, l3] = SHAPE_RADII[isThemeShape(theme.shape) ? theme.shape : DEFAULT_SHAPE]
   return {
-    '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px',
-    '--radius-button': '6px', '--radius-check': '9999px', '--radius-chip': '6px',
+    '--radius-sm': `${l1}px`, '--radius-md': `${l2}px`, '--radius-lg': `${l3}px`, '--radius-xl': `${l3}px`,
+    '--radius-button': `${l2}px`, '--radius-check': '9999px', '--radius-chip': `${l2}px`,
     '--icon-stroke': '1.75', '--icon-cap': 'round', '--icon-join': 'round',
     '--border-width': '1px',
     ...elevationOf(scheme),
@@ -789,5 +789,5 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
     // bar it is the accent tint, with the same short bar and the count as a fill in the accent.
     'data-selection': column ? 'bar' : full ? 'filled' : 'tint',
   }
-  return { theme: theme.id, scheme, colors, shape: shapeOf(scheme), attributes, corrected: [...corrected] }
+  return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
 }

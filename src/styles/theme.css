@@ -46,6 +46,15 @@
   --text-sm--line-height: calc(1.25 / 0.875);
   --text-base: 1rem;
   --text-base--line-height: 1.5;
+  /* Titles of what is larger than a dialog: a card or a panel (`lg`, 18px/28px), a section (`xl`, 20px/28px), a page
+     (`2xl`, 24px/32px). The toolkit's own surfaces stop at 16px; these are for an app's pages, so that every app
+     takes its titles from one scale (the owner's decision of 2026-11-22). */
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
 
   /* The two font roles of DESIGN.md: the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
      monospace faces: DESIGN.md `code-sm`). */
@@ -369,6 +378,38 @@
       --row-height: max(var(--touch-target), var(--density-row-height, 40px));
     }
   }
+}
+
+/* The title bar (src/components/ui/title-bar.tsx): its height follows the density (a dense control and 8px above and
+   below it). `--titlebar-start` and `--titlebar-end` are the room the system keeps for its own window buttons over the
+   page: an installed web app with the window-controls overlay reports it through `env(titlebar-area-*)`, in a browser
+   tab it is zero, and an app whose host says nothing sets the two itself. The bar moves the window (`app-region`),
+   and every control inside it does not, so it stays a control. A compact bar is the smallest control and 2px above
+   and below it. */
+@layer theme {
+  :root {
+    --titlebar-start: env(titlebar-area-x, 0px);
+    --titlebar-end: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+  }
+  :where(:root, [data-density]) {
+    --titlebar-height: calc(var(--control-sm) + 1rem);
+  }
+}
+[data-slot="title-bar"] {
+  min-height: var(--titlebar-height);
+  padding-inline: calc(var(--titlebar-start) + 0.5rem) calc(var(--titlebar-end) + 0.5rem);
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+[data-slot="title-bar"][data-size="compact"] {
+  min-height: calc(var(--control-xs) + 0.25rem);
+}
+[data-slot="title-bar"][data-window-controls] {
+  padding-inline-end: var(--titlebar-end);
+}
+[data-slot="title-bar"] :is(button, a, input, textarea, select, [tabindex], [data-no-drag]) {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 /* Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its

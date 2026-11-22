@@ -11,7 +11,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Bell, ChevronRight, Inbox, Plus, Search, Settings, Trash2 } from 'lucide-react'
+import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -31,10 +31,30 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  ItemList,
+  ItemRow,
+  AppShell,
+  CommandPalette,
+  useCommandKey,
+  ToolbarTab,
+  ToolbarTabs,
+  Inspector,
+  useAppShell,
+  TitleBar,
+  Toolbar,
+  ToolbarBrand,
+  ToolbarButton,
+  ToolbarGroup,
+  ToolbarSearch,
+  ToolbarSeparator,
+  ToolbarSpacer,
+  ToolbarTitle,
+  WindowControls,
   Sidebar,
   SidebarGroup,
   Slider,
   Count,
+  cn,
   FormField,
   NavItem,
   NavList,
@@ -99,6 +119,9 @@ import {
   TonePresetChoice,
   Tooltip,
   DENSITIES,
+  DEFAULT_SHAPE,
+  THEME_SHAPES,
+  isThemeShape,
   PALETTE_COMBOS,
   applyDensity,
   applyTheme,
@@ -117,6 +140,7 @@ import {
   type SpotKind,
   type ThemeDef,
   type ThemeScheme,
+  type ThemeShape,
   type ThemeTone,
   type ToastItem,
 } from '../src/index'
@@ -387,6 +411,9 @@ function Tokens() {
         <span data-text="xs" className="text-xs">13px date</span>
         <span data-text="sm" className="text-sm">14px text</span>
         <span data-text="base" className="text-base">16px title</span>
+        <span data-text="lg" className="text-lg font-semibold">18px card title</span>
+        <span data-text="xl" className="text-xl font-semibold">20px section title</span>
+        <span data-text="2xl" className="text-2xl font-semibold">24px page title</span>
       </Row>
       <Row label="Ink levels">
         <span className="text-sm text-ink">ink</span>
@@ -718,6 +745,441 @@ function SidebarSample({ animated }: { animated: boolean }) {
           </div>
         </div>
       </Row>
+    </Section>
+  )
+}
+
+/** The bar of a window in a frame, as a host without a frame of its own would show it, and the same bar on a web page. */
+function Toolbars({ animated }: { animated: boolean }) {
+  const [text, setText] = React.useState('')
+  const [filter, setFilter] = React.useState(true)
+  const [panel, setPanel] = React.useState(false)
+  const [maximized, setMaximized] = React.useState(false)
+  const [said, setSaid] = React.useState('Nothing pressed yet.')
+  const bar = (name: string, field = false) => (
+    <Toolbar aria-label={name}>
+      <ToolbarButton label="Show the sidebar" icon={<PanelLeft aria-hidden="true" />} pressed={panel} onClick={() => setPanel(!panel)} animated={animated} />
+      <ToolbarTitle>Inbox</ToolbarTitle>
+      <ToolbarSpacer />
+      <ToolbarSearch closed={field ? 'field' : 'icon'} label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+      <ToolbarGroup aria-label="View">
+        <ToolbarButton label="Filter" icon={<ListFilter aria-hidden="true" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
+        <ToolbarButton label="Sort" icon={<ArrowDownUp aria-hidden="true" />} onClick={() => setSaid('Sort')} animated={animated} />
+      </ToolbarGroup>
+      <ToolbarSeparator />
+      {field ? null : (
+        <>
+          <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} onClick={() => setSaid('Reply')} animated={animated} />
+          <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} onClick={() => setSaid('Archive')} animated={animated} />
+          <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} disabled animated={animated} />
+          <ToolbarButton label="More actions" icon={<Ellipsis aria-hidden="true" />} onClick={() => setSaid('More actions')} animated={animated} />
+        </>
+      )}
+      <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />} onClick={() => setSaid('New message')}>
+        New
+      </ToolbarButton>
+    </Toolbar>
+  )
+  const page = (
+    <div className="flex flex-col gap-1 p-4">
+      <p className="text-sm text-ink">{said}</p>
+      <p className="text-sm text-ink-mute">{text === '' ? 'The magnifier opens the search; Esc closes it, and so does leaving it empty.' : `Searching for «${text}».`}</p>
+    </div>
+  )
+  return (
+    <Section id="toolbar" title="Toolbar, TitleBar and WindowControls" note="One row of actions and a single Tab stop: the arrows move among the items. A button that shows an icon alone has its name as a hint, with its key; a switch that is on has the selection tint; one item is the solid action (R3). The search takes no room until its magnifier is pressed, or rests as a quiet field with its key. Under 448px of bar a word beside an icon gives way and the field is its magnifier. In the frame of a window the empty parts of the bar move the window and the three buttons at the end call the app back; on a web page the same bar has neither.">
+      <Row label="in a window">
+        <div data-sample="title-bar" className="w-full max-w-3xl overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar windowControls={<WindowControls maximized={maximized} onMinimize={() => setSaid('Minimize')} onMaximizeToggle={() => setMaximized(!maximized)} onClose={() => setSaid('Close')} />}>
+            {bar('Mail, in a window', true)}
+          </TitleBar>
+          {page}
+        </div>
+      </Row>
+      <Row label="on a web page">
+        <div data-sample="top-bar" className="w-full max-w-3xl overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar>{bar('Mail, on a page')}</TitleBar>
+          {page}
+        </div>
+      </Row>
+      <Row label="narrow">
+        <div className="w-80 max-w-full overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar>
+            <Toolbar aria-label="Mail, narrow">
+              <ToolbarTitle>Inbox</ToolbarTitle>
+              <ToolbarSpacer />
+              <ToolbarSearch label="Search the mail" value={text} onValueChange={setText} animated={animated} />
+              <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />}>
+                New
+              </ToolbarButton>
+            </Toolbar>
+          </TitleBar>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
+function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
+  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} /> : null
+}
+
+/** What each example recommends, in one sentence: the same words as docs/patterns.md. */
+const PATTERNS = {
+  'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the views are a row of tabs directly under the bar; Commands (Ctrl K) opens the palette.' },
+  page: { name: 'Sidebar and page', advice: 'For settings and documents. One column of text no wider than 65 characters; each choice is a row with its control at the end; the rest sits under Advanced.' },
+  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the views are tabs: in the bar after the app as in Xiox, under the bar, in a bottom bar on a narrow window, or small in the status bar.' },
+  focus: { name: 'Focus', advice: 'For one thing at a time. No sidebar and no inspector: what to do, how many are left, and the way out.' },
+} as const
+type PatternId = keyof typeof PATTERNS
+
+/**
+ * The gallery of layout patterns: complete screens made only of the toolkit's parts, at the widths where the frame
+ * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits.
+ */
+function Shells({ animated }: { animated: boolean }) {
+  const [pattern, setPattern] = React.useState<PatternId>('list-detail')
+  const [width, setWidth] = React.useState('1040')
+  const [place, setPlace] = React.useState('all')
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [menu, setMenu] = React.useState(false)
+  const [details, setDetails] = React.useState(true)
+  const [text, setText] = React.useState('')
+  const [view, setView] = React.useState('board')
+  const [filter, setFilter] = React.useState('all')
+  const [tabsAt, setTabsAt] = React.useState<'bar' | 'under' | 'bottom' | 'status'>('bar')
+  const views = (look: { edge?: 'top'; size?: 'sm'; layout?: 'stacked' } = {}) => (
+    <ToolbarTabs aria-label="Views" value={view} onValueChange={setView} {...look}>
+      <ToolbarTab value="list" icon={look.layout ? <Icon name="all" /> : undefined}>List</ToolbarTab>
+      <ToolbarTab value="board" icon={look.layout ? <Icon name="structure" /> : undefined}>Board</ToolbarTab>
+      <ToolbarTab value="calendar" icon={look.layout ? <Icon name="date" /> : undefined}>Calendar</ToolbarTab>
+      <ToolbarTab value="settings" icon={look.layout ? <Icon name="settings" /> : undefined}>Settings</ToolbarTab>
+    </ToolbarTabs>
+  )
+  const [palette, setPalette] = React.useState(false)
+  const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
+  useCommandKey(() => setPalette(true))
+  const commandsButton = (
+    <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Terminal aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
+      Commands
+    </ToolbarButton>
+  )
+  const [chosen, setChosen] = React.useState(0)
+  const mail: [string, string, string][] = [
+    ['Kitchen quote, second version', 'Marta Riva', '09:42'],
+    ['Receipt of the waste tax', 'City of Bergamo', '08:15'],
+    ['Photos of Tuesday\'s survey', 'Luca Ferri', 'Mon'],
+    ['Invoice 114 for October', 'Studio Belli', 'Mon'],
+    ['Saturday dinner: who brings dessert?', 'Anna Greco', 'Sun'],
+  ]
+  const lanes: [string, [string, string][]][] = [
+    ['To do', [['Renew the identity card', '28 Nov'], ['Book the train to Rome', '5 Dec'], ['Shopping for Saturday', 'Sat']]],
+    ['Doing', [['Draft of the quote', 'Today'], ['Call the plumber', 'Today']]],
+    ['Done', [['Pay the waste tax', 'Mon']]],
+  ]
+  const row = (id: string, icon: React.ComponentProps<typeof Icon>['name'], label: string, count?: number) => (
+    <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />} end={count === undefined ? undefined : <Count value={count} label="items" reserve />}>
+      {label}
+    </NavItem>
+  )
+  const sidebar = (groups: React.ReactNode) => (
+    <Sidebar aria-label="Sample navigation" collapsed={collapsed} onCollapsedChange={setCollapsed} open={menu} onOpenChange={setMenu} animated={animated}>
+      {groups}
+    </Sidebar>
+  )
+  const bar = (title: string, items: React.ReactNode) => (
+    <TitleBar size={barStyle === 'regular' ? 'default' : 'compact'} windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
+      <Toolbar aria-label={title}>
+        {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
+        {items}
+      </Toolbar>
+    </TitleBar>
+  )
+  const frames: Record<PatternId, React.ReactNode> = {
+    'list-detail': (
+      <AppShell
+        contentLabel="Messages"
+        titleBar={bar(
+          'Mail',
+          barStyle === 'classic' ? (
+            <>
+              <ToolbarBrand name="Mail" page="Inbox" />
+              <ToolbarSpacer />
+            </>
+          ) : (
+          <>
+            <ToolbarBrand name="Mail" />
+            <ToolbarSpacer />
+            <ToolbarSearch label="Search the mail" value={text} onValueChange={setText} animated={animated} />
+            {commandsButton}
+            <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
+            <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
+              New
+            </ToolbarButton>
+          </>
+          ),
+        )}
+        tabs={
+          barStyle === 'classic' ? (
+            <Toolbar aria-label="Menus and actions" size="sm">
+              {(['File', 'Edit', 'View', 'Help'] as const).map((menu) => (
+                <DropdownMenu key={menu} modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <ToolbarButton label={menu}>{menu}</ToolbarButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56" animated={animated}>
+                    <DropdownMenuItem>
+                      New message
+                      <DropdownMenuShortcut>Ctrl N</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setPalette(true)}>
+                      Commands
+                      <DropdownMenuShortcut>Ctrl K</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ))}
+              <ToolbarSeparator />
+              <ToolbarButton label="New message" shortcut="Ctrl N" icon={<Plus aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} animated={animated} />
+              <ToolbarSeparator />
+              <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
+              <ToolbarSpacer />
+              <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+            </Toolbar>
+          ) : (
+          <Toolbar aria-label="Views of the mail">
+            <ToolbarTabs aria-label="Views" value={filter} onValueChange={setFilter}>
+              <ToolbarTab value="all">All</ToolbarTab>
+              <ToolbarTab value="unread">Unread</ToolbarTab>
+              <ToolbarTab value="flagged">Flagged</ToolbarTab>
+            </ToolbarTabs>
+          </Toolbar>
+          )
+        }
+        status={<span>Archived «Receipt of the waste tax»</span>}
+        sidebar={sidebar(
+          <>
+            <SidebarGroup label="Favorites" icon={<Icon name="tag" />}>
+              {row('all', 'all', 'Inbox', 12)}
+              {row('notifications', 'notifications', 'Waiting', 3)}
+              {row('date', 'date', 'Today')}
+            </SidebarGroup>
+            <SidebarGroup label="Account" icon={<Icon name="account" />}>
+              {row('settings', 'settings', 'Settings')}
+            </SidebarGroup>
+          </>,
+        )}
+        inspector={
+          <Inspector title="Details" open={details} onOpenChange={setDetails} animated={animated} footer={<Button variant="outline" size="sm">Archive</Button>}>
+            <p className="font-medium text-ink">{mail[chosen]![0]}</p>
+            <p className="mt-1 text-ink-mute">
+              {mail[chosen]![1]}, {mail[chosen]![2]}
+            </p>
+            <p className="mt-3 text-ink-soft">The quote with the quartz top and the built-in hood. The total goes down by 380.</p>
+          </Inspector>
+        }
+        actions={<Button size="sm">Reply</Button>}
+        footer={
+          <>
+            <span>Connected</span>
+            <span className="tabular-nums">12 unread</span>
+          </>
+        }
+      >
+        <ItemList aria-label="Messages" className="p-2">
+          {mail.map(([subject, from, when], i) => (
+            <ItemRow key={subject} title={subject} description={from} meta={when} unread={i === 2} current={i === chosen} onClick={() => setChosen(i)} />
+          ))}
+        </ItemList>
+      </AppShell>
+    ),
+    page: (
+      <AppShell
+        contentLabel="Look"
+        titleBar={bar('Settings', <ToolbarBrand name="Daodan" page="Settings" />)}
+        sidebar={sidebar(
+          <SidebarGroup>
+            {row('general', 'settings', 'General')}
+            {row('all', 'appearance', 'Look')}
+            {row('notifications', 'notifications', 'Notifications')}
+            {row('account', 'account', 'Account')}
+          </SidebarGroup>,
+        )}
+      >
+        <div className="mx-auto flex max-w-xl flex-col gap-1 p-6">
+          <h1 className="text-xl font-semibold text-ink">Look</h1>
+          <p className="text-sm text-ink-mute">How the app looks on this computer.</p>
+          <div className="mt-4 flex flex-col divide-y divide-line border-y border-line text-sm text-ink">
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2">
+              <span>Scheme</span>
+              <ToggleGroup aria-label="Scheme" value="light" onValueChange={() => {}}>
+                <ToggleGroupItem value="light">Light</ToggleGroupItem>
+                <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2">
+              <span>Animations</span>
+              <Switch aria-label="Animations" defaultChecked />
+            </div>
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2 text-ink-mute">
+              <span>Advanced</span>
+              <ChevronRight aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    ),
+    board: (
+      <AppShell
+        contentLabel="Board"
+        titleBar={bar(
+          'Home',
+          <>
+            <ToolbarBrand name="Tasks" />
+            {tabsAt === 'bar' ? views() : null}
+            <ToolbarSpacer />
+            {commandsButton}
+            <ToolbarButton label="New task" variant="default" icon={<Plus aria-hidden="true" />}>
+              New task
+            </ToolbarButton>
+          </>,
+        )}
+        sidebar={sidebar(
+          <SidebarGroup label="Projects" icon={<Icon name="structure" />}>
+            {row('all', 'all', 'Home', 6)}
+            {row('date', 'date', 'Clients', 4)}
+          </SidebarGroup>,
+        )}
+        tabs={tabsAt === 'under' ? <Toolbar aria-label="Views of the tasks">{views()}</Toolbar> : undefined}
+        bottomBar={tabsAt === 'bottom' ? <Toolbar aria-label="Views of the tasks">{views({ edge: 'top', layout: 'stacked' })}</Toolbar> : undefined}
+        footer={
+          tabsAt === 'status' ? (
+            <Toolbar aria-label="Views of the tasks">
+              {views({ edge: 'top', size: 'sm' })}
+              <ToolbarSpacer />
+              <span className="tabular-nums">6 tasks, 2 for today</span>
+            </Toolbar>
+          ) : (
+            <span className="tabular-nums">6 tasks, 2 for today</span>
+          )
+        }
+      >
+        <div className="flex min-w-max items-start gap-3 p-4">
+          {lanes.map(([name, cards]) => (
+            <div key={name} className="flex w-56 flex-col gap-2 rounded-lg bg-paper-2 p-2">
+              <h3 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink">
+                {name}
+                <span className="text-2xs font-normal text-ink-mute tabular-nums">{cards.length}</span>
+              </h3>
+              {cards.map(([task, due]) => (
+                <div key={task} className="flex flex-col gap-1 rounded-md bg-raised p-2 text-sm text-ink shadow-xs">
+                  {task}
+                  <span className={cn('text-2xs', due === 'Today' ? 'font-medium text-accent' : 'text-ink-mute')}>{due}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </AppShell>
+    ),
+    focus: (
+      <AppShell
+        contentLabel="The task in focus"
+        titleBar={bar(
+          'Focus',
+          <>
+            <ToolbarButton label="Leave the focus" icon={<ChevronRight aria-hidden="true" className="rotate-180" />} keepWord>
+              Leave the focus
+            </ToolbarButton>
+            <ToolbarSpacer />
+            <span className="text-2xs text-ink-mute tabular-nums">2 of 7</span>
+            <ToolbarSpacer />
+          </>,
+        )}
+      >
+        <div className="flex h-full items-center justify-center p-6">
+          <div className="flex max-w-sm flex-col gap-2">
+            <h1 className="text-xl font-semibold text-ink">Call the plumber</h1>
+            <p className="text-sm text-ink-mute">A leak under the sink. Before noon, when the shop answers.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button>Done</Button>
+              <Button variant="outline">Later</Button>
+              <Button variant="ghost">Skip</Button>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    ),
+  }
+  return (
+    <Section id="patterns" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps.">
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup aria-label="Pattern" value={pattern} onValueChange={(v) => v && setPattern(v as PatternId)} animated={animated}>
+          {(Object.keys(PATTERNS) as PatternId[]).map((id) => (
+            <ToggleGroupItem key={id} value={id}>
+              {PATTERNS[id].name}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <ToggleGroup
+          aria-label="Width of the frame"
+          value={width}
+          onValueChange={(v) => {
+            if (!v) return
+            setWidth(v)
+            // Under 1000px the inspector is a panel over the window, which here is the page: it starts closed.
+            if (Number(v) < 1000) setDetails(false)
+          }}
+          animated={animated}
+        >
+          <ToggleGroupItem value="1040">1040</ToggleGroupItem>
+          <ToggleGroupItem value="900">900</ToggleGroupItem>
+          <ToggleGroupItem value="700">700</ToggleGroupItem>
+          <ToggleGroupItem value="480">480</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup aria-label="Style of the bar" value={barStyle} onValueChange={(v) => v && setBarStyle(v as typeof barStyle)} animated={animated}>
+          <ToggleGroupItem value="regular">Regular bar</ToggleGroupItem>
+          <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
+          <ToggleGroupItem value="classic">Classic menus</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup
+          aria-label="Where the views are"
+          value={tabsAt}
+          onValueChange={(v) => {
+            if (!v) return
+            setTabsAt(v as typeof tabsAt)
+            setPattern('board')
+          }}
+          animated={animated}
+        >
+          <ToggleGroupItem value="bar">Tabs in the bar</ToggleGroupItem>
+          <ToggleGroupItem value="under">Under the bar</ToggleGroupItem>
+          <ToggleGroupItem value="bottom">Bottom bar</ToggleGroupItem>
+          <ToggleGroupItem value="status">Status bar</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <p data-sample="pattern-advice" className="max-w-3xl text-sm text-ink-soft">
+        <span className="font-semibold text-ink">{PATTERNS[pattern].name}.</span> {PATTERNS[pattern].advice}
+      </p>
+      <CommandPalette
+        open={palette}
+        onOpenChange={setPalette}
+        animated={animated}
+        commands={[
+          { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
+          ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
+          ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+        ]}
+      />
+      <div className="max-w-full overflow-x-auto p-1 pb-6">
+        <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
+          {frames[pattern]}
+        </div>
+      </div>
     </Section>
   )
 }
@@ -1613,6 +2075,8 @@ function App() {
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
+  // `?shape=sharp|soft|round`: how round the corners are (a parameter of the theme).
+  const [shape, setShape] = React.useState<ThemeShape>(isThemeShape(params.get('shape')) ? (params.get('shape') as ThemeShape) : DEFAULT_SHAPE)
   const [tone, setTone] = React.useState(() => {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
@@ -1623,11 +2087,12 @@ function App() {
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [animated])
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, yours ? { theme: colorTheme({ id: YOURS, label: 'Your colours', color, spot }), scheme, tone: AS_CHOSEN } : { theme: themeById(theme), scheme, tone })
+    applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), shape }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), shape }, scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
     next.set('tone', tonePresetOf(tone))
+    next.set('shape', shape)
     if (yours) {
       next.set('color', color.slice(1))
       next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
@@ -1636,7 +2101,7 @@ function App() {
       next.delete('spot')
     }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone, yours, color, spot])
+  }, [theme, scheme, tone, yours, color, spot, shape])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -1665,6 +2130,13 @@ function App() {
             <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
               <ToggleGroupItem value="light">Light</ToggleGroupItem>
               <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+            </ToggleGroup>
+            <ToggleGroup aria-label="Shape" value={shape} onValueChange={(v) => isThemeShape(v) && setShape(v)}>
+              {THEME_SHAPES.map((name) => (
+                <ToggleGroupItem key={name} value={name}>
+                  {name[0]!.toUpperCase() + name.slice(1)}
+                </ToggleGroupItem>
+              ))}
             </ToggleGroup>
             <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
               {DENSITIES.map((d) => (
@@ -1720,6 +2192,8 @@ function App() {
           <FormFields />
           <Navigation />
           <SidebarSample animated={animated} />
+          <Toolbars animated={animated} />
+          <Shells animated={animated} />
           <Pickers />
           <Toggles animated={animated} />
           <Selects />
