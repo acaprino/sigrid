@@ -104,6 +104,53 @@ describe('Tabs', () => {
     expect(spy).toHaveBeenCalledTimes(1)
   })
 
+  test('a tab can carry attributes and handlers of its own, and a button after it in the same item', async () => {
+    const picked = vi.fn()
+    const closed = vi.fn()
+    function WithButtons() {
+      const [value, setValue] = useState('mail')
+      return (
+        <Tabs value={value} onValueChange={setValue}>
+          <TabsList aria-label="Drafts">
+            {['mail', 'calendar'].map((name) => (
+              <TabsTrigger
+                key={name}
+                value={name}
+                id={`draft-tab-${name}`}
+                title={`Draft ${name}`}
+                onClick={() => picked(name, value)}
+                itemClassName="draft-item"
+                end={
+                  <button type="button" aria-label={`Close ${name}`} onClick={() => closed(name)}>
+                    x
+                  </button>
+                }
+              >
+                {name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )
+    }
+    const { container } = render(<WithButtons />)
+    const items = container.querySelectorAll('[data-slot="tabs-item"]')
+    expect(items).toHaveLength(2)
+    expect(items[0]!.className).toContain('draft-item')
+    // The item holds the tab and, after it, the button: the button is not a tab, and the tab keeps what the caller gave it.
+    expect([...items[0]!.children].map((el) => el.getAttribute('role') ?? el.tagName.toLowerCase())).toEqual(['tab', 'button'])
+    expect(screen.getAllByRole('tab')).toHaveLength(2)
+    expect(tab('mail').id).toBe('draft-tab-mail')
+    expect(tab('mail').getAttribute('title')).toBe('Draft mail')
+    // A click on the chosen tab reaches the caller's handler, though it is not a change of value; the button is its own.
+    fireEvent.click(tab('mail'))
+    await settle()
+    expect(picked).toHaveBeenLastCalledWith('mail', 'mail')
+    fireEvent.click(screen.getByRole('button', { name: 'Close calendar' }))
+    expect(closed).toHaveBeenCalledWith('calendar')
+    expect(tab('mail').getAttribute('aria-selected')).toBe('true')
+  })
+
   test('one Tab stop; the arrows move along the tabs and wrap; a disabled tab is skipped', async () => {
     render(<Sample />)
     expect(tab('Mail').tabIndex).toBe(0)

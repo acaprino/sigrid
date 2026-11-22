@@ -74,21 +74,37 @@ export type TabsTriggerProps = {
   disabled?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
-}
+  /**
+   * After the tab, in the same item: a button that acts on it (closing it). It is not a tab: it keeps its own Tab stop, and
+   * the arrows still move from tab to tab. With it the tab and the button sit in one `data-slot="tabs-item"` element.
+   */
+  end?: React.ReactNode
+  /** The class of that item (only with `end`). */
+  itemClassName?: string | undefined
+} & Omit<React.ComponentPropsWithoutRef<"button">, "value" | "disabled" | "className" | "children" | "type" | "role" | "end">
 
-function TabsTrigger({ value, disabled, className, children }: TabsTriggerProps) {
+function TabsTrigger({ value, disabled, className, children, end, itemClassName, ...rest }: TabsTriggerProps) {
   const tabs = React.useContext(TabsContext)
   const motion = tabs?.motion ?? null
-  return (
+  // `rest` is the caller's own attributes and handlers on the tab (an `onClick` hears a click on the chosen tab too, which is not a change of value).
+  const trigger = (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       value={value}
+      {...rest}
       {...(disabled !== undefined ? { disabled } : {})}
       className={cn(TRIGGER, motion && "isolate data-[selected]:bg-transparent", className)}
     >
       {motion && tabs && tabs.value === value ? <motion.Highlight id={tabs.id} className="absolute inset-0 -z-10 rounded-[inherit] bg-selected" /> : null}
       {children}
     </TabsPrimitive.Trigger>
+  )
+  if (end === undefined) return trigger
+  return (
+    <span data-slot="tabs-item" className={cn("relative inline-flex items-center", itemClassName)}>
+      {trigger}
+      {end}
+    </span>
   )
 }
 
