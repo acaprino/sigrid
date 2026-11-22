@@ -47,6 +47,24 @@ Recommended:
   to a menu.
 - In a shell that draws no frame, pass `dragProps` and `WindowControls`; on the web pass neither. Nothing else changes.
 
+## Views as tabs, in the bar or under it
+
+An app with a few views of the same weight (Xiox: Cleanup, Registry, Developers, Settings) shows them as words:
+`ToolbarTabs`. The view the user is in has the stronger text and a short bar in the accent under it.
+
+- In the title bar, right after the app, when the views are the app's main places and there are up to five. It is the
+  form that reads as a native window: app, views, room that moves the window, commands, the window's buttons.
+- Directly under the bar (`AppShell`'s `tabs`), when the bar is already full, or when the tabs are views of what the
+  sidebar chose (All, Unread, Flagged) and not places of the app.
+- Not both on one screen, and not together with a sidebar that lists the same places.
+
+## The command palette
+
+Give the app a `CommandPalette` and open it with Ctrl+K (`useCommandKey`) and from a «Commands Ctrl K» button in the
+bar. Put in it every place the app can go to and every action that has no button in sight, each with its own key at
+the end of its row: the palette is where a user learns the keys. Group the commands («Go to», «Look») once there are
+more than seven. A command that cannot run now stays in the list, dimmed, so the list does not jump.
+
 ## Navigation: which form
 
 | Form | Fits | Built with |
@@ -54,7 +72,7 @@ Recommended:
 | Whole sidebar | Five places or more, or places with counts | `Sidebar`, `SidebarGroup`, `NavItem` |
 | Rail of icons | The same places, when the content needs the width | `Sidebar collapsed`; the frame does it by itself from 620px to 850px |
 | Drawer | A narrow window or a phone | `Sidebar` with `open`; the frame does it under 620px |
-| Tabs in the bar | Three or four views of the same thing | `ToggleGroup` or `Tabs` in the toolbar |
+| Tabs in the bar, or under it | Up to five views of the same weight | `ToolbarTabs` (see above) |
 
 Recommended: every row has an icon (R6) so the rail needs no second design; the rows used most are the first group; a
 count is a pill at the end of the row (R5).

@@ -75,6 +75,12 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  readonly palette: {
+    /** The name of the command palette and the placeholder of its field. */
+    readonly placeholder: string
+    /** Said when no command holds the text. */
+    readonly empty: string
+  }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
     readonly skip: string
@@ -200,6 +206,10 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  palette: {
+    placeholder: 'Type a command',
+    empty: 'No command found',
   },
   shell: {
     skip: 'Skip to the content',

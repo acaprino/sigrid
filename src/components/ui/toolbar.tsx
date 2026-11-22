@@ -11,6 +11,11 @@
 // - `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the
 //   initial of the product's name, and the name beside it, or the name alone (`mark={false}`). With `page` the place
 //   follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.
+// - `ToolbarTabs` are the views of the app as words in the bar, after the brand, as in Xiox («Cleanup · Registry ·
+//   Developers · Settings»): the view the user is in has the stronger text and a short bar in the accent under it. The
+//   same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`).
+// - A button with a word shows its `shortcut` after the word, as plain text («Commands Ctrl K»): the way into the
+//   command palette.
 // - `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the
 //   root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.
 // Short of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container
@@ -22,6 +27,7 @@ import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight, Search } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { FOCUS_RING_INSET } from "../../lib/focus"
 import { buttonVariants } from "./button"
 import { SearchField } from "./search-field"
 import { Tooltip } from "./tooltip"
@@ -68,6 +74,8 @@ const NARROW_GONE = "@max-md/toolbar:hidden"
 
 function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const iconOnly = children === undefined || children === null || children === false
+  // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
+  const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
   const button = (
     <ToolbarPrimitive.Button
       data-slot="button"
@@ -81,7 +89,17 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
       className={cn(buttonVariants({ variant, size: iconOnly ? "icon-sm" : "sm" }), ITEM, className)}
     >
       {icon}
-      {iconOnly ? null : icon && !keepWord ? <span data-slot="toolbar-button-word" className={cn("flex min-w-0 flex-1 items-center gap-2", NARROW_GONE)}>{children}</span> : children}
+      {iconOnly ? null : icon && !keepWord ? (
+        <span data-slot="toolbar-button-word" className={cn("flex min-w-0 flex-1 items-center gap-2", NARROW_GONE)}>
+          {children}
+          {key}
+        </span>
+      ) : (
+        <>
+          {children}
+          {key}
+        </>
+      )}
     </ToolbarPrimitive.Button>
   )
   if (!iconOnly) return button
@@ -89,6 +107,56 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
     <Tooltip label={label} shortcut={shortcut} animated={animated}>
       {button}
     </Tooltip>
+  )
+}
+
+export type ToolbarTabsProps = {
+  /** Name of the views for screen readers («Views»). */
+  "aria-label": string
+  /** The view the user is in. */
+  value: string
+  onValueChange: (value: string) => void
+  className?: string | undefined
+  children?: React.ReactNode
+}
+
+const TabsContext = React.createContext<{ value: string; onValueChange: (value: string) => void } | null>(null)
+
+/** The views of the app, as words in a toolbar. They are places, not panels: the one the user is in is the current page. */
+function ToolbarTabs({ value, onValueChange, className, children, ...props }: ToolbarTabsProps) {
+  const context = React.useMemo(() => ({ value, onValueChange }), [value, onValueChange])
+  return (
+    <ToolbarPrimitive.Group data-slot="toolbar-tabs" {...props} className={cn("flex shrink-0 items-stretch self-stretch", className)}>
+      <TabsContext.Provider value={context}>{children}</TabsContext.Provider>
+    </ToolbarPrimitive.Group>
+  )
+}
+
+export type ToolbarTabProps = {
+  value: string
+  /** A 16px drawing before the word. */
+  icon?: React.ReactNode
+  disabled?: boolean | undefined
+  className?: string | undefined
+  children?: React.ReactNode
+}
+
+// As tall as the bar, so the short accent bar of the current view sits on the bar's lower edge.
+const TAB = cn(
+  "relative flex shrink-0 cursor-default items-center gap-2 px-3 text-sm whitespace-nowrap text-ink-soft hover:text-ink data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:content-['']",
+  "aria-[current=page]:font-semibold aria-[current=page]:text-ink aria-[current=page]:after:bg-primary",
+  FOCUS_RING_INSET,
+)
+
+function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabProps) {
+  const tabs = React.useContext(TabsContext)
+  const current = tabs?.value === value
+  return (
+    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, className)}>
+      {icon}
+      {children}
+    </ToolbarPrimitive.Button>
   )
 }
 
@@ -288,4 +356,4 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
   )
 }
 
-export { Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle }
+export { Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTab, ToolbarTabs, ToolbarTitle }

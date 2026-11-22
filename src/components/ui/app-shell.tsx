@@ -1,7 +1,8 @@
 // The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out
 // alike and an app fills in only the regions it needs.
 //
-//   ┌ title bar: name · toolbar · window buttons ──────────────┐
+//   ┌ title bar: app · views · toolbar · window buttons ───────┐
+//   ├ tabs: the views, when they are not in the bar ───────────┤
 //   ├ status: the last result · a summary ────────────────────┤
 //   │ sidebar │ content                    │ inspector         │
 //   │         ├ actions: the primary one at the end ───────────┤
@@ -60,6 +61,8 @@ export function useAppShell(): AppShellLayout {
 export type AppShellProps = {
   /** The bar at the top (a `TitleBar`). */
   titleBar?: React.ReactNode
+  /** Directly under the bar, across the whole window: the views of the app (a `Toolbar` of `ToolbarTabs`), when they are not in the bar. */
+  tabs?: React.ReactNode
   /** Under the bar: the last result and a summary, one line. */
   status?: React.ReactNode
   /** The navigation (a `Sidebar`). */
@@ -81,7 +84,7 @@ export type AppShellProps = {
 
 const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 
-function AppShell({ titleBar, status, sidebar, inspector, actions, footer, steps, contentLabel, className, children }: AppShellProps) {
+function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const [layout, setLayout] = React.useState<AppShellLayout>(WIDE)
@@ -112,6 +115,11 @@ function AppShell({ titleBar, status, sidebar, inspector, actions, footer, steps
           {words.shell.skip}
         </a>
         {titleBar}
+        {tabs ? (
+          <div data-slot="app-shell-tabs" className="flex min-h-(--control-md) shrink-0 items-stretch border-b border-line px-2 select-none">
+            {tabs}
+          </div>
+        ) : null}
         <div data-slot="app-shell-body" className="flex min-h-0 flex-1">
           {sidebar}
           <div data-slot="app-shell-work" className="flex min-w-0 flex-1 flex-col">

@@ -32,6 +32,10 @@ import {
   Combobox,
   SearchField,
   AppShell,
+  CommandPalette,
+  useCommandKey,
+  ToolbarTab,
+  ToolbarTabs,
   Inspector,
   useAppShell,
   TitleBar,
@@ -821,9 +825,9 @@ function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
 
 /** What each example recommends, in one sentence: the same words as docs/patterns.md. */
 const PATTERNS = {
-  'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the one solid action sits last in the action bar.' },
+  'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the views are a row of tabs directly under the bar; Commands (Ctrl K) opens the palette.' },
   page: { name: 'Sidebar and page', advice: 'For settings and documents. One column of text no wider than 65 characters; each choice is a row with its control at the end; the rest sits under Advanced.' },
-  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the view switch is in the bar.' },
+  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the views are tabs in the bar, after the app, as in Xiox.' },
   focus: { name: 'Focus', advice: 'For one thing at a time. No sidebar and no inspector: what to do, how many are left, and the way out.' },
 } as const
 type PatternId = keyof typeof PATTERNS
@@ -841,6 +845,14 @@ function Shells({ animated }: { animated: boolean }) {
   const [details, setDetails] = React.useState(true)
   const [text, setText] = React.useState('')
   const [view, setView] = React.useState('board')
+  const [filter, setFilter] = React.useState('all')
+  const [palette, setPalette] = React.useState(false)
+  useCommandKey(() => setPalette(true))
+  const commandsButton = (
+    <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Search aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
+      Commands
+    </ToolbarButton>
+  )
   const mail = ['Kitchen quote, second version', 'Receipt of the waste tax', 'Photos of Tuesday\'s survey', 'Invoice 114 for October', 'Saturday dinner: who brings dessert?']
   const lanes: [string, [string, string][]][] = [
     ['To do', [['Renew the identity card', '28 Nov'], ['Book the train to Rome', '5 Dec'], ['Shopping for Saturday', 'Sat']]],
@@ -874,13 +886,23 @@ function Shells({ animated }: { animated: boolean }) {
           <>
             <ToolbarBrand name="Mail" />
             <ToolbarSpacer />
-            <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+            <ToolbarSearch label="Search the mail" value={text} onValueChange={setText} animated={animated} />
+            {commandsButton}
             <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
             <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
               New
             </ToolbarButton>
           </>,
         )}
+        tabs={
+          <Toolbar aria-label="Views of the mail">
+            <ToolbarTabs aria-label="Views" value={filter} onValueChange={setFilter}>
+              <ToolbarTab value="all">All</ToolbarTab>
+              <ToolbarTab value="unread">Unread</ToolbarTab>
+              <ToolbarTab value="flagged">Flagged</ToolbarTab>
+            </ToolbarTabs>
+          </Toolbar>
+        }
         status={<span>Archived «Receipt of the waste tax»</span>}
         sidebar={sidebar(
           <>
@@ -960,12 +982,15 @@ function Shells({ animated }: { animated: boolean }) {
         titleBar={bar(
           'Home',
           <>
-            <ToolbarBrand name="Tasks" page="Home" />
+            <ToolbarBrand name="Tasks" />
+            <ToolbarTabs aria-label="Views" value={view} onValueChange={setView}>
+              <ToolbarTab value="list">List</ToolbarTab>
+              <ToolbarTab value="board">Board</ToolbarTab>
+              <ToolbarTab value="calendar">Calendar</ToolbarTab>
+              <ToolbarTab value="settings">Settings</ToolbarTab>
+            </ToolbarTabs>
             <ToolbarSpacer />
-            <ToggleGroup aria-label="View" value={view} onValueChange={(v) => v && setView(v)} animated={animated}>
-              <ToggleGroupItem value="list">List</ToggleGroupItem>
-              <ToggleGroupItem value="board">Board</ToggleGroupItem>
-            </ToggleGroup>
+            {commandsButton}
             <ToolbarButton label="New task" variant="default" icon={<Plus aria-hidden="true" />}>
               New task
             </ToolbarButton>
@@ -1046,6 +1071,16 @@ function Shells({ animated }: { animated: boolean }) {
       <p data-sample="pattern-advice" className="max-w-3xl text-sm text-ink-soft">
         <span className="font-semibold text-ink">{PATTERNS[pattern].name}.</span> {PATTERNS[pattern].advice}
       </p>
+      <CommandPalette
+        open={palette}
+        onOpenChange={setPalette}
+        animated={animated}
+        commands={[
+          { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
+          ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
+          ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+        ]}
+      />
       <div className="max-w-full overflow-x-auto p-1 pb-6">
         <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
           {frames[pattern]}

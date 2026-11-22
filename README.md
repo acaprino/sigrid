@@ -97,6 +97,9 @@ default and equals the sizes the toolkit had before density existed.
 - `ToolbarBrand`: the app at the start of the bar, as in Imago's apps: a square in the accent with the initial of
   its `name`, and the name beside it; `mark={false}` shows the name alone, and `page`
   puts the place after it («Daodan › Settings»).
+- `ToolbarTabs`, `ToolbarTab`: the views of the app as words in the bar, after the brand, as in Xiox; the current one
+  has the stronger text and a short accent bar. They can also sit in a toolbar directly under the bar (`AppShell`'s
+  `tabs`). A `ToolbarButton` with a word shows its `shortcut` after it («Commands Ctrl K»).
 - `ToolbarTitle`, `ToolbarSpacer`, `ToolbarGroup`, `ToolbarSeparator` lay the row out.
 
 `TitleBar` is the bar that holds it at the top of a window. On a web page it is a top bar and nothing more. It becomes
@@ -127,6 +130,22 @@ const win = getCurrentWindow()
 ```
 
 The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
+
+## The command palette
+
+`CommandPalette` is quick access to everything an app can do: a dialog near the top of the window with one field and
+the app's commands under it. Typing narrows them (every word, in the name or the `keywords`), the arrows move, Enter
+runs one and closes the palette. Each command shows its own key at the end of its row. `useCommandKey(open)` binds
+Ctrl+K (Cmd+K on a Mac).
+
+```tsx
+const [open, setOpen] = useState(false)
+useCommandKey(() => setOpen(true))
+<CommandPalette open={open} onOpenChange={setOpen} commands={[
+  { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: find },
+  { id: 'settings', label: 'Go to Settings', group: 'Go to', shortcut: '4', onSelect: () => go('settings') },
+]} />
+```
 
 ## The frame of an app
 
@@ -160,7 +179,7 @@ a drawer.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
