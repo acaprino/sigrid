@@ -1,7 +1,8 @@
-// The toolkit's showcase, built with the toolkit's own frame (`AppShell`) as docs/patterns.md recommends. Four views,
-// as tabs in the bar (`?view=philosophy|guidelines|practices|components`): the philosophy, the guidelines and the
-// practices of the design system (guide.tsx, with the phone layouts of docs/mobile.md in phone.tsx), and every
-// exported component, in its variants, sizes and states (this file). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
+// The toolkit's showcase, built with the toolkit's own frame (`AppShell`) as docs/patterns.md recommends. Five views,
+// as tabs in the bar (`?view=philosophy|guidelines|practices|components|examples`): the philosophy, the guidelines and
+// the practices of the design system (guide.tsx, with the phone layouts of docs/mobile.md in phone.tsx), every
+// exported component, in its variants, sizes and states (this file), and two whole apps in their four hosts
+// (examples.tsx). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
 // scheme. All of them are also in the address: `?theme=amber-bold&scheme=dark&shape=sharp&density=compact`.
 // The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour (`<colour>-<combination>`,
 // such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover,
@@ -160,6 +161,7 @@ import {
 } from '../src/index'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
+import { ExamplesView } from './examples'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -2271,6 +2273,8 @@ function App() {
   const [menu, setMenu] = React.useState(false)
   const [look, setLook] = React.useState(false)
   const narrow = useMedia(`(width < ${FRAME_STEPS.sidebar}px)`)
+  // Five names at the foot need 360px: under that the longest one takes its short form.
+  const tight = useMedia('(width < 360px)')
   React.useEffect(() => {
     const next = new URLSearchParams(location.search)
     next.set('animated', animated ? '1' : '0')
@@ -2327,7 +2331,7 @@ function App() {
     <ToolbarTabs aria-label="Views" value={view} onValueChange={(next) => isViewId(next) && go(next)} {...placing}>
       {VIEWS.map((v) => (
         <ToolbarTab key={v.id} value={v.id} icon={placing.layout ? <Icon name={v.icon} /> : undefined}>
-          {v.label}
+          {placing.layout && tight && 'short' in v ? v.short : v.label}
         </ToolbarTab>
       ))}
     </ToolbarTabs>
@@ -2471,7 +2475,7 @@ function App() {
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>
