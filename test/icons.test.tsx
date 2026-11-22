@@ -91,9 +91,9 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
   const Colour = ({ className }: { className?: string | undefined }) => <svg data-own="colour" className={className} />
   const art = [24, '<path data-own="art" d="M4 4h16v16H4z" fill="currentColor"/>'] as const
   const icons: IconSet = {
-    inbox: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}', duotone: art },
-    archive: { lucide: Line, emoji: art, twemoji: art },
-    reply: { lucide: Line },
+    invoice: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}', duotone: art },
+    receipt: { lucide: Line, emoji: art, twemoji: art },
+    stamp: { lucide: Line },
     settings: { lucide: Line },
   }
   const drawn = (pack: IconPack, name: string) => {
@@ -111,13 +111,13 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
     unmount()
     return found
   }
-  expect(drawn('lucide', 'inbox')).toEqual({ own: 'line', image: false, size: 'size-5' })
-  expect(drawn('fluent', 'inbox')).toEqual({ own: 'colour', image: false, size: 'size-5' })
-  expect(drawn('emoji', 'inbox')).toEqual({ own: null, image: true, size: 'size-5' })
+  expect(drawn('lucide', 'invoice')).toEqual({ own: 'line', image: false, size: 'size-5' })
+  expect(drawn('fluent', 'invoice')).toEqual({ own: 'colour', image: false, size: 'size-5' })
+  expect(drawn('emoji', 'invoice')).toEqual({ own: null, image: true, size: 'size-5' })
   // A pack the app did not draw falls back to its line drawing.
-  expect(drawn('fluent', 'reply').own).toBe('line')
-  expect(drawn('emoji', 'reply').own).toBe('line')
-  for (const pack of ['duotone', 'solar', 'twemoji'] as const) expect(drawn(pack, 'reply').own, pack).toBe('line')
+  expect(drawn('fluent', 'stamp').own).toBe('line')
+  expect(drawn('emoji', 'stamp').own).toBe('line')
+  for (const pack of ['duotone', 'solar', 'twemoji'] as const) expect(drawn(pack, 'stamp').own, pack).toBe('line')
   // The drawn packs take the app's drawing; Twemoji takes the emoji where it has none of its own.
   const picture = (pack: IconPack, name: string) => {
     const { container, unmount } = render(<IconPackProvider pack={pack} icons={icons}><Icon name={name} /></IconPackProvider>)
@@ -125,17 +125,17 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
     unmount()
     return found
   }
-  expect(picture('duotone', 'inbox')).toEqual({ art: true, image: false })
-  expect(drawn('solar', 'inbox').own).toBe('line')
-  expect(picture('twemoji', 'inbox')).toEqual({ art: false, image: true })
-  expect(picture('emoji', 'archive')).toEqual({ art: true, image: false })
-  expect(picture('twemoji', 'archive')).toEqual({ art: true, image: false })
+  expect(picture('duotone', 'invoice')).toEqual({ art: true, image: false })
+  expect(drawn('solar', 'invoice').own).toBe('line')
+  expect(picture('twemoji', 'invoice')).toEqual({ art: false, image: true })
+  expect(picture('emoji', 'receipt')).toEqual({ art: true, image: false })
+  expect(picture('twemoji', 'receipt')).toEqual({ art: true, image: false })
   // A name of the toolkit is not replaced.
   expect(drawn('lucide', 'settings').own).toBeNull()
 })
 
 test('a name nobody draws is an empty slot of the same size, so the row keeps its alignment', () => {
-  for (const name of ['inbox', 'constructor', '']) {
+  for (const name of ['invoice', 'constructor', '']) {
     const { container, unmount } = render(<Icon name={name} className="size-5" />)
     const box = container.firstElementChild!
     expect(box.querySelector('svg'), name).toBeNull()
