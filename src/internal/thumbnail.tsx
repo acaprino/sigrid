@@ -40,7 +40,7 @@ export type ThumbnailProps = {
 export function Thumbnail({ src, kind, size, label, onOpen }: ThumbnailProps) {
   const safe = safeThumbnail(src)
   const Icon = kindIcon(kind)
-  const frame = cn('relative flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-input bg-paper-2', SIZE[size])
+  const frame = cn('relative flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-line bg-paper-2', SIZE[size])
   const content = safe ? (
     <img src={safe} alt="" draggable={false} className="size-full object-cover" />
   ) : (

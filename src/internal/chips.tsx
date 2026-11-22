@@ -308,7 +308,7 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
             className="flex max-h-80 flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-sm text-popover-foreground shadow-md outline-none"
           >
             {items.map((item) => (
-              <Combobox.Item key={item.value} item={item} data-slot="chips-suggestion" className="flex min-h-(--row-height) cursor-default items-center rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[highlighted]:bg-paper-2">
+              <Combobox.Item key={item.value} item={item} data-slot="chips-suggestion" className="flex min-h-(--row-height) cursor-default items-center rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink">
                 <Combobox.ItemText className="truncate">{item.label}</Combobox.ItemText>
                 {/* The value under a name: after it, in the muted ink. */}
                 {item.label === item.value ? null : (

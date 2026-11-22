@@ -19,7 +19,7 @@ const write = async (box: HTMLInputElement, text: string) => {
 const thumbOf = (name?: string) => screen.getByRole('slider', { hidden: true, ...(name ? { name } : {}) })
 
 describe('Slider', () => {
-  test('a named slider with its limits and its value; the track is the control border colour, the range and the thumb border the ink', () => {
+  test('a named slider with its limits and its value; the track is the control border colour, the range and the thumb border the accent', () => {
     const { container } = render(<Slider aria-label="Zoom" value={40} min={0} max={100} step={10} onValueChange={() => {}} />)
     const thumb = thumbOf()
     // The name is the label part the thumb points to, kept out of sight.
@@ -30,9 +30,9 @@ describe('Slider', () => {
     expect(thumb.getAttribute('aria-valuemin')).toBe('0')
     expect(thumb.getAttribute('aria-valuemax')).toBe('100')
     expect(classes(container.querySelector('[data-slot="slider-track"]')!)).toContain('bg-input')
-    expect(classes(container.querySelector('[data-slot="slider-range"]')!)).toContain('bg-ink')
+    expect(classes(container.querySelector('[data-slot="slider-range"]')!)).toContain('bg-primary')
     const c = classes(thumb)
-    for (const cls of ['size-5', 'rounded-full', 'border-ink', 'bg-paper']) expect(c).toContain(cls)
+    for (const cls of ['size-5', 'rounded-full', 'border-primary', 'bg-paper']) expect(c).toContain(cls)
     expect(c.some((x) => x.startsWith('shadow'))).toBe(false)
     expect(c).toContain(coarse('after:-inset-3'))
   })

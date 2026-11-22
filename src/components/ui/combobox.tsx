@@ -154,7 +154,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               key={option.value}
               item={option}
               data-slot="combobox-item"
-              className="flex min-h-(--row-height) cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-paper-2"
+              className="flex min-h-(--row-height) cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink"
             >
               <span className="flex min-w-0 flex-col">
                 <ComboboxPrimitive.ItemText className="truncate">{option.label}</ComboboxPrimitive.ItemText>

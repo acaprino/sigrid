@@ -20,6 +20,7 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { GROUP_LABEL } from "../../lib/rows"
 import { FOCUS_RING } from "../../lib/focus"
 import { usePortalContainer } from "../PortalContainer"
 import { useEntrance } from "../../internal/motion"
@@ -57,7 +58,7 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
 }
 
 const ITEM_CLASS =
-  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-sm py-(--row-pad) pr-8 pl-2 text-sm outline-none select-none data-[highlighted]:bg-paper-2 data-[disabled]:opacity-50"
+  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-sm py-(--row-pad) pr-8 pl-2 text-sm outline-none select-none data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink data-[disabled]:opacity-50"
 
 function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
   return (
@@ -98,7 +99,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         data-slot="select-trigger"
         className={cn(
           "flex w-full items-center justify-between gap-2 rounded-md border border-line bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
-          invalid ? "border-destructive" : "data-[popup-open]:border-ink",
+          invalid ? "border-destructive" : "data-[popup-open]:border-ring",
           disabled && "pointer-events-none cursor-not-allowed opacity-50",
           FOCUS_RING,
           size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
@@ -126,7 +127,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
               {groups?.map((g) =>
                 g.options.length ? (
                   <SelectPrimitive.Group key={g.label} data-slot="select-group" className="mt-1 first:mt-0">
-                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className="flex h-(--row-height) items-center px-2 text-sm font-medium text-ink-mute">
+                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className={cn("flex h-(--row-height) items-center px-2 text-ink-mute", GROUP_LABEL)}>
                       {g.label}
                     </SelectPrimitive.GroupLabel>
                     {g.options.map((o) => (
