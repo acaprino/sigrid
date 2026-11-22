@@ -3,7 +3,7 @@
 // palettes side by side. The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour
 // (`<colour>-<combination>`, such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
 // at once. What only opens on a gesture opens from the address: `?open=menu`, `popover`, `select`, `tooltip`, `date`,
-// `datetime`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with commas).
+// `datetime`, `range`, `date-picks`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with commas).
 // Not shown: `DesktopSurface` (a separate system window of the desktop shell) and the headless re-exports
 // (`Collapsible`, `Field`, `PopoverPrimitive`), which have no form of their own.
 import './showcase.css'
@@ -42,6 +42,9 @@ import {
   TabsTrigger,
   ChipsInput,
   DateField,
+  DateRangeField,
+  dayPicks,
+  rangePicks,
   DateTimeField,
   Dialog,
   DropdownMenu,
@@ -103,6 +106,7 @@ import {
   tonePresetOf,
   useMotion,
   type AttachmentView,
+  type DateRange,
   type DensityId,
   type ThemeDef,
   type ThemeScheme,
@@ -1153,8 +1157,13 @@ function Dates({ animated }: { animated: boolean }) {
   const [day, setDay] = React.useState<string | null>('2026-11-20')
   const [reminder, setReminder] = React.useState<string | null>('2026-11-21T09:30')
   const [none, setNone] = React.useState<string | null>(null)
+  const [quick, setQuick] = React.useState<string | null>(null)
+  const [stay, setStay] = React.useState<DateRange | null>({ start: '2026-11-20', end: '2026-11-24' })
+  // The quick choices are counted from the device's own day, once.
+  const [days] = React.useState(() => dayPicks())
+  const [ranges] = React.useState(() => rangePicks())
   return (
-    <Section id="date" title="Calendar, DateField and DateTimeField" note="The calendar inline (today and a chosen day), the two fields closed. `?open=date` and `?open=datetime` open their cards.">
+    <Section id="date" title="Calendar, DateField, DateTimeField and DateRangeField" note="The calendar inline (today and a chosen day), the fields closed. Quick choices set a day, or a range, with one press. A range takes two presses: the days between the two ends have the selection tint. `?open=date`, `?open=datetime` and `?open=range` open their cards.">
       <Row label="calendar">
         <DatePicker.Root inline locale="en-US" startOfWeek={1} fixedWeeks defaultValue={[parseDate('2026-11-24')]} defaultFocusedValue={parseDate('2026-11-24')} translations={CALENDAR_WORDS} className="w-fit rounded-lg bg-raised shadow-lg">
           <Calendar />
@@ -1174,6 +1183,18 @@ function Dates({ animated }: { animated: boolean }) {
         <Cell label="DateTimeField">
           <div className="w-64" data-open-target="datetime">
             <DateTimeField value={reminder} onChange={setReminder} animated={animated} />
+          </div>
+        </Cell>
+      </Row>
+      <Row label="quick choices, range">
+        <Cell label="DateField, quick choices">
+          <div className="w-64" data-open-target="date-picks">
+            <DateField value={quick} onChange={setQuick} animated={animated} picks={days} />
+          </div>
+        </Cell>
+        <Cell label="DateRangeField, quick choices">
+          <div className="w-64" data-open-target="range">
+            <DateRangeField value={stay} onChange={setStay} animated={animated} picks={ranges} />
           </div>
         </Cell>
       </Row>
@@ -1517,6 +1538,8 @@ function App() {
     if (OPEN.has('select')) press('select')?.click()
     if (OPEN.has('date')) press('date')?.click()
     if (OPEN.has('datetime')) press('datetime')?.click()
+    if (OPEN.has('range')) press('range')?.click()
+    if (OPEN.has('date-picks')) press('date-picks')?.click()
     if (OPEN.has('tooltip')) press('tooltip')?.focus()
   }, [])
   return (

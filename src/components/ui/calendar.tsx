@@ -51,6 +51,9 @@ const CELL_CLASS = cn(
   "data-today:font-semibold data-today:after:absolute data-today:after:bottom-1 data-today:after:left-1/2 data-today:after:h-0.5 data-today:after:w-2 data-today:after:-translate-x-1/2 data-today:after:rounded-full data-today:after:bg-primary data-today:after:content-['']",
   // Days outside the month: `text-ink-soft` (not a half-transparent ink) to keep the text at 4.5:1.
   'data-outside-range:text-ink-soft',
+  // A range: the days between the two ends take the selection tint (R1), the ends are chosen days; while the last day
+  // is being chosen, the days the pointer would take in have the hover fill.
+  '[&[data-in-range]:not([data-selected])]:bg-selected [&[data-in-range]:not([data-selected])]:text-selected-ink [&[data-in-hover-range]:not([data-selected])]:bg-ink/6',
   'data-selected:bg-primary data-selected:font-semibold data-selected:text-primary-foreground data-selected:hover:bg-accent-hover data-selected:after:bg-primary-foreground',
   'aria-disabled:pointer-events-none aria-disabled:text-ink-mute',
 )

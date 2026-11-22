@@ -12,10 +12,10 @@
 // focus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.
 import * as React from 'react'
 import { DatePicker, useDatePickerContext } from '@ark-ui/react/date-picker'
-import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date'
+import { CalendarDate, getDayOfWeek, getLocalTimeZone, parseDate } from '@internationalized/date'
 import { CalendarIcon } from 'lucide-react'
 import { Calendar, calendarWords } from '../components/ui/calendar'
-import { useWords } from '../words'
+import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
 import { Input } from '../components/ui/input'
@@ -71,6 +71,9 @@ const PHONE_SHEET = cn(
 const PHONE_SHEET_CARD =
   'max-md:pointer-coarse:max-h-[85dvh] max-md:pointer-coarse:w-full max-md:pointer-coarse:overflow-y-auto max-md:pointer-coarse:rounded-b-none max-md:pointer-coarse:pb-[env(safe-area-inset-bottom)] max-md:pointer-coarse:[&>[data-slot=calendar]]:mx-auto'
 
+/** A quick choice above the calendar, as the card takes it: one day, or the two ends of a range. */
+type ShellPick = { label: string; days: readonly CalendarDate[] }
+
 type FieldShellProps = {
   id?: string | undefined
   text: string | null
@@ -78,6 +81,12 @@ type FieldShellProps = {
   selected: CalendarDate | null
   /** A day chosen in the grid. */
   onSelect: (day: CalendarDate) => void
+  /** A range of days instead of one day: with `onRange` the grid chooses a first and a last day, `range` is the one chosen. */
+  range?: readonly [CalendarDate, CalendarDate] | null | undefined
+  /** The two ends chosen in the grid, the earlier one first. */
+  onRange?: ((first: CalendarDate, last: CalendarDate) => void) | undefined
+  /** Quick choices, in a row above the calendar. */
+  picks?: readonly ShellPick[] | undefined
   /** The card closes when a day is chosen. */
   closeOnSelect: boolean
   /** The card has just opened. */
@@ -92,14 +101,19 @@ type FieldShellProps = {
   children: React.ReactNode
 }
 
-function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, onOpen, onPressSelected, animated, min, max, disabled, locale = DEFAULT_LOCALE, children }: FieldShellProps) {
+function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange, picks, closeOnSelect, onOpen, onPressSelected, animated, min, max, disabled, locale = DEFAULT_LOCALE, children }: FieldShellProps) {
   const toolkit = useWords()
   const translations = React.useMemo(() => ({ ...calendarWords(toolkit), trigger: NO_TRIGGER_NAME }), [toolkit])
-  const first = parseDay(min)
-  const last = parseDay(max)
-  const key = selected?.toString() ?? ''
+  const earliest = parseDay(min)
+  const latest = parseDay(max)
+  const ranged = onRange !== undefined
+  const key = ranged ? (range ? `${range[0].toString()}/${range[1].toString()}` : '') : (selected?.toString() ?? '')
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = React.useMemo(() => (selected ? [selected] : []), [key])
+  const chosen = React.useMemo(() => (ranged ? (range ? [range[0], range[1]] : []) : selected ? [selected] : []), [key, ranged])
+  // A range is the caller's only when it has both ends: the first day alone lives here until the second is chosen
+  // (or the card closes, and it is forgotten).
+  const [first, setFirst] = React.useState<CalendarDate[] | null>(null)
+  const value = first ?? chosen
   const ids = React.useMemo(() => (id ? { trigger: id } : undefined), [id])
   // The card mounts when it opens: with `animated` it enters with a short fade (never with prefers-reduced-motion).
   // The card enters from the side of the field it is really on (measured: the placement attribute comes too late).
@@ -110,16 +124,27 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
       ids={ids}
       value={value}
       onValueChange={(details) => {
-        const day = details.value[0]
-        if (day) onSelect(parseDate(day.toString().slice(0, 10)))
+        const days = details.value.map((day) => parseDate(day.toString().slice(0, 10)))
+        if (!ranged) {
+          if (days[0]) onSelect(days[0])
+          return
+        }
+        const [a, b] = days
+        if (a && b) {
+          setFirst(null)
+          if (a.compare(b) <= 0) onRange(a, b)
+          else onRange(b, a)
+        } else setFirst(days)
       }}
       onOpenChange={(details) => {
         if (details.open) onOpen?.()
+        else setFirst(null)
       }}
+      selectionMode={ranged ? 'range' : 'single'}
       closeOnSelect={closeOnSelect}
       locale={locale}
-      {...(first ? { min: first } : {})}
-      {...(last ? { max: last } : {})}
+      {...(earliest ? { min: earliest } : {})}
+      {...(latest ? { max: latest } : {})}
       {...(disabled ? { disabled: true } : {})}
       timeZone={getLocalTimeZone()}
       startOfWeek={1}
@@ -148,12 +173,102 @@ function FieldShell({ id, text, placeholder, selected, onSelect, closeOnSelect, 
           }}
           className={cn('w-fit origin-top-left rounded-lg bg-popover text-popover-foreground shadow-lg outline-hidden', PHONE_SHEET_CARD)}
         >
+          {picks?.length ? (
+            <Picks
+              picks={picks}
+              current={chosen}
+              closes={closeOnSelect}
+              onPick={(days) => {
+                setFirst(null)
+                const [a, b] = days
+                if (ranged && a) onRange(a, b ?? a)
+                else if (a) onSelect(a)
+              }}
+            />
+          ) : null}
           <Calendar onPressSelected={onPressSelected} />
           {children}
         </DatePicker.Content>
       </DatePicker.Positioner>
     </DatePicker.Root>
   )
+}
+
+/**
+ * The quick choices: a row of small buttons above the calendar («Today», «Tomorrow», «This weekend»). A press sets the
+ * day (or the two ends of a range) and, where a choice closes the card, closes it. The one that is the current value is
+ * pressed, in the selection tint, as a shortcut of the duration field.
+ */
+function Picks({ picks, current, closes, onPick }: { picks: readonly ShellPick[]; current: readonly CalendarDate[]; closes: boolean; onPick: (days: readonly CalendarDate[]) => void }) {
+  const picker = useDatePickerContext()
+  const same = (days: readonly CalendarDate[]) => current.length > 0 && current[0]!.compare(days[0]!) === 0 && current[current.length - 1]!.compare(days[days.length - 1]!) === 0
+  return (
+    <div data-slot="date-picks" className="flex flex-wrap gap-1 border-b border-border px-4 py-2.5">
+      {picks.map((pick) => (
+        <Button
+          key={pick.label}
+          type="button"
+          variant="secondary"
+          size="xs"
+          aria-pressed={same(pick.days)}
+          className="aria-pressed:bg-selected aria-pressed:text-selected-ink"
+          onClick={(e) => {
+            onPick(pick.days)
+            if (!closes) return
+            const trigger = picker.getTriggerProps().id
+            if (trigger) e.currentTarget.ownerDocument.getElementById(trigger)?.focus({ preventScroll: true })
+            picker.setOpen(false)
+          }}
+        >
+          {pick.label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+/** A quick choice of a date field: its name and the day it sets, as `YYYY-MM-DD`. */
+export type DatePick = { label: string; value: string }
+/** A quick choice of a range field: its name and the two ends it sets, as `YYYY-MM-DD`. */
+export type DateRangePick = { label: string; start: string; end: string }
+
+const dayOf = (date: Date) => new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate())
+/** The Saturday of this weekend: today on a Saturday, yesterday on a Sunday (the weekend is on), otherwise the coming one. */
+const saturdayOf = (day: CalendarDate) => {
+  const weekday = getDayOfWeek(day, 'en-US') // 0 is Sunday
+  return weekday === 0 ? day.subtract({ days: 1 }) : day.add({ days: 6 - weekday })
+}
+const later = (a: CalendarDate, b: CalendarDate) => (a.compare(b) >= 0 ? a : b)
+
+/**
+ * The usual quick choices of a date field: today, tomorrow and this weekend (its Saturday, or today once the weekend is
+ * on). `now` is the device's own date; the names are the toolkit's words unless an app passes its own.
+ */
+export function dayPicks(words: Words['date'] = DEFAULT_WORDS.date, now: Date = new Date()): DatePick[] {
+  const today = dayOf(now)
+  return [
+    { label: words.today, value: today.toString() },
+    { label: words.tomorrow, value: today.add({ days: 1 }).toString() },
+    { label: words.weekend, value: later(saturdayOf(today), today).toString() },
+  ]
+}
+
+/** The usual quick choices of a range field: this weekend (what is left of it, once it is on) and the next seven days, today included. */
+export function rangePicks(words: Words['date'] = DEFAULT_WORDS.date, now: Date = new Date()): DateRangePick[] {
+  const today = dayOf(now)
+  const saturday = saturdayOf(today)
+  return [
+    { label: words.weekend, start: later(saturday, today).toString(), end: saturday.add({ days: 1 }).toString() },
+    { label: words.nextDays(7), start: today.toString(), end: today.add({ days: 6 }).toString() },
+  ]
+}
+
+/** The quick choices as the card takes them: one that is not a real date is left out. */
+function shellPicks(picks: readonly (DatePick | DateRangePick)[] | undefined): ShellPick[] | undefined {
+  return picks?.flatMap((pick) => {
+    const days = 'value' in pick ? [parseDay(pick.value)] : [parseDay(pick.start), parseDay(pick.end)]
+    return days.every((day): day is CalendarDate => day !== null) ? [{ label: pick.label, days }] : []
+  })
 }
 
 /** A button of the card's foot that also closes the card (focus goes back to the field's button). */
@@ -190,17 +305,78 @@ export type DateFieldProps = {
   locale?: string | undefined
   /** The words of the card's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). */
   words?: { clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
+  /** Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend. */
+  picks?: readonly DatePick[] | undefined
 }
 
 /** A local date (a due date, a birthday): a click or Enter on a day chooses it and closes. */
-export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words }: DateFieldProps) {
+export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words, picks }: DateFieldProps) {
   const toolkit = useWords()
   const selected = parseDay(value)
   return (
-    <FieldShell id={id} text={selected ? dayText(selected, locale) : null} placeholder={placeholder ?? toolkit.date.noDate} selected={selected} onSelect={(day) => onChange(day.toString())} closeOnSelect animated={animated} min={min} max={max} disabled={disabled} locale={locale}>
+    <FieldShell id={id} text={selected ? dayText(selected, locale) : null} placeholder={placeholder ?? toolkit.date.noDate} selected={selected} onSelect={(day) => onChange(day.toString())} picks={shellPicks(picks)} closeOnSelect animated={animated} min={min} max={max} disabled={disabled} locale={locale}>
       <div className="flex justify-end border-t border-border px-4 py-2.5">
         <Closing variant="ghost" size="sm" disabled={!selected} onClick={() => onChange(null)}>
           {words?.clear ?? toolkit.date.clear}
+        </Closing>
+      </div>
+    </FieldShell>
+  )
+}
+
+/** A range of local days, both ends included: `start` is never after `end`. */
+export type DateRange = { start: string; end: string }
+
+export type DateRangeFieldProps = Omit<DateFieldProps, 'value' | 'onChange' | 'picks' | 'words'> & {
+  /** The two ends as `YYYY-MM-DD`, or null. A value whose ends are not real dates, or are the wrong way round, reads as null. */
+  value: DateRange | null
+  onChange: (value: DateRange | null) => void
+  /** Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days. */
+  picks?: readonly DateRangePick[] | undefined
+  /** The word of the card's foot, for this field only: otherwise the toolkit's («Clear the dates»). */
+  words?: { clear?: string | undefined } | undefined
+}
+
+/** «November 20 – 24, 2026»: the range as the button shows it, in the field's locale (one day alone reads as a date). */
+function rangeText(first: CalendarDate, last: CalendarDate, locale: string = DEFAULT_LOCALE): string {
+  // `formatRange` is in every current browser, not in the project's TypeScript library: where it is missing the two
+  // dates are written out in full.
+  const format = longDate(locale) as Intl.DateTimeFormat & { formatRange?: (from: Date, to: Date) => string }
+  const from = new Date(first.year, first.month - 1, first.day)
+  const to = new Date(last.year, last.month - 1, last.day)
+  return format.formatRange ? format.formatRange(from, to) : `${format.format(from)} – ${format.format(to)}`
+}
+
+/**
+ * A range of local days (a stay, a leave, a filter): a click chooses the first day, a second one the last and closes;
+ * the days between take the selection tint. The two clicks may come in either order, and on the same day for a range
+ * of one day. The caller hears of a range only when it has both ends.
+ */
+export function DateRangeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words, picks }: DateRangeFieldProps) {
+  const toolkit = useWords()
+  const start = parseDay(value?.start)
+  const end = parseDay(value?.end)
+  const range = start && end && start.compare(end) <= 0 ? ([start, end] as const) : null
+  return (
+    <FieldShell
+      id={id}
+      text={range ? rangeText(range[0], range[1], locale) : null}
+      placeholder={placeholder ?? toolkit.date.noRange}
+      selected={null}
+      onSelect={() => {}}
+      range={range}
+      onRange={(first, last) => onChange({ start: first.toString(), end: last.toString() })}
+      picks={shellPicks(picks)}
+      closeOnSelect
+      animated={animated}
+      min={min}
+      max={max}
+      disabled={disabled}
+      locale={locale}
+    >
+      <div className="flex justify-end border-t border-border px-4 py-2.5">
+        <Closing variant="ghost" size="sm" disabled={!range} onClick={() => onChange(null)}>
+          {words?.clear ?? toolkit.date.clearRange}
         </Closing>
       </div>
     </FieldShell>
@@ -227,7 +403,7 @@ export type DateTimeFieldProps = DateFieldProps
  * checkbox starts on if the time is not the default one. A half-typed time (the empty field while writing) never enters
  * the value: the last valid one stays. «Done» or Esc closes.
  */
-export function DateTimeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words }: DateTimeFieldProps) {
+export function DateTimeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words, picks }: DateTimeFieldProps) {
   const toolkit = useWords()
   const current = splitDateTime(value)
   // `time` is always a valid time; `typed` is what is seen in the field while writing.
@@ -254,6 +430,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder, min,
       placeholder={placeholder ?? toolkit.date.noDateTime}
       selected={current?.day ?? null}
       onSelect={(day) => onChange(`${day.toString()}T${effective}`)}
+      picks={shellPicks(picks)}
       closeOnSelect={false}
       onOpen={sync}
       onPressSelected={() => onChange(null)}

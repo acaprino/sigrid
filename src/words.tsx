@@ -37,7 +37,16 @@ export interface Words {
   readonly date: {
     readonly noDate: string
     readonly noDateTime: string
+    /** The button text of a range field without a value. */
+    readonly noRange: string
     readonly clear: string
+    /** The button that empties a range field. */
+    readonly clearRange: string
+    /** The quick choices above the calendar (`dayPicks`, `rangePicks`). */
+    readonly today: string
+    readonly tomorrow: string
+    readonly weekend: string
+    readonly nextDays: (days: number) => string
     readonly time: string
     readonly timeOfDay: string
     readonly done: string
@@ -139,7 +148,13 @@ export const DEFAULT_WORDS: Words = {
   date: {
     noDate: 'No date',
     noDateTime: 'No date and time',
+    noRange: 'No dates',
     clear: 'Clear the date',
+    clearRange: 'Clear the dates',
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    weekend: 'This weekend',
+    nextDays: (days) => `Next ${days} days`,
     time: 'Time',
     timeOfDay: 'Time of day',
     done: 'Done',

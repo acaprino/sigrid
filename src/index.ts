@@ -62,7 +62,7 @@ export { MotionProvider, loadMotion, preloadMotion, useMotion, type MotionImpl }
 export { AttachmentMarks, AttachmentsSection, stateText, summarize, typedUrl, type AttachmentMarksInput, type AttachmentState, type AttachmentSummary, type AttachmentView, type AttachmentsSectionProps } from './internal/attachments'
 export { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps, type AttachmentViewerStatus, type ViewerPage } from './internal/attachment-viewer'
 export { ChipsInput, type ChipsInputProps } from './internal/chips'
-export { DateField, DateTimeField, type DateFieldProps, type DateTimeFieldProps } from './internal/date-field'
+export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateFieldProps, type DatePick, type DateRange, type DateRangeFieldProps, type DateRangePick, type DateTimeFieldProps } from './internal/date-field'
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, usePageDrop, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
 export { DurationField, type DurationFieldProps, type DurationParts } from './internal/duration-field'
 export { FileDrop, type FileDropProps, type FileDropReason, type FileDropRefusal } from './internal/file-drop'

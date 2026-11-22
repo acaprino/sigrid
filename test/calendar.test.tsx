@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { DateField, DateTimeField } from '../src/internal/date-field'
+import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/internal/date-field'
 
 const noop = () => {}
 
@@ -290,4 +290,124 @@ test('without a placeholder of their own the fields say “No date” and “No 
   )
   expect(screen.getByLabelText('Day').textContent).toBe('No date')
   expect(screen.getByLabelText('When').textContent).toBe('No date and time')
+})
+
+/* ———— A range of days, and the quick choices ———— */
+
+function Ranged({ initial, onChange, picks = false }: { initial: DateRange | null; onChange: (v: DateRange | null) => void; picks?: boolean }) {
+  const [value, setValue] = useState(initial)
+  return (
+    <>
+      <label htmlFor="r">Stay</label>
+      <DateRangeField id="r" value={value} onChange={(v) => { setValue(v); onChange(v) }} {...(picks ? { picks: rangePicks(undefined, new Date(2026, 10, 18)) } : {})} />
+    </>
+  )
+}
+const dayButton = (grid: HTMLElement, name: string) => within(grid).getByRole('button', { name })
+
+test('a range field shows both ends, or «No dates»; ends the wrong way round read as no value', () => {
+  const { unmount } = render(<Ranged initial={{ start: '2026-11-20', end: '2026-11-24' }} onChange={noop} />)
+  expect(screen.getByLabelText('Stay').textContent).toMatch(/^November 20\s*[–-]\s*24, 2026$/)
+  unmount()
+  const again = render(<Ranged initial={null} onChange={noop} />)
+  expect(screen.getByLabelText('Stay').textContent).toBe('No dates')
+  again.unmount()
+  render(<Ranged initial={{ start: '2026-11-24', end: '2026-11-20' }} onChange={noop} />)
+  expect(screen.getByLabelText('Stay').textContent).toBe('No dates')
+})
+
+test('two clicks choose a range: the caller hears of it only with both ends, the earlier one first, and the card closes', async () => {
+  const onChange = vi.fn()
+  render(<Ranged initial={{ start: '2026-11-03', end: '2026-11-05' }} onChange={onChange} />)
+  const { trigger, grid } = await openField('Stay')
+  // The days between the two ends are in the range; the ends are chosen days.
+  expect(dayButton(grid, 'Wednesday, November 4, 2026').hasAttribute('data-in-range')).toBe(true)
+  expect(dayButton(grid, 'Tuesday, November 3, 2026').hasAttribute('data-selected')).toBe(true)
+  // The last day first: a first click alone is not a value yet.
+  await press(dayButton(grid, 'Tuesday, November 24, 2026'))
+  expect(onChange).not.toHaveBeenCalled()
+  expect(screen.queryByRole('grid')).toBeTruthy()
+  await press(dayButton(grid, 'Friday, November 20, 2026'))
+  expect(onChange).toHaveBeenCalledTimes(1)
+  expect(onChange).toHaveBeenCalledWith({ start: '2026-11-20', end: '2026-11-24' })
+  await waitFor(() => expect(screen.queryByRole('grid')).toBeNull())
+  expect(trigger.textContent).toMatch(/^November 20\s*[–-]\s*24, 2026$/)
+})
+
+test('a first day chosen and the card closed without a second one leaves the value as it was', async () => {
+  const onChange = vi.fn()
+  render(<Ranged initial={{ start: '2026-11-03', end: '2026-11-05' }} onChange={onChange} />)
+  const { trigger, grid } = await openField('Stay')
+  await press(dayButton(grid, 'Tuesday, November 24, 2026'))
+  await key('Escape')
+  await waitFor(() => expect(screen.queryByRole('grid')).toBeNull())
+  expect(onChange).not.toHaveBeenCalled()
+  expect(trigger.textContent).toMatch(/^November 3\s*[–-]\s*5, 2026$/)
+  // Opened again, the range is the caller's, not the day left half chosen.
+  const again = await openField('Stay')
+  expect(dayButton(again.grid, 'Wednesday, November 4, 2026').hasAttribute('data-in-range')).toBe(true)
+})
+
+test('«Clear the dates» empties a range with null', async () => {
+  const onChange = vi.fn()
+  render(<Ranged initial={{ start: '2026-11-03', end: '2026-11-05' }} onChange={onChange} />)
+  await openField('Stay')
+  await press(screen.getByRole('button', { name: 'Clear the dates' }))
+  expect(onChange).toHaveBeenCalledWith(null)
+  expect(screen.getByLabelText('Stay').textContent).toBe('No dates')
+})
+
+test('the usual quick choices: today, tomorrow and this weekend; the weekend already on starts today', () => {
+  // Wednesday, November 18, 2026.
+  expect(dayPicks(undefined, new Date(2026, 10, 18))).toEqual([
+    { label: 'Today', value: '2026-11-18' },
+    { label: 'Tomorrow', value: '2026-11-19' },
+    { label: 'This weekend', value: '2026-11-21' },
+  ])
+  expect(rangePicks(undefined, new Date(2026, 10, 18))).toEqual([
+    { label: 'This weekend', start: '2026-11-21', end: '2026-11-22' },
+    { label: 'Next 7 days', start: '2026-11-18', end: '2026-11-24' },
+  ])
+  // On the Saturday and on the Sunday the weekend is what is left of it.
+  expect(dayPicks(undefined, new Date(2026, 10, 21))[2]).toEqual({ label: 'This weekend', value: '2026-11-21' })
+  expect(dayPicks(undefined, new Date(2026, 10, 22))[2]).toEqual({ label: 'This weekend', value: '2026-11-22' })
+  expect(rangePicks(undefined, new Date(2026, 10, 22))[0]).toEqual({ label: 'This weekend', start: '2026-11-22', end: '2026-11-22' })
+})
+
+test('a quick choice sets the day and closes; the one that is the value is pressed; a choice that is not a date is left out', async () => {
+  const onChange = vi.fn()
+  function Field() {
+    const [value, setValue] = useState<string | null>('2026-11-19')
+    return (
+      <>
+        <label htmlFor="q">Due date</label>
+        <DateField id="q" value={value} onChange={(v) => { setValue(v); onChange(v) }} picks={[...dayPicks(undefined, new Date(2026, 10, 18)), { label: 'Never', value: 'soon' }]} />
+      </>
+    )
+  }
+  render(<Field />)
+  await openField('Due date')
+  const row = document.querySelector<HTMLElement>('[data-slot="date-picks"]')!
+  expect(within(row).getAllByRole('button').map((b) => b.textContent)).toEqual(['Today', 'Tomorrow', 'This weekend'])
+  expect(within(row).getByRole('button', { name: 'Tomorrow' }).getAttribute('aria-pressed')).toBe('true')
+  expect(within(row).getByRole('button', { name: 'Today' }).getAttribute('aria-pressed')).toBe('false')
+  await press(within(row).getByRole('button', { name: 'This weekend' }))
+  expect(onChange).toHaveBeenCalledWith('2026-11-21')
+  await waitFor(() => expect(screen.queryByRole('grid')).toBeNull())
+  expect(screen.getByLabelText('Due date').textContent).toBe('November 21, 2026')
+})
+
+test('a quick choice of a range field sets both ends and closes', async () => {
+  const onChange = vi.fn()
+  render(<Ranged initial={null} onChange={onChange} picks />)
+  await openField('Stay')
+  await press(screen.getByRole('button', { name: 'Next 7 days' }))
+  expect(onChange).toHaveBeenCalledWith({ start: '2026-11-18', end: '2026-11-24' })
+  await waitFor(() => expect(screen.queryByRole('grid')).toBeNull())
+})
+
+test('without quick choices the card has no row for them', async () => {
+  render(<Controlled initial="2026-11-07" onChange={noop} />)
+  await openField('Due date')
+  expect(document.querySelector('[data-slot="date-picks"]')).toBeNull()
 })
