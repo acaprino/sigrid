@@ -129,7 +129,9 @@ test('the frame has a row for the views directly under the bar', () => {
   render(<AppShell contentLabel="Page" titleBar={<header>Bar</header>} tabs={<span>Views</span>}>Text</AppShell>)
   const row = document.querySelector('[data-slot="app-shell-tabs"]')!
   expect(row.textContent).toBe('Views')
-  expect(row.previousElementSibling?.textContent).toBe('Bar')
+  // The row is the first thing under the bar.
+  expect(row.parentElement?.previousElementSibling?.textContent).toBe('Bar')
+  expect(row.parentElement?.firstElementChild).toBe(row)
 })
 
 test('tabs at the foot of the window have their accent bar on the upper edge, and stacked they share the bar with the icon over the word', () => {

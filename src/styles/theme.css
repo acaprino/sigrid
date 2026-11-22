@@ -412,6 +412,34 @@
   app-region: no-drag;
 }
 
+/* The frame of an app as the window of a program (`AppShell desktop`, src/components/ui/app-shell.tsx). Its chrome is
+   not selectable and keeps the arrow cursor; the content, the body of the inspector, every field and what carries
+   `data-selectable` are selectable; a control is chrome wherever it is. The overlays of the frame mount into a layer
+   that starts under the title bar: the transform makes it the box their `position: fixed` is measured from, so a
+   dialog's backdrop stops at the bar and the window can still be moved and closed. The layer itself takes no pointer;
+   what mounts in it does. */
+[data-slot="app-shell"][data-desktop] {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+[data-slot="app-shell"][data-desktop] :is([data-slot="app-shell-content"], [data-slot="inspector-body"], input, textarea, [contenteditable]:not([contenteditable="false"]), [data-selectable]) {
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: auto;
+}
+[data-slot="app-shell"][data-desktop] :is(button, [role="button"], [role="option"], [role="menuitem"], a, label, summary, select) {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+[data-slot="app-shell-overlays"] {
+  transform: translateZ(0);
+}
+[data-slot="app-shell-overlays"] > * {
+  pointer-events: auto;
+}
+
 /* Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its
    name (`tagHue` in `src/internal/tag.tsx`), so the same name has the same color everywhere and on every device,
    without an extra datum. Each pair passes 4.5:1 (test/tag-colors.test.ts). Selectors in `:where()`: zero specificity,

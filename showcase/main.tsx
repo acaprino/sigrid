@@ -894,11 +894,23 @@ function Shells({ animated }: { animated: boolean }) {
         {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
         {items}
       </Toolbar>
+      {/* Inside the frame, so it opens under the title bar as every overlay of a desktop window. */}
+      <CommandPalette
+        open={palette}
+        onOpenChange={setPalette}
+        animated={animated}
+        commands={[
+          { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
+          ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
+          ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+        ]}
+      />
     </TitleBar>
   )
   const frames: Record<PatternId, React.ReactNode> = {
     'list-detail': (
       <AppShell
+        desktop
         contentLabel="Messages"
         titleBar={bar(
           'Mail',
@@ -999,6 +1011,7 @@ function Shells({ animated }: { animated: boolean }) {
     ),
     page: (
       <AppShell
+        desktop
         contentLabel="Look"
         titleBar={bar('Settings', <ToolbarBrand name="Daodan" page="Settings" />)}
         sidebar={sidebar(
@@ -1035,6 +1048,7 @@ function Shells({ animated }: { animated: boolean }) {
     ),
     board: (
       <AppShell
+        desktop
         contentLabel="Board"
         titleBar={bar(
           'Home',
@@ -1088,6 +1102,7 @@ function Shells({ animated }: { animated: boolean }) {
     ),
     focus: (
       <AppShell
+        desktop
         contentLabel="The task in focus"
         titleBar={bar(
           'Focus',
@@ -1116,7 +1131,7 @@ function Shells({ animated }: { animated: boolean }) {
     ),
   }
   return (
-    <Section id="patterns" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps.">
+    <Section id="patterns" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps. The frames here are desktop ones: what opens over them (the inspector's panel, the sidebar's drawer, a menu) stays under their title bar.">
       <div className="flex flex-wrap items-center gap-3">
         <ToggleGroup aria-label="Pattern" value={pattern} onValueChange={(v) => v && setPattern(v as PatternId)} animated={animated}>
           {(Object.keys(PATTERNS) as PatternId[]).map((id) => (
@@ -1131,8 +1146,6 @@ function Shells({ animated }: { animated: boolean }) {
           onValueChange={(v) => {
             if (!v) return
             setWidth(v)
-            // Under 1000px the inspector is a panel over the window, which here is the page: it starts closed.
-            if (Number(v) < 1000) setDetails(false)
           }}
           animated={animated}
         >
@@ -1165,16 +1178,6 @@ function Shells({ animated }: { animated: boolean }) {
       <p data-sample="pattern-advice" className="max-w-3xl text-sm text-ink-soft">
         <span className="font-semibold text-ink">{PATTERNS[pattern].name}.</span> {PATTERNS[pattern].advice}
       </p>
-      <CommandPalette
-        open={palette}
-        onOpenChange={setPalette}
-        animated={animated}
-        commands={[
-          { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
-          ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
-          ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
-        ]}
-      />
       <div className="max-w-full overflow-x-auto p-1 pb-6">
         <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
           {frames[pattern]}

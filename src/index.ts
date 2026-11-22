@@ -72,6 +72,7 @@ export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type Da
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, usePageDrop, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
 export { DurationField, type DurationFieldProps, type DurationParts } from './internal/duration-field'
 export { FileDrop, type FileDropProps, type FileDropReason, type FileDropRefusal } from './internal/file-drop'
+export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions } from './internal/desktop-guard'
 export { useEdgeAutoScroll } from './internal/edge-scroll'
 export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './internal/kinds'
 export { splitLines } from './internal/lines'

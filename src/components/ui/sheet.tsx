@@ -15,6 +15,7 @@ import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
 import { BACKDROP, TOASTS_ATTR } from "../../internal/overlay"
+import { usePortalContainer } from "../PortalContainer"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
 
@@ -120,6 +121,8 @@ function SheetContent({
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
   const modal = React.useContext(ModalContext)
+  // As the dialog: inside part of the app drawn elsewhere (another document, the layer of a window's frame) the sheet opens there.
+  const container = usePortalContainer()
   const words = useWords()
   React.useLayoutEffect(() => setSide(side), [setSide, side])
   const motion = useMotion(animated)
@@ -161,7 +164,7 @@ function SheetContent({
     return false
   }, [])
   return (
-    <SheetPortal>
+    <SheetPortal container={container}>
       {modal ? <SheetOverlay /> : null}
       {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
       <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>

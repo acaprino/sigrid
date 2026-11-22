@@ -130,6 +130,13 @@ const win = getCurrentWindow()
 </TitleBar>
 ```
 
+Two more switches make a page behave as a program in a window of its own; a page in a browser tab leaves them off.
+`AppShell desktop` keeps the chrome unselectable with the arrow cursor (the content, the inspector's body, fields and
+`data-selectable` stay selectable) and opens every overlay under the title bar, so the window can still be moved and
+closed while a dialog is open. `useDesktopGuard()` takes away the browser's own keys (reload, print, find, the
+developer tools), its right-press menu outside fields, the mouse's back and forward buttons and the dragging of
+pictures and links; `ownKeysIn` names a terminal or an editor that keeps its keys.
+
 The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
 `TitleBar size="compact"` is the thin caption of a classic desktop program (32px), and the toolbar inside it takes
 28px items by itself; `Toolbar size="sm"` asks for them anywhere. Text `ToolbarButton`s that open a `DropdownMenu`
