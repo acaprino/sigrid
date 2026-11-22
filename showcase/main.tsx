@@ -11,7 +11,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Bell, Inbox, Plus, Search, Settings, Trash2 } from 'lucide-react'
+import { Bell, ChevronRight, Inbox, Plus, Search, Settings, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -942,6 +942,94 @@ function Popovers({ animated }: { animated: boolean }) {
   )
 }
 
+/** The motion an app builds its own lists with (`useMotion()`): none of the toolkit's components use these pieces. */
+function MotionPieces({ animated }: { animated: boolean }) {
+  const motion = useMotion(animated)
+  const next = React.useRef(3)
+  const [items, setItems] = React.useState([{ id: 3, fresh: false }, { id: 2, fresh: false }, { id: 1, fresh: false }])
+  const [rows, setRows] = React.useState(['Call the dentist', 'Renew the contract', 'Book the survey', 'Send the report'])
+  const [open, setOpen] = React.useState(false)
+  const [cards, setCards] = React.useState([1])
+  // Only the card just placed lands: the ones already there at load, or when Motion arrives, stay still.
+  const placed = React.useRef<number | null>(null)
+  const land = React.useCallback(
+    (el: HTMLLIElement | null) => {
+      if (!el || !motion || Number(el.dataset.card) !== placed.current) return
+      placed.current = null
+      motion.landCard(el)
+    },
+    [motion],
+  )
+  const ITEM = 'flex h-9 items-center justify-between gap-2 rounded-md bg-ink/4 pr-1 pl-3 text-sm'
+  const item = (id: number) => (
+    <>
+      <span>Entry {id}</span>
+      <Button variant="ghost" size="xs" onClick={() => setItems((now) => now.filter((i) => i.id !== id))}>Remove</Button>
+    </>
+  )
+  const row = (name: string) => (
+    <>
+      <span>{name}</span>
+      <Button variant="ghost" size="xs" onClick={() => setRows((now) => now.filter((r) => r !== name))}>Done</Button>
+    </>
+  )
+  const chevron = <ChevronRight className="size-4" aria-hidden />
+  return (
+    <Section id="motion-pieces" title="List, row, arrow and card motion" note="The pieces an app animates its own lists with, from `useMotion()`. With animations: a new entry comes down into its place while the others make room, and a removed one fades while they close up; a completed row fades and closes up in height; the arrow of a group turns a quarter; a card placed in a column comes down a little. Without, each change is immediate.">
+      <Row label="list item">
+        <div className="flex w-64 max-w-full flex-col items-start gap-2">
+          <Button variant="outline" size="sm" data-sample="list-add" onClick={() => {
+            const id = (next.current += 1)
+            setItems((now) => [{ id, fresh: true }, ...now])
+          }}>Add on top</Button>
+          <ul data-sample="list-items" className="flex w-full flex-col gap-1">
+            {motion ? (
+              <motion.Presence pop>
+                {items.map((i) => (
+                  <motion.ListItem key={i.id} enter={i.fresh} className={ITEM}>{() => item(i.id)}</motion.ListItem>
+                ))}
+              </motion.Presence>
+            ) : items.map((i) => <li key={i.id} className={ITEM}>{item(i.id)}</li>)}
+          </ul>
+        </div>
+      </Row>
+      <Row label="row exit">
+        <div className="flex w-64 max-w-full flex-col items-start gap-2">
+          <ul data-sample="row-exit" className="flex w-full flex-col">
+            {motion ? (
+              <motion.Presence>
+                {rows.map((name) => (
+                  <motion.m.li key={name} {...motion.ROW_EXIT} className={`${ITEM} mb-1 overflow-hidden`}>{row(name)}</motion.m.li>
+                ))}
+              </motion.Presence>
+            ) : rows.map((name) => <li key={name} className={`${ITEM} mb-1`}>{row(name)}</li>)}
+          </ul>
+          <Button variant="ghost" size="sm" onClick={() => setRows(['Call the dentist', 'Renew the contract', 'Book the survey', 'Send the report'])}>Put the rows back</Button>
+        </div>
+      </Row>
+      <Row label="arrow">
+        <div className="flex w-64 max-w-full flex-col items-start gap-1">
+          <Button variant="ghost" data-sample="turn" aria-expanded={open} onClick={() => setOpen((now) => !now)}>
+            {motion ? <motion.Turn open={open}>{chevron}</motion.Turn> : <span aria-hidden="true" className={`inline-flex ${open ? 'rotate-90' : ''}`}>{chevron}</span>}
+            Kitchen renovation
+          </Button>
+          {open ? <p className="pl-9 text-sm text-ink-soft">Three tasks in this group.</p> : null}
+        </div>
+      </Row>
+      <Row label="card landing">
+        <div className="flex w-64 max-w-full flex-col items-start gap-2">
+          <Button variant="outline" size="sm" data-sample="card-add" onClick={() => setCards((now) => [(placed.current = (now[0] ?? 0) + 1), ...now].slice(0, 4))}>Place a card</Button>
+          <ul className="flex w-full flex-col gap-2 rounded-lg bg-paper-2 p-2">
+            {cards.map((n) => (
+              <li key={n} ref={land} data-card={n} className="rounded-md bg-raised px-3 py-2 text-sm shadow-xs">Card {n}</li>
+            ))}
+          </ul>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 function Keys() {
   return (
     <Section id="kbd" title="Kbd and Shortcut" note="A key hint in three sizes, a combination, and in context.">
@@ -1112,9 +1200,14 @@ function Content() {
   )
 }
 
+const LIVE_TEXTS = ['Moved to Today', 'Task completed', 'Added to the stack', 'Label removed']
+
 function Notices({ animated }: { animated: boolean }) {
+  const [live, setLive] = React.useState<{ id: string; text: string }[]>([])
+  const count = React.useRef(0)
+  const remove = React.useCallback((id: string) => setLive((now) => now.filter((item) => item.id !== id)), [])
   return (
-    <Section id="toasts" title="Toasts" note="The column, inline: an undo with its key, quick choices with one pressed, a plain undo; then with the seconds left and the close button.">
+    <Section id="toasts" title="Toasts" note="The column, inline: an undo with its key, quick choices with one pressed, a plain undo; then with the seconds left and the close button. Live: each press adds a notice (it rises into the column), a fourth pushes the oldest out from the top, and a notice leaves with Undo, with its close button or after six seconds.">
       <Row label="column">
         <div className="w-[26rem]">
           <Toasts items={TOASTS} inline animated={animated} />
@@ -1123,6 +1216,26 @@ function Notices({ animated }: { animated: boolean }) {
       <Row label="timed">
         <div className="w-[26rem]">
           <Toasts items={[{ id: 'tt', text: 'Moved to Today', undo: { hint: 'Z', onClick: () => {} } }]} inline durationMs={3_600_000} onDismiss={() => {}} />
+        </div>
+      </Row>
+      <Row label="live">
+        <div className="flex w-[26rem] max-w-full flex-col items-start gap-2">
+          <Button variant="outline" data-sample="toast-add" onClick={() => {
+              const n = (count.current += 1)
+              setLive((now) => [...now, { id: `live-${n}`, text: LIVE_TEXTS[n % LIVE_TEXTS.length] as string }])
+            }}>
+            Show a notice
+          </Button>
+          <div className="min-h-44 w-full">
+            <Toasts
+              items={live.map((item) => ({ ...item, undo: { onClick: () => remove(item.id) } }))}
+              inline
+              max={3}
+              durationMs={6000}
+              onDismiss={remove}
+              animated={animated}
+            />
+          </div>
         </div>
       </Row>
     </Section>
@@ -1377,6 +1490,7 @@ function App() {
           <Menus animated={animated} />
           <Popovers animated={animated} />
           <HoverRows animated={animated} />
+          <MotionPieces animated={animated} />
           <Keys />
           <Empties />
           <Dates animated={animated} />
