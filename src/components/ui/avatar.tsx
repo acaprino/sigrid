@@ -9,6 +9,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@ark-ui/react/avatar"
 import { cn } from "../../lib/utils"
+import { FIXED, contrast } from "../../theme-engine"
 
 const SIZES = {
   md: "size-(--control-md) text-sm",
@@ -24,7 +25,24 @@ export type AvatarProps = {
   size?: keyof typeof SIZES | undefined
   /** The name is written beside the avatar: hide it from screen readers. */
   decorative?: boolean | undefined
+  /**
+   * An identity fill, `#rrggbb`, for an app whose people or accounts are told apart by colour (a mail app's accounts). The
+   * initials take the ink with the better contrast on it (the one the toolkit gives a filled mark). Without it the tile is
+   * the neutral one (R10: a colour for a person is a dot, not a fill): this is for what the app chose on purpose.
+   */
+  color?: string | undefined
+  /** Drawn in place of the initials (an icon for «all accounts»); the picture still wins when it loads. */
+  children?: React.ReactNode
   className?: string | undefined
+}
+
+const IS_HEX = /^#[0-9a-fA-F]{6}$/
+
+/** The ink for a fill: white or the dark mark ink, whichever has the better contrast on it. */
+export function inkOn(fill: string): string {
+  const light = FIXED.markInk["mark-ink-light"]
+  const dark = FIXED.markInk["mark-ink-dark"]
+  return contrast(fill, light) >= contrast(fill, dark) ? light : dark
 }
 
 /** The first letter of the first and of the last word («Ada Lovelace» → «AL»); one word gives one letter. */
@@ -37,15 +55,17 @@ export function initials(name: string): string {
   return (letter(first) + letter(last)).toUpperCase()
 }
 
-function Avatar({ name, src, size = "md", decorative, className }: AvatarProps) {
+function Avatar({ name, src, size = "md", decorative, color, children, className }: AvatarProps) {
+  const fill = color !== undefined && IS_HEX.test(color) ? color.toLowerCase() : null
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
+      {...(fill ? { "data-tinted": "", style: { backgroundColor: fill, color: inkOn(fill) } } : {})}
       {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": name })}
       className={cn("relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink/6 align-top font-medium text-ink select-none", SIZES[size], className)}
     >
       <AvatarPrimitive.Fallback data-slot="avatar-fallback" aria-hidden="true" className="leading-none">
-        {initials(name)}
+        {children ?? initials(name)}
       </AvatarPrimitive.Fallback>
       {src ? <AvatarPrimitive.Image data-slot="avatar-image" src={src} alt="" className="size-full object-cover" /> : null}
     </AvatarPrimitive.Root>

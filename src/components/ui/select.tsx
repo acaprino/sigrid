@@ -121,7 +121,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
             data-slot="select-content"
             className="flex max-h-80 min-w-[max(var(--anchor-width),10rem)] flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md outline-none"
           >
-            <SelectPrimitive.List>
+            <SelectPrimitive.List aria-label={aria["aria-label"]}>
               {options.map((o) => (
                 <OptionItem key={o.value} o={o} renderMark={renderMark} />
               ))}
