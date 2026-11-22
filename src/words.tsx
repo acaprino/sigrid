@@ -62,6 +62,15 @@ export interface Words {
     /** A shortcut: «15m», «1h». */
     readonly short: (hours: number, minutes: number) => string
   }
+  readonly sidebar: {
+    /** The button at the foot of the sidebar, and its name once the sidebar is a rail. */
+    readonly collapse: string
+    readonly expand: string
+    /** The search box that filters the rows: its name and its placeholder. */
+    readonly search: string
+    /** Said when no row holds the text searched for. */
+    readonly empty: string
+  }
   readonly search: {
     readonly clear: string
   }
@@ -167,6 +176,12 @@ export const DEFAULT_WORDS: Words = {
     minutes: 'minutes',
     none: 'None',
     short: (hours, minutes) => (hours > 0 && minutes > 0 ? `${hours}h ${minutes}m` : hours > 0 ? `${hours}h` : `${minutes}m`),
+  },
+  sidebar: {
+    collapse: 'Collapse the sidebar',
+    expand: 'Expand the sidebar',
+    search: 'Search the menu',
+    empty: 'No results',
   },
   search: {
     clear: 'Clear the search',

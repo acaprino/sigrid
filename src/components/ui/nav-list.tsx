@@ -8,9 +8,17 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { Tooltip } from "./tooltip"
 
 type Tone = "page" | "sidebar"
-const ToneContext = React.createContext<Tone>("page")
+/** The tone of the rows below: a `NavList` sets it, and so does a `Sidebar` (its rows are on the sidebar). */
+export const ToneContext = React.createContext<Tone>("page")
+
+/**
+ * What a `Sidebar` tells its rows: `rail` when it is shrunk to its icons (a row then shows its icon alone, with its
+ * name as a hint), and what is typed in its search box, in lower case (a row whose name does not hold it is hidden).
+ */
+export const NavContext = React.createContext<{ rail: boolean; query: string }>({ rail: false, query: "" })
 
 export type NavListProps = {
   /** Name of the navigation for screen readers («Mail folders»). */
@@ -57,32 +65,45 @@ export type NavItemProps = NavItemOwnProps &
 
 function NavItem({ current = false, icon, end, className, children, ...props }: NavItemProps) {
   const tone = React.useContext(ToneContext)
+  const { rail, query } = React.useContext(NavContext)
+  // The name of the row as text, for the search and for the hint of the rail: a row whose name is not plain text is
+  // never hidden by a search, and has no hint.
+  const name = typeof children === "string" ? children : undefined
   const shared = {
     "data-slot": "nav-item",
     "aria-current": current ? ("page" as const) : undefined,
-    className: cn(ROW, TONES[tone], FOCUS_RING_INSET, "disabled:pointer-events-none disabled:opacity-50", className),
+    className: cn(ROW, TONES[tone], FOCUS_RING_INSET, "disabled:pointer-events-none disabled:opacity-50", rail && "justify-center px-0", className),
   }
   const content = (
     <>
       <span data-slot="nav-item-icon" aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">
         {icon}
       </span>
-      <span data-slot="nav-item-label" className="min-w-0 flex-1 truncate">
+      {/* On the rail the name stays for screen readers: the row is still named by it. */}
+      <span data-slot="nav-item-label" className={rail ? "sr-only" : "min-w-0 flex-1 truncate"}>
         {children}
       </span>
-      {end}
+      {rail ? null : end}
     </>
   )
+  const row =
+    props.href !== undefined ? (
+      <a {...props} {...shared}>
+        {content}
+      </a>
+    ) : (
+      <button type="button" {...props} {...shared}>
+        {content}
+      </button>
+    )
   return (
-    <li data-slot="nav-item-row">
-      {props.href !== undefined ? (
-        <a {...props} {...shared}>
-          {content}
-        </a>
+    <li data-slot="nav-item-row" hidden={query !== "" && name !== undefined && !name.toLowerCase().includes(query)}>
+      {rail && name !== undefined ? (
+        <Tooltip label={name} side="right">
+          {row}
+        </Tooltip>
       ) : (
-        <button type="button" {...props} {...shared}>
-          {content}
-        </button>
+        row
       )}
     </li>
   )

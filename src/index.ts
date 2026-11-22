@@ -33,6 +33,7 @@ export { NavItem, NavList, type NavItemProps, type NavListProps } from './compon
 export { Popover, PopoverAnchor, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from './components/ui/popover'
 export { RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RadioGroupProps } from './components/ui/radio-group'
 export { SearchField, type SearchFieldProps } from './components/ui/search-field'
+export { Sidebar, SidebarGroup, type SidebarGroupProps, type SidebarProps } from './components/ui/sidebar'
 export { Select, type SelectGroup, type SelectOption, type SelectProps } from './components/ui/select'
 export { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet'
 export { Slider, type SliderProps } from './components/ui/slider'

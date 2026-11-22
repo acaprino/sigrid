@@ -30,6 +30,8 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  Sidebar,
+  SidebarGroup,
   Slider,
   Count,
   FormField,
@@ -638,6 +640,63 @@ function FormFields() {
         <FormField label="Density" className="w-48">
           <Select options={[{ value: 'compact', label: 'Compact' }, { value: 'normal', label: 'Normal' }]} value="normal" onValueChange={() => {}} />
         </FormField>
+      </Row>
+    </Section>
+  )
+}
+
+/** The sidebar in a frame, as an app would hold it: wide or a rail on a wide window, a drawer behind «Menu» on a narrow one. */
+function SidebarSample({ animated }: { animated: boolean }) {
+  const [place, setPlace] = React.useState('all')
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
+  const row = (id: string, icon: React.ComponentProps<typeof Icon>['name'], label: string, count?: number) => (
+    <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />} end={count === undefined ? undefined : <Count value={count} label="items" reserve />}>
+      {label}
+    </NavItem>
+  )
+  return (
+    <Section id="sidebar" title="Sidebar" note="The navigation as groups of rows on the sidebar surface. The button at the foot shrinks it to a rail of icons, each with its name as a hint; a group with an arrow opens and closes; the search box hides the rows that do not hold the text. Below 860px it is a drawer: «Menu» opens it and choosing a row closes it.">
+      <Row label="in an app">
+        <div data-sample="sidebar" className="flex h-112 w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-paper">
+          <Sidebar
+            aria-label="Sample app"
+            collapsed={collapsed}
+            onCollapsedChange={setCollapsed}
+            open={open}
+            onOpenChange={setOpen}
+            search
+            animated={animated}
+            header={<p className="px-(--row-pad) py-1 text-sm font-semibold text-sidebar-ink">Sample app</p>}
+            footer={
+              <div className="flex items-center gap-2 px-(--row-pad) py-1 text-sm text-sidebar-ink">
+                <Avatar name="Ada Lovelace" size="xs" decorative />
+                Ada Lovelace
+              </div>
+            }
+          >
+            <SidebarGroup label="Favorites" icon={<Icon name="tag" />}>
+              {row('all', 'all', 'All', 3)}
+              {row('notifications', 'notifications', 'Notifications', 12)}
+            </SidebarGroup>
+            <SidebarGroup label="Look" icon={<Icon name="appearance" />} collapsible>
+              {row('colors', 'colors', 'Colors')}
+              {row('layout', 'layout', 'Layout')}
+              {row('font', 'font', 'Font')}
+            </SidebarGroup>
+            <SidebarGroup label="Account" icon={<Icon name="account" />} collapsible defaultOpen={false}>
+              {row('account', 'account', 'Profile')}
+              {row('settings', 'settings', 'Settings')}
+            </SidebarGroup>
+          </Sidebar>
+          <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
+            <Button variant="outline" size="sm" className="self-start md:hidden" data-sample="sidebar-open" onClick={() => setOpen(true)}>
+              Menu
+            </Button>
+            <p className="text-base font-semibold text-ink">{place}</p>
+            <p className="text-sm text-ink-soft">The page of the place chosen in the sidebar.</p>
+          </div>
+        </div>
       </Row>
     </Section>
   )
@@ -1587,6 +1646,7 @@ function App() {
           <TabSets animated={animated} />
           <FormFields />
           <Navigation />
+          <SidebarSample animated={animated} />
           <Pickers />
           <Toggles animated={animated} />
           <Selects />

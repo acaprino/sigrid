@@ -207,11 +207,14 @@ import * as UI from '../src'
 
 describe('package invariants', () => {
   test('the toolkit carries no app component: an app\'s product components live in its own package', () => {
-    const product = ['FocusStrip', 'Gate', 'Kanban', 'Shell', 'Sidebar', 'SortCard', 'Stack', 'TaskList', 'TaskSheet', 'ViewHeader']
+    // `Sidebar` left this list on 2026-11-22 (the owner's decision): the list is for what is specific to one app (its
+    // task list, its sheets), and the toolkit's sidebar is the generic navigation of any app (groups of rows, a rail,
+    // a search, a drawer).
+    const product = ['FocusStrip', 'Gate', 'Kanban', 'Shell', 'SortCard', 'Stack', 'TaskList', 'TaskSheet', 'ViewHeader']
     expect(Object.keys(UI).filter((k) => product.includes(k))).toEqual([])
     // And no app concept in the sources' names.
     const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
-    expect(walk(`${root}src`).map((f) => f.slice(root.length)).filter((f) => /(^|[/._-])(task|stack|sort|kanban|sidebar|area|project|inbox|section)/i.test(f))).toEqual([])
+    expect(walk(`${root}src`).map((f) => f.slice(root.length)).filter((f) => /(^|[/._-])(task|stack|sort|kanban|area|project|inbox|section)/i.test(f))).toEqual([])
   })
 
   test('the documented utility families are in styles.css', () => {
