@@ -56,6 +56,7 @@ import {
   colorTheme,
   densityWith,
   presetTone,
+  toneHasEffect,
   type DensityDef,
   type FontId,
   type IconPack,
@@ -169,12 +170,15 @@ type Look = {
 }
 const SEEDS = COLORS.filter((_, i) => i % 3 === 1)
 const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
-const START_LOOK: Look = { scheme: 'light', colors: 'base', color: SEEDS[0]!, spot: 'balanced', tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
+// The canvas starts in colour: on the gray baseline the accent, the tone and the selection would all read as gray.
+const START_LOOK: Look = { scheme: 'light', colors: 'own', color: SEEDS[0]!, spot: 'balanced', tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
 const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
+
+const themeOf = (look: Look) => (look.colors === 'own' ? colorTheme({ id: 'own', label: 'Your colours', color: look.color, spot: look.spot }) : BASE_THEME)
 
 function applyLook(look: Look) {
   const root = document.documentElement
-  const theme = look.colors === 'own' ? colorTheme({ id: 'own', label: 'Your colours', color: look.color, spot: look.spot }) : BASE_THEME
+  const theme = themeOf(look)
   applyTheme(root, { theme: { ...theme, shape: look.shape }, scheme: look.scheme, tone: presetTone(look.tone) })
   applyDensity(root, look.density)
   applyFont(root, look.font)
@@ -220,6 +224,9 @@ function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look
           <ToggleGroupItem value="base">Gray baseline</ToggleGroupItem>
           <ToggleGroupItem value="own">Two colours</ToggleGroupItem>
         </ToggleGroup>
+        {look.colors === 'base' ? (
+          <p className="text-xs text-ink-mute">The toolkit's own theme: grays only, no accent hue. An app brings its colours; choose «Two colours» to try some.</p>
+        ) : (
         <ColorMatch
           colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] ?? seed }))}
           color={look.color}
@@ -229,19 +236,24 @@ function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look
           onSpot={(spot) => onLook({ spot, colors: 'own' })}
           text={{
             color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
-            kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
+            kinds: { quiet: 'Quiet', balanced: 'Matched', loud: 'Loud' },
             sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
           }}
         />
+        )}
       </Group>
       <Group label="Tone of the accents">
-        <ToggleGroup aria-label="Tone" value={look.tone} onValueChange={(v) => v && onLook({ tone: v as TonePreset })}>
-          {TONE_PRESETS.map((tone) => (
-            <ToggleGroupItem key={tone} value={tone}>
-              {title(tone)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        {toneHasEffect({ theme: themeOf(look), scheme: look.scheme }) ? (
+          <ToggleGroup aria-label="Tone" value={look.tone} onValueChange={(v) => v && onLook({ tone: v as TonePreset })}>
+            {TONE_PRESETS.map((tone) => (
+              <ToggleGroupItem key={tone} value={tone}>
+                {title(tone)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : (
+          <p data-builder-no-tone className="text-xs text-ink-mute">These colours have no hue, so the tone changes nothing: Calm, Balanced and Vivid would look the same.</p>
+        )}
       </Group>
       <Group label="Corners">
         <ToggleGroup aria-label="Corners" value={look.shape} onValueChange={(v) => v && onLook({ shape: v as ThemeShape })}>
@@ -264,6 +276,7 @@ function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        {d.id === 'custom' ? <p className="text-xs text-ink-mute">Your own measures. A preset above puts them back.</p> : null}
         <Measure label="Control height" value={d.control.md} min={L.control.min} max={L.control.max} onChange={(md) => density({ control: { md } })} />
         <Measure label="Dense control height" value={d.control.sm} min={L.control.min} max={L.control.max} onChange={(sm) => density({ control: { sm } })} />
         <Measure label="Smallest control height" value={d.control.xs} min={L.control.min} max={L.control.max} onChange={(xs) => density({ control: { xs } })} />

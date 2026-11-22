@@ -8,7 +8,7 @@ import { useMotion } from '../internal/motion'
 import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
 import type { ThemeDef } from '../theme-catalog'
 import { TONE_PRESETS, presetTone, tonePresetOf, type ThemeScheme, type ThemeTone, type TonePreset } from '../theme-engine'
-import { themeVariables, type ThemePick } from '../themes'
+import { themeVariables, type ThemePick, toneHasEffect } from '../themes'
 import { useWords } from '../words'
 
 // The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,
@@ -252,12 +252,21 @@ export interface TonePresetText {
   readonly label: string
   readonly hint: string
   readonly presets: Readonly<Record<TonePreset, ChoiceText>>
+  /**
+   * Said in place of the three cards when the tone changes nothing: the colours in use have no hue (a gray theme), so
+   * the cards would be three copies of one preview. Absent: the cards are shown all the same.
+   */
+  readonly noEffect?: string | undefined
 }
 
 /** The tone, among three: each card shows that tone on the colours in use (the palette, or the theme). */
 export function TonePresetChoice({ theme, scheme, palette, tone, onTone, text }: { theme: ThemeDef; scheme: ThemeScheme; palette: PalettePick | null; tone: ThemeTone | null; onTone: (tone: ThemeTone | null) => void; text: TonePresetText }) {
   const id = useId()
   const chosen = tonePresetOf(tone)
+  // A choice that changes nothing is not offered: three identical previews would say the control is broken.
+  if (text.noEffect !== undefined && !toneHasEffect({ theme, scheme, palette })) {
+    return <ChoiceGroup id={id} label={text.label} hint={text.noEffect}>{null}</ChoiceGroup>
+  }
   return (
     <ChoiceGroup id={id} label={text.label} hint={text.hint}>
       <ChoiceCards labelledBy={id}>

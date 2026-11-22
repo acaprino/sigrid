@@ -5,7 +5,7 @@
 
 // Theme engine, catalog and colours: the single source of truth for colours.
 export { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from './colors'
-export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, type ThemePick } from './themes'
+export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, toneHasEffect, type ThemePick } from './themes'
 export { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId, type Density, type DensityDef, type DensityId, type DensityOverride } from './density'
 export { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeShape, type FontDef, type FontId, type PaletteProfile, type SidebarKind, type Surfaces, type ThemeDef, type ThemeShape } from './theme-catalog'
 export { FIXED, STATUS, contrast, fit, luminance, over, themeTokens, toHex, tokensFor, type Oklch, type ThemeScheme, type ThemeTokens } from './theme-engine'

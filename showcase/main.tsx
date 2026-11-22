@@ -147,7 +147,9 @@ import {
 
 /* ———— The address ———— */
 
-const params = new URLSearchParams(location.search)
+// A page that cannot carry an address of its own (the showcase published inside another page) names its starting
+// choices in `SIGRID_SHOWCASE_DEFAULTS`, written as the address would be: `?theme=blue-clean`.
+const params = new URLSearchParams(location.search || (window as { SIGRID_SHOWCASE_DEFAULTS?: string }).SIGRID_SHOWCASE_DEFAULTS || '')
 const OPEN = new Set((params.get('open') ?? '').split(',').filter(Boolean))
 
 /** The base colours of the showcase's palettes: six of the toolkit's free colours, far apart in hue. */
@@ -2056,7 +2058,7 @@ function Strip({ theme, scheme, tone, onTone }: { theme: ThemeId; scheme: ThemeS
   return (
     <Section id="palettes" title="Palettes" note="The main controls in three palettes, in light and dark, side by side.">
       <TonePresetChoice theme={themeById(theme)} scheme={scheme} palette={null} tone={tone} onTone={onTone}
-        text={{ label: 'Tone', hint: '', presets: {
+        text={{ label: 'Tone', hint: '', noEffect: 'The theme chosen above has no hue (the gray baseline), so the tone changes nothing here: Calm, Balanced and Vivid would look the same. Choose a coloured theme to see the three tones.', presets: {
           calm: { name: 'Calm', note: 'Muted accents' },
           balanced: { name: 'Balanced', note: 'Moderate contrast between colours' },
           vivid: { name: 'Vivid', note: 'Saturated accents' },

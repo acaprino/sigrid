@@ -237,7 +237,8 @@ a drawer.
   the toolkit's components are dragged from a list into a panel and up and down inside it. The inspector holds the
   look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
   corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
-  motion. What is built, look included, is kept in the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
+  motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is
+  replaced by a sentence that says why (`toneHasEffect`). What is built, look included, is kept in the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
   pinned), drawn with the toolkit's tokens.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
