@@ -380,6 +380,34 @@
   }
 }
 
+/* The title bar (src/components/ui/title-bar.tsx): its height follows the density (a dense control and 8px above and
+   below it). `--titlebar-start` and `--titlebar-end` are the room the system keeps for its own window buttons over the
+   page: an installed web app with the window-controls overlay reports it through `env(titlebar-area-*)`, in a browser
+   tab it is zero, and an app whose host says nothing sets the two itself. The bar moves the window (`app-region`),
+   and every control inside it does not, so it stays a control. */
+@layer theme {
+  :root {
+    --titlebar-start: env(titlebar-area-x, 0px);
+    --titlebar-end: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+  }
+  :where(:root, [data-density]) {
+    --titlebar-height: calc(var(--control-sm) + 1rem);
+  }
+}
+[data-slot="title-bar"] {
+  min-height: var(--titlebar-height);
+  padding-inline: calc(var(--titlebar-start) + 0.5rem) calc(var(--titlebar-end) + 0.5rem);
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+[data-slot="title-bar"][data-window-controls] {
+  padding-inline-end: var(--titlebar-end);
+}
+[data-slot="title-bar"] :is(button, a, input, textarea, select, [tabindex], [data-no-drag]) {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
 /* Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its
    name (`tagHue` in `src/internal/tag.tsx`), so the same name has the same color everywhere and on every device,
    without an extra datum. Each pair passes 4.5:1 (test/tag-colors.test.ts). Selectors in `:where()`: zero specificity,

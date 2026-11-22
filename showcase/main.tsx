@@ -11,7 +11,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Bell, ChevronRight, Inbox, Plus, Search, Settings, Trash2 } from 'lucide-react'
+import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -31,6 +31,15 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  TitleBar,
+  Toolbar,
+  ToolbarButton,
+  ToolbarGroup,
+  ToolbarSearch,
+  ToolbarSeparator,
+  ToolbarSpacer,
+  ToolbarTitle,
+  WindowControls,
   Sidebar,
   SidebarGroup,
   Slider,
@@ -723,6 +732,71 @@ function SidebarSample({ animated }: { animated: boolean }) {
             <p className="text-base font-semibold text-ink">{place}</p>
             <p className="text-sm text-ink-soft">The page of the place chosen in the sidebar.</p>
           </div>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+/** The bar of a window in a frame, as a host without a frame of its own would show it, and the same bar on a web page. */
+function Toolbars({ animated }: { animated: boolean }) {
+  const [text, setText] = React.useState('')
+  const [filter, setFilter] = React.useState(true)
+  const [panel, setPanel] = React.useState(false)
+  const [maximized, setMaximized] = React.useState(false)
+  const [said, setSaid] = React.useState('Nothing pressed yet.')
+  const bar = (name: string) => (
+    <Toolbar aria-label={name}>
+      <ToolbarButton label="Show the sidebar" icon={<PanelLeft aria-hidden="true" />} pressed={panel} onClick={() => setPanel(!panel)} animated={animated} />
+      <ToolbarTitle>Inbox</ToolbarTitle>
+      <ToolbarSpacer />
+      <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+      <ToolbarGroup aria-label="View">
+        <ToolbarButton label="Filter" icon={<ListFilter aria-hidden="true" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
+        <ToolbarButton label="Sort" icon={<ArrowDownUp aria-hidden="true" />} onClick={() => setSaid('Sort')} animated={animated} />
+      </ToolbarGroup>
+      <ToolbarSeparator />
+      <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} onClick={() => setSaid('Reply')} animated={animated} />
+      <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} onClick={() => setSaid('Archive')} animated={animated} />
+      <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} disabled animated={animated} />
+      <ToolbarButton label="More actions" icon={<Ellipsis aria-hidden="true" />} onClick={() => setSaid('More actions')} animated={animated} />
+      <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />} onClick={() => setSaid('New message')}>
+        New
+      </ToolbarButton>
+    </Toolbar>
+  )
+  const page = (
+    <div className="flex flex-col gap-1 p-4">
+      <p className="text-sm text-ink">{said}</p>
+      <p className="text-sm text-ink-mute">{text === '' ? 'The magnifier opens the search; Esc closes it, and so does leaving it empty.' : `Searching for «${text}».`}</p>
+    </div>
+  )
+  return (
+    <Section id="toolbar" title="Toolbar, TitleBar and WindowControls" note="One row of actions and a single Tab stop: the arrows move among the items. A button that shows an icon alone has its name as a hint, with its key; a switch that is on has the selection tint; one item is the solid action (R3). The search takes no room until its magnifier is pressed. In the frame of a window the empty parts of the bar move the window and the three buttons at the end call the app back; on a web page the same bar has neither.">
+      <Row label="in a window">
+        <div data-sample="title-bar" className="w-full max-w-3xl overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar windowControls={<WindowControls maximized={maximized} onMinimize={() => setSaid('Minimize')} onMaximizeToggle={() => setMaximized(!maximized)} onClose={() => setSaid('Close')} />}>
+            {bar('Mail, in a window')}
+          </TitleBar>
+          {page}
+        </div>
+      </Row>
+      <Row label="on a web page">
+        <div data-sample="top-bar" className="w-full max-w-3xl overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar>{bar('Mail, on a page')}</TitleBar>
+          {page}
+        </div>
+      </Row>
+      <Row label="narrow">
+        <div className="w-80 max-w-full overflow-hidden rounded-lg bg-paper shadow-lg">
+          <TitleBar>
+            <Toolbar aria-label="Mail, narrow">
+              <ToolbarTitle>Inbox</ToolbarTitle>
+              <ToolbarSpacer />
+              <ToolbarSearch label="Search the mail" value={text} onValueChange={setText} animated={animated} />
+              <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />} animated={animated} />
+            </Toolbar>
+          </TitleBar>
         </div>
       </Row>
     </Section>
@@ -1737,6 +1811,7 @@ function App() {
           <FormFields />
           <Navigation />
           <SidebarSample animated={animated} />
+          <Toolbars animated={animated} />
           <Pickers />
           <Toggles animated={animated} />
           <Selects />

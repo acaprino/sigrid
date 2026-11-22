@@ -75,6 +75,14 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  /** The names of the buttons of a window (`WindowControls`). */
+  readonly window: {
+    readonly minimize: string
+    readonly maximize: string
+    /** The middle button, once the window fills the screen. */
+    readonly restore: string
+    readonly close: string
+  }
   readonly combobox: {
     readonly empty: string
     readonly trigger: string
@@ -188,6 +196,12 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  window: {
+    minimize: 'Minimize',
+    maximize: 'Maximize',
+    restore: 'Restore',
+    close: 'Close',
   },
   combobox: {
     empty: 'No results',

@@ -1,7 +1,8 @@
 # Sigrid UI
 
 Sigrid is the shared design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
-knows nothing of any app: no app's name, concepts or product components, and nothing of a desktop shell. An app builds
+knows nothing of any app: no app's name, concepts or product components, and no window API of a desktop shell (its
+title bar is plain web, and a shell drives it from outside: see [Toolbar and title bar](#toolbar-and-title-bar)). An app builds
 its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
 MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
 
@@ -36,7 +37,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
 ## The four layers
 
 1. **Behaviour: two libraries, each for what it does best.** **Base UI** (`@base-ui/react`, pinned to 1.9.0) carries
-   the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, checkbox, radio group,
+   the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, toolbar, checkbox, radio group,
    toggle group, input; `Collapsible`, `Field` and `PopoverPrimitive` are re-exported so an app composes them with the
    toolkit's single copy. **Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component, carries the
    richer parts Base UI does not have: notices, date picker, tags input, file upload, combobox, slider, switch, tabs,
@@ -81,13 +82,52 @@ default and equals the sizes the toolkit had before density existed.
   (a density that asks for more gets more on touch too).
 - `DensityChoice` is the settings control, of the same family as the other look settings; the app stores the choice.
 
+## Toolbar and title bar
+
+`Toolbar` is one row of actions and a single Tab stop (Base UI's `Toolbar`: the arrows move among the items).
+
+- `ToolbarButton`: with no children it shows an icon alone, and its `label` is its accessible name and its hint (with
+  `shortcut` after it); `pressed` makes it a switch with the selection tint; `variant="default"` is the one solid
+  action (R3).
+- `ToolbarSearch`: a magnifier that opens into a `SearchField` on a press, or when the app sets `open` from its own
+  key; Esc empties and closes it, and so does leaving it empty.
+- `ToolbarTitle`, `ToolbarSpacer`, `ToolbarGroup`, `ToolbarSeparator` lay the row out.
+
+`TitleBar` is the bar that holds it at the top of a window. On a web page it is a top bar and nothing more. It becomes
+the frame of a window from outside, so the toolkit imports no shell:
+
+| What | On the web | In a shell without a frame |
+|---|---|---|
+| Moving the window | nothing to do | `app-region: drag` is already on the bar and off its controls (theme.css); a shell with its own mark passes it as `dragProps`, and the bar, the toolbar, the title and the spacers carry it |
+| The system's buttons over the page | `--titlebar-start` and `--titlebar-end` follow `env(titlebar-area-*)` (an installed web app with the window-controls overlay) | the app sets the two variables if the shell keeps room for its own buttons |
+| Minimize, maximize, close | not drawn | `WindowControls` draws them and calls the app back |
+
+```tsx
+// An app in Tauri on Windows, with `decorations: false`. The same component on the web: no dragProps, no windowControls.
+const win = getCurrentWindow()
+<TitleBar
+  dragProps={{ 'data-tauri-drag-region': '' }}
+  windowControls={<WindowControls maximized={maximized} onMinimize={() => win.minimize()} onMaximizeToggle={() => win.toggleMaximize()} onClose={() => win.close()} />}
+>
+  <Toolbar aria-label="Mail">
+    <ToolbarTitle>Inbox</ToolbarTitle>
+    <ToolbarSpacer />
+    <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} />
+    <ToolbarButton label="Archive" shortcut="E" icon={<Icon name="archive" />} onClick={archive} />
+    <ToolbarButton label="New message" variant="default" icon={<Icon name="add" />}>New</ToolbarButton>
+  </Toolbar>
+</TitleBar>
+```
+
+The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
+
 ## What it exports
 
 `ThemeGallery` displays an app's themes as keyboard-selectable tiles. Each tile previews its theme in the active scheme and tone. Pass `selected={null}` and a `custom` choice to mark a user-defined palette. The app supplies the labels and handles preference storage.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
