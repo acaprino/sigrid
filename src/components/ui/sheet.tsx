@@ -14,7 +14,8 @@ import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
-import { BACKDROP, TOASTS_ATTR } from "../../internal/overlay"
+import { BACKDROP, TOASTS_ATTR, inTitleBar } from "../../internal/overlay"
+import { usePortalContainer } from "../PortalContainer"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
 
@@ -67,7 +68,9 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
       <SheetPrimitive.Root
         swipeDirection={SIDE_TO_SWIPE[side]}
         onOpenChange={(open, details) => {
-          if (!open && (details.reason === "outside-press" || details.reason === "focus-out") && inToasts(details.event?.target)) {
+          const outside = details.reason === "outside-press" || details.reason === "focus-out"
+          // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.
+          if (!open && outside && (inToasts(details.event?.target) || inTitleBar(details.event?.target))) {
             details.cancel()
             return
           }
@@ -120,6 +123,8 @@ function SheetContent({
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
   const modal = React.useContext(ModalContext)
+  // As the dialog: inside part of the app drawn elsewhere (another document, the layer of a window's frame) the sheet opens there.
+  const container = usePortalContainer()
   const words = useWords()
   React.useLayoutEffect(() => setSide(side), [setSide, side])
   const motion = useMotion(animated)
@@ -161,7 +166,7 @@ function SheetContent({
     return false
   }, [])
   return (
-    <SheetPortal>
+    <SheetPortal container={container}>
       {modal ? <SheetOverlay /> : null}
       {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
       <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>

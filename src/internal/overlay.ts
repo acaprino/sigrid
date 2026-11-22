@@ -1,5 +1,12 @@
 import type { RefObject } from 'react'
 
+/**
+ * True for a press on the bar of a window (`TitleBar`). In a desktop frame the overlays open under the bar, so a
+ * press on it is outside them: but the user is moving or minimizing the window, not leaving the dialog.
+ */
+export const inTitleBar = (target: EventTarget | null | undefined): boolean =>
+  typeof (target as Element | null | undefined)?.closest === 'function' && (target as Element).closest('[data-slot="title-bar"]') !== null
+
 /** Marks the stack of notices: it lets a modal window recognize it (see `ignoreToasts`). */
 export const TOASTS_ATTR = 'data-toasts'
 

@@ -59,6 +59,28 @@ export function themeVariables(pick: ThemePick): Record<string, string> {
   return { ...Object.fromEntries(Object.entries(t.colors).map(([k, v]) => [`--color-${k}`, v])), ...t.shape }
 }
 
+/** The least difference, in one channel of 255, that reads as another colour beside the first. */
+const VISIBLE_STEP = 12
+
+/**
+ * True if the tone changes a colour of this theme, in this scheme, by an amount an eye can see. A theme with no hue
+ * (the gray baseline) keeps every colour of the interface in every tone, and its data colours move by a few units of
+ * 255: the three tones look the same. An app that offers the tone as a choice asks this first, so it never shows three
+ * previews that are one and the same.
+ */
+export function toneHasEffect(pick: Omit<ThemePick, 'tone'>): boolean {
+  const calm = tokensOf({ ...pick, tone: { intensity: 'faded', light: 'theme' } }).colors as Record<string, string>
+  const vivid = tokensOf({ ...pick, tone: null }).colors as Record<string, string>
+  const channels = (hex: string) => (/^#[0-9a-f]{6}/i.test(hex) ? [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)) : null)
+  return Object.keys(calm).some((name) => {
+    const a = channels(calm[name]!)
+    const b = channels(vivid[name] ?? '')
+    // A colour not written as six hexadecimal digits is compared as it is written.
+    if (!a || !b) return calm[name] !== vivid[name]
+    return a.some((value, at) => Math.abs(value - b[at]!) >= VISIBLE_STEP)
+  })
+}
+
 /**
  * Puts a theme in a scheme on an element: the color and shape variables as an inline style, and the attributes
  * (`data-theme`, `data-scheme` and the shape ones). On the document root it also updates the browser bar's

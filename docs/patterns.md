@@ -121,6 +121,23 @@ actions with the main one first. It is the screen where the accent has the least
 - What the user needs to act never gives way: the solid action and the window's buttons stay at every width.
 - With a finger every control is at least 44px (the toolkit does it); leave the key hints out on a phone.
 
+## An app in a window of its own
+
+For an app that runs in its own window (Tauri, or any host without a browser around the page), three switches make
+it behave as a program. They are Imago's techniques; on a page in a browser tab leave them off.
+
+- `AppShell desktop`: the chrome is not selectable and keeps the arrow cursor, while the content, the inspector's body
+  and every field stay selectable (mark anything else with `data-selectable`). What opens over the window opens under
+  the title bar, so the window can still be moved, minimized and closed while a dialog is open.
+- `useDesktopGuard()`: the browser's own keys (reload, print, find, the developer tools), its right-press menu outside
+  fields, the mouse's back and forward buttons and the dragging of pictures and links do nothing. Name a terminal or
+  an editor in `ownKeysIn` and it keeps its keys.
+- `TitleBar` with `dragProps` and `WindowControls`, as above.
+
+What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
+kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
+web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
+
 ## What to avoid
 
 - Two toolbars on one screen, or actions both in the toolbar and in an action bar.

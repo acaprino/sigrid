@@ -114,3 +114,13 @@ describe('copyTheme', () => {
     expect(b.style.getPropertyValue(FONT_VARIABLE)).toBe('')
   })
 })
+
+// A tone is offered only where it shows.
+import { toneHasEffect as toneShows } from '../src'
+import { paletteTheme as paletteOf, COLORS as SEED_COLORS, PALETTE_COMBOS as COMBOS, BASE_THEME as GRAY } from '../src'
+test('the tone changes nothing on the gray baseline and something on every theme with a hue', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    expect(toneShows({ theme: GRAY, scheme })).toBe(false)
+    for (const combo of COMBOS) expect(toneShows({ theme: paletteOf({ seed: SEED_COLORS[1]!, combo }), scheme }), `${combo} ${scheme}`).toBe(true)
+  }
+})
