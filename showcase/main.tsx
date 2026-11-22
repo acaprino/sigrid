@@ -829,7 +829,7 @@ function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
 const PATTERNS = {
   'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the views are a row of tabs directly under the bar; Commands (Ctrl K) opens the palette.' },
   page: { name: 'Sidebar and page', advice: 'For settings and documents. One column of text no wider than 65 characters; each choice is a row with its control at the end; the rest sits under Advanced.' },
-  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the views are tabs in the bar, after the app, as in Xiox.' },
+  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the views are tabs: in the bar after the app as in Xiox, under the bar, in a bottom bar on a narrow window, or small in the status bar.' },
   focus: { name: 'Focus', advice: 'For one thing at a time. No sidebar and no inspector: what to do, how many are left, and the way out.' },
 } as const
 type PatternId = keyof typeof PATTERNS
@@ -848,6 +848,15 @@ function Shells({ animated }: { animated: boolean }) {
   const [text, setText] = React.useState('')
   const [view, setView] = React.useState('board')
   const [filter, setFilter] = React.useState('all')
+  const [tabsAt, setTabsAt] = React.useState<'bar' | 'under' | 'bottom' | 'status'>('bar')
+  const views = (look: { edge?: 'top'; size?: 'sm'; layout?: 'stacked' } = {}) => (
+    <ToolbarTabs aria-label="Views" value={view} onValueChange={setView} {...look}>
+      <ToolbarTab value="list" icon={look.layout ? <Icon name="all" /> : undefined}>List</ToolbarTab>
+      <ToolbarTab value="board" icon={look.layout ? <Icon name="structure" /> : undefined}>Board</ToolbarTab>
+      <ToolbarTab value="calendar" icon={look.layout ? <Icon name="date" /> : undefined}>Calendar</ToolbarTab>
+      <ToolbarTab value="settings" icon={look.layout ? <Icon name="settings" /> : undefined}>Settings</ToolbarTab>
+    </ToolbarTabs>
+  )
   const [palette, setPalette] = React.useState(false)
   useCommandKey(() => setPalette(true))
   const commandsButton = (
@@ -992,12 +1001,7 @@ function Shells({ animated }: { animated: boolean }) {
           'Home',
           <>
             <ToolbarBrand name="Tasks" />
-            <ToolbarTabs aria-label="Views" value={view} onValueChange={setView}>
-              <ToolbarTab value="list">List</ToolbarTab>
-              <ToolbarTab value="board">Board</ToolbarTab>
-              <ToolbarTab value="calendar">Calendar</ToolbarTab>
-              <ToolbarTab value="settings">Settings</ToolbarTab>
-            </ToolbarTabs>
+            {tabsAt === 'bar' ? views() : null}
             <ToolbarSpacer />
             {commandsButton}
             <ToolbarButton label="New task" variant="default" icon={<Plus aria-hidden="true" />}>
@@ -1011,7 +1015,19 @@ function Shells({ animated }: { animated: boolean }) {
             {row('date', 'date', 'Clients', 4)}
           </SidebarGroup>,
         )}
-        footer={<span className="tabular-nums">6 tasks, 2 for today</span>}
+        tabs={tabsAt === 'under' ? <Toolbar aria-label="Views of the tasks">{views()}</Toolbar> : undefined}
+        bottomBar={tabsAt === 'bottom' ? <Toolbar aria-label="Views of the tasks">{views({ edge: 'top', layout: 'stacked' })}</Toolbar> : undefined}
+        footer={
+          tabsAt === 'status' ? (
+            <Toolbar aria-label="Views of the tasks">
+              {views({ edge: 'top', size: 'sm' })}
+              <ToolbarSpacer />
+              <span className="tabular-nums">6 tasks, 2 for today</span>
+            </Toolbar>
+          ) : (
+            <span className="tabular-nums">6 tasks, 2 for today</span>
+          )
+        }
       >
         <div className="flex min-w-max items-start gap-3 p-4">
           {lanes.map(([name, cards]) => (
@@ -1070,11 +1086,36 @@ function Shells({ animated }: { animated: boolean }) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
+        <ToggleGroup
+          aria-label="Width of the frame"
+          value={width}
+          onValueChange={(v) => {
+            if (!v) return
+            setWidth(v)
+            // Under 1000px the inspector is a panel over the window, which here is the page: it starts closed.
+            if (Number(v) < 1000) setDetails(false)
+          }}
+          animated={animated}
+        >
           <ToggleGroupItem value="1040">1040</ToggleGroupItem>
           <ToggleGroupItem value="900">900</ToggleGroupItem>
           <ToggleGroupItem value="700">700</ToggleGroupItem>
           <ToggleGroupItem value="480">480</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup
+          aria-label="Where the views are"
+          value={tabsAt}
+          onValueChange={(v) => {
+            if (!v) return
+            setTabsAt(v as typeof tabsAt)
+            setPattern('board')
+          }}
+          animated={animated}
+        >
+          <ToggleGroupItem value="bar">Tabs in the bar</ToggleGroupItem>
+          <ToggleGroupItem value="under">Under the bar</ToggleGroupItem>
+          <ToggleGroupItem value="bottom">Bottom bar</ToggleGroupItem>
+          <ToggleGroupItem value="status">Status bar</ToggleGroupItem>
         </ToggleGroup>
       </div>
       <p data-sample="pattern-advice" className="max-w-3xl text-sm text-ink-soft">

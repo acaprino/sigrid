@@ -99,7 +99,8 @@ default and equals the sizes the toolkit had before density existed.
   puts the place after it («Daodan › Settings»).
 - `ToolbarTabs`, `ToolbarTab`: the views of the app as words in the bar, after the brand, as in Xiox; the current one
   has the stronger text and a short accent bar. They can also sit in a toolbar directly under the bar (`AppShell`'s
-  `tabs`). A `ToolbarButton` with a word shows its `shortcut` after it («Commands Ctrl K»).
+  `tabs`), in a bar at the foot of the window (`bottomBar`, with `edge="top"` and `layout="stacked"`) or small in the
+  status bar (`footer`, with `size="sm"`). A `ToolbarButton` with a word shows its `shortcut` after it («Commands Ctrl K»).
 - `ToolbarTitle`, `ToolbarSpacer`, `ToolbarGroup`, `ToolbarSeparator` lay the row out.
 
 `TitleBar` is the bar that holds it at the top of a window. On a web page it is a top bar and nothing more. It becomes

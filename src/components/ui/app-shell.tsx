@@ -6,7 +6,8 @@
 //   ├ status: the last result · a summary ────────────────────┤
 //   │ sidebar │ content                    │ inspector         │
 //   │         ├ actions: the primary one at the end ───────────┤
-//   └─────────┴ footer: service · counts · keys ───────────────┘
+//   ├─────────┴ footer: service · counts · keys ───────────────┤
+//   └ bottom bar: the views, when they are at the foot ────────┘
 //
 // The frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the
 // narrow window it is. Three steps, Imago's:
@@ -73,6 +74,8 @@ export type AppShellProps = {
   actions?: React.ReactNode
   /** The foot: the state of the service, counts, the keys that work now. */
   footer?: React.ReactNode
+  /** Under everything, across the whole window: the views of the app as tabs at the foot (a `Toolbar` of `ToolbarTabs` with `edge="top"`). */
+  bottomBar?: React.ReactNode
   /** The app's own steps, all or some, in place of the recommended ones (`APP_SHELL_STEPS`); 0 switches a step off. */
   steps?: Partial<AppShellSteps> | undefined
   /** The name of the content for screen readers, and where the skip link goes. */
@@ -84,7 +87,7 @@ export type AppShellProps = {
 
 const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 
-function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, steps, contentLabel, className, children }: AppShellProps) {
+function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const [layout, setLayout] = React.useState<AppShellLayout>(WIDE)
@@ -146,6 +149,11 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
             ) : null}
           </div>
         </div>
+        {bottomBar ? (
+          <div data-slot="app-shell-bottom" className="flex min-h-12 shrink-0 items-stretch border-t border-line px-2 select-none">
+            {bottomBar}
+          </div>
+        ) : null}
       </div>
     </AppShellContext.Provider>
   )

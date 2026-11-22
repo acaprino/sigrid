@@ -13,7 +13,9 @@
 //   follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.
 // - `ToolbarTabs` are the views of the app as words in the bar, after the brand, as in Xiox («Cleanup · Registry ·
 //   Developers · Settings»): the view the user is in has the stronger text and a short bar in the accent under it. The
-//   same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`).
+//   same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`), in a bar at the
+//   foot of the window (`bottomBar`, with `edge="top"` and, on a narrow window, `layout="stacked"`: the icon over the
+//   word), or small in the status bar (`size="sm"` in the `footer`).
 // - A button with a word shows its `shortcut` after the word, as plain text («Commands Ctrl K»): the way into the
 //   command palette.
 // - `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the
@@ -116,17 +118,27 @@ export type ToolbarTabsProps = {
   /** The view the user is in. */
   value: string
   onValueChange: (value: string) => void
+  /**
+   * The edge of its bar the accent bar of the current view sits on: `bottom` (the default) for tabs in or under the
+   * title bar, `top` for tabs in a bar at the foot of the window.
+   */
+  edge?: "bottom" | "top" | undefined
+  /** `sm` for tabs in a status bar: 12px words. */
+  size?: "md" | "sm" | undefined
+  /** `stacked`: the icon over the word, each tab taking an equal share of the bar (a bottom bar on a narrow window). */
+  layout?: "inline" | "stacked" | undefined
   className?: string | undefined
   children?: React.ReactNode
 }
 
-const TabsContext = React.createContext<{ value: string; onValueChange: (value: string) => void } | null>(null)
+type TabsLook = { edge: "bottom" | "top"; size: "md" | "sm"; layout: "inline" | "stacked" }
+const TabsContext = React.createContext<({ value: string; onValueChange: (value: string) => void } & TabsLook) | null>(null)
 
 /** The views of the app, as words in a toolbar. They are places, not panels: the one the user is in is the current page. */
-function ToolbarTabs({ value, onValueChange, className, children, ...props }: ToolbarTabsProps) {
-  const context = React.useMemo(() => ({ value, onValueChange }), [value, onValueChange])
+function ToolbarTabs({ value, onValueChange, edge = "bottom", size = "md", layout = "inline", className, children, ...props }: ToolbarTabsProps) {
+  const context = React.useMemo(() => ({ value, onValueChange, edge, size, layout }), [value, onValueChange, edge, size, layout])
   return (
-    <ToolbarPrimitive.Group data-slot="toolbar-tabs" {...props} className={cn("flex shrink-0 items-stretch self-stretch", className)}>
+    <ToolbarPrimitive.Group data-slot="toolbar-tabs" data-edge={edge} {...props} className={cn("flex items-stretch self-stretch", layout === "stacked" ? "min-w-0 flex-1" : "shrink-0", className)}>
       <TabsContext.Provider value={context}>{children}</TabsContext.Provider>
     </ToolbarPrimitive.Group>
   )
@@ -141,10 +153,10 @@ export type ToolbarTabProps = {
   children?: React.ReactNode
 }
 
-// As tall as the bar, so the short accent bar of the current view sits on the bar's lower edge.
+// As tall as the bar, so the short accent bar of the current view sits on the bar's edge.
 const TAB = cn(
-  "relative flex shrink-0 cursor-default items-center gap-2 px-3 text-sm whitespace-nowrap text-ink-soft hover:text-ink data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
-  "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:content-['']",
+  "relative flex cursor-default items-center whitespace-nowrap text-ink-soft hover:text-ink data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "after:absolute after:inset-x-3 after:h-0.5 after:rounded-full after:content-['']",
   "aria-[current=page]:font-semibold aria-[current=page]:text-ink aria-[current=page]:after:bg-primary",
   FOCUS_RING_INSET,
 )
@@ -152,8 +164,12 @@ const TAB = cn(
 function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabProps) {
   const tabs = React.useContext(TabsContext)
   const current = tabs?.value === value
+  const look = cn(
+    tabs?.edge === "top" ? "after:top-0" : "after:bottom-0",
+    tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
+  )
   return (
-    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, className)}>
+    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, look, className)}>
       {icon}
       {children}
     </ToolbarPrimitive.Button>

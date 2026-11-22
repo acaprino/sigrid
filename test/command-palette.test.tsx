@@ -131,3 +131,38 @@ test('the frame has a row for the views directly under the bar', () => {
   expect(row.textContent).toBe('Views')
   expect(row.previousElementSibling?.textContent).toBe('Bar')
 })
+
+test('tabs at the foot of the window have their accent bar on the upper edge, and stacked they share the bar with the icon over the word', () => {
+  render(
+    <AppShell
+      contentLabel="Page"
+      bottomBar={
+        <Toolbar aria-label="Views">
+          <ToolbarTabs aria-label="Views" value="a" onValueChange={() => {}} edge="top" layout="stacked">
+            <ToolbarTab value="a" icon={<svg />}>List</ToolbarTab>
+            <ToolbarTab value="b" icon={<svg />}>Board</ToolbarTab>
+          </ToolbarTabs>
+        </Toolbar>
+      }
+      footer={
+        <Toolbar aria-label="Sheets">
+          <ToolbarTabs aria-label="Sheets" value="x" onValueChange={() => {}} edge="top" size="sm">
+            <ToolbarTab value="x">Sheet 1</ToolbarTab>
+          </ToolbarTabs>
+        </Toolbar>
+      }
+    >
+      Text
+    </AppShell>,
+  )
+  const bottom = document.querySelector('[data-slot="app-shell-bottom"]')!
+  expect(bottom.previousElementSibling?.getAttribute('data-slot')).toBe('app-shell-body')
+  const list = screen.getByRole('button', { name: 'List' })
+  expect(list.className).toContain('after:top-0')
+  expect(list.className).toContain('flex-col')
+  expect(list.className).toContain('flex-1')
+  const sheet = screen.getByRole('button', { name: 'Sheet 1' })
+  expect(sheet.closest('[data-slot="app-shell-footer"]')).toBeTruthy()
+  expect(sheet.className).toContain('text-2xs')
+  expect(sheet.className).not.toContain('flex-col')
+})

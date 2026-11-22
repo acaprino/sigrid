@@ -47,7 +47,7 @@ Recommended:
   to a menu.
 - In a shell that draws no frame, pass `dragProps` and `WindowControls`; on the web pass neither. Nothing else changes.
 
-## Views as tabs, in the bar or under it
+## Views as tabs: in the bar, under it, or at the foot
 
 An app with a few views of the same weight (Xiox: Cleanup, Registry, Developers, Settings) shows them as words:
 `ToolbarTabs`. The view the user is in has the stronger text and a short bar in the accent under it.
@@ -56,7 +56,11 @@ An app with a few views of the same weight (Xiox: Cleanup, Registry, Developers,
   form that reads as a native window: app, views, room that moves the window, commands, the window's buttons.
 - Directly under the bar (`AppShell`'s `tabs`), when the bar is already full, or when the tabs are views of what the
   sidebar chose (All, Unread, Flagged) and not places of the app.
-- Not both on one screen, and not together with a sidebar that lists the same places.
+- In a bar at the foot of the window (`AppShell`'s `bottomBar`, tabs with `edge="top"` and `layout="stacked"`: the icon
+  over the word), on a narrow window or a phone, where the thumb reaches the foot and not the head. Up to five.
+- Small, in the status bar (`footer`, tabs with `edge="top"` and `size="sm"`), for views that change what the content
+  shows without being places of the app: the sheets of a document, the panes of a console.
+- One place for the views on one screen, and not together with a sidebar that lists the same places.
 
 ## The command palette
 
@@ -72,7 +76,7 @@ more than seven. A command that cannot run now stays in the list, dimmed, so the
 | Whole sidebar | Five places or more, or places with counts | `Sidebar`, `SidebarGroup`, `NavItem` |
 | Rail of icons | The same places, when the content needs the width | `Sidebar collapsed`; the frame does it by itself from 620px to 850px |
 | Drawer | A narrow window or a phone | `Sidebar` with `open`; the frame does it under 620px |
-| Tabs in the bar, or under it | Up to five views of the same weight | `ToolbarTabs` (see above) |
+| Tabs: in the bar, under it, or at the foot | Up to five views of the same weight | `ToolbarTabs` (see above) |
 
 Recommended: every row has an icon (R6) so the rail needs no second design; the rows used most are the first group; a
 count is a pill at the end of the row (R5).
