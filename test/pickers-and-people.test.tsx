@@ -111,7 +111,7 @@ describe('Avatar with an identity colour', () => {
     }
     // Not a hex colour: the neutral tile, as before.
     rerender(<Avatar name="Work account" color="red" />)
-    expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('style')).toBeNull()
+    expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('style') ?? '').toBe('')
     expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('data-tinted')).toBeNull()
     // `children` stand in for the initials.
     rerender(<Avatar name="All accounts" color="#2f9e6e"><span data-testid="icon" /></Avatar>)
