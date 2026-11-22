@@ -11,7 +11,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Trash2 } from 'lucide-react'
+import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -861,7 +861,7 @@ function Shells({ animated }: { animated: boolean }) {
   const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
   useCommandKey(() => setPalette(true))
   const commandsButton = (
-    <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Search aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
+    <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Terminal aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
       Commands
     </ToolbarButton>
   )

@@ -42,6 +42,8 @@ Recommended:
   whose icon nobody would guess, keeps its word, or goes in a menu.
 - Rest the search as a field (`closed="field"`) where searching is the main way in, as the magnifier where it is one
   tool among others.
+- Two actions in one bar never share an icon. The magnifier is the search; the button that opens the command palette
+  has another drawing (a prompt), or its word alone.
 - A switch that is on (`pressed`) says so with the selection tint. Do not use the solid variant for a switch.
 - At most seven items in sight. More than that, group them (`ToolbarGroup`, `ToolbarSeparator`) or move the rare ones
   to a menu.
