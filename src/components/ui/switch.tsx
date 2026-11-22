@@ -55,7 +55,7 @@ function Switch({ checked, defaultChecked, onCheckedChange, disabled, invalid, r
       <SwitchPrimitive.HiddenInput role="switch" {...aria} />
       <SwitchPrimitive.Control
         data-slot="switch-control"
-        className="relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full bg-input outline-hidden after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3 data-[disabled]:cursor-not-allowed data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring data-[invalid]:bg-destructive data-[state=checked]:bg-ink"
+        className="relative inline-flex h-5 w-10 shrink-0 items-center rounded-full bg-input outline-hidden after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3 data-[disabled]:cursor-not-allowed data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring data-[invalid]:bg-destructive data-[state=checked]:bg-ink"
       >
         <SwitchPrimitive.Thumb
           data-slot="switch-thumb"
