@@ -9,7 +9,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@ark-ui/react/avatar"
 import { cn } from "../../lib/utils"
-import { FIXED, contrast } from "../../theme-engine"
+import { contrast } from "../../theme-engine"
 
 const SIZES = {
   md: "size-(--control-md) text-sm",
@@ -38,11 +38,12 @@ export type AvatarProps = {
 
 const IS_HEX = /^#[0-9a-fA-F]{6}$/
 
-/** The ink for a fill: white or the dark mark ink, whichever has the better contrast on it. */
+/**
+ * The ink for a fill: white or black, whichever has the better contrast on it. Of the two, one always reaches 4.5:1 (the worst
+ * fill, a mid-tone, still gets 4.58): the initials are small text, and the dark mark ink of the theme is not dark enough for that.
+ */
 export function inkOn(fill: string): string {
-  const light = FIXED.markInk["mark-ink-light"]
-  const dark = FIXED.markInk["mark-ink-dark"]
-  return contrast(fill, light) >= contrast(fill, dark) ? light : dark
+  return contrast(fill, "#ffffff") >= contrast(fill, "#000000") ? "#ffffff" : "#000000"
 }
 
 /** The first letter of the first and of the last word («Ada Lovelace» → «AL»); one word gives one letter. */
