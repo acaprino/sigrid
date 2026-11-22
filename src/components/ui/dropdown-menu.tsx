@@ -15,6 +15,7 @@ import * as React from "react"
 import { Menu } from "@base-ui/react/menu"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { GROUP_LABEL } from "../../lib/rows"
 import { useEntrance } from "../../internal/motion"
 import { usePortalContainer } from "../PortalContainer"
 
@@ -150,7 +151,7 @@ function DropdownMenuGroup({ ...props }: Menu.Group.Props) {
 }
 
 const ITEM =
-  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-md px-2 py-(--row-pad) text-sm outline-hidden select-none data-highlighted:bg-paper-2 data-highlighted:text-ink focus-visible:bg-paper-2 focus-visible:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-md px-2 py-(--row-pad) text-sm outline-hidden select-none data-highlighted:bg-selected/60 data-highlighted:text-ink focus-visible:bg-selected/60 focus-visible:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 
 type DropdownMenuItemProps = Menu.Item.Props & {
   inset?: boolean | undefined
@@ -222,7 +223,7 @@ function DropdownMenuLabel({ className, inset, ...props }: React.ComponentProps<
     <div
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn("flex h-(--row-height) items-center px-2 text-sm font-medium text-ink-mute data-[inset]:pl-8", className)}
+      className={cn("flex h-(--row-height) items-center px-2 text-ink-mute data-[inset]:pl-8", GROUP_LABEL, className)}
       {...props}
     />
   )
@@ -259,7 +260,7 @@ function DropdownMenuSubTrigger({
       data-inset={inset}
       className={cn(
         ITEM,
-        "data-popup-open:bg-paper-2 data-popup-open:text-ink [&_svg:not([class*='text-'])]:text-muted-foreground",
+        "data-popup-open:bg-selected/60 data-popup-open:text-ink [&_svg:not([class*='text-'])]:text-muted-foreground",
         className
       )}
       {...props}

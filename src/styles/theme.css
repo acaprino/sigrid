@@ -76,7 +76,7 @@
   /* Border of the controls (checkbox, fields, textarea, selects): at least 3:1 on paper, paper-2 and raised
      (WCAG 1.4.11, test/contrast.test.ts). Decorative dividers stay `line`/`border`. */
   --color-input: #878787;
-  /* The focus ring is the accent as text (R8): a 2px outline on the control's border or 2px away from it, at least 3:1 on every background and on
+  /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
      the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
   --color-ring: #1f1f1f;
   /* Ink of the icons inside the shapes the user colours: the background is a user color, so the same in
@@ -656,6 +656,17 @@ svg.lucide[stroke-width="2"] {
   10% { --shade-left: 28px; }
   90% { --shade-right: 28px; }
   to { --shade-left: 28px; --shade-right: 0px; }
+}
+/* State changes ease instead of snapping, but only where the app turned motion on (`MotionProvider` marks the root
+   with `data-motion`) and the system allows motion: the fill, the border and the text of a control take 100ms, the
+   time of a press (Fluent's `faster`, on its easy-ease curve), to reach the state under the pointer or the keyboard.
+   Colours only: nothing moves, and the focus ring is never delayed. Zero specificity (`:where`): any other rule wins. */
+@media (prefers-reduced-motion: no-preference) {
+  :where(:root[data-motion]) :where(button, a, input, textarea, [role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"], [data-slot="switch-control"], [data-slot="slider-thumb"], [data-slot="chip"], [data-part="control"]) {
+    transition-property: background-color, border-color, color;
+    transition-duration: 100ms;
+    transition-timing-function: cubic-bezier(0.33, 0, 0.67, 1);
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   [data-scroll-shade] {

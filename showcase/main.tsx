@@ -555,32 +555,32 @@ function Fields() {
     <Section id="input" title="Input and Textarea" note="Empty with a placeholder, filled, under the pointer, focused, disabled, invalid.">
       <Row label="Input">
         <Cell label="placeholder">
-          <Input placeholder="Search by name" className="w-56" data-sample="input-placeholder" />
+          <Input aria-label="Sample empty" placeholder="Search by name" className="w-56" data-sample="input-placeholder" />
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Input defaultValue="Quarterly report" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
+            <Input aria-label={`Sample ${state}`} defaultValue="Quarterly report" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
       <Row label="Input types">
         <Cell label="time">
-          <Input type="time" defaultValue="09:00" className="w-32" />
+          <Input aria-label="Sample time" type="time" defaultValue="09:00" className="w-32" />
         </Cell>
         <Cell label="number">
-          <Input type="number" defaultValue={2} className="w-20" />
+          <Input aria-label="Sample number" type="number" defaultValue={2} className="w-20" />
         </Cell>
         <Cell label="file">
-          <Input type="file" className="w-72" />
+          <Input aria-label="Sample file" type="file" className="w-72" />
         </Cell>
       </Row>
       <Row label="Textarea">
         <Cell label="placeholder">
-          <Textarea placeholder="What's on your mind?" className="w-64" data-sample="textarea-placeholder" />
+          <Textarea aria-label="Sample empty note" placeholder="What's on your mind?" className="w-64" data-sample="textarea-placeholder" />
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Textarea defaultValue="Ask the supplier to move the delivery" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
+            <Textarea aria-label={`Sample note ${state}`} defaultValue="Ask the supplier to move the delivery" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
@@ -591,7 +591,7 @@ function Fields() {
 function Switches({ animated }: { animated: boolean }) {
   const [sync, setSync] = React.useState(true)
   return (
-    <Section id="switch" title="Switch" note="An on/off setting that takes effect at once. The track is the control border colour when off and the ink when on; the thumb slides only with animations.">
+    <Section id="switch" title="Switch" note="An on/off setting that takes effect at once. The track is the control border colour when off and the accent when on; the thumb slides only with animations.">
       <Row label="states">
         <Cell label="off">
           <Switch aria-label="Sample off" animated={animated} />
@@ -740,7 +740,7 @@ function Navigation() {
     </NavList>
   )
   return (
-    <Section id="nav-list" title="NavList and Count" note="Rows of a navigation: an icon slot that stays when empty (R6), the selection tint on the current row and no bar (R1), counts as plain tabular numbers (R5).">
+    <Section id="nav-list" title="NavList and Count" note="Rows of a navigation: an icon slot that stays when empty (R6), the selection tint and a short accent bar on the current row (R1), counts as pills, in the accent on the current row (R5).">
       <Row label="on the page">{list('page')}</Row>
       <Row label="on the sidebar">
         <div className="rounded-lg bg-sidebar-paper p-2">{list('sidebar')}</div>
@@ -1281,23 +1281,45 @@ function Dates({ animated }: { animated: boolean }) {
   )
 }
 
+/** People for the recipients sample: the address is the value, the name is what a chip shows. */
+const ADDRESS_BOOK: Record<string, string> = {
+  'ada@example.com': 'Ada Lovelace',
+  'alan@example.com': 'Alan Turing',
+  'grace@example.com': 'Grace Hopper',
+  'margaret@example.com': 'Margaret Hamilton',
+}
+const nameOf = (address: string) => ADDRESS_BOOK[address] ?? address
+const notAnAddress = (value: string) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)
+const ADDRESS_SEPARATORS = [',', ';', ' '] as const
+
 function OtherFields() {
   const [labels, setLabels] = React.useState(['home', 'marco', 'office'])
+  const [to, setTo] = React.useState(['ada@example.com', 'alan@example.com', 'luca@example'])
   const [duration, setDuration] = React.useState<{ hours: number; minutes: number } | null>({ hours: 0, minutes: 30 })
   return (
-    <Section id="fields" title="ChipsInput and DurationField" note="Labels as chips, at rest and focused; hours and minutes with four shortcuts.">
+    <Section id="fields" title="ChipsInput and DurationField" note="Labels as chips, at rest and focused. As recipients: a chip shows a person's name in place of the address, one that is not an address has the destructive chip, a comma, a semicolon or a space closes one, the chips have no dot, and a suggestion shows the name with the address after it. Hours and minutes with four shortcuts.">
       <Row label="ChipsInput">
         <Cell label="default">
           <div className="w-80">
+            <label htmlFor="chips-a" className="sr-only">Sample labels</label>
             <ChipsInput id="chips-a" value={labels} onChange={setLabels} placeholder="Add a label" />
           </div>
         </Cell>
         <Cell label="focus">
           <Forced state="focus" selector='[data-part="control"]'>
             <div className="w-80">
-              <ChipsInput id="chips-b" value={labels} onChange={setLabels} placeholder="Add a label" />
+              <label htmlFor="chips-b" className="sr-only">Sample labels, focused</label>
+            <ChipsInput id="chips-b" value={labels} onChange={setLabels} placeholder="Add a label" />
             </div>
           </Forced>
+        </Cell>
+      </Row>
+      <Row label="ChipsInput, recipients">
+        <Cell label="display, invalid, separators, no dot">
+          <div className="w-96 max-w-full" data-sample="recipients">
+            <label htmlFor="chips-to" className="sr-only">Sample recipients</label>
+            <ChipsInput id="chips-to" value={to} onChange={setTo} placeholder="Add a person" display={nameOf} invalid={notAnAddress} separators={ADDRESS_SEPARATORS} dot={false} suggestions={Object.keys(ADDRESS_BOOK)} />
+          </div>
         </Cell>
       </Row>
       <Row label="DurationField">

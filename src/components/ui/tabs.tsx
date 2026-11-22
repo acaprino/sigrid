@@ -63,9 +63,9 @@ function TabsList({ className, children, ...props }: TabsListProps) {
 }
 
 const TRIGGER = cn(
-  "relative inline-flex h-(--control-md) min-w-(--control-md) items-center gap-2 rounded-md px-4 text-sm font-semibold text-ink-mute pointer-coarse:h-auto pointer-coarse:min-h-11 hover:text-ink",
+  "relative inline-flex h-(--control-md) min-w-(--control-md) items-center gap-2 rounded-md px-4 text-sm font-medium text-ink-mute pointer-coarse:h-auto pointer-coarse:min-h-11 hover:text-ink",
   FOCUS_RING,
-  "focus-visible:z-10 data-[selected]:bg-selected data-[selected]:text-selected-ink",
+  "focus-visible:z-10 data-[selected]:bg-selected data-[selected]:font-semibold data-[selected]:text-selected-ink",
   "disabled:pointer-events-none disabled:opacity-50"
 )
 

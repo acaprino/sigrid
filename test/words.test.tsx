@@ -160,7 +160,8 @@ describe('an app replaces the words, all or some', () => {
     // The card of the date field: its foot and the calendar's arrows.
     fireEvent.click(document.getElementById('day')!)
     await settle()
-    expect(screen.getByRole('button', { name: 'Togli la data' })).toBeTruthy()
+    // The date card has no button that removes the date (2026-11-22): the word for it is no longer shown.
+    expect(screen.queryByRole('button', { name: 'Togli la data' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Precedente: month' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Successivo: month' })).toBeTruthy()
   })

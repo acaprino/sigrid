@@ -54,13 +54,13 @@ function Slider({ value, onValueChange, min, max, step = 1, disabled, className,
       <SliderPrimitive.Label className="sr-only">{aria["aria-label"]}</SliderPrimitive.Label>
       <SliderPrimitive.Control data-slot="slider-control" className="relative inline-flex min-h-5 w-full items-center pointer-coarse:min-h-11">
         <SliderPrimitive.Track data-slot="slider-track" className="h-2 flex-1 overflow-hidden rounded-full bg-input">
-          <SliderPrimitive.Range data-slot="slider-range" className="h-full bg-ink" />
+          <SliderPrimitive.Range data-slot="slider-range" className="h-full bg-primary" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           index={0}
           data-slot="slider-thumb"
           onKeyDownCapture={vertical}
-          className={cn("top-1/2 z-2 size-5 -translate-y-1/2 rounded-full border-2 border-ink bg-paper after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3", FOCUS_RING)}
+          className={cn("top-1/2 z-2 size-5 -translate-y-1/2 rounded-full border-2 border-primary bg-paper hover:border-accent-hover hover:bg-accent-soft after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3", FOCUS_RING)}
         >
           <SliderPrimitive.HiddenInput />
         </SliderPrimitive.Thumb>

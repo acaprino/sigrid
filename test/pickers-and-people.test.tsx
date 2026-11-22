@@ -19,7 +19,7 @@ const write = async (box: HTMLInputElement, text: string) => {
 const thumbOf = (name?: string) => screen.getByRole('slider', { hidden: true, ...(name ? { name } : {}) })
 
 describe('Slider', () => {
-  test('a named slider with its limits and its value; the track is the control border colour, the range and the thumb border the ink', () => {
+  test('a named slider with its limits and its value; the track is the control border colour, the range and the thumb border the accent', () => {
     const { container } = render(<Slider aria-label="Zoom" value={40} min={0} max={100} step={10} onValueChange={() => {}} />)
     const thumb = thumbOf()
     // The name is the label part the thumb points to, kept out of sight.
@@ -30,9 +30,9 @@ describe('Slider', () => {
     expect(thumb.getAttribute('aria-valuemin')).toBe('0')
     expect(thumb.getAttribute('aria-valuemax')).toBe('100')
     expect(classes(container.querySelector('[data-slot="slider-track"]')!)).toContain('bg-input')
-    expect(classes(container.querySelector('[data-slot="slider-range"]')!)).toContain('bg-ink')
+    expect(classes(container.querySelector('[data-slot="slider-range"]')!)).toContain('bg-primary')
     const c = classes(thumb)
-    for (const cls of ['size-5', 'rounded-full', 'border-ink', 'bg-paper']) expect(c).toContain(cls)
+    for (const cls of ['size-5', 'rounded-full', 'border-primary', 'bg-paper']) expect(c).toContain(cls)
     expect(c.some((x) => x.startsWith('shadow'))).toBe(false)
     expect(c).toContain(coarse('after:-inset-3'))
   })
@@ -182,10 +182,10 @@ describe('Combobox', () => {
     expect(options()).toHaveLength(3)
   })
 
-  test('the form of the field: the control border, 40px by the density, 44px with a coarse pointer; invalid turns the border', () => {
+  test('the form of the field: the light divider border, its height by the density, 44px with a coarse pointer; invalid turns the border', () => {
     const { rerender } = render(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} />)
     const c = classes(screen.getByRole('combobox'))
-    for (const cls of ['h-(--control-md)', 'border-input', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
+    for (const cls of ['h-(--control-md)', 'border-line', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
     rerender(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} aria-invalid />)
     expect(classes(screen.getByRole('combobox'))).toContain('border-destructive')
   })
@@ -290,7 +290,7 @@ describe('the date field: limits, locale, words', () => {
     expect((document.getElementById('due') as HTMLButtonElement).disabled).toBe(true)
   })
 
-  test('the days before `min` and after `max` cannot be chosen; the words of the foot are the caller\'s', async () => {
+  test('the days before `min` and after `max` cannot be chosen; the card has no button that removes the date', async () => {
     render(<DateField id="due" value="2026-11-10" onChange={() => {}} min="2026-11-05" max="2026-11-20" words={{ clear: 'Togli la data' }} />)
     fireEvent.click(document.getElementById('due')!)
     await settle()
@@ -299,7 +299,7 @@ describe('the date field: limits, locale, words', () => {
     expect(day('5').hasAttribute('data-disabled')).toBe(false)
     expect(day('20').hasAttribute('data-disabled')).toBe(false)
     expect(day('21').hasAttribute('data-disabled')).toBe(true)
-    expect(screen.getByRole('button', { name: 'Togli la data' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Togli la data' })).toBeNull()
   })
 
   test('the date and time field takes the same options', async () => {

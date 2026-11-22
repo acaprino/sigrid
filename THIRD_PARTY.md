@@ -5,10 +5,13 @@ behaviour of the components rests on a headless library, the form comes from Par
 durations and curves from Fluent 2's tokens, the motion code and the rest of the look are ours, on top of SmoothUI pieces copied into the package and adapted. An app's product components (in the
 app's own package, with its own `THIRD_PARTY.md`) are not listed here.
 
-- **Ark UI** (`@ark-ui/react`, an npm dependency) is the base for behaviour: state, keyboard, focus, ARIA. The
-  primitives are being moved onto it one by one (phase 2a: notices, date field and calendar, labels field, upload
-  zone). **Base UI** (`@base-ui/react`) still carries the ones not moved yet (dialog, sheet, select, popover, menu,
-  checkbox, tooltip, toggle, field, input).
+- **Ark UI** and **Base UI** (`@ark-ui/react`, `@base-ui/react`, npm dependencies) are the base for behaviour: state,
+  keyboard, focus, ARIA. Base UI carries the basic controls and the surfaces that open (dialog, sheet, select, popover,
+  menu, tooltip, checkbox, radio group, toggle group, input, and the re-exported collapsible and field); Ark UI the
+  richer parts Base UI does not have (notices, date field and calendar, labels field, upload zone, combobox, slider,
+  switch, tabs, avatar). The split is meant to stay (the owner's decision of 2026-11-22: moving the rest onto Ark would
+  change the structure of controls that work and are tested, for nothing a user would see). A control moves from one
+  to the other only when it is rewritten anyway, or when a defect comes from the two living together.
 - **Park UI** for the form (2026-11-19, the owner's choice: Park's native look, not compact): sizes, variants, states,
   corner levels and elevation follow Park's recipes, translated by hand to Tailwind classes. Park itself is Panda CSS
   only and is **not installed**. Colors stay the theme engine's, never Park's palettes.

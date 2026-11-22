@@ -14,6 +14,7 @@ import * as React from "react"
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { GROUP_LABEL } from "../../lib/rows"
 import { NARROW, useMedia } from "../../internal/media"
 import { useMotion } from "../../internal/motion"
 import { useWords } from "../../words"
@@ -48,7 +49,8 @@ const SidebarContext = React.createContext<{ rail: boolean; query: string; anima
 
 // A control of the sidebar that is not a row of the navigation: the heading of a group that opens, the button at the foot.
 const CONTROL = cn(
-  "flex min-h-(--control-xs) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-xs font-medium text-sidebar-mute pointer-coarse:min-h-11 hover:bg-sidebar-selected/60 hover:text-sidebar-ink",
+  "flex min-h-(--control-xs) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sidebar-mute pointer-coarse:min-h-11 hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink",
+  GROUP_LABEL,
   FOCUS_RING_INSET,
 )
 
@@ -68,7 +70,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
   const context = React.useMemo(() => ({ rail, query, animated }), [rail, query, animated])
   const rows = React.useMemo(() => ({ rail, query }), [rail, query])
   const toggle = onCollapsedChange && !narrow ? (
-    <button type="button" data-slot="sidebar-collapse" aria-label={rail ? words.sidebar.expand : words.sidebar.collapse} aria-expanded={!rail} onClick={() => onCollapsedChange(!collapsed)} className={cn(CONTROL, rail && "justify-center px-0")}>
+    <button type="button" data-slot="sidebar-collapse" aria-label={rail ? words.sidebar.expand : words.sidebar.collapse} aria-expanded={!rail} onClick={() => onCollapsedChange(!collapsed)} className={cn(CONTROL, "text-xs font-medium tracking-normal normal-case", rail && "justify-center px-0")}>
       {rail ? <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" /> : <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />}
       {rail ? null : <span aria-hidden="true">{words.sidebar.collapse}</span>}
     </button>
@@ -171,7 +173,7 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
           {motion ? <motion.Turn open={shown}>{arrow}</motion.Turn> : <span aria-hidden="true" className={cn("inline-flex", shown && "rotate-90")}>{arrow}</span>}
         </button>
       ) : (
-        <div data-slot="sidebar-group-heading" className="flex min-h-(--control-xs) items-center gap-2 px-(--row-pad) text-xs font-medium text-sidebar-mute">
+        <div data-slot="sidebar-group-heading" className={cn("flex min-h-(--control-xs) items-center gap-2 px-(--row-pad) text-sidebar-mute", GROUP_LABEL)}>
           {heading}
         </div>
       )}

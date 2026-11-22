@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
@@ -160,4 +161,11 @@ test('the attachments section refuses dropped text with a neutral sentence, or w
   fireEvent.drop(zone(), { dataTransfer: dt({ 'text/plain': 'a note' }) })
   expect(screen.getByRole('status').textContent).toBe('Text goes in the notes.')
   expect(props.onAttach).not.toHaveBeenCalled()
+})
+
+test('the button that chooses a file is named by what it shows, title and hint (WCAG 2.5.3): it has no shorter label of its own', () => {
+  const source = readFileSync(`${process.cwd()}/src/internal/attachments.tsx`, 'utf8')
+  const at = source.indexOf('<FileUpload.Trigger')
+  expect(at).toBeGreaterThan(-1)
+  expect(source.slice(at, source.indexOf('>', at))).not.toContain('aria-label')
 })

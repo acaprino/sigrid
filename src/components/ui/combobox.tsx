@@ -13,7 +13,7 @@ import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/rea
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING_BORDER } from "../../lib/focus"
+import { FOCUS_RING } from "../../lib/focus"
 
 export type ComboboxOption = {
   value: string
@@ -120,9 +120,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           aria-label={aria["aria-label"]}
           aria-describedby={aria["aria-describedby"]}
           className={cn(
-            "h-(--control-md) w-full min-w-0 truncate rounded-md border border-input bg-transparent py-1 pr-(--control-md) pl-(--pad-sm) text-base pointer-coarse:min-h-11 md:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50",
-            FOCUS_RING_BORDER,
-            invalid && "border-destructive",
+            "h-(--control-md) w-full min-w-0 truncate rounded-md border border-line bg-transparent py-1 pr-(--control-md) pl-(--pad-sm) text-base pointer-coarse:min-h-11 md:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50",
+            FOCUS_RING,
+            invalid ? "border-destructive" : "hover:border-input",
           )}
         />
         <ComboboxPrimitive.Trigger
@@ -154,7 +154,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               key={option.value}
               item={option}
               data-slot="combobox-item"
-              className="flex min-h-(--row-height) cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-paper-2"
+              className="flex min-h-(--row-height) cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink"
             >
               <span className="flex min-w-0 flex-col">
                 <ComboboxPrimitive.ItemText className="truncate">{option.label}</ComboboxPrimitive.ItemText>

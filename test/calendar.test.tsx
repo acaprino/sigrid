@@ -174,14 +174,15 @@ test('the next-month button shows the following month', async () => {
   await expectTitle('November 2026')
 })
 
-test('“Clear the date” empties the value with null', async () => {
+test('the date card has no button that removes the date: a calendar is there to give one', async () => {
   const onChange = vi.fn()
   render(<Controlled initial="2026-11-07" onChange={onChange} />)
   await openField('Due date')
-  fireEvent.click(screen.getByRole('button', { name: 'Clear the date' }))
-  await flush()
-  expect(onChange).toHaveBeenCalledWith(null)
-  expect(screen.getByLabelText('Due date').textContent).toBe('No date')
+  expect(screen.queryByRole('button', { name: /Clear/ })).toBeNull()
+  // The chosen day pressed again stays chosen: it is not a hidden way to remove the date.
+  await press(within(screen.getByRole('grid')).getByRole('button', { name: 'Saturday, November 7, 2026' }))
+  expect(onChange.mock.calls.every(([v]) => v === '2026-11-07')).toBe(true)
+  expect(screen.getByLabelText('Due date').textContent).toBe('November 7, 2026')
 })
 
 test('reminder: a day gives YYYY-MM-DDTHH:mm with the time field, and the time can change', async () => {
@@ -348,13 +349,10 @@ test('a first day chosen and the card closed without a second one leaves the val
   expect(dayButton(again.grid, 'Wednesday, November 4, 2026').hasAttribute('data-in-range')).toBe(true)
 })
 
-test('«Clear the dates» empties a range with null', async () => {
-  const onChange = vi.fn()
-  render(<Ranged initial={{ start: '2026-11-03', end: '2026-11-05' }} onChange={onChange} />)
+test('the range card has no button that removes the dates either', async () => {
+  render(<Ranged initial={{ start: '2026-11-03', end: '2026-11-05' }} onChange={noop} />)
   await openField('Stay')
-  await press(screen.getByRole('button', { name: 'Clear the dates' }))
-  expect(onChange).toHaveBeenCalledWith(null)
-  expect(screen.getByLabelText('Stay').textContent).toBe('No dates')
+  expect(screen.queryByRole('button', { name: /Clear/ })).toBeNull()
 })
 
 test('the usual quick choices: today, tomorrow and this weekend; the weekend already on starts today', () => {

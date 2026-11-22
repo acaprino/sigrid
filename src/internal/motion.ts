@@ -8,8 +8,26 @@ import { createContext, createElement, useCallback, useContext, useEffect, useRe
 export type MotionImpl = typeof import('./motion-impl')
 const MotionPreference = createContext(false)
 
-/** Enable motion for a subtree, including its portals. Individual controls can override the preference. */
+/** The mark `MotionProvider` leaves on the document root while motion is on: theme.css eases the state changes of the controls under it. */
+export const MOTION_ATTR = 'data-motion'
+let marking = 0
+
+/**
+ * Enable motion for a subtree, including its portals. Individual controls can override the preference. While at least
+ * one provider has motion on, the document root carries `data-motion`: with it (and only where the system allows
+ * motion) a control's fill, border and text ease to the state under the pointer instead of snapping (theme.css).
+ */
 export function MotionProvider({ animated, children }: { animated: boolean; children: ReactNode }) {
+  useEffect(() => {
+    if (!animated || typeof document === 'undefined') return
+    const root = document.documentElement
+    marking += 1
+    root.setAttribute(MOTION_ATTR, '')
+    return () => {
+      marking -= 1
+      if (marking === 0) root.removeAttribute(MOTION_ATTR)
+    }
+  }, [animated])
   return createElement(MotionPreference.Provider, { value: animated }, children)
 }
 type Impl = MotionImpl

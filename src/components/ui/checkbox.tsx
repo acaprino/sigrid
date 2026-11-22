@@ -2,8 +2,8 @@
 // Park UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)
 // From Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid
 // variant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`
-// token (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the ink, as before: the accent is kept for the
-// primary action. An app may round its own boxes in its own CSS, through the shape token `--radius-check`.
+// token (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine
+// pairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.
 // From SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type="button">` (`nativeButton`,
 // so a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked
 // check mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`
@@ -78,7 +78,7 @@ function Checkbox({
       data-slot="checkbox"
       data-state={state}
       className={cn(
-        "peer relative size-4.5 shrink-0 rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[state=checked]:border-ink data-[state=checked]:bg-ink data-[state=checked]:text-paper data-[state=indeterminate]:border-ink data-[state=indeterminate]:bg-ink data-[state=indeterminate]:text-paper",
+        "peer relative size-4.5 shrink-0 rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input enabled:data-[state=unchecked]:hover:border-ink-soft enabled:data-[state=checked]:hover:border-accent-hover enabled:data-[state=checked]:hover:bg-accent-hover enabled:data-[state=indeterminate]:hover:border-accent-hover enabled:data-[state=indeterminate]:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
         FOCUS_RING,
         className
       )}

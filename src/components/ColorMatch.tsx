@@ -65,12 +65,12 @@ export function ColorMatch({ colors, color, spot, scheme, onColor, onSpot, text 
       <p id={spotId} className="text-sm font-medium">{text.spot}</p>
       <div role="radiogroup" aria-labelledby={spotId} onKeyDown={radioArrows} className="flex flex-wrap items-center gap-2">
         {SPOT_KINDS.map((kind) => <button key={kind} type="button" role="radio" aria-checked={spot === kind} tabIndex={spot === kind ? 0 : -1} onClick={() => onSpot(kind)}
-          className={`flex items-center gap-2 rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === kind ? 'border-ink ring-1 ring-ink' : 'border-line hover:border-input'}`}>
+          className={`flex items-center gap-2 rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === kind ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}>
           <span aria-hidden="true" style={{ backgroundColor: proposals[kind] }} className="size-4 rounded-full" />
           {text.kinds[kind]}
         </button>)}
         <button type="button" role="radio" aria-checked={spot === null} tabIndex={spot === null ? 0 : -1} onClick={() => onSpot(null)}
-          className={`rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === null ? 'border-ink ring-1 ring-ink' : 'border-line hover:border-input'}`}>
+          className={`rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === null ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}>
           {text.none}
         </button>
         <Own label={`${text.spot}: ${text.own}`} value={ownSpot ? (spot as string) : proposals.balanced} chosen={ownSpot} onPick={onSpot} />

@@ -216,7 +216,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
                     {it.check !== undefined ? (
                       // The box of a checklist item: as the toolkit's Checkbox, the ink when done (R2: not the accent),
                       // l1 corners, a 12px stroked mark.
-                      <span aria-hidden="true" className={cn('mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input', it.check && 'border-ink bg-ink text-paper')}>
+                      <span aria-hidden="true" className={cn('mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input', it.check && 'border-primary bg-primary text-primary-foreground')}>
                         {it.check ? (
                           <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" focusable="false">
                             <path d="M20 6L9 17l-5-5" />

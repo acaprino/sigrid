@@ -137,7 +137,7 @@ describe('normal is what the toolkit is before any script runs', () => {
     has('src/components/ui/select.tsx', 'data-slot="select-group-label"', 'h-(--row-height)')
     // Menu: an item at least 40px with 8px above and below, a label 40px.
     has('src/components/ui/dropdown-menu.tsx', '"relative flex min-h-', 'min-h-(--row-height)', 'py-(--row-pad)')
-    has('src/components/ui/dropdown-menu.tsx', 'font-medium text-ink-mute data-[inset]', 'h-(--row-height)')
+    has('src/components/ui/dropdown-menu.tsx', 'text-ink-mute data-[inset]', 'h-(--row-height)')
     // Segment item: 36px, 12px of side padding.
     has('src/components/ui/toggle-group.tsx', '"inline-flex h-', 'h-(--control-md)', 'min-w-(--control-md)', 'px-(--pad-md)')
     // Date field: the surface of Input; the time field 32px.

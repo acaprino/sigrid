@@ -110,7 +110,7 @@ export function FileDrop({ label, hint, dropLabel, onFiles, onRefuse, accept, ma
           className={cn(
             'rounded-lg border-2 border-dashed border-input bg-raised p-1.5',
             invalid && 'border-destructive',
-            dragging && 'border-solid border-ink bg-paper-2',
+            dragging && 'border-solid border-ring bg-paper-2',
             disabled && 'opacity-50',
           )}
         >

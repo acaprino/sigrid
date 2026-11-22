@@ -241,7 +241,7 @@ function Notice({ id }: { id: string }) {
               </span>
             ) : null}
             <Button variant="ghost" size="xs" aria-label={`Close the notice: ${item.text}`} className={cn('text-paper hover:bg-paper/15 hover:text-paper', ON_TOAST_FOCUS)} disabled={out} onClick={out ? undefined : () => column.close?.(id)}>
-              ×
+              <span aria-hidden="true">×</span>
             </Button>
           </>
         ) : null}

@@ -25,6 +25,7 @@ import { kindIcon, kindLabel, type AttachmentKind } from './kinds'
 import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { NeedThumbnail, Thumbnail } from './thumbnail'
 import { cn } from '../lib/utils'
+import { GROUP_LABEL } from '../lib/rows'
 import { FOCUS_RING } from '../lib/focus'
 
 /**
@@ -211,7 +212,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
 
   return (
     <section aria-labelledby={headingId} className="space-y-3">
-      <h3 id={headingId} className="text-2xs font-semibold tracking-[0.07em] text-ink-mute uppercase">
+      <h3 id={headingId} className={cn(GROUP_LABEL, "text-ink-mute")}>
         {said.heading}
       </h3>
       {attachments.length ? (
@@ -277,13 +278,14 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
           data-slot="file-upload"
           data-drop-active={drop.active}
           // While something is dragged over it the dashed edge turns solid ink: the accent is not for this (R2).
-          className={cn('space-y-2 rounded-lg border-2 border-dashed border-input bg-raised p-1.5', drop.active && 'border-solid border-ink bg-paper-2')}
+          className={cn('space-y-2 rounded-lg border-2 border-dashed border-input bg-raised p-1.5', drop.active && 'border-solid border-ring bg-paper-2')}
         >
           {/* The zone is the control (name and keyboard: a real button); the input stays outside it and outside the accessibility tree. */}
           <FileUpload.HiddenInput />
           <FileUpload.Trigger
             ref={chooseRef}
-            aria-label={said.addFile}
+            // Named by what it shows (its title and the hint under it), not by a shorter label of its own: whoever
+            // speaks to the screen says the words they see (WCAG 2.5.3).
             data-slot="file-upload-trigger"
             className={cn('flex w-full flex-col items-center justify-center rounded-md px-6 py-4 text-center hover:bg-ink/4', FOCUS_RING)}
           >

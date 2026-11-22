@@ -37,7 +37,7 @@ describe('Switch', () => {
     expect(container.querySelector('[data-slot="switch-control"]')!.getAttribute('data-state')).toBe('checked')
   })
 
-  test('disabled: not toggled; the form of Park md, the ink when on, a 44px area with a coarse pointer', async () => {
+  test('disabled: not toggled; the form of Park md, the accent when on, a 44px area with a coarse pointer', async () => {
     const spy = vi.fn()
     const { container } = render(
       <Switch disabled onCheckedChange={spy}>
@@ -50,7 +50,9 @@ describe('Switch', () => {
     await settle()
     expect(spy).not.toHaveBeenCalled()
     const track = classes(container.querySelector('[data-slot="switch-control"]')!)
-    for (const c of ['h-5', 'w-10', 'rounded-full', 'bg-input', 'data-[state=checked]:bg-ink']) expect(track).toContain(c)
+    for (const c of ['h-5', 'w-10', 'rounded-full', 'bg-input', 'data-[state=checked]:bg-primary']) expect(track).toContain(c)
+    // On the accent the thumb takes the colour the engine pairs with it.
+    expect(classes(container.querySelector('[data-slot="switch-thumb"]')!)).toContain('data-[state=checked]:bg-primary-foreground')
     // The area: 20px + 2 x 12px with a coarse pointer, 20px + 2 x 4px otherwise.
     expect(track).toContain(coarse('after:-inset-3'))
     expect(track).toContain('after:-inset-1')
@@ -193,6 +195,47 @@ describe('FormField', () => {
   })
 })
 
+describe('the design of 2026-11-22: the error box, the count pills', () => {
+  test('a field with an error shows it in a box on the soft destructive fill, and its control keeps its own border', () => {
+    render(
+      <FormField label="Address" error="Write an address with an @.">
+        <Input defaultValue="ada.example.com" />
+      </FormField>,
+    )
+    const box = screen.getByRole('alert')
+    for (const c of ['rounded-md', 'bg-destructive-soft', 'text-destructive', 'px-3', 'py-2']) expect(classes(box)).toContain(c)
+    expect(classes(box.closest('[data-slot="field"]')!)).toContain('[&[data-invalid]_[aria-invalid=true]]:border-line')
+    expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('true')
+  })
+
+  test('the helper of a field is the 12px muted text', () => {
+    render(
+      <FormField label="Name" help="As it appears on your messages.">
+        <Input />
+      </FormField>,
+    )
+    const help = classes(screen.getByText('As it appears on your messages.'))
+    expect(help).toContain('text-xs')
+    expect(help).toContain('text-muted-foreground')
+  })
+
+  test('a count on a navigation row is a pill: neutral on a row, in the accent on the chosen one, in each tone', () => {
+    for (const tone of ['page', 'sidebar'] as const) {
+      const { unmount } = render(
+        <NavList aria-label="Places" tone={tone}>
+          <NavItem current end={<Count value={3} />}>Chosen</NavItem>
+        </NavList>,
+      )
+      const c = classes(screen.getByRole('button'))
+      for (const cls of ['[&_[data-slot=count]]:rounded-full', '[&_[data-slot=count]]:px-1.5', '[&_[data-slot=count]]:font-semibold']) expect(c, tone).toContain(cls)
+      expect(c, tone).toContain(tone === 'page' ? '[&_[data-slot=count]]:bg-ink/9' : '[&_[data-slot=count]]:bg-sidebar-ink/12')
+      expect(c, tone).toContain(tone === 'page' ? 'aria-[current=page]:[&_[data-slot=count]]:bg-primary' : 'aria-[current=page]:[&_[data-slot=count]]:bg-sidebar-accent')
+      expect(c, tone).toContain(tone === 'page' ? 'aria-[current=page]:before:bg-primary' : 'aria-[current=page]:before:bg-sidebar-accent')
+      unmount()
+    }
+  })
+})
+
 describe('Count (R5)', () => {
   test('a plain tabular number, never a pill: no fill, no border, no rounding', () => {
     const { container } = render(<Count value={12} />)
@@ -240,7 +283,7 @@ describe('NavList and NavItem (R1, R6)', () => {
     expect(screen.getByRole('link', { name: 'Archive' }).getAttribute('href')).toBe('/archive')
   })
 
-  test('a row without an icon keeps the empty slot (R6); no rail and no bar (R1); 44px with a coarse pointer', () => {
+  test('a row without an icon keeps the empty slot (R6); the bar is only on the chosen row (R1); 44px with a coarse pointer', () => {
     render(
       <NavList aria-label="Places">
         <NavItem icon={<Icon name="date" />}>Today</NavItem>
@@ -252,7 +295,10 @@ describe('NavList and NavItem (R1, R6)', () => {
       expect(classes(slot)).toContain('size-4')
       const c = classes(row)
       expect(c).toContain(coarse('min-h-11'))
-      expect(c.some((x) => /border-l|border-s|before:|after:/.test(x))).toBe(false)
+      // The short accent bar is drawn on the chosen row only: every class of it is under `aria-[current=page]`.
+      expect(c.filter((x) => /before:|after:/.test(x)).every((x) => x.startsWith('aria-[current=page]:'))).toBe(true)
+      expect(c).toContain('aria-[current=page]:before:bg-primary')
+      expect(c.some((x) => /border-l|border-s/.test(x))).toBe(false)
     }
     expect(screen.getByRole('button', { name: 'Plain' }).querySelector('[data-slot="nav-item-icon"]')!.childElementCount).toBe(0)
   })
@@ -267,5 +313,19 @@ describe('NavList and NavItem (R1, R6)', () => {
     expect(c).toContain('text-sidebar-ink')
     expect(c).toContain('aria-[current=page]:bg-sidebar-selected')
     expect(c).not.toContain('aria-[current=page]:bg-selected')
+  })
+})
+
+describe('found by the accessibility check of 2026-11-22', () => {
+  test('a switch without a visible label does not point at a label that is not on the page; with one it does', async () => {
+    const { container, rerender } = render(<Switch aria-label="Sync" />)
+    const input = () => container.querySelector('input')!
+    expect(input().getAttribute('aria-labelledby')).toBeNull()
+    expect(input().getAttribute('aria-label')).toBe('Sync')
+    rerender(<Switch aria-label="Sync" checked onCheckedChange={() => {}} />)
+    expect(input().getAttribute('aria-labelledby')).toBeNull()
+    const labelled = render(<Switch>Sync on this device</Switch>)
+    const by = labelled.container.querySelector('input')!.getAttribute('aria-labelledby')!
+    expect(document.getElementById(by)!.textContent).toBe('Sync on this device')
   })
 })

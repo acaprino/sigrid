@@ -134,17 +134,17 @@ test('disabled: Base UI disabled (no opening, out of the Tab order) with the sta
   expect(onValueChange).not.toHaveBeenCalled()
 })
 
-test('invalid: aria-invalid and the destructive control border, also while open; without it nothing changes', async () => {
+test('invalid: aria-invalid and the destructive border, also while open; without it the light divider border', async () => {
   const { rerender } = render(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} />)
   const trigger = () => screen.getByRole('combobox', { name: 'Status' })
   expect(trigger().getAttribute('aria-invalid')).toBeNull()
-  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-input', 'data-[popup-open]:border-ink']))
+  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-line', 'data-[popup-open]:border-ring']))
   expect(trigger().className).not.toMatch(/destructive|opacity-50/)
   rerender(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} invalid />)
   expect(trigger().getAttribute('aria-invalid')).toBe('true')
   expect(trigger().className.split(' ')).toContain('border-destructive')
   // The open state does not paint the ink over the invalid border.
-  expect(trigger().className).not.toContain('data-[popup-open]:border-ink')
+  expect(trigger().className).not.toContain('data-[popup-open]:border-ring')
   // Still usable: it opens and picks.
   fireEvent.click(trigger())
   await flush()

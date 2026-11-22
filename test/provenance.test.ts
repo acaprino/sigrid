@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The toolkit rests on Ark UI for behaviour (with Base UI under the primitives not moved yet), on Park UI's recipes for
+// The toolkit rests on Ark UI for behaviour (with Base UI under the basic controls and the surfaces that open), on Park UI's recipes for
 // form and on SmoothUI for part of the look; the motion is its own code on Fluent 2's token values: INV-007 (provenance and dependencies) and
 // INV-008 (no decorative components, no infinite motion, no springs). An app's product package
 // has its own provenance test for its product components.
@@ -65,7 +65,7 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     expect(Object.values(pkg.scripts ?? {}).join(' ')).not.toMatch(/shadcn/)
   })
 
-  // Base UI stays allowed while the primitives not yet moved onto Ark still use it.
+  // Base UI stays: it carries the basic controls and the surfaces that open (the split is meant to stay, 2026-11-22).
   test('@base-ui/react and motion are pinned to exact versions', () => {
     expect(pkg.dependencies?.['@base-ui/react']).toBe('1.9.0')
     expect(pkg.dependencies?.motion).toBe('14.6.0')

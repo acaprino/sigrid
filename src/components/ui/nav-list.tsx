@@ -1,6 +1,6 @@
 // The rows of a navigation (R1 and R6 of the owner's rules): a list of places, each a row with an icon slot, a name
 // and, at the end, whatever the caller adds (a `Count`). The row of the place the user is in carries
-// `aria-current="page"`, the selection tint and stronger text; no rail and no bar (R1). The icon slot is always there,
+// `aria-current="page"`, the selection tint, stronger text and a short accent bar at its left edge (R1). The icon slot is always there,
 // 16px wide, so a row without an icon stays aligned with the others (R6). A row is as tall as the density's row, and
 // at least 44px with a coarse pointer.
 // Two tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's
@@ -38,11 +38,21 @@ function NavList({ tone = "page", className, children, ...props }: NavListProps)
   )
 }
 
+// Under the pointer a row takes a lighter share of the selection tint and the stronger text: it is seen as the row
+// about to be chosen, and stays below the chosen one, which has the whole tint and the semibold. (The page's `paper-2`
+// was a fill one step from the page: in the dark it was darker than the page, and next to invisible.)
 // On the current row a count takes the row's own ink: the muted ink is not checked against the selection tint.
-const ROW = "flex min-h-(--row-height) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sm pointer-coarse:min-h-11 aria-[current=page]:[&_[data-slot=count]]:text-current"
+// The chosen row has, with the tint, a short bar in the accent at its left edge; a count at the end of a row is a pill,
+// in the accent on the chosen row and neutral on the others (the owner's design of 2026-11-22: before it, no bar and
+// plain numbers).
+const ROW = cn(
+  "relative flex min-h-(--row-height) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sm pointer-coarse:min-h-11",
+  "aria-[current=page]:before:absolute aria-[current=page]:before:top-1/2 aria-[current=page]:before:left-0 aria-[current=page]:before:h-4 aria-[current=page]:before:w-0.75 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:rounded-full aria-[current=page]:before:content-['']",
+  "[&_[data-slot=count]]:min-w-5 [&_[data-slot=count]]:rounded-full [&_[data-slot=count]]:px-1.5 [&_[data-slot=count]]:py-0.5 [&_[data-slot=count]]:text-center [&_[data-slot=count]]:font-semibold",
+)
 const TONES: Record<Tone, string> = {
-  page: "text-ink-soft hover:bg-paper-2 aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink",
-  sidebar: "text-sidebar-ink hover:bg-sidebar-selected/60 aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink",
+  page: "text-ink-soft hover:bg-selected/60 hover:text-ink aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink aria-[current=page]:before:bg-primary [&_[data-slot=count]]:bg-ink/9 [&_[data-slot=count]]:text-ink-soft aria-[current=page]:[&_[data-slot=count]]:bg-primary aria-[current=page]:[&_[data-slot=count]]:text-primary-foreground",
+  sidebar: "text-sidebar-ink hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink aria-[current=page]:before:bg-sidebar-accent [&_[data-slot=count]]:bg-sidebar-ink/12 [&_[data-slot=count]]:text-sidebar-ink aria-[current=page]:[&_[data-slot=count]]:bg-sidebar-accent aria-[current=page]:[&_[data-slot=count]]:text-sidebar-accent-ink",
 }
 
 type NavItemOwnProps = {
