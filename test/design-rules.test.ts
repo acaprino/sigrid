@@ -135,7 +135,7 @@ describe('DESIGN.md and the zero-slop-design code check', () => {
 
   test('the permitted values were read from DESIGN.md', () => {
     expect([...RADII].sort((a, b) => a - b)).toEqual([4, 6, 10, 9999])
-    expect([...SIZES].sort((a, b) => a - b)).toEqual([12, 13, 14, 16])
+    expect([...SIZES].sort((a, b) => a - b)).toEqual([12, 13, 14, 16, 18, 20, 24]) // 18, 20 and 24: the titles of an app's pages (2026-11-22)
     expect([...WEIGHTS].sort()).toEqual([400, 500, 600])
     expect(SHADOWS).toEqual(new Set(['xs', 'sm', 'md', 'lg', 'float']))
     expect([...ICONS].sort((a, b) => a - b)).toEqual([8, 14, 16])

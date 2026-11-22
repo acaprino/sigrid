@@ -46,6 +46,15 @@
   --text-sm--line-height: calc(1.25 / 0.875);
   --text-base: 1rem;
   --text-base--line-height: 1.5;
+  /* Titles of what is larger than a dialog: a card or a panel (`lg`, 18px/28px), a section (`xl`, 20px/28px), a page
+     (`2xl`, 24px/32px). The toolkit's own surfaces stop at 16px; these are for an app's pages, so that every app
+     takes its titles from one scale (the owner's decision of 2026-11-22). */
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
 
   /* The two font roles of DESIGN.md: the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
      monospace faces: DESIGN.md `code-sm`). */

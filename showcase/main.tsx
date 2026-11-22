@@ -99,6 +99,9 @@ import {
   TonePresetChoice,
   Tooltip,
   DENSITIES,
+  DEFAULT_SHAPE,
+  THEME_SHAPES,
+  isThemeShape,
   PALETTE_COMBOS,
   applyDensity,
   applyTheme,
@@ -117,6 +120,7 @@ import {
   type SpotKind,
   type ThemeDef,
   type ThemeScheme,
+  type ThemeShape,
   type ThemeTone,
   type ToastItem,
 } from '../src/index'
@@ -387,6 +391,9 @@ function Tokens() {
         <span data-text="xs" className="text-xs">13px date</span>
         <span data-text="sm" className="text-sm">14px text</span>
         <span data-text="base" className="text-base">16px title</span>
+        <span data-text="lg" className="text-lg font-semibold">18px card title</span>
+        <span data-text="xl" className="text-xl font-semibold">20px section title</span>
+        <span data-text="2xl" className="text-2xl font-semibold">24px page title</span>
       </Row>
       <Row label="Ink levels">
         <span className="text-sm text-ink">ink</span>
@@ -1613,6 +1620,8 @@ function App() {
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
+  // `?shape=sharp|soft|round`: how round the corners are (a parameter of the theme).
+  const [shape, setShape] = React.useState<ThemeShape>(isThemeShape(params.get('shape')) ? (params.get('shape') as ThemeShape) : DEFAULT_SHAPE)
   const [tone, setTone] = React.useState(() => {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
@@ -1623,11 +1632,12 @@ function App() {
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [animated])
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, yours ? { theme: colorTheme({ id: YOURS, label: 'Your colours', color, spot }), scheme, tone: AS_CHOSEN } : { theme: themeById(theme), scheme, tone })
+    applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), shape }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), shape }, scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
     next.set('tone', tonePresetOf(tone))
+    next.set('shape', shape)
     if (yours) {
       next.set('color', color.slice(1))
       next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
@@ -1636,7 +1646,7 @@ function App() {
       next.delete('spot')
     }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone, yours, color, spot])
+  }, [theme, scheme, tone, yours, color, spot, shape])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -1665,6 +1675,13 @@ function App() {
             <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
               <ToggleGroupItem value="light">Light</ToggleGroupItem>
               <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+            </ToggleGroup>
+            <ToggleGroup aria-label="Shape" value={shape} onValueChange={(v) => isThemeShape(v) && setShape(v)}>
+              {THEME_SHAPES.map((name) => (
+                <ToggleGroupItem key={name} value={name}>
+                  {name[0]!.toUpperCase() + name.slice(1)}
+                </ToggleGroupItem>
+              ))}
             </ToggleGroup>
             <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
               {DENSITIES.map((d) => (

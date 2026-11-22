@@ -3,7 +3,7 @@
 // every palette of `theme.css`, plus those of the filled sidebar, the selected item, the text on red and the filled button
 // in the dark. The contrast is computed here with its own formula, not with the engine's.
 import { describe, expect, test } from 'vitest'
-import { DEFAULT_FONT, FONTS } from '../src/theme-catalog'
+import { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeShape } from '../src/theme-catalog'
 import type { ThemeDef } from '../src/theme-catalog'
 import { DEFAULT_THEME, THEMES, themeTokens } from './fixtures/sample-themes'
 import type { ThemeId } from './fixtures/sample-themes'
@@ -593,4 +593,43 @@ describe('the user\'s own theme', () => {
       }
     }
   }, 30_000)
+})
+
+describe('the shape is a parameter of the theme (2026-11-22)', () => {
+  const base: ThemeDef = { id: 'shape-test', label: 'Shape', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
+  const radii = (def: ThemeDef) => {
+    const s = tokensFor(def, 'light').shape
+    return [s['--radius-sm'], s['--radius-md'], s['--radius-lg'], s['--radius-xl'], s['--radius-button'], s['--radius-chip'], s['--radius-check']]
+  }
+
+  test('three presets move the three nested levels together; buttons and labels follow the middle one', () => {
+    expect(radii({ ...base, shape: 'sharp' })).toEqual(['2px', '4px', '6px', '6px', '4px', '4px', '9999px'])
+    expect(radii({ ...base, shape: 'soft' })).toEqual(['4px', '6px', '10px', '10px', '6px', '6px', '9999px'])
+    expect(radii({ ...base, shape: 'round' })).toEqual(['6px', '10px', '14px', '14px', '10px', '10px', '9999px'])
+  })
+
+  test('without a shape, or with a value that is not one, the theme is soft', () => {
+    expect(radii(base)).toEqual(radii({ ...base, shape: 'soft' }))
+    expect(radii({ ...base, shape: 'pill' as never })).toEqual(radii({ ...base, shape: 'soft' }))
+    expect(DEFAULT_SHAPE).toBe('soft')
+    expect(THEME_SHAPES).toEqual(['sharp', 'soft', 'round'])
+    expect(isThemeShape('round')).toBe(true)
+    expect(isThemeShape('pill')).toBe(false)
+  })
+
+  test('every level of every shape is on the 2px step, and the levels only grow', () => {
+    for (const name of THEME_SHAPES) {
+      const [l1, l2, l3] = SHAPE_RADII[name]
+      expect(l1 < l2 && l2 < l3, name).toBe(true)
+      for (const r of [l1, l2, l3]) expect(r % 2, `${name} ${r}`).toBe(0)
+    }
+  })
+
+  test('the shape changes nothing else of the theme: same colours, same stroke, same elevation', () => {
+    const soft = tokensFor({ ...base, shape: 'soft' }, 'dark')
+    const round = tokensFor({ ...base, shape: 'round' }, 'dark')
+    expect(round.colors).toEqual(soft.colors)
+    const rest = (s: Readonly<Record<string, string>>) => Object.fromEntries(Object.entries(s).filter(([k]) => !k.startsWith('--radius-')))
+    expect(rest(round.shape)).toEqual(rest(soft.shape))
+  })
 })
