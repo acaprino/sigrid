@@ -125,13 +125,38 @@ const win = getCurrentWindow()
 
 The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
 
+## The frame of an app
+
+`AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
+children, a `<main>` with a skip link to it), `inspector`, `actions` and `footer`. An app passes the regions it needs.
+
+The frame measures its own width, not the screen's (`APP_SHELL_STEPS`, Imago's): from 1000px the `Inspector` is docked
+and pushes the content, under it a panel over the end of the content, never modal; from 850px the `Sidebar` is whole
+(or the rail the user chose), from 620px to 850px a rail, under 620px a drawer. `Sidebar` and `Inspector` read the step
+from the frame; `useAppShell()` gives it to the app, which shows its «open the menu» button only where the sidebar is
+a drawer.
+
+```tsx
+<AppShell
+  contentLabel="Messages"
+  titleBar={<TitleBar>…</TitleBar>}
+  status="Archived «Receipt»"
+  sidebar={<Sidebar aria-label="Folders" open={menu} onOpenChange={setMenu}>…</Sidebar>}
+  inspector={<Inspector title="Details" open={details} onOpenChange={setDetails}>…</Inspector>}
+  actions={<Button>Reply</Button>}
+  footer="12 unread"
+>
+  …the list…
+</AppShell>
+```
+
 ## What it exports
 
 `ThemeGallery` displays an app's themes as keyboard-selectable tiles. Each tile previews its theme in the active scheme and tone. Pass `selected={null}` and a `custom` choice to mark a user-defined palette. The app supplies the labels and handles preference storage.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'

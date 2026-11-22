@@ -31,6 +31,9 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  AppShell,
+  Inspector,
+  useAppShell,
   TitleBar,
   Toolbar,
   ToolbarButton,
@@ -44,6 +47,7 @@ import {
   SidebarGroup,
   Slider,
   Count,
+  cn,
   FormField,
   NavItem,
   NavList,
@@ -805,6 +809,93 @@ function Toolbars({ animated }: { animated: boolean }) {
           </TitleBar>
         </div>
       </Row>
+    </Section>
+  )
+}
+
+/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
+function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
+  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} /> : null
+}
+
+/** The whole frame of an app at the widths where it changes: the steps follow the frame, not the screen. */
+function Shells({ animated }: { animated: boolean }) {
+  const [width, setWidth] = React.useState('1040')
+  const [place, setPlace] = React.useState('all')
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [menu, setMenu] = React.useState(false)
+  const [details, setDetails] = React.useState(true)
+  const [text, setText] = React.useState('')
+  const mail = ['Kitchen quote, second version', 'Receipt of the waste tax', 'Photos of Tuesday\'s survey', 'Invoice 114 for October', 'Saturday dinner: who brings dessert?']
+  const row = (id: string, icon: React.ComponentProps<typeof Icon>['name'], label: string, count?: number) => (
+    <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />} end={count === undefined ? undefined : <Count value={count} label="items" reserve />}>
+      {label}
+    </NavItem>
+  )
+  return (
+    <Section id="app-shell" title="AppShell and Inspector" note="One frame with seven regions: the title bar, a status line, the sidebar, the content, the inspector, the actions and the foot. It measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar.">
+      <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
+        <ToggleGroupItem value="1040">1040</ToggleGroupItem>
+        <ToggleGroupItem value="900">900</ToggleGroupItem>
+        <ToggleGroupItem value="700">700</ToggleGroupItem>
+        <ToggleGroupItem value="480">480</ToggleGroupItem>
+      </ToggleGroup>
+      <div className="max-w-full overflow-x-auto p-1 pb-6">
+        <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
+          <AppShell
+            contentLabel="Messages"
+            titleBar={
+              <TitleBar windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
+                <Toolbar aria-label="Mail">
+                  <ShellMenuButton onOpen={() => setMenu(true)} />
+                  <ToolbarTitle>Mail</ToolbarTitle>
+                  <ToolbarSpacer />
+                  <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+                  <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
+                  <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
+                    New
+                  </ToolbarButton>
+                </Toolbar>
+              </TitleBar>
+            }
+            status={<span>Archived «Receipt of the waste tax»</span>}
+            sidebar={
+              <Sidebar aria-label="Mail folders" collapsed={collapsed} onCollapsedChange={setCollapsed} open={menu} onOpenChange={setMenu} animated={animated}>
+                <SidebarGroup label="Favorites" icon={<Icon name="tag" />}>
+                  {row('all', 'all', 'Inbox', 12)}
+                  {row('notifications', 'notifications', 'Waiting', 3)}
+                  {row('date', 'date', 'Today')}
+                </SidebarGroup>
+                <SidebarGroup label="Account" icon={<Icon name="account" />}>
+                  {row('settings', 'settings', 'Settings')}
+                </SidebarGroup>
+              </Sidebar>
+            }
+            inspector={
+              <Inspector title="Details" open={details} onOpenChange={setDetails} animated={animated} footer={<Button variant="outline" size="sm">Archive</Button>}>
+                <p className="font-medium text-ink">Kitchen quote, second version</p>
+                <p className="mt-1 text-ink-mute">Marta Riva, today at 09:42</p>
+                <p className="mt-3 text-ink-soft">The quote with the quartz top and the built-in hood. The total goes down by 380.</p>
+              </Inspector>
+            }
+            actions={<Button size="sm">Reply</Button>}
+            footer={
+              <>
+                <span>Connected</span>
+                <span className="tabular-nums">12 unread</span>
+              </>
+            }
+          >
+            <ul role="list" className="flex flex-col p-2">
+              {mail.map((subject, i) => (
+                <li key={subject} className={cn('flex min-h-(--row-height) items-center rounded-md px-(--row-pad) text-sm', i === 0 ? 'bg-selected font-semibold text-selected-ink' : 'text-ink-soft')}>
+                  <span className="truncate">{subject}</span>
+                </li>
+              ))}
+            </ul>
+          </AppShell>
+        </div>
+      </div>
     </Section>
   )
 }
@@ -1818,6 +1909,7 @@ function App() {
           <Navigation />
           <SidebarSample animated={animated} />
           <Toolbars animated={animated} />
+          <Shells animated={animated} />
           <Pickers />
           <Toggles animated={animated} />
           <Selects />

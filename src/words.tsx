@@ -75,6 +75,10 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  readonly shell: {
+    /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
+    readonly skip: string
+  }
   /** The names of the buttons of a window (`WindowControls`). */
   readonly window: {
     readonly minimize: string
@@ -196,6 +200,9 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  shell: {
+    skip: 'Skip to the content',
   },
   window: {
     minimize: 'Minimize',

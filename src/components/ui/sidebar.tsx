@@ -8,6 +8,7 @@
 //   groups left with no row; with nothing left it says so;
 // - below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`
 //   the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.
+// Inside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.
 // What sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:
 // `header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).
 import * as React from "react"
@@ -18,6 +19,7 @@ import { GROUP_LABEL } from "../../lib/rows"
 import { NARROW, useMedia } from "../../internal/media"
 import { useMotion } from "../../internal/motion"
 import { useWords } from "../../words"
+import { AppShellContext } from "./app-shell"
 import { NavContext, ToneContext } from "./nav-list"
 import { SearchField } from "./search-field"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
@@ -56,8 +58,13 @@ const CONTROL = cn(
 
 function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenChange, header, footer, search = false, animated, className, children, ...props }: SidebarProps) {
   const words = useWords()
-  const narrow = useMedia(NARROW)
-  const rail = collapsed && !narrow
+  // Inside an `AppShell` the frame's own width decides (a rail from 620px to 850px, a drawer under 620px); alone, the
+  // screen does (a drawer under 860px).
+  const shell = React.useContext(AppShellContext)
+  const media = useMedia(NARROW)
+  const narrow = shell ? shell.sidebar === "drawer" : media
+  const forced = shell?.sidebar === "rail"
+  const rail = (collapsed || forced) && !narrow
   const [typed, setTyped] = React.useState("")
   const query = rail ? "" : typed.trim().toLowerCase()
   const nav = React.useRef<HTMLElement>(null)
@@ -69,7 +76,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
   }, [query, children])
   const context = React.useMemo(() => ({ rail, query, animated }), [rail, query, animated])
   const rows = React.useMemo(() => ({ rail, query }), [rail, query])
-  const toggle = onCollapsedChange && !narrow ? (
+  const toggle = onCollapsedChange && !narrow && !forced ? (
     <button type="button" data-slot="sidebar-collapse" aria-label={rail ? words.sidebar.expand : words.sidebar.collapse} aria-expanded={!rail} onClick={() => onCollapsedChange(!collapsed)} className={cn(CONTROL, "text-xs font-medium tracking-normal normal-case", rail && "justify-center px-0")}>
       {rail ? <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" /> : <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />}
       {rail ? null : <span aria-hidden="true">{words.sidebar.collapse}</span>}
