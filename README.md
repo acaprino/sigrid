@@ -245,7 +245,7 @@ a drawer.
   turns motion on. An address that opens something, or ends in `#<section>`, starts in the view that holds it.
 - `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
   are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
-  the toolkit's components are dragged from a list into a panel and up and down inside it. The inspector holds the
+  the toolkit's components are dragged from a list into a panel and up and down inside it, or set beside the one before it on the same row. The inspector holds the
   look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
   corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
   motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is

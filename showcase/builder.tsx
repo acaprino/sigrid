@@ -1,7 +1,8 @@
 // The layout builder: a canvas to compose the screen of an app out of the toolkit's parts, by dragging. The canvas is
 // made of panels; a panel is dragged by its tab onto another to join it (tabs), or onto one of its edges to stand
 // beside it, above or below; the line between two panels resizes them. A component is dragged from the list at the
-// left into a panel, and inside a panel up and down. The inspector at the right holds the look: everything the toolkit
+// left into a panel, and inside a panel up and down; one can also be set beside the one before it, on the same row
+// (a title and the view tabs). The inspector at the right holds the look: everything the toolkit
 // lets an app configure (scheme, colours, tone, corners, font, density and each of its measures, icon pack, motion),
 // applied to the whole canvas at once. What is built is kept in this browser and can be copied as data.
 // Development only, like the showcase it lives in. The panels are `dockview-react` (MIT, a development dependency),
@@ -10,7 +11,7 @@ import './builder.css'
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DockviewReact, themeLight, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-react'
-import { Archive, ArrowDown, ArrowUp, GripVertical, Moon, Plus, Reply, RotateCcw, Search, SlidersHorizontal, Sun, Trash2, X } from 'lucide-react'
+import { Archive, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Columns2, GripVertical, Moon, Plus, Reply, RotateCcw, Rows2, Search, SlidersHorizontal, Sun, Trash2, X } from 'lucide-react'
 import {
   AppShell,
   BASE_THEME,
@@ -52,6 +53,7 @@ import {
   applyFont,
   applyTheme,
   cn,
+  Tooltip,
   accentSuggestions,
   duoTheme,
   pageTint,
@@ -134,6 +136,8 @@ const KINDS = {
     ),
   },
   list: { label: 'List', render: () => <ListSample /> },
+  // In a row it takes what the others leave, which pushes what follows it to the end of the row.
+  spacer: { label: 'Space', render: () => <div aria-hidden="true" className="flex h-8 items-center justify-center rounded-sm bg-ink/4 text-2xs text-ink-mute">Space</div> },
   nav: {
     label: 'Navigation',
     render: () => (
@@ -150,6 +154,11 @@ const KINDS = {
   empty: { label: 'Empty state', render: () => <Empty title="Nothing here yet" description="What is added will show in this place." /> },
 } as const satisfies Record<string, { label: string; render: () => React.ReactNode }>
 type Kind = keyof typeof KINDS
+/**
+ * In a row with others these keep the width they have; the rest share what is left. A toolbar has no width of its own
+ * (it measures its container), so left to itself it would be squeezed to nothing beside a title.
+ */
+const NATURAL = new Set<Kind>(['heading', 'primary', 'outline', 'segment', 'badge'])
 const isKind = (value: unknown): value is Kind => typeof value === 'string' && value in KINDS
 
 /* ———— The state: what each panel holds, kept in this browser with the arrangement of the panels ———— */
@@ -361,7 +370,8 @@ function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look
   )
 }
 
-type Item = { uid: string; kind: Kind }
+/** `beside`: the component sits on the row of the one before it, instead of starting a row of its own. */
+type Item = { uid: string; kind: Kind; beside?: boolean | undefined }
 type Contents = Record<string, Item[]>
 type Saved = { layout: unknown; contents: Contents; next: number; look?: Look | undefined }
 const KEY = 'sigrid-layout-builder-1'
@@ -370,13 +380,26 @@ const MOVE = 'application/x-sigrid-item'
 let serial = 0
 const uid = () => `c${Date.now().toString(36)}${(serial++).toString(36)}`
 
+/** The items without the one at `at`. If the one after it was beside it, that one keeps the place in the row the taken one had. */
+function take(items: Item[], at: number): Item[] {
+  const out = items.filter((_, i) => i !== at)
+  const next = out[at]
+  if (next?.beside) out[at] = { ...next, beside: items[at]!.beside }
+  return out
+}
+
 function load(): Saved | null {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const saved = JSON.parse(raw) as Saved
     const contents: Contents = {}
-    for (const [panel, items] of Object.entries(saved.contents ?? {})) contents[panel] = items.filter((item) => isKind(item.kind))
+    for (const [panel, items] of Object.entries(saved.contents ?? {})) {
+      let list = items
+      // Backwards, so each one taken out leaves the indexes of those still to be looked at as they were.
+      for (let i = list.length - 1; i >= 0; i--) if (!isKind(list[i]!.kind)) list = take(list, i)
+      contents[panel] = list
+    }
     // A look saved by an older builder may lack what was added since: the starting look fills it in.
     return { layout: saved.layout, contents, next: Number(saved.next) || 1, look: saved.look ? { ...START_LOOK, ...saved.look, ...(typeof saved.look.accent === 'string' ? {} : { accent: START_LOOK.accent }) } : undefined }
   } catch {
@@ -403,6 +426,8 @@ type Actions = {
   move: (from: string, itemUid: string, to: string, index: number) => void
   remove: (panel: string, itemUid: string) => void
   shift: (panel: string, itemUid: string, by: 1 | -1) => void
+  /** Puts a component on the row of the one before it, or back on a row of its own. */
+  toggleBeside: (panel: string, itemUid: string) => void
 }
 const BuilderContext = React.createContext<Actions | null>(null)
 
@@ -412,6 +437,14 @@ function PanelView({ api }: IDockviewPanelProps) {
   const builder = React.useContext(BuilderContext)
   const panel = api.id
   const items = builder?.contents[panel] ?? []
+  // A component beside the one before it shares its row; the first of a panel always starts one.
+  const rows = items.reduce<Item[][]>((all, item, i) => {
+    if (item.beside && i > 0) all[all.length - 1]!.push(item)
+    else all.push([item])
+    return all
+  }, [])
+  const where = new Map<string, { size: number; place: number }>()
+  for (const row of rows) row.forEach((item, place) => where.set(item.uid, { size: row.length, place }))
   const column = React.useRef<HTMLDivElement>(null)
   /** Where a drop would land: before the item of this index. Null: nothing is being dragged over. */
   const [at, setAt] = React.useState<number | null>(null)
@@ -422,7 +455,10 @@ function PanelView({ api }: IDockviewPanelProps) {
       const box = row.getBoundingClientRect()
       return y < box.top + box.height / 2
     })
-    return index === -1 ? rows.length : index
+    let at = index === -1 ? rows.length : index
+    // A drop is always before a whole row, never between two of its components.
+    while (at < items.length && items[at]!.beside && at > 0) at++
+    return at
   }
   return (
     <div
@@ -454,54 +490,71 @@ function PanelView({ api }: IDockviewPanelProps) {
       }}
     >
       {items.length === 0 && at === null ? <p className="m-auto max-w-48 text-center text-xs text-ink-mute">Drag a component here, or press one in the list while this panel is the active one.</p> : null}
-      {items.map((item, i) => (
-        <React.Fragment key={item.uid}>
-          {at === i ? <DropLine /> : null}
-          <div data-builder-item={item.uid} className="group/item relative rounded-md p-1 hover:bg-ink/4 focus-within:bg-ink/4">
-            {KINDS[item.kind].render()}
-            {/* Hidden with opacity, not with `display`: a grip taken out of the page as its drag starts would end the drag. */}
-            <div className="pointer-events-none absolute top-1 right-1 flex items-center gap-0.5 rounded-md bg-raised p-0.5 opacity-0 shadow-sm group-focus-within/item:pointer-events-auto group-focus-within/item:opacity-100 group-hover/item:pointer-events-auto group-hover/item:opacity-100">
-              {/* The grip is what is dragged: a drag that starts in a field of the component selects its text. */}
-              <span
-                data-builder-grip
-                draggable
-                title="Drag to move"
-                onDragStart={(event) => {
-                  event.dataTransfer.setData(MOVE, JSON.stringify({ panel, uid: item.uid }))
-                  event.dataTransfer.effectAllowed = 'move'
-                  const row = event.currentTarget.closest('[data-builder-item]')
-                  if (row) event.dataTransfer.setDragImage(row, 8, 8)
-                }}
-                className="flex size-6 cursor-grab items-center justify-center rounded-sm text-ink-mute hover:bg-ink/9 active:cursor-grabbing"
-              >
-                <GripVertical aria-hidden="true" className="size-3.5" />
-              </span>
-              <ItemButton label={`Move ${KINDS[item.kind].label} up`} disabled={i === 0} onClick={() => builder?.shift(panel, item.uid, -1)}>
-                <ArrowUp aria-hidden="true" className="size-3.5" />
-              </ItemButton>
-              <ItemButton label={`Move ${KINDS[item.kind].label} down`} disabled={i === items.length - 1} onClick={() => builder?.shift(panel, item.uid, 1)}>
-                <ArrowDown aria-hidden="true" className="size-3.5" />
-              </ItemButton>
-              <ItemButton label={`Remove ${KINDS[item.kind].label}`} onClick={() => builder?.remove(panel, item.uid)}>
-                <X aria-hidden="true" className="size-3.5" />
-              </ItemButton>
-            </div>
-          </div>
-        </React.Fragment>
-      ))}
+      {/* One flat list, so a component keeps its place in the tree (its state, its focus) when it changes row; a break starts the next row. */}
+      <div className="flex flex-wrap items-center gap-x-2">
+        {items.map((item, i) => {
+          const { size, place } = where.get(item.uid) ?? { size: 1, place: 0 }
+          const head = place === 0
+          const label = KINDS[item.kind].label
+          // Beside a neighbour in its own row the arrows go sideways; at the edge of the row they go up and down.
+          const left = item.beside && i > 0
+          const right = items[i + 1]?.beside === true
+          return (
+            <React.Fragment key={item.uid}>
+              {head && i > 0 && at !== i ? <div aria-hidden="true" className="basis-full" /> : null}
+              {head && at === i ? <DropLine /> : null}
+              <div data-builder-item={item.uid} className={cn('group/item relative my-1 min-w-0', size === 1 ? 'flex-1' : NATURAL.has(item.kind) ? 'flex-none' : 'flex-1')}>
+                <div className={cn('min-w-0 rounded-md p-1 group-hover/item:bg-ink/4 group-focus-within/item:bg-ink/4', size > 1 && 'overflow-x-clip')}>{KINDS[item.kind].render()}</div>
+                {/* Hidden with opacity, not with `display`: a grip taken out of the page as its drag starts would end the drag. The bar opens toward the rest of the row, so a narrow component does not cut it off. */}
+                <div className={cn('pointer-events-none absolute top-1 flex items-center gap-0.5 rounded-md bg-raised p-0.5 opacity-0 shadow-sm group-focus-within/item:pointer-events-auto group-focus-within/item:opacity-100 group-hover/item:pointer-events-auto group-hover/item:opacity-100', size > 1 && head ? 'left-1' : 'right-1')}>
+                  {/* The grip is what is dragged: a drag that starts in a field of the component selects its text. */}
+                  <span
+                    data-builder-grip
+                    draggable
+                    title="Drag to move"
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData(MOVE, JSON.stringify({ panel, uid: item.uid }))
+                      event.dataTransfer.effectAllowed = 'move'
+                      const row = event.currentTarget.closest('[data-builder-item]')
+                      if (row) event.dataTransfer.setDragImage(row, 8, 8)
+                    }}
+                    className="flex size-6 cursor-grab items-center justify-center rounded-sm text-ink-mute hover:bg-ink/9 active:cursor-grabbing"
+                  >
+                    <GripVertical aria-hidden="true" className="size-3.5" />
+                  </span>
+                  <ItemButton label={left ? `Put ${label} on a row of its own` : `Put ${label} beside the one before`} disabled={i === 0} onClick={() => builder?.toggleBeside(panel, item.uid)}>
+                    {left ? <Rows2 aria-hidden="true" className="size-3.5" /> : <Columns2 aria-hidden="true" className="size-3.5" />}
+                  </ItemButton>
+                  <ItemButton label={`Move ${label} ${left ? 'left' : 'up'}`} disabled={i === 0} onClick={() => builder?.shift(panel, item.uid, -1)}>
+                    {left ? <ArrowLeft aria-hidden="true" className="size-3.5" /> : <ArrowUp aria-hidden="true" className="size-3.5" />}
+                  </ItemButton>
+                  <ItemButton label={`Move ${label} ${right ? 'right' : 'down'}`} disabled={i === items.length - 1} onClick={() => builder?.shift(panel, item.uid, 1)}>
+                    {right ? <ArrowRight aria-hidden="true" className="size-3.5" /> : <ArrowDown aria-hidden="true" className="size-3.5" />}
+                  </ItemButton>
+                  <ItemButton label={`Remove ${label}`} onClick={() => builder?.remove(panel, item.uid)}>
+                    <X aria-hidden="true" className="size-3.5" />
+                  </ItemButton>
+                </div>
+              </div>
+            </React.Fragment>
+          )
+        })}
+      </div>
       {at === items.length ? <DropLine /> : null}
     </div>
   )
 }
 
 /** Where the dragged component will land: a line in the accent. */
-const DropLine = () => <div aria-hidden="true" data-builder-drop className="h-0.5 shrink-0 rounded-full bg-primary" />
+const DropLine = () => <div aria-hidden="true" data-builder-drop className="h-0.5 shrink-0 basis-full rounded-full bg-primary" />
 
 function ItemButton({ label, disabled, onClick, children }: { label: string; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" aria-label={label} disabled={disabled} onClick={onClick} className="flex size-6 items-center justify-center rounded-sm text-ink-soft outline-hidden hover:bg-ink/9 hover:text-ink focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40">
-      {children}
-    </button>
+    <Tooltip label={label}>
+      <button type="button" aria-label={label} disabled={disabled} onClick={onClick} className="flex size-6 items-center justify-center rounded-sm text-ink-soft outline-hidden hover:bg-ink/9 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40">
+        {children}
+      </button>
+    </Tooltip>
   )
 }
 
@@ -553,21 +606,37 @@ function Builder() {
           const source = now[from] ?? []
           const at = source.findIndex((item) => item.uid === itemUid)
           if (at < 0) return now
+          // Dropped where it already is: nothing changes, and its row stays.
+          if (from === to && (index === at || index === at + 1)) return now
           const item = source[at]!
-          const without = source.filter((_, i) => i !== at)
+          const without = take(source, at)
           const target = from === to ? without : [...(now[to] ?? [])]
-          // Inside one panel, taking the item out moves what follows it up by one.
-          target.splice(from === to && at < index ? index - 1 : index, 0, item)
+          // Inside one panel, taking the item out moves what follows it up by one. It lands on a row of its own.
+          target.splice(from === to && at < index ? index - 1 : index, 0, { ...item, beside: undefined })
           return { ...now, [from]: without, [to]: target }
         }),
-      remove: (panel, itemUid) => change((now) => ({ ...now, [panel]: (now[panel] ?? []).filter((item) => item.uid !== itemUid) })),
+      remove: (panel, itemUid) =>
+        change((now) => {
+          const items = now[panel] ?? []
+          const at = items.findIndex((item) => item.uid === itemUid)
+          return at < 0 ? now : { ...now, [panel]: take(items, at) }
+        }),
       shift: (panel, itemUid, by) =>
         change((now) => {
           const items = [...(now[panel] ?? [])]
           const at = items.findIndex((item) => item.uid === itemUid)
           const to = at + by
           if (at < 0 || to < 0 || to >= items.length) return now
-          ;[items[at], items[to]] = [items[to]!, items[at]!]
+          // The two change places and the rows stay as they are: what says who is beside whom belongs to the place.
+          const a = items[at]!
+          const b = items[to]!
+          items[at] = { ...b, beside: a.beside }
+          items[to] = { ...a, beside: b.beside }
+          return { ...now, [panel]: items }
+        }),
+      toggleBeside: (panel, itemUid) =>
+        change((now) => {
+          const items = (now[panel] ?? []).map((item, i) => (item.uid === itemUid && i > 0 ? { ...item, beside: item.beside ? undefined : true } : item))
           return { ...now, [panel]: items }
         }),
     }
@@ -699,7 +768,7 @@ function Builder() {
               {panels} {panels === 1 ? 'panel' : 'panels'}, {total} {total === 1 ? 'component' : 'components'}
             </span>
             <span role="status">{said}</span>
-            <span className="ms-auto max-md:hidden">Drag a tab onto a panel to join it, onto an edge to split; drag the line between two panels to resize.</span>
+            <span className="ms-auto max-md:hidden">Drag a tab onto a panel to join it, onto an edge to split; drag the line between two panels to resize. Hover a component to set it beside the one before.</span>
           </>
         }
       >
