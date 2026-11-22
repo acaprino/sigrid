@@ -21,7 +21,7 @@ import { Checkbox } from '../components/ui/checkbox'
 import { Input } from '../components/ui/input'
 import { useEntrance } from './motion'
 import { cn } from '../lib/utils'
-import { FOCUS_RING_BORDER } from '../lib/focus'
+import { FOCUS_RING } from '../lib/focus'
 
 const DEFAULT_LOCALE = 'en-US'
 const longDates = new Map<string, Intl.DateTimeFormat>()
@@ -50,8 +50,8 @@ const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
 const TRIGGER_CLASS = cn(
-  'flex h-(--control-md) w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-input bg-transparent px-(--pad-sm) py-1 text-left text-base md:text-sm',
-  FOCUS_RING_BORDER,
+  'flex h-(--control-md) w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-line bg-transparent px-(--pad-sm) py-1 text-left text-base md:text-sm',
+  FOCUS_RING,
 )
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.

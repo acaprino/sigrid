@@ -102,7 +102,7 @@ const ITEM_CLASSES = {
     // 18px, as the checkbox (Park's sm control for both).
     "peer relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-full border border-input bg-paper after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3.5",
     FOCUS_RING,
-    "aria-invalid:border-destructive data-checked:border-ink"
+    "aria-invalid:border-destructive data-checked:border-primary"
   ),
   // 24 px, 44 with touch; `ink` selection ring on `paper` (2 px, detached by 2 px) and the focus ring (accent text, R8)
   // at 6 px: the 2px offset of R8 is taken by the selection ring, so focus sits outside it (approved exception).
@@ -138,7 +138,7 @@ function RadioGroupItem({ value, disabled = false, className, id, children, vari
     >
       {variant === "radio" ? (
         <RadioPrimitive.Indicator data-slot="radio-group-indicator" className="flex size-full items-center justify-center">
-          <span aria-hidden="true" className="block size-2 rounded-full bg-ink" />
+          <span aria-hidden="true" className="block size-2 rounded-full bg-primary" />
         </RadioPrimitive.Indicator>
       ) : null}
     </RadioPrimitive.Root>

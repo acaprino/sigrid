@@ -22,7 +22,7 @@ import { X } from 'lucide-react'
 import { Badge } from '../components/ui/badge'
 import { Tooltip } from '../components/ui/tooltip'
 import { cn } from '../lib/utils'
-import { FOCUS_RING, FOCUS_WITHIN_RING_BORDER } from '../lib/focus'
+import { FOCUS_RING, FOCUS_WITHIN_RING } from '../lib/focus'
 import { TAG_PILL, tagColorAttrs } from './tag-color'
 import { useWords, type Words } from '../words'
 
@@ -144,7 +144,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
   const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm pointer-coarse:min-h-11 outline-none placeholder:text-muted-foreground" />
   return (
     // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field; with the density it is half of what the control height leaves (30px: the chip and the two borders)
-    <TagsInput.Control className={cn('flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 rounded-md border border-input px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0', FOCUS_WITHIN_RING_BORDER)}>
+    <TagsInput.Control className={cn('flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 rounded-md border border-line px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0', FOCUS_WITHIN_RING)}>
       {value.map((tag, index) => {
         const name = display?.(tag) ?? tag
         const wrong = invalid?.(tag) === true

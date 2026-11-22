@@ -1,6 +1,7 @@
 // Park UI (MIT) field 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts)
-// From Park's `field` recipe comes the form: a column with a 6px gap, the label in 14px medium ink, the helper text in
-// 14px muted, the error text in 14px in the destructive red, and the mark of a required field after the label. Ours:
+// From Park's `field` recipe comes the form: a column with a 6px gap, the label in 14px medium ink, and the mark of a
+// required field after the label. Ours (the owner's design of 2026-11-22): the helper text is 12px muted, and the error
+// is a box on the soft destructive fill with the text in the destructive red, while the control keeps its border;
 // the required mark is the ink, not the accent (R2), and hidden from screen readers (the control says `required`).
 // The wiring is the toolkit's own, so any of its controls can sit inside (`Input`, `Textarea`, `Select`, `DateField`,
 // `ChipsInput`, `Switch`): the one child receives the `id` the label points to, `aria-describedby` with the helper or
@@ -41,7 +42,12 @@ function FormField({ label, help, error, required, id, className, children }: Fo
   const noteId = `${controlId}-note`
   const described = [children.props["aria-describedby"], hasError || hasHelp ? noteId : undefined].filter(Boolean).join(" ")
   return (
-    <div data-slot="field" data-invalid={hasError || undefined} className={cn("flex flex-col gap-1.5", className)}>
+    <div
+      data-slot="field"
+      data-invalid={hasError || undefined}
+      // With an error the box under the control says what is wrong: the control keeps its own border, not a red one.
+      className={cn("flex flex-col gap-1.5 [&[data-invalid]_[aria-invalid=true]]:border-line", className)}
+    >
       <label data-slot="field-label" htmlFor={controlId} className="flex items-center gap-0.5 text-start text-sm font-medium text-ink select-none">
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
@@ -53,11 +59,11 @@ function FormField({ label, help, error, required, id, className, children }: Fo
         ...(required ? { required: true } : {}),
       })}
       {hasError ? (
-        <p data-slot="field-error" id={noteId} role="alert" className="text-sm text-destructive">
+        <p data-slot="field-error" id={noteId} role="alert" className="rounded-md bg-destructive-soft px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       ) : hasHelp ? (
-        <p data-slot="field-help" id={noteId} className="text-sm text-muted-foreground">
+        <p data-slot="field-help" id={noteId} className="text-xs text-muted-foreground">
           {help}
         </p>
       ) : null}

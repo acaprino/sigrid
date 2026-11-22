@@ -184,14 +184,15 @@ test('chips: each chip is a badge with a named remove button that keeps focus in
   expect(document.querySelector('#__live-region__')?.textContent).toBe('Label email removed')
 })
 
-test('chips: the placeholder shows only with no tags; the box border keeps the 3:1 token', () => {
+test('chips: the placeholder shows only with no tags; the box border is the light divider colour, as the other fields', () => {
   const { unmount } = render(<Chips />)
   expect(screen.getByPlaceholderText('Type, then Enter or comma')).toBeTruthy()
   unmount()
   render(<Chips initial={['a']} />)
   expect(screen.queryByPlaceholderText('Type, then Enter or comma')).toBeNull()
   const box = screen.getByRole('textbox', { name: 'Labels' }).parentElement as HTMLElement
-  expect(box.className).toContain('border-input')
+  expect(box.className).toContain('border-line')
+  expect(box.className).not.toContain('border-input')
 })
 
 // The remove button of a chip, named and with its tooltip.

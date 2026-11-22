@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Input as InputPrimitive } from '@base-ui/react/input'
 import { cn } from '../../lib/utils'
-import { FOCUS_RING_BORDER } from '../../lib/focus'
+import { FOCUS_RING } from '../../lib/focus'
 
 // The form is Park's `textarea` recipe, md size: l2 corners, 12px of side padding and 7px above and below, so one line
 // is as tall as a field (40px). The border stays `border-input` (3:1), not Park's lighter one.
@@ -13,8 +13,8 @@ import { FOCUS_RING_BORDER } from '../../lib/focus'
 // SmoothUI's default: `rows` and `resize-*` are left to whoever uses the component.
 const TEXTAREA_CLASS = cn(
   // design-check-ignore-next-line dimension-value: Park's md textarea padding (7px), so one line with its 1px border is 40px like a field
-  'flex field-sizing-content min-h-16 w-full rounded-md border border-input bg-transparent px-(--pad-sm) py-[7px] text-base placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm',
-  FOCUS_RING_BORDER,
+  'flex field-sizing-content min-h-16 w-full rounded-md border border-line bg-transparent px-(--pad-sm) py-[7px] text-base placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm',
+  FOCUS_RING,
 )
 
 type PrimitiveProps = React.ComponentProps<typeof InputPrimitive>

@@ -571,7 +571,7 @@ function Fields() {
 function Switches({ animated }: { animated: boolean }) {
   const [sync, setSync] = React.useState(true)
   return (
-    <Section id="switch" title="Switch" note="An on/off setting that takes effect at once. The track is the control border colour when off and the ink when on; the thumb slides only with animations.">
+    <Section id="switch" title="Switch" note="An on/off setting that takes effect at once. The track is the control border colour when off and the accent when on; the thumb slides only with animations.">
       <Row label="states">
         <Cell label="off">
           <Switch aria-label="Sample off" animated={animated} />
@@ -720,7 +720,7 @@ function Navigation() {
     </NavList>
   )
   return (
-    <Section id="nav-list" title="NavList and Count" note="Rows of a navigation: an icon slot that stays when empty (R6), the selection tint on the current row and no bar (R1), counts as plain tabular numbers (R5).">
+    <Section id="nav-list" title="NavList and Count" note="Rows of a navigation: an icon slot that stays when empty (R6), the selection tint and a short accent bar on the current row (R1), counts as pills, in the accent on the current row (R5).">
       <Row label="on the page">{list('page')}</Row>
       <Row label="on the sidebar">
         <div className="rounded-lg bg-sidebar-paper p-2">{list('sidebar')}</div>

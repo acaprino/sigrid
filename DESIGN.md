@@ -36,24 +36,23 @@ x-zsd:
       - "Owner revision of 2026-11-20, evening: the colours belong to the app («il toolkit deve solo avere utilities di theming parametrico»): the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icon packs are Lucide, Fluent Color and Emoji."
   preferences:
     must-use:
-      - "R1: the chosen row of a list or of the navigation uses the theme's selection tint and stronger text, so the eye finds where it is; one selection tint for each view."
+      - "R1: the chosen row of a list or of the navigation has the selection tint, stronger text and a short accent bar; one selection tint for each view."
       - "R2: the accent tells the ADHD eye where to look and what to click: the primary action, add actions, the current selection, the icons of the main views, progress, today and unread state, and focus. Everything else stays neutral, so the accent keeps its pull."
-      - "R3: one solid primary button on each screen; other actions are outline or text buttons."
+      - "R3: one solid primary button on each screen, and a solid red one to delete; other actions are outline or text buttons."
       - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
-      - "R5: counts are plain tabular numbers; key hints are plain 12px text, hidden at phone widths; pills only for labels."
+      - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text, hidden at phone widths."
       - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the icon pack the user chose in Settings, line or coloured; an empty slot keeps alignment."
       - "R11: the default tone is Vivid: the accent's fills, the selection and the data colours more saturated, the lightness as the theme was designed (owner, 2026-11-20, from a comparison board). The settings offer three tones, Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and the lanes, so the three read apart at a glance (owner, 2026-11-20: «cambiando tono non vedo cambiamenti»)."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R7: radii 4, 6 and 10px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36, 32 or 28px (compact 32, 28 or 24px; large 40, 36 or 32px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
-      - "R8: the focus ring is 2px in the accent text colour, at least 3:1 in every theme, on every control: on its border, or 2px away."
+      - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
     must-avoid:
-      - Side rails and accent bars on rows, cards or fields.
+      - Side rails and accent bars on cards or fields.
       - A border and a shadow on the same element.
       - Key hints drawn as boxes.
-      - Pills or badges for counts.
       - Sparkles, bolts or info icons as decoration.
       - Gradients.
       - Glass or blur effects.
@@ -63,14 +62,13 @@ x-zsd:
       - Data colours as filled blocks.
     preserve:
       - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default and the dark column stays an option."
-      - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
+      - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22)."
       - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light mode, light in dark."
       - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; in a picker the colour is the content, not a data label."
       - "One backdrop for every overlay that dims (sheet, drawer, dialog, viewer): the drop colour at 40%."
-      - "The checkbox keeps l1; --radius-check defaults to 9999px, so an app can round its own boxes (an app setting)."
       - "Two font roles: the interface stack and the monospace stack of inline code."
   implementation:
     token-source: src/styles/theme.css
@@ -304,8 +302,8 @@ components:
     padding: "{spacing.pad-md}"
     height: "{spacing.control-md}"
   button-destructive:
-    backgroundColor: "{colors.destructive-soft}"
-    textColor: "{colors.destructive}"
+    backgroundColor: "{colors.destructive}"
+    textColor: "{colors.on-destructive}"
     typography: "{typography.label-md}"
     rounded: "{rounded.l2}"
     padding: "{spacing.pad-md}"
@@ -317,9 +315,13 @@ components:
     rounded: "{rounded.l2}"
     padding: "{spacing.md}"
     height: "{spacing.control-md}"
+  input-error:
+    backgroundColor: "{colors.destructive-soft}"
+    textColor: "{colors.destructive}"
+    rounded: "{rounded.l2}"
   checkbox-checked:
-    backgroundColor: "{colors.on-surface}"
-    textColor: "{colors.surface}"
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
     rounded: "{rounded.l1}"
   segment-thumb:
     backgroundColor: "{colors.surface-raised}"
@@ -420,7 +422,7 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 - `on-primary`: Use for text on `primary` and `primary-hover`.
 - `accent-text`: Use for today, unread, add actions, progress and the focus ring.
 - `accent-soft`: Use for the accent tint behind accent text.
-- `selected`: Use for the current selection and the navigation's chosen row, one tint per view.
+- `selected`: Use for the current selection, one tint per view.
 - `on-selected`: Use for text on `selected`.
 - `surface`: Use for the page, inputs and outline buttons.
 - `on-surface`: Use for body text, checked boxes, the tooltip and the toast surface.
@@ -428,11 +430,11 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 - `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb.
 - `text-soft`: Use for secondary text and the label of the plain button.
 - `text-muted`: Use for placeholders, descriptions, metadata and key hints. It keeps 4.5:1.
-- `divider`: Use for decorative lines only. It stays below 3:1.
-- `control-border`: Use for the border of inputs, selects, checkboxes and outline buttons. It keeps 3:1.
+- `divider`: Use for lines and the border of inputs, selects and outline buttons.
+- `control-border`: Use for checkbox and radio borders and the switch track. It keeps 3:1.
 - `destructive`: Use for destructive text and invalid borders.
 - `on-destructive`: Use for text on a filled `destructive` surface.
-- `destructive-soft`: Use for the fill of the destructive button.
+- `destructive-soft`: Use for the error box of a field and an invalid chip.
 - `subtle-fill`: Use for quiet fills: the secondary button, label pills and chips (`QUIET_CHIP`). The code draws it as the ink at 6%: the value is that fill over `surface`.
 - `backdrop`: Use behind every overlay that dims the page (`BACKDROP`). It is the drop colour at 40%.
 
@@ -486,13 +488,13 @@ The checkbox keeps `l1`. `--radius-check` defaults to `full`, so an app can roun
 
 ### Button
 
-Use `button-primary` for the one solid action of a screen and `button-primary-hover` under the pointer. Use `button-outline` or `button-secondary` for other actions, `button-ghost` for the weakest, and `button-destructive` for a delete. Disabled buttons drop to half opacity and take no pointer.
+Use `button-primary` for the one solid action of a screen and `button-primary-hover` under the pointer. Use `button-outline` or `button-secondary` for other actions, `button-ghost` for the weakest, `button-destructive` to delete. Disabled buttons drop to half opacity and take no pointer.
 
-With `loading` a button keeps its size and focus and ignores clicks; `loadingText` can replace the label. There is no spinner.
+With `loading` a button keeps its size and focus and ignores clicks; `loadingText` can replace the label. No spinner.
 
 ### Input
 
-Use `input` with a visible label. An invalid value turns the border `destructive`. Selects, date fields and the chips field use the same border and height.
+Use `input` with a visible label; an error is the `input-error` box under it. Selects, date fields and the chips field share its border and height.
 
 ### Select
 
@@ -500,7 +502,7 @@ With `invalid` the border is `destructive`. With `disabled` the select drops to 
 
 ### Checkbox
 
-Use `checkbox-checked` for the checked and indeterminate boxes. The fill is ink, not the accent.
+Use `checkbox-checked` for the checked and indeterminate boxes, the radio dot and the switch when on.
 
 ### Segment
 
@@ -508,7 +510,7 @@ Use `segment-thumb` for the chosen item of a single-choice group. The thumb slid
 
 ### Label
 
-Use `label-pill` for a user label, with a dot in its colour. Never use a pill for a count.
+Use `label-pill` for a user label, with a dot in its colour.
 
 ### Accent
 
@@ -516,7 +518,7 @@ Use `accent-label` only for today or unread state.
 
 ### Selection
 
-Use `selection-row` with stronger text for the current selection and the navigation's chosen row, one tint for each view. A hovered item uses `surface-ground`.
+Use `selection-row` with stronger text and a short accent bar for the chosen row, one tint for each view. A hovered row takes a share of the tint.
 
 ### Description
 
@@ -524,7 +526,7 @@ Use `description` for the sentence under a title.
 
 ### Control
 
-Use `control-boundary` as the border colour of inputs, selects, checkboxes and outline buttons.
+Use `control-boundary` as the border of checkboxes and radios, `separator` as that of inputs, selects and outline buttons.
 
 ### Separator
 

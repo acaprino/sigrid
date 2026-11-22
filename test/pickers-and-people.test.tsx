@@ -182,10 +182,10 @@ describe('Combobox', () => {
     expect(options()).toHaveLength(3)
   })
 
-  test('the form of the field: the control border, 40px by the density, 44px with a coarse pointer; invalid turns the border', () => {
+  test('the form of the field: the light divider border, its height by the density, 44px with a coarse pointer; invalid turns the border', () => {
     const { rerender } = render(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} />)
     const c = classes(screen.getByRole('combobox'))
-    for (const cls of ['h-(--control-md)', 'border-input', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
+    for (const cls of ['h-(--control-md)', 'border-line', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
     rerender(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} aria-invalid />)
     expect(classes(screen.getByRole('combobox'))).toContain('border-destructive')
   })

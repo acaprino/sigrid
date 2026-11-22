@@ -222,11 +222,11 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
     expect(bad).toEqual([])
   })
 
-  test('selects and the tags box use the control border, like the other fields', () => {
+  test('selects and the tags box use the light divider border, like the other fields (the design of 2026-11-22)', () => {
     const line = (file: string, needle: string) => readFileSync(`${root}${file}`, 'utf8').split('\n').find((l) => l.includes(needle)) ?? ''
     // The native `<select>`s became Base UI's Select: the border sits on its button.
-    expect(line('src/components/ui/select.tsx', 'flex w-full items-center justify-between')).toContain('border-input')
-    expect(line('src/internal/chips.tsx', 'flex min-h-(--control-md) w-full')).toContain('border-input')
+    expect(line('src/components/ui/select.tsx', 'flex w-full items-center justify-between')).toContain('border-line')
+    expect(line('src/internal/chips.tsx', 'flex min-h-(--control-md) w-full')).toContain('border-line')
   })
 })
 

@@ -134,11 +134,11 @@ test('disabled: Base UI disabled (no opening, out of the Tab order) with the sta
   expect(onValueChange).not.toHaveBeenCalled()
 })
 
-test('invalid: aria-invalid and the destructive control border, also while open; without it nothing changes', async () => {
+test('invalid: aria-invalid and the destructive border, also while open; without it the light divider border', async () => {
   const { rerender } = render(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} />)
   const trigger = () => screen.getByRole('combobox', { name: 'Status' })
   expect(trigger().getAttribute('aria-invalid')).toBeNull()
-  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-input', 'data-[popup-open]:border-ink']))
+  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-line', 'data-[popup-open]:border-ink']))
   expect(trigger().className).not.toMatch(/destructive|opacity-50/)
   rerender(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} invalid />)
   expect(trigger().getAttribute('aria-invalid')).toBe('true')

@@ -14,7 +14,9 @@ as installed) and from Park UI's recipes (`packages/preset/src/recipes/*.ts` at 
 - R5 counts are plain tabular numbers; key hints plain 12px text, hidden at phone widths; pills only for labels.
 - R6 an icon only when it tells something; an empty slot rather than a repeated icon; no decorative sparkles, bolts or info icons.
 - R7 radii 4/6/10 (2/4/6 when this inventory was made) (round only for avatars, dots, switches); 4px spacing grid; heights 36/32/28 (at normal density; 32/28/24 at compact, 40/36/32 at large; 40/36/32 at normal when this inventory was made: added after this inventory, `src/density.ts`); icons 16/14; weights 400/500/600; text sizes from tokens.
-- R8 focus ring 2px in the accent-text colour, at least 3:1 in every theme, on every focusable control: on the border of a control that has one (fields, selects, outline buttons; since 2026-11-22), 2px away otherwise (2px away everywhere when this inventory was made).
+Since 2026-11-22 the owner's design changed several of the rules below: the chosen row has a short accent bar (R1), a destructive button is solid red (R3), counts on a navigation row are pills (R5), checkbox, radio and switch are filled with the accent, fields and outline buttons have the light divider border, and a field's error is a box. `DESIGN.md` states the rules as they are now; the findings below are as they were when this inventory was made.
+
+- R8 focus ring 2px in the accent-text colour, 2px offset, at least 3:1 in every theme, on every focusable control.
 - R9 accent text at least 4.5:1 on both page backgrounds in every theme; step 12 where step 11 falls short.
 - R10 data colours (projects, areas, labels, events) as 8px dots only.
 - Decisions: Park native form (md 40px, 14px text), light sidebar by default; control borders at 3:1; toasts an inverted column (dark in light mode, light in dark mode) of at most 3, newest at the bottom; motion only on a gesture, no loops but skeletons; colours only from the theme engine, Park/Radix 12-step palettes as the target.

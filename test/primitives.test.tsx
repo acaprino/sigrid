@@ -9,10 +9,19 @@ test('Button default is the accent action', () => {
   expect(b.getAttribute('type')).toBe('button')
 })
 
-test('Button destructive uses the semantic red text and a soft background', () => {
+test('Button outline has the light divider border, and its focus ring is the offset one, as on every control', () => {
+  render(<Button variant="outline">Reply</Button>)
+  const c = screen.getByRole('button').className.split(' ')
+  expect(c).toContain('border-line')
+  expect(c).not.toContain('border-input')
+  expect(c).toContain('focus-visible:outline-offset-2')
+  expect(c.some((x) => x.includes('-outline-offset-1'))).toBe(false)
+})
+
+test('Button destructive is a solid red fill with the text colour paired with it', () => {
   render(<Button variant="destructive">Delete</Button>)
   expect(screen.getByRole('button').className.split(' ')).toEqual(expect.arrayContaining([
-    'bg-destructive-soft', 'text-destructive', 'hover:' + 'bg-destructive-soft/80',
+    'bg-destructive', 'text-destructive-foreground', 'hover:' + 'bg-destructive/90',
   ]))
 })
 
