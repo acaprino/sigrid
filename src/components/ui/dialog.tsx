@@ -18,7 +18,7 @@ import { XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
-import { BACKDROP, ignoreToasts } from "../../internal/overlay"
+import { BACKDROP, ignoreToasts, inTitleBar } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
 import { useEntrance } from "../../internal/motion"
 
@@ -44,7 +44,9 @@ function Dialog({ onOpenChange, ...props }: RootProps) {
   return (
     <DialogPrimitive.Root
       onOpenChange={(open, details) => {
-        if (!open && isToastPress(details)) {
+        // Nor does a press on the window's bar: in a desktop frame the bar is outside the backdrop, and moving the
+        // window is not leaving the dialog.
+        if (!open && (isToastPress(details) || (details.reason === "outside-press" && inTitleBar(details.event.target)))) {
           details.cancel()
           return
         }

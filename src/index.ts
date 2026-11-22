@@ -5,7 +5,7 @@
 
 // Theme engine, catalog and colours: the single source of truth for colours.
 export { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from './colors'
-export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, type ThemePick } from './themes'
+export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, toneHasEffect, type ThemePick } from './themes'
 export { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId, type Density, type DensityDef, type DensityId, type DensityOverride } from './density'
 export { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeRadii, isThemeShape, type FontDef, type FontId, type PaletteProfile, type SidebarKind, type Surfaces, type ThemeDef, type ThemeRadii, type ThemeShape } from './theme-catalog'
 export { FIXED, STATUS, contrast, fit, luminance, over, themeTokens, toHex, tokensFor, type Oklch, type ThemeScheme, type ThemeTokens } from './theme-engine'
@@ -72,6 +72,7 @@ export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type Da
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, usePageDrop, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
 export { DurationField, type DurationFieldProps, type DurationParts } from './internal/duration-field'
 export { FileDrop, type FileDropProps, type FileDropReason, type FileDropRefusal } from './internal/file-drop'
+export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions } from './internal/desktop-guard'
 export { useEdgeAutoScroll } from './internal/edge-scroll'
 export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './internal/kinds'
 export { splitLines } from './internal/lines'
@@ -83,6 +84,7 @@ export { TAG_COLOR, TAG_HUES, TAG_PILL, tagColorAttrs, tagHue } from './internal
 export { NeedThumbnail, Thumbnail, safeThumbnail, type ThumbnailProps } from './internal/thumbnail'
 export { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, useIconPack, type IconArt, type IconDrawing, type IconName, type IconPack, type IconSet } from './icons'
 export { PALETTE_COMBOS, palettePick, paletteTheme, type PaletteCombo, type PalettePick } from './palette'
+export { HARMONIES, accentSuggestions, duoTheme, pageTint, type AccentSuggestion, type DuoPick, type Harmony } from './harmony'
 export { SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, type ColorThemePick, type SpotKind } from './color-theme'
 export { ThemeGallery, type ThemeGalleryProps } from './components/ThemeGallery'
 export { ColorMatch, type ColorMatchProps } from './components/ColorMatch'

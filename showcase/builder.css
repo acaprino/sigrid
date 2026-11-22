@@ -1,0 +1,52 @@
+/* The layout builder: the showcase's Tailwind and the docking library's stylesheet, then the library's variables set
+   from the toolkit's tokens, so the canvas follows the theme, the scheme and the corner shape like every other part. */
+@import "./showcase.css";
+@import "dockview-react/dist/styles/dockview.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.sigrid-dock .dockview-theme-light {
+  --dv-group-view-background-color: var(--color-paper);
+  --dv-tabs-and-actions-container-background-color: var(--color-paper-2);
+  --dv-tabs-and-actions-container-height: var(--control-sm);
+  --dv-tabs-and-actions-container-font-size: 0.8125rem;
+  --dv-activegroup-visiblepanel-tab-background-color: var(--color-paper);
+  --dv-activegroup-visiblepanel-tab-color: var(--color-ink);
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-activegroup-hiddenpanel-tab-color: var(--color-ink-mute);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--color-paper);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--color-ink-soft);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--color-ink-mute);
+  --dv-separator-border: var(--color-line);
+  --dv-paneview-header-border-color: var(--color-line);
+  --dv-tab-divider-color: var(--color-line);
+  --dv-drag-over-background-color: color-mix(in oklab, var(--color-selected) 70%, transparent);
+  --dv-drag-over-border-color: var(--color-ring);
+  --dv-edge-dock-indicator-color: var(--color-ring);
+  --dv-icon-hover-background-color: color-mix(in oklab, var(--color-ink) 9%, transparent);
+  --dv-paneview-active-outline-color: var(--color-ring);
+  --dv-tab-border-radius: var(--radius-md);
+  --dv-floating-box-shadow: var(--shadow-lg);
+  --dv-floating-border: 0;
+  --dv-floating-group-border: 0;
+  --dv-floating-titlebar-background-color: var(--color-paper-2);
+  --dv-floating-titlebar-border-bottom: 1px solid var(--color-line);
+  --dv-tabs-container-scrollbar-color: var(--color-ink-mute);
+  --dv-scrollbar-background-color: color-mix(in oklab, var(--color-ink) 30%, transparent);
+  --dv-context-menu-background-color: var(--color-raised);
+  --dv-context-menu-color: var(--color-ink);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--color-ring);
+  --dv-dnd-compass-color: var(--color-raised);
+  --dv-dnd-compass-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  --dv-dnd-compass-edge-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  --dv-dnd-compass-active-cell-color: var(--color-ring);
+  --dv-smart-guides-color: var(--color-ring);
+  --dv-smart-guides-preview-color: color-mix(in oklab, var(--color-selected) 70%, transparent);
+  color: var(--color-ink);
+}

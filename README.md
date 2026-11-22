@@ -56,7 +56,12 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
    for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
    `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
-   component lets a user pick both (the showcase has it in its theme gallery).
+   component lets a user pick both (the showcase has it in its theme gallery). A theme can also be made from a base
+   and an accent (`src/harmony.ts`): `pageTint` brings any base colour to a very light tone, the page (no base is the
+   white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
+   OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
+   recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
+   The layout builder's «Look» panel has it: choosing a base suggests its accents.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
@@ -129,6 +134,13 @@ const win = getCurrentWindow()
   </Toolbar>
 </TitleBar>
 ```
+
+Two more switches make a page behave as a program in a window of its own; a page in a browser tab leaves them off.
+`AppShell desktop` keeps the chrome unselectable with the arrow cursor (the content, the inspector's body, fields and
+`data-selectable` stay selectable) and opens every overlay under the title bar, so the window can still be moved and
+closed while a dialog is open. `useDesktopGuard()` takes away the browser's own keys (reload, print, find, the
+developer tools), its right-press menu outside fields, the mouse's back and forward buttons and the dragging of
+pictures and links; `ownKeysIn` names a terminal or an editor that keeps its keys.
 
 The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
 `TitleBar size="compact"` is the thin caption of a classic desktop program (32px), and the toolbar inside it takes
@@ -227,6 +239,14 @@ a drawer.
   part of the package); `?theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the theme (`base`, or a
   palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`; the toolbar
   has a switch for it too), opens what opens on a gesture and turns motion on.
+- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
+  are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
+  the toolkit's components are dragged from a list into a panel and up and down inside it. The inspector holds the
+  look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
+  corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
+  motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is
+  replaced by a sentence that says why (`toneHasEffect`). What is built, look included, is kept in the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
+  pinned), drawn with the toolkit's tokens.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
   findings in `design-check.known.json`) use the copy of the tool in `tools/zero-slop-design/` (v0.2.1, MIT); the
