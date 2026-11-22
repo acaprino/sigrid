@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from 'react'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
 
-// A small Markdown of our own, for the title and notes of a task. No dependencies and no `innerHTML`: the text becomes
+// A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes
 // React elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the
 // package does it): they are shown underlined, with the address as a hint.
 //
@@ -92,7 +92,7 @@ function plainOf(nodes: Inline[]): string {
 
 /**
  * The text without the inline marks: for accessible names, suggestions and wherever the plain title is needed. Like
- * `InlineMarkdown` (and like Rust's `plain_title`) it does not touch the block marks: «1. Call» stays «1. Call».
+ * `InlineMarkdown` it does not touch the block marks: «1. Call» stays «1. Call».
  */
 export function plainText(src: string): string {
   return src

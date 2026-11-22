@@ -51,7 +51,7 @@ test('blocks: paragraphs, lists, checkboxes, headings and quotes', () => {
 
 test('plainText removes the marks for names and tooltips', () => {
   expect(plainText('**Meeting** with *Marco*')).toBe('Meeting with Marco')
-  // The block marks stay: the title shows them like this (InlineMarkdown) and so does Rust.
+  // The block marks stay: the title shows them like this (InlineMarkdown).
   expect(plainText('1. Call **Marco**')).toBe('1. Call Marco')
   expect(hasMarkdown('1. Call Marco')).toBe(false)
 })

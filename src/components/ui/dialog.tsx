@@ -9,7 +9,7 @@
 // From the SmoothUI source we keep the Base UI primitives (`Root`, `Portal`, `Backdrop`, `Popup`, `Title`, `Description`,
 // `Close`), the layout parts (`DialogHeader`, `DialogFooter`) and the panel structure. Removed: `AlertDialog`,
 // `trigger` and the internal state with `AnimatePresence`, the staggered entrance of the children, the spring and the
-// rotation of the X on hover, the blur of the page behind the window (decorative effects). The public `Dialog` has no `animated` prop (ADR-0009):
+// rotation of the X on hover, the blur of the page behind the window (decorative effects). The public `Dialog` has no `animated` prop:
 // here there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"

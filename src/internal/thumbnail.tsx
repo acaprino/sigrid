@@ -4,7 +4,7 @@ import { cn } from '../lib/utils'
 
 /**
  * The only sources a thumbnail accepts: a JPEG or PNG image in base64, whole in the string. No `javascript:`,
- * `data:text/html`, `data:image/svg+xml` (it can carry script), `http:` or `blob:`: the thumbnail comes from app-core as
+ * `data:text/html`, `data:image/svg+xml` (it can carry script), `http:` or `blob:`: the thumbnail comes from the app as
  * a data URL and no other value must ever reach `src`.
  */
 const SAFE_THUMBNAIL = /^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/

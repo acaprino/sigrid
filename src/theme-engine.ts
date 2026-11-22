@@ -195,7 +195,7 @@ export function tonePresetOf(tone: ThemeTone | null): TonePreset {
 
 /**
  * The tone of the colors, on any theme: the same hues, more or less saturated and lighter or darker. It applies to the
- * accent, the filled button, the selected item and the colors of areas and projects; the page and the text stay as they are.
+ * accent, the filled button, the selected item and the eighteen free colors; the page and the text stay as they are.
  */
 export interface ThemeTone {
   /** Absent: `DEFAULT_TONE_INTENSITY`. `theme` is a choice of its own: as the theme was designed. */

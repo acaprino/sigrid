@@ -79,7 +79,7 @@
   /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
      the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
   --color-ring: #1f1f1f;
-  /* Ink of the icons inside the shapes of areas and projects: the background is a user color, so the same in
+  /* Ink of the icons inside the shapes the user colours: the background is a user color, so the same in
      both palettes (test/contrast.test.ts). */
   --color-mark-ink-light: #ffffff;
   --color-mark-ink-dark: #1b1916;
@@ -363,10 +363,7 @@
   }
 }
 
-/* Priority colors (`--prio-N`: the dot on the row, at least 3:1 on paper, paper 2 and raised of every theme;
-   `--prio-N-bg`/`--prio-N-ink`: the pressed button of the picker, at least 4.5:1; test/priority-colors.test.tsx): P1 red,
-   P2 yellow, P3 light blue, "None" without color. They sit in the same rules as the labels, below.
-   Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its
+/* Label colors (`@pharmacy`): eight background/ink pairs, one per scheme. A label's color comes from its
    name (`tagHue` in `src/internal/tag.tsx`), so the same name has the same color everywhere and on every device,
    without an extra datum. Each pair passes 4.5:1 (test/tag-colors.test.ts). Selectors in `:where()`: zero specificity,
    and an element with `data-scheme` (the theme thumbnails) takes its palette. */
@@ -388,15 +385,6 @@
     --tag-7-ink: #5133a6;
     --tag-8-bg: #fbe4f0;
     --tag-8-ink: #9a2464;
-    --prio-1: #d23a29;
-    --prio-1-bg: #fde8e4;
-    --prio-1-ink: #a3291b;
-    --prio-2: #a77100;
-    --prio-2-bg: #fdf0d5;
-    --prio-2-ink: #7a4a00;
-    --prio-3: #2a86cc;
-    --prio-3-bg: #e0eefa;
-    --prio-3-ink: #1a5590;
   }
   @media (prefers-color-scheme: dark) {
     :where(:root:not([data-scheme])) {
@@ -416,15 +404,6 @@
       --tag-7-ink: #c8b8fa;
       --tag-8-bg: #48203a;
       --tag-8-ink: #f5aed2;
-      --prio-1: #ff8574;
-      --prio-1-bg: #4a221c;
-      --prio-1-ink: #ffb4a6;
-      --prio-2: #f2c14e;
-      --prio-2-bg: #43321a;
-      --prio-2-ink: #f6c977;
-      --prio-3: #62b4f2;
-      --prio-3-bg: #17324d;
-      --prio-3-ink: #a6d2f7;
     }
   }
   :where([data-scheme="dark"]) {
@@ -444,15 +423,6 @@
     --tag-7-ink: #c8b8fa;
     --tag-8-bg: #48203a;
     --tag-8-ink: #f5aed2;
-    --prio-1: #ff8574;
-    --prio-1-bg: #4a221c;
-    --prio-1-ink: #ffb4a6;
-    --prio-2: #f2c14e;
-    --prio-2-bg: #43321a;
-    --prio-2-ink: #f6c977;
-    --prio-3: #62b4f2;
-    --prio-3-bg: #17324d;
-    --prio-3-ink: #a6d2f7;
   }
   /* The color of a pill: `data-tag-hue` is set by `tagColorAttrs`, `TAG_COLOR` reads the two variables. */
   [data-tag-hue="1"] {
@@ -487,7 +457,7 @@
     --tag-bg: var(--tag-8-bg);
     --tag-ink: var(--tag-8-ink);
   }
-  /* The eighteen colors of areas, projects and folders adapted to the active theme (`markHueAttrs` in `colors.ts`). */
+  /* The eighteen free colors (of a folder, a group, a mark) adapted to the active theme (`markHueAttrs` in `colors.ts`). */
   [data-mark-hue="1"] { --mark-dot: var(--color-mark-1); --mark-icon: var(--color-mark-icon-1); }
   [data-mark-hue="2"] { --mark-dot: var(--color-mark-2); --mark-icon: var(--color-mark-icon-2); }
   [data-mark-hue="3"] { --mark-dot: var(--color-mark-3); --mark-icon: var(--color-mark-icon-3); }

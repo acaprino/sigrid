@@ -269,7 +269,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 
 ### Sheet
 
-- **Purpose**: a side panel (task details, the viewer, a drawer dialog).
+- **Purpose**: a side panel (the details of an item, the viewer, a drawer dialog).
 - **Parts**: `Sheet`, `SheetTrigger`, `SheetClose`, `SheetContent` (`side`, `showCloseButton`, `onCloseAutoFocus`, `animated`), `SheetHeader`, `SheetFooter`, `SheetTitle`, `SheetDescription`.
 - **Tokens**: `background`, `shadow-lg` + `border-l` (F03), `BACKDROP` (`drop` at 40%, F27, Q7), close `ink-mute`.
 - **Accessibility**: modal, swipe to dismiss in the side's direction, focus restored; a toast does not close it.
@@ -303,11 +303,11 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 
 ### DurationField
 
-- Two number inputs (64px wide), two 13px `ink-soft` labels, four `secondary` xs buttons (`aria-pressed`) and a `ghost` "None". Inherits F03 through `secondary`. Ark/Park: none of its own (NumberInput of Ark not used: two native number fields, approved by ADR-0013). **Do**: shortcuts for the frequent cases. **Don't**: free text.
+- Two number inputs (64px wide), two 13px `ink-soft` labels, four `secondary` xs buttons (`aria-pressed`) and a `ghost` "None". Inherits F03 through `secondary`. Ark/Park: none of its own (NumberInput of Ark not used: two native number fields). **Do**: shortcuts for the frequent cases. **Don't**: free text.
 
 ### AttachmentsSection, AttachmentMarks, Thumbnail
 
-- **Purpose**: list a task's attachments and add files or links; show a row's attachment count; show an image.
+- **Purpose**: list an item's attachments and add files or links; show a row's attachment count; show an image.
 - **States**: attachment ready / arriving / not uploaded / over the limit / text only; drop zone rest, drag over (`border-primary`, F09), focus; notice.
 - **Tokens**: `raised`, `line` (tile border, F04), `input` (dashed zone), `paper-2`, `ink`, `ink-soft`, `ink-mute`, `radius-lg` (tiles, zone), `radius-md` (thumbnail, trigger), `text-2xs` uppercase heading with 0.07em tracking.
 - **Composition**: Ark `FileUpload` (RootProvider, HiddenInput, Trigger) + `useDropTarget` + `Input` + `Button` + `Tooltip` + `Thumbnail`.

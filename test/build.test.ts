@@ -153,7 +153,7 @@ describe('build output', () => {
     expect(c).toMatch(/\.z-50\s*\{\s*z-index:\s*50/)
   })
 
-  test('no automatic motion (ADR-0009 INV-002)', () => {
+  test('no automatic motion', () => {
     const rest = outsideReducedMotion(css())
     expect(rest).not.toMatch(/animation-iteration-count:\s*infinite/)
     expect(rest).not.toMatch(/\banimation\s*:/)
@@ -205,7 +205,7 @@ describe('build output', () => {
 
 import * as UI from '../src'
 
-describe('package invariants (ADR-0009)', () => {
+describe('package invariants', () => {
   test('the toolkit carries no app component: an app\'s product components live in its own package', () => {
     const product = ['FocusStrip', 'Gate', 'Kanban', 'Shell', 'Sidebar', 'SortCard', 'Stack', 'TaskList', 'TaskSheet', 'ViewHeader']
     expect(Object.keys(UI).filter((k) => product.includes(k))).toEqual([])

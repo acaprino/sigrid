@@ -59,17 +59,17 @@ test('the Emoji pack: one colour emoji per meaning, none shared, a picture in th
 })
 
 test('the pack comes from the provider; Lucide without one; `pack` wins for a preview', () => {
-  const { container, rerender } = render(<Icon name="today" />)
+  const { container, rerender } = render(<Icon name="settings" />)
   expect(container.firstElementChild!.getAttribute('data-icon-pack')).toBe(DEFAULT_ICON_PACK)
   rerender(
     <IconPackProvider pack="fluent">
-      <Icon name="today" />
+      <Icon name="settings" />
     </IconPackProvider>,
   )
   expect(container.firstElementChild!.getAttribute('data-icon-pack')).toBe('fluent')
   rerender(
     <IconPackProvider pack="fluent">
-      <Icon name="today" pack="emoji" />
+      <Icon name="settings" pack="emoji" />
     </IconPackProvider>,
   )
   expect(container.firstElementChild!.getAttribute('data-icon-pack')).toBe('emoji')
@@ -78,14 +78,14 @@ test('the pack comes from the provider; Lucide without one; `pack` wins for a pr
 test('saved values are checked: only real packs and names pass', () => {
   for (const pack of ['lucide', 'fluent', 'emoji']) expect(isIconPack(pack), pack).toBe(true)
   for (const no of ['', 'Lucide', 'material', null, 3, 'constructor']) expect(isIconPack(no), String(no)).toBe(false)
-  expect(isIconName('today')).toBe(true)
-  for (const no of ['', 'Today', 'sparkles', undefined, 'toString']) expect(isIconName(no), String(no)).toBe(false)
+  expect(isIconName('settings')).toBe(true)
+  for (const no of ['', 'Settings', 'sparkles', 'today', 'project', undefined, 'toString']) expect(isIconName(no), String(no)).toBe(false)
 })
 
 test('a pack that left (Phosphor, Tabler, 2026-11-20) is refused when read back, so the icons fall back to Lucide', () => {
   for (const saved of ['phosphor', 'tabler'] as unknown[]) {
     expect(isIconPack(saved), String(saved)).toBe(false)
-    const { container, unmount } = render(<Icon name="today" pack={isIconPack(saved) ? saved : undefined} />)
+    const { container, unmount } = render(<Icon name="settings" pack={isIconPack(saved) ? saved : undefined} />)
     expect(container.firstElementChild!.getAttribute('data-icon-pack')).toBe('lucide')
     unmount()
   }
@@ -97,7 +97,7 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
   const icons: IconSet = {
     inbox: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}' },
     reply: { lucide: Line },
-    today: { lucide: Line },
+    settings: { lucide: Line },
   }
   const drawn = (pack: IconPack, name: string) => {
     const { container, unmount } = render(
@@ -121,7 +121,7 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
   expect(drawn('fluent', 'reply').own).toBe('line')
   expect(drawn('emoji', 'reply').own).toBe('line')
   // A name of the toolkit is not replaced.
-  expect(drawn('lucide', 'today').own).toBeNull()
+  expect(drawn('lucide', 'settings').own).toBeNull()
 })
 
 test('a name nobody draws is an empty slot of the same size, so the row keeps its alignment', () => {

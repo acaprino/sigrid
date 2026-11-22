@@ -33,7 +33,7 @@ function hue(hex: string): number {
   return (h * 60 + 360) % 360
 }
 
-describe('the color palette of areas and projects', () => {
+describe('the palette of the free colors', () => {
   test('has eighteen distinct colors, every one written as #rrggbb in lower case', () => {
     expect(COLORS.length).toBe(18)
     expect(new Set(COLORS).size).toBe(COLORS.length)
