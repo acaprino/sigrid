@@ -85,6 +85,24 @@ export interface Words {
     /** Said when no command holds the text. */
     readonly empty: string
   }
+  /** What a step of `Steps` is, read after its name. */
+  readonly steps: {
+    readonly done: string
+    readonly current: string
+    readonly upcoming: string
+    /** A step that failed. */
+    readonly error: string
+    /** «Step 2 of 4»: said under a row of steps too narrow for their names, and the only name left is the current one. */
+    readonly summary: (position: number, total: number) => string
+  }
+  /** What a `Progress` says about itself: its value, and what became of the task. */
+  readonly progress: {
+    readonly value: (value: number, max: number) => string
+    /** It is not known how far it is. */
+    readonly indeterminate: string
+    readonly complete: string
+    readonly error: string
+  }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
     readonly skip: string
@@ -217,6 +235,19 @@ export const DEFAULT_WORDS: Words = {
   palette: {
     placeholder: 'Type a command',
     empty: 'No command found',
+  },
+  steps: {
+    done: 'done',
+    current: 'current step',
+    upcoming: 'not started',
+    error: 'failed',
+    summary: (position, total) => `Step ${position} of ${total}`,
+  },
+  progress: {
+    value: (value, max) => `${Math.round((value / max) * 100)}%`,
+    indeterminate: 'In progress',
+    complete: 'Complete',
+    error: 'Failed',
   },
   shell: {
     skip: 'Skip to the content',

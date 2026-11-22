@@ -58,6 +58,10 @@ import {
   Sidebar,
   SidebarGroup,
   Slider,
+  Steps,
+  Progress,
+  ProgressRing,
+  ProgressSegments,
   Count,
   cn,
   FormField,
@@ -261,8 +265,8 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields'] },
-  { label: 'Navigation', icon: 'structure', ids: ['tabs', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
-  { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'empty'] },
+  { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
+  { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -682,6 +686,155 @@ function TabSets({ animated }: { animated: boolean }) {
             <p className="text-sm text-ink-soft">The advanced settings.</p>
           </TabsContent>
         </Tabs>
+      </Row>
+    </Section>
+  )
+}
+
+const SIGNUP = [
+  { label: 'Account', description: 'Email and password' },
+  { label: 'Profile', description: 'Your name and a photo' },
+  { label: 'Plan', description: 'Free, or paid by the month' },
+  { label: 'Done' },
+]
+const IMPORT = [{ label: 'Upload' }, { label: 'Read' }, { label: 'Convert' }, { label: 'Publish' }]
+const TUTORIAL = [{ label: 'Welcome' }, { label: 'Add a task' }, { label: 'Set a day' }, { label: 'Finish' }]
+
+function StepsSection() {
+  const [current, setCurrent] = React.useState(1)
+  const [lesson, setLesson] = React.useState(1)
+  const back = (value: number, set: (n: number) => void) => (
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" disabled={value === 0} onClick={() => set(value - 1)}>
+        Back
+      </Button>
+      <Button size="sm" disabled={value === SIGNUP.length} onClick={() => set(value + 1)}>
+        {value === SIGNUP.length - 1 ? 'Finish' : 'Continue'}
+      </Button>
+    </div>
+  )
+  return (
+    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with a cross and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
+      <Row label="a wizard">
+        <div className="flex flex-col gap-4">
+          <Steps aria-label="Signup" steps={SIGNUP} current={current} onStepSelect={setCurrent} />
+          {back(current, setCurrent)}
+        </div>
+      </Row>
+      <Row label="a tutorial, in a row">
+        <div className="flex w-full max-w-2xl flex-col gap-4">
+          <Steps aria-label="Tutorial" orientation="horizontal" steps={TUTORIAL} current={lesson} onStepSelect={setLesson} />
+          {back(lesson, setLesson)}
+        </div>
+      </Row>
+      <Row label="a processing">
+        <div className="flex w-full max-w-2xl flex-col gap-6">
+          <Cell label="working: the app moves the step on as each part ends">
+            <Steps aria-label="Import, working" orientation="horizontal" steps={IMPORT} current={2} className="w-full" />
+          </Cell>
+          <Cell label="a step failed: it stays where it stopped, in red">
+            <Steps aria-label="Import, failed" orientation="horizontal" steps={[IMPORT[0]!, IMPORT[1]!, { ...IMPORT[2]!, status: 'error' }, IMPORT[3]!]} current={2} className="w-full" />
+          </Cell>
+        </div>
+      </Row>
+      <Row label="in a narrow place">
+        <div className="w-72">
+          <Steps aria-label="Signup, narrow" orientation="horizontal" steps={SIGNUP} current={1} />
+        </div>
+      </Row>
+      <Row label="the ends">
+        <Cell label="first step">
+          <Steps aria-label="First step" steps={SIGNUP.slice(0, 3)} current={0} />
+        </Cell>
+        <Cell label="all done">
+          <Steps aria-label="All done" steps={SIGNUP.slice(0, 3)} current={3} />
+        </Cell>
+      </Row>
+    </Section>
+  )
+}
+
+function ProgressSection() {
+  const [sent, setSent] = React.useState(40)
+  return (
+    <Section id="progress" title="Progress" note="How far a task is, as a bar, a ring or blocks: one set of props for the three. The accent is progress (R2), done is the success colour and a failure the destructive one, each with a word. Not knowing how far it is is a track with no range and the word «In progress», not a loop. Nothing moves: the range jumps to the value, so a screen that changes often does not flicker. Screen readers get the value and the words, never each percent.">
+      <Row label="a bar">
+        <div className="flex w-full max-w-md flex-col gap-4">
+          <Progress aria-label="Upload" value={sent} showValue />
+          <Progress aria-label="Upload, small" size="sm" value={sent} />
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSent(0)}>
+              Start again
+            </Button>
+            <Button size="sm" disabled={sent >= 100} onClick={() => setSent(Math.min(100, sent + 15))}>
+              Add 15%
+            </Button>
+          </div>
+        </div>
+      </Row>
+      <Row label="what became of it">
+        <div className="flex w-full max-w-md flex-col gap-4">
+          <Cell label="not known how far">
+            <Progress aria-label="Import, not known" value={null} />
+          </Cell>
+          <Cell label="done">
+            <Progress aria-label="Import, done" value={100} showValue />
+          </Cell>
+          <Cell label="failed: the range stays where it stopped">
+            <Progress aria-label="Import, failed" value={35} status="error" showValue />
+          </Cell>
+        </div>
+      </Row>
+      <Row label="a ring">
+        <Cell label="25%">
+          <ProgressRing aria-label="Ring, a quarter" value={25} showValue />
+        </Cell>
+        <Cell label="small">
+          <ProgressRing aria-label="Ring, small" size="sm" value={70} showValue />
+        </Cell>
+        <Cell label="countdown: the time left as the value">
+          <ProgressRing aria-label="Time left" value={16} max={30} valueText="16 seconds left">
+            16
+          </ProgressRing>
+        </Cell>
+        <Cell label="done">
+          <ProgressRing aria-label="Ring, done" value={100} showValue />
+        </Cell>
+        <Cell label="failed">
+          <ProgressRing aria-label="Ring, failed" value={40} status="error" showValue />
+        </Cell>
+        <Cell label="not known">
+          <ProgressRing aria-label="Ring, not known" value={null} />
+        </Cell>
+      </Row>
+      <Row label="blocks">
+        <div className="flex w-full max-w-md flex-col gap-4">
+          <Cell label="6 of 10">
+            <ProgressSegments aria-label="Level" value={6} showValue />
+          </Cell>
+          <Cell label="3 of 5, small">
+            <ProgressSegments aria-label="Level, small" size="sm" max={5} value={3} />
+          </Cell>
+          <Cell label="done">
+            <ProgressSegments aria-label="Level, done" value={10} showValue />
+          </Cell>
+        </div>
+      </Row>
+      <Row label="a file being sent">
+        <div className="w-full max-w-md rounded-lg bg-raised p-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="inline-flex text-ink-mute [&_svg]:size-4">
+              <Icon name="attach" />
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="truncate text-ink">Site survey.mov</span>
+                <span className="shrink-0 text-xs text-ink-mute tabular-nums">{sent >= 100 ? '212 MB' : '1.2 MB/s'}</span>
+              </div>
+              <Progress aria-label="Site survey.mov" size="sm" value={sent} showValue />
+            </div>
+          </div>
+        </div>
       </Row>
     </Section>
   )
@@ -2228,6 +2381,7 @@ function App() {
       <Dates animated={animated} />
       <OtherFields />
       <TabSets animated={animated} />
+      <StepsSection />
       <Navigation />
       <SidebarSample animated={animated} />
       <Toolbars animated={animated} />
@@ -2235,6 +2389,7 @@ function App() {
       <Popovers animated={animated} />
       <Overlays animated={animated} />
       <Notices animated={animated} />
+      <ProgressSection />
       <Empties />
       <Files />
       <Content />
