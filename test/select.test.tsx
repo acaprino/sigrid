@@ -33,6 +33,13 @@ async function press(key: string) {
   await flush()
 }
 
+test('the open list has the name of the select, so a screen reader reads «Status, list»', async () => {
+  render(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} />)
+  fireEvent.click(screen.getByRole('combobox', { name: 'Status' }))
+  await flush()
+  expect(screen.getByRole('listbox', { name: 'Status' })).toBeTruthy()
+})
+
 test('accessible name, shown value, opening with a click and picking with the mouse', async () => {
   const onValueChange = vi.fn()
   render(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={onValueChange} />)

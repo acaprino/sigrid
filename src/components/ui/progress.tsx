@@ -28,6 +28,11 @@ export type ProgressProps = {
   "aria-label": string
   /** What the value says, in place of the toolkit's words («16 seconds left»): read by screen readers and shown by `showValue`. */
   valueText?: string | undefined
+  /**
+   * The value is what is left (a time running out), not what is done: it empties, a full one is the start, not the end, so it is
+   * never «Complete». Say what is left in `valueText` («16 seconds left»).
+   */
+  countdown?: boolean | undefined
   /** Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status). */
   showValue?: boolean | undefined
   size?: "sm" | "md" | undefined
@@ -42,12 +47,12 @@ const STROKE: Record<Mood, string> = { active: "stroke-primary", indeterminate: 
 const TEXT: Record<Mood, string> = { active: "text-ink-soft", indeterminate: "text-ink-soft", complete: "text-success", error: "text-destructive" }
 
 /** What a progress shows: where it is, in what mood, and what it says. */
-function useProgress({ value, max = 100, valueText, status }: Pick<ProgressProps, "value" | "max" | "valueText" | "status">) {
+function useProgress({ value, max = 100, valueText, status, countdown }: Pick<ProgressProps, "value" | "max" | "valueText" | "status" | "countdown">) {
   const words = useWords()
   const top = max > 0 ? max : 100
   const known = value !== null && Number.isFinite(value)
   const now = known ? Math.min(Math.max(value, 0), top) : 0
-  const mood: Mood = status === "error" ? "error" : !known ? "indeterminate" : now >= top ? "complete" : "active"
+  const mood: Mood = status === "error" ? "error" : !known ? "indeterminate" : now >= top && !countdown ? "complete" : "active"
   const text = valueText ?? (mood === "error" ? words.progress.error : mood === "indeterminate" ? words.progress.indeterminate : mood === "complete" ? words.progress.complete : words.progress.value(now, top))
   const aria = {
     role: "progressbar" as const,

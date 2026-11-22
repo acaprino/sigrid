@@ -4,6 +4,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
+import { contrast } from '../src'
+import { inkOn } from '../src/components/ui/avatar'
 
 const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const coarse = (cls: string) => 'pointer-coarse:' + cls
@@ -88,6 +90,33 @@ describe('Avatar', () => {
     expect(hidden.getAttribute('aria-hidden')).toBe('true')
     expect(hidden.getAttribute('role')).toBeNull()
     expect(classes(hidden)).toContain('size-(--control-xs)')
+  })
+})
+
+describe('Avatar with an identity colour', () => {
+  test('a #rrggbb fill with the ink that reads on it; anything else is the neutral tile; something else than initials can be drawn', () => {
+    const { rerender } = render(<Avatar name="Work account" color="#4f46e5" />)
+    const tile = screen.getByRole('img', { name: 'Work account' })
+    expect(tile.getAttribute('data-tinted')).toBe('')
+    const style = tile.getAttribute('style') ?? ''
+    expect(style).toContain('background-color: rgb(79, 70, 229)')
+    // White on indigo, not the dark ink.
+    expect(style).toContain('color: rgb(255, 255, 255)')
+    // A light fill takes the dark ink.
+    rerender(<Avatar name="Work account" color="#f5d76e" />)
+    expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('style') ?? '').not.toContain('color: rgb(255, 255, 255)')
+    // The ink always reads: at least 4.5:1 on any fill the app gives.
+    for (const fill of ['#4f46e5', '#f5d76e', '#2f9e6e', '#e34432', '#ffffff', '#000000']) {
+      expect(contrast(fill, inkOn(fill)), fill).toBeGreaterThanOrEqual(4.5)
+    }
+    // Not a hex colour: the neutral tile, as before.
+    rerender(<Avatar name="Work account" color="red" />)
+    expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('style') ?? '').toBe('')
+    expect(screen.getByRole('img', { name: 'Work account' }).getAttribute('data-tinted')).toBeNull()
+    // `children` stand in for the initials.
+    rerender(<Avatar name="All accounts" color="#2f9e6e"><span data-testid="icon" /></Avatar>)
+    expect(screen.getByTestId('icon')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'All accounts' }).textContent).toBe('')
   })
 })
 
