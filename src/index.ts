@@ -30,6 +30,7 @@ export { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 export { Empty, type EmptyProps } from './components/ui/empty'
 export { FormField, type FormFieldProps } from './components/ui/form-field'
 export { Input } from './components/ui/input'
+export { ItemList, ItemRow, type ItemListProps, type ItemRowProps } from './components/ui/item-list'
 export { Kbd, Shortcut, type KbdProps, type KbdSize, type ShortcutProps } from './components/ui/kbd'
 export { NavItem, NavList, type NavItemProps, type NavListProps } from './components/ui/nav-list'
 export { Popover, PopoverAnchor, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from './components/ui/popover'

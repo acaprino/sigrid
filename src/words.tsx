@@ -75,6 +75,10 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  readonly list: {
+    /** Read before the title of a row not read yet (`ItemRow`). */
+    readonly unread: string
+  }
   readonly palette: {
     /** The name of the command palette and the placeholder of its field. */
     readonly placeholder: string
@@ -206,6 +210,9 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  list: {
+    unread: 'Unread',
   },
   palette: {
     placeholder: 'Type a command',

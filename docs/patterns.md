@@ -80,7 +80,8 @@ count is a pill at the end of the row (R5).
 ## Four screens to start from
 
 **List and detail.** For things to read and act on: mail, tasks, files. The sidebar says where, the content is the
-list, the inspector shows the one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
+list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot for unread), the inspector shows the
+one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
 covers the end of the list and the list stays usable beside it.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each

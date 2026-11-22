@@ -31,6 +31,8 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  ItemList,
+  ItemRow,
   AppShell,
   CommandPalette,
   useCommandKey,
@@ -853,7 +855,14 @@ function Shells({ animated }: { animated: boolean }) {
       Commands
     </ToolbarButton>
   )
-  const mail = ['Kitchen quote, second version', 'Receipt of the waste tax', 'Photos of Tuesday\'s survey', 'Invoice 114 for October', 'Saturday dinner: who brings dessert?']
+  const [chosen, setChosen] = React.useState(0)
+  const mail: [string, string, string][] = [
+    ['Kitchen quote, second version', 'Marta Riva', '09:42'],
+    ['Receipt of the waste tax', 'City of Bergamo', '08:15'],
+    ['Photos of Tuesday\'s survey', 'Luca Ferri', 'Mon'],
+    ['Invoice 114 for October', 'Studio Belli', 'Mon'],
+    ['Saturday dinner: who brings dessert?', 'Anna Greco', 'Sun'],
+  ]
   const lanes: [string, [string, string][]][] = [
     ['To do', [['Renew the identity card', '28 Nov'], ['Book the train to Rome', '5 Dec'], ['Shopping for Saturday', 'Sat']]],
     ['Doing', [['Draft of the quote', 'Today'], ['Call the plumber', 'Today']]],
@@ -918,8 +927,10 @@ function Shells({ animated }: { animated: boolean }) {
         )}
         inspector={
           <Inspector title="Details" open={details} onOpenChange={setDetails} animated={animated} footer={<Button variant="outline" size="sm">Archive</Button>}>
-            <p className="font-medium text-ink">Kitchen quote, second version</p>
-            <p className="mt-1 text-ink-mute">Marta Riva, today at 09:42</p>
+            <p className="font-medium text-ink">{mail[chosen]![0]}</p>
+            <p className="mt-1 text-ink-mute">
+              {mail[chosen]![1]}, {mail[chosen]![2]}
+            </p>
             <p className="mt-3 text-ink-soft">The quote with the quartz top and the built-in hood. The total goes down by 380.</p>
           </Inspector>
         }
@@ -931,13 +942,11 @@ function Shells({ animated }: { animated: boolean }) {
           </>
         }
       >
-        <ul role="list" className="flex flex-col p-2">
-          {mail.map((subject, i) => (
-            <li key={subject} className={cn('flex min-h-(--row-height) items-center rounded-md px-(--row-pad) text-sm', i === 0 ? 'bg-selected font-semibold text-selected-ink' : 'text-ink-soft')}>
-              <span className="truncate">{subject}</span>
-            </li>
+        <ItemList aria-label="Messages" className="p-2">
+          {mail.map(([subject, from, when], i) => (
+            <ItemRow key={subject} title={subject} description={from} meta={when} unread={i === 2} current={i === chosen} onClick={() => setChosen(i)} />
           ))}
-        </ul>
+        </ItemList>
       </AppShell>
     ),
     page: (
