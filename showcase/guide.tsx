@@ -1,5 +1,6 @@
 // The three guide views of the showcase: the philosophy, the guidelines and the practices of the design system. They say
-// in words what DESIGN.md (the rules, R1 to R13), the README and docs/patterns.md say, and show each point with the
+// in words what DESIGN.md (the rules, R1 to R13), the README, docs/patterns.md and docs/mobile.md (each view's «On a
+// phone») say, and show each point with the
 // toolkit's own parts, so they follow the theme chosen in Look. Figures that live in code (densities, corner radii, the
 // frame's steps) are read from the exports, never copied: a copy would fall behind. The wording of the rules and the
 // recommendations follows those three files; when one changes, change it here too.
@@ -18,6 +19,8 @@ import {
   Icon,
   Input,
   Kbd,
+  COARSE,
+  NARROW,
   NavItem,
   NavList,
   SHAPE_RADII,
@@ -25,6 +28,8 @@ import {
   THEME_SHAPES,
   TOUCH_TARGET,
   cn,
+  densityVariables,
+  densityWith,
   markHueAttrs,
   type IconName,
 } from '../src/index'
@@ -131,6 +136,16 @@ const PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: 
   { icon: 'check', title: 'Stay readable and reachable', refs: 'R8, R9, R12', text: 'Text keeps 4.5:1 and borders and rings 3:1 in every theme. The focus ring is 2px in the accent. With a finger every control is at least 44px. Z undoes the newest action.' },
 ]
 
+/** The idea on a phone (docs/mobile.md): the same six principles, with room for one thing. */
+const PHONE_PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: string }[] = [
+  { icon: 'column', title: 'The same app, in one column', refs: 'AppShell', text: 'Do not design a second app. The regions of the frame give way in a fixed order until one column is left: the inspector becomes a page, the sidebar a drawer, the words beside icons go. What the user learned on the wide window still holds.' },
+  { icon: 'now', title: 'One screen, one job', refs: 'R2, R3', text: 'One list, or one thing to read, with one solid action. Whatever else can be done waits in a menu. An eye that is easily pulled away has one place to land.' },
+  { icon: 'moveDown', title: 'Read at the head, act at the foot', refs: 'bottomBar, actions', text: 'The bar at the head says where the user is and the way back. The thumb reaches the foot: the views are tabs there, and so are the actions, the solid one last.' },
+  { icon: 'tasks', title: 'State in sight, without a pointer', refs: 'R1, R5, R6', text: 'A finger has no hover, so nothing may live only under the pointer. The chosen row, the unread dot and the counts are always drawn. An icon nobody would guess keeps its word, since no hint will explain it.' },
+  { icon: 'undo', title: 'Undo, do not ask', refs: 'R12', text: 'A finger slips. An action that can be taken back is done at once, and the notice that says so carries Undo. Only what cannot be undone asks first.' },
+  { icon: 'check', title: 'Nothing shrinks', refs: 'R7', text: `The text sizes are the ones of the wide window, a field is 16px so the page does not zoom, and every control and row is at least ${TOUCH_TARGET}px at every density.` },
+]
+
 /** The four layers of the README, each with where to see it. */
 const LAYERS: readonly { name: string; text: string; id: string; see: string }[] = [
   { name: 'Behaviour', text: 'Base UI carries the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip. Ark UI carries the richer parts Base UI lacks: date picker, tags input, file upload, combobox, slider, tabs.', id: 'select', see: 'Select' },
@@ -171,6 +186,20 @@ export function PhilosophyView() {
             ))}
           </ul>
         </div>
+      </Section>
+      <Section id="philosophy-phone" icon="column" title="On a phone" note="A phone does not change the idea. It makes it stricter, because there is room for one thing.">
+        <div className="@container">
+          <ul role="list" className={CARDS}>
+            {PHONE_PRINCIPLES.map((p) => (
+              <Card key={p.title} icon={p.icon} title={p.title} refs={p.refs}>
+                {p.text}
+              </Card>
+            ))}
+          </ul>
+        </div>
+        <See view="practices" id="practices-phone">
+          See the phone layouts
+        </See>
       </Section>
       <Section id="philosophy-layers" icon="structure" title="Four layers, each from its best source" note="Nothing is invented twice: behaviour, form, motion and colour each come from the place that does it best.">
         <ol role="list" className="@container flex flex-col">
@@ -258,6 +287,52 @@ function DoList({ icon, title, items }: { icon: IconName; title: string; items: 
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+/** What the toolkit does by itself on a phone (docs/mobile.md): facts of the code, with the figures read from it. */
+const PHONE_FACTS: readonly (readonly [string, React.ReactNode])[] = [
+  ['A phone', <>Narrow and with a finger: <Code>{NARROW}</Code> and <Code>{COARSE}</Code>, together <Code>usePhone()</Code>. The frame is a measure of its own: AppShell reads its own width, not the screen's.</>],
+  ['Controls and rows', `At least ${TOUCH_TARGET}px tall with a coarse pointer, at every density (the approved exception to R7). A density that asks for more gets more.`],
+  ['Fields', 'The text of a field is 16px below 860px, so iOS does not zoom the page on focus. No other text size changes.'],
+  ['Key hints', 'Hidden on a phone: Kbd, the shortcuts of a menu and of the command palette (R5).'],
+  ['Sidebar', `A drawer when the frame is under ${APP_SHELL_STEPS.rail}px (outside a frame, when the screen is under 860px). A swipe towards its edge closes it.`],
+  ['Inspector', `Under ${APP_SHELL_STEPS.inspector}px a panel over the end of the content, three quarters of the frame wide, not modal.`],
+  ['Toolbar', "Under 448px of its own width a button keeps its icon and drops its word, and a search field is its magnifier. Under 256px the app's name goes. The buttons never go."],
+  ['Sheets', 'Close with a swipe in the direction of their side, as well as with Esc and a press outside.'],
+  ['Date card', 'On a phone a sheet at the foot of the screen, with room for the home indicator.'],
+  ['Notices', <>In the middle of the foot below 860px, above the room an app declares for its bottom bar (<Code>--bottom-bar-room</Code>).</>],
+  ['Steps', 'A row too narrow for its names keeps the current one and says «Step 2 of 4».'],
+  ['Hover', 'Drawn only where the pointer can hover: a tap leaves no stuck hover.'],
+]
+
+/** The sizes a finger gets from a density: what theme.css does with a coarse pointer, written on a preview. */
+const TOUCH = densityWith('normal', { id: 'normal-touch', control: { md: TOUCH_TARGET, sm: TOUCH_TARGET, xs: TOUCH_TARGET }, row: { height: TOUCH_TARGET } })
+
+/** The same controls with a mouse and with a finger, side by side at the normal density. */
+function TouchDemo() {
+  const controls = (
+    <>
+      <Button>Save</Button>
+      <Button variant="outline" size="sm">
+        Skip
+      </Button>
+      <Input aria-label="Sample field" placeholder="Search by name" className="w-40" />
+    </>
+  )
+  return (
+    <div className="@container">
+      <div className="grid gap-4 @2xl:grid-cols-2">
+        <div data-sample="pointer-fine" data-density="normal" style={densityVariables('normal')} className="flex flex-col gap-2 rounded-lg bg-paper-2 p-3">
+          <span className="text-2xs font-medium text-ink-mute">With a mouse: {DENSITIES.find((d) => d.id === 'normal')?.control.md}px and {DENSITIES.find((d) => d.id === 'normal')?.control.sm}px</span>
+          <div className="flex flex-wrap items-center gap-3">{controls}</div>
+        </div>
+        <div data-sample="pointer-coarse" data-density={TOUCH.id} style={densityVariables(TOUCH)} className="flex flex-col gap-2 rounded-lg bg-paper-2 p-3">
+          <span className="text-2xs font-medium text-ink-mute">With a finger: {TOUCH_TARGET}px, whatever the size asked</span>
+          <div className="flex flex-wrap items-center gap-3">{controls}</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -457,6 +532,22 @@ export function GuidelinesView() {
           </dl>
         </div>
       </Section>
+      <Section id="guidelines-phone" icon="column" title="On a phone" note="What the toolkit does by itself when the screen is narrow or the pointer is a finger: an app gets these without writing anything. What an app adds is a practice, not a rule: it is in Practices.">
+        <TouchDemo />
+        <div className="@container">
+          <dl className="grid gap-x-8 @xl:grid-cols-2">
+            {PHONE_FACTS.map(([term, text]) => (
+              <div key={term} className="border-t border-line py-2">
+                <dt className="text-sm font-medium text-ink">{term}</dt>
+                <dd className="text-sm text-ink-soft">{text}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <See view="practices" id="practices-phone-advice">
+          See what an app adds
+        </See>
+      </Section>
       <Section id="guidelines-checks" icon="service" title="How the rules are kept" note="These run in CI on every push, beside the typecheck. An exception needs a comment above the line: design-check-ignore-next-line <rule>: <cause>.">
         <dl className="@container flex max-w-3xl flex-col">
           {CHECKS.map(([command, text]) => (
@@ -555,6 +646,26 @@ const NARROW_ADVICE = [
   'With a finger every control is at least 44px (the toolkit does it); leave the key hints out on a phone.',
 ]
 
+/** What an app adds on a phone (docs/mobile.md): recommendations. */
+const PHONE_ADVICE = [
+  <>Let the frame measure itself. Do not switch on <Code>usePhone()</Code> to lay a screen out: a narrow window with a mouse wants the same layout. Keep it for what belongs to a finger on a small screen, as a swipe on a row.</>,
+  <>Make the frame as tall as the screen that is left (<Code>h-dvh</Code>), and do not switch the user's zoom off.</>,
+  'One solid action on the screen (R3). On a list it is the add button, last in the bar; on a page about one thing it is at the foot, last, with the quieter ones before it.',
+  "The bar at the head holds the app and the place, then at most three actions. The rest goes in one menu. The way back keeps its word: «‹ Today», not an arrow alone.",
+  'A row is two lines at most. A press opens it; what else can be done to it is in its page or in a menu at its end. A swipe is a shortcut, never the only way.',
+  'A short task (add, rename, pick) is a sheet from the foot: one field, a few quick choices, one solid button. A dialog is for a question that must be answered.',
+  'What can be undone is done at once, with Undo in the notice. Z has no key on a phone: the button in the notice is the way back.',
+  <>Leave the status and footer strips out, and tell the notices how tall the bottom bar is (<Code>--bottom-bar-room</Code>), or they cover it.</>,
+  "A destructive action is never where the thumb rests: in the menu, last, after a separator.",
+]
+
+/** Which navigation on a phone (docs/mobile.md). */
+const PHONE_NAVIGATION: readonly (readonly [string, string, string])[] = [
+  ['Two to five views of the same weight', 'Tabs at the foot, an icon over a word', 'bottomBar; ToolbarTabs with edge="top" and layout="stacked"'],
+  ['Six places or more, or places with counts', 'The drawer, opened from the first button of the bar', "Sidebar with open; the button where useAppShell().sidebar === 'drawer'"],
+  ['A place inside a place (a task of a list)', 'A page, with the way back in the bar by its name', 'Swap the content; ToolbarButton keepWord'],
+]
+
 const AVOID = [
   'Two toolbars on one screen, or actions both in the toolbar and in an action bar.',
   'A modal inspector: the user loses the list they were choosing from.',
@@ -563,9 +674,9 @@ const AVOID = [
 ]
 
 /** The practices, with the layout gallery (`gallery`) where docs/patterns.md puts the four screens to start from. */
-export function PracticesView({ gallery }: { gallery: React.ReactNode }) {
+export function PracticesView({ gallery, phones }: { gallery: React.ReactNode; phones: React.ReactNode }) {
   return (
-    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The four screens to start from are shown live, at the widths where the frame changes.">
+    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The four screens to start from are shown live, at the widths where the frame changes, and six more as one small app in a frame as wide as a phone.">
       <Section id="practices-frame" icon="layout" title="Start from the one frame" note="Use AppShell for the window of an app and fill in only the regions it needs. This showcase is built with it.">
         <Anatomy />
         <Table caption="The regions of the frame" head={['Region', 'Put there', 'Leave out when']} rows={REGIONS} />
@@ -596,6 +707,11 @@ export function PracticesView({ gallery }: { gallery: React.ReactNode }) {
       <Section id="practices-narrow" icon="sidebarClose" title="Narrow windows and phones" note="The same app, not a second one.">
         <Lines items={NARROW_ADVICE} />
       </Section>
+      <Section id="practices-phone-advice" icon="tasks" title="On a phone: what the app adds" note="The toolkit gives the sizes and the frame (Guidelines, «On a phone»). These are the choices left to the app, with one place for the views on each screen: never tabs at the foot and a drawer that list the same places.">
+        <Table caption="Navigation on a phone" head={['The app has', 'Use', 'Built with']} rows={PHONE_NAVIGATION} />
+        <Lines items={PHONE_ADVICE} />
+      </Section>
+      {phones}
       <Section id="practices-avoid" icon="alert" title="What to avoid">
         <Lines items={AVOID} />
       </Section>

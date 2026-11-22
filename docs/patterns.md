@@ -121,6 +121,10 @@ actions with the main one first. It is the screen where the accent has the least
 - What the user needs to act never gives way: the solid action and the window's buttons stay at every width.
 - With a finger every control is at least 44px (the toolkit does it); leave the key hints out on a phone.
 
+A phone has a guide of its own, `docs/mobile.md`: the idea, what the toolkit does by itself, what an app adds, and six
+layouts (list, detail as a page, capture sheet, board with one lane, settings page, focus) with their code. The
+gallery shows them as one small app in a frame as wide as a phone: view Practices, section «Phone layouts».
+
 ## An app in a window of its own
 
 For an app that runs in its own window (Tauri, or any host without a browser around the page), three switches make

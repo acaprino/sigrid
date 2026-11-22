@@ -232,11 +232,16 @@ a drawer.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
   which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
   shows each one live under «Layout patterns», in the Practices view.
+- `docs/mobile.md`: the system on a phone. The idea (the same app in one column, one job on each screen, act at the
+  foot, undo and do not ask), what the toolkit does by itself (44px with a finger, 16px fields, the drawer, the date
+  card as a sheet…) with the measures at 390px, what an app adds (which navigation, the bar, actions, forms, sheets),
+  six layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
+  frame as wide as a phone under «Phone layouts», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: the design system shown with its own frame (`AppShell`), in four views as tabs in the bar. Philosophy,
-  Guidelines and Practices say what this README, `DESIGN.md` and `docs/patterns.md` say, with live examples (the
-  layout gallery is in Practices); Components shows every component in its variants, sizes and states
+  Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
+  examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
   (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,

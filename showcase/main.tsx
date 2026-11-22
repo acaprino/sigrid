@@ -1,7 +1,7 @@
 // The toolkit's showcase, built with the toolkit's own frame (`AppShell`) as docs/patterns.md recommends. Four views,
 // as tabs in the bar (`?view=philosophy|guidelines|practices|components`): the philosophy, the guidelines and the
-// practices of the design system (guide.tsx), and every exported component, in its variants, sizes and states
-// (this file). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
+// practices of the design system (guide.tsx, with the phone layouts of docs/mobile.md in phone.tsx), and every
+// exported component, in its variants, sizes and states (this file). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
 // scheme. All of them are also in the address: `?theme=amber-bold&scheme=dark&shape=sharp&density=compact`.
 // The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour (`<colour>-<combination>`,
 // such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover,
@@ -159,6 +159,7 @@ import {
   type ToastItem,
 } from '../src/index'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
+import { PhoneLayouts } from './phone'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -2455,19 +2456,22 @@ function App() {
               </Inspector>
             }
             bottomBar={narrow ? <Toolbar aria-label="Views of the showcase">{views({ edge: 'top', layout: 'stacked' })}</Toolbar> : undefined}
+            // No strip at the foot of a narrow window (docs/mobile.md): with a finger it is as tall as a control, over the tabs.
             footer={
-              <>
-                <span>{themeLabel}</span>
-                <span>{scheme}</span>
-                <span>{DENSITIES.find((d) => d.id === density)?.label}</span>
-                <span className="ms-auto">{animated ? 'Animations on' : 'Animations off'}</span>
-              </>
+              narrow ? undefined : (
+                <>
+                  <span>{themeLabel}</span>
+                  <span>{scheme}</span>
+                  <span>{DENSITIES.find((d) => d.id === density)?.label}</span>
+                  <span className="ms-auto">{animated ? 'Animations on' : 'Animations off'}</span>
+                </>
+              )
             }
           >
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>
