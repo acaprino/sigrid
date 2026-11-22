@@ -224,7 +224,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 function Cell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div data-cell={label} className="flex flex-col items-start gap-2">
+    <div data-cell={label} className="flex max-w-full min-w-0 flex-col items-start gap-2">
       {children}
       <span className="text-2xs text-ink-mute">{label}</span>
     </div>

@@ -409,3 +409,22 @@ test('without quick choices the card has no row for them', async () => {
   await openField('Due date')
   expect(document.querySelector('[data-slot="date-picks"]')).toBeNull()
 })
+
+test('the quick choices never widen the card: the row stays out of the card\'s own width, wraps, and its buttons fill each line', async () => {
+  function Field() {
+    const [value, setValue] = useState<string | null>(null)
+    return (
+      <>
+        <label htmlFor="w">Due date</label>
+        <DateField id="w" value={value} onChange={setValue} picks={[{ label: 'Oggi', value: '2026-11-18' }, { label: 'Domani', value: '2026-11-19' }, { label: 'Questo fine settimana', value: '2026-11-21' }]} />
+      </>
+    )
+  }
+  render(<Field />)
+  await openField('Due date')
+  const row = document.querySelector<HTMLElement>('[data-slot="date-picks"]')!
+  const c = row.className.split(' ')
+  // `w-0 min-w-full`: no width of its own (the calendar sets the card's), then all of the card's.
+  for (const cls of ['w-0', 'min-w-full', 'flex-wrap']) expect(c).toContain(cls)
+  for (const button of within(row).getAllByRole('button')) expect(button.className.split(' ')).toContain('grow')
+})
