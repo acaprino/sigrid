@@ -22,7 +22,7 @@ x-zsd:
   review:
     status: draft
   intent:
-    audience: People who use the owner's apps (a to-do app, a mail app, whatever comes next), many with ADHD.
+    audience: People who use the owner's apps (to-do, mail and more), many with ADHD.
     primary-task: Find, read and act on the items of an app, with one clear action at a time.
     character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
