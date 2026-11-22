@@ -17,6 +17,23 @@ export const THEME_SHAPES = ['sharp', 'soft', 'round'] as const satisfies readon
 export const DEFAULT_SHAPE: ThemeShape = 'soft'
 /** The corner radii of each shape, in px: l1, l2, l3. */
 export const SHAPE_RADII: Readonly<Record<ThemeShape, readonly [number, number, number]>> = { sharp: [2, 4, 6], soft: [4, 6, 10], round: [6, 10, 14] }
+/** The corner radii of a theme in px (`ThemeDef.radii`). */
+export interface ThemeRadii {
+  readonly sm: number
+  readonly md: number
+  readonly lg: number
+  readonly xl: number
+  readonly button?: number | undefined
+  readonly chip?: number | undefined
+}
+export function isThemeRadii(value: unknown): value is ThemeRadii {
+  if (typeof value !== 'object' || value === null) return false
+  const r = value as Record<string, unknown>
+  const whole = (n: unknown, most: number) => typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= most
+  // `button` and `chip` may be a pill (9999); the four steps of the scale stay under 64.
+  return whole(r.sm, 64) && whole(r.md, 64) && whole(r.lg, 64) && whole(r.xl, 64) && (r.button === undefined || whole(r.button, 9999)) && (r.chip === undefined || whole(r.chip, 9999))
+}
+
 export function isThemeShape(value: unknown): value is ThemeShape {
   return (THEME_SHAPES as readonly unknown[]).includes(value)
 }
@@ -37,6 +54,12 @@ export interface ThemeDef {
   readonly palette: PaletteProfile
   /** How round the corners are. Absent: `soft` (4/6/10px). A value that is not a shape counts as absent. */
   readonly shape?: ThemeShape | undefined
+  /**
+   * The corner radii in px, for an app whose corners are none of the three shapes (for example 4/6/8/12): `sm`, `md`, `lg`
+   * and `xl` go to `--radius-sm`, `-md`, `-lg` and `-xl`; `button` and `chip` default to `md`. Absent, or not whole
+   * numbers (0 to 64; `button` and `chip` to 9999, a pill): the radii of `shape`.
+   */
+  readonly radii?: ThemeRadii | undefined
   /**
    * A strong accent: the OKLCH lightness and chroma of the fill (the hue is the accent's). Without it the fill is the
    * accent as text in light, and a deeper tone of it in dark. The engine still guarantees the label and the 3:1.

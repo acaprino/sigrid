@@ -11,7 +11,7 @@
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import { DEFAULT_SHAPE, SHAPE_RADII, isThemeShape, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
+import { DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -440,9 +440,12 @@ function elevationOf(scheme: ThemeScheme): Record<string, string> {
  */
 function shapeOf(theme: ThemeDef, scheme: ThemeScheme): Record<string, string> {
   const [l1, l2, l3] = SHAPE_RADII[isThemeShape(theme.shape) ? theme.shape : DEFAULT_SHAPE]
+  // An app's own radii (`ThemeDef.radii`) replace the shape's.
+  const own = isThemeRadii(theme.radii) ? theme.radii : null
+  const sm = own?.sm ?? l1, md = own?.md ?? l2, lg = own?.lg ?? l3, xl = own?.xl ?? l3
   return {
-    '--radius-sm': `${l1}px`, '--radius-md': `${l2}px`, '--radius-lg': `${l3}px`, '--radius-xl': `${l3}px`,
-    '--radius-button': `${l2}px`, '--radius-check': '9999px', '--radius-chip': `${l2}px`,
+    '--radius-sm': `${sm}px`, '--radius-md': `${md}px`, '--radius-lg': `${lg}px`, '--radius-xl': `${xl}px`,
+    '--radius-button': `${own?.button ?? md}px`, '--radius-check': '9999px', '--radius-chip': `${own?.chip ?? md}px`,
     '--icon-stroke': '1.75', '--icon-cap': 'round', '--icon-join': 'round',
     '--border-width': '1px',
     ...elevationOf(scheme),

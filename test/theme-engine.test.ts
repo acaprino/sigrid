@@ -357,6 +357,17 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
   })
 
+  test('an app can give its own radii: they replace the shape, and a bad value counts as absent', () => {
+    const base = THEMES[0]!
+    const own = tokensFor({ ...base, radii: { sm: 4, md: 6, lg: 8, xl: 12 } }, 'light')
+    expect(own.shape).toMatchObject({ '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '8px', '--radius-xl': '12px', '--radius-button': '6px', '--radius-chip': '6px' })
+    const apart = tokensFor({ ...base, radii: { sm: 4, md: 6, lg: 8, xl: 12, button: 8, chip: 999 } }, 'light')
+    expect(apart.shape).toMatchObject({ '--radius-button': '8px', '--radius-chip': '999px' })
+    for (const bad of [{ sm: 4, md: 6, lg: 8 }, { sm: 4, md: 6, lg: 8, xl: 12.5 }, { sm: 4, md: 6, lg: 8, xl: -1 }, { sm: 4, md: 6, lg: 8, xl: 99 }, [4, 6, 8, 12]] as unknown as ThemeDef['radii'][]) {
+      expect(tokensFor({ ...base, radii: bad }, 'light').shape).toMatchObject({ '--radius-sm': '4px', '--radius-lg': '10px', '--radius-xl': '10px' })
+    }
+  })
+
   test('the shape: Park UI\'s l1/l2/l3 corners a step rounder, 4/6/10px, rows in the open, round checkboxes, stroke 1.75', () => {
     expect(tk.shape).toMatchObject({ '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px', '--radius-button': '6px', '--radius-chip': '6px' })
     expect(tk.attributes['data-rows']).toBe('open')
