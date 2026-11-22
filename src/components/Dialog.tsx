@@ -33,7 +33,7 @@ export type DialogProps = {
   restoreFocusTo?: RefObject<HTMLElement | null> | undefined
   onCloseAutoFocus?: ((event: Event) => void) | undefined
   /**
-   * The form opens in a side panel on the right, like the task details.
+   * The form opens in a side panel on the right, like a details sheet.
    * Without it, it is a window in the center of the page: the short confirmations.
    */
   drawer?: boolean | undefined
@@ -76,10 +76,10 @@ function useCloseFocus(open: boolean, onCloseAutoFocus: DialogProps['onCloseAuto
   }, [])
 }
 
-/** Modal window on a raised surface: area name, profile, confirmations. */
+/** Modal window on a raised surface: a name to change, a profile, confirmations. */
 export function Dialog({ open, onOpenChange, title, description, children, footer, restoreFocusTo, onCloseAutoFocus, drawer = false, animated }: DialogProps) {
   const finalFocus = useCloseFocus(open, onCloseAutoFocus, restoreFocusTo)
-  // Like `TaskSheet`: the sheet gives focus back by itself to whoever had it before it opened.
+  // The sheet gives focus back by itself to whoever had it before it opened.
   if (drawer) return (
     <Sheet open={open} onOpenChange={(next) => onOpenChange(next)}>
       <SheetContent side="right" animated={animated} className={cn('w-full gap-5 overflow-hidden bg-raised p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>

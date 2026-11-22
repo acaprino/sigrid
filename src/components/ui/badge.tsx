@@ -6,7 +6,7 @@
 // Icons are 14px (R7).
 // From SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with
 // Base UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its
-// looping pulse (nobody uses them; no loops, ADR-0009). The badge does not animate.
+// looping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { useRender } from "@base-ui/react/use-render"

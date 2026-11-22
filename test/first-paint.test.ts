@@ -2,7 +2,7 @@
 // The first paint (before the script puts the choice on the root) uses the two blocks of `theme.css`: the `@theme`
 // block is the gray baseline (`BASE_THEME`) in light, the `prefers-color-scheme: dark` one in dark; an app paints its own default over them. They must be exactly what
 // the engine computes, or the page would change color as soon as it opens. With `UPDATE_THEME_CSS=1` the test
-// rewrites them (like `UPDATE_BINDINGS` for the app-core types), then it must be run again without it.
+// rewrites them, then it must be run again without it.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

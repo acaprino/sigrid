@@ -28,13 +28,13 @@ import { cn } from '../lib/utils'
 import { FOCUS_RING } from '../lib/focus'
 
 /**
- * The state of an attachment, as app-core says it: `ready` can be opened; `arriving` is arriving from the sync; `notUploaded`
+ * The state of an attachment, as the app says it: `ready` can be opened; `arriving` is arriving from the sync; `notUploaded`
  * the other device has not uploaded it yet; `overLimit` exceeds the limit; `textOnly` only its text is left.
  */
 export type AttachmentState = 'ready' | 'arriving' | 'notUploaded' | 'overLimit' | 'textOnly'
 
 /**
- * An attachment in the details (app-core's `AttachmentView`). `A` is the action type (the bindings' `Action`): the
+ * An attachment in the details. `A` is the app's action type: the
  * sheet does not read it, it hands it back to `onAction`. `open` null: no «Open». `href` is shown as text, never
  * as a clickable link: it is opened only with `open`.
  */
@@ -47,12 +47,12 @@ export type AttachmentView<A = unknown> = {
   href: string | null
   state: AttachmentState
   /**
-   * The state in words, if the caller gives it (app-core: «Arriving»); null: none. Absent: the sheet's own words
+   * The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words
    * («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»).
    */
   stateLabel?: string | null | undefined
   /**
-   * An image with its thumbnail ready (app-core's `AttachmentView.thumbnail`): the row shows a 64px thumbnail in place
+   * An image with its thumbnail ready: the row shows a 64px thumbnail in place
    * of the type mark, taken from `the section's `thumbnails[id]``. Absent or false: the row as before.
    */
   thumbnail?: boolean | undefined
@@ -62,7 +62,7 @@ export type AttachmentView<A = unknown> = {
 
 export type AttachmentSummary = { kinds: AttachmentKind[]; count: number }
 
-/** The summary `{ kinds, count }`, or the attachments themselves (`AttachmentView[]` from app-core): the `kind` of each is enough. */
+/** The summary `{ kinds, count }`, or the attachments themselves (`AttachmentView[]`): the `kind` of each is enough. */
 export type AttachmentMarksInput = AttachmentSummary | readonly { kind: AttachmentKind }[]
 
 export function summarize(input: AttachmentMarksInput): AttachmentSummary {

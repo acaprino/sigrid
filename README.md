@@ -92,8 +92,8 @@ default and equals the sizes the toolkit had before density existed.
   total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
-- Icons: `Icon` draws a meaning (`today`, `settings`) with the pack the user chose (`IconPackProvider`). An app adds
-  the meanings of its own with `icons`: `<IconPackProvider pack={pack} icons={{ inbox: { lucide: Inbox, fluent:
+- Icons: `Icon` draws a meaning (`settings`, `delete`) with the pack the user chose (`IconPackProvider`). The toolkit
+  draws only what any app has (`ICON_NAMES`); an app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ inbox: { lucide: Inbox, fluent:
   MailInboxColor, emoji: '\u{1F4E5}' } }}>`, then `<Icon name="inbox" />`. The line drawing is required; a pack left
   out falls back to it; a name nobody draws is an empty slot of the same size.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a

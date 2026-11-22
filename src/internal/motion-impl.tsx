@@ -160,7 +160,7 @@ export const LIST_ITEM = {
 
 /**
  * The elements with an exit animation. `initial={false}`: what is already there at mount does not move (no animation
- * on load, ADR-0009 INV-002). `reducedMotion="user"`: a second defense besides `useMotion`.
+ * on load). `reducedMotion="user"`: a second defense besides `useMotion`.
  */
 export function Presence({ children, pop = false }: { children: ReactNode; /** The leaving element steps out of the flow at once and the others slide (`popLayout`). */ pop?: boolean }) {
   return (

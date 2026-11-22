@@ -192,7 +192,7 @@ export type DateFieldProps = {
   words?: { clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
 }
 
-/** A local date (the due date): a click or Enter on a day chooses it and closes. */
+/** A local date (a due date, a birthday): a click or Enter on a day chooses it and closes. */
 export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words }: DateFieldProps) {
   const toolkit = useWords()
   const selected = parseDay(value)

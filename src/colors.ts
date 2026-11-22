@@ -1,8 +1,7 @@
 /**
- * The eighteen free colors for areas and projects, in hue order (from red to pink). They are medium tints: the color is
- * user data, the same in both themes, so it holds up on both the light and the dark paper. The same hex values
- * are in `ShellView.palette` in Rust (`app-core/src/structure.rs`, proven by `test/colors.test.ts`): the client shows
- * what the server sends. A color that is already saved never falls out of the list.
+ * The eighteen free colors (for what the user colours: a folder, a group, a mark), in hue order (from red to pink). They are medium tints: the color is
+ * user data, the same in both themes, so it holds up on both the light and the dark paper. An app that keeps the list
+ * elsewhere too (on its server) keeps the same hex values there. A color that is already saved never falls out of the list.
  */
 export const COLORS = [
   '#e34432',

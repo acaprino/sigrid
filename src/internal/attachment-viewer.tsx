@@ -52,9 +52,9 @@ function nearestStep(zoom: number): number {
 }
 
 /**
- * The preview of an attachment (internal: `TaskSheet` opens it with the `preview` prop, the package always exports
+ * The preview of an attachment (the app's details sheet opens it with the `preview` prop, the package always exports
  * sixteen components): pages one below the other in a sheet on the right (full width on the phone, a sheet inside the
- * page like the task details everywhere else). Only the drawing is here: whoever uses the
+ * page like a details sheet everywhere else). Only the drawing is here: whoever uses the
  * package opens and draws the document, provides the pages with their measures, provides the image when `onNeedPage`
  * asks for it and chooses the zoom. A page asks for its image only when it is close to entering the view.
  */

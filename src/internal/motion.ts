@@ -1,6 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 
-// Optional animations (ADR-0009): only in response to a gesture, under 250 ms, off by default. A component animates
+// Optional animations: only in response to a gesture, under 250 ms, off by default. A component animates
 // when MotionProvider or the control enables it and the system allows motion. Motion lives in a separate chunk
 // (`motion-impl`), loaded the first time it is needed: with animations off it never even reaches the browser.
 

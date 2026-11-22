@@ -50,8 +50,8 @@
   /* shadcn aliases kept for the primitives (theme.css): background = paper, foreground = ink, card = popover =
      raised, secondary = muted = paper-2, muted-foreground = ink-mute, border = line. */
   /* Data colours: 18 user colours adapted per theme, as dots (`--color-mark-N`, >= 3:1) and icons
-     (`--color-mark-icon-N`, >= 3.5:1); 8 label pairs `--tag-N-bg`/`--tag-N-ink` (>= 4.5:1); 3 priority dots
-     `--prio-N` (>= 3:1). Values: src/styles/theme.css. */
+     (`--color-mark-icon-N`, >= 3.5:1); 8 label pairs `--tag-N-bg`/`--tag-N-ink` (>= 4.5:1).
+     Values: src/styles/theme.css. */
 }
 
 /* ———— Colour, dark (src/styles/theme.css `prefers-color-scheme: dark`, = themeTokens('neutro', 'dark')) ———— */

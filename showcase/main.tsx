@@ -205,27 +205,98 @@ function Cell({ label, children }: { label: string; children: React.ReactNode })
   )
 }
 
+/* ———— The index ———— */
+
+/** Where a section's title must have passed, from the top of the window, for the section to be the one being read. */
+const READING_LINE = 96
+
+/**
+ * The index at the side: one row per section, read from the page itself so it cannot fall behind it, with a field
+ * that filters the rows by name (Enter goes to the first). The row of the section being read is the current one.
+ */
+function Index() {
+  const [sections, setSections] = React.useState<{ id: string; title: string }[]>([])
+  const [current, setCurrent] = React.useState('')
+  const [query, setQuery] = React.useState('')
+  React.useEffect(() => {
+    const found = Array.from(document.querySelectorAll<HTMLElement>('section[data-showcase]'))
+    setSections(found.map((s) => ({ id: s.id, title: s.querySelector('h2')?.textContent ?? s.id })))
+    // The sections did not exist when the browser looked for the address's anchor.
+    const asked = () => document.getElementById(decodeURIComponent(location.hash.slice(1)))
+    if (location.hash) asked()?.scrollIntoView()
+    let frame = 0
+    const read = () => {
+      frame = 0
+      const passed = found.filter((s) => s.getBoundingClientRect().top <= READING_LINE)
+      let now = passed[passed.length - 1] ?? found[0]
+      // At the end of the page the last sections never reach the line: the one asked for, if in view, else the last.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        const target = location.hash ? asked() : null
+        const inView = target && found.includes(target) && target.getBoundingClientRect().top < window.innerHeight && target.getBoundingClientRect().top > READING_LINE
+        now = inView ? target : found[found.length - 1]
+      }
+      setCurrent(now?.id ?? '')
+    }
+    const later = () => {
+      frame ||= requestAnimationFrame(read)
+    }
+    read()
+    window.addEventListener('scroll', later, { passive: true })
+    window.addEventListener('resize', later)
+    window.addEventListener('hashchange', later)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', later)
+      window.removeEventListener('resize', later)
+      window.removeEventListener('hashchange', later)
+    }
+  }, [])
+  const wanted = query.trim().toLowerCase()
+  const shown = sections.filter((s) => s.title.toLowerCase().includes(wanted))
+  return (
+    <aside data-showcase-index="" className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-3 self-start overflow-y-auto border-e border-line p-3 lg:flex">
+      <SearchField
+        aria-label="Find a section"
+        placeholder="Find a section"
+        value={query}
+        onValueChange={setQuery}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && shown[0]) location.hash = shown[0].id
+        }}
+      />
+      <NavList aria-label="Sections">
+        {shown.map((s) => (
+          <NavItem key={s.id} href={`#${s.id}`} title={s.title} current={current === s.id}>
+            {s.title}
+          </NavItem>
+        ))}
+      </NavList>
+      {shown.length === 0 ? <p className="px-(--row-pad) text-sm text-ink-mute">No section has that name.</p> : null}
+    </aside>
+  )
+}
+
 /* ———— Sample data ———— */
 
 const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 
 const ATTACHMENTS: AttachmentView<string>[] = [
   { id: 'a1', kind: 'file', title: 'Quarterly report.pdf', detail: '2.4 MB', href: null, state: 'ready', open: 'open-a1', remove: 'remove-a1', thumbnail: true },
-  { id: 'a2', kind: 'link', title: 'Kitchen layout ideas', detail: null, href: 'https://example.com/kitchen', state: 'ready', open: 'open-a2', remove: 'remove-a2' },
-  { id: 'a3', kind: 'email', title: 'Re: electricity contract', detail: 'Marco Rossi', href: null, state: 'arriving', open: null, remove: 'remove-a3' },
+  { id: 'a2', kind: 'link', title: 'Layout ideas', detail: null, href: 'https://example.com/layout', state: 'ready', open: 'open-a2', remove: 'remove-a2' },
+  { id: 'a3', kind: 'email', title: 'Re: contract renewal', detail: 'Marco Rossi', href: null, state: 'arriving', open: null, remove: 'remove-a3' },
   { id: 'a4', kind: 'file', title: 'Site survey.mov', detail: '212 MB', href: null, state: 'overLimit', open: null, remove: 'remove-a4' },
 ]
 
 const TOASTS: ToastItem[] = [
-  { id: 't1', text: 'Moved to Kitchen renovation', undo: { hint: 'Z', onClick: () => {} } },
+  { id: 't1', text: 'Moved to Archive', undo: { hint: 'Z', onClick: () => {} } },
   {
     id: 't2',
-    text: 'Added to the stack',
+    text: 'Reminder set',
     actions: [
       { label: 'When', items: [{ id: 'today', label: 'Today', pressed: true, onClick: () => {} }, { id: 'tomorrow', label: 'Tomorrow', onClick: () => {} }, { id: 'week', label: 'In a week', onClick: () => {} }] },
     ],
   },
-  { id: 't3', text: 'Task deleted', undo: { onClick: () => {} } },
+  { id: 't3', text: 'Item deleted', undo: { onClick: () => {} } },
 ]
 
 const MARKDOWN = `**Before the call**
@@ -241,13 +312,13 @@ const MARKDOWN = `**Before the call**
 2. Write to [Marco](https://example.com)`
 
 const SELECT_OPTIONS = [
-  { value: 'stack', label: 'Stack' },
-  { value: 'today', label: 'Today' },
-  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'drafts', label: 'Drafts' },
+  { value: 'shared', label: 'Shared' },
+  { value: 'archive', label: 'Archive' },
 ]
 const SELECT_GROUPS = [
-  { label: 'Home', options: [{ value: 'kitchen', label: 'Kitchen renovation', color: COLORS[10] as string }, { value: 'contract', label: 'Electricity contract', color: COLORS[4] as string }] },
-  { label: 'Work', options: [{ value: 'report', label: 'Quarterly report', color: COLORS[7] as string }] },
+  { label: 'Personal', options: [{ value: 'travel', label: 'Travel', color: COLORS[10] as string }, { value: 'contracts', label: 'Contracts', color: COLORS[4] as string }] },
+  { label: 'Team', options: [{ value: 'reports', label: 'Reports', color: COLORS[7] as string }] },
 ]
 
 /* ———— Sections ———— */
@@ -398,7 +469,7 @@ function Buttons({ animated }: { animated: boolean }) {
         <Cell label="icon">
           <Button variant="outline">
             <Plus aria-hidden="true" />
-            New task
+            New item
           </Button>
         </Cell>
         <Cell label="key hint">
@@ -457,11 +528,11 @@ function Fields() {
     <Section id="input" title="Input and Textarea" note="Empty with a placeholder, filled, under the pointer, focused, disabled, invalid.">
       <Row label="Input">
         <Cell label="placeholder">
-          <Input placeholder="Search a task" className="w-56" data-sample="input-placeholder" />
+          <Input placeholder="Search by name" className="w-56" data-sample="input-placeholder" />
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Input defaultValue="Kitchen renovation" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
+            <Input defaultValue="Quarterly report" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
@@ -482,7 +553,7 @@ function Fields() {
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Textarea defaultValue="Call the dentist to reschedule the appointment" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
+            <Textarea defaultValue="Ask the supplier to move the delivery" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
@@ -568,11 +639,11 @@ function FormFields() {
 }
 
 function Navigation() {
-  const [place, setPlace] = React.useState('today')
+  const [place, setPlace] = React.useState('all')
   const rows = [
-    { id: 'today', icon: 'today', label: 'Today', count: 3 },
-    { id: 'upcoming', icon: 'upcoming', label: 'Upcoming', count: 12 },
-    { id: 'all', icon: 'all', label: 'All', count: 0 },
+    { id: 'all', icon: 'all', label: 'All', count: 3 },
+    { id: 'notifications', icon: 'notifications', label: 'Notifications', count: 12 },
+    { id: 'settings', icon: 'settings', label: 'Settings', count: 0 },
     { id: 'plain', icon: null, label: 'A row without an icon', count: 128 },
   ] as const
   const list = (tone: 'page' | 'sidebar') => (
@@ -592,7 +663,7 @@ function Navigation() {
       </Row>
       <Row label="status colours">
         <span className="rounded-md bg-success-soft px-2 py-1 text-sm text-success">Saved</span>
-        <span className="rounded-md bg-warning-soft px-2 py-1 text-sm text-warning">High priority</span>
+        <span className="rounded-md bg-warning-soft px-2 py-1 text-sm text-warning">Expires soon</span>
         <span className="text-sm">
           A <mark className="bg-highlight text-ink">match</mark> inside a text
         </span>
@@ -642,7 +713,7 @@ function Pickers() {
           <label htmlFor="suggested-labels" className="text-sm font-medium">
             Labels
           </label>
-          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Home', 'Work', 'Waiting', 'Errands', 'Someday']} placeholder="Add a label" />
+          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
         </div>
       </Row>
       <Row label="avatar">
@@ -781,8 +852,8 @@ function Toggles({ animated }: { animated: boolean }) {
 }
 
 function Selects() {
-  const [value, setValue] = React.useState('today')
-  const [place, setPlace] = React.useState('kitchen')
+  const [value, setValue] = React.useState('shared')
+  const [place, setPlace] = React.useState('travel')
   const states: State[] = ['default', 'hover', 'focus']
   return (
     <Section id="select" title="Select" note="The button in three states, disabled and invalid, the small size, a placeholder, groups with the app's mark. `?open=select` opens the list.">
@@ -813,14 +884,14 @@ function Selects() {
         </Cell>
         <Cell label="placeholder">
           <div className="w-56">
-            <Select aria-label="Project" options={SELECT_OPTIONS} value="" placeholder="Choose a project" onValueChange={setValue} />
+            <Select aria-label="Folder" options={SELECT_OPTIONS} value="" placeholder="Choose a folder" onValueChange={setValue} />
           </div>
         </Cell>
         <Cell label="groups and marks">
           <div className="w-64" data-open-target="select">
             <Select
               aria-label="Where"
-              options={[{ value: 'stack', label: 'Stack', color: '' }]}
+              options={[{ value: 'none', label: 'No folder', color: '' }]}
               groups={SELECT_GROUPS}
               value={place}
               onValueChange={setPlace}
@@ -846,7 +917,7 @@ function Menus({ animated }: { animated: boolean }) {
               <Button variant="outline">Actions</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64" animated={animated}>
-              <DropdownMenuLabel>Task</DropdownMenuLabel>
+              <DropdownMenuLabel>Item</DropdownMenuLabel>
               <DropdownMenuGroup>
                 <Forced attrs={{ 'data-highlighted': '' }}>
                   <DropdownMenuItem data-sample="menu-item-highlighted">
@@ -860,16 +931,16 @@ function Menus({ animated }: { animated: boolean }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Priority</DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
-                    <DropdownMenuItem>P1</DropdownMenuItem>
-                    <DropdownMenuItem>P2</DropdownMenuItem>
+                    <DropdownMenuItem>Copy the link</DropdownMenuItem>
+                    <DropdownMenuItem>Send by email</DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem checked={done} onCheckedChange={setDone}>
-                Show completed
+                Show hidden
               </DropdownMenuCheckboxItem>
               <DropdownMenuRadioGroup value={sort} onValueChange={setSort}>
                 <DropdownMenuRadioItem value="date">By date</DropdownMenuRadioItem>
@@ -898,7 +969,7 @@ function HoverRows({ animated }: { animated: boolean }) {
       <Row label="rows">
         <ul ref={setList} data-sample="hover-rows" className="relative flex w-64 flex-col gap-0.5">
           {motion ? <motion.HoverHighlight container={list} selector="[data-hover-row]" className="absolute rounded-md bg-ink/5" /> : null}
-          {['Today', 'Upcoming', 'Kitchen renovation', 'Quarterly report', 'Done'].map((name, i) => (
+          {['Overview', 'Documents', 'Shared with me', 'Quarterly report', 'Archive'].map((name, i) => (
             <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm ${i === 2 || i === 3 ? 'h-7 pl-6' : 'h-9'} ${motion ? '' : 'hover:bg-ink/5'}`}>
               {name}
             </li>
@@ -924,8 +995,8 @@ function Popovers({ animated }: { animated: boolean }) {
             </PopoverTrigger>
             <PopoverContent align="start" data-sample="popover" animated={animated}>
               <PopoverHeader>
-                <PopoverTitle>3 tasks due today</PopoverTitle>
-                <PopoverDescription>One of them is late.</PopoverDescription>
+                <PopoverTitle>3 new comments</PopoverTitle>
+                <PopoverDescription>One of them mentions you.</PopoverDescription>
               </PopoverHeader>
             </PopoverContent>
           </Popover>
@@ -1052,7 +1123,7 @@ function Keys() {
       </Row>
       <Row label="in a line">
         <p className="text-sm text-ink-soft">
-          Press <Kbd>N</Kbd> to add a task, <Kbd>Z</Kbd> to undo.
+          Press <Kbd>N</Kbd> to add an item, <Kbd>Z</Kbd> to undo.
         </p>
       </Row>
     </Section>
@@ -1067,10 +1138,10 @@ function Empties() {
           <Empty title="Nothing for today" className="w-72 rounded-lg border border-line p-6" />
         </Cell>
         <Cell label="sentence and action">
-          <Empty title="No tasks here" description="Tasks you move to this project appear here." action={<Button variant="outline">New task</Button>} className="w-72 rounded-lg border border-line p-6" />
+          <Empty title="Nothing here yet" description="Items you move to this folder appear here." action={<Button variant="outline">New item</Button>} className="w-72 rounded-lg border border-line p-6" />
         </Cell>
         <Cell label="icon">
-          <Empty icon={<Inbox />} title="Inbox zero" description="Everything has a place." className="w-72 rounded-lg border border-line p-6" data-sample="empty-icon" />
+          <Empty icon={<Inbox />} title="No new messages" description="You have read everything." className="w-72 rounded-lg border border-line p-6" data-sample="empty-icon" />
         </Cell>
       </Row>
     </Section>
@@ -1186,7 +1257,7 @@ function Content() {
       </Row>
       <Row label="inline">
         <p className="text-sm">
-          <InlineMarkdown text="Call **the dentist** about the `crown`" />
+          <InlineMarkdown text="Ask **the supplier** about the `invoice`" />
         </p>
       </Row>
       <Row label="label colours">
@@ -1215,7 +1286,7 @@ function Notices({ animated }: { animated: boolean }) {
       </Row>
       <Row label="timed">
         <div className="w-[26rem]">
-          <Toasts items={[{ id: 'tt', text: 'Moved to Today', undo: { hint: 'Z', onClick: () => {} } }]} inline durationMs={3_600_000} onDismiss={() => {}} />
+          <Toasts items={[{ id: 'tt', text: 'Moved to Archive', undo: { hint: 'Z', onClick: () => {} } }]} inline durationMs={3_600_000} onDismiss={() => {}} />
         </div>
       </Row>
       <Row label="live">
@@ -1278,8 +1349,8 @@ function Overlays({ animated }: { animated: boolean }) {
       <Dialog
         open={dialog}
         onOpenChange={setDialog}
-        title="Rename the area"
-        description="The new name shows everywhere the area appears."
+        title="Rename the folder"
+        description="The new name shows everywhere the folder appears."
         footer={
           <>
             <Button variant="ghost" onClick={() => setDialog(false)}>
@@ -1289,14 +1360,14 @@ function Overlays({ animated }: { animated: boolean }) {
           </>
         }
       >
-        <Input defaultValue="Home" aria-label="Name" />
+        <Input defaultValue="Contracts" aria-label="Name" />
       </Dialog>
       <Dialog
         open={drawer}
         onOpenChange={setDrawer}
         drawer
-        title="New project"
-        description="A project groups the tasks of one goal."
+        title="New folder"
+        description="A folder groups the items of one subject."
         footer={
           <>
             <Button variant="ghost" onClick={() => setDrawer(false)}>
@@ -1314,11 +1385,11 @@ function Overlays({ animated }: { animated: boolean }) {
       <Sheet open={sheet !== null} onOpenChange={(o) => setSheet(o ? sheet : null)}>
         <SheetContent side={sheet ?? 'right'} animated={animated}>
           <SheetHeader>
-            <SheetTitle>Task details</SheetTitle>
-            <SheetDescription>Everything about one task.</SheetDescription>
+            <SheetTitle>Details</SheetTitle>
+            <SheetDescription>Everything about one item.</SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-3 px-4">
-            <Input defaultValue="Call the dentist" aria-label="Title" />
+            <Input defaultValue="Quarterly report" aria-label="Title" />
             <Textarea placeholder="Notes" aria-label="Notes" />
           </div>
           <SheetFooter>
@@ -1370,7 +1441,7 @@ function ThemePanel({ theme, scheme, tone }: { theme: ThemeId; scheme: ThemeSche
           Focus
         </Button>
       </div>
-      <Input placeholder="Search a task" />
+      <Input placeholder="Search by name" />
       <div className="flex items-center gap-4">
         <Checkbox aria-label="Done" defaultChecked />
         <Checkbox aria-label="Not done" />
@@ -1425,13 +1496,13 @@ function App() {
     next.set('theme', theme)
     next.set('scheme', scheme)
     next.set('tone', tonePresetOf(tone))
-    history.replaceState(null, '', `?${next.toString()}`)
+    history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [theme, scheme, tone])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
     next.set('density', density)
-    history.replaceState(null, '', `?${next.toString()}`)
+    history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [density])
   // What only opens on a gesture: the showcase makes the gesture once, after the first paint.
   React.useEffect(() => {
@@ -1469,7 +1540,9 @@ function App() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 pb-24 md:px-6">
+        <div className="flex">
+        <Index />
+        <main className="mx-auto min-w-0 max-w-6xl flex-1 px-4 pb-24 md:px-6">
           <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
           <Tokens />
           <Section id="theme-gallery" title="Theme gallery">
@@ -1500,6 +1573,7 @@ function App() {
           <Notices animated={animated} />
           <Overlays animated={animated} />
         </main>
+        </div>
       </div>
     </MotionProvider>
   )

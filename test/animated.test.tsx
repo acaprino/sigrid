@@ -1,4 +1,4 @@
-// Optional animations (ADR-0009: only as a response to a gesture, off by default, never with prefers-reduced-motion).
+// Optional animations (only as a response to a gesture, off by default, never with prefers-reduced-motion).
 // The snapshots in this file pin the DOM without `animated` of the toolkit's animated primitives (the one from before
 // the animations, plus the later fixes: ARIA attributes of the notices). An app's components are pinned in its own package. The `useId` ids are
 // numbered in the order they appear (`stripIds`): they do not depend on the React format or on the cases rendered before.
