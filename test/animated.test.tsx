@@ -385,3 +385,36 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
     expect(enter).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('state changes ease only where motion is on', () => {
+  test('MotionProvider marks the document root while motion is on, and only then; two providers share the mark', async () => {
+    const { render: mount } = await import('@testing-library/react')
+    const { MotionProvider } = await import('../src')
+    const root = document.documentElement
+    expect(root.hasAttribute('data-motion')).toBe(false)
+    const off = mount(<MotionProvider animated={false}><p>x</p></MotionProvider>)
+    expect(root.hasAttribute('data-motion')).toBe(false)
+    off.unmount()
+    const a = mount(<MotionProvider animated><p>a</p></MotionProvider>)
+    const b = mount(<MotionProvider animated><p>b</p></MotionProvider>)
+    expect(root.hasAttribute('data-motion')).toBe(true)
+    a.unmount()
+    expect(root.hasAttribute('data-motion')).toBe(true)
+    b.rerender(<MotionProvider animated={false}><p>b</p></MotionProvider>)
+    expect(root.hasAttribute('data-motion')).toBe(false)
+    b.unmount()
+  })
+
+  test('the easing is in theme.css under that mark, inside the reduced-motion guard, for colours only and in 100ms', async () => {
+    const { readFileSync } = await import('node:fs')
+    const css = readFileSync(`${process.cwd()}/src/styles/theme.css`, 'utf8')
+    const at = css.indexOf(':where(:root[data-motion])')
+    expect(at).toBeGreaterThan(-1)
+    const guard = css.lastIndexOf('@media', at)
+    expect(css.slice(guard, at)).toMatch(/^@media \(prefers-reduced-motion: no-preference\) \{\s*$/)
+    const rule = css.slice(at, css.indexOf('}', at))
+    expect(rule).toMatch(/transition-property:\s*background-color, border-color, color;/)
+    expect(rule).toMatch(/transition-duration:\s*100ms;/)
+    expect(rule).not.toMatch(/transform|opacity|outline|all/)
+  })
+})

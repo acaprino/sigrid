@@ -60,7 +60,7 @@ function Slider({ value, onValueChange, min, max, step = 1, disabled, className,
           index={0}
           data-slot="slider-thumb"
           onKeyDownCapture={vertical}
-          className={cn("top-1/2 z-2 size-5 -translate-y-1/2 rounded-full border-2 border-primary bg-paper after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3", FOCUS_RING)}
+          className={cn("top-1/2 z-2 size-5 -translate-y-1/2 rounded-full border-2 border-primary bg-paper hover:border-accent-hover hover:bg-accent-soft after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3", FOCUS_RING)}
         >
           <SliderPrimitive.HiddenInput />
         </SliderPrimitive.Thumb>

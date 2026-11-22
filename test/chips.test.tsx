@@ -191,8 +191,10 @@ test('chips: the placeholder shows only with no tags; the box border is the ligh
   render(<Chips initial={['a']} />)
   expect(screen.queryByPlaceholderText('Type, then Enter or comma')).toBeNull()
   const box = screen.getByRole('textbox', { name: 'Labels' }).parentElement as HTMLElement
-  expect(box.className).toContain('border-line')
-  expect(box.className).not.toContain('border-input')
+  expect(box.className.split(' ')).toContain('border-line')
+  // The darker border is only under the pointer.
+  expect(box.className.split(' ')).not.toContain('border-input')
+  expect(box.className.split(' ')).toContain('hover:border-input')
 })
 
 // The remove button of a chip, named and with its tooltip.

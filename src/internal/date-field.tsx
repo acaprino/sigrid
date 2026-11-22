@@ -51,6 +51,7 @@ const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
 const TRIGGER_CLASS = cn(
   'flex h-(--control-md) w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-line bg-transparent px-(--pad-sm) py-1 text-left text-base md:text-sm',
+  'hover:border-input',
   FOCUS_RING,
 )
 

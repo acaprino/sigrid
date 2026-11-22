@@ -535,32 +535,32 @@ function Fields() {
     <Section id="input" title="Input and Textarea" note="Empty with a placeholder, filled, under the pointer, focused, disabled, invalid.">
       <Row label="Input">
         <Cell label="placeholder">
-          <Input placeholder="Search by name" className="w-56" data-sample="input-placeholder" />
+          <Input aria-label="Sample empty" placeholder="Search by name" className="w-56" data-sample="input-placeholder" />
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Input defaultValue="Quarterly report" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
+            <Input aria-label={`Sample ${state}`} defaultValue="Quarterly report" className="w-56" data-sample={`input-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
       <Row label="Input types">
         <Cell label="time">
-          <Input type="time" defaultValue="09:00" className="w-32" />
+          <Input aria-label="Sample time" type="time" defaultValue="09:00" className="w-32" />
         </Cell>
         <Cell label="number">
-          <Input type="number" defaultValue={2} className="w-20" />
+          <Input aria-label="Sample number" type="number" defaultValue={2} className="w-20" />
         </Cell>
         <Cell label="file">
-          <Input type="file" className="w-72" />
+          <Input aria-label="Sample file" type="file" className="w-72" />
         </Cell>
       </Row>
       <Row label="Textarea">
         <Cell label="placeholder">
-          <Textarea placeholder="What's on your mind?" className="w-64" data-sample="textarea-placeholder" />
+          <Textarea aria-label="Sample empty note" placeholder="What's on your mind?" className="w-64" data-sample="textarea-placeholder" />
         </Cell>
         {fieldStates.map((state) => (
           <Cell key={state} label={state}>
-            <Textarea defaultValue="Ask the supplier to move the delivery" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
+            <Textarea aria-label={`Sample note ${state}`} defaultValue="Ask the supplier to move the delivery" className="w-64" data-sample={`textarea-${state}`} {...stateProps(state)} />
           </Cell>
         ))}
       </Row>
@@ -777,7 +777,8 @@ function Pickers() {
           <label htmlFor="suggested-labels" className="text-sm font-medium">
             Labels
           </label>
-          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
+          <label htmlFor="suggested-labels" className="sr-only">Sample labels with suggestions</label>
+            <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
         </div>
       </Row>
       <Row label="avatar">
@@ -1281,13 +1282,15 @@ function OtherFields() {
       <Row label="ChipsInput">
         <Cell label="default">
           <div className="w-80">
+            <label htmlFor="chips-a" className="sr-only">Sample labels</label>
             <ChipsInput id="chips-a" value={labels} onChange={setLabels} placeholder="Add a label" />
           </div>
         </Cell>
         <Cell label="focus">
           <Forced state="focus" selector='[data-part="control"]'>
             <div className="w-80">
-              <ChipsInput id="chips-b" value={labels} onChange={setLabels} placeholder="Add a label" />
+              <label htmlFor="chips-b" className="sr-only">Sample labels, focused</label>
+            <ChipsInput id="chips-b" value={labels} onChange={setLabels} placeholder="Add a label" />
             </div>
           </Forced>
         </Cell>
@@ -1295,6 +1298,7 @@ function OtherFields() {
       <Row label="ChipsInput, recipients">
         <Cell label="display, invalid, separators, no dot">
           <div className="w-96 max-w-full" data-sample="recipients">
+            <label htmlFor="chips-to" className="sr-only">Sample recipients</label>
             <ChipsInput id="chips-to" value={to} onChange={setTo} placeholder="Add a person" display={nameOf} invalid={notAnAddress} separators={ADDRESS_SEPARATORS} dot={false} suggestions={Object.keys(ADDRESS_BOOK)} />
           </div>
         </Cell>

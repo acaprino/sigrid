@@ -99,7 +99,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         data-slot="select-trigger"
         className={cn(
           "flex w-full items-center justify-between gap-2 rounded-md border border-line bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
-          invalid ? "border-destructive" : "data-[popup-open]:border-ring",
+          invalid ? "border-destructive" : "hover:border-input data-[popup-open]:border-ring",
           disabled && "pointer-events-none cursor-not-allowed opacity-50",
           FOCUS_RING,
           size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",

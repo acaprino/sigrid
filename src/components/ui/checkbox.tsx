@@ -78,7 +78,7 @@ function Checkbox({
       data-slot="checkbox"
       data-state={state}
       className={cn(
-        "peer relative size-4.5 shrink-0 rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
+        "peer relative size-4.5 shrink-0 rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input enabled:data-[state=unchecked]:hover:border-ink-soft enabled:data-[state=checked]:hover:border-accent-hover enabled:data-[state=checked]:hover:bg-accent-hover enabled:data-[state=indeterminate]:hover:border-accent-hover enabled:data-[state=indeterminate]:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
         FOCUS_RING,
         className
       )}

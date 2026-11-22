@@ -122,7 +122,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           className={cn(
             "h-(--control-md) w-full min-w-0 truncate rounded-md border border-line bg-transparent py-1 pr-(--control-md) pl-(--pad-sm) text-base pointer-coarse:min-h-11 md:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50",
             FOCUS_RING,
-            invalid && "border-destructive",
+            invalid ? "border-destructive" : "hover:border-input",
           )}
         />
         <ComboboxPrimitive.Trigger
