@@ -9,7 +9,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@ark-ui/react/avatar"
 import { cn } from "../../lib/utils"
-import { contrast } from "../../theme-engine"
+import { contrast, toHex } from "../../theme-engine"
 
 const SIZES = {
   md: "size-(--control-md) text-sm",
@@ -27,7 +27,7 @@ export type AvatarProps = {
   decorative?: boolean | undefined
   /**
    * An identity fill, `#rrggbb`, for an app whose people or accounts are told apart by colour (a mail app's accounts). The
-   * initials take the ink with the better contrast on it (the one the toolkit gives a filled mark). Without it the tile is
+   * initials take the ink with the better contrast on it (white or black). Without it the tile is
    * the neutral one (R10: a colour for a person is a dot, not a fill): this is for what the app chose on purpose.
    */
   color?: string | undefined
@@ -42,8 +42,9 @@ const IS_HEX = /^#[0-9a-fA-F]{6}$/
  * The ink for a fill: white or black, whichever has the better contrast on it. Of the two, one always reaches 4.5:1 (the worst
  * fill, a mid-tone, still gets 4.58): the initials are small text, and the dark mark ink of the theme is not dark enough for that.
  */
+const BLACK = toHex({ L: 0, C: 0, h: 0 })
 export function inkOn(fill: string): string {
-  return contrast(fill, "#ffffff") >= contrast(fill, "#000000") ? "#ffffff" : "#000000"
+  return contrast(fill, "#ffffff") >= contrast(fill, BLACK) ? "#ffffff" : BLACK
 }
 
 /** The first letter of the first and of the last word («Ada Lovelace» → «AL»); one word gives one letter. */
