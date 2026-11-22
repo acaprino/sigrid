@@ -90,6 +90,8 @@ export interface Words {
     readonly removeAll: string
     /** The name of the list of suggestions. */
     readonly suggestions: string
+    /** Said after the name of a chip whose value is not valid. */
+    readonly invalid: string
   }
   readonly kinds: {
     readonly text: string
@@ -201,6 +203,7 @@ export const DEFAULT_WORDS: Words = {
     count: (count) => plural(count, 'label', 'labels'),
     removeAll: 'Remove all labels',
     suggestions: 'Suggestions',
+    invalid: 'not valid',
   },
   kinds: { text: 'text', file: 'file', email: 'email', link: 'link' },
   attachments: {

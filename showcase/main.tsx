@@ -1261,11 +1261,23 @@ function Dates({ animated }: { animated: boolean }) {
   )
 }
 
+/** People for the recipients sample: the address is the value, the name is what a chip shows. */
+const ADDRESS_BOOK: Record<string, string> = {
+  'ada@example.com': 'Ada Lovelace',
+  'alan@example.com': 'Alan Turing',
+  'grace@example.com': 'Grace Hopper',
+  'margaret@example.com': 'Margaret Hamilton',
+}
+const nameOf = (address: string) => ADDRESS_BOOK[address] ?? address
+const notAnAddress = (value: string) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)
+const ADDRESS_SEPARATORS = [',', ';', ' '] as const
+
 function OtherFields() {
   const [labels, setLabels] = React.useState(['home', 'marco', 'office'])
+  const [to, setTo] = React.useState(['ada@example.com', 'alan@example.com', 'luca@example'])
   const [duration, setDuration] = React.useState<{ hours: number; minutes: number } | null>({ hours: 0, minutes: 30 })
   return (
-    <Section id="fields" title="ChipsInput and DurationField" note="Labels as chips, at rest and focused; hours and minutes with four shortcuts.">
+    <Section id="fields" title="ChipsInput and DurationField" note="Labels as chips, at rest and focused. As recipients: a chip shows a person's name in place of the address, one that is not an address has the destructive chip, a comma, a semicolon or a space closes one, the chips have no dot, and a suggestion shows the name with the address after it. Hours and minutes with four shortcuts.">
       <Row label="ChipsInput">
         <Cell label="default">
           <div className="w-80">
@@ -1278,6 +1290,13 @@ function OtherFields() {
               <ChipsInput id="chips-b" value={labels} onChange={setLabels} placeholder="Add a label" />
             </div>
           </Forced>
+        </Cell>
+      </Row>
+      <Row label="ChipsInput, recipients">
+        <Cell label="display, invalid, separators, no dot">
+          <div className="w-96 max-w-full" data-sample="recipients">
+            <ChipsInput id="chips-to" value={to} onChange={setTo} placeholder="Add a person" display={nameOf} invalid={notAnAddress} separators={ADDRESS_SEPARATORS} dot={false} suggestions={Object.keys(ADDRESS_BOOK)} />
+          </div>
         </Cell>
       </Row>
       <Row label="DurationField">

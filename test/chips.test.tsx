@@ -207,3 +207,96 @@ test('the tag remove button keeps its name and shows it as a tooltip on focus', 
   expect(content.getAttribute('aria-hidden')).toBe('true')
   expect(screen.getAllByRole('button', { name: 'Remove label home' })).toHaveLength(1)
 })
+
+/* ———— A shown name, a value that is not valid, the separators, the dot ———— */
+
+const PEOPLE: Record<string, string> = { 'giulia@studioferri.it': 'Giulia Ferri', 'sara.conti@gmail.com': 'Sara Conti', 'marco@bellini.it': 'Marco Bellini' }
+function Recipients({ initial = [] as string[], spy, suggestions }: { initial?: string[]; spy?: (v: string[]) => void; suggestions?: string[] }) {
+  const [tags, setTags] = useState(initial)
+  return (
+    <>
+      <label htmlFor="to">To</label>
+      <ChipsInput
+        id="to"
+        value={tags}
+        onChange={(v) => {
+          spy?.(v)
+          setTags(v)
+        }}
+        display={(value) => PEOPLE[value] ?? value}
+        invalid={(value) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)}
+        separators={[',', ';', ' ']}
+        dot={false}
+        {...(suggestions ? { suggestions } : {})}
+      />
+    </>
+  )
+}
+
+test('chips: a chip shows the name given for its value, the value stays the caller\'s, and its remove button is named by the name', async () => {
+  const spy = vi.fn()
+  render(<Recipients initial={['giulia@studioferri.it', 'luca@esempio.it']} spy={spy} />)
+  await settle()
+  // A value with no name shows as it is.
+  expect([...document.querySelectorAll('[data-part="item-text"]')].map((c) => c.textContent)).toEqual(['Giulia Ferri', 'luca@esempio.it'])
+  fireEvent.click(screen.getByRole('button', { name: 'Remove label Giulia Ferri' }))
+  await settle()
+  expect(spy).toHaveBeenLastCalledWith(['luca@esempio.it'])
+})
+
+test('chips: a value that is not valid has the destructive chip and says so to screen readers; a valid one does not', async () => {
+  render(<Recipients initial={['giulia@studioferri.it', 'luca@esempio']} />)
+  await settle()
+  const [good, bad] = [...document.querySelectorAll<HTMLElement>('[data-slot="chip"]')]
+  expect(bad!.hasAttribute('data-invalid')).toBe(true)
+  expect(bad!.className).toContain('border-destructive')
+  expect(bad!.className).toContain('text-destructive')
+  expect(bad!.className).toContain('bg-destructive-soft')
+  expect(bad!.className).not.toContain('bg-ink/6')
+  expect(bad!.textContent).toBe('luca@esempio, not valid')
+  expect(bad!.querySelector('.sr-only')!.textContent).toBe(', not valid')
+  expect(good!.hasAttribute('data-invalid')).toBe(false)
+  expect(good!.className).toContain('bg-ink/6')
+  expect(good!.textContent).toBe('Giulia Ferri')
+})
+
+test('chips: every separator given closes a label, typed or arriving with other text; without the prop only the comma does', async () => {
+  const spy = vi.fn()
+  const { unmount } = render(<Recipients spy={spy} />)
+  const box = screen.getByLabelText('To')
+  await typed(box, 'a@b.it;c@d.it e@f.it,rest')
+  expect(spy).toHaveBeenLastCalledWith(['a@b.it', 'c@d.it', 'e@f.it'])
+  expect((box as HTMLInputElement).value).toBe('rest')
+  unmount()
+  const plain = vi.fn()
+  render(<Chips spy={plain} />)
+  await typed(screen.getByLabelText('Labels'), 'one;two three,rest')
+  expect(plain).toHaveBeenLastCalledWith(['one;two three'])
+})
+
+test('chips: the dot is there by default and gone with dot={false}', async () => {
+  const { unmount } = render(<Chips initial={['home']} />)
+  await settle()
+  expect(document.querySelector('[data-slot="chip-dot"]')).toBeTruthy()
+  unmount()
+  render(<Recipients initial={['giulia@studioferri.it']} />)
+  await settle()
+  expect(document.querySelector('[data-slot="chip-dot"]')).toBeNull()
+})
+
+test('chips: a suggestion shows the name and the value after it, and is found by either', async () => {
+  const spy = vi.fn()
+  render(<Recipients spy={spy} suggestions={Object.keys(PEOPLE)} />)
+  const box = screen.getByLabelText('To')
+  box.focus()
+  await typed(box, 'bell')
+  const rows = () => [...document.querySelectorAll<HTMLElement>('[data-slot="chips-suggestion"]')]
+  expect(rows().map((r) => r.textContent)).toEqual(['Marco Bellinimarco@bellini.it'])
+  expect(rows()[0]!.querySelector('[data-slot="chips-suggestion-value"]')!.textContent).toBe('marco@bellini.it')
+  // By the value: «gmail» is in no name.
+  await typed(box, 'gmail')
+  expect(rows().map((r) => r.querySelector('[data-part="item-text"]')!.textContent)).toEqual(['Sara Conti'])
+  fireEvent.click(rows()[0]!)
+  await settle()
+  expect(spy).toHaveBeenLastCalledWith(['sara.conti@gmail.com'])
+})
