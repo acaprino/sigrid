@@ -69,7 +69,7 @@ describe('the catalog', () => {
     for (const t of THEMES) expect(['mono', 'calm', 'crisp', 'soft'], t.id).toContain(t.palette)
   })
 
-  test('in light the page is a cream and the sidebar a clear step below it, in the theme\'s tint (Neutral and Ink apart)', () => {
+  test('in light the page is a cool near-white and the sidebar a clear step below it, in the theme\'s tint (Neutral and Ink apart)', () => {
     const spread = (hex: string) => {
       const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
       return Math.max(...ch) - Math.min(...ch)
@@ -77,10 +77,11 @@ describe('the catalog', () => {
     const defs: readonly ThemeDef[] = THEMES
     for (const t of defs.filter((x) => x.surfaces === undefined)) {
       const c = themeTokens(t.id as ThemeId, 'light').colors
-      // A cream, never pure white (2026-11-19: "il bianco puro acceca"): light, warm (red above blue), a soft tint.
+      // A near-white, never pure white (2026-11-19: "il bianco puro acceca"): light, cool (blue not below red; it was a
+      // cream until 2026-11-22), a trace of tint.
       expect(c['paper'], t.id).not.toBe('#ffffff')
       expect(lum(c['paper']!), t.id).toBeGreaterThan(0.9)
-      expect(parseInt(c['paper']!.slice(1, 3), 16), t.id).toBeGreaterThan(parseInt(c['paper']!.slice(5, 7), 16))
+      expect(parseInt(c['paper']!.slice(5, 7), 16), t.id).toBeGreaterThanOrEqual(parseInt(c['paper']!.slice(1, 3), 16))
       expect(spread(c['paper']!), t.id).toBeLessThanOrEqual(16)
       if (t.sidebar === 'tenue') {
         expect(ratio(c['paper']!, c['sidebar-paper']!), `${t.id}: page and sidebar apart`).toBeGreaterThanOrEqual(1.12)
@@ -313,7 +314,7 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
     if (scheme === 'light') {
       expect(lum(t['paper']!)).toBeGreaterThan(lum(t['ink']!))
-      // A cream page and ivory sheets, never pure white (2026-11-19); the sidebar sits a clear step below.
+      // A near-white page and lighter sheets, never pure white (2026-11-19); the sidebar sits a clear step below.
       expect(t['paper']).not.toBe('#ffffff')
       expect(t['raised']).not.toBe('#ffffff')
       expect(lum(t['raised']!)).toBeGreaterThan(lum(t['paper']!))

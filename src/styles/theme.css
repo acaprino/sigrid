@@ -1,9 +1,9 @@
 /* The first paint of the toolkit: a plain gray baseline (`BASE_THEME`), in light (`@theme`) and for the dark system
    (the block below). It names every colour token; an app paints its own default theme over it. Imported by an app (with Tailwind compiled by it) and by entry.css (precompiled styles.css). */
 @theme {
-  --color-paper: #fbf7ef;
+  --color-paper: #fafcfc;
   --color-paper-2: #eeeeee;
-  --color-sidebar-paper: #e9e9e9;
+  --color-sidebar-paper: #ededed;
   --color-ink: #161616;
   --color-ink-soft: #3d3d3d;
   /* Muted text: at least 4.5:1 on paper, paper-2 and raised (test/contrast.test.ts). */
@@ -12,7 +12,7 @@
   --color-accent: #1f1f1f;
   --color-accent-hover: #151515;
   --color-accent-soft: #ebebeb;
-  --color-raised: #fefcf8;
+  --color-raised: #fdfefe;
 
   /* Park UI's three nested corner levels, each a step rounder than Park ships: l1/l2/l3 = 4/6/10px. `sm` is l1 (what sits inside a control: a key, a
      menu item, a small box), `md` is l2 (controls: buttons, fields, selects, labels), `lg` is l3 (what holds controls:
@@ -57,11 +57,11 @@
 
   /* Semantic names that the shadcn/ui primitives use internally, mapped onto the paper:
      they are not part of the vocabulary for whoever builds screens (use paper/ink/accent). */
-  --color-background: #fbf7ef;
+  --color-background: #fafcfc;
   --color-foreground: #161616;
-  --color-card: #fefcf8;
+  --color-card: #fdfefe;
   --color-card-foreground: #161616;
-  --color-popover: #fefcf8;
+  --color-popover: #fdfefe;
   --color-popover-foreground: #161616;
   /* The solid button: the accent as a fill, with light text. */
   --color-primary: #1f1f1f;
@@ -75,7 +75,7 @@
   --color-border: #dcdcdc;
   /* Border of the controls (checkbox, fields, textarea, selects): at least 3:1 on paper, paper-2 and raised
      (WCAG 1.4.11, test/contrast.test.ts). Decorative dividers stay `line`/`border`. */
-  --color-input: #858585;
+  --color-input: #878787;
   /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
      the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
   --color-ring: #1f1f1f;
@@ -134,7 +134,7 @@
   --color-mark-18: #605556;
   --color-mark-icon-18: #4d4243;
   --color-sidebar-accent: #1f1f1f;
-  --color-sidebar-accent-ink: #fbf7ef;
+  --color-sidebar-accent-ink: #fafcfc;
   --color-sidebar-mark-1: #605553;
   --color-sidebar-mark-icon-1: #4d4240;
   --color-sidebar-mark-2: #605553;

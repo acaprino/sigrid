@@ -235,8 +235,12 @@ function shiftOf(tone: ThemeTone | null): Shift {
   return { on: true, k, lift, surface, d: light === 'lighter' ? 0.06 : light === 'darker' ? -0.07 : 0 }
 }
 
-/** The cream page of the light scheme, in every theme (2026-11-19). */
-const PAPER_LIGHT: Oklch = { L: 0.978, C: 0.012, h: 85 }
+/**
+ * The page of the light scheme, in every theme: a near-white with a trace of cool (`#fafcfc`, DESIGN.md's `surface`),
+ * not pure white. It was a cream until 2026-11-22: a warm page under neutral grays and cool accents read as two
+ * temperatures at once (the owner's decision).
+ */
+const PAPER_LIGHT: Oklch = fromHex('#fafcfc')
 const PAGE_LIGHT = toHex(PAPER_LIGHT)
 
 /** Adapts one of the 18 user colors to the theme's profile and to the scheme, guaranteeing 3:1 (dot) or 3.5:1 (icon). */
@@ -353,16 +357,17 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
       return c
     }
     return {
-      // The page is a cream and the sheets an ivory in every theme, never pure white, which glares (the owner's decision
-      // of 2026-11-19); the theme's tint sits in the sidebar and the lanes, a clear step below the page.
-      raised: ok(0.992, 0.006, 88), paper: PAPER_LIGHT, paper2: g(0.95, 1.3 * tone.surface), line: g(0.895), input: g(0.63),
+      // The page is a cool near-white in every theme and the sheets a step lighter, never pure white, which glares (the
+      // owner's decisions of 2026-11-19 and 2026-11-22); the theme's tint sits in the sidebar and the lanes, a clear
+      // step below the page.
+      raised: fromHex('#fdfefe'), paper: PAPER_LIGHT, paper2: g(0.95, 1.3 * tone.surface), line: g(0.895), input: g(0.63),
       ink: g(0.2, 1.5), inkSoft: g(0.36, 1.5), inkMute: g(0.5, 1.2),
       // The accent as text is step 11 of the palette; step 12 is the stronger text step, taken where 11 falls short.
       accent, accentStrong: mono ? ok(0.2, 0, 0) : ok(0.39, ac, ah), fill: plain ?? accent, onFill: plain ? labelOn(plain, ok(1, 0, 0)) : ok(1, 0, 0), accentSoft: ok(0.94, mono ? 0 : tint(strong ? 0.045 : 0.032), ah),
       selected: mono ? ok(0.87, 0, 0) : ok(0.895, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
       // The solid sidebar is dark enough for the user's colors to hold 3:1 on it and on the light page at once.
       // The tone tints the sidebar too: Calm takes it toward gray, Vivid gives it the theme's colour (owner, 2026-11-20).
-      sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4 * tone.surface, 0.018), t.hue) : belowPage(g(0.934, 1.7 * tone.surface)),
+      sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4 * tone.surface, 0.018), t.hue) : belowPage(g(0.946, 1.7 * tone.surface)),
       barInk: column ? bar(0.87, 0.008) : ok(0.95, 0.008, t.hue), barMute: column ? bar(0.71, 0.012) : ok(0.77, 0.012, t.hue),
       barSelected: column ? bar(0.29, 0.012) : ok(0.35, 0.036, t.hue), barSelectedInk: ok(1, 0, 0),
       barAccent: mono ? ok(0.93, 0, 0) : ok(0.8, Math.min(ac * 1.2, 0.13), ah), barAccentInk: ok(0.22, mono ? 0 : 0.03, ah),
