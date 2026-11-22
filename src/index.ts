@@ -16,7 +16,7 @@ export { cn } from './lib/utils'
 export { DEFAULT_WORDS, WordsProvider, useWords, withWords, type CalendarSpan, type Words, type WordsOverride } from './words'
 
 // Primitives.
-export { APP_SHELL_STEPS, AppShell, AppShellContext, Inspector, appShellLayout, useAppShell, type AppShellLayout, type AppShellProps, type InspectorProps } from './components/ui/app-shell'
+export { APP_SHELL_STEPS, AppShell, AppShellContext, Inspector, appShellLayout, useAppShell, type AppShellLayout, type AppShellProps, type AppShellSteps, type InspectorProps } from './components/ui/app-shell'
 export { Avatar, initials, type AvatarProps } from './components/ui/avatar'
 export { Badge, badgeVariants } from './components/ui/badge'
 export { Button, QUIET_CHIP, buttonVariants, type ButtonProps } from './components/ui/button'

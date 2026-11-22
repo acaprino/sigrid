@@ -13,6 +13,8 @@
 //   content as a panel with no backdrop (the page beside it keeps working);
 // - 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever
 //   the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.
+// The steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own
+// (`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).
 // The `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.
 // Without a way to measure (a server, a test) the frame is the wide one.
 import * as React from "react"
@@ -22,8 +24,10 @@ import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
 import { useWords } from "../../words"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
 
-/** The widths, in px of the frame, at which the layout changes. */
+/** The widths, in px of the frame, at which the layout changes: the recommended ones, which an app can replace. */
 export const APP_SHELL_STEPS = { inspector: 1000, sidebar: 850, rail: 620 } as const
+
+export type AppShellSteps = { readonly inspector: number; readonly sidebar: number; readonly rail: number }
 
 export type AppShellLayout = {
   /** `full`: the user's choice holds. `rail`: forced to its icons. `drawer`: out of the layout, opened over the page. */
@@ -34,11 +38,11 @@ export type AppShellLayout = {
 
 const WIDE: AppShellLayout = { sidebar: "full", inspector: "docked" }
 
-/** The layout for a width of the frame. */
-export function appShellLayout(width: number): AppShellLayout {
+/** The layout for a width of the frame, with the recommended steps or an app's own. */
+export function appShellLayout(width: number, steps: AppShellSteps = APP_SHELL_STEPS): AppShellLayout {
   return {
-    sidebar: width >= APP_SHELL_STEPS.sidebar ? "full" : width >= APP_SHELL_STEPS.rail ? "rail" : "drawer",
-    inspector: width >= APP_SHELL_STEPS.inspector ? "docked" : "drawer",
+    sidebar: width >= steps.sidebar ? "full" : width >= steps.rail ? "rail" : "drawer",
+    inspector: width >= steps.inspector ? "docked" : "drawer",
   }
 }
 
@@ -66,6 +70,8 @@ export type AppShellProps = {
   actions?: React.ReactNode
   /** The foot: the state of the service, counts, the keys that work now. */
   footer?: React.ReactNode
+  /** The app's own steps, all or some, in place of the recommended ones (`APP_SHELL_STEPS`); 0 switches a step off. */
+  steps?: Partial<AppShellSteps> | undefined
   /** The name of the content for screen readers, and where the skip link goes. */
   contentLabel: string
   className?: string | undefined
@@ -75,17 +81,20 @@ export type AppShellProps = {
 
 const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 
-function AppShell({ titleBar, status, sidebar, inspector, actions, footer, contentLabel, className, children }: AppShellProps) {
+function AppShell({ titleBar, status, sidebar, inspector, actions, footer, steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const [layout, setLayout] = React.useState<AppShellLayout>(WIDE)
+  const inspectorStep = steps?.inspector ?? APP_SHELL_STEPS.inspector
+  const sidebarStep = steps?.sidebar ?? APP_SHELL_STEPS.sidebar
+  const railStep = steps?.rail ?? APP_SHELL_STEPS.rail
   React.useLayoutEffect(() => {
     const el = root.current
     if (!el || typeof ResizeObserver === "undefined") return
     const read = (width: number) => {
       // A frame not laid out yet measures nothing: the wide layout stays.
       if (width <= 0) return
-      const next = appShellLayout(width)
+      const next = appShellLayout(width, { inspector: inspectorStep, sidebar: sidebarStep, rail: railStep })
       setLayout((now) => (now.sidebar === next.sidebar && now.inspector === next.inspector ? now : next))
     }
     read(el.getBoundingClientRect().width)
@@ -94,7 +103,7 @@ function AppShell({ titleBar, status, sidebar, inspector, actions, footer, conte
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [inspectorStep, sidebarStep, railStep])
   const id = React.useId()
   return (
     <AppShellContext.Provider value={layout}>

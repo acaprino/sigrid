@@ -818,82 +818,236 @@ function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
   return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} /> : null
 }
 
-/** The whole frame of an app at the widths where it changes: the steps follow the frame, not the screen. */
+/** What each example recommends, in one sentence: the same words as docs/patterns.md. */
+const PATTERNS = {
+  'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the one solid action sits last in the action bar.' },
+  page: { name: 'Sidebar and page', advice: 'For settings and documents. One column of text no wider than 65 characters; each choice is a row with its control at the end; the rest sits under Advanced.' },
+  board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the view switch is in the bar.' },
+  focus: { name: 'Focus', advice: 'For one thing at a time. No sidebar and no inspector: what to do, how many are left, and the way out.' },
+} as const
+type PatternId = keyof typeof PATTERNS
+
+/**
+ * The gallery of layout patterns: complete screens made only of the toolkit's parts, at the widths where the frame
+ * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits.
+ */
 function Shells({ animated }: { animated: boolean }) {
+  const [pattern, setPattern] = React.useState<PatternId>('list-detail')
   const [width, setWidth] = React.useState('1040')
   const [place, setPlace] = React.useState('all')
   const [collapsed, setCollapsed] = React.useState(false)
   const [menu, setMenu] = React.useState(false)
   const [details, setDetails] = React.useState(true)
   const [text, setText] = React.useState('')
+  const [view, setView] = React.useState('board')
   const mail = ['Kitchen quote, second version', 'Receipt of the waste tax', 'Photos of Tuesday\'s survey', 'Invoice 114 for October', 'Saturday dinner: who brings dessert?']
+  const lanes: [string, [string, string][]][] = [
+    ['To do', [['Renew the identity card', '28 Nov'], ['Book the train to Rome', '5 Dec'], ['Shopping for Saturday', 'Sat']]],
+    ['Doing', [['Draft of the quote', 'Today'], ['Call the plumber', 'Today']]],
+    ['Done', [['Pay the waste tax', 'Mon']]],
+  ]
   const row = (id: string, icon: React.ComponentProps<typeof Icon>['name'], label: string, count?: number) => (
     <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />} end={count === undefined ? undefined : <Count value={count} label="items" reserve />}>
       {label}
     </NavItem>
   )
+  const sidebar = (groups: React.ReactNode) => (
+    <Sidebar aria-label="Sample navigation" collapsed={collapsed} onCollapsedChange={setCollapsed} open={menu} onOpenChange={setMenu} animated={animated}>
+      {groups}
+    </Sidebar>
+  )
+  const bar = (title: string, items: React.ReactNode) => (
+    <TitleBar windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
+      <Toolbar aria-label={title}>
+        {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
+        {items}
+      </Toolbar>
+    </TitleBar>
+  )
+  const frames: Record<PatternId, React.ReactNode> = {
+    'list-detail': (
+      <AppShell
+        contentLabel="Messages"
+        titleBar={bar(
+          'Mail',
+          <>
+            <ToolbarTitle>Mail</ToolbarTitle>
+            <ToolbarSpacer />
+            <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+            <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
+            <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
+              New
+            </ToolbarButton>
+          </>,
+        )}
+        status={<span>Archived «Receipt of the waste tax»</span>}
+        sidebar={sidebar(
+          <>
+            <SidebarGroup label="Favorites" icon={<Icon name="tag" />}>
+              {row('all', 'all', 'Inbox', 12)}
+              {row('notifications', 'notifications', 'Waiting', 3)}
+              {row('date', 'date', 'Today')}
+            </SidebarGroup>
+            <SidebarGroup label="Account" icon={<Icon name="account" />}>
+              {row('settings', 'settings', 'Settings')}
+            </SidebarGroup>
+          </>,
+        )}
+        inspector={
+          <Inspector title="Details" open={details} onOpenChange={setDetails} animated={animated} footer={<Button variant="outline" size="sm">Archive</Button>}>
+            <p className="font-medium text-ink">Kitchen quote, second version</p>
+            <p className="mt-1 text-ink-mute">Marta Riva, today at 09:42</p>
+            <p className="mt-3 text-ink-soft">The quote with the quartz top and the built-in hood. The total goes down by 380.</p>
+          </Inspector>
+        }
+        actions={<Button size="sm">Reply</Button>}
+        footer={
+          <>
+            <span>Connected</span>
+            <span className="tabular-nums">12 unread</span>
+          </>
+        }
+      >
+        <ul role="list" className="flex flex-col p-2">
+          {mail.map((subject, i) => (
+            <li key={subject} className={cn('flex min-h-(--row-height) items-center rounded-md px-(--row-pad) text-sm', i === 0 ? 'bg-selected font-semibold text-selected-ink' : 'text-ink-soft')}>
+              <span className="truncate">{subject}</span>
+            </li>
+          ))}
+        </ul>
+      </AppShell>
+    ),
+    page: (
+      <AppShell
+        contentLabel="Look"
+        titleBar={bar('Settings', <ToolbarTitle>Settings</ToolbarTitle>)}
+        sidebar={sidebar(
+          <SidebarGroup>
+            {row('general', 'settings', 'General')}
+            {row('all', 'appearance', 'Look')}
+            {row('notifications', 'notifications', 'Notifications')}
+            {row('account', 'account', 'Account')}
+          </SidebarGroup>,
+        )}
+      >
+        <div className="mx-auto flex max-w-xl flex-col gap-1 p-6">
+          <h1 className="text-xl font-semibold text-ink">Look</h1>
+          <p className="text-sm text-ink-mute">How the app looks on this computer.</p>
+          <div className="mt-4 flex flex-col divide-y divide-line border-y border-line text-sm text-ink">
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2">
+              <span>Scheme</span>
+              <ToggleGroup aria-label="Scheme" value="light" onValueChange={() => {}}>
+                <ToggleGroupItem value="light">Light</ToggleGroupItem>
+                <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2">
+              <span>Animations</span>
+              <Switch aria-label="Animations" defaultChecked />
+            </div>
+            <div className="flex min-h-12 items-center justify-between gap-4 py-2 text-ink-mute">
+              <span>Advanced</span>
+              <ChevronRight aria-hidden="true" className="size-4" />
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    ),
+    board: (
+      <AppShell
+        contentLabel="Board"
+        titleBar={bar(
+          'Home',
+          <>
+            <ToolbarTitle>Home</ToolbarTitle>
+            <ToolbarSpacer />
+            <ToggleGroup aria-label="View" value={view} onValueChange={(v) => v && setView(v)} animated={animated}>
+              <ToggleGroupItem value="list">List</ToggleGroupItem>
+              <ToggleGroupItem value="board">Board</ToggleGroupItem>
+            </ToggleGroup>
+            <ToolbarButton label="New task" variant="default" icon={<Plus aria-hidden="true" />}>
+              New task
+            </ToolbarButton>
+          </>,
+        )}
+        sidebar={sidebar(
+          <SidebarGroup label="Projects" icon={<Icon name="structure" />}>
+            {row('all', 'all', 'Home', 6)}
+            {row('date', 'date', 'Clients', 4)}
+          </SidebarGroup>,
+        )}
+        footer={<span className="tabular-nums">6 tasks, 2 for today</span>}
+      >
+        <div className="flex min-w-max items-start gap-3 p-4">
+          {lanes.map(([name, cards]) => (
+            <div key={name} className="flex w-56 flex-col gap-2 rounded-lg bg-paper-2 p-2">
+              <h3 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink">
+                {name}
+                <span className="text-2xs font-normal text-ink-mute tabular-nums">{cards.length}</span>
+              </h3>
+              {cards.map(([task, due]) => (
+                <div key={task} className="flex flex-col gap-1 rounded-md bg-raised p-2 text-sm text-ink shadow-xs">
+                  {task}
+                  <span className={cn('text-2xs', due === 'Today' ? 'font-medium text-accent' : 'text-ink-mute')}>{due}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </AppShell>
+    ),
+    focus: (
+      <AppShell
+        contentLabel="The task in focus"
+        titleBar={bar(
+          'Focus',
+          <>
+            <ToolbarButton label="Leave the focus" icon={<ChevronRight aria-hidden="true" className="rotate-180" />} keepWord>
+              Leave the focus
+            </ToolbarButton>
+            <ToolbarSpacer />
+            <span className="text-2xs text-ink-mute tabular-nums">2 of 7</span>
+            <ToolbarSpacer />
+          </>,
+        )}
+      >
+        <div className="flex h-full items-center justify-center p-6">
+          <div className="flex max-w-sm flex-col gap-2">
+            <h1 className="text-xl font-semibold text-ink">Call the plumber</h1>
+            <p className="text-sm text-ink-mute">A leak under the sink. Before noon, when the shop answers.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button>Done</Button>
+              <Button variant="outline">Later</Button>
+              <Button variant="ghost">Skip</Button>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    ),
+  }
   return (
-    <Section id="app-shell" title="AppShell and Inspector" note="One frame with seven regions: the title bar, a status line, the sidebar, the content, the inspector, the actions and the foot. It measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar.">
-      <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
-        <ToggleGroupItem value="1040">1040</ToggleGroupItem>
-        <ToggleGroupItem value="900">900</ToggleGroupItem>
-        <ToggleGroupItem value="700">700</ToggleGroupItem>
-        <ToggleGroupItem value="480">480</ToggleGroupItem>
-      </ToggleGroup>
+    <Section id="patterns" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps.">
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup aria-label="Pattern" value={pattern} onValueChange={(v) => v && setPattern(v as PatternId)} animated={animated}>
+          {(Object.keys(PATTERNS) as PatternId[]).map((id) => (
+            <ToggleGroupItem key={id} value={id}>
+              {PATTERNS[id].name}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
+          <ToggleGroupItem value="1040">1040</ToggleGroupItem>
+          <ToggleGroupItem value="900">900</ToggleGroupItem>
+          <ToggleGroupItem value="700">700</ToggleGroupItem>
+          <ToggleGroupItem value="480">480</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <p data-sample="pattern-advice" className="max-w-3xl text-sm text-ink-soft">
+        <span className="font-semibold text-ink">{PATTERNS[pattern].name}.</span> {PATTERNS[pattern].advice}
+      </p>
       <div className="max-w-full overflow-x-auto p-1 pb-6">
         <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
-          <AppShell
-            contentLabel="Messages"
-            titleBar={
-              <TitleBar windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
-                <Toolbar aria-label="Mail">
-                  <ShellMenuButton onOpen={() => setMenu(true)} />
-                  <ToolbarTitle>Mail</ToolbarTitle>
-                  <ToolbarSpacer />
-                  <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
-                  <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
-                  <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
-                    New
-                  </ToolbarButton>
-                </Toolbar>
-              </TitleBar>
-            }
-            status={<span>Archived «Receipt of the waste tax»</span>}
-            sidebar={
-              <Sidebar aria-label="Mail folders" collapsed={collapsed} onCollapsedChange={setCollapsed} open={menu} onOpenChange={setMenu} animated={animated}>
-                <SidebarGroup label="Favorites" icon={<Icon name="tag" />}>
-                  {row('all', 'all', 'Inbox', 12)}
-                  {row('notifications', 'notifications', 'Waiting', 3)}
-                  {row('date', 'date', 'Today')}
-                </SidebarGroup>
-                <SidebarGroup label="Account" icon={<Icon name="account" />}>
-                  {row('settings', 'settings', 'Settings')}
-                </SidebarGroup>
-              </Sidebar>
-            }
-            inspector={
-              <Inspector title="Details" open={details} onOpenChange={setDetails} animated={animated} footer={<Button variant="outline" size="sm">Archive</Button>}>
-                <p className="font-medium text-ink">Kitchen quote, second version</p>
-                <p className="mt-1 text-ink-mute">Marta Riva, today at 09:42</p>
-                <p className="mt-3 text-ink-soft">The quote with the quartz top and the built-in hood. The total goes down by 380.</p>
-              </Inspector>
-            }
-            actions={<Button size="sm">Reply</Button>}
-            footer={
-              <>
-                <span>Connected</span>
-                <span className="tabular-nums">12 unread</span>
-              </>
-            }
-          >
-            <ul role="list" className="flex flex-col p-2">
-              {mail.map((subject, i) => (
-                <li key={subject} className={cn('flex min-h-(--row-height) items-center rounded-md px-(--row-pad) text-sm', i === 0 ? 'bg-selected font-semibold text-selected-ink' : 'text-ink-soft')}>
-                  <span className="truncate">{subject}</span>
-                </li>
-              ))}
-            </ul>
-          </AppShell>
+          {frames[pattern]}
         </div>
       </div>
     </Section>

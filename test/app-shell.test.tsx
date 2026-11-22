@@ -106,3 +106,15 @@ test('a closed inspector leaves its room to the content', () => {
   render(<AppShell contentLabel="Page" inspector={<Inspector title="Details" open={false}>x</Inspector>}>Text</AppShell>)
   expect(document.querySelector('[data-slot="inspector"]')?.hasAttribute('hidden')).toBe(true)
 })
+
+test('the steps are a recommendation: an app passes its own, and a step at 0 never happens', () => {
+  expect(appShellLayout(700, { inspector: 600, sidebar: 0, rail: 0 })).toEqual({ sidebar: 'full', inspector: 'docked' })
+  const resize = observed()
+  render(
+    <AppShell contentLabel="Page" steps={{ sidebar: 0, rail: 0 }}>
+      <Layout />
+    </AppShell>,
+  )
+  resize(400)
+  expect(screen.getByTestId('layout').textContent).toBe('full drawer')
+})

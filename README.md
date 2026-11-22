@@ -133,7 +133,8 @@ children, a `<main>` with a skip link to it), `inspector`, `actions` and `footer
 The frame measures its own width, not the screen's (`APP_SHELL_STEPS`, Imago's): from 1000px the `Inspector` is docked
 and pushes the content, under it a panel over the end of the content, never modal; from 850px the `Sidebar` is whole
 (or the rail the user chose), from 620px to 850px a rail, under 620px a drawer. `Sidebar` and `Inspector` read the step
-from the frame; `useAppShell()` gives it to the app, which shows its «open the menu» button only where the sidebar is
+from the frame; the steps are recommended, and an app passes its own with `steps` (0 switches one off);
+`useAppShell()` gives the step to the app, which shows its «open the menu» button only where the sidebar is
 a drawer.
 
 ```tsx
@@ -188,6 +189,9 @@ a drawer.
   owner's rules R1 to R10 of 2026-11-20 (accent in four places only, border or shadow, plain key hints and counts,
   icons that inform, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
+- `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
+  which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
+  shows each one live under «Layout patterns».
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: every component in its variants, sizes and states (hover, pressed and focus forced with
