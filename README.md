@@ -232,6 +232,11 @@ a drawer.
   part of the package); `?theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the theme (`base`, or a
   palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`; the toolbar
   has a switch for it too), opens what opens on a gesture and turns motion on.
+- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
+  are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
+  the toolkit's components are dragged from a list into a panel and up and down inside it. What is built is kept in
+  the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
+  pinned), drawn with the toolkit's tokens.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
   findings in `design-check.known.json`) use the copy of the tool in `tools/zero-slop-design/` (v0.2.1, MIT); the
