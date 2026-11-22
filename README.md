@@ -48,7 +48,11 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    never reaches the browser.
 4. **Colours: the theme engine** (`src/theme-engine.ts`, `src/theme-catalog.ts`, `src/themes.ts`, `src/colors.ts`):
    every colour is computed from the chosen theme and scheme and written as tokens on the root (`applyTheme`); the
-   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else.
+   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. A theme can also be made
+   from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
+   for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
+   `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
+   component lets a user pick both (the showcase has it in its theme gallery).
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

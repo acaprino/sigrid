@@ -172,6 +172,10 @@
   --color-sidebar-mark-18: #605556;
   --color-sidebar-mark-icon-18: #4d4243;
   --color-drop: #161616;
+  --color-spot: #1f1f1f;
+  --color-spot-foreground: #ffffff;
+  --color-spot-soft: #ebebeb;
+  --color-spot-ink: #1f1f1f;
 }
 
 /* The elevation of the first paint, in light: the drop and the ring are the engine's `drop` color (the ink, in light)
@@ -323,6 +327,10 @@
       --color-sidebar-mark-18: #a19596;
       --color-sidebar-mark-icon-18: #b4a7a8;
       --color-drop: #060606;
+      --color-spot: #dedede;
+      --color-spot-foreground: #0d0d0d;
+      --color-spot-soft: #2b2b2b;
+      --color-spot-ink: #dedede;
     }
   }
 }
