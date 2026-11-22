@@ -94,6 +94,8 @@ default and equals the sizes the toolkit had before density existed.
   `closed="field"` rests it as a quiet field with its name and key.
 - Short of room the bar gives way in fixed steps measured on the toolbar itself, not on the screen: under 448px a word
   beside an icon goes (`keepWord` keeps it) and the search field is its magnifier; under 256px the title goes.
+- `ToolbarBrand`: the app at the start of the bar, as in Imago's apps: a square in the accent with the initial of
+  its `name`, and the name beside it; `mark={false}` shows the name alone.
 - `ToolbarTitle`, `ToolbarSpacer`, `ToolbarGroup`, `ToolbarSeparator` lay the row out.
 
 `TitleBar` is the bar that holds it at the top of a window. On a web page it is a top bar and nothing more. It becomes

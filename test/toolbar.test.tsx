@@ -4,7 +4,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { TitleBar, Toolbar, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, WordsProvider } from '../src'
+import { TitleBar, Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, WordsProvider } from '../src'
 
 const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
 
@@ -170,4 +170,29 @@ test('a host that owns the pointer over the maximize button gets the button and 
   expect(button!.getAttribute('data-os-state')).toBe('hover')
   // Closing destroys nothing: the accent, not the red.
   expect(screen.getByRole('button', { name: 'Close' }).className).not.toContain('destructive')
+})
+
+test('the brand is the mark with the initial of the name and the name beside it, and both move the window', () => {
+  expect(brandInitial('  xiox')).toBe('X')
+  expect(brandInitial('3 émile')).toBe('É')
+  expect(brandInitial('42')).toBe('')
+  render(
+    <TitleBar dragProps={{ 'data-drag': '' }}>
+      <Toolbar aria-label="Xiox">
+        <ToolbarBrand name="Xiox" />
+      </Toolbar>
+    </TitleBar>,
+  )
+  const mark = document.querySelector('[data-slot="toolbar-brand-mark"]')!
+  expect(mark.textContent).toBe('X')
+  expect(mark.getAttribute('aria-hidden')).toBe('true')
+  expect(mark.className).toContain('bg-primary')
+  expect(document.querySelector('[data-slot="toolbar-brand-name"]')?.textContent).toBe('Xiox')
+  expect(document.querySelectorAll('[data-slot^="toolbar-brand"][data-drag]').length).toBe(3)
+})
+
+test('the brand can be the name alone', () => {
+  render(<Toolbar aria-label="Xiox"><ToolbarBrand name="Xiox" mark={false} /></Toolbar>)
+  expect(document.querySelector('[data-slot="toolbar-brand-mark"]')).toBeNull()
+  expect(document.querySelector('[data-slot="toolbar-brand-name"]')?.textContent).toBe('Xiox')
 })

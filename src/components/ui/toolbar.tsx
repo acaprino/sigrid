@@ -8,6 +8,8 @@
 // - `ToolbarSearch` is a search box that takes no room until it is asked for: a magnifier that opens into the
 //   toolkit's `SearchField` on a press (or when the app opens it from its own key), and closes again with Esc, or when
 //   it is left empty. While it holds text it stays open, so what filters the page is always in sight.
+// - `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the
+//   initial of the product's name, and the name beside it, or the name alone (`mark={false}`). No drawn logo: the hue and the name tell the apps apart.
 // - `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the
 //   root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.
 // Short of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container
@@ -105,6 +107,41 @@ function ToolbarGroup({ className, children, ...props }: ToolbarGroupProps) {
     <ToolbarPrimitive.Group data-slot="toolbar-group" {...props} className={cn("flex shrink-0 items-center gap-0.5", className)}>
       {children}
     </ToolbarPrimitive.Group>
+  )
+}
+
+/** The first letter of a name, in capitals: what the mark shows. The same on every machine, whatever its language. */
+export function brandInitial(name: string): string {
+  const letter = Array.from(name.trim().normalize("NFC")).find((character) => /\p{L}/u.test(character))
+  return letter ? (Array.from(letter.toUpperCase())[0] ?? "") : ""
+}
+
+export type ToolbarBrandProps = {
+  /** The name of the product («Xiox»): shown beside the mark, and the source of its letter. */
+  name: string
+  /** In place of the letter, the app's own mark (a 16px drawing): the square stays. `false`: the name alone. */
+  mark?: React.ReactNode | false
+  className?: string | undefined
+}
+
+/**
+ * The app, at the start of the bar: the mark and the name. In a `TitleBar` both move the window. Under 256px of
+ * toolbar the name goes and the mark stays.
+ */
+function ToolbarBrand({ name, mark, className }: ToolbarBrandProps) {
+  const drag = React.useContext(TitleBarDragContext)
+  const letter = brandInitial(name)
+  return (
+    <span data-slot="toolbar-brand" {...drag} className={cn("flex min-w-0 shrink-0 items-center gap-2 px-1", className)}>
+      {mark !== false && (mark || letter) ? (
+        <span data-slot="toolbar-brand-mark" aria-hidden="true" {...drag} className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground [&_svg]:size-4">
+          {mark ?? letter}
+        </span>
+      ) : null}
+      <span data-slot="toolbar-brand-name" {...drag} className="truncate text-sm font-semibold text-ink @max-3xs/toolbar:hidden">
+        {name}
+      </span>
+    </span>
   )
 }
 
@@ -236,4 +273,4 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
   )
 }
 
-export { Toolbar, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle }
+export { Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle }

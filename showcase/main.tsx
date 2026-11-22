@@ -36,6 +36,7 @@ import {
   useAppShell,
   TitleBar,
   Toolbar,
+  ToolbarBrand,
   ToolbarButton,
   ToolbarGroup,
   ToolbarSearch,
@@ -871,7 +872,7 @@ function Shells({ animated }: { animated: boolean }) {
         titleBar={bar(
           'Mail',
           <>
-            <ToolbarTitle>Mail</ToolbarTitle>
+            <ToolbarBrand name="Mail" />
             <ToolbarSpacer />
             <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
             <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
@@ -920,7 +921,7 @@ function Shells({ animated }: { animated: boolean }) {
     page: (
       <AppShell
         contentLabel="Look"
-        titleBar={bar('Settings', <ToolbarTitle>Settings</ToolbarTitle>)}
+        titleBar={bar('Settings', <><ToolbarBrand name="Mail" mark={false} /><ToolbarTitle className="font-normal text-ink-mute">Settings</ToolbarTitle></>)}
         sidebar={sidebar(
           <SidebarGroup>
             {row('general', 'settings', 'General')}
@@ -959,7 +960,8 @@ function Shells({ animated }: { animated: boolean }) {
         titleBar={bar(
           'Home',
           <>
-            <ToolbarTitle>Home</ToolbarTitle>
+            <ToolbarBrand name="Tasks" />
+            <ToolbarTitle className="font-normal text-ink-mute">Home</ToolbarTitle>
             <ToolbarSpacer />
             <ToggleGroup aria-label="View" value={view} onValueChange={(v) => v && setView(v)} animated={animated}>
               <ToggleGroupItem value="list">List</ToggleGroupItem>

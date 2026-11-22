@@ -32,7 +32,9 @@ Recommended:
 
 ## The title bar and its toolbar
 
-- Order: where am I (the title), then room that moves the window (`ToolbarSpacer`), then find (`ToolbarSearch`), then
+- Start the bar with the app (`ToolbarBrand`): a square in the accent with the initial of its name, and the name. It
+  is how a user tells one window of the suite from another at a glance. The name alone (`mark={false}`) is as good where the app has no colour of its own. A drawn logo is not needed.
+- Order: the app, where am I (the title, quieter than the app's name), then room that moves the window (`ToolbarSpacer`), then find (`ToolbarSearch`), then
   switches of the view, then actions, the solid one last.
 - An action used many times a day is an icon alone with its name as a hint and its key. An action used rarely, or one
   whose icon nobody would guess, keeps its word, or goes in a menu.

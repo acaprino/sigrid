@@ -43,7 +43,7 @@ export { Tabs, TabsContent, TabsList, TabsTrigger, type TabsContentProps, type T
 export { Textarea } from './components/ui/textarea'
 export { TitleBar, TitleBarDragContext, WindowControls, type TitleBarDragProps, type TitleBarProps, type WindowControlsProps } from './components/ui/title-bar'
 export { ToggleGroup, ToggleGroupItem, type ToggleGroupItemProps, type ToggleGroupProps } from './components/ui/toggle-group'
-export { Toolbar, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, type ToolbarButtonProps, type ToolbarGroupProps, type ToolbarProps, type ToolbarSearchProps } from './components/ui/toolbar'
+export { Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, type ToolbarBrandProps, type ToolbarButtonProps, type ToolbarGroupProps, type ToolbarProps, type ToolbarSearchProps } from './components/ui/toolbar'
 export { TOOLTIP_DELAY_MS, Tooltip, type TooltipProps } from './components/ui/tooltip'
 export { Collapsible, Field, PopoverPrimitive } from './components/ui/headless'
 export type InputProps = React.ComponentProps<typeof import('./components/ui/input').Input>
