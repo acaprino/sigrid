@@ -1,25 +1,44 @@
 // The layout builder: a canvas to compose the screen of an app out of the toolkit's parts, by dragging. The canvas is
 // made of panels; a panel is dragged by its tab onto another to join it (tabs), or onto one of its edges to stand
 // beside it, above or below; the line between two panels resizes them. A component is dragged from the list at the
-// left into a panel, and inside a panel up and down. What is built is kept in this browser and can be copied as data.
+// left into a panel, and inside a panel up and down. The inspector at the right holds the look: everything the toolkit
+// lets an app configure (scheme, colours, tone, corners, font, density and each of its measures, icon pack, motion),
+// applied to the whole canvas at once. What is built is kept in this browser and can be copied as data.
 // Development only, like the showcase it lives in. The panels are `dockview-react` (MIT, a development dependency),
 // drawn with the toolkit's tokens (builder.css); everything inside a panel is the toolkit's own components.
 import './builder.css'
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DockviewReact, themeLight, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-react'
-import { Archive, ArrowDown, ArrowUp, GripVertical, Moon, Plus, Reply, RotateCcw, Search, Sun, Trash2, X } from 'lucide-react'
+import { Archive, ArrowDown, ArrowUp, GripVertical, Moon, Plus, Reply, RotateCcw, Search, SlidersHorizontal, Sun, Trash2, X } from 'lucide-react'
 import {
   AppShell,
   BASE_THEME,
   Badge,
   Button,
+  COLORS,
+  COLOR_NAMES,
+  ColorMatch,
+  DENSITIES,
+  DENSITY_LIMITS,
   Empty,
+  FONTS,
+  ICON_PACKS,
+  Icon,
+  IconPackProvider,
   Input,
+  Inspector,
   ItemList,
   ItemRow,
+  MotionProvider,
+  NavItem,
+  NavList,
   SearchField,
+  Select,
+  Slider,
   Switch,
+  THEME_SHAPES,
+  TONE_PRESETS,
   TitleBar,
   ToggleGroup,
   ToggleGroupItem,
@@ -30,9 +49,20 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
+  applyDensity,
+  applyFont,
   applyTheme,
   cn,
+  colorTheme,
+  densityWith,
+  presetTone,
+  type DensityDef,
+  type FontId,
+  type IconPack,
+  type SpotKind,
   type ThemeScheme,
+  type ThemeShape,
+  type TonePreset,
 } from '../src'
 
 /* ———— What can be dropped into a panel ———— */
@@ -102,6 +132,18 @@ const KINDS = {
     ),
   },
   list: { label: 'List', render: () => <ListSample /> },
+  nav: {
+    label: 'Navigation',
+    render: () => (
+      <NavList aria-label="Sample places">
+        <NavItem icon={<Icon name="all" />} current>
+          Inbox
+        </NavItem>
+        <NavItem icon={<Icon name="notifications" />}>Waiting</NavItem>
+        <NavItem icon={<Icon name="settings" />}>Settings</NavItem>
+      </NavList>
+    ),
+  },
   badge: { label: 'Badge', render: () => <Badge variant="secondary">Draft</Badge> },
   empty: { label: 'Empty state', render: () => <Empty title="Nothing here yet" description="What is added will show in this place." /> },
 } as const satisfies Record<string, { label: string; render: () => React.ReactNode }>
@@ -110,9 +152,144 @@ const isKind = (value: unknown): value is Kind => typeof value === 'string' && v
 
 /* ———— The state: what each panel holds, kept in this browser with the arrangement of the panels ———— */
 
+/* ———— The look: everything the toolkit lets an app configure, as data ———— */
+
+type Look = {
+  scheme: ThemeScheme
+  /** The toolkit's gray baseline, or a theme made from two colours. */
+  colors: 'base' | 'own'
+  color: string
+  spot: SpotKind | string | null
+  tone: TonePreset
+  shape: ThemeShape
+  font: FontId
+  density: DensityDef
+  icons: IconPack
+  animated: boolean
+}
+const SEEDS = COLORS.filter((_, i) => i % 3 === 1)
+const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
+const START_LOOK: Look = { scheme: 'light', colors: 'base', color: SEEDS[0]!, spot: 'balanced', tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
+const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
+
+function applyLook(look: Look) {
+  const root = document.documentElement
+  const theme = look.colors === 'own' ? colorTheme({ id: 'own', label: 'Your colours', color: look.color, spot: look.spot }) : BASE_THEME
+  applyTheme(root, { theme: { ...theme, shape: look.shape }, scheme: look.scheme, tone: presetTone(look.tone) })
+  applyDensity(root, look.density)
+  applyFont(root, look.font)
+}
+
+/** One measure of the density: its name, its value in px, and the slider that changes it within the toolkit's limits. */
+function Measure({ label, value, min, max, step = 2, onChange }: { label: string; value: number; min: number; max: number; step?: number; onChange: (value: number) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between text-xs">
+        <span className="text-ink-soft">{label}</span>
+        <span className="text-ink-mute tabular-nums">{value}px</span>
+      </div>
+      <Slider aria-label={label} value={value} min={min} max={max} step={step} onValueChange={onChange} />
+    </div>
+  )
+}
+
+function Group({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2 border-b border-line pb-4 last:border-0">
+      <h3 className="text-2xs font-semibold tracking-[0.07em] text-ink-mute uppercase">{label}</h3>
+      {children}
+    </section>
+  )
+}
+
+/** The controls of the look, in the inspector: each changes the whole canvas at once. */
+function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look>) => void }) {
+  const d = look.density
+  const density = (override: Parameters<typeof densityWith>[1]) => onLook({ density: densityWith(d, { id: 'custom', label: 'Custom', ...override }) })
+  const L = DENSITY_LIMITS
+  return (
+    <div className="flex flex-col gap-4">
+      <Group label="Scheme">
+        <ToggleGroup aria-label="Scheme" value={look.scheme} onValueChange={(v) => v && onLook({ scheme: v as ThemeScheme })}>
+          <ToggleGroupItem value="light">Light</ToggleGroupItem>
+          <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+        </ToggleGroup>
+      </Group>
+      <Group label="Colours">
+        <ToggleGroup aria-label="Colours" value={look.colors} onValueChange={(v) => v && onLook({ colors: v as Look['colors'] })}>
+          <ToggleGroupItem value="base">Gray baseline</ToggleGroupItem>
+          <ToggleGroupItem value="own">Two colours</ToggleGroupItem>
+        </ToggleGroup>
+        <ColorMatch
+          colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] ?? seed }))}
+          color={look.color}
+          spot={look.spot}
+          scheme={look.scheme}
+          onColor={(color) => onLook({ color, colors: 'own' })}
+          onSpot={(spot) => onLook({ spot, colors: 'own' })}
+          text={{
+            color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
+            kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
+            sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
+          }}
+        />
+      </Group>
+      <Group label="Tone of the accents">
+        <ToggleGroup aria-label="Tone" value={look.tone} onValueChange={(v) => v && onLook({ tone: v as TonePreset })}>
+          {TONE_PRESETS.map((tone) => (
+            <ToggleGroupItem key={tone} value={tone}>
+              {title(tone)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </Group>
+      <Group label="Corners">
+        <ToggleGroup aria-label="Corners" value={look.shape} onValueChange={(v) => v && onLook({ shape: v as ThemeShape })}>
+          {THEME_SHAPES.map((shape) => (
+            <ToggleGroupItem key={shape} value={shape}>
+              {title(shape)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <p className="text-xs text-ink-mute">Sharp is 2, 4 and 6px; soft 4, 6 and 10px; round 6, 10 and 14px.</p>
+      </Group>
+      <Group label="Font">
+        <Select aria-label="Font" options={FONTS.map((font) => ({ value: font.id, label: font.label }))} value={look.font} onValueChange={(v) => onLook({ font: v as FontId })} />
+      </Group>
+      <Group label="Density and spacing">
+        <ToggleGroup aria-label="Density" value={d.id} onValueChange={(v) => v && onLook({ density: DENSITIES.find((preset) => preset.id === v) ?? NORMAL })}>
+          {DENSITIES.map((preset) => (
+            <ToggleGroupItem key={preset.id} value={preset.id}>
+              {preset.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <Measure label="Control height" value={d.control.md} min={L.control.min} max={L.control.max} onChange={(md) => density({ control: { md } })} />
+        <Measure label="Dense control height" value={d.control.sm} min={L.control.min} max={L.control.max} onChange={(sm) => density({ control: { sm } })} />
+        <Measure label="Smallest control height" value={d.control.xs} min={L.control.min} max={L.control.max} onChange={(xs) => density({ control: { xs } })} />
+        <Measure label="Button padding" value={d.pad.md} min={L.pad.min} max={L.pad.max} onChange={(md) => density({ pad: { md } })} />
+        <Measure label="Field padding" value={d.pad.sm} min={L.pad.min} max={L.pad.max} onChange={(sm) => density({ pad: { sm } })} />
+        <Measure label="Smallest button padding" value={d.pad.xs} min={L.pad.min} max={L.pad.max} onChange={(xs) => density({ pad: { xs } })} />
+        <Measure label="Row height" value={d.row.height} min={L.rowHeight.min} max={L.rowHeight.max} onChange={(height) => density({ row: { height } })} />
+        <Measure label="Row padding" value={d.row.pad} min={L.rowPad.min} max={L.rowPad.max} onChange={(pad) => density({ row: { pad } })} />
+      </Group>
+      <Group label="Icons">
+        <Select aria-label="Icon pack" options={ICON_PACKS.map((pack) => ({ value: pack, label: title(pack) }))} value={look.icons} onValueChange={(v) => onLook({ icons: v as IconPack })} />
+        <p className="text-xs text-ink-mute">Shown by the Navigation component.</p>
+      </Group>
+      <Group label="Motion">
+        <label className="flex items-center justify-between gap-4 text-sm text-ink">
+          Animations on a gesture
+          <Switch aria-label="Animations" checked={look.animated} onCheckedChange={(animated) => onLook({ animated })} />
+        </label>
+      </Group>
+    </div>
+  )
+}
+
 type Item = { uid: string; kind: Kind }
 type Contents = Record<string, Item[]>
-type Saved = { layout: unknown; contents: Contents; next: number }
+type Saved = { layout: unknown; contents: Contents; next: number; look?: Look | undefined }
 const KEY = 'sigrid-layout-builder-1'
 const NEW = 'application/x-sigrid-kind'
 const MOVE = 'application/x-sigrid-item'
@@ -126,7 +303,8 @@ function load(): Saved | null {
     const saved = JSON.parse(raw) as Saved
     const contents: Contents = {}
     for (const [panel, items] of Object.entries(saved.contents ?? {})) contents[panel] = items.filter((item) => isKind(item.kind))
-    return { layout: saved.layout, contents, next: Number(saved.next) || 1 }
+    // A look saved by an older builder may lack what was added since: the starting look fills it in.
+    return { layout: saved.layout, contents, next: Number(saved.next) || 1, look: saved.look ? { ...START_LOOK, ...saved.look } : undefined }
   } catch {
     return null
   }
@@ -261,7 +439,10 @@ const WIDTHS = { full: 'Full', '900': '900', '600': '600' } as const
 function Builder() {
   const saved = React.useMemo(load, [])
   const [contents, setContents] = React.useState<Contents>(saved?.contents ?? START)
-  const [scheme, setScheme] = React.useState<ThemeScheme>('light')
+  const [look, setLook] = React.useState<Look>(saved?.look ?? START_LOOK)
+  const [lookOpen, setLookOpen] = React.useState(true)
+  const onLook = React.useCallback((change: Partial<Look>) => setLook((now) => ({ ...now, ...change })), [])
+  const scheme = look.scheme
   const [width, setWidth] = React.useState<keyof typeof WIDTHS>('full')
   const [said, setSaid] = React.useState('')
   const [panels, setPanels] = React.useState(0)
@@ -272,16 +453,16 @@ function Builder() {
   const latest = React.useRef(contents)
   latest.current = contents
 
-  React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, { theme: BASE_THEME, scheme })
-  }, [scheme])
+  const latestLook = React.useRef(look)
+  latestLook.current = look
+  React.useLayoutEffect(() => applyLook(look), [look])
 
   const keep = React.useCallback(() => {
     if (!dock.current) return
     setPanels(dock.current.panels.length)
-    save({ layout: dock.current.toJSON(), contents: latest.current, next: next.current })
+    save({ layout: dock.current.toJSON(), contents: latest.current, next: next.current, look: latestLook.current })
   }, [])
-  React.useEffect(keep, [contents, keep])
+  React.useEffect(keep, [contents, look, keep])
 
   const actions = React.useMemo<Actions>(() => {
     const change = (fn: (now: Contents) => Contents) => setContents((now) => fn(now))
@@ -359,13 +540,14 @@ function Builder() {
     next.current = 1
     if (dock.current) startLayout(dock.current)
     setContents(START)
+    setLook(START_LOOK)
     setSaid('Back to the starting layout.')
   }
   const copy = async () => {
-    const data = JSON.stringify({ layout: dock.current?.toJSON(), contents }, null, 2)
+    const data = JSON.stringify({ look, layout: dock.current?.toJSON(), contents }, null, 2)
     try {
       await navigator.clipboard.writeText(data)
-      setSaid('The layout is on the clipboard, as data.')
+      setSaid('The look and the layout are on the clipboard, as data.')
     } catch {
       setSaid('This browser did not let the page write to the clipboard.')
     }
@@ -376,6 +558,8 @@ function Builder() {
   const total = Object.values(contents).reduce((sum, items) => sum + items.length, 0)
 
   return (
+    <MotionProvider animated={look.animated}>
+    <IconPackProvider pack={look.icons}>
     <BuilderContext.Provider value={actions}>
       <AppShell
         contentLabel="Canvas"
@@ -392,7 +576,8 @@ function Builder() {
                 ))}
               </ToggleGroup>
               <ToolbarSeparator />
-              <ToolbarButton label={scheme === 'light' ? 'Dark scheme' : 'Light scheme'} icon={scheme === 'light' ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />} onClick={() => setScheme(scheme === 'light' ? 'dark' : 'light')} />
+              <ToolbarButton label={scheme === 'light' ? 'Dark scheme' : 'Light scheme'} icon={scheme === 'light' ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />} onClick={() => onLook({ scheme: scheme === 'light' ? 'dark' : 'light' })} />
+              <ToolbarButton label="Look" icon={<SlidersHorizontal aria-hidden="true" />} pressed={lookOpen} onClick={() => setLookOpen(!lookOpen)} />
               <ToolbarButton label="Start again" icon={<RotateCcw aria-hidden="true" />} onClick={reset} />
               <ToolbarButton label="Copy the layout as data" variant="outline" onClick={copy}>
                 Copy
@@ -429,6 +614,11 @@ function Builder() {
             ))}
           </aside>
         }
+        inspector={
+          <Inspector title="Look" open={lookOpen} onOpenChange={setLookOpen}>
+            <LookPanel look={look} onLook={onLook} />
+          </Inspector>
+        }
         footer={
           <>
             <span className="tabular-nums">
@@ -444,6 +634,8 @@ function Builder() {
         </div>
       </AppShell>
     </BuilderContext.Provider>
+    </IconPackProvider>
+    </MotionProvider>
   )
 }
 
