@@ -4,13 +4,15 @@ import * as React from 'react'
 import { ArrowRight } from 'lucide-react'
 import { Button, Icon, type IconName } from '../src/index'
 
-/** The four views of the showcase: the idea, the rules, the way to put the parts together, and the parts themselves. */
+/** The five views of the showcase: the idea, the rules, the way to put the parts together, the parts themselves, and whole apps made of them. */
 export const VIEWS = [
   { id: 'philosophy', label: 'Philosophy', icon: 'all' },
   { id: 'guidelines', label: 'Guidelines', icon: 'tasks' },
   { id: 'practices', label: 'Practices', icon: 'layout' },
-  { id: 'components', label: 'Components', icon: 'structure' },
-] as const satisfies readonly { id: string; label: string; icon: IconName }[]
+  // `short`: its name in the bar at the foot of a window too narrow for five whole names (under 360px).
+  { id: 'components', label: 'Components', short: 'Parts', icon: 'structure' },
+  { id: 'examples', label: 'Examples', icon: 'inbox' },
+] as const satisfies readonly { id: string; label: string; short?: string; icon: IconName }[]
 export type ViewId = (typeof VIEWS)[number]['id']
 export const isViewId = (value: unknown): value is ViewId => VIEWS.some((v) => v.id === value)
 
@@ -20,7 +22,7 @@ export const isViewId = (value: unknown): value is ViewId => VIEWS.some((v) => v
  */
 export function viewOfId(id: string): ViewId {
   const prefix = id.split('-', 1)[0]
-  if (prefix === 'philosophy' || prefix === 'guidelines' || prefix === 'practices') return prefix
+  if (prefix === 'philosophy' || prefix === 'guidelines' || prefix === 'practices' || prefix === 'examples') return prefix
   return id === 'patterns' ? 'practices' : 'components'
 }
 

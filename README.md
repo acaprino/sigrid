@@ -239,10 +239,13 @@ a drawer.
   frame as wide as a phone under «Phone layouts», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
-- `showcase/`: the design system shown with its own frame (`AppShell`), in four views as tabs in the bar. Philosophy,
+- `showcase/`: the design system shown with its own frame (`AppShell`), in five views as tabs in the bar. Philosophy,
   Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
   examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
-  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes. `npm run showcase`
+  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows two
+  whole apps of the suite made of these parts, a to-do list (Ethel) and a mail client (Qamille), each on a computer
+  and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`): sketches
+  with made-up content and each app's own theme, with what the host changes and what it does not. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
   or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;

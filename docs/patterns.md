@@ -138,6 +138,9 @@ it behave as a program. They are Imago's techniques; on a page in a browser tab 
   an editor in `ownKeysIn` and it keeps its keys.
 - `TitleBar` with `dragProps` and `WindowControls`, as above.
 
+The gallery shows the same app with and without these switches: view Examples, where a to-do list and a mail client
+are drawn in a browser tab and in a Tauri window, on a computer and on a phone, with a table of what the host changes.
+
 What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
 web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
