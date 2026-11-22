@@ -204,7 +204,10 @@ function Picks({ picks, current, closes, onPick }: { picks: readonly ShellPick[]
   const picker = useDatePickerContext()
   const same = (days: readonly CalendarDate[]) => current.length > 0 && current[0]!.compare(days[0]!) === 0 && current[current.length - 1]!.compare(days[days.length - 1]!) === 0
   return (
-    <div data-slot="date-picks" className="flex flex-wrap gap-1 border-b border-border px-4 py-2.5">
+    // The card is as wide as the calendar, never as wide as these: `w-0 min-w-full` keeps the row out of the card's
+    // own width and then gives it all of it, so long names («Questo fine settimana») go on a second line instead of
+    // stretching the card past a calendar that stays small. Each button grows to fill its line, so the lines end even.
+    <div data-slot="date-picks" className="flex w-0 min-w-full flex-wrap gap-1 border-b border-border px-4 py-2.5">
       {picks.map((pick) => (
         <Button
           key={pick.label}
@@ -212,7 +215,7 @@ function Picks({ picks, current, closes, onPick }: { picks: readonly ShellPick[]
           variant="secondary"
           size="xs"
           aria-pressed={same(pick.days)}
-          className="aria-pressed:bg-selected aria-pressed:text-selected-ink"
+          className="grow aria-pressed:bg-selected aria-pressed:text-selected-ink"
           onClick={(e) => {
             onPick(pick.days)
             if (!closes) return
