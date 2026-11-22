@@ -284,7 +284,8 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
           <FileUpload.HiddenInput />
           <FileUpload.Trigger
             ref={chooseRef}
-            aria-label={said.addFile}
+            // Named by what it shows (its title and the hint under it), not by a shorter label of its own: whoever
+            // speaks to the screen says the words they see (WCAG 2.5.3).
             data-slot="file-upload-trigger"
             className={cn('flex w-full flex-col items-center justify-center rounded-md px-6 py-4 text-center hover:bg-ink/4', FOCUS_RING)}
           >

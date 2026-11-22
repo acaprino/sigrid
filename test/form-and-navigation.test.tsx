@@ -315,3 +315,17 @@ describe('NavList and NavItem (R1, R6)', () => {
     expect(c).not.toContain('aria-[current=page]:bg-selected')
   })
 })
+
+describe('found by the accessibility check of 2026-11-22', () => {
+  test('a switch without a visible label does not point at a label that is not on the page; with one it does', async () => {
+    const { container, rerender } = render(<Switch aria-label="Sync" />)
+    const input = () => container.querySelector('input')!
+    expect(input().getAttribute('aria-labelledby')).toBeNull()
+    expect(input().getAttribute('aria-label')).toBe('Sync')
+    rerender(<Switch aria-label="Sync" checked onCheckedChange={() => {}} />)
+    expect(input().getAttribute('aria-labelledby')).toBeNull()
+    const labelled = render(<Switch>Sync on this device</Switch>)
+    const by = labelled.container.querySelector('input')!.getAttribute('aria-labelledby')!
+    expect(document.getElementById(by)!.textContent).toBe('Sync on this device')
+  })
+})

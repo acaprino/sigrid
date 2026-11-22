@@ -38,6 +38,12 @@ export type SwitchProps = {
 
 function Switch({ checked, defaultChecked, onCheckedChange, disabled, invalid, required, name, id, children, className, animated, ...aria }: SwitchProps) {
   const moving = useMotion(animated) !== null
+  // Without a visible label Ark still points the input at its label part (`aria-labelledby`), which is not on the page:
+  // the pointer is taken off, and the name is the caller's `aria-label` or the `<label htmlFor>` elsewhere.
+  const input = React.useRef<HTMLInputElement>(null)
+  React.useLayoutEffect(() => {
+    if (children == null) input.current?.removeAttribute("aria-labelledby")
+  })
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
@@ -52,7 +58,7 @@ function Switch({ checked, defaultChecked, onCheckedChange, disabled, invalid, r
       onCheckedChange={(details) => onCheckedChange?.(details.checked)}
     >
       {/* Ark leaves the input a plain checkbox: the role says what it is, as WAI-ARIA asks of an on/off control. */}
-      <SwitchPrimitive.HiddenInput role="switch" {...aria} />
+      <SwitchPrimitive.HiddenInput ref={input} role="switch" {...aria} />
       <SwitchPrimitive.Control
         data-slot="switch-control"
         className="relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full bg-input not-data-disabled:data-[state=unchecked]:hover:bg-ink-mute not-data-disabled:data-[state=checked]:hover:bg-accent-hover outline-hidden after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3 data-[disabled]:cursor-not-allowed data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring data-[invalid]:bg-destructive data-[state=checked]:bg-primary"

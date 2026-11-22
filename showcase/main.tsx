@@ -777,8 +777,7 @@ function Pickers() {
           <label htmlFor="suggested-labels" className="text-sm font-medium">
             Labels
           </label>
-          <label htmlFor="suggested-labels" className="sr-only">Sample labels with suggestions</label>
-            <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
+          <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
         </div>
       </Row>
       <Row label="avatar">
