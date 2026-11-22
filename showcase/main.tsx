@@ -2257,6 +2257,10 @@ function App() {
                   <ToolbarBrand name="Sigrid" />
                   {narrow ? null : views()}
                   <ToolbarSpacer />
+                  {/* The layout editor is its own page (builder.html), not a view of this one: it opens beside it. */}
+                  <ToolbarButton label="Layout editor" icon={<Icon name="layout" />} onClick={() => window.open('builder.html', '_blank', 'noopener')}>
+                    Layout editor
+                  </ToolbarButton>
                   <ToolbarButton label="Dark mode" icon={<Icon name="moon" />} pressed={scheme === 'dark'} onClick={() => setScheme(scheme === 'dark' ? 'light' : 'dark')} animated={animated} />
                   <ToolbarButton label="Look" icon={<Icon name="appearance" />} pressed={look} onClick={() => setLook(!look)} animated={animated}>
                     Look
