@@ -921,7 +921,7 @@ function Shells({ animated }: { animated: boolean }) {
     page: (
       <AppShell
         contentLabel="Look"
-        titleBar={bar('Settings', <><ToolbarBrand name="Mail" mark={false} /><ToolbarTitle className="font-normal text-ink-mute">Settings</ToolbarTitle></>)}
+        titleBar={bar('Settings', <ToolbarBrand name="Daodan" page="Settings" />)}
         sidebar={sidebar(
           <SidebarGroup>
             {row('general', 'settings', 'General')}
@@ -960,8 +960,7 @@ function Shells({ animated }: { animated: boolean }) {
         titleBar={bar(
           'Home',
           <>
-            <ToolbarBrand name="Tasks" />
-            <ToolbarTitle className="font-normal text-ink-mute">Home</ToolbarTitle>
+            <ToolbarBrand name="Tasks" page="Home" />
             <ToolbarSpacer />
             <ToggleGroup aria-label="View" value={view} onValueChange={(v) => v && setView(v)} animated={animated}>
               <ToggleGroupItem value="list">List</ToggleGroupItem>

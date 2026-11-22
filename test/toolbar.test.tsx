@@ -196,3 +196,14 @@ test('the brand can be the name alone', () => {
   expect(document.querySelector('[data-slot="toolbar-brand-mark"]')).toBeNull()
   expect(document.querySelector('[data-slot="toolbar-brand-name"]')?.textContent).toBe('Xiox')
 })
+
+test('the place follows the app\'s name after a chevron, and the last one is the current page', () => {
+  render(<Toolbar aria-label="Daodan"><ToolbarBrand name="Daodan" page={['Settings', 'Look']} /></Toolbar>)
+  const brand = document.querySelector('[data-slot="toolbar-brand"]')!
+  expect(brand.textContent).toBe('DDaodanSettingsLook')
+  expect(brand.querySelectorAll('svg').length).toBe(2)
+  const places = [...brand.querySelectorAll('[data-slot="toolbar-brand-page"]')]
+  expect(places.map((p) => p.getAttribute('aria-current'))).toEqual([null, 'page'])
+  // Short of room the app's name gives way and the place stays.
+  expect(brand.querySelector('[data-slot="toolbar-brand-name"]')?.className).toContain('@max-md/toolbar:hidden')
+})

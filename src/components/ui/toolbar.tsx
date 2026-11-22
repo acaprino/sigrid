@@ -9,7 +9,8 @@
 //   toolkit's `SearchField` on a press (or when the app opens it from its own key), and closes again with Esc, or when
 //   it is left empty. While it holds text it stays open, so what filters the page is always in sight.
 // - `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the
-//   initial of the product's name, and the name beside it, or the name alone (`mark={false}`). No drawn logo: the hue and the name tell the apps apart.
+//   initial of the product's name, and the name beside it, or the name alone (`mark={false}`). With `page` the place
+//   follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.
 // - `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the
 //   root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.
 // Short of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container
@@ -19,7 +20,7 @@
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
-import { Search } from "lucide-react"
+import { ChevronRight, Search } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { buttonVariants } from "./button"
 import { SearchField } from "./search-field"
@@ -121,6 +122,11 @@ export type ToolbarBrandProps = {
   name: string
   /** In place of the letter, the app's own mark (a 16px drawing): the square stays. `false`: the name alone. */
   mark?: React.ReactNode | false
+  /**
+   * Where the user is, after the name: «Daodan › Settings». One name, or the path to it. On a toolbar under 448px
+   * the app's name gives way and the place stays, after the mark.
+   */
+  page?: string | readonly string[] | undefined
   className?: string | undefined
 }
 
@@ -128,19 +134,28 @@ export type ToolbarBrandProps = {
  * The app, at the start of the bar: the mark and the name. In a `TitleBar` both move the window. Under 256px of
  * toolbar the name goes and the mark stays.
  */
-function ToolbarBrand({ name, mark, className }: ToolbarBrandProps) {
+function ToolbarBrand({ name, mark, page, className }: ToolbarBrandProps) {
   const drag = React.useContext(TitleBarDragContext)
   const letter = brandInitial(name)
+  const path = page === undefined ? [] : typeof page === "string" ? [page] : page
   return (
-    <span data-slot="toolbar-brand" {...drag} className={cn("flex min-w-0 shrink-0 items-center gap-2 px-1", className)}>
+    <span data-slot="toolbar-brand" {...drag} className={cn("flex min-w-0 items-center gap-2 px-1", className)}>
       {mark !== false && (mark || letter) ? (
         <span data-slot="toolbar-brand-mark" aria-hidden="true" {...drag} className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground [&_svg]:size-4">
           {mark ?? letter}
         </span>
       ) : null}
-      <span data-slot="toolbar-brand-name" {...drag} className="truncate text-sm font-semibold text-ink @max-3xs/toolbar:hidden">
+      <span data-slot="toolbar-brand-name" {...drag} className={cn("truncate text-sm font-semibold text-ink", path.length > 0 ? NARROW_GONE : "@max-3xs/toolbar:hidden")}>
         {name}
       </span>
+      {path.map((place, i) => (
+        <React.Fragment key={`${i}-${place}`}>
+          <ChevronRight aria-hidden="true" {...drag} className={cn("size-3.5 shrink-0 text-ink-mute", i === 0 && NARROW_GONE)} />
+          <span data-slot="toolbar-brand-page" aria-current={i === path.length - 1 ? "page" : undefined} {...drag} className={cn("truncate text-sm", i === path.length - 1 ? "font-medium text-ink" : "text-ink-mute")}>
+            {place}
+          </span>
+        </React.Fragment>
+      ))}
     </span>
   )
 }
