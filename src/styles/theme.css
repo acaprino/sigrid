@@ -384,7 +384,8 @@
    below it). `--titlebar-start` and `--titlebar-end` are the room the system keeps for its own window buttons over the
    page: an installed web app with the window-controls overlay reports it through `env(titlebar-area-*)`, in a browser
    tab it is zero, and an app whose host says nothing sets the two itself. The bar moves the window (`app-region`),
-   and every control inside it does not, so it stays a control. */
+   and every control inside it does not, so it stays a control. A compact bar is the smallest control and 2px above
+   and below it. */
 @layer theme {
   :root {
     --titlebar-start: env(titlebar-area-x, 0px);
@@ -399,6 +400,9 @@
   padding-inline: calc(var(--titlebar-start) + 0.5rem) calc(var(--titlebar-end) + 0.5rem);
   -webkit-app-region: drag;
   app-region: drag;
+}
+[data-slot="title-bar"][data-size="compact"] {
+  min-height: calc(var(--control-xs) + 0.25rem);
 }
 [data-slot="title-bar"][data-window-controls] {
   padding-inline-end: var(--titlebar-end);

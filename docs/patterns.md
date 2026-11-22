@@ -47,6 +47,19 @@ Recommended:
   to a menu.
 - In a shell that draws no frame, pass `dragProps` and `WindowControls`; on the web pass neither. Nothing else changes.
 
+## A compact bar, or the bars of a classic desktop program
+
+The same parts give a denser, older look by a parameter, with no second set of components.
+
+- `TitleBar size="compact"` is a thin caption (32px at normal density, in place of 48px); the toolbar inside it takes
+  28px items by itself. Use it where the content needs every row: tables, logs, editors.
+- For the bars of a classic Windows program, keep the compact caption for the app and the place, and put under it
+  (`AppShell`'s `tabs`) a `Toolbar size="sm"`: text buttons that open a `DropdownMenu` («File», «Edit», «View») are
+  its menu bar, and the icons beside them its toolbar. A `sharp` theme (`ThemeDef.shape`) squares the corners, and the
+  `compact` density lowers the rows to match.
+- The regular bar is still the recommendation for an app used with a finger, or by someone new to it: bigger targets,
+  fewer things in sight. With a coarse pointer every control is 44px in both.
+
 ## Views as tabs: in the bar, under it, or at the foot
 
 An app with a few views of the same weight (Xiox: Cleanup, Registry, Developers, Settings) shows them as words:

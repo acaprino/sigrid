@@ -24,6 +24,9 @@
 // query, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon
 // and a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.
 // What the user needs to act (the buttons) is never what gives way.
+// Two sizes, chosen with a parameter: `md`, and `sm` for the dense bars of a classic desktop program (28px items, a
+// 20px mark). A toolbar in a compact `TitleBar` is `sm` by itself. Text buttons that open a `DropdownMenu` («File»,
+// «Edit», «View») make the menu bar of such a program out of the same parts.
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
@@ -33,20 +36,30 @@ import { FOCUS_RING_INSET } from "../../lib/focus"
 import { buttonVariants } from "./button"
 import { SearchField } from "./search-field"
 import { Tooltip } from "./tooltip"
-import { TitleBarDragContext } from "./title-bar"
+import { TitleBarDragContext, TitleBarSizeContext } from "./title-bar"
+
+/** The size of the toolbar around: its buttons, its search and its brand read it. */
+const ToolbarSizeContext = React.createContext<"md" | "sm">("md")
 
 export type ToolbarProps = {
   /** Name of the toolbar for screen readers («Message actions»). */
   "aria-label": string
+  /**
+   * `md` (the default): 32px items at normal density. `sm`: 28px items, for the dense bars of a classic desktop
+   * program. Absent: `sm` in a compact `TitleBar`, `md` elsewhere.
+   */
+  size?: "md" | "sm" | undefined
   className?: string | undefined
   children?: React.ReactNode
 }
 
-function Toolbar({ className, children, ...props }: ToolbarProps) {
+function Toolbar({ size, className, children, ...props }: ToolbarProps) {
   const drag = React.useContext(TitleBarDragContext)
+  const bar = React.useContext(TitleBarSizeContext)
+  const own = size ?? (bar === "compact" ? "sm" : "md")
   return (
-    <ToolbarPrimitive.Root data-slot="toolbar" {...drag} {...props} className={cn("@container/toolbar flex min-w-0 flex-1 items-center gap-1 self-stretch", className)}>
-      {children}
+    <ToolbarPrimitive.Root data-slot="toolbar" data-size={own} {...drag} {...props} className={cn("@container/toolbar flex min-w-0 flex-1 items-center self-stretch", own === "sm" ? "gap-0.5" : "gap-1", className)}>
+      <ToolbarSizeContext.Provider value={own}>{children}</ToolbarSizeContext.Provider>
     </ToolbarPrimitive.Root>
   )
 }
@@ -75,6 +88,7 @@ const ITEM = "aria-pressed:bg-selected aria-pressed:text-selected-ink data-disab
 const NARROW_GONE = "@max-md/toolbar:hidden"
 
 function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
+  const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = children === undefined || children === null || children === false
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
   const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
@@ -88,7 +102,7 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
       type={type}
       {...props}
       ref={ref as React.Ref<HTMLButtonElement>}
-      className={cn(buttonVariants({ variant, size: iconOnly ? "icon-sm" : "sm" }), ITEM, className)}
+      className={cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)}
     >
       {icon}
       {iconOnly ? null : icon && !keepWord ? (
@@ -220,12 +234,13 @@ export type ToolbarBrandProps = {
  */
 function ToolbarBrand({ name, mark, page, className }: ToolbarBrandProps) {
   const drag = React.useContext(TitleBarDragContext)
+  const small = React.useContext(ToolbarSizeContext) === "sm"
   const letter = brandInitial(name)
   const path = page === undefined ? [] : typeof page === "string" ? [page] : page
   return (
     <span data-slot="toolbar-brand" {...drag} className={cn("flex min-w-0 items-center gap-2 px-1", className)}>
       {mark !== false && (mark || letter) ? (
-        <span data-slot="toolbar-brand-mark" aria-hidden="true" {...drag} className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground [&_svg]:size-4">
+        <span data-slot="toolbar-brand-mark" aria-hidden="true" {...drag} className={cn("flex shrink-0 items-center justify-center bg-primary font-semibold text-primary-foreground", small ? "size-5 rounded-sm text-2xs [&_svg]:size-3.5" : "size-6 rounded-md text-xs [&_svg]:size-4")}>
           {mark ?? letter}
         </span>
       ) : null}
@@ -286,6 +301,7 @@ export type ToolbarSearchProps = {
 const FIELD_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"])
 
 function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false, onOpenChange, closed = "icon", shortcut, placeholder, animated, className }: ToolbarSearchProps) {
+  const small = React.useContext(ToolbarSizeContext) === "sm"
   const [own, setOwn] = React.useState(defaultOpen)
   const asked = open ?? own
   const shown = asked || value !== ""
@@ -351,7 +367,7 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
   return (
     <div
       data-slot="toolbar-search"
-      className={cn("w-64 min-w-24 shrink [&_input]:h-(--control-sm)", className)}
+      className={cn("w-64 min-w-24 shrink", small ? "[&_input]:h-(--control-xs)" : "[&_input]:h-(--control-sm)", className)}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation()

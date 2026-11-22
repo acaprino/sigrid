@@ -858,6 +858,7 @@ function Shells({ animated }: { animated: boolean }) {
     </ToolbarTabs>
   )
   const [palette, setPalette] = React.useState(false)
+  const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
   useCommandKey(() => setPalette(true))
   const commandsButton = (
     <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Search aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
@@ -888,7 +889,7 @@ function Shells({ animated }: { animated: boolean }) {
     </Sidebar>
   )
   const bar = (title: string, items: React.ReactNode) => (
-    <TitleBar windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
+    <TitleBar size={barStyle === 'regular' ? 'default' : 'compact'} windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
       <Toolbar aria-label={title}>
         {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
         {items}
@@ -901,6 +902,12 @@ function Shells({ animated }: { animated: boolean }) {
         contentLabel="Messages"
         titleBar={bar(
           'Mail',
+          barStyle === 'classic' ? (
+            <>
+              <ToolbarBrand name="Mail" page="Inbox" />
+              <ToolbarSpacer />
+            </>
+          ) : (
           <>
             <ToolbarBrand name="Mail" />
             <ToolbarSpacer />
@@ -910,9 +917,40 @@ function Shells({ animated }: { animated: boolean }) {
             <ToolbarButton label="New message" variant="outline" icon={<Plus aria-hidden="true" />}>
               New
             </ToolbarButton>
-          </>,
+          </>
+          ),
         )}
         tabs={
+          barStyle === 'classic' ? (
+            <Toolbar aria-label="Menus and actions" size="sm">
+              {(['File', 'Edit', 'View', 'Help'] as const).map((menu) => (
+                <DropdownMenu key={menu} modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <ToolbarButton label={menu}>{menu}</ToolbarButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56" animated={animated}>
+                    <DropdownMenuItem>
+                      New message
+                      <DropdownMenuShortcut>Ctrl N</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setPalette(true)}>
+                      Commands
+                      <DropdownMenuShortcut>Ctrl K</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ))}
+              <ToolbarSeparator />
+              <ToolbarButton label="New message" shortcut="Ctrl N" icon={<Plus aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} animated={animated} />
+              <ToolbarSeparator />
+              <ToolbarButton label="Show the details" icon={<Settings aria-hidden="true" />} pressed={details} onClick={() => setDetails(!details)} animated={animated} />
+              <ToolbarSpacer />
+              <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+            </Toolbar>
+          ) : (
           <Toolbar aria-label="Views of the mail">
             <ToolbarTabs aria-label="Views" value={filter} onValueChange={setFilter}>
               <ToolbarTab value="all">All</ToolbarTab>
@@ -920,6 +958,7 @@ function Shells({ animated }: { animated: boolean }) {
               <ToolbarTab value="flagged">Flagged</ToolbarTab>
             </ToolbarTabs>
           </Toolbar>
+          )
         }
         status={<span>Archived «Receipt of the waste tax»</span>}
         sidebar={sidebar(
@@ -1101,6 +1140,11 @@ function Shells({ animated }: { animated: boolean }) {
           <ToggleGroupItem value="900">900</ToggleGroupItem>
           <ToggleGroupItem value="700">700</ToggleGroupItem>
           <ToggleGroupItem value="480">480</ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup aria-label="Style of the bar" value={barStyle} onValueChange={(v) => v && setBarStyle(v as typeof barStyle)} animated={animated}>
+          <ToggleGroupItem value="regular">Regular bar</ToggleGroupItem>
+          <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
+          <ToggleGroupItem value="classic">Classic menus</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup
           aria-label="Where the views are"

@@ -131,6 +131,9 @@ const win = getCurrentWindow()
 ```
 
 The bar's height is `--titlebar-height` (a dense control and 8px above and below it: 48px at normal density).
+`TitleBar size="compact"` is the thin caption of a classic desktop program (32px), and the toolbar inside it takes
+28px items by itself; `Toolbar size="sm"` asks for them anywhere. Text `ToolbarButton`s that open a `DropdownMenu`
+make a menu bar («File», «Edit», «View») out of the same parts.
 
 ## The command palette
 

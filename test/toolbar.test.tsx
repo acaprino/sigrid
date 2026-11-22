@@ -207,3 +207,31 @@ test('the place follows the app\'s name after a chevron, and the last one is the
   // Short of room the app's name gives way and the place stays.
   expect(brand.querySelector('[data-slot="toolbar-brand-name"]')?.className).toContain('@max-md/toolbar:hidden')
 })
+
+test('a compact bar is a parameter: the toolbar inside it and its buttons, search and mark take the small size', () => {
+  render(
+    <TitleBar size="compact">
+      <Toolbar aria-label="Classic">
+        <ToolbarBrand name="Xiox" />
+        <ToolbarButton label="Save" icon={<svg />} />
+        <ToolbarButton label="File">File</ToolbarButton>
+      </Toolbar>
+    </TitleBar>,
+  )
+  expect(screen.getByRole('banner').getAttribute('data-size')).toBe('compact')
+  expect(screen.getByRole('toolbar').getAttribute('data-size')).toBe('sm')
+  expect(screen.getByRole('button', { name: 'Save' }).className).toContain('size-(--control-xs)')
+  expect(screen.getByRole('button', { name: 'File' }).className).toContain('h-(--control-xs)')
+  expect(document.querySelector('[data-slot="toolbar-brand-mark"]')?.className).toContain('size-5')
+})
+
+test('a toolbar chooses its own size wherever it is', () => {
+  render(
+    <>
+      <Toolbar aria-label="Dense" size="sm"><ToolbarButton label="Cut" icon={<svg />} /></Toolbar>
+      <TitleBar size="compact"><Toolbar aria-label="Roomy" size="md"><ToolbarButton label="Copy" icon={<svg />} /></Toolbar></TitleBar>
+    </>,
+  )
+  expect(screen.getByRole('button', { name: 'Cut' }).className).toContain('size-(--control-xs)')
+  expect(screen.getByRole('button', { name: 'Copy' }).className).toContain('size-(--control-sm)')
+})

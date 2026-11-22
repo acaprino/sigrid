@@ -12,7 +12,9 @@
 //   the pointer then never reaches the page's button. `maximizeRef` gives the host the button to measure, and
 //   `maximizeState` shows on it the hover and the press the system reports (Imago's window does this).
 // The bar is as tall as a dense control and 8px above and below it (`--titlebar-height`), on the page's own surface
-// with a line under it (R4: a line, no shadow).
+// with a line under it (R4: a line, no shadow). With `size="compact"` it is the thin caption of a classic desktop
+// program: the smallest control and 2px above and below it (32px at normal density), and the toolbar inside it takes
+// the small size by itself. Nothing else changes: it is a measure, chosen with a parameter.
 import * as React from "react"
 import { Copy, Minus, Square, X } from "lucide-react"
 import { cn } from "../../lib/utils"
@@ -25,7 +27,12 @@ export type TitleBarDragProps = Readonly<Record<`data-${string}`, string>>
 /** The drag attributes of the bar around, for the parts inside it that move the window too. */
 export const TitleBarDragContext = React.createContext<TitleBarDragProps | undefined>(undefined)
 
+/** The size of the bar around, which the toolbar inside it follows. */
+export const TitleBarSizeContext = React.createContext<"default" | "compact">("default")
+
 export type TitleBarProps = Omit<React.ComponentProps<"header">, "children"> & {
+  /** `compact`: the thin caption of a classic desktop program, with small controls. */
+  size?: "default" | "compact" | undefined
   /** The host's own mark of a drag region, if it has one. */
   dragProps?: TitleBarDragProps | undefined
   /** The window's buttons (`WindowControls`), at the end of the bar and flush with its corner. */
@@ -33,16 +40,19 @@ export type TitleBarProps = Omit<React.ComponentProps<"header">, "children"> & {
   children?: React.ReactNode
 }
 
-function TitleBar({ dragProps, windowControls, className, children, ...props }: TitleBarProps) {
+function TitleBar({ size = "default", dragProps, windowControls, className, children, ...props }: TitleBarProps) {
   return (
     <header
       data-slot="title-bar"
+      data-size={size}
       data-window-controls={windowControls ? "" : undefined}
       {...dragProps}
       {...props}
       className={cn("flex shrink-0 cursor-default items-center gap-2 border-b border-line bg-paper text-ink select-none", className)}
     >
-      <TitleBarDragContext.Provider value={dragProps}>{children}</TitleBarDragContext.Provider>
+      <TitleBarSizeContext.Provider value={size}>
+        <TitleBarDragContext.Provider value={dragProps}>{children}</TitleBarDragContext.Provider>
+      </TitleBarSizeContext.Provider>
       {windowControls}
     </header>
   )
