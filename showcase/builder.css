@@ -33,5 +33,20 @@ body,
   --dv-tab-border-radius: var(--radius-md);
   --dv-floating-box-shadow: var(--shadow-lg);
   --dv-floating-border: 0;
+  --dv-floating-group-border: 0;
+  --dv-floating-titlebar-background-color: var(--color-paper-2);
+  --dv-floating-titlebar-border-bottom: 1px solid var(--color-line);
+  --dv-tabs-container-scrollbar-color: var(--color-ink-mute);
+  --dv-scrollbar-background-color: color-mix(in oklab, var(--color-ink) 30%, transparent);
+  --dv-context-menu-background-color: var(--color-raised);
+  --dv-context-menu-color: var(--color-ink);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--color-ring);
+  --dv-dnd-compass-color: var(--color-raised);
+  --dv-dnd-compass-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  --dv-dnd-compass-edge-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
+  --dv-dnd-compass-active-cell-color: var(--color-ring);
+  --dv-smart-guides-color: var(--color-ring);
+  --dv-smart-guides-preview-color: color-mix(in oklab, var(--color-selected) 70%, transparent);
   color: var(--color-ink);
 }

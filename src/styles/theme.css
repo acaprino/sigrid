@@ -433,6 +433,12 @@
   user-select: none;
   cursor: default;
 }
+/* A link or a label inside what is selectable is read and copied with the text around it. */
+[data-slot="app-shell"][data-desktop] :is([data-slot="app-shell-content"], [data-slot="inspector-body"], [data-selectable]) :is(a, label, summary),
+[data-slot="app-shell"][data-desktop] :is(a, label, summary)[data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
 [data-slot="app-shell-overlays"] {
   transform: translateZ(0);
 }

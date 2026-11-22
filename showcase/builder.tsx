@@ -205,18 +205,25 @@ function PanelView({ api }: IDockviewPanelProps) {
       {items.map((item, i) => (
         <React.Fragment key={item.uid}>
           {at === i ? <DropLine /> : null}
-          <div
-            data-builder-item={item.uid}
-            draggable
-            onDragStart={(event) => {
-              event.dataTransfer.setData(MOVE, JSON.stringify({ panel, uid: item.uid }))
-              event.dataTransfer.effectAllowed = 'move'
-            }}
-            className="group/item relative rounded-md p-1 hover:bg-ink/4 focus-within:bg-ink/4"
-          >
+          <div data-builder-item={item.uid} className="group/item relative rounded-md p-1 hover:bg-ink/4 focus-within:bg-ink/4">
             {KINDS[item.kind].render()}
-            <div className="absolute top-1 right-1 hidden items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm group-focus-within/item:flex group-hover/item:flex">
-              <GripVertical aria-hidden="true" className="size-3.5 text-ink-mute" />
+            {/* Hidden with opacity, not with `display`: a grip taken out of the page as its drag starts would end the drag. */}
+            <div className="pointer-events-none absolute top-1 right-1 flex items-center gap-0.5 rounded-md bg-raised p-0.5 opacity-0 shadow-sm group-focus-within/item:pointer-events-auto group-focus-within/item:opacity-100 group-hover/item:pointer-events-auto group-hover/item:opacity-100">
+              {/* The grip is what is dragged: a drag that starts in a field of the component selects its text. */}
+              <span
+                data-builder-grip
+                draggable
+                title="Drag to move"
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(MOVE, JSON.stringify({ panel, uid: item.uid }))
+                  event.dataTransfer.effectAllowed = 'move'
+                  const row = event.currentTarget.closest('[data-builder-item]')
+                  if (row) event.dataTransfer.setDragImage(row, 8, 8)
+                }}
+                className="flex size-6 cursor-grab items-center justify-center rounded-sm text-ink-mute hover:bg-ink/9 active:cursor-grabbing"
+              >
+                <GripVertical aria-hidden="true" className="size-3.5" />
+              </span>
               <ItemButton label={`Move ${KINDS[item.kind].label} up`} disabled={i === 0} onClick={() => builder?.shift(panel, item.uid, -1)}>
                 <ArrowUp aria-hidden="true" className="size-3.5" />
               </ItemButton>
@@ -257,6 +264,9 @@ function Builder() {
   const [scheme, setScheme] = React.useState<ThemeScheme>('light')
   const [width, setWidth] = React.useState<keyof typeof WIDTHS>('full')
   const [said, setSaid] = React.useState('')
+  const [panels, setPanels] = React.useState(0)
+  /** While the canvas is being emptied to start again, a panel that goes does not take the new contents with it. */
+  const restarting = React.useRef(false)
   const dock = React.useRef<DockviewApi | null>(null)
   const next = React.useRef(saved?.next ?? 1)
   const latest = React.useRef(contents)
@@ -267,7 +277,9 @@ function Builder() {
   }, [scheme])
 
   const keep = React.useCallback(() => {
-    if (dock.current) save({ layout: dock.current.toJSON(), contents: latest.current, next: next.current })
+    if (!dock.current) return
+    setPanels(dock.current.panels.length)
+    save({ layout: dock.current.toJSON(), contents: latest.current, next: next.current })
   }, [])
   React.useEffect(keep, [contents, keep])
 
@@ -307,7 +319,9 @@ function Builder() {
   }, [contents])
 
   const startLayout = (api: DockviewApi) => {
+    restarting.current = true
     api.clear()
+    restarting.current = false
     api.addPanel({ id: 'navigation', component: 'panel', title: 'Navigation' })
     api.addPanel({ id: 'content', component: 'panel', title: 'Content', position: { referencePanel: 'navigation', direction: 'right' } })
     api.addPanel({ id: 'details', component: 'panel', title: 'Details', position: { referencePanel: 'content', direction: 'right' } })
@@ -329,7 +343,10 @@ function Builder() {
     if (!restored) startLayout(api)
     api.onDidLayoutChange(keep)
     // A panel that is closed takes its components with it.
-    api.onDidRemovePanel((panel) => setContents(({ [panel.id]: _gone, ...rest }) => rest))
+    api.onDidRemovePanel((panel) => {
+      if (!restarting.current) setContents(({ [panel.id]: _gone, ...rest }) => rest)
+    })
+    setPanels(api.panels.length)
   }
   const addPanel = () => {
     const api = dock.current
@@ -339,9 +356,9 @@ function Builder() {
     api.addPanel({ id: `panel-${n}`, component: 'panel', title: `Panel ${n}`, ...(reference ? { position: { referencePanel: reference.id, direction: 'right' as const } } : {}) })
   }
   const reset = () => {
-    setContents(START)
     next.current = 1
     if (dock.current) startLayout(dock.current)
+    setContents(START)
     setSaid('Back to the starting layout.')
   }
   const copy = async () => {
@@ -353,8 +370,10 @@ function Builder() {
       setSaid('This browser did not let the page write to the clipboard.')
     }
   }
+  // The library's light theme carries the measures; every colour of it is set from the toolkit's tokens (builder.css),
+  // and the scheme is told to the library so what it draws by itself follows it.
+  const dockTheme = React.useMemo(() => ({ ...themeLight, colorScheme: scheme }), [scheme])
   const total = Object.values(contents).reduce((sum, items) => sum + items.length, 0)
-  const panels = Object.keys(contents).length
 
   return (
     <BuilderContext.Provider value={actions}>
@@ -421,7 +440,7 @@ function Builder() {
         }
       >
         <div className={cn('sigrid-dock mx-auto h-full bg-paper-2', width !== 'full' && 'border-x border-line')} style={width === 'full' ? undefined : { maxWidth: `${width}px` }}>
-          <DockviewReact components={COMPONENTS} onReady={onReady} theme={themeLight} />
+          <DockviewReact components={COMPONENTS} onReady={onReady} theme={dockTheme} />
         </div>
       </AppShell>
     </BuilderContext.Provider>

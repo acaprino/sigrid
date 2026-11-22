@@ -1,9 +1,12 @@
 // The frame as the window of a program (`AppShell desktop`) and the guard that takes the browser out of a page
 // (`guardDesktop`, `useDesktopGuard`): the techniques of Imago's windows, in the toolkit's own writing.
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useEffect, useState } from 'react'
 import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
-import { AppShell, DialogContent, DialogRoot, DialogTitle, guardDesktop, isBrowserKey, useDesktopGuard } from '../src'
+import { AppShell, DialogContent, DialogRoot, DialogTitle, TitleBar, guardDesktop, isBrowserKey, useDesktopGuard } from '../src'
 
 const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
 const key = (k: string, more: Partial<KeyboardEventInit> = {}) => ({ key: k, ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, ...more })
@@ -93,8 +96,69 @@ test('a frame in a browser tab has no such layer: its overlays open over the who
 })
 
 test('theme.css keeps the chrome of a desktop frame unselectable and its content selectable, and bounds its overlays', () => {
-  const css = readFileSync('src/styles/theme.css', 'utf8')
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../src/styles/theme.css'), 'utf8')
   expect(css).toMatch(/\[data-slot="app-shell"\]\[data-desktop\] \{[^}]*user-select: none;[^}]*cursor: default;/)
   expect(css).toMatch(/\[data-slot="app-shell"\]\[data-desktop\] :is\(\[data-slot="app-shell-content"\][^{]*\{[^}]*user-select: text;/)
   expect(css).toMatch(/\[data-slot="app-shell-overlays"\] \{\s*transform: translateZ\(0\);/)
+})
+
+test('on a Mac the browser\'s keys go with Command, and Command with an arrow is left to the caret', () => {
+  for (const k of ['r', 'p', 'f', '[', ']']) expect(isBrowserKey(key(k, { metaKey: true }), true)).toBe(true)
+  expect(isBrowserKey(key('i', { metaKey: true, altKey: true }), true)).toBe(true)
+  for (const e of [key('k', { metaKey: true }), key('c', { metaKey: true }), key('ArrowLeft', { metaKey: true }), key('r', { ctrlKey: true }), key('r')]) expect(isBrowserKey(e, true)).toBe(false)
+  // Elsewhere the Command key is not the browser's.
+  expect(isBrowserKey(key('r', { metaKey: true }))).toBe(false)
+})
+
+test('a desktop frame mounts what it holds once', async () => {
+  let mounts = 0
+  function Page() {
+    const [text, setText] = useState('')
+    useEffect(() => {
+      mounts++
+    }, [])
+    return <input aria-label="Draft" value={text} onChange={(event) => setText(event.target.value)} />
+  }
+  render(
+    <AppShell desktop contentLabel="Page" titleBar={<header>Bar</header>}>
+      <Page />
+    </AppShell>,
+  )
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft' }), { target: { value: 'kept' } })
+  await flush()
+  expect(mounts).toBe(1)
+  expect((screen.getByRole('textbox', { name: 'Draft' }) as HTMLInputElement).value).toBe('kept')
+  expect(document.querySelector('[data-slot="app-shell-overlays"]')).toBeTruthy()
+})
+
+test('a press on the window\'s bar does not close a dialog; a press on the backdrop still does', async () => {
+  const seen: boolean[] = []
+  render(
+    <AppShell desktop contentLabel="Page" titleBar={<TitleBar><button type="button">Minimize</button></TitleBar>}>
+      <DialogRoot open onOpenChange={(open) => seen.push(open)}>
+        <DialogContent>
+          <DialogTitle>Sure?</DialogTitle>
+        </DialogContent>
+      </DialogRoot>
+    </AppShell>,
+  )
+  await flush()
+  const press = (el: Element) => {
+    fireEvent.pointerDown(el)
+    fireEvent.mouseDown(el)
+    fireEvent.pointerUp(el)
+    fireEvent.mouseUp(el)
+    fireEvent.click(el)
+  }
+  press(screen.getByText('Minimize'))
+  await flush()
+  expect(seen).toEqual([])
+  press(document.querySelector('[data-slot="dialog-overlay"]')!)
+  await flush()
+  expect(seen).toEqual([false])
+})
+
+test('theme.css lets a link inside the content be selected with the text around it', () => {
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../src/styles/theme.css'), 'utf8')
+  expect(css).toMatch(/\[data-slot="app-shell-content"\], \[data-slot="inspector-body"\], \[data-selectable\]\) :is\(a, label, summary\),[^{]*\{[^}]*user-select: text;/)
 })

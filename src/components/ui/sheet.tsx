@@ -14,7 +14,7 @@ import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
-import { BACKDROP, TOASTS_ATTR } from "../../internal/overlay"
+import { BACKDROP, TOASTS_ATTR, inTitleBar } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
@@ -68,7 +68,9 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
       <SheetPrimitive.Root
         swipeDirection={SIDE_TO_SWIPE[side]}
         onOpenChange={(open, details) => {
-          if (!open && (details.reason === "outside-press" || details.reason === "focus-out") && inToasts(details.event?.target)) {
+          const outside = details.reason === "outside-press" || details.reason === "focus-out"
+          // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.
+          if (!open && outside && (inToasts(details.event?.target) || inTitleBar(details.event?.target))) {
             details.cancel()
             return
           }

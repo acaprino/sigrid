@@ -31,7 +31,7 @@ import { XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
 import { useWords } from "../../words"
-import { PortalContainerProvider } from "../PortalContainer"
+import { PortalContainerProvider, usePortalContainer } from "../PortalContainer"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
 
 /** The widths, in px of the frame, at which the layout changes: the recommended ones, which an app can replace. */
@@ -125,6 +125,8 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   }, [inspectorStep, sidebarStep, railStep])
   const id = React.useId()
   const [overlays, setOverlays] = React.useState<HTMLDivElement | null>(null)
+  // Until the layer is there (the first render), the overlays go where they would have gone without the frame.
+  const outer = usePortalContainer() ?? null
   // Everything under the title bar, so the overlays of a window start there.
   const below = (
     <>
@@ -181,7 +183,8 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
         <a href={`#${id}`} data-slot="app-shell-skip" className={cn("sr-only top-2 left-2 z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-ink shadow-lg focus:not-sr-only focus:absolute", FOCUS_RING)}>
           {words.shell.skip}
         </a>
-        {desktop && overlays ? <PortalContainerProvider container={overlays}>{frame}</PortalContainerProvider> : frame}
+        {/* The provider is there from the first render, with or without its layer: the frame is never mounted twice. */}
+        {desktop ? <PortalContainerProvider container={overlays ?? outer}>{frame}</PortalContainerProvider> : frame}
       </div>
     </AppShellContext.Provider>
   )
