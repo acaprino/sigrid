@@ -143,3 +143,31 @@ test('the window buttons only call the app back, are drawn only with an action, 
   )
   expect(screen.getByRole('button', { name: 'Chiudi' })).toBeTruthy()
 })
+
+test('a word beside an icon gives way on a narrow bar unless it is kept, and the search can rest as a field with its key', () => {
+  render(
+    <Toolbar aria-label="Mail">
+      <ToolbarButton label="New message" icon={<svg />}>New</ToolbarButton>
+      <ToolbarButton label="Send" icon={<svg />} keepWord>Send</ToolbarButton>
+      <ToolbarButton label="Help">Help</ToolbarButton>
+      <ToolbarSearch closed="field" label="Search the mail" shortcut="Ctrl K" value="" onValueChange={() => {}} />
+    </Toolbar>,
+  )
+  expect(screen.getByRole('toolbar').className).toContain('@container/toolbar')
+  expect(screen.getByText('New').closest('[data-slot="toolbar-button-word"]')?.className).toContain('@max-md/toolbar:hidden')
+  expect(screen.getByText('Send').closest('[data-slot="toolbar-button-word"]')).toBeNull()
+  expect(screen.getByText('Help').closest('[data-slot="toolbar-button-word"]')).toBeNull()
+  const field = screen.getByRole('button', { name: 'Search the mail' })
+  expect(field.textContent).toBe('Search the mailCtrl K')
+  fireEvent.click(field)
+  expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Search the mail' }))
+})
+
+test('a host that owns the pointer over the maximize button gets the button and shows its own hover on it', () => {
+  let button: HTMLButtonElement | null = null
+  render(<WindowControls onMaximizeToggle={() => {}} onClose={() => {}} maximizeRef={(el) => { button = el }} maximizeState="hover" />)
+  expect(button).toBe(screen.getByRole('button', { name: 'Maximize' }))
+  expect(button!.getAttribute('data-os-state')).toBe('hover')
+  // Closing destroys nothing: the accent, not the red.
+  expect(screen.getByRole('button', { name: 'Close' }).className).not.toContain('destructive')
+})

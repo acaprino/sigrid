@@ -745,21 +745,25 @@ function Toolbars({ animated }: { animated: boolean }) {
   const [panel, setPanel] = React.useState(false)
   const [maximized, setMaximized] = React.useState(false)
   const [said, setSaid] = React.useState('Nothing pressed yet.')
-  const bar = (name: string) => (
+  const bar = (name: string, field = false) => (
     <Toolbar aria-label={name}>
       <ToolbarButton label="Show the sidebar" icon={<PanelLeft aria-hidden="true" />} pressed={panel} onClick={() => setPanel(!panel)} animated={animated} />
       <ToolbarTitle>Inbox</ToolbarTitle>
       <ToolbarSpacer />
-      <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
+      <ToolbarSearch closed={field ? 'field' : 'icon'} label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
       <ToolbarGroup aria-label="View">
         <ToolbarButton label="Filter" icon={<ListFilter aria-hidden="true" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
         <ToolbarButton label="Sort" icon={<ArrowDownUp aria-hidden="true" />} onClick={() => setSaid('Sort')} animated={animated} />
       </ToolbarGroup>
       <ToolbarSeparator />
-      <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} onClick={() => setSaid('Reply')} animated={animated} />
-      <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} onClick={() => setSaid('Archive')} animated={animated} />
-      <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} disabled animated={animated} />
-      <ToolbarButton label="More actions" icon={<Ellipsis aria-hidden="true" />} onClick={() => setSaid('More actions')} animated={animated} />
+      {field ? null : (
+        <>
+          <ToolbarButton label="Reply" shortcut="R" icon={<Reply aria-hidden="true" />} onClick={() => setSaid('Reply')} animated={animated} />
+          <ToolbarButton label="Archive" shortcut="E" icon={<Archive aria-hidden="true" />} onClick={() => setSaid('Archive')} animated={animated} />
+          <ToolbarButton label="Delete" icon={<Trash2 aria-hidden="true" />} disabled animated={animated} />
+          <ToolbarButton label="More actions" icon={<Ellipsis aria-hidden="true" />} onClick={() => setSaid('More actions')} animated={animated} />
+        </>
+      )}
       <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />} onClick={() => setSaid('New message')}>
         New
       </ToolbarButton>
@@ -772,11 +776,11 @@ function Toolbars({ animated }: { animated: boolean }) {
     </div>
   )
   return (
-    <Section id="toolbar" title="Toolbar, TitleBar and WindowControls" note="One row of actions and a single Tab stop: the arrows move among the items. A button that shows an icon alone has its name as a hint, with its key; a switch that is on has the selection tint; one item is the solid action (R3). The search takes no room until its magnifier is pressed. In the frame of a window the empty parts of the bar move the window and the three buttons at the end call the app back; on a web page the same bar has neither.">
+    <Section id="toolbar" title="Toolbar, TitleBar and WindowControls" note="One row of actions and a single Tab stop: the arrows move among the items. A button that shows an icon alone has its name as a hint, with its key; a switch that is on has the selection tint; one item is the solid action (R3). The search takes no room until its magnifier is pressed, or rests as a quiet field with its key. Under 448px of bar a word beside an icon gives way and the field is its magnifier. In the frame of a window the empty parts of the bar move the window and the three buttons at the end call the app back; on a web page the same bar has neither.">
       <Row label="in a window">
         <div data-sample="title-bar" className="w-full max-w-3xl overflow-hidden rounded-lg bg-paper shadow-lg">
           <TitleBar windowControls={<WindowControls maximized={maximized} onMinimize={() => setSaid('Minimize')} onMaximizeToggle={() => setMaximized(!maximized)} onClose={() => setSaid('Close')} />}>
-            {bar('Mail, in a window')}
+            {bar('Mail, in a window', true)}
           </TitleBar>
           {page}
         </div>
@@ -794,7 +798,9 @@ function Toolbars({ animated }: { animated: boolean }) {
               <ToolbarTitle>Inbox</ToolbarTitle>
               <ToolbarSpacer />
               <ToolbarSearch label="Search the mail" value={text} onValueChange={setText} animated={animated} />
-              <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />} animated={animated} />
+              <ToolbarButton label="New message" variant="default" icon={<Plus aria-hidden="true" />}>
+                New
+              </ToolbarButton>
             </Toolbar>
           </TitleBar>
         </div>

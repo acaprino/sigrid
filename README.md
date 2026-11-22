@@ -91,6 +91,9 @@ default and equals the sizes the toolkit had before density existed.
   action (R3).
 - `ToolbarSearch`: a magnifier that opens into a `SearchField` on a press, or when the app sets `open` from its own
   key; Esc empties and closes it, and so does leaving it empty.
+  `closed="field"` rests it as a quiet field with its name and key.
+- Short of room the bar gives way in fixed steps measured on the toolbar itself, not on the screen: under 448px a word
+  beside an icon goes (`keepWord` keeps it) and the search field is its magnifier; under 256px the title goes.
 - `ToolbarTitle`, `ToolbarSpacer`, `ToolbarGroup`, `ToolbarSeparator` lay the row out.
 
 `TitleBar` is the bar that holds it at the top of a window. On a web page it is a top bar and nothing more. It becomes
@@ -101,6 +104,7 @@ the frame of a window from outside, so the toolkit imports no shell:
 | Moving the window | nothing to do | `app-region: drag` is already on the bar and off its controls (theme.css); a shell with its own mark passes it as `dragProps`, and the bar, the toolbar, the title and the spacers carry it |
 | The system's buttons over the page | `--titlebar-start` and `--titlebar-end` follow `env(titlebar-area-*)` (an installed web app with the window-controls overlay) | the app sets the two variables if the shell keeps room for its own buttons |
 | Minimize, maximize, close | not drawn | `WindowControls` draws them and calls the app back |
+| Snap Layouts of Windows 11 | nothing | the shell lays the system's hit area over the middle button: `maximizeRef` gives it the button to measure, `maximizeState` shows the hover and press the system reports |
 
 ```tsx
 // An app in Tauri on Windows, with `decorations: false`. The same component on the web: no dragProps, no windowControls.

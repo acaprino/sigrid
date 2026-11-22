@@ -10,6 +10,10 @@
 //   it is left empty. While it holds text it stays open, so what filters the page is always in sight.
 // - `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the
 //   root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.
+// Short of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container
+// query, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon
+// and a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.
+// What the user needs to act (the buttons) is never what gives way.
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
@@ -30,7 +34,7 @@ export type ToolbarProps = {
 function Toolbar({ className, children, ...props }: ToolbarProps) {
   const drag = React.useContext(TitleBarDragContext)
   return (
-    <ToolbarPrimitive.Root data-slot="toolbar" {...drag} {...props} className={cn("flex min-w-0 flex-1 items-center gap-1 self-stretch", className)}>
+    <ToolbarPrimitive.Root data-slot="toolbar" {...drag} {...props} className={cn("@container/toolbar flex min-w-0 flex-1 items-center gap-1 self-stretch", className)}>
       {children}
     </ToolbarPrimitive.Root>
   )
@@ -47,6 +51,8 @@ export type ToolbarButtonProps = Omit<React.ComponentProps<"button">, "aria-labe
   variant?: "ghost" | "outline" | "default" | undefined
   /** A switch: on or off. Absent: a plain action. */
   pressed?: boolean | undefined
+  /** With an icon and a word: the word stays on a narrow bar too (by default it gives way under 448px). */
+  keepWord?: boolean | undefined
   /** The hint fades in (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
 }
@@ -54,7 +60,10 @@ export type ToolbarButtonProps = Omit<React.ComponentProps<"button">, "aria-labe
 // A switch that is on has the selection tint and its ink; a disabled item stays in the arrows' path, dimmed.
 const ITEM = "aria-pressed:bg-selected aria-pressed:text-selected-ink data-disabled:pointer-events-none data-disabled:opacity-50"
 
-function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, animated, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
+/** Gone while the toolbar is under 448px wide. */
+const NARROW_GONE = "@max-md/toolbar:hidden"
+
+function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const iconOnly = children === undefined || children === null || children === false
   const button = (
     <ToolbarPrimitive.Button
@@ -69,7 +78,7 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, anim
       className={cn(buttonVariants({ variant, size: iconOnly ? "icon-sm" : "sm" }), ITEM, className)}
     >
       {icon}
-      {iconOnly ? null : children}
+      {iconOnly ? null : icon && !keepWord ? <span data-slot="toolbar-button-word" className={cn("flex min-w-0 flex-1 items-center gap-2", NARROW_GONE)}>{children}</span> : children}
     </ToolbarPrimitive.Button>
   )
   if (!iconOnly) return button
@@ -103,7 +112,7 @@ function ToolbarGroup({ className, children, ...props }: ToolbarGroupProps) {
 function ToolbarTitle({ className, children }: { className?: string | undefined; children?: React.ReactNode }) {
   const drag = React.useContext(TitleBarDragContext)
   return (
-    <span data-slot="toolbar-title" {...drag} className={cn("min-w-20 truncate px-1 text-sm font-semibold text-ink", className)}>
+    <span data-slot="toolbar-title" {...drag} className={cn("min-w-20 truncate px-1 text-sm font-semibold text-ink @max-3xs/toolbar:hidden", className)}>
       {children}
     </span>
   )
@@ -125,6 +134,11 @@ export type ToolbarSearchProps = {
   open?: boolean | undefined
   defaultOpen?: boolean | undefined
   onOpenChange?: ((open: boolean) => void) | undefined
+  /**
+   * Closed, it is the magnifier alone (`icon`, the default) or a quiet field with its name and its key (`field`), for
+   * a bar where the search is the main way in. On a narrow bar the field is the magnifier too.
+   */
+  closed?: "icon" | "field" | undefined
   /** The key the app opens it with («Ctrl K»), shown in the hint. The app binds the key. */
   shortcut?: string | undefined
   /** The placeholder, if it differs from the name. */
@@ -135,7 +149,7 @@ export type ToolbarSearchProps = {
 
 const FIELD_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"])
 
-function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false, onOpenChange, shortcut, placeholder, animated, className }: ToolbarSearchProps) {
+function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false, onOpenChange, closed = "icon", shortcut, placeholder, animated, className }: ToolbarSearchProps) {
   const [own, setOwn] = React.useState(defaultOpen)
   const asked = open ?? own
   const shown = asked || value !== ""
@@ -161,6 +175,26 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
     }
     if (open) input.current?.focus()
   }, [open])
+  if (!shown && closed === "field") {
+    return (
+      <ToolbarButton
+        ref={button}
+        data-toolbar-item="search"
+        label={label}
+        variant="outline"
+        aria-expanded={false}
+        icon={<Search aria-hidden="true" className="text-ink-mute" />}
+        className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @md/toolbar:w-48"
+        onClick={() => {
+          want.current = "input"
+          set(true)
+        }}
+      >
+        <span className="flex-1 truncate text-start">{placeholder ?? label}</span>
+        {shortcut ? <span data-slot="toolbar-search-shortcut" className="text-2xs font-medium">{shortcut}</span> : null}
+      </ToolbarButton>
+    )
+  }
   if (!shown) {
     return (
       <ToolbarButton
