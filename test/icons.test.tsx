@@ -4,8 +4,8 @@ import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, type IconPack, type IconSet } from '../src'
 
-test('the packs, in the order Settings shows them: Lucide (the default), Fluent Color, Emoji', () => {
-  expect(ICON_PACKS).toEqual(['lucide', 'fluent', 'emoji'])
+test('the packs, in the order Settings shows them: Lucide (the default), the two in the colour of the theme, the three in full colour', () => {
+  expect(ICON_PACKS).toEqual(['lucide', 'duotone', 'solar', 'fluent', 'emoji', 'twemoji'])
   expect(DEFAULT_ICON_PACK).toBe('lucide')
 })
 
@@ -28,34 +28,29 @@ test('every pack draws every icon: an svg sized by the class given, hidden from 
   }
 })
 
-test('the Emoji pack: one colour emoji per meaning, none shared, a picture in the 24-unit box of the line icons', () => {
-  // A fully qualified emoji: a symbol that is text by default (sun, gear, arrows) carries U+FE0F, or it shows as text.
-  const qualified = new RegExp('^\\p{RGI_Emoji}$', 'v')
-  expect('\u{2600}').not.toMatch(qualified)
-  expect('\u{2600}\u{FE0F}').toMatch(qualified)
-  const prefix = 'data:image/svg+xml,'
-  const glyphs = ICON_NAMES.map((name) => {
-    const { container, unmount } = render(
-      <p>
-        <Icon name={name} pack="emoji" />
-        Label
-      </p>,
-    )
-    const svg = container.querySelector('svg')!
-    expect(svg.getAttribute('viewBox'), name).toBe('0 0 24 24')
-    expect(svg.getAttribute('class'), name).toBe('size-4')
-    // A picture, not text: the text read from the page is the label alone.
-    expect(container.textContent, name).toBe('Label')
-    const href = svg.querySelector('image')!.getAttribute('href')!
-    expect(href.startsWith(prefix), name).toBe(true)
-    const drawing = decodeURIComponent(href.slice(prefix.length))
-    expect(drawing, name).toContain(`font-family="'Segoe UI Emoji'`)
-    const glyph = /<text\b[^>]*>([^<]*)<\/text>/.exec(drawing)?.[1] ?? ''
-    unmount()
-    expect(glyph, name).toMatch(qualified)
-    return glyph
-  })
-  expect(new Set(glyphs).size).toBe(ICON_NAMES.length)
+test('the drawn packs: one drawing per meaning, none shared, a picture in its own square box; the duotones take the text colour, the emoji keep theirs', () => {
+  for (const pack of ['duotone', 'solar', 'emoji', 'twemoji'] as const) {
+    const drawings = ICON_NAMES.map((name) => {
+      const { container, unmount } = render(
+        <p>
+          <Icon name={name} pack={pack} />
+          Label
+        </p>,
+      )
+      const svg = container.querySelector('svg')!
+      const [, , width, height] = (svg.getAttribute('viewBox') ?? '').split(' ')
+      expect(width, `${pack} ${name}`).toBe(height)
+      expect(svg.getAttribute('class'), `${pack} ${name}`).toBe('size-4')
+      // A picture, not text: the text read from the page is the label alone.
+      expect(container.textContent, `${pack} ${name}`).toBe('Label')
+      const drawing = svg.innerHTML
+      unmount()
+      expect(drawing.length, `${pack} ${name}`).toBeGreaterThan(20)
+      expect(drawing.includes('currentColor'), `${pack} ${name}`).toBe(pack === 'duotone' || pack === 'solar')
+      return drawing
+    })
+    expect(new Set(drawings).size, pack).toBe(ICON_NAMES.length)
+  }
 })
 
 test('the pack comes from the provider; Lucide without one; `pack` wins for a preview', () => {
@@ -76,7 +71,7 @@ test('the pack comes from the provider; Lucide without one; `pack` wins for a pr
 })
 
 test('saved values are checked: only real packs and names pass', () => {
-  for (const pack of ['lucide', 'fluent', 'emoji']) expect(isIconPack(pack), pack).toBe(true)
+  for (const pack of ['lucide', 'duotone', 'solar', 'fluent', 'emoji', 'twemoji']) expect(isIconPack(pack), pack).toBe(true)
   for (const no of ['', 'Lucide', 'material', null, 3, 'constructor']) expect(isIconPack(no), String(no)).toBe(false)
   expect(isIconName('settings')).toBe(true)
   for (const no of ['', 'Settings', 'sparkles', 'today', 'project', undefined, 'toString']) expect(isIconName(no), String(no)).toBe(false)
@@ -94,8 +89,10 @@ test('a pack that left (Phosphor, Tabler, 2026-11-20) is refused when read back,
 test("an app's own meanings: drawn by the pack in context, the line drawing where a pack has none; the toolkit's names keep the toolkit's drawing", () => {
   const Line = ({ className }: { className?: string | undefined }) => <svg data-own="line" className={className} />
   const Colour = ({ className }: { className?: string | undefined }) => <svg data-own="colour" className={className} />
+  const art = [24, '<path data-own="art" d="M4 4h16v16H4z" fill="currentColor"/>'] as const
   const icons: IconSet = {
-    inbox: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}' },
+    inbox: { lucide: Line, fluent: Colour, emoji: '\u{1F4E5}', duotone: art },
+    archive: { lucide: Line, emoji: art, twemoji: art },
     reply: { lucide: Line },
     settings: { lucide: Line },
   }
@@ -120,6 +117,19 @@ test("an app's own meanings: drawn by the pack in context, the line drawing wher
   // A pack the app did not draw falls back to its line drawing.
   expect(drawn('fluent', 'reply').own).toBe('line')
   expect(drawn('emoji', 'reply').own).toBe('line')
+  for (const pack of ['duotone', 'solar', 'twemoji'] as const) expect(drawn(pack, 'reply').own, pack).toBe('line')
+  // The drawn packs take the app's drawing; Twemoji takes the emoji where it has none of its own.
+  const picture = (pack: IconPack, name: string) => {
+    const { container, unmount } = render(<IconPackProvider pack={pack} icons={icons}><Icon name={name} /></IconPackProvider>)
+    const found = { art: container.querySelector('[data-own="art"]') != null, image: container.querySelector('image') != null }
+    unmount()
+    return found
+  }
+  expect(picture('duotone', 'inbox')).toEqual({ art: true, image: false })
+  expect(drawn('solar', 'inbox').own).toBe('line')
+  expect(picture('twemoji', 'inbox')).toEqual({ art: false, image: true })
+  expect(picture('emoji', 'archive')).toEqual({ art: true, image: false })
+  expect(picture('twemoji', 'archive')).toEqual({ art: true, image: false })
   // A name of the toolkit is not replaced.
   expect(drawn('lucide', 'settings').own).toBeNull()
 })

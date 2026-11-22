@@ -19,6 +19,7 @@ import {
   BACKDROP,
   BASE_THEME,
   ThemeGallery,
+  ColorMatch,
   MotionProvider,
   Badge,
   Button,
@@ -101,6 +102,9 @@ import {
   PALETTE_COMBOS,
   applyDensity,
   applyTheme,
+  colorTheme,
+  isAccentColor,
+  isSpotKind,
   isDensityId,
   markHueAttrs,
   paletteTheme,
@@ -110,6 +114,7 @@ import {
   type AttachmentView,
   type DateRange,
   type DensityId,
+  type SpotKind,
   type ThemeDef,
   type ThemeScheme,
   type ThemeTone,
@@ -137,7 +142,22 @@ const THEMES: readonly ThemeDef[] = [
 type ThemeId = string
 const isThemeId = (value: unknown): value is ThemeId => THEMES.some((t) => t.id === value)
 const themeById = (id: ThemeId): ThemeDef => THEMES.find((t) => t.id === id) ?? BASE_THEME
-const initialTheme: ThemeId = isThemeId(params.get('theme')) ? (params.get('theme') as ThemeId) : BASE_THEME.id
+/**
+ * The theme made in the showcase from two colours ("Match colours"): `?theme=yours&color=00857a&spot=balanced`, where
+ * the spot is one of the three proposals, a colour, or `none`.
+ */
+const YOURS = 'yours'
+type Spot = SpotKind | string | null
+const hexParam = (name: string) => {
+  const value = `#${params.get(name) ?? ''}`
+  return isAccentColor(value) ? value.toLowerCase() : null
+}
+const givenSpot = params.get('spot')
+const initialColor = hexParam('color') ?? SEEDS[0]!
+const initialSpot: Spot = givenSpot === 'none' ? null : isSpotKind(givenSpot) ? givenSpot : (hexParam('spot') ?? 'balanced')
+/** The colours are the ones chosen: the engine's tone does not move them. */
+const AS_CHOSEN: ThemeTone = { intensity: 'theme', light: 'theme' }
+const initialTheme: ThemeId = params.get('theme') === YOURS ? YOURS : isThemeId(params.get('theme')) ? (params.get('theme') as ThemeId) : BASE_THEME.id
 const initialScheme: ThemeScheme = params.get('scheme') === 'dark' ? 'dark' : 'light'
 /** `?density=compact|normal|large`: one of the toolkit's presets; anything else is `normal`. */
 const givenDensity = params.get('density')
@@ -1565,6 +1585,9 @@ function Strip({ theme, scheme, tone, onTone }: { theme: ThemeId; scheme: ThemeS
 
 function App() {
   const [theme, setTheme] = React.useState<ThemeId>(initialTheme)
+  const [color, setColor] = React.useState(initialColor)
+  const [spot, setSpot] = React.useState<Spot>(initialSpot)
+  const yours = theme === YOURS
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
@@ -1578,13 +1601,20 @@ function App() {
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [animated])
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, { theme: themeById(theme), scheme, tone })
+    applyTheme(document.documentElement, yours ? { theme: colorTheme({ id: YOURS, label: 'Your colours', color, spot }), scheme, tone: AS_CHOSEN } : { theme: themeById(theme), scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
     next.set('tone', tonePresetOf(tone))
+    if (yours) {
+      next.set('color', color.slice(1))
+      next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
+    } else {
+      next.delete('color')
+      next.delete('spot')
+    }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone])
+  }, [theme, scheme, tone, yours, color, spot])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -1608,7 +1638,7 @@ function App() {
           <h1 className="text-base font-semibold">Sigrid UI showcase</h1>
           <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 md:ml-auto">
             <div className="w-56 max-w-full">
-              <Select aria-label="Theme" options={THEMES.map((t) => ({ value: t.id, label: t.label }))} value={theme} onValueChange={(v) => isThemeId(v) && setTheme(v)} />
+              <Select aria-label="Theme" options={[...THEMES.map((t) => ({ value: t.id, label: t.label })), { value: YOURS, label: 'Your colours' }]} value={theme} onValueChange={(v) => (v === YOURS || isThemeId(v)) && setTheme(v)} />
             </div>
             <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
               <ToggleGroupItem value="light">Light</ToggleGroupItem>
@@ -1634,8 +1664,29 @@ function App() {
         <main className="mx-auto min-w-0 max-w-6xl flex-1 px-4 pb-24 md:px-6">
           <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
           <Tokens />
-          <Section id="theme-gallery" title="Theme gallery">
-            <ThemeGallery themes={THEMES} selected={theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
+          <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
+            <Row label="match colours">
+              <div className="w-full max-w-xl">
+                <ColorMatch
+                  colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] }))}
+                  color={color}
+                  spot={spot}
+                  scheme={scheme}
+                  onColor={(next) => { setColor(next); setTheme(YOURS) }}
+                  onSpot={(next) => { setSpot(next); setTheme(YOURS) }}
+                  text={{
+                    color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
+                    kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
+                    sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
+                  }}
+                />
+              </div>
+            </Row>
+            <Row label="gallery">
+              <div className="w-full">
+                <ThemeGallery themes={THEMES} selected={yours ? null : theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
+              </div>
+            </Row>
           </Section>
           <Buttons animated={animated} />
           <Badges />

@@ -693,6 +693,27 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   if (accentStep.step === 12) corrected.add('accent')
   const accent = hex(take('accent', accentStep.c, dir, accentOk))
 
+  // The spot color: a fill to be seen without text (3:1 on the backgrounds) with a label readable on it, its soft
+  // background, and the spot as text (4.5:1 on the backgrounds and on its soft background). Without a spot color in
+  // the theme the four tokens are the theme's own fill and accent, so that whoever uses them needs no second case.
+  let spot: Record<string, string> = { spot: primary, 'spot-foreground': onFill, 'spot-soft': accentSoft, 'spot-ink': accent }
+  if (theme.spot && isAccentColor(theme.spot)) {
+    const base = fit(fromHex(theme.spot))
+    const lightLabel = hex(ok(1, 0, 0))
+    const darkLabel = hex(ok(0.13, 0.02, base.h))
+    const label = contrast(lightLabel, hex(base)) >= contrast(darkLabel, hex(base)) ? lightLabel : darkLabel
+    const labelHolds = (h: string) => contrast(label, h) >= 4.5 + MARGIN
+    let fillC = take('spot', base, awayFrom(label), labelHolds)
+    if (!graphicOnBackgrounds(hex(fillC))) {
+      fillC = push(fillC, dir, labelHolds, graphicOnBackgrounds).c
+      corrected.add('spot')
+    }
+    const soft = hex(ok(light ? s.paper.L - 0.035 : s.paper.L + 0.08, Math.min(base.C, 0.045), base.h))
+    const inkStart = light ? ok(0.47, base.C, base.h) : ok(0.8, Math.min(base.C, 0.15), base.h)
+    const spotInk = hex(take('spotInk', inkStart, dir, atLeast([...backgrounds, soft], 4.5)))
+    spot = { spot: hex(fillC), 'spot-foreground': label, 'spot-soft': soft, 'spot-ink': spotInk }
+  }
+
   // The sidebar: with its own colors (solid) or the content's (light).
   let bar: Record<string, string>
   if (full) {
@@ -756,7 +777,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
     primary, 'primary-foreground': onFill, secondary: paper2, 'secondary-foreground': ink, muted: paper2, 'muted-foreground': inkMute,
     // The focus ring is the accent as text (R8): 2px, offset 2px, at least 3:1 on every background and on the selection.
     ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent, ...FIXED.markInk,
-    selected, 'selected-ink': selectedInk, ...bar, ...marks,
+    selected, 'selected-ink': selectedInk, ...spot, ...bar, ...marks,
   }
   const attributes: Record<string, string> = {
     // Rows in the open: no card around the group and no ruled line between the rows (theme.css, `data-rows="open"`).
