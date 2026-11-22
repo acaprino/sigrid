@@ -221,6 +221,19 @@ Two npm dependencies, installed and unmodified, never copied into `src/` (`src/i
   https://github.com/microsoft/fluentui-system-icons): the optional `fluent` pack. Its repository's licence is plain
   MIT, without the fonts-and-icons note of the Fluent UI repository.
 
+Four packs are not dependencies: their drawings, one per meaning and unmodified, are in `src/icon-packs.generated.ts`,
+written by `scripts/icon-packs.mjs` from the Iconify API (https://iconify.design):
+
+- Phosphor Icons, duotone weight (MIT, "Copyright (c) 2023 Phosphor Icons", https://github.com/phosphor-icons/core):
+  the `duotone` pack.
+- Solar Icons, bold duotone style (CC BY 4.0, by 480 Design, https://www.figma.com/community/file/1166831539721848736):
+  the `solar` pack. Attribution: "Solar Icons by 480 Design".
+- Fluent Emoji, flat style (MIT, "Copyright (c) Microsoft Corporation", https://github.com/microsoft/fluentui-emoji):
+  the `emoji` pack.
+- Twemoji (graphics CC BY 4.0, "Copyright 2019 Twitter, Inc and other contributors",
+  https://github.com/twitter/twemoji): the `twemoji` pack. Attribution: "Twemoji by Twitter, Inc and other
+  contributors".
+
 ## SmoothUI
 
 - Project: SmoothUI, https://smoothui.dev (repository https://github.com/educlopez/smoothui)
