@@ -138,6 +138,18 @@ What the page cannot do is the host's: a transparent window with no white flash,
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
 web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
 
+## Progress of a task
+
+- A task of a few named stages (a signup, a tutorial, an import): `Steps`, in a column on a phone and in a row where
+  there is width. The app moves `current` on as each stage ends and marks the one that failed with `status: 'error'`.
+  A wizard keeps its own Back and Continue (one solid action, R3); `Steps` has none.
+- One thing with a size (a file, an export): `Progress` under its name, with the speed or the size beside the name; at
+  the end the text says «Complete» and the size takes the speed's place. A failure keeps the range where it stopped
+  (`status="error"`), and Retry is the one solid action.
+- A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
+- Where it is not known how far it is, `value={null}`: a track and the word «In progress». Nothing loops.
+- Do not make screen readers read every percent: say the end and the failure in a live region of the app (`Toasts`).
+
 ## What to avoid
 
 - Two toolbars on one screen, or actions both in the toolbar and in an action bar.
