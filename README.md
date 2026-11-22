@@ -56,7 +56,12 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
    for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
    `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
-   component lets a user pick both (the showcase has it in its theme gallery).
+   component lets a user pick both (the showcase has it in its theme gallery). A theme can also be made from a base
+   and an accent (`src/harmony.ts`): `pageTint` brings any base colour to a very light tone, the page (no base is the
+   white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
+   OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
+   recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
+   The layout builder's «Look» panel has it: choosing a base suggests its accents.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

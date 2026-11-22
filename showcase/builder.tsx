@@ -18,7 +18,6 @@ import {
   Button,
   COLORS,
   COLOR_NAMES,
-  ColorMatch,
   DENSITIES,
   DENSITY_LIMITS,
   Empty,
@@ -53,14 +52,16 @@ import {
   applyFont,
   applyTheme,
   cn,
-  colorTheme,
+  accentSuggestions,
+  duoTheme,
+  pageTint,
   densityWith,
   presetTone,
   toneHasEffect,
   type DensityDef,
   type FontId,
   type IconPack,
-  type SpotKind,
+  type Harmony,
   type ThemeScheme,
   type ThemeShape,
   type TonePreset,
@@ -157,10 +158,14 @@ const isKind = (value: unknown): value is Kind => typeof value === 'string' && v
 
 type Look = {
   scheme: ThemeScheme
-  /** The toolkit's gray baseline, or a theme made from two colours. */
+  /** The toolkit's gray baseline, or a theme of two colours: the base of the page and the accent. */
   colors: 'base' | 'own'
-  color: string
-  spot: SpotKind | string | null
+  /** The base: the colour of the page, brought to a very light tone. Null: the white. */
+  page: string | null
+  /** The accent, `#rrggbb`. */
+  accent: string
+  /** The accent follows the base: when the base changes, the accent is the one the toolkit suggests first. */
+  accentAuto: boolean
   tone: TonePreset
   shape: ThemeShape
   font: FontId
@@ -168,18 +173,22 @@ type Look = {
   icons: IconPack
   animated: boolean
 }
-const SEEDS = COLORS.filter((_, i) => i % 3 === 1)
+const SEEDS: readonly string[] = COLORS.filter((_, i) => i % 3 === 1)
 const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
 // The canvas starts in colour: on the gray baseline the accent, the tone and the selection would all read as gray.
-const START_LOOK: Look = { scheme: 'light', colors: 'own', color: SEEDS[0]!, spot: 'balanced', tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
+const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
 const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
 
-const themeOf = (look: Look) => (look.colors === 'own' ? colorTheme({ id: 'own', label: 'Your colours', color: look.color, spot: look.spot }) : BASE_THEME)
+/** The two colours as the engine takes them, on top of the baseline; nothing for the baseline itself. */
+const ownOf = (look: Look) => (look.colors === 'own' ? duoTheme({ base: look.page, accent: look.accent }) : null)
+/** The principle behind a suggested accent, in words. */
+const HARMONY: Record<Harmony, string> = { split: 'Split', complement: 'Complement', triad: 'Triad', analogous: 'Neighbour', mono: 'Same hue', spread: 'Hue' }
+/** A suggestion's name: its principle and, where two share one, the side of the wheel it is on. */
+const suggestionName = (s: { harmony: Harmony; turn: number; id: string }) => (s.harmony === 'spread' ? `Hue ${s.id.slice(7)}°` : s.turn === 0 || Math.abs(s.turn) === 180 ? HARMONY[s.harmony] : `${HARMONY[s.harmony]} ${s.turn > 0 ? '+' : '−'}${Math.abs(s.turn)}°`)
 
 function applyLook(look: Look) {
   const root = document.documentElement
-  const theme = themeOf(look)
-  applyTheme(root, { theme: { ...theme, shape: look.shape }, scheme: look.scheme, tone: presetTone(look.tone) })
+  applyTheme(root, { theme: { ...BASE_THEME, shape: look.shape }, scheme: look.scheme, own: ownOf(look), tone: presetTone(look.tone) })
   applyDensity(root, look.density)
   applyFont(root, look.font)
 }
@@ -197,6 +206,25 @@ function Measure({ label, value, min, max, step = 2, onChange }: { label: string
   )
 }
 
+/** A colour to choose among a few: a round swatch, with a dot of the colour it comes from. */
+function Swatch({ label, color, dot, chosen, onChoose }: { label: string; color: string; dot?: string | undefined; chosen: boolean; onChoose: () => void }) {
+  return (
+    <button type="button" role="radio" aria-checked={chosen} aria-label={label} title={label} onClick={onChoose} className="relative flex size-8 items-center justify-center rounded-full border border-line outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-checked:border-2 aria-checked:border-ring" style={{ background: color }}>
+      {dot ? <span aria-hidden="true" className="size-2 rounded-full" style={{ background: dot }} /> : null}
+    </button>
+  )
+}
+
+/** Any colour, from the system's own picker. */
+function OwnColour({ label, value, chosen, onChange }: { label: string; value: string; chosen: boolean; onChange: (color: string) => void }) {
+  return (
+    <label title={label} className={cn('relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line text-xs text-ink-mute focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring', chosen && 'border-2 border-ring')}>
+      <span aria-hidden="true">+</span>
+      <input type="color" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="absolute inset-0 size-full cursor-pointer opacity-0" />
+    </label>
+  )
+}
+
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2 border-b border-line pb-4 last:border-0">
@@ -210,6 +238,9 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
 function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look>) => void }) {
   const d = look.density
   const density = (override: Parameters<typeof densityWith>[1]) => onLook({ density: densityWith(d, { id: 'custom', label: 'Custom', ...override }) })
+  const suggestions = React.useMemo(() => accentSuggestions(look.page), [look.page])
+  // A new base brings its best accent with it, unless the accent was chosen by hand.
+  const chooseBase = (page: string | null) => onLook(look.accentAuto ? { page, accent: accentSuggestions(page)[0]!.color } : { page })
   const L = DENSITY_LIMITS
   return (
     <div className="flex flex-col gap-4">
@@ -227,23 +258,53 @@ function LookPanel({ look, onLook }: { look: Look; onLook: (change: Partial<Look
         {look.colors === 'base' ? (
           <p className="text-xs text-ink-mute">The toolkit's own theme: grays only, no accent hue. An app brings its colours; choose «Two colours» to try some.</p>
         ) : (
-        <ColorMatch
-          colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] ?? seed }))}
-          color={look.color}
-          spot={look.spot}
-          scheme={look.scheme}
-          onColor={(color) => onLook({ color, colors: 'own' })}
-          onSpot={(spot) => onLook({ spot, colors: 'own' })}
-          text={{
-            color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
-            kinds: { quiet: 'Quiet', balanced: 'Matched', loud: 'Loud' },
-            sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
-          }}
-        />
+          <>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-ink-soft">Base: the page</span>
+                <span className="text-ink-mute tabular-nums">{pageTint(look.page)}</span>
+              </div>
+              <div role="radiogroup" aria-label="Base colour" className="flex flex-wrap gap-1.5">
+                {[null, ...SEEDS].map((base) => (
+                  <Swatch key={base ?? 'white'} label={base === null ? 'White' : ((COLOR_NAMES as Record<string, string>)[base] ?? base)} color={pageTint(base)} dot={base ?? undefined} chosen={look.page === base} onChoose={() => chooseBase(base)} />
+                ))}
+                <OwnColour label="Your own base colour" value={look.page ?? '#ffffff'} chosen={look.page !== null && !SEEDS.includes(look.page)} onChange={chooseBase} />
+              </div>
+              <p className="text-xs text-ink-mute">Any colour is brought to a very light tone: only its hue is left on the page.</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-ink-soft">Accent: suggested for this base</span>
+                <span className="text-ink-mute tabular-nums">{look.accent}</span>
+              </div>
+              <div role="radiogroup" aria-label="Accent colour" className="grid grid-cols-2 gap-1.5">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={look.accent === suggestion.color}
+                    data-builder-accent={suggestion.id}
+                    title={suggestion.moved ? 'Moved out of the red of errors' : undefined}
+                    onClick={() => onLook({ accent: suggestion.color, accentAuto: suggestion.recommended })}
+                    className="flex min-h-(--control-sm) items-center gap-2 rounded-md border border-line px-2 text-start text-xs text-ink outline-hidden hover:bg-ink/4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-checked:border-ring aria-checked:bg-selected aria-checked:text-selected-ink"
+                  >
+                    <span aria-hidden="true" className="size-4 shrink-0 rounded-full" style={{ background: suggestion.color }} />
+                    <span className="min-w-0 flex-1 truncate">{suggestionName(suggestion)}</span>
+                    {suggestion.recommended ? <span className="shrink-0 text-2xs font-semibold tracking-[0.07em] uppercase opacity-80">Best</span> : null}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-ink-soft">
+                <OwnColour label="Your own accent colour" value={look.accent} chosen={!suggestions.some((suggestion) => suggestion.color === look.accent)} onChange={(accent) => onLook({ accent, accentAuto: false })} />
+                Or a colour of your own. The engine moves any accent until its contrast holds.
+              </div>
+            </div>
+          </>
         )}
       </Group>
       <Group label="Tone of the accents">
-        {toneHasEffect({ theme: themeOf(look), scheme: look.scheme }) ? (
+        {toneHasEffect({ theme: BASE_THEME, scheme: look.scheme, own: ownOf(look) }) ? (
           <ToggleGroup aria-label="Tone" value={look.tone} onValueChange={(v) => v && onLook({ tone: v as TonePreset })}>
             {TONE_PRESETS.map((tone) => (
               <ToggleGroupItem key={tone} value={tone}>
@@ -317,7 +378,7 @@ function load(): Saved | null {
     const contents: Contents = {}
     for (const [panel, items] of Object.entries(saved.contents ?? {})) contents[panel] = items.filter((item) => isKind(item.kind))
     // A look saved by an older builder may lack what was added since: the starting look fills it in.
-    return { layout: saved.layout, contents, next: Number(saved.next) || 1, look: saved.look ? { ...START_LOOK, ...saved.look } : undefined }
+    return { layout: saved.layout, contents, next: Number(saved.next) || 1, look: saved.look ? { ...START_LOOK, ...saved.look, ...(typeof saved.look.accent === 'string' ? {} : { accent: START_LOOK.accent }) } : undefined }
   } catch {
     return null
   }
