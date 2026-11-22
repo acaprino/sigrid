@@ -46,7 +46,7 @@ x-zsd:
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R7: radii 4, 6 and 10px; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36, 32 or 28px (compact 32, 28 or 24px; large 40, 36 or 32px); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
-      - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every focusable control."
+      - "R8: the focus ring is 2px in the accent text colour, at least 3:1 in every theme, on every control: on its border, or 2px away."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours of projects, areas, labels and events appear as 8px dots."
     must-avoid:

@@ -43,7 +43,8 @@ const buttonVariants = cva(
         destructive: "bg-destructive-soft text-destructive hover:bg-destructive-soft/80",
         // Park outline: a border, no fill; a quiet fill under the pointer. The border is the control border (`input`,
         // 3:1: the approved deviation from Park's lighter border, as on fields and selects).
-        outline: "border border-input text-ink hover:bg-ink/4 active:bg-ink/6",
+        // The focus ring sits on the border, as on a field (`FOCUS_RING_BORDER`), not 2px away.
+        outline: "border border-input text-ink hover:bg-ink/4 active:bg-ink/6 focus-visible:-outline-offset-1",
         // Park subtle, in the neutral gray: a quiet fill, no border and no shadow (R4: a control has a border or a
         // shadow, never both; Park's surface added both).
         secondary: "bg-ink/6 text-ink hover:bg-ink/9 active:bg-ink/12",

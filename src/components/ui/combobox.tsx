@@ -13,7 +13,7 @@ import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/rea
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING } from "../../lib/focus"
+import { FOCUS_RING_BORDER } from "../../lib/focus"
 
 export type ComboboxOption = {
   value: string
@@ -121,7 +121,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           aria-describedby={aria["aria-describedby"]}
           className={cn(
             "h-(--control-md) w-full min-w-0 truncate rounded-md border border-input bg-transparent py-1 pr-(--control-md) pl-(--pad-sm) text-base pointer-coarse:min-h-11 md:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50",
-            FOCUS_RING,
+            FOCUS_RING_BORDER,
             invalid && "border-destructive",
           )}
         />

@@ -76,7 +76,7 @@
   /* Border of the controls (checkbox, fields, textarea, selects): at least 3:1 on paper, paper-2 and raised
      (WCAG 1.4.11, test/contrast.test.ts). Decorative dividers stay `line`/`border`. */
   --color-input: #878787;
-  /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
+  /* The focus ring is the accent as text (R8): a 2px outline on the control's border or 2px away from it, at least 3:1 on every background and on
      the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
   --color-ring: #1f1f1f;
   /* Ink of the icons inside the shapes of areas and projects: the background is a user color, so the same in

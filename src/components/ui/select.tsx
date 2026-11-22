@@ -20,7 +20,7 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { FOCUS_RING } from "../../lib/focus"
+import { FOCUS_RING_BORDER } from "../../lib/focus"
 import { usePortalContainer } from "../PortalContainer"
 import { useEntrance } from "../../internal/motion"
 
@@ -100,7 +100,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
           "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
           invalid ? "border-destructive" : "data-[popup-open]:border-ink",
           disabled && "pointer-events-none cursor-not-allowed opacity-50",
-          FOCUS_RING,
+          FOCUS_RING_BORDER,
           size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
           className,
         )}
