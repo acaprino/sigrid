@@ -303,23 +303,21 @@ export type DateFieldProps = {
   disabled?: boolean | undefined
   /** The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`. */
   locale?: string | undefined
-  /** The words of the card's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). */
+  /** The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22). */
   words?: { clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
   /** Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend. */
   picks?: readonly DatePick[] | undefined
 }
 
 /** A local date (a due date, a birthday): a click or Enter on a day chooses it and closes. */
-export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words, picks }: DateFieldProps) {
+// The card has no button that removes the date (the owner's decision of 2026-11-22: a calendar is there to give a
+// date). A form whose date may be empty offers that beside the field, and calls `onChange(null)` itself.
+export function DateField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, picks }: DateFieldProps) {
   const toolkit = useWords()
   const selected = parseDay(value)
   return (
     <FieldShell id={id} text={selected ? dayText(selected, locale) : null} placeholder={placeholder ?? toolkit.date.noDate} selected={selected} onSelect={(day) => onChange(day.toString())} picks={shellPicks(picks)} closeOnSelect animated={animated} min={min} max={max} disabled={disabled} locale={locale}>
-      <div className="flex justify-end border-t border-border px-4 py-2.5">
-        <Closing variant="ghost" size="sm" disabled={!selected} onClick={() => onChange(null)}>
-          {words?.clear ?? toolkit.date.clear}
-        </Closing>
-      </div>
+      {null}
     </FieldShell>
   )
 }
@@ -333,8 +331,6 @@ export type DateRangeFieldProps = Omit<DateFieldProps, 'value' | 'onChange' | 'p
   onChange: (value: DateRange | null) => void
   /** Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days. */
   picks?: readonly DateRangePick[] | undefined
-  /** The word of the card's foot, for this field only: otherwise the toolkit's («Clear the dates»). */
-  words?: { clear?: string | undefined } | undefined
 }
 
 /** «November 20 – 24, 2026»: the range as the button shows it, in the field's locale (one day alone reads as a date). */
@@ -352,7 +348,7 @@ function rangeText(first: CalendarDate, last: CalendarDate, locale: string = DEF
  * the days between take the selection tint. The two clicks may come in either order, and on the same day for a range
  * of one day. The caller hears of a range only when it has both ends.
  */
-export function DateRangeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, words, picks }: DateRangeFieldProps) {
+export function DateRangeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, picks }: DateRangeFieldProps) {
   const toolkit = useWords()
   const start = parseDay(value?.start)
   const end = parseDay(value?.end)
@@ -374,11 +370,7 @@ export function DateRangeField({ id, value, onChange, animated, placeholder, min
       disabled={disabled}
       locale={locale}
     >
-      <div className="flex justify-end border-t border-border px-4 py-2.5">
-        <Closing variant="ghost" size="sm" disabled={!range} onClick={() => onChange(null)}>
-          {words?.clear ?? toolkit.date.clearRange}
-        </Closing>
-      </div>
+      {null}
     </FieldShell>
   )
 }

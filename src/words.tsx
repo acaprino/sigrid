@@ -39,8 +39,9 @@ export interface Words {
     readonly noDateTime: string
     /** The button text of a range field without a value. */
     readonly noRange: string
+    /** No longer shown: the date cards have no button that removes the date (2026-11-22). Kept so an app's words still fit. */
     readonly clear: string
-    /** The button that empties a range field. */
+    /** No longer shown, as `clear`. */
     readonly clearRange: string
     /** The quick choices above the calendar (`dayPicks`, `rangePicks`). */
     readonly today: string

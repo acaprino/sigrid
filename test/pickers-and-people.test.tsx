@@ -290,7 +290,7 @@ describe('the date field: limits, locale, words', () => {
     expect((document.getElementById('due') as HTMLButtonElement).disabled).toBe(true)
   })
 
-  test('the days before `min` and after `max` cannot be chosen; the words of the foot are the caller\'s', async () => {
+  test('the days before `min` and after `max` cannot be chosen; the card has no button that removes the date', async () => {
     render(<DateField id="due" value="2026-11-10" onChange={() => {}} min="2026-11-05" max="2026-11-20" words={{ clear: 'Togli la data' }} />)
     fireEvent.click(document.getElementById('due')!)
     await settle()
@@ -299,7 +299,7 @@ describe('the date field: limits, locale, words', () => {
     expect(day('5').hasAttribute('data-disabled')).toBe(false)
     expect(day('20').hasAttribute('data-disabled')).toBe(false)
     expect(day('21').hasAttribute('data-disabled')).toBe(true)
-    expect(screen.getByRole('button', { name: 'Togli la data' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Togli la data' })).toBeNull()
   })
 
   test('the date and time field takes the same options', async () => {

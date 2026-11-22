@@ -38,11 +38,14 @@ function NavList({ tone = "page", className, children, ...props }: NavListProps)
   )
 }
 
+// Under the pointer a row takes a lighter share of the selection tint and the stronger text: it is seen as the row
+// about to be chosen, and stays below the chosen one, which has the whole tint and the semibold. (The page's `paper-2`
+// was a fill one step from the page: in the dark it was darker than the page, and next to invisible.)
 // On the current row a count takes the row's own ink: the muted ink is not checked against the selection tint.
 const ROW = "flex min-h-(--row-height) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sm pointer-coarse:min-h-11 aria-[current=page]:[&_[data-slot=count]]:text-current"
 const TONES: Record<Tone, string> = {
-  page: "text-ink-soft hover:bg-paper-2 aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink",
-  sidebar: "text-sidebar-ink hover:bg-sidebar-selected/60 aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink",
+  page: "text-ink-soft hover:bg-selected/60 hover:text-ink aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink",
+  sidebar: "text-sidebar-ink hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink",
 }
 
 type NavItemOwnProps = {
