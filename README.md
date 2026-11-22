@@ -208,8 +208,10 @@ a drawer.
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
 - Icons: `Icon` draws a meaning (`settings`, `delete`) with the pack the user chose (`IconPackProvider`). The toolkit
-  draws only what any app has (`ICON_NAMES`); an app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ inbox: { lucide: Inbox, fluent:
-  MailInboxColor, emoji: '\u{1F4E5}' } }}>`, then `<Icon name="inbox" />`. The line drawing is required; a pack left
+  draws what apps have in common (`ICON_NAMES`: the views and settings, the menu entries, and the actions of a mail,
+  calendar or editing screen: `mail`, `reply`, `archive`, `bold`, `undo`, `attach`, `windowMinimize`…), in every pack; an
+  app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ invoice: { lucide: Receipt,
+  fluent: ReceiptColor, emoji: '\u{1F9FE}' } }}>`, then `<Icon name="invoice" />`. The line drawing is required; a pack left
   out falls back to it; a name nobody draws is an empty slot of the same size.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a
   match inside a text). Fixed for every theme, as the red is; the engine keeps their contrast on every theme.

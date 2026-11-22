@@ -7,7 +7,7 @@
 export { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from './colors'
 export { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables, toneHasEffect, type ThemePick } from './themes'
 export { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId, type Density, type DensityDef, type DensityId, type DensityOverride } from './density'
-export { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeShape, type FontDef, type FontId, type PaletteProfile, type SidebarKind, type Surfaces, type ThemeDef, type ThemeShape } from './theme-catalog'
+export { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeRadii, isThemeShape, type FontDef, type FontId, type PaletteProfile, type SidebarKind, type Surfaces, type ThemeDef, type ThemeRadii, type ThemeShape } from './theme-catalog'
 export { FIXED, STATUS, contrast, fit, luminance, over, themeTokens, toHex, tokensFor, type Oklch, type ThemeScheme, type ThemeTokens } from './theme-engine'
 export { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, OWN_BACKGROUNDS, OWN_SECONDS, OWN_SIDEBARS, OWN_TINTS, TONE_INTENSITIES, TONE_LIGHTS, TONE_PRESETS, isAccentColor, ownTheme, presetTone, themeTone, tonePresetOf, type OwnTheme, type ThemeTone, type TonePreset } from './theme-engine'
 export { cn } from './lib/utils'
