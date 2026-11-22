@@ -46,6 +46,15 @@ describe('Progress', () => {
     expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Complete')
   })
 
+  test('a countdown starts full and is never «Complete»: the value is what is left', () => {
+    const { container } = render(<Progress aria-label="Time left to undo" value={10} max={10} countdown valueText="10 seconds left" />)
+    const bar = screen.getByRole('progressbar', { name: 'Time left to undo' })
+    expect(bar.getAttribute('data-state')).toBe('active')
+    expect(bar.getAttribute('aria-valuetext')).toBe('10 seconds left')
+    expect((container.querySelector('[data-slot="progress-range"]') as HTMLElement).style.width).toBe('100%')
+    expect(container.querySelector('[data-slot="progress-text"]')).toBeNull()
+  })
+
   test('a failure keeps where it stopped and says so', () => {
     const { container } = render(<Progress aria-label="Upload" value={30} status="error" showValue />)
     const bar = screen.getByRole('progressbar')
