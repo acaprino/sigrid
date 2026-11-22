@@ -66,6 +66,29 @@ describe('Progress', () => {
     expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('In progress')
   })
 
+  test('done, failed and not known say their word without showValue; under way it says nothing unless asked', () => {
+    const { container, rerender } = render(<Progress aria-label="Upload" value={100} />)
+    const word = () => container.querySelector('[data-slot="progress-text"]')?.textContent ?? null
+    expect(word()).toBe('Complete')
+    rerender(<Progress aria-label="Upload" value={30} status="error" />)
+    expect(word()).toBe('Failed')
+    rerender(<Progress aria-label="Upload" value={null} />)
+    expect(word()).toBe('In progress')
+    rerender(<Progress aria-label="Upload" value={30} />)
+    expect(word()).toBeNull()
+  })
+
+  test('the ring and the blocks say it too', () => {
+    const { container, rerender } = render(<ProgressRing aria-label="Ring" value={100} />)
+    expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Complete')
+    rerender(<ProgressRing aria-label="Ring" value={20} />)
+    expect(container.querySelector('[data-slot="progress-text"]')).toBeNull()
+    rerender(<ProgressSegments aria-label="Level" value={10} />)
+    expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Complete')
+    rerender(<ProgressSegments aria-label="Level" value={4} status="error" />)
+    expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Failed')
+  })
+
   test('the app can say the value in its own words', () => {
     render(<Progress aria-label="Time left" value={16} max={30} valueText="16 seconds left" />)
     expect(screen.getByRole('progressbar').getAttribute('aria-valuetext')).toBe('16 seconds left')

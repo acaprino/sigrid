@@ -8,7 +8,8 @@
 // The colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the
 // success colour and a failure the destructive one, each with a word (DESIGN.md "Status": a colour is never alone).
 // Nothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a
-// gesture, so no tween: an owner's decision that DESIGN.md does not have yet.
+// gesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the
+// switch (DESIGN.md Colors).
 // Not knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.
 // For screen readers: `role="progressbar"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,
 // «Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should
@@ -27,7 +28,7 @@ export type ProgressProps = {
   "aria-label": string
   /** What the value says, in place of the toolkit's words («16 seconds left»): read by screen readers and shown by `showValue`. */
   valueText?: string | undefined
-  /** Shows the value as text. Where it is not known how far it is, the word is always shown: it is all there is to see. */
+  /** Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status). */
   showValue?: boolean | undefined
   size?: "sm" | "md" | undefined
   /** `error`: the task failed. The range stays where it stopped, in red, and the text says so. */
@@ -76,7 +77,7 @@ function Progress({ size = "md", showValue, className, ...props }: ProgressProps
       <div {...p.aria} aria-label={props["aria-label"]} className={cn("w-full overflow-hidden rounded-sm", TRACK, size === "sm" ? "h-2" : "h-2.5")}>
         <div data-slot="progress-range" className={cn("h-full", FILL[p.mood])} style={{ width: `${p.fraction * 100}%` }} />
       </div>
-      {showValue || p.mood === "indeterminate" ? <Text mood={p.mood}>{p.text}</Text> : null}
+      {showValue || p.mood !== "active" ? <Text mood={p.mood}>{p.text}</Text> : null}
     </div>
   )
 }
@@ -102,7 +103,7 @@ function ProgressRing({ size = "md", showValue, children, className, ...props }:
           {inside}
         </span>
       </div>
-      {p.mood === "indeterminate" || (showValue && p.mood !== "active") ? <Text mood={p.mood}>{p.text}</Text> : null}
+      {p.mood !== "active" ? <Text mood={p.mood}>{p.text}</Text> : null}
     </div>
   )
 }
@@ -118,7 +119,7 @@ function ProgressSegments({ size = "md", showValue, className, max = 10, ...prop
           <span key={i} data-slot="progress-segment" data-filled={i < filled ? "" : undefined} className={cn("flex-1 rounded-sm", size === "sm" ? "h-2" : "h-2.5", i < filled ? FILL[p.mood] : TRACK)} />
         ))}
       </div>
-      {showValue || p.mood === "indeterminate" ? <Text mood={p.mood}>{p.text}</Text> : null}
+      {showValue || p.mood !== "active" ? <Text mood={p.mood}>{p.text}</Text> : null}
     </div>
   )
 }
