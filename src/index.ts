@@ -1,5 +1,5 @@
 // @acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for
-// behaviour, Park UI recipes for form, Base UI under the primitives not moved yet), motion in a lazy chunk, and the
+// behaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the
 // generic fields and surfaces built on them. No app concepts: each app builds its product components on top of
 // this.
 

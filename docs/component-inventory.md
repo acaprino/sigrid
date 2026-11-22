@@ -37,7 +37,7 @@ Each finding is marked:
 | Headless (no form) | Collapsible, Field, PopoverPrimitive (Base UI re-exports) |
 
 Behaviour: Ark UI carries Calendar/DateField/DateTimeField (DatePicker), ChipsInput (TagsInput), AttachmentsSection
-(FileUpload) and Toasts (Toast); Base UI carries the other primitives. Form: Park UI recipes translated to Tailwind.
+(FileUpload) and Toasts (Toast); Base UI carries the other primitives, and that split is meant to stay (2026-11-22). Form: Park UI recipes translated to Tailwind.
 
 ## Findings at a glance
 

@@ -35,10 +35,13 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
 
 ## The four layers
 
-1. **Behaviour: Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component: notices, date picker,
-   tags input, file upload. **Base UI** (`@base-ui/react`, 1.9.0) still carries the primitives not moved yet (dialog,
-   sheet, select, popover, menu, checkbox, tooltip, toggle group, radio group, input); `Collapsible`, `Field` and
-   `PopoverPrimitive` are re-exported so an app composes them with the toolkit's single copy.
+1. **Behaviour: two libraries, each for what it does best.** **Base UI** (`@base-ui/react`, pinned to 1.9.0) carries
+   the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, checkbox, radio group,
+   toggle group, input; `Collapsible`, `Field` and `PopoverPrimitive` are re-exported so an app composes them with the
+   toolkit's single copy. **Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component, carries the
+   richer parts Base UI does not have: notices, date picker, tags input, file upload, combobox, slider, switch, tabs,
+   avatar. The split is meant to stay (the owner's decision of 2026-11-22): a control moves from one to the other only
+   when it is rewritten anyway, or when a defect comes from the two living together.
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
    levels and elevation of every primitive in `src/components/ui/`.
 3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
