@@ -297,6 +297,7 @@ const TOASTS: ToastItem[] = [
     ],
   },
   { id: 't3', text: 'Item deleted', undo: { onClick: () => {} } },
+  { id: 't4', text: 'Could not reach the server', kind: 'error' },
 ]
 
 const MARKDOWN = `**Before the call**
@@ -1274,11 +1275,11 @@ function Content() {
 const LIVE_TEXTS = ['Moved to Today', 'Task completed', 'Added to the stack', 'Label removed']
 
 function Notices({ animated }: { animated: boolean }) {
-  const [live, setLive] = React.useState<{ id: string; text: string }[]>([])
+  const [live, setLive] = React.useState<{ id: string; text: string; kind?: 'error' }[]>([])
   const count = React.useRef(0)
   const remove = React.useCallback((id: string) => setLive((now) => now.filter((item) => item.id !== id)), [])
   return (
-    <Section id="toasts" title="Toasts" note="The column, inline: an undo with its key, quick choices with one pressed, a plain undo; then with the seconds left and the close button. Live: each press adds a notice (it rises into the column), a fourth pushes the oldest out from the top, and a notice leaves with Undo, with its close button or after six seconds.">
+    <Section id="toasts" title="Toasts" note="The column, inline: an undo with its key, quick choices with one pressed, a plain undo; then with the seconds left and the close button. Live: each press adds a notice (it rises into the column), a fourth pushes the oldest out from the top, and a notice leaves with Undo, with its close button or after six seconds. An error has a mark, never counts down and is pushed out last: it stays until it is closed.">
       <Row label="column">
         <div className="w-[26rem]">
           <Toasts items={TOASTS} inline animated={animated} />
@@ -1290,16 +1291,22 @@ function Notices({ animated }: { animated: boolean }) {
         </div>
       </Row>
       <Row label="live">
-        <div className="flex w-[26rem] max-w-full flex-col items-start gap-2">
+        <div className="flex w-[26rem] max-w-full flex-wrap items-start gap-2">
           <Button variant="outline" data-sample="toast-add" onClick={() => {
               const n = (count.current += 1)
               setLive((now) => [...now, { id: `live-${n}`, text: LIVE_TEXTS[n % LIVE_TEXTS.length] as string }])
             }}>
             Show a notice
           </Button>
+          <Button variant="outline" data-sample="toast-error-add" onClick={() => {
+              const n = (count.current += 1)
+              setLive((now) => [...now, { id: `live-${n}`, text: 'Could not save the change', kind: 'error' }])
+            }}>
+            Show an error
+          </Button>
           <div className="min-h-44 w-full">
             <Toasts
-              items={live.map((item) => ({ ...item, undo: { onClick: () => remove(item.id) } }))}
+              items={live.map((item) => (item.kind === 'error' ? item : { ...item, undo: { onClick: () => remove(item.id) } }))}
               inline
               max={3}
               durationMs={6000}

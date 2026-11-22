@@ -20,6 +20,8 @@ export interface Words {
     readonly undo: string
     /** The name of the region that holds the notices. */
     readonly notices: string
+    /** What screen readers hear before the text of a notice that is an error. */
+    readonly error: string
     /** How a key combination is read: keys pressed together, and one after the other. */
     readonly keysTogether: (keys: readonly string[]) => string
     readonly keysInSequence: (keys: readonly string[]) => string
@@ -125,6 +127,7 @@ export const DEFAULT_WORDS: Words = {
     close: 'Close',
     undo: 'Undo',
     notices: 'Notices',
+    error: 'Error',
     keysTogether: (keys) => keys.join(' + '),
     keysInSequence: (keys) => keys.join(' then '),
   },

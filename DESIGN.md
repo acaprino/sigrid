@@ -64,7 +64,7 @@ x-zsd:
     preserve:
       - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default and the dark column stays an option."
       - "Control borders keep 3:1 contrast, darker than the Park step 7 border (approved deviation from Park)."
-      - "Toasts: a vertical column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an inverted surface: dark in light mode, light in dark mode."
+      - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light mode, light in dark."
       - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application so the segment thumb slides (owner, 2026-11-20), no springs, all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density (test/targets.test.tsx)."

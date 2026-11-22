@@ -95,6 +95,39 @@ test('a timed toast shows the seconds left and a close button; an untimed one ha
   vi.useRealTimers()
 })
 
+test('an error never counts down: it shows no seconds, keeps its close button and stays when the others have gone', async () => {
+  vi.useFakeTimers()
+  const onDismiss = vi.fn()
+  render(<Toasts items={[{ id: 'e', text: 'Could not save', kind: 'error' }, { id: 'a', text: 'First' }]} durationMs={3000} onDismiss={onDismiss} />)
+  await settle()
+  // The mark and the word for screen readers, before the text; no seconds, but the «×».
+  expect(card('Could not save').querySelector('[data-slot="toast-error"]')).toBeTruthy()
+  expect(card('Could not save').textContent).toMatch(/^Error:Could not save/)
+  expect(card('Could not save').querySelector('[data-slot="toast-timer"]')).toBeNull()
+  expect(card('First').querySelector('[data-slot="toast-timer"]')!.textContent).toBe('3')
+  await tick(60_000)
+  expect(onDismiss.mock.calls.map((c) => c[0])).toEqual(['a'])
+  expect(screen.getByText('Could not save')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Close the notice: Could not save' }))
+  expect(onDismiss).toHaveBeenLastCalledWith('e')
+})
+
+test('a full column pushes the plain notices out before an error, and an error only when nothing else is left', async () => {
+  const onDismiss = vi.fn()
+  const error = (id: string) => ({ id, text: `Error ${id}`, kind: 'error' as const })
+  const plain = (id: string) => ({ id, text: `Notice ${id}` })
+  const { rerender } = render(<Toasts max={2} items={[error('e1'), plain('a'), plain('b')]} onDismiss={onDismiss} />)
+  await settle()
+  // The error is the oldest, yet the oldest plain notice is the one that goes.
+  expect(onDismiss.mock.calls.map((c) => c[0])).toEqual(['a'])
+  expect(screen.getByText('Error e1')).toBeTruthy()
+  expect(screen.getByText('Notice b')).toBeTruthy()
+  onDismiss.mockClear()
+  rerender(<Toasts max={2} items={[error('e1'), error('e2'), error('e3')]} onDismiss={onDismiss} />)
+  await settle()
+  expect(onDismiss.mock.calls.map((c) => c[0])).toEqual(['e1'])
+})
+
 test('a toast can carry the shortcut next to undo and quick choices on a second row', async () => {
   const pick = vi.fn()
   render(

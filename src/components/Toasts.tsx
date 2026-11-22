@@ -29,6 +29,7 @@ import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
+import { CircleAlert } from 'lucide-react'
 import { FOCUS_RING } from '../lib/focus'
 
 /** An extra action on a notice (a quick choice after a gesture): `pressed` marks it as already chosen. */
@@ -41,6 +42,12 @@ export type ToastItem = {
   undo?: { label?: string; hint?: string | undefined; onClick: () => void }
   /** Quick choices, on a second row: groups of buttons (each group has a name for screen readers). */
   actions?: { label: string; items: ToastAction[] }[] | undefined
+  /**
+   * `error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it
+   * shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with
+   * `onDismiss`) or the caller removes it. A mark before the text says what it is, and screen readers hear «Error».
+   */
+  kind?: 'error' | undefined
 }
 
 export type ToastsProps = {
@@ -149,7 +156,7 @@ function Notice({ id }: { id: string }) {
   // How much is left, in whole seconds: it is shown next to the close button. While the column is held (pointer or focus)
   // it goes back to the full time, like the real timer (which starts over when it is left). A number that counts down,
   // not a moving bar.
-  const total = armed && durationMs ? Math.ceil(durationMs / 1000) : 0
+  const total = armed && durationMs && item?.kind !== 'error' ? Math.ceil(durationMs / 1000) : 0
   const [left, setLeft] = useState(total)
   useEffect(() => {
     setLeft(total)
@@ -195,6 +202,14 @@ function Notice({ id }: { id: string }) {
   const body = (
     <>
       <div className="flex items-center gap-3">
+        {item.kind === 'error' ? (
+          // The mark of an error: an icon in the toast's own text colour (no red on the inverted surface), and the word
+          // for screen readers, read before the text.
+          <>
+            <CircleAlert data-slot="toast-error" aria-hidden="true" className="-ml-1 size-4 shrink-0" />
+            <span className="sr-only">{words.common.error}:</span>
+          </>
+        ) : null}
         <Toast.Title asChild>
           <span className="min-w-0 flex-1">{item.text}</span>
         </Toast.Title>
@@ -298,8 +313,13 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   // They are not shown again (and do not expire a second time) until the caller removes them and gives them back.
   const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set())
   const alive = items.filter((t) => !gone.has(t.id))
-  const shown = alive.slice(-max)
-  const over = alive.slice(0, -max)
+  // Over `max`, the oldest go: the plain notices first, an error only when nothing else is left to push out.
+  const excess = Math.max(0, alive.length - max)
+  const dropped = new Set<string>()
+  for (const t of alive) if (dropped.size < excess && t.kind !== 'error') dropped.add(t.id)
+  for (const t of alive) if (dropped.size < excess) dropped.add(t.id)
+  const shown = alive.filter((t) => !dropped.has(t.id))
+  const over = alive.filter((t) => dropped.has(t.id))
   const pushedOut = useRef(new Set<string>())
   for (const t of over) pushedOut.current.add(t.id)
   // A caller that keeps the list short itself (the client holds three) removes the oldest as it adds a new one: for the
@@ -372,16 +392,17 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
     for (const id of shownOnce.current) if (!items.some((item) => item.id === id)) shownOnce.current.delete(id)
   })
   const later = useRef(new Set<ReturnType<typeof setTimeout>>())
-  const wanted = { ids: shown.map((t) => t.id), duration: armed && !paused && durationMs !== undefined ? durationMs : Infinity, leaveMs }
+  // An error has no time of its own: it never counts down.
+  const wanted = { ids: shown.map((t) => t.id), errors: shown.filter((t) => t.kind === 'error').map((t) => t.id), duration: armed && !paused && durationMs !== undefined ? durationMs : Infinity, leaveMs }
   const latest = useRef(wanted)
-  const wantedKey = JSON.stringify([wanted.ids, wanted.duration === Infinity ? null : wanted.duration, wanted.leaveMs])
+  const wantedKey = JSON.stringify([wanted.ids, wanted.errors, wanted.duration === Infinity ? null : wanted.duration, wanted.leaveMs])
   useLayoutEffect(() => {
     latest.current = wanted
     let live = true
     // In a microtask: Ark's store renders each change at once (`flushSync`), which React refuses inside an effect.
     queueMicrotask(() => {
       if (!live) return
-      const { ids, duration, leaveMs } = latest.current
+      const { ids, errors, duration: timed, leaveMs } = latest.current
       const want = new Set(ids)
       for (const id of [...made.current.keys()]) {
         if (want.has(id)) continue
@@ -398,8 +419,9 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
         }, leaveMs + 100)
         later.current.add(timer)
       }
-      const time = `${duration}/${leaveMs}`
       for (const id of ids) {
+        const duration = errors.includes(id) ? Infinity : timed
+        const time = `${duration}/${leaveMs}`
         if (made.current.get(id) === time) continue
         if (made.current.has(id)) store.update(id, { duration, removeDelay: leaveMs })
         else {
