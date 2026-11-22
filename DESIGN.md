@@ -423,10 +423,10 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 
 ## Colors
 
-- `primary`: Use for the fill of the one solid action, the chosen calendar day and main-view icons.
+- `primary`: Use for the fill of the one solid action, the chosen calendar day, progress and main-view icons.
 - `primary-hover`: Use for the solid action under the pointer.
 - `on-primary`: Use for text on `primary` and `primary-hover`.
-- `accent-text`: Use for today, unread, add actions, progress and the focus ring.
+- `accent-text`: Use for today, unread, add actions and the focus ring.
 - `accent-soft`: Use for the accent tint behind accent text.
 - `selected`: Use for the current selection, one tint per view.
 - `on-selected`: Use for text on `selected`.
@@ -559,7 +559,7 @@ Use `toast` for the result of an action. Undo and quick choices sit in the toast
 
 ### Status
 
-Pair `success` or `warning` with a word. `highlight` marks hits.
+Pair `success` or `warning` with a word. Progress ends `success` or `destructive`, with a word. `highlight` marks hits.
 
 ### Calendar
 
@@ -571,13 +571,11 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 - Do give navigation items and headings an icon (R6).
 - Do show data colours as dots.
 - Do write key hints as plain text.
-- Do not add a rail or an accent bar to a row.
-- Do not put a count in a pill.
 - Do not add a colour outside the theme engine.
 
 ## Motion
 
-`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states immediately.
+`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states immediately. Progress set by events jumps.
 
 ## Iconography
 
