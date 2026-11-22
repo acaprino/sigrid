@@ -32,6 +32,11 @@ export interface ThemeDef {
    */
   readonly second?: readonly [number, number]
   /**
+   * The spot color (`#rrggbb`): a second, louder color for the few things that ask for attention now (what is due, what
+   * is running), never for structure. Without it the spot tokens are the theme's own fill and accent.
+   */
+  readonly spot?: string
+  /**
    * A curated palette: the theme's own surfaces, ink and accents in each scheme, as `#rrggbb`, instead of the common
    * lightness ladder. The engine still corrects text, accents and borders until they hold the contrast thresholds.
    */

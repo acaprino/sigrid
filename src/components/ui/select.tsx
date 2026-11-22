@@ -27,9 +27,10 @@ import { useEntrance } from "../../internal/motion"
 
 /**
  * An option: a value and its label. An app can add its own fields (`O extends SelectOption`) and draw them before the
- * label with `renderMark` (a coloured shape, for example): the mark is the app's, the list is the toolkit's.
+ * label with `renderMark` (a coloured shape, for example): the mark is the app's, the list is the toolkit's. `style`
+ * is put on the label in the list: a font shown in its own face, for example.
  */
-export type SelectOption = { value: string; label: string }
+export type SelectOption = { value: string; label: string; style?: React.CSSProperties | undefined }
 export type SelectGroup<O extends SelectOption = SelectOption> = { label: string; options: O[] }
 
 export type SelectProps<O extends SelectOption = SelectOption> = {
@@ -64,7 +65,7 @@ function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMar
   return (
     <SelectPrimitive.Item value={o.value} data-slot="select-item" className={ITEM_CLASS}>
       {renderMark ? renderMark(o) : null}
-      <SelectPrimitive.ItemText>{o.label}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText style={o.style}>{o.label}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
         <Check className="size-4" aria-hidden />
       </SelectPrimitive.ItemIndicator>

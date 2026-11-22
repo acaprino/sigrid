@@ -87,7 +87,7 @@ x-zsd:
     icon-assets:
       - lucide-react
       - "@fluentui/react-icons"
-      - "the device's colour emoji (the Emoji pack, no package)"
+      - "src/icon-packs.generated.ts (four drawn packs)"
     checks: design-check.config.json
   unresolved:
     - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."

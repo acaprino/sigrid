@@ -5,6 +5,7 @@
     "theme-engine.ts",
     "theme-catalog.ts",
     "colors.ts",
+    "icon-packs.generated.ts",
     "styles/theme.css"
   ],
   "extensions": [

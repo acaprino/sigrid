@@ -1,9 +1,11 @@
 // The icon packs (R6 of the toolkit's rules, 2026-11-20): icons are visual anchors for the eye, and the user picks the
 // pack in Settings. A component asks for an icon by what it means (`settings`, `delete`), never by a pack's own name:
-// the pack in context draws it. Lucide is the default (line, the toolkit's stroke); Fluent Color is full colour, its own
-// colours; Emoji is the device's own colour emoji, drawn by the system font, with no package. One line pack is enough:
-// the owner saw no difference between Lucide, Phosphor and Tabler, so the last two left (2026-11-20). Functional chrome
-// (chevrons, ×, the search magnifier) stays Lucide.
+// the pack in context draws it. Lucide is the default (line, the toolkit's stroke). Two packs take the colour of the
+// theme: Phosphor Duotone and Solar Duotone, drawn in the text colour with a lighter second tone. Three are in their
+// own colours: Fluent Color, Fluent Emoji Flat and Twemoji, drawn emoji that look the same on every device (the
+// device's own emoji font left the packs on 2026-11-21: the owner did not like it). The drawn packs are not npm
+// dependencies: their drawings are in `icon-packs.generated.ts`, written by `scripts/icon-packs.mjs`. Functional
+// chrome (chevrons, ×, the search magnifier) stays Lucide.
 import { createContext, useContext, useMemo, type ComponentType, type ReactNode } from 'react'
 import {
   ArrowDown,
@@ -71,9 +73,12 @@ import {
   VideoColor,
 } from '@fluentui/react-icons'
 import { cn } from './lib/utils'
+import { DUOTONE_DRAWINGS, EMOJI_DRAWINGS, SOLAR_DRAWINGS, TWEMOJI_DRAWINGS, type Drawing } from './icon-packs.generated'
+
+export type { Drawing as IconArt } from './icon-packs.generated'
 
 /** The packs to choose from, in the order Settings shows them; the first is the default. */
-export const ICON_PACKS = ['lucide', 'fluent', 'emoji'] as const
+export const ICON_PACKS = ['lucide', 'duotone', 'solar', 'fluent', 'emoji', 'twemoji'] as const
 export type IconPack = (typeof ICON_PACKS)[number]
 export const DEFAULT_ICON_PACK: IconPack = 'lucide'
 
@@ -156,6 +161,27 @@ function emoji(glyph: string): Glyph {
   )
 }
 
+/**
+ * A glyph from a drawing (`icon-packs.generated.ts`, or an app's own): in its own square view box, sized by the
+ * `size-*` class like a line icon. A drawing in `currentColor` takes the colour of the text around it; an emoji keeps
+ * its own. One component per drawing, made once: a new component at every render would remount the picture.
+ */
+const drawnGlyphs = new WeakMap<Drawing, Glyph>()
+function drawnGlyph(drawing: Drawing): Glyph {
+  let made = drawnGlyphs.get(drawing)
+  if (!made) {
+    const [box, body] = drawing
+    made = ({ className }) => <svg viewBox={`0 0 ${box} ${box}`} width="24" height="24" className={className} aria-hidden="true" dangerouslySetInnerHTML={{ __html: body }} />
+    drawnGlyphs.set(drawing, made)
+  }
+  return made
+}
+
+/** A pack from its drawings, one per meaning. */
+function drawn(drawings: Readonly<Record<IconName, Drawing>>): Readonly<Record<IconName, Glyph>> {
+  return Object.fromEntries(ICON_NAMES.map((name) => [name, drawnGlyph(drawings[name])])) as Record<IconName, Glyph>
+}
+
 const PACKS: Readonly<Record<IconPack, Readonly<Record<IconName, Glyph>>>> = {
   lucide: {
     all: List,
@@ -229,55 +255,25 @@ const PACKS: Readonly<Record<IconPack, Readonly<Record<IconName, Glyph>>>> = {
     date: CalendarColor,
     clearFilter: DismissCircleColor,
   },
-  // One emoji per meaning, none shared, chosen to read at a glance and to stay visible on a dark page as on a light one.
-  // Written as code points: the U+FE0F that asks for the colour form of a symbol that is text by default (sun, gear,
-  // pencil, arrows) is invisible in a literal, and the design check reads emoji literals in the interface code as a
-  // must-avoid (DESIGN.md), while this pack, which the user picks, is the one place that draws them.
-  emoji: {
-    all: emoji('\u{1F4DC}'), // scroll: the whole list
-    tag: emoji('\u{1F3F7}\u{FE0F}'), // label
-    labels: emoji('\u{1F516}'), // bookmark
-    more: emoji('\u{1F4E6}'), // package: the other lists
-    notifications: emoji('\u{1F514}'), // bell
-    settings: emoji('\u{2699}\u{FE0F}'), // gear
-    account: emoji('\u{1F194}'), // ID button (the dark silhouette fades on a dark page)
-    appearance: emoji('\u{1F3A8}'), // artist palette
-    colors: emoji('\u{1F308}'), // rainbow
-    layout: emoji('\u{1F9E9}'), // puzzle piece: how the pieces are laid out
-    font: emoji('\u{1F524}'), // input latin letters
-    animations: emoji('\u{1F3AC}'), // clapper board
-    dateTime: emoji('\u{1F570}\u{FE0F}'), // mantelpiece clock
-    ai: emoji('\u{2728}'), // sparkles
-    importExport: emoji('\u{1F504}'), // anticlockwise arrows button
-    data: emoji('\u{1F5C3}\u{FE0F}'), // card file box
-    service: emoji('\u{1F310}'), // globe with meridians (the white cloud fades on a light page)
-    rename: emoji('\u{270F}\u{FE0F}'), // pencil
-    changeIcon: emoji('\u{1F5BC}\u{FE0F}'), // framed picture
-    move: emoji('\u{1F69A}'), // delivery truck: «Move to…», apart from the arrows that nudge
-    moveUp: emoji('\u{2B06}\u{FE0F}'), // up arrow
-    moveDown: emoji('\u{2B07}\u{FE0F}'), // down arrow
-    moveLeft: emoji('\u{2B05}\u{FE0F}'), // left arrow
-    moveRight: emoji('\u{27A1}\u{FE0F}'), // right arrow
-    delete: emoji('\u{1F5D1}\u{FE0F}'), // wastebasket
-    newFolder: emoji('\u{1F4C1}'), // file folder
-    profile: emoji('\u{1F9D1}'), // person: you
-    structure: emoji('\u{1F5C2}\u{FE0F}'), // card index dividers
-    signOut: emoji('\u{1F6AA}'), // door
-    now: emoji('\u{26A1}'), // high voltage
-    column: emoji('\u{1F4CA}'), // bar chart: the columns of a board
-    date: emoji('\u{1F4C5}'), // calendar
-    clearFilter: emoji('\u{1F9F9}'), // broom
-  },
+  duotone: drawn(DUOTONE_DRAWINGS),
+  solar: drawn(SOLAR_DRAWINGS),
+  emoji: drawn(EMOJI_DRAWINGS),
+  twemoji: drawn(TWEMOJI_DRAWINGS),
 }
 
 /**
  * How an app draws a meaning of its own (a mail app's `inbox`, `reply`): the line drawing is required; a pack left
- * out falls back to it. `emoji` is the glyph itself, fully qualified (with U+FE0F where the symbol is text by default).
+ * out falls back to it. The drawn packs take a drawing each (its square view box and its SVG content, as
+ * `scripts/icon-packs.mjs` writes them). `emoji` may also be the glyph itself, fully qualified (with U+FE0F where
+ * the symbol is text by default): the device's font then draws it, in the Emoji pack and in Twemoji.
  */
 export interface IconDrawing {
   readonly lucide: Glyph
   readonly fluent?: Glyph | undefined
-  readonly emoji?: string | undefined
+  readonly duotone?: Drawing | undefined
+  readonly solar?: Drawing | undefined
+  readonly emoji?: Drawing | string | undefined
+  readonly twemoji?: Drawing | undefined
 }
 
 /** An app's own meanings, by name. A name the toolkit already draws keeps the toolkit's drawing. */
@@ -300,7 +296,12 @@ function glyphOf(name: string, pack: IconPack, icons: IconSet | undefined): Glyp
   const own = icons && Object.prototype.hasOwnProperty.call(icons, name) ? icons[name] : undefined
   if (!own) return undefined
   if (pack === 'fluent') return own.fluent ?? own.lucide
-  if (pack === 'emoji') return own.emoji ? emojiGlyph(own.emoji) : own.lucide
+  if (pack === 'duotone') return own.duotone ? drawnGlyph(own.duotone) : own.lucide
+  if (pack === 'solar') return own.solar ? drawnGlyph(own.solar) : own.lucide
+  if (pack === 'emoji' || pack === 'twemoji') {
+    const art = pack === 'twemoji' ? (own.twemoji ?? own.emoji) : own.emoji
+    return art === undefined ? own.lucide : typeof art === 'string' ? emojiGlyph(art) : drawnGlyph(art)
+  }
   return own.lucide
 }
 
