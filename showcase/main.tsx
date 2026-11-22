@@ -1,9 +1,14 @@
-// The toolkit's showcase: every exported component, in its variants, sizes and states, under the theme and scheme
-// chosen at the top (also from the address: `?theme=amber-bold&scheme=dark`), and a strip of the main controls in six
-// palettes side by side. The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour
-// (`<colour>-<combination>`, such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover, pressed and focus are forced with `data-force` (see showcase.css), so they can be seen
-// at once. What only opens on a gesture opens from the address: `?open=menu`, `popover`, `select`, `tooltip`, `date`,
-// `datetime`, `range`, `date-picks`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with commas).
+// The toolkit's showcase, built with the toolkit's own frame (`AppShell`) as docs/patterns.md recommends. Four views,
+// as tabs in the bar (`?view=philosophy|guidelines|practices|components`): the philosophy, the guidelines and the
+// practices of the design system (guide.tsx), and every exported component, in its variants, sizes and states
+// (this file). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
+// scheme. All of them are also in the address: `?theme=amber-bold&scheme=dark&shape=sharp&density=compact`.
+// The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour (`<colour>-<combination>`,
+// such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover,
+// pressed and focus are forced with `data-force` (see showcase.css), so they can be seen at once. What only opens on a
+// gesture opens from the address: `?open=menu`, `popover`, `select`, `tooltip`, `date`, `datetime`, `range`,
+// `date-picks`, `dialog`, `drawer`, `sheet`, `sheet-left`, `viewer`, `viewer-loading`, `viewer-error` (several, with
+// commas); an address that opens something, or ends in `#<section>`, starts in the view that holds it.
 // Not shown: `DesktopSurface` (a separate system window of the desktop shell) and the headless re-exports
 // (`Collapsible`, `Field`, `PopoverPrimitive`), which have no form of their own.
 import './showcase.css'
@@ -134,9 +139,14 @@ import {
   presetTone,
   tonePresetOf,
   useMotion,
+  useMedia,
+  isIconName,
+  WordsProvider,
+  AppShellContext,
   type AttachmentView,
   type DateRange,
   type DensityId,
+  type IconName,
   type SpotKind,
   type ThemeDef,
   type ThemeScheme,
@@ -144,6 +154,8 @@ import {
   type ThemeTone,
   type ToastItem,
 } from '../src/index'
+import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
+import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
 
@@ -188,6 +200,10 @@ const initialScheme: ThemeScheme = params.get('scheme') === 'dark' ? 'dark' : 'l
 /** `?density=compact|normal|large`: one of the toolkit's presets; anything else is `normal`. */
 const givenDensity = params.get('density')
 const initialDensity: DensityId = isDensityId(givenDensity) ? givenDensity : 'normal'
+/** `?view=…`; without it, the view that holds what the address asks for (something to open, or a `#section`), else the philosophy. */
+const givenView = params.get('view')
+const givenSection = decodeURIComponent(location.hash.slice(1))
+const initialView: ViewId = isViewId(givenView) ? givenView : OPEN.size > 0 ? 'components' : givenSection ? viewOfId(givenSection) : 'philosophy'
 
 /** The palettes of the strip: three accents far apart, each in light and dark. */
 const STRIP: ThemeId[] = [BASE_THEME.id, 'blue-clean', 'amber-bold']
@@ -227,64 +243,60 @@ function stateProps(state: State): Record<string, unknown> {
   return { 'data-force': state }
 }
 
-function Section({ id, title, note, children }: { id: string; title: string; note?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section id={id} data-showcase={id} aria-labelledby={`${id}-title`} className="scroll-mt-20 border-t border-line py-8">
-      <h2 id={`${id}-title`} className="text-base font-semibold text-ink">
-        {title}
-      </h2>
-      {note ? <p className="mt-1 max-w-3xl text-sm text-ink-soft">{note}</p> : null}
-      <div className="mt-6 flex flex-col gap-6">{children}</div>
-    </section>
-  )
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 items-start gap-2 md:grid-cols-[8rem_1fr] md:gap-4">
-      <div className="text-2xs font-medium text-ink-mute md:pt-2">{label}</div>
-      <div className="flex min-w-0 flex-wrap items-start gap-4">{children}</div>
-    </div>
-  )
-}
-
-function Cell({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div data-cell={label} className="flex max-w-full min-w-0 flex-col items-start gap-2">
-      {children}
-      <span className="text-2xs text-ink-mute">{label}</span>
-    </div>
-  )
-}
-
 /* ———— The index ———— */
 
-/** Where a section's title must have passed, from the top of the window, for the section to be the one being read. */
+/** Where a section's title must have passed, from the top of the content, for the section to be the one being read. */
 const READING_LINE = 96
 
+/** The content of the frame, which scrolls by itself. The first one in the page is the frame's own: the examples hold more of them, deeper in. */
+const shellContent = () => document.querySelector<HTMLElement>('[data-slot="app-shell-content"]')
+
+type Group = { label: string; icon: IconName; ids: readonly string[] }
+
 /**
- * The index at the side: one row per section, read from the page itself so it cannot fall behind it, with a field
- * that filters the rows by name (Enter goes to the first). The row of the section being read is the current one.
+ * The sections of the component gallery in the groups of the index, in the order of the page: the page follows the
+ * index, so scrolling reads down it. A section in no group goes under «More».
  */
-function Index() {
-  const [sections, setSections] = React.useState<{ id: string; title: string }[]>([])
+const COMPONENT_GROUPS: readonly Group[] = [
+  { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
+  { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
+  { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields'] },
+  { label: 'Navigation', icon: 'structure', ids: ['tabs', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
+  { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'empty'] },
+  { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
+  { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
+]
+
+/**
+ * The sidebar of the frame: one row per section of the view on show, read from the page itself so it cannot fall behind
+ * it, with the toolkit's own search box to filter them. The row of the section being read is the current one.
+ */
+function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated: boolean; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [sections, setSections] = React.useState<{ id: string; title: string; icon: string | undefined }[]>([])
   const [current, setCurrent] = React.useState('')
-  const [query, setQuery] = React.useState('')
-  React.useEffect(() => {
+  const first = React.useRef(true)
+  // A layout effect: the rows of the view just left are gone before the new view is painted.
+  React.useLayoutEffect(() => {
     const found = Array.from(document.querySelectorAll<HTMLElement>('section[data-showcase]'))
-    setSections(found.map((s) => ({ id: s.id, title: s.querySelector('h2')?.textContent ?? s.id })))
+    setSections(found.map((s) => ({ id: s.id, title: s.querySelector('h2')?.textContent ?? s.id, icon: s.dataset.icon })))
+    const scroller = shellContent()
+    if (!scroller) return
     // The sections did not exist when the browser looked for the address's anchor.
     const asked = () => document.getElementById(decodeURIComponent(location.hash.slice(1)))
-    if (location.hash) asked()?.scrollIntoView()
+    if (first.current && location.hash) asked()?.scrollIntoView()
+    first.current = false
     let frame = 0
     const read = () => {
       frame = 0
-      const passed = found.filter((s) => s.getBoundingClientRect().top <= READING_LINE)
+      const box = scroller.getBoundingClientRect()
+      const line = box.top + READING_LINE
+      const passed = found.filter((s) => s.getBoundingClientRect().top <= line)
       let now = passed[passed.length - 1] ?? found[0]
       // At the end of the page the last sections never reach the line: the one asked for, if in view, else the last.
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) {
         const target = location.hash ? asked() : null
-        const inView = target && found.includes(target) && target.getBoundingClientRect().top < window.innerHeight && target.getBoundingClientRect().top > READING_LINE
+        const top = target?.getBoundingClientRect().top
+        const inView = target && found.includes(target) && top !== undefined && top < box.bottom && top > line
         now = inView ? target : found[found.length - 1]
       }
       setCurrent(now?.id ?? '')
@@ -293,38 +305,37 @@ function Index() {
       frame ||= requestAnimationFrame(read)
     }
     read()
-    window.addEventListener('scroll', later, { passive: true })
+    scroller.addEventListener('scroll', later, { passive: true })
     window.addEventListener('resize', later)
     window.addEventListener('hashchange', later)
     return () => {
       cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', later)
+      scroller.removeEventListener('scroll', later)
       window.removeEventListener('resize', later)
       window.removeEventListener('hashchange', later)
     }
-  }, [])
-  const wanted = query.trim().toLowerCase()
-  const shown = sections.filter((s) => s.title.toLowerCase().includes(wanted))
+  }, [view])
+  const groups: readonly Group[] = view === 'components' ? COMPONENT_GROUPS : [{ label: 'On this page', icon: 'all', ids: sections.map((s) => s.id) }]
+  const known = new Set(groups.flatMap((g) => g.ids))
+  const loose = sections.filter((s) => !known.has(s.id))
+  const shown: readonly Group[] = loose.length > 0 ? [...groups, { label: 'More', icon: 'more', ids: loose.map((s) => s.id) }] : groups
   return (
-    <aside data-showcase-index="" className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-3 self-start overflow-y-auto border-e border-line p-3 lg:flex">
-      <SearchField
-        aria-label="Find a section"
-        placeholder="Find a section"
-        value={query}
-        onValueChange={setQuery}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && shown[0]) location.hash = shown[0].id
-        }}
-      />
-      <NavList aria-label="Sections">
-        {shown.map((s) => (
-          <NavItem key={s.id} href={`#${s.id}`} title={s.title} current={current === s.id}>
-            {s.title}
-          </NavItem>
-        ))}
-      </NavList>
-      {shown.length === 0 ? <p className="px-(--row-pad) text-sm text-ink-mute">No section has that name.</p> : null}
-    </aside>
+    <WordsProvider words={{ sidebar: { search: 'Find a section', empty: 'No section has that name.' } }}>
+    <Sidebar aria-label="Sections" search open={open} onOpenChange={onOpenChange} animated={animated}>
+      {shown.map((g) => {
+        const rows = sections.filter((s) => g.ids.includes(s.id))
+        return rows.length === 0 ? null : (
+          <SidebarGroup key={g.label} label={g.label} icon={<Icon name={g.icon} />}>
+            {rows.map((s) => (
+              <NavItem key={s.id} href={`#${s.id}`} title={s.title} current={current === s.id} icon={isIconName(s.icon) ? <Icon name={s.icon} /> : null}>
+                {s.title}
+              </NavItem>
+            ))}
+          </SidebarGroup>
+        )
+      })}
+    </Sidebar>
+    </WordsProvider>
   )
 }
 
@@ -1133,7 +1144,7 @@ function Shells({ animated }: { animated: boolean }) {
     ),
   }
   return (
-    <Section id="patterns" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps. The frames here are desktop ones: what opens over them (the inspector's panel, the sidebar's drawer, a menu) stays under their title bar.">
+    <Section id="patterns" icon="column" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps. The frames here are desktop ones: what opens over them (the inspector's panel, the sidebar's drawer, a menu) stays under their title bar.">
       <div className="flex flex-wrap items-center gap-3">
         <ToggleGroup aria-label="Pattern" value={pattern} onValueChange={(v) => v && setPattern(v as PatternId)} animated={animated}>
           {(Object.keys(PATTERNS) as PatternId[]).map((id) => (
@@ -2072,6 +2083,19 @@ function Strip({ theme, scheme, tone, onTone }: { theme: ThemeId; scheme: ThemeS
 
 /* ———— The page ———— */
 
+/** A setting of the look in the panel: its name over its control. */
+function LookField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium text-ink">{label}</span>
+      {children}
+    </div>
+  )
+}
+
+/** Where the frame stops showing a sidebar and the views move to the foot of the window (docs/patterns.md): a whole sidebar needs more than this. */
+const FRAME_STEPS = { sidebar: 700, rail: 700 } as const
+
 function App() {
   const [theme, setTheme] = React.useState<ThemeId>(initialTheme)
   const [color, setColor] = React.useState(initialColor)
@@ -2086,11 +2110,32 @@ function App() {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
   })
+  // The view on show, and the section asked for in it, if any: `n` tells a new request from the first render.
+  const [nav, setNav] = React.useState<{ view: ViewId; id: string | null; n: number }>({ view: initialView, id: null, n: 0 })
+  const view = nav.view
+  const go = React.useCallback((next: ViewId, id?: string) => setNav((now) => ({ view: next, id: id ?? null, n: now.n + 1 })), [])
+  const [menu, setMenu] = React.useState(false)
+  const [look, setLook] = React.useState(false)
+  const narrow = useMedia(`(width < ${FRAME_STEPS.sidebar}px)`)
   React.useEffect(() => {
     const next = new URLSearchParams(location.search)
     next.set('animated', animated ? '1' : '0')
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
   }, [animated])
+  React.useEffect(() => {
+    const next = new URLSearchParams(location.search)
+    next.set('view', view)
+    history.replaceState(null, '', `?${next.toString()}${location.hash}`)
+  }, [view])
+  // A tab or a link took the page to a view, or to a section of it: the first render is the address's own, and the
+  // index scrolls to its anchor.
+  React.useEffect(() => {
+    if (nav.n === 0) return
+    const target = nav.id ? document.getElementById(nav.id) : null
+    if (target) target.scrollIntoView()
+    else shellContent()?.scrollTo(0, 0)
+    history.replaceState(null, '', `${location.search}${nav.id ? `#${nav.id}` : ''}`)
+  }, [nav])
   React.useLayoutEffect(() => {
     applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), shape }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), shape }, scheme, tone })
     const next = new URLSearchParams(location.search)
@@ -2123,100 +2168,156 @@ function App() {
     if (OPEN.has('date-picks')) press('date-picks')?.click()
     if (OPEN.has('tooltip')) press('tooltip')?.focus()
   }, [])
+  const themeLabel = yours ? 'Your colours' : themeById(theme).label
+  const views = (placing: { edge?: 'top'; layout?: 'stacked' } = {}) => (
+    <ToolbarTabs aria-label="Views" value={view} onValueChange={(next) => isViewId(next) && go(next)} {...placing}>
+      {VIEWS.map((v) => (
+        <ToolbarTab key={v.id} value={v.id} icon={placing.layout ? <Icon name={v.icon} /> : undefined}>
+          {v.label}
+        </ToolbarTab>
+      ))}
+    </ToolbarTabs>
+  )
+  // The component gallery, in the order of the index (COMPONENT_GROUPS).
+  const components = (
+    <Page
+      title="Components"
+      lead={
+        <>
+          Every component in its variants, sizes and states, under the theme, shape and density chosen in Look. Hover, pressed and focus are forced with <Code>data-force</Code>, so they can be seen at once. What opens on a gesture opens from the address: <Code>?open=menu</Code>, <Code>popover</Code>, <Code>select</Code>, <Code>dialog</Code>, <Code>sheet</Code> and more.
+        </>
+      }
+    >
+      <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
+      <Tokens />
+      <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
+        <Row label="match colours">
+          <div className="w-full max-w-xl">
+            <ColorMatch
+              colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] }))}
+              color={color}
+              spot={spot}
+              scheme={scheme}
+              onColor={(next) => { setColor(next); setTheme(YOURS) }}
+              onSpot={(next) => { setSpot(next); setTheme(YOURS) }}
+              text={{
+                color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
+                kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
+                sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
+              }}
+            />
+          </div>
+        </Row>
+        <Row label="gallery">
+          <div className="w-full">
+            <ThemeGallery themes={THEMES} selected={yours ? null : theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
+          </div>
+        </Row>
+      </Section>
+      <Buttons animated={animated} />
+      <Toggles animated={animated} />
+      <Badges />
+      <Keys />
+      <Fields />
+      <FormFields />
+      <Selects />
+      <Pickers />
+      <Checkboxes animated={animated} />
+      <Radios />
+      <Switches animated={animated} />
+      <Dates animated={animated} />
+      <OtherFields />
+      <TabSets animated={animated} />
+      <Navigation />
+      <SidebarSample animated={animated} />
+      <Toolbars animated={animated} />
+      <Menus animated={animated} />
+      <Popovers animated={animated} />
+      <Overlays animated={animated} />
+      <Notices animated={animated} />
+      <Empties />
+      <Files />
+      <Content />
+      <HoverRows animated={animated} />
+      <MotionPieces animated={animated} />
+    </Page>
+  )
   return (
     <MotionProvider animated={animated}>
-      <div className="min-h-screen bg-paper text-ink">
-        <header className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-line bg-paper px-4 py-3 md:px-6">
-          <h1 className="text-base font-semibold">Sigrid UI showcase</h1>
-          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 md:ml-auto">
-            <div className="w-56 max-w-full">
-              <Select aria-label="Theme" options={[...THEMES.map((t) => ({ value: t.id, label: t.label })), { value: YOURS, label: 'Your colours' }]} value={theme} onValueChange={(v) => (v === YOURS || isThemeId(v)) && setTheme(v)} />
-            </div>
-            <ToggleGroup aria-label="Scheme" value={scheme} onValueChange={setScheme}>
-              <ToggleGroupItem value="light">Light</ToggleGroupItem>
-              <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-            </ToggleGroup>
-            <ToggleGroup aria-label="Shape" value={shape} onValueChange={(v) => isThemeShape(v) && setShape(v)}>
-              {THEME_SHAPES.map((name) => (
-                <ToggleGroupItem key={name} value={name}>
-                  {name[0]!.toUpperCase() + name.slice(1)}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)}>
-              {DENSITIES.map((d) => (
-                <ToggleGroupItem key={d.id} value={d.id}>
-                  {d.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-            <div className="flex items-center gap-2">
-              <Checkbox id="animated" checked={animated} onCheckedChange={(c) => setAnimated(c === true)} />
-              <label htmlFor="animated" className="text-sm">
-                Animations
-              </label>
-            </div>
-          </div>
-        </header>
-        <div className="flex">
-        <Index />
-        <main className="mx-auto min-w-0 max-w-6xl flex-1 px-4 pb-24 md:px-6">
-          <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
-          <Tokens />
-          <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
-            <Row label="match colours">
-              <div className="w-full max-w-xl">
-                <ColorMatch
-                  colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] }))}
-                  color={color}
-                  spot={spot}
-                  scheme={scheme}
-                  onColor={(next) => { setColor(next); setTheme(YOURS) }}
-                  onSpot={(next) => { setSpot(next); setTheme(YOURS) }}
-                  text={{
-                    color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
-                    kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
-                    sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
-                  }}
-                />
+      <Go.Provider value={go}>
+        <div className="h-dvh overflow-hidden bg-paper text-ink">
+          <AppShell
+            contentLabel={VIEWS.find((v) => v.id === view)?.label ?? view}
+            // No rail between the drawer and the whole sidebar: the rows of the gallery have no icon to be a rail of.
+            steps={FRAME_STEPS}
+            titleBar={
+              <TitleBar>
+                <Toolbar aria-label="Showcase">
+                  <ShellMenuButton onOpen={() => setMenu(true)} />
+                  <ToolbarBrand name="Sigrid" />
+                  {narrow ? null : views()}
+                  <ToolbarSpacer />
+                  {/* The layout editor is its own page (builder.html), not a view of this one: it opens beside it. */}
+                  <ToolbarButton label="Layout editor" icon={<Icon name="layout" />} onClick={() => window.open('builder.html', '_blank', 'noopener')}>
+                    Layout editor
+                  </ToolbarButton>
+                  <ToolbarButton label="Dark mode" icon={<Icon name="moon" />} pressed={scheme === 'dark'} onClick={() => setScheme(scheme === 'dark' ? 'light' : 'dark')} animated={animated} />
+                  <ToolbarButton label="Look" icon={<Icon name="appearance" />} pressed={look} onClick={() => setLook(!look)} animated={animated}>
+                    Look
+                  </ToolbarButton>
+                </Toolbar>
+              </TitleBar>
+            }
+            sidebar={<Index view={view} animated={animated} open={menu} onOpenChange={setMenu} />}
+            inspector={
+              <Inspector title="Look" open={look} onOpenChange={setLook} animated={animated}>
+                <div className="flex flex-col gap-4">
+                  <FormField label="Theme">
+                    <Select options={[...THEMES.map((t) => ({ value: t.id, label: t.label })), { value: YOURS, label: 'Your colours' }]} value={theme} onValueChange={(v) => (v === YOURS || isThemeId(v)) && setTheme(v)} />
+                  </FormField>
+                  <LookField label="Shape">
+                    <ToggleGroup aria-label="Shape" value={shape} onValueChange={(v) => isThemeShape(v) && setShape(v)} className="self-start">
+                      {THEME_SHAPES.map((name) => (
+                        <ToggleGroupItem key={name} value={name}>
+                          {name[0]!.toUpperCase() + name.slice(1)}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </LookField>
+                  <LookField label="Density">
+                    <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)} className="self-start">
+                      {DENSITIES.map((d) => (
+                        <ToggleGroupItem key={d.id} value={d.id}>
+                          {d.label}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </LookField>
+                  <Switch checked={animated} onCheckedChange={setAnimated} animated={animated}>
+                    Animations
+                  </Switch>
+                </div>
+              </Inspector>
+            }
+            bottomBar={narrow ? <Toolbar aria-label="Views of the showcase">{views({ edge: 'top', layout: 'stacked' })}</Toolbar> : undefined}
+            footer={
+              <>
+                <span>{themeLabel}</span>
+                <span>{scheme}</span>
+                <span>{DENSITIES.find((d) => d.id === density)?.label}</span>
+                <span className="ms-auto">{animated ? 'Animations on' : 'Animations off'}</span>
+              </>
+            }
+          >
+            {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
+            <AppShellContext.Provider value={undefined}>
+              <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} /> : components}
               </div>
-            </Row>
-            <Row label="gallery">
-              <div className="w-full">
-                <ThemeGallery themes={THEMES} selected={yours ? null : theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
-              </div>
-            </Row>
-          </Section>
-          <Buttons animated={animated} />
-          <Badges />
-          <Fields />
-          <Checkboxes animated={animated} />
-          <Radios />
-          <Switches animated={animated} />
-          <TabSets animated={animated} />
-          <FormFields />
-          <Navigation />
-          <SidebarSample animated={animated} />
-          <Toolbars animated={animated} />
-          <Shells animated={animated} />
-          <Pickers />
-          <Toggles animated={animated} />
-          <Selects />
-          <Menus animated={animated} />
-          <Popovers animated={animated} />
-          <HoverRows animated={animated} />
-          <MotionPieces animated={animated} />
-          <Keys />
-          <Empties />
-          <Dates animated={animated} />
-          <OtherFields />
-          <Files />
-          <Content />
-          <Notices animated={animated} />
-          <Overlays animated={animated} />
-        </main>
+            </AppShellContext.Provider>
+          </AppShell>
         </div>
-      </div>
+      </Go.Provider>
     </MotionProvider>
   )
 }

@@ -231,17 +231,21 @@ a drawer.
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
   which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
-  shows each one live under «Layout patterns».
+  shows each one live under «Layout patterns», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
-- `showcase/`: every component in its variants, sizes and states (hover, pressed and focus forced with
-  `data-force`), in light and dark and in several palettes. `npm run showcase` serves it (Vite, development only, not
-  part of the package); `?theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the theme (`base`, or a
-  palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`; the toolbar
-  has a switch for it too), opens what opens on a gesture and turns motion on.
+- `showcase/`: the design system shown with its own frame (`AppShell`), in four views as tabs in the bar. Philosophy,
+  Guidelines and Practices say what this README, `DESIGN.md` and `docs/patterns.md` say, with live examples (the
+  layout gallery is in Practices); Components shows every component in its variants, sizes and states
+  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes. `npm run showcase`
+  serves it (Vite, development only, not part of the package);
+  `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
+  or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;
+  «Look» in the bar has a switch for it too, with the shape and the animations), opens what opens on a gesture and
+  turns motion on. An address that opens something, or ends in `#<section>`, starts in the view that holds it.
 - `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
   are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
-  the toolkit's components are dragged from a list into a panel and up and down inside it. The inspector holds the
+  the toolkit's components are dragged from a list into a panel and up and down inside it, or set beside the one before it on the same row. The inspector holds the
   look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
   corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
   motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is

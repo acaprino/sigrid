@@ -167,9 +167,10 @@ export type ToolbarTabProps = {
   children?: React.ReactNode
 }
 
-// As tall as the bar, so the short accent bar of the current view sits on the bar's edge.
+// As tall as the bar, so the short accent bar of the current view sits on the bar's edge. The others get a quiet wash
+// under the pointer, as the buttons beside them do; the current one has its bar and takes no wash.
 const TAB = cn(
-  "relative flex cursor-default items-center whitespace-nowrap text-ink-soft hover:text-ink data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative flex cursor-default items-center whitespace-nowrap text-ink-soft hover:text-ink not-aria-[current=page]:hover:bg-ink/6 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   "after:absolute after:inset-x-3 after:h-0.5 after:rounded-full after:content-['']",
   "aria-[current=page]:font-semibold aria-[current=page]:text-ink aria-[current=page]:after:bg-primary",
   FOCUS_RING_INSET,

@@ -4,8 +4,8 @@ How to put the toolkit's parts together into a whole screen. These are recommend
 suite's apps (Imago's frame is their source): nothing here is checked by a program, and an app that has a reason does
 otherwise. The owner's rules R1 to R13 (`DESIGN.md`) are a separate matter: those are checked.
 
-The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, section
-«Layout patterns». The parts are optimized for these layouts, and work outside them too.
+The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, view
+Practices, section «Layout patterns». The parts are optimized for these layouts, and work outside them too.
 
 ## Start from the one frame
 
