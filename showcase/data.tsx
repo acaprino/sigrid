@@ -3,12 +3,12 @@
 // (`./virtual`), a list put in order by its handles (`./reorder`) and a field for text with a little form
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
-import { Avatar, Badge, FormField, Input, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
+import { Avatar, Badge, Button, FormField, Input, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
 import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
 import { RichTextField } from '../src/rich-text'
-import { GraphCanvas, type GraphEdge, type GraphNode } from '../src/graph'
+import { GraphCanvas, type GraphCanvasHandle, type GraphEdge, type GraphNode } from '../src/graph'
 import '../src/styles/graph.css'
 import { Code, Row, Section } from './parts'
 
@@ -257,6 +257,34 @@ const JOINS: GraphEdge[] = [
   { from: 'screens', to: 'pages' },
 ]
 
+/** The plan with lines that do not hang (one comes first, one needs another, two never go together) and a path through it. */
+const LINKS: GraphEdge[] = [
+  ...JOINS,
+  { from: 'tokens', to: 'screens', kind: 'link', label: 'comes first' },
+  { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the final text' },
+  { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' },
+]
+const PATH = new Map<string, readonly number[]>([['tokens', [1]], ['screens', [2]], ['pages', [3]], ['test', [4]]])
+
+/** 37 things in 15 groups, every group closed, as a large graph starts: a few lines across groups, and a path of two steps. */
+const GROUPS: GraphNode[] = []
+const GROUP_JOINS: GraphEdge[] = []
+for (let g = 1; g <= 15; g++) {
+  const count = g <= 7 ? 3 : 2
+  GROUPS.push({ id: `group-${g}`, label: `Group ${g}`, detail: `${count} things`, icon: 'structure' })
+  for (let i = 1; i <= count; i++) {
+    GROUPS.push({ id: `thing-${g}-${i}`, label: `Thing ${g}.${i}` })
+    GROUP_JOINS.push({ from: `group-${g}`, to: `thing-${g}-${i}` })
+  }
+}
+GROUP_JOINS.push(
+  { from: 'thing-9-1', to: 'thing-12-2', kind: 'link', label: 'comes first' },
+  { from: 'thing-2-1', to: 'thing-12-2', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs it' },
+  { from: 'thing-12-2', to: 'thing-14-1', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'never together' },
+)
+const GROUP_PATH = new Map<string, readonly number[]>([['thing-9-1', [1]], ['thing-12-2', [2]]])
+const CLOSED_GROUPS = GROUPS.filter((node) => node.detail).map((node) => node.id)
+
 /** A wide graph, the same at every load, to see what a thousand things cost. */
 const WIDE: GraphNode[] = Array.from({ length: 1000 }, (_, i) => ({ id: `n${i}`, label: `Item ${i + 1}` }))
 const WIDE_JOINS: GraphEdge[] = WIDE.slice(1).map((node, i) => ({ from: `n${Math.floor(i / 4)}`, to: node.id }))
@@ -265,6 +293,8 @@ export function Graphs() {
   const [graph, setGraph] = React.useState({ nodes: PLAN, edges: JOINS })
   const [selected, setSelected] = React.useState<string | null>('design')
   const [picked, setPicked] = React.useState<string | null>(null)
+  const [numbered, setNumbered] = React.useState(true)
+  const groups = React.useRef<GraphCanvasHandle>(null)
   const chosen = graph.nodes.find((node) => node.id === selected)
   return (
     <Section
@@ -272,7 +302,7 @@ export function Graphs() {
       title="GraphCanvas"
       note={
         <>
-          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away.
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edge never cuts a thing. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>.
         </>
       }
     >
@@ -291,6 +321,27 @@ export function Graphs() {
       <Row label="downwards, read only">
         <div data-sample="graph-down" className="w-full max-w-4xl">
           <GraphCanvas aria-label="Plan, from the head" nodes={PLAN} edges={JOINS} direction="down" defaultCollapsed={['content', 'build']} className="h-80" />
+        </div>
+      </Row>
+      <Row label="a path, and lines that do not hang">
+        <div data-sample="graph-path" className="w-full max-w-4xl">
+          <GraphCanvas aria-label="Plan, with its path" nodes={PLAN} edges={LINKS} steps={PATH} className="h-112" />
+        </div>
+      </Row>
+      <Row label="37 things in 15 groups">
+        <div data-sample="graph-groups" className="flex w-full max-w-4xl flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Switch checked={numbered} onCheckedChange={setNumbered}>
+              Number a path
+            </Switch>
+            <Button variant="outline" size="sm" disabled={!numbered} onClick={() => groups.current?.focus([...GROUP_PATH.keys()])}>
+              Bring the path into view
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => groups.current?.fit()}>
+              Fit the view
+            </Button>
+          </div>
+          <GraphCanvas ref={groups} aria-label="Groups" nodes={GROUPS} edges={GROUP_JOINS} steps={numbered ? GROUP_PATH : undefined} defaultCollapsed={CLOSED_GROUPS} search minimap className="h-112" />
         </div>
       </Row>
       <Row label="1,000 things">

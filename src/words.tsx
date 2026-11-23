@@ -212,6 +212,13 @@ export interface Words {
     readonly add: (item: string) => string
     /** The name a new thing starts with. */
     readonly newNode: string
+    /** What screen readers hear of a thing on the path the app numbers: its name and its steps («Copy, step 2»). */
+    readonly onPath: (item: string, steps: readonly number[]) => string
+    /**
+     * What screen readers hear of a line that joins a thing to another without hanging (a `link`): its words, which
+     * way it goes (`to` the other thing, `from` it, or `with` it both ways) and the other thing. Said after the name.
+     */
+    readonly line: (item: string, way: 'to' | 'from' | 'with', label?: string) => string
   }
   readonly reorder: {
     /** The name of the handle that moves an item («Move Inbox»). */
@@ -396,6 +403,8 @@ export const DEFAULT_WORDS: Words = {
     closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
     add: (item) => `Add under ${item}`,
     newNode: 'New',
+    onPath: (item, steps) => `${item}, ${steps.length === 1 ? `step ${steps[0]}` : `steps ${steps.slice(0, -1).join(', ')} and ${steps[steps.length - 1]}`}`,
+    line: (item, way, label) => `${label ? `${label}, ` : ''}${way} ${item}`,
   },
   reorder: {
     handle: (item) => `Move ${item}`,

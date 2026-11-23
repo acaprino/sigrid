@@ -34,6 +34,43 @@
   stroke-width: 1.5;
 }
 
+/* The dash of a line says its kind with its words, never its colour alone. A dotted line is a little thicker, so its
+   dots are seen. */
+.react-flow__edge.sigrid-graph-dashed .react-flow__edge-path {
+  stroke-dasharray: 6 4;
+}
+.react-flow__edge.sigrid-graph-dotted .react-flow__edge-path {
+  stroke-dasharray: 0 4;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+/* The tones of a line, from the theme (each keeps 3:1 on the canvas). The accent, the path's, is thicker. */
+.react-flow__edge.sigrid-graph-accent .react-flow__edge-path {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.react-flow__edge.sigrid-graph-warning .react-flow__edge-path {
+  stroke: var(--color-warning);
+}
+.react-flow__edge.sigrid-graph-destructive .react-flow__edge-path {
+  stroke: var(--color-destructive);
+}
+
+/* With a path, a line to a dimmed thing is dimmed as the thing is. */
+.react-flow__edge.sigrid-graph-dim {
+  opacity: 0.4;
+}
+
+/* The words of a line: 12px in the soft ink, on the canvas's own ground so the line stops around them. */
+.react-flow__edge-text {
+  font-size: var(--text-xs);
+  fill: var(--color-ink-soft);
+}
+.react-flow__edge-textbg {
+  fill: var(--color-paper-2);
+}
+
 /* The small map is a raised surface: a shadow, no border (R4). */
 .react-flow__minimap {
   border-radius: var(--radius-md);

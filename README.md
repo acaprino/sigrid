@@ -259,6 +259,29 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
     branches closed (`defaultCollapsed`). `visibleGraph` and
     `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
+    - Two kinds of line. A `GraphEdge` is `{ from, to }` and `to` hangs from `from` (`kind: 'child'`, the default):
+      these lines alone make the tree, what opens and closes, what a closed thing hides, the ranks and the keys. With
+      `kind: 'link'` the line joins two things without any of that (one waits for the other, refers to it, never goes
+      with it) and is drawn while both ends are in sight. Any line may have `label` (words in its middle: keep them
+      short, the gap between two ranks is 56 px), `style` (`solid`, `dashed`, `dotted`), `tone` (`default`, `accent`,
+      which is also thicker, `warning`, `destructive`: the theme's, at 3:1 or more on the canvas) and `directed` (an
+      arrowhead at `to`; a `link` has one unless `false`, a `child` line none unless `true`). What a kind of line
+      means is told by its dash and its words, never by its colour alone. Screen readers hear a thing's `link` lines
+      in its description («waits for, to Screens»); the lines themselves are not read twice.
+    - `steps`, a `Map` from a thing's id to its step numbers, numbers a path through the graph (the steps of a plan,
+      the answer to a question): each thing on it has the selection tint, its numbers in small dots and in its name
+      («Copy, step 2»); the lines between two of them take the accent; what is neither on it nor joined to it is
+      dimmed (the field's finds come first, then the chosen thing and the path together). When the things on the path
+      change, what hides one of them opens, through `onCollapsedChange` when the app keeps `collapsed`; the user may
+      close it again.
+    - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
+      with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
+      whole graph down to 0.2, as before 3.4.0). A graph too large for that starts at its top left. The edges of the
+      canvas fall between things, never across one: the view moves a little, or is a little smaller or larger, until
+      they do. The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
+      (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
+      entry of `dist` takes `react` (each is an ES module with no `require`).
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -286,6 +309,14 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   import { GraphCanvas } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+
+  // A path of two steps, a line that waits and one that never goes together; the view moved by the app.
+  const view = useRef<GraphCanvasHandle>(null)
+  <GraphCanvas ref={view} aria-label="Plan" nodes={nodes} className="h-full"
+    edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
+      { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
+    steps={new Map([['copy', [1]], ['pages', [2]]])} />
+  <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
