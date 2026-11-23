@@ -43,6 +43,7 @@ const ITALIAN: WordsOverride = {
   date: { noDate: 'Nessuna data', noDateTime: 'Nessuna data e ora', clear: 'Togli la data', time: 'Ora', timeOfDay: 'Ora del giorno', done: 'Fatto', calendar: 'Calendario', previous: (span) => `Precedente: ${span}`, next: (span) => `Successivo: ${span}` },
   duration: { hours: 'ore', minutes: 'minuti', none: 'Nessuna', short: (h, m) => (h > 0 ? `${h} h` : `${m} min`) },
   search: { clear: 'Svuota la ricerca' },
+  copy: { copy: 'Copia', copied: 'Copiato', failed: 'Copia non riuscita' },
   combobox: { empty: 'Nessun risultato', trigger: 'Mostra le opzioni' },
   labels: { remove: (l) => `Togli l’etichetta ${l}`, count: (n) => (n === 1 ? '1 etichetta' : `${n} etichette`), suggestions: 'Suggerimenti' },
   kinds: { text: 'testo', file: 'file', email: 'messaggio', link: 'collegamento' },

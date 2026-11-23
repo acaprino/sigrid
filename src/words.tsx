@@ -75,6 +75,14 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  readonly copy: {
+    /** The name of a `CopyButton` that was given none. */
+    readonly copy: string
+    /** Shown and said right after the text is on the clipboard. */
+    readonly copied: string
+    /** Said when the system refused the clipboard. */
+    readonly failed: string
+  }
   readonly list: {
     /** Read before the title of a row not read yet (`ItemRow`). */
     readonly unread: string
@@ -313,6 +321,11 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  copy: {
+    copy: 'Copy',
+    copied: 'Copied',
+    failed: 'Could not copy',
   },
   list: {
     unread: 'Unread',

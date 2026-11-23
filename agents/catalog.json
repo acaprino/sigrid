@@ -1552,6 +1552,71 @@
      ]
     },
     {
+     "file": "src/components/ui/copy-button.tsx",
+     "about": "A button that puts a text on the clipboard and says that it did. After the press the copy icon is a check and the\nword is «Copied» for two seconds, then both go back: the answer is where the eye already is, so no notice is needed\n(a toast is for an action that can be taken back). Nothing moves: the icon keeps its box and the word the room of\nthe wider of its two texts. Screen readers hear «Copied» (a polite status), or that the system refused.\nAlone it is a quiet icon button with a hint; with `showLabel` it shows its word; in an `InputGroup` it takes the\nsize of the group's buttons and is off with the field.",
+     "components": [
+      {
+       "name": "CopyButton",
+       "props": [
+        {
+         "name": "variant",
+         "type": "\"link\" | \"default\" | \"secondary\" | \"destructive\" | \"outline\" | \"ghost\" | null"
+        },
+        {
+         "name": "size",
+         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The button goes down a little while pressed (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "hoverScale",
+         "type": "number",
+         "doc": "Scale under the pointer, with `animated`. Default 1: still."
+        },
+        {
+         "name": "tapScale",
+         "type": "number",
+         "doc": "Override the default press scale (0.96 with at most 2px of travel per edge)."
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text put on the clipboard."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the action («Copy the link»): the accessible name, the hint, and the word with `showLabel`. Absent: the toolkit's word («Copy»)."
+        },
+        {
+         "name": "showLabel",
+         "type": "boolean",
+         "doc": "The word beside the icon. Without it the button shows the icon alone."
+        },
+        {
+         "name": "onCopied",
+         "type": "((value: string) => void)",
+         "doc": "Called once the text is on the clipboard."
+        },
+        {
+         "name": "onCopyError",
+         "type": "((error: unknown) => void)",
+         "doc": "Called when the system refused the clipboard."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "COPIED_MS",
+      "CopyButtonProps"
+     ]
+    },
+    {
      "file": "src/components/ui/count.tsx",
      "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`.",
      "components": [
@@ -4255,7 +4320,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifica…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifica…",
          "required": true
         },
         {
@@ -6041,6 +6106,11 @@
          "required": true
         },
         {
+         "name": "copy",
+         "type": "{ readonly copy: string; readonly copied: string; readonly failed: string; }",
+         "required": true
+        },
+        {
          "name": "list",
          "type": "{ readonly unread: string; readonly more: (count: number) => string; }",
          "required": true
@@ -6158,6 +6228,10 @@
         {
          "name": "search",
          "type": "Partial<{ readonly clear: string; }>"
+        },
+        {
+         "name": "copy",
+         "type": "Partial<{ readonly copy: string; readonly copied: string; readonly failed: string; }>"
         },
         {
          "name": "list",
@@ -6822,7 +6896,7 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifications\" | \"settin…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifications\" | \"settin…",
          "doc": "An icon of the user's pack before the name."
         },
         {

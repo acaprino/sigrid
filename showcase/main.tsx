@@ -37,6 +37,7 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  CopyButton,
   InputGroup,
   InputGroupButton,
   InputGroupText,
@@ -1451,7 +1452,7 @@ function Pickers() {
   const [labels, setLabels] = React.useState(['Home'])
   const [panel, setPanel] = React.useState(false)
   return (
-    <Section id="pickers" title="Slider, SearchField, InputGroup, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a choice from a list filtered while typing; a person as a neutral round tile.">
+    <Section id="pickers" title="Slider, SearchField, InputGroup, CopyButton, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a button that copies and says so; a choice from a list filtered while typing; a person as a neutral round tile.">
       <Row label="slider">
         <div className="flex w-64 flex-col gap-2">
           <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
@@ -1467,7 +1468,7 @@ function Pickers() {
       </Row>
       <Row label="field with parts">
         <FormField label="Site" className="w-64">
-          <InputGroup start={<InputGroupText>https://</InputGroupText>} end={<InputGroupButton label="Copy the address" icon={<Icon name="copy" />} />} value={site} onChange={(event) => setSite(event.target.value)} />
+          <InputGroup start={<InputGroupText>https://</InputGroupText>} end={<CopyButton value={`https://${site}`} label="Copy the address" />} value={site} onChange={(event) => setSite(event.target.value)} />
         </FormField>
         <FormField label="Password" className="w-64">
           <InputGroup type={shown ? 'text' : 'password'} defaultValue="correct horse" end={<InputGroupButton label="Show" pressed={shown} onClick={() => setShown(!shown)} />} />
@@ -1478,6 +1479,11 @@ function Pickers() {
         <FormField label="Coupon" className="w-64">
           <InputGroup disabled defaultValue="SPRING" end={<InputGroupButton label="Apply" />} />
         </FormField>
+      </Row>
+      <Row label="copy">
+        <CopyButton value="SIGRID-2026" label="Copy the code" />
+        <CopyButton value="SIGRID-2026" label="Copy the code" showLabel variant="outline" />
+        <CopyButton value="SIGRID-2026" label="Copy the code" showLabel disabled />
       </Row>
       <Row label="combobox">
         <FormField label="Assignee" className="w-64">

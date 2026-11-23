@@ -12,8 +12,13 @@ import { Button } from "./button"
 import { Tooltip } from "./tooltip"
 import { cn } from "../../lib/utils"
 
-/** The buttons of a field that is off are off too. */
-const GroupDisabledContext = React.createContext(false)
+/** Inside a group, and whether its field is off: the buttons of a field that is off are off too. `null` outside one. */
+const InputGroupContext = React.createContext<{ disabled: boolean } | null>(null)
+
+/** For a button of the toolkit that may stand in a group (`CopyButton`): the group around it, or `null`. */
+export function useInputGroup(): { disabled: boolean } | null {
+  return React.useContext(InputGroupContext)
+}
 
 export type InputGroupProps = Omit<React.ComponentProps<"input">, "children"> & {
   /** What stands before the text: an `InputGroupText`, an `InputGroupButton`, or a few of them. */
@@ -45,9 +50,10 @@ function InputGroup({ start, end, className, disabled, ref, ...props }: InputGro
     },
     [ref],
   )
+  const group = React.useMemo(() => ({ disabled: disabled === true }), [disabled])
   const has = (part: React.ReactNode) => part !== undefined && part !== null && part !== false
   return (
-    <GroupDisabledContext.Provider value={disabled === true}>
+    <InputGroupContext.Provider value={group}>
       <div
         data-slot="input-group"
         className={cn(GROUP_CLASS, className)}
@@ -76,7 +82,7 @@ function InputGroup({ start, end, className, disabled, ref, ...props }: InputGro
           </div>
         ) : null}
       </div>
-    </GroupDisabledContext.Provider>
+    </InputGroupContext.Provider>
   )
 }
 
@@ -111,8 +117,7 @@ export type InputGroupButtonProps = Omit<React.ComponentProps<"button">, "childr
  * fill and no border. It is off when its field is.
  */
 function InputGroupButton({ label, icon, pressed, animated, disabled, className, ...props }: InputGroupButtonProps) {
-  const groupDisabled = React.useContext(GroupDisabledContext)
-  const off = disabled || groupDisabled
+  const off = disabled || useInputGroup()?.disabled === true
   if (icon === undefined || icon === null || icon === false) {
     return (
       <Button variant="ghost" size="xs" data-slot="input-group-button" aria-pressed={pressed} disabled={off} className={className} {...props}>
