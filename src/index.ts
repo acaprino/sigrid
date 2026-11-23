@@ -61,6 +61,16 @@ export { ToggleGroup, ToggleGroupItem, type ToggleGroupItemProps, type ToggleGro
 export { Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTab, ToolbarTabs, ToolbarTitle, type ToolbarBrandProps, type ToolbarButtonProps, type ToolbarGroupProps, type ToolbarProps, type ToolbarSearchProps, type ToolbarTabProps, type ToolbarTabsProps } from './components/ui/toolbar'
 export { TOOLTIP_DELAY_MS, Tooltip, type TooltipProps } from './components/ui/tooltip'
 export { Tree, type TreeNode, type TreeProps } from './components/ui/tree'
+// The parts an app composes a screen of with no class of its own: a card, a heading, a dot, a line, the facts of one
+// thing, a choice of a settings page, a row of the sidebar's head or foot, the button that opens the sidebar's drawer.
+export { Card, type CardProps } from './components/ui/card'
+export { DescriptionList, type DescriptionItem, type DescriptionListProps } from './components/ui/description-list'
+export { Dot, type DotProps } from './components/ui/dot'
+export { DrawerButton, type DrawerButtonProps } from './components/ui/drawer-button'
+export { Heading, type HeadingProps } from './components/ui/heading'
+export { Separator, type SeparatorProps } from './components/ui/separator'
+export { SettingRow, type SettingRowProps } from './components/ui/setting-row'
+export { SidebarRow, type SidebarRowProps } from './components/ui/sidebar-row'
 export { Collapsible, Field, PopoverPrimitive } from './components/ui/headless'
 export type InputProps = React.ComponentProps<typeof import('./components/ui/input').Input>
 export type TextareaProps = React.ComponentProps<typeof import('./components/ui/textarea').Textarea>

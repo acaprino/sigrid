@@ -1,8 +1,9 @@
 // What a component of the editor draws, as data: a small tree of elements, with the few expressions an app needs
 // (a value kept in state, the function that changes it, going to a screen). One description serves three readers,
 // so they cannot disagree: the canvas and the run page turn it into React (render.tsx), and the export prints it as
-// the source of an app (codegen.ts). An element names what it is by its tag: a part of the toolkit («Button»), one of
-// the few helpers the generated app defines itself («MenuButton»), or an HTML element («div»).
+// the source of an app (codegen.ts). An element names what it is by its tag: a part of the toolkit («Button»,
+// «Column»), or a fragment. Never an HTML element or a class: an app the editor makes writes no class of its own
+// (test/editor-export.test.ts).
 import type * as React from 'react'
 
 /** The names an expression can read while the app runs: the state, its setters, and what the frame provides. */

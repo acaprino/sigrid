@@ -3,7 +3,10 @@
 // type-checked against the toolkit as it is now, for every app the editor starts from and for one that holds every
 // component of its catalogue in every setting that changes what is printed. A prop of a part that is renamed, or a
 // part that goes, fails here, before someone exports an app that does not compile.
-import { mkdirSync, writeFileSync } from 'node:fs'
+// The source is made of the toolkit's parts and nothing else (AGENTS.md, «One look for every app»): no class, no
+// inline style and no HTML element of its own, in the apps it exports and in the examples written from it for agents
+// (`agents/examples`, scripts/agents.mjs), which `sigrid-check` with `own-class` on passes.
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
@@ -193,4 +196,37 @@ test('the zip of an export holds every file, stored, with its checksum', () => {
   const text = new TextDecoder().decode(bytes.subarray(30 + name.length, 30 + name.length + view.getUint32(18, true)))
   expect(text).toBe(files[0]!.text)
   expect(files.find((file) => file.path === 'package.json')!.text).toContain('/v1.2.3/acaprino-sigrid-1.2.3.tgz')
+})
+
+/**
+ * What an app that writes no interface code of its own does not have: a class (`className=`, `class=`, a `…ClassName`
+ * prop, `className:` in an object: the pattern of `sigrid-check`'s `own-class`), an inline style, or an element of HTML
+ * (a lowercase tag) where a part of the toolkit belongs.
+ */
+const OWN_CLASS = /(?<![\w$-])(?:class|className|[a-z]\w*ClassName)\s*(?:=(?!=)|\+=|:(?!:))|\bclassList\.(?:add|toggle|replace)\s*\(|\bsetAttribute\(\s*['"]class['"]/
+const STYLE = /(?<![\w$-])style\s*(?:=(?!=)|:(?!:))/
+const ELEMENT = /(?<![\w$.])<[a-z][\w-]*[\s/>]/
+/** The source without the words in quotes: a notice that says «<here>» is text, not an element. */
+const code = (source: string) => source.replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, "''")
+
+test('an exported app is made of the toolkit\'s parts only: no class, no style, no element of its own', () => {
+  const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
+  for (const [id, app] of Object.entries(apps)) {
+    const source = code(appSource(app))
+    expect(source, `${id}: a class`).not.toMatch(OWN_CLASS)
+    expect(source, `${id}: a style`).not.toMatch(STYLE)
+    expect(source, `${id}: an element of its own`).not.toMatch(ELEMENT)
+  }
+})
+
+test('the examples written for agents carry no class, no style and no element of their own', () => {
+  const folder = join(root, 'agents/examples')
+  const files = readdirSync(folder).filter((file) => file.endsWith('.tsx'))
+  expect(files.length).toBeGreaterThan(0)
+  for (const file of files) {
+    const source = readFileSync(join(folder, file), 'utf8')
+    expect(source, `${file}: a class`).not.toMatch(OWN_CLASS)
+    expect(source, `${file}: a style`).not.toMatch(STYLE)
+    expect(source, `${file}: an element of its own`).not.toMatch(ELEMENT)
+  }
 })

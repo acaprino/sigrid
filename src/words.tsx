@@ -69,6 +69,8 @@ export interface Words {
     readonly search: string
     /** Said when no row holds the text searched for: by the sidebar's search, and by a `Tree`'s filter. */
     readonly empty: string
+    /** The button in the bar that opens the sidebar where the frame has made it a drawer (`DrawerButton`). */
+    readonly open: string
   }
   readonly search: {
     readonly clear: string
@@ -338,6 +340,7 @@ export const DEFAULT_WORDS: Words = {
     expand: 'Expand the sidebar',
     search: 'Search the menu',
     empty: 'No results',
+    open: 'Open the menu',
   },
   search: {
     clear: 'Clear the search',

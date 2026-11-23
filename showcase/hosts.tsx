@@ -12,21 +12,21 @@
 // (`touchDensity`, phone.tsx says why), and the overlays of an app open inside its frame, in a layer of their own.
 // Each app brings its own theme (the toolkit ships none): it is put on the frame, in the scheme and the shape chosen
 // for the page in Look, so the two apps are told apart by their colour as two windows of the suite are.
+// A host is the window the app's frame fills: the app writes no height (no `h-full` around or on `AppShell`), and the
+// host says how tall its window is (`--app-height`, the height `AppShell` takes, is the whole of the host's box). It
+// also names the app it holds (`data-app`), so the keys of one example run only while the focus is in it
+// (`CommandsProvider keysIn`): the four examples share one page, and a key of one is not a key of the others.
 import * as React from 'react'
-import { PanelLeft } from 'lucide-react'
 import {
   PortalContainerProvider,
   TitleBar,
   Toasts,
   Toolbar,
-  ToolbarButton,
   WindowControls,
   applyTheme,
   cn,
   densityOf,
   densityVariables,
-  markHueAttrs,
-  useAppShell,
   type DensityDef,
   type DensityId,
   type ThemeDef,
@@ -88,16 +88,6 @@ export function HomeIndicator() {
   )
 }
 
-/** A data colour as it may be drawn: an 8px dot (R10). */
-export function Dot({ color }: { color: string }) {
-  return <span {...markHueAttrs(color)} data-mark-dot="" className="size-2 shrink-0 rounded-full bg-(--mark-dot)" />
-}
-
-/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
-export function MenuButton({ onOpen, animated }: { onOpen: () => void; animated: boolean }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} animated={animated} /> : null
-}
-
 /**
  * The bar at the head of an app, in its host. In a browser it is a top bar and nothing more. In a Tauri window on a
  * computer it is the window's bar: the host's drag mark on its empty parts and the three buttons at its end (here
@@ -118,13 +108,9 @@ export function AppBar({ device, host, label, overlays, children }: Pick<Setup, 
   )
 }
 
-/** True for a key press the app may take as one of its own keys: not in a field, and with no modifier. */
-export function isAppKey(event: React.KeyboardEvent): boolean {
-  const target = event.target as HTMLElement
-  return !event.ctrlKey && !event.metaKey && !event.altKey && !target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
-}
-
 export type HostProps = Setup & {
+  /** The app it holds, as a word («ethel»): the place its keys are read in (`appKeys`). */
+  app: string
   /** The app's own theme. */
   theme: ThemeDef
   look: Look
@@ -135,12 +121,19 @@ export type HostProps = Setup & {
   /** The notices of the app, drawn at the foot of its frame as `Toasts` draws them at the foot of a window. */
   notices?: ToastItem[]
   onDismiss?: (id: string) => void
-  className?: string
+  /** A desktop window as wide as the page lets it be (up to 1200px) and 760px tall: for an app whose work needs the room. */
+  wide?: boolean
   children: React.ReactNode
 }
 
 /** One of the four hosts, with the app inside it. */
-export function Host({ device, host, animated, theme, look, address, density, notices = [], onDismiss, className, children }: HostProps) {
+/** Where the keys of the app in a host are read: inside its frame (`CommandsProvider keysIn`). */
+export const appKeys = (app: string) => `[data-app="${app}"]`
+
+/** The host is the window: the frame of the app inside it is as tall as the host's box. */
+const WINDOW = { '--app-height': '100%' } as React.CSSProperties
+
+export function Host({ app, device, host, animated, theme, look, address, density, notices = [], onDismiss, wide = false, children }: HostProps) {
   const frame = React.useRef<HTMLDivElement>(null)
   const region = React.useRef<HTMLDivElement>(null)
   const [layer, setLayer] = React.useState<HTMLDivElement | null>(null)
@@ -168,14 +161,15 @@ export function Host({ device, host, animated, theme, look, address, density, no
     <div
       ref={frame}
       data-sample="example"
+      data-app={app}
       data-device={device}
       data-host={host}
       data-density={measures.id}
       style={{ ...densityVariables(measures) }}
-      className={cn('relative flex flex-col overflow-hidden rounded-lg bg-paper text-ink shadow-lg', phone ? 'h-190 w-97.5 max-w-full' : 'h-160 w-260', className)}
+      className={cn('relative flex flex-col overflow-hidden rounded-lg bg-paper text-ink shadow-lg', phone ? 'h-190 w-97.5 max-w-full' : wide ? 'h-190 w-full max-w-300' : 'h-160 w-260')}
     >
       {host === 'web' ? <Address address={address} device={device} /> : phone ? <Clock /> : null}
-      <div ref={region} data-host-region="" className="relative min-h-0 flex-1">
+      <div ref={region} data-host-region="" style={WINDOW} className="relative min-h-0 flex-1">
         <PortalContainerProvider container={layer}>{children}</PortalContainerProvider>
         {/* Where the overlays of the app open: a layer of the frame, which also holds what is `fixed` inside it. */}
         <div ref={setLayer} data-host-layer="" className="pointer-events-none absolute inset-0 z-40 transform-gpu *:pointer-events-auto" />

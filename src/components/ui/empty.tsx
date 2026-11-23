@@ -1,6 +1,7 @@
 // SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)
 // From SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s
-// (`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no
+// (`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). With `fill` it is the whole of a view
+// that has nothing to show: as tall as its region, centred in it, with a page's margins, so an app writes no class for it. Adapted: words only, no
 // illustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,
 // `text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:
 // empty states sit inside views that already have their own titles, and the title can be markup from the caller
@@ -21,6 +22,8 @@ export type EmptyProps = Omit<React.ComponentProps<"div">, "title"> & {
   icon?: React.ReactNode
   /** Classes for the title, in place of the default ones where they overlap. */
   titleClassName?: string | undefined
+  /** The whole of a view: as tall as the region it is in, centred in it, with the margins of a page (24px). */
+  fill?: boolean | undefined
 }
 
 /**
@@ -28,9 +31,9 @@ export type EmptyProps = Omit<React.ComponentProps<"div">, "title"> & {
  * steps: the title says what happened with its particulars («240 € sent to Sam Lee»), the sentence what happens next,
  * the action moves on. A task of several steps never ends on a notice alone.
  */
-function Empty({ action, className, description, icon, title, titleClassName, ...props }: EmptyProps) {
+function Empty({ action, className, description, icon, title, titleClassName, fill = false, ...props }: EmptyProps) {
   return (
-    <div data-slot="empty" className={cn("flex w-full flex-col items-center justify-center gap-2 text-center", className)} {...props}>
+    <div data-slot="empty" data-fill={fill || undefined} className={cn("flex w-full flex-col items-center justify-center gap-2 text-center", fill && "h-full p-6", className)} {...props}>
       {icon ? (
         <div aria-hidden="true" data-slot="empty-icon" className="mb-1 flex items-center justify-center text-ink-mute [&_svg]:size-4">
           {icon}

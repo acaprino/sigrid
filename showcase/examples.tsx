@@ -1,8 +1,9 @@
-// The Examples view of the showcase: three apps of the suite as they would be made with the toolkit, two of them in each of
-// their four hosts (a computer or a phone, a browser tab or a native app in Tauri). They are sketches with made-up content, close
-// to the real apps and not copies of them: what they show is which parts make a whole app (`AppShell` and its regions,
-// the bar, the lists, what opens), and what changes with the host and what does not. The apps are in ethel.tsx and
-// qamille.tsx, the hosts in hosts.tsx; nothing here is part of the package, and the toolkit itself still knows no app.
+// The Examples view of the showcase: four apps of the suite as they would be made with the toolkit, two of them in each of
+// their four hosts (a computer or a phone, a browser tab or a native app in Tauri), the other two as a native app on a
+// computer. They are sketches with made-up content, close to the real apps and not copies of them: what they show is
+// which parts make a whole app (`AppShell` and its regions, the bar, the lists, what opens), and what changes with the
+// host and what does not. The apps are in ethel.tsx, qamille.tsx, shinatama.tsx and xiox.tsx, the hosts in hosts.tsx;
+// nothing here is part of the package, and the toolkit itself still knows no app.
 // `?device=phone&host=native` opens both examples in that host.
 import * as React from 'react'
 import { ToggleGroup, ToggleGroupItem, type DensityId } from '../src/index'
@@ -67,7 +68,7 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
   return (
     <Page
       title="Examples"
-      lead="Three apps of the suite as they would be made with the toolkit: Ethel, a to-do list, Qamille, a mail client, and Shinatama, a workspace for terminal agents. Ethel and Qamille on a computer and on a phone, in a browser tab and as a native app in Tauri; Shinatama only as a native app on a computer. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
+      lead="Four apps of the suite as they would be made with the toolkit: Ethel, a to-do list, Qamille, a mail client, Shinatama, a workspace for terminal agents, and Xiox, a cleaner. Ethel and Qamille on a computer and on a phone, in a browser tab and as a native app in Tauri; Shinatama and Xiox only as a native app on a computer. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
     >
       <Section id="examples-ethel" icon="tasks" title="Ethel, a to-do list" note="One list to get through, one task at a time. On a computer the lists are the sidebar and the task chosen is in the inspector; on a phone the views are tabs at the foot, a task is a page, and adding is a sheet from the foot.">
         <Example name="Ethel" animated={animated} density={density} look={look} app={Ethel} caveat={{ phone: 'Ethel today is a Windows program and an installable web app: the phone in Tauri is drawn as it would be.' }} />

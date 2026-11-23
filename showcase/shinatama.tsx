@@ -11,24 +11,35 @@
 //   Sessions view tiles the terminals. The inspector: the Sessions panel (running, saved), open on a wide frame.
 // - The notice at the foot is what Shinatama's widget does: a terminal asks for the person, and one press opens it.
 // Left out on purpose: the ONI look and the glass (Sigrid has neither), the mascot of the widget, the other views.
+// Outside the GAPs it writes no class: the layout is `Column` and `Cluster`, the words `Text`, the dot of a state `Dot`,
+// the rows of the sidebar's head and foot `SidebarRow`, and the keys are commands of the registry (`useCommand`), which
+// the foot lists (`KeyHints`).
 import * as React from 'react'
 import {
   AppShell,
   Button,
   Checkbox,
+  Cluster,
+  Column,
+  CommandsProvider,
   Count,
+  Dot,
   Empty,
   Icon,
   Inspector,
   ItemList,
   ItemRow,
-  Kbd,
+  KeyHints,
   MarkdownBlocks,
   NavItem,
   SearchField,
+  Section,
   Select,
   Sidebar,
   SidebarGroup,
+  SidebarRow,
+  Spacer,
+  Text,
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
@@ -40,10 +51,11 @@ import {
   Tree,
   cn,
   colorTheme,
+  useCommand,
   type ToastItem,
   type TreeNode,
 } from '../src/index'
-import { AppBar, Host, type AppProps } from './hosts'
+import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Shinatama's own theme: its rose (hue 355 in Imago; this hex is the nearest one picked by eye, not measured). */
 const THEME = colorTheme({ id: 'shinatama', label: 'Shinatama', color: '#b8326a', spot: 'balanced' })
@@ -239,7 +251,16 @@ function TerminalPane({ pane, focused, onFocus }: { pane: Pane; focused: boolean
   )
 }
 
-export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+/** Shinatama in its window, with the registry of its keys around it: they run while the focus is in the window. */
+export function Shinatama(props: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+  return (
+    <CommandsProvider keysIn={appKeys('shinatama')} palette={false}>
+      <ShinatamaApp {...props} />
+    </CommandsProvider>
+  )
+}
+
+function ShinatamaApp({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
   const [view, setView] = React.useState<string>('Workspace')
   const [thread, setThread] = React.useState('shell')
   const [focus, setFocus] = React.useState('p4')
@@ -249,29 +270,35 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
   const [filter, setFilter] = React.useState('')
   const [project, setProject] = React.useState('all')
   const [archived, setArchived] = React.useState(false)
-  const [notices, setNotices] = React.useState<readonly { id: string; text: string }[]>([{ id: 'n1', text: 'Needs your answer: billing-service · Codex' }])
+  const [notices, setNotices] = React.useState<readonly { id: string; text: string; asks?: boolean }[]>([{ id: 'n1', text: 'Needs your answer: billing-service · Codex', asks: true }])
   const dismiss = React.useCallback((id: string) => setNotices((list) => list.filter((n) => n.id !== id)), [])
-  const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, actions: [{ label: 'Terminal', items: [{ id: 'open', label: 'Open session', onClick: () => { setFocus('p1'); setView('Sessions'); dismiss(n.id) } }] }] }))
+  // A notice of a terminal that asks for the person opens it in one press; the others only say.
+  const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, ...(n.asks ? { actions: [{ label: 'Terminal', items: [{ id: 'open', label: 'Open session', onClick: () => { setFocus('p1'); setView('Sessions'); dismiss(n.id) } }] }] } : {}) }))
+  const count = React.useRef(1)
+  const newSession = () => setNotices((list) => [...list, { id: `n${(count.current += 1)}`, text: 'A new session would start here: the trial draws no new terminal' }])
+  // The key of «New session», declared once: it runs from anywhere in the window, and the foot names it.
+  useCommand({ id: 'new-session', label: 'New session', keys: 'Ctrl+Shift+T', run: newSession })
 
   const sidebar = (
     <Sidebar
       aria-label="Threads"
       animated={animated}
       header={
-        // GAP: a sidebar heading with its count and its actions: the app's own markup.
-        <div className="flex items-center gap-1 ps-2">
-          <h2 className="text-sm font-semibold text-sidebar-ink">Threads</h2>
-          <Count value={1} label="running" />
-          <span className="flex-1" />
-          <Button variant="ghost" size="xs" aria-label="Add a project folder"><Icon name="newFolder" /></Button>
-          <Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>
-        </div>
+        <SidebarRow
+          end={
+            <>
+              <Button variant="ghost" size="xs" aria-label="Add a project folder"><Icon name="newFolder" /></Button>
+              <Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>
+            </>
+          }
+        >
+          <Text variant="strong">Threads</Text> <Count value={1} label="running" />
+        </SidebarRow>
       }
       footer={
-        <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-          <Checkbox aria-label="Show archived threads" checked={archived} onCheckedChange={(next) => setArchived(next === true)} animated={animated} />
-          <span className="min-w-0 flex-1 truncate">Show archived threads</span>
-        </div>
+        <SidebarRow leading={<Checkbox aria-label="Show archived threads" checked={archived} onCheckedChange={(next) => setArchived(next === true)} animated={animated} />}>
+          Show archived threads
+        </SidebarRow>
       }
     >
       {/* GAP: a group heading with its count (9) and its actions (new thread, close): SidebarGroup has a label and an icon only. */}
@@ -313,11 +340,11 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         ))}
       </ToolbarTabs>
       <ToolbarSpacer />
-      <ToolbarButton label="New session" variant="default" icon={<Icon name="plus" />} keepWord animated={animated}>
+      <ToolbarButton label="New session" variant="default" icon={<Icon name="plus" />} keepWord onClick={newSession} animated={animated}>
         New session
       </ToolbarButton>
       {/* The resources as a dot in the status colour, with their state as the name (R2: a colour is never alone). */}
-      <ToolbarButton label="Resources: available" icon={<span aria-hidden="true" className="size-2 rounded-full bg-success" />} animated={animated} />
+      <ToolbarButton label="Resources: available" icon={<Dot tone="success" />} animated={animated} />
       <ToolbarButton label="More" variant="outline" animated={animated}>More</ToolbarButton>
     </>
   )
@@ -344,64 +371,54 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         ))}
       </div>
     ) : (
-      <Empty className="h-full p-6" title={view} description="The trial stops here: the Workspace and Sessions views are drawn." />
+      <Empty fill title={view} description="The trial stops here: the Workspace and Sessions views are drawn." />
     )
 
   return (
-    <Host device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="shinatama" notices={toasts} onDismiss={dismiss} className="h-190 w-full max-w-300">
-      <div className="h-full">
-        <AppShell
-          // A box of the page's own (the host's window), maybe taller than the window: the frame fills the box.
-          className="h-full"
-          desktop
-          frame="sheet"
-          contentLabel={view}
-          titleBar={<AppBar device="desktop" host="native" label="Shinatama">{bar}</AppBar>}
-          sidebar={sidebar}
-          inspector={
-            <Inspector title="Sessions" open={sessions} onOpenChange={setSessions} animated={animated}>
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                  <SearchField value={filter} onValueChange={setFilter} aria-label="Filter the sessions" placeholder="Filter" className="min-w-0 flex-1" />
-                  <Select size="sm" aria-label="Project" options={[{ value: 'all', label: 'All projects' }, ...PROJECTS.map((p) => ({ value: p, label: p }))]} value={project} onValueChange={setProject} className="w-36 shrink-0" />
-                </div>
-                <section aria-label="Running" className="flex flex-col gap-1">
-                  <h3 className="text-sm font-semibold text-ink">Running</h3>
-                  <p className="text-sm text-ink-mute">No session is running.</p>
-                </section>
-                <section aria-label="Saved" className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="flex-1 text-sm font-semibold text-ink">Saved</h3>
-                    <Button variant="ghost" size="xs"><Icon name="refresh" />Reload</Button>
-                  </div>
-                  <ItemList aria-label="Saved sessions">
-                    {SAVED.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase())).map((s) => (
-                      <ItemRow key={s.id} title={s.name} description={s.note} leading={<Icon name="history" />} />
-                    ))}
-                  </ItemList>
-                </section>
-              </div>
-            </Inspector>
-          }
-          footer={
-            <>
-              {/* What the app says gives way first, cut with an ellipsis; the keys stay whole. */}
-              <span className="flex min-w-0 items-center gap-3 overflow-hidden whitespace-nowrap">
-                <span>Local runtime · experimental</span>
-                <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="size-2 rounded-full bg-success" />Resources: available</span>
-                <span className="tabular-nums">4 terminals</span>
-                <span className="truncate">Workspace 1 pane</span>
-              </span>
-              <span className="ms-auto inline-flex shrink-0 items-center gap-3 whitespace-nowrap">
-                <span className="inline-flex items-center gap-1"><Kbd>Ctrl K</Kbd> commands</span>
-                <span className="inline-flex items-center gap-1"><Kbd>Ctrl Shift T</Kbd> new session</span>
-              </span>
-            </>
-          }
-        >
-          {content}
-        </AppShell>
-      </div>
+    <Host app="shinatama" device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="shinatama" notices={toasts} onDismiss={dismiss} wide>
+      <AppShell
+        desktop
+        frame="sheet"
+        contentLabel={view}
+        titleBar={<AppBar device="desktop" host="native" label="Shinatama">{bar}</AppBar>}
+        sidebar={sidebar}
+        inspector={
+          <Inspector title="Sessions" open={sessions} onOpenChange={setSessions} animated={animated}>
+            <Column gap="lg">
+              <Cluster wrap={false}>
+                <SearchField value={filter} onValueChange={setFilter} aria-label="Filter the sessions" placeholder="Filter" />
+                <Select size="sm" aria-label="Project" options={[{ value: 'all', label: 'All projects' }, ...PROJECTS.map((p) => ({ value: p, label: p }))]} value={project} onValueChange={setProject} />
+              </Cluster>
+              <Section title="Running" level={3} icon={<Icon name="play" />} gap="xs">
+                <Text as="p" variant="muted">No session is running.</Text>
+              </Section>
+              <Section title="Saved" level={3} icon={<Icon name="history" />} gap="xs" end={<Button variant="ghost" size="xs"><Icon name="refresh" />Reload</Button>}>
+                <ItemList aria-label="Saved sessions">
+                  {SAVED.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase())).map((s) => (
+                    <ItemRow key={s.id} title={s.name} description={s.note} leading={<Icon name="history" />} />
+                  ))}
+                </ItemList>
+              </Section>
+            </Column>
+          </Inspector>
+        }
+        footer={
+          <>
+            <Text>Local runtime · experimental</Text>
+            <Cluster gap="xs" wrap={false}>
+              <Dot tone="success" />
+              <Text>Resources: available</Text>
+            </Cluster>
+            <Text>4 terminals</Text>
+            <Text>Workspace 1 pane</Text>
+            <Spacer />
+            {/* Ctrl K is the app's palette, which this trial does not draw: a key with its name, not a command here. */}
+            <KeyHints ids={[{ keys: 'Ctrl+K', label: 'Commands' }, 'new-session']} />
+          </>
+        }
+      >
+        {content}
+      </AppShell>
     </Host>
   )
 }

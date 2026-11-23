@@ -11,6 +11,8 @@
 // tokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,
 // `pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),
 // only after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.
+// With `label` the box comes with its words: one `<label>` around both, so a press on the words checks it too, the
+// row as tall as the smallest control (44px with a finger), in the text of what is around it.
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 import { cn } from "../../lib/utils"
@@ -34,6 +36,8 @@ type CheckboxOwnProps = {
   className?: string | undefined
   /** The mark appears with a short animation when the user checks (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
+  /** Its words, beside it: a press on them checks it too, and they name it for screen readers. */
+  label?: React.ReactNode
 }
 
 /** The `<button>` attributes (ref, `aria-*`, `data-*`, handlers) go on the control. */
@@ -53,6 +57,7 @@ function Checkbox({
   id,
   className,
   animated,
+  label,
   ...props
 }: CheckboxOwnProps & CheckboxNativeProps) {
   const motion = useMotion(animated)
@@ -73,7 +78,7 @@ function Checkbox({
     },
     [motion]
   )
-  return (
+  const box = (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       data-state={state}
@@ -120,6 +125,13 @@ function Checkbox({
         </svg>
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
+  )
+  if (label == null || label === false || label === "") return box
+  return (
+    <label data-slot="checkbox-label" className="flex min-h-(--control-xs) min-w-0 items-center gap-2 text-sm pointer-coarse:min-h-11">
+      {box}
+      <span className="min-w-0">{label}</span>
+    </label>
   )
 }
 

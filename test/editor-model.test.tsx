@@ -44,7 +44,7 @@ test('the export passes the sheet frame to AppShell only when the app has it', (
   const workspace = appSource(starter('workspace'))
   expect(workspace).toContain('frame="sheet"')
   // Xiox's layout: the views in the bar, the Commands button, a sidebar, a status row, a panel, the details, the actions, the keys.
-  for (const part of ['<ToolbarTabs', 'label="Commands"', 'shortcut="Ctrl K"', '<Sidebar', 'status={status[screen]}', '<Panel', '<Inspector', 'actions={actions[screen]}', '<Kbd>']) expect(workspace).toContain(part)
+  for (const part of ['<ToolbarTabs', 'label="Commands"', 'shortcut="Ctrl K"', '<Sidebar', 'status={status[screen]}', '<Panel', '<Inspector', 'actions={actions[screen]}', '<KeyHints']) expect(workspace).toContain(part)
   for (const id of ['tasks', 'mail', 'blank']) expect(appSource(starter(id)), id).not.toContain('frame=')
   expect(appSource({ ...starter('tasks'), settings: { ...starter('tasks').settings, frame: 'sheet' } })).toContain('frame="sheet"')
 })
