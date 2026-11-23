@@ -61,7 +61,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
    OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
    recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
-   The layout builder's «Look» panel has it: choosing a base suggests its accents.
+   The app editor's «Look» panel has it: choosing a base suggests its accents.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
@@ -251,14 +251,29 @@ a drawer.
   or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;
   «Look» in the bar has a switch for it too, with the shape and the animations), opens what opens on a gesture and
   turns motion on. An address that opens something, or ends in `#<section>`, starts in the view that holds it.
-- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
-  are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
-  the toolkit's components are dragged from a list into a panel and up and down inside it, or set beside the one before it on the same row. The inspector holds the
-  look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
-  corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
-  motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is
-  replaced by a sentence that says why (`toneHasEffect`). What is built, look included, is kept in the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
-  pinned), drawn with the toolkit's tokens.
+- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): the app editor. A whole app is made by
+  dragging the toolkit's parts into the regions of the one frame (`AppShell`): the bar at the head, the tabs under it,
+  the sidebar, the content, the details, the actions, the strip and the bar at the foot. A region takes only what
+  belongs there (a toolbar holds actions, a sidebar holds places), as `docs/patterns.md` says. An app has screens: the
+  bar, the sidebar, the tabs and the foot are shared, the content, the details and the actions are each screen's own,
+  and a button, a row or a tab can go to a screen, open the drawer, show the details or show a notice.
+  - One layout serves a computer and a phone: a region, and any component, is there always or only where the frame is
+    narrow (under 620px) or wide. The canvas shows the app at the width of a phone, a tablet, a laptop or the room there
+    is, in a browser tab or as a native window in Tauri; for a phone it is drawn with the 44px sizes of a finger.
+  - «Run» is the app running by itself (`/run.html`, which also opens in a tab of its own, or on a phone): its
+    state, its navigation and its notices work, from the same description the export prints.
+  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`), in a project
+    that runs in a browser as it is (Vite, Tailwind, the entry file with the look) and as a native app in Tauri after
+    the steps of its README (the window's bar and buttons, the browser's keys taken away, the safe areas of a phone).
+    `test/editor-export.test.ts` type-checks that source against the toolkit, for the apps the editor starts from and
+    for one that holds every component in every setting. The app can also be saved as data and opened again.
+  - The inspector holds the component chosen, the screen, the app and the look: everything the toolkit lets an app
+    configure (scheme, the theme's two colours, the tone of the accents, the corner shape, the font, the density and
+    each of its measures, the icon pack, motion). What is made is kept in the browser.
+  - Development only. The dragging, the selection, the outline and the history are Puck's (`@puckeditor/core`, MIT, a
+    development dependency, pinned; with it come, for the showcase only, the packages it depends on, TipTap and one
+    Radix popover among them: none of it is in the package). Everything it draws is the toolkit's, and the editor
+    is itself an app in the one frame. Its pieces are in `showcase/editor/`.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
   findings in `design-check.known.json`) use the copy of the tool in `tools/zero-slop-design/` (v0.2.1, MIT); the

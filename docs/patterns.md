@@ -7,6 +7,10 @@ otherwise. The owner's rules R1 to R13 (`DESIGN.md`) are a separate matter: thos
 The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, view
 Practices, section «Layout patterns». The parts are optimized for these layouts, and work outside them too.
 
+The app editor of the showcase (`/builder.html`) is these patterns as a tool: an app is made by dragging parts into the
+regions of the frame, each region takes only what the table below puts there, and the result runs and is exported as
+source.
+
 ## Start from the one frame
 
 Use `AppShell` for the window of an app, and fill in only the regions the app needs.

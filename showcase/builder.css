@@ -1,7 +1,8 @@
-/* The layout builder: the showcase's Tailwind and the docking library's stylesheet, then the library's variables set
-   from the toolkit's tokens, so the canvas follows the theme, the scheme and the corner shape like every other part. */
+/* The app editor: the showcase's Tailwind, then the stylesheet of the library that carries the canvas (Puck, without
+   the font it would fetch from another site), then that library's own parts drawn with the toolkit's tokens, so the
+   list of components, the outline and the fields follow the theme, the scheme and the density like every other part. */
 @import "./showcase.css";
-@import "dockview-react/dist/styles/dockview.css";
+@import "@puckeditor/core/no-external.css";
 
 html,
 body,
@@ -9,44 +10,57 @@ body,
   height: 100%;
 }
 
-.sigrid-dock .dockview-theme-light {
-  --dv-group-view-background-color: var(--color-paper);
-  --dv-tabs-and-actions-container-background-color: var(--color-paper-2);
-  --dv-tabs-and-actions-container-height: var(--control-sm);
-  --dv-tabs-and-actions-container-font-size: 0.8125rem;
-  --dv-activegroup-visiblepanel-tab-background-color: var(--color-paper);
-  --dv-activegroup-visiblepanel-tab-color: var(--color-ink);
-  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
-  --dv-activegroup-hiddenpanel-tab-color: var(--color-ink-mute);
-  --dv-inactivegroup-visiblepanel-tab-background-color: var(--color-paper);
-  --dv-inactivegroup-visiblepanel-tab-color: var(--color-ink-soft);
-  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
-  --dv-inactivegroup-hiddenpanel-tab-color: var(--color-ink-mute);
-  --dv-separator-border: var(--color-line);
-  --dv-paneview-header-border-color: var(--color-line);
-  --dv-tab-divider-color: var(--color-line);
-  --dv-drag-over-background-color: color-mix(in oklab, var(--color-selected) 70%, transparent);
-  --dv-drag-over-border-color: var(--color-ring);
-  --dv-edge-dock-indicator-color: var(--color-ring);
-  --dv-icon-hover-background-color: color-mix(in oklab, var(--color-ink) 9%, transparent);
-  --dv-paneview-active-outline-color: var(--color-ring);
-  --dv-tab-border-radius: var(--radius-md);
-  --dv-floating-box-shadow: var(--shadow-lg);
-  --dv-floating-border: 0;
-  --dv-floating-group-border: 0;
-  --dv-floating-titlebar-background-color: var(--color-paper-2);
-  --dv-floating-titlebar-border-bottom: 1px solid var(--color-line);
-  --dv-tabs-container-scrollbar-color: var(--color-ink-mute);
-  --dv-scrollbar-background-color: color-mix(in oklab, var(--color-ink) 30%, transparent);
-  --dv-context-menu-background-color: var(--color-raised);
-  --dv-context-menu-color: var(--color-ink);
-  --dv-sash-color: transparent;
-  --dv-active-sash-color: var(--color-ring);
-  --dv-dnd-compass-color: var(--color-raised);
-  --dv-dnd-compass-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
-  --dv-dnd-compass-edge-cell-color: color-mix(in oklab, var(--color-ink) 12%, transparent);
-  --dv-dnd-compass-active-cell-color: var(--color-ring);
-  --dv-smart-guides-color: var(--color-ring);
-  --dv-smart-guides-preview-color: color-mix(in oklab, var(--color-selected) 70%, transparent);
-  color: var(--color-ink);
+/* The library's colours and font, from the toolkit's tokens. */
+:root {
+  --puck-font-family: var(--font-sans);
+  --puck-font-family-monospaced: var(--font-mono);
+  --puck-color-white: var(--color-paper);
+  --puck-color-black: var(--color-ink);
+  --puck-color-grey-01: var(--color-ink);
+  --puck-color-grey-02: var(--color-ink);
+  --puck-color-grey-03: var(--color-ink-soft);
+  --puck-color-grey-04: var(--color-ink-soft);
+  --puck-color-grey-05: var(--color-ink-mute);
+  --puck-color-grey-06: var(--color-ink-mute);
+  --puck-color-grey-07: var(--color-ink-mute);
+  --puck-color-grey-08: var(--color-line);
+  --puck-color-grey-09: var(--color-line);
+  --puck-color-grey-10: var(--color-line);
+  --puck-color-grey-11: var(--color-paper-2);
+  --puck-color-grey-12: var(--color-paper);
+  --puck-color-azure-01: var(--color-selected-ink);
+  --puck-color-azure-02: var(--color-selected-ink);
+  --puck-color-azure-03: var(--color-accent);
+  --puck-color-azure-04: var(--color-ring);
+  --puck-color-azure-05: var(--color-ring);
+  --puck-color-azure-06: var(--color-ring);
+  --puck-color-azure-07: var(--color-ring);
+  --puck-color-azure-08: var(--color-selected);
+  --puck-color-azure-09: var(--color-selected);
+  --puck-color-azure-10: var(--color-selected);
+  --puck-color-azure-11: var(--color-selected);
+  --puck-color-azure-12: var(--color-paper-2);
+}
+
+/* The library's own parts, laid out for the editor's panels. Its class names carry a hash, so they are matched by
+   their start. */
+/* The outline: the first zone is the one the root keeps for children, which this editor does not use. */
+.editor-outline [class*="_LayerTreeRoot_"] > :nth-child(-n + 2) {
+  display: none;
+}
+.editor-outline [class*="_LayerTree-zoneTitle_"] {
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+/* The fields of a component: one under the other, a step apart, with no frame of their own. */
+.editor-fields [class*="_PuckFields-rows_"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.editor-fields [class*="_PuckFields-field_"],
+.editor-fields [class*="_InputWrapper_"] {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }

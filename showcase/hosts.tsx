@@ -59,7 +59,7 @@ export const HOSTS: Record<Device, Record<HostKind, string>> = {
 const STRIP = 'flex shrink-0 items-center select-none'
 
 /** The address strip of a browser: scenery, one line. */
-function Address({ address, device }: { address: string; device: Device }) {
+export function Address({ address, device }: { address: string; device: Device }) {
   return (
     <div aria-hidden="true" data-host-strip="address" className={cn(STRIP, 'justify-center bg-paper-2 px-3', device === 'phone' ? 'h-11' : 'h-9')}>
       <span className={cn('truncate rounded-md bg-ink/6 px-3 py-1 text-2xs text-ink-mute', device === 'phone' ? 'w-full text-center' : 'w-96 max-w-full')}>{address}</span>
@@ -68,7 +68,7 @@ function Address({ address, device }: { address: string; device: Device }) {
 }
 
 /** The clock of a phone, over the app's own surface: the room an app keeps free at the head. */
-function Clock() {
+export function Clock() {
   return (
     <div aria-hidden="true" data-host-strip="status" className={cn(STRIP, 'h-9 justify-between bg-paper px-6 text-2xs font-semibold text-ink tabular-nums')}>
       <span>9:41</span>
@@ -78,7 +78,7 @@ function Clock() {
 }
 
 /** The home indicator of a phone: the room an app keeps free at the foot. */
-function HomeIndicator() {
+export function HomeIndicator() {
   return (
     <div aria-hidden="true" data-host-strip="home" className={cn(STRIP, 'h-5 justify-center bg-paper')}>
       <span className="h-1 w-28 rounded-full bg-ink/30" />

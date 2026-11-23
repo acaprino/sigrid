@@ -48,6 +48,7 @@ import {
   densityOf,
   densityVariables,
   densityWith,
+  type Density,
   type DensityDef,
   type DensityId,
   type IconName,
@@ -95,7 +96,7 @@ type When = (typeof WHENS)[number]
  * What a finger gets from a density: every control and every row at least the touch target. theme.css does this by
  * itself with a coarse pointer; here it is written on the frame, so a wide window with a mouse draws the same sizes.
  */
-export function touchDensity(density: DensityId): DensityDef {
+export function touchDensity(density: Density): DensityDef {
   const d = densityOf(density)
   const up = (px: number) => Math.max(TOUCH_TARGET, px)
   return densityWith(d, { id: `${d.id}-touch`, control: { md: up(d.control.md), sm: up(d.control.sm), xs: up(d.control.xs) }, row: { height: up(d.row.height) } })

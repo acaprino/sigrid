@@ -1,0 +1,9 @@
+/* The run page of the app editor: the showcase's Tailwind (the toolkit's fonts and theme, and the classes the editor's
+   catalogue uses), on a page as tall as its window. */
+@import "./showcase.css";
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}

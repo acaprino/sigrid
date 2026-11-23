@@ -12,6 +12,6 @@ export default defineConfig({
   plugins: [react(), tailwind()],
   server: { port: 5180, host: '127.0.0.1' },
   preview: { port: 5181, host: '127.0.0.1' },
-  // Two pages: the showcase and the layout builder (`/builder.html`).
-  build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: { index: fileURLToPath(new URL('./index.html', import.meta.url)), builder: fileURLToPath(new URL('./builder.html', import.meta.url)) } } },
+  // Three pages: the showcase, the app editor (`/builder.html`) and the page that runs the app it edits (`/run.html`).
+  build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: { index: fileURLToPath(new URL('./index.html', import.meta.url)), builder: fileURLToPath(new URL('./builder.html', import.meta.url)), run: fileURLToPath(new URL('./run.html', import.meta.url)) } } },
 })
