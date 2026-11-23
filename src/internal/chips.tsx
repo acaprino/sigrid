@@ -150,7 +150,9 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
     if (!text) return
     const next = clean([...value, ...text.split(split)])
     if (!same(next, value)) onChange(next)
+    // Ark's text and the box's own: the first is what Enter and the list read, the second what is on the screen.
     tags.setInputValue('')
+    e.currentTarget.value = ''
   }
   const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm pointer-coarse:min-h-11 outline-none placeholder:text-muted-foreground" />
   return (

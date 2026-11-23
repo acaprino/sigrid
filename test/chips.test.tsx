@@ -309,6 +309,7 @@ test('chips: the text left in the box becomes a label when the focus goes elsewh
   const { unmount } = render(<Chips spy={plain} />)
   const box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
+  await settle()
   await typed(box, 'home')
   fireEvent.blur(box)
   await settle()
@@ -325,6 +326,7 @@ test('chips: the text left in the box becomes a label when the focus goes elsewh
   render(<Recipients spy={spy} suggestions={Object.keys(PEOPLE)} />)
   const to = screen.getByLabelText('To') as HTMLInputElement
   act(() => to.focus())
+  await settle()
   await typed(to, 'left@x.it')
   fireEvent.blur(to)
   await settle()
