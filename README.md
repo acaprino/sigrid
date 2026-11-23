@@ -176,7 +176,10 @@ the registry's own command, `PALETTE_COMMAND`, turned off with `palette={false}`
 belongs to what has the focus it is left there: a plain key in a field (but Escape and the function keys), Enter,
 Space and the arrows on a control, a key without Ctrl or Alt in an open dialog or menu, a plain key a widget handled,
 every key in the places `ownKeysIn` names. `useCommands()` gives the list, each key in the words of the system and of
-the app (`formatKeys`, `Words.keys`), and `useCommandPalette()` the palette's open state for a button.
+the app (`formatKeys`, `Words.keys`), and `useCommandPalette()` the palette's open state for a button. `KeyHints`, in
+the window's foot, names the keys that work now of the commands the app picks:
+`footer={<KeyHints ids={[PALETTE_COMMAND, 'search', 'close']} />}` («Ctrl K Commands · Ctrl F Search in this view»),
+hidden on a phone.
 
 ```tsx
 <CommandsProvider>

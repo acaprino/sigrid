@@ -16,9 +16,13 @@
 // - A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.
 // - The registry is in the order the commands are declared in the tree; when two available commands share a key, the
 //   one declared last runs.
+// - `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,
+//   hidden on a phone).
 import * as React from "react"
 import { FIELDS } from "../../internal/desktop-guard"
+import { cn } from "../../lib/utils"
 import { DEFAULT_WORDS, useWords, type Words } from "../../words"
+import { Kbd, ON_PHONE_HIDDEN } from "./kbd"
 
 export type CommandDeclaration = {
   /** Its name in the registry: one for each id, the one declared last stands for it. */
@@ -253,4 +257,33 @@ function useCommandPalette(): { open: boolean; setOpen: (open: boolean) => void 
   return { open: context?.open ?? false, setOpen: context?.setOpen ?? (() => {}) }
 }
 
-export { CommandsContext, CommandsProvider, useCommand, useCommandPalette, useCommands }
+export type KeyHintsProps = {
+  /** The commands it names, by id, in this order; of those, the ones with a key that can be done now are shown. `PALETTE_COMMAND` names Ctrl+K. */
+  ids: readonly string[]
+  /** Its name for screen readers. Absent: the toolkit's words («Keys»). */
+  "aria-label"?: string | undefined
+}
+
+/**
+ * The keys that work now, for the window's foot (`AppShell`'s `footer`): each named command that has a key and can be
+ * done now, its key as plain text and its name («Ctrl K Commands»). A command that cannot be done now leaves the list
+ * and comes back with it. Hidden on a phone, where there is no keyboard to press them on.
+ */
+function KeyHints({ ids, "aria-label": label }: KeyHintsProps) {
+  const words = useWords()
+  const commands = useCommands()
+  const shown = ids.flatMap((id) => commands.filter((command) => command.id === id && command.shortcut !== undefined && command.when !== false))
+  if (shown.length === 0) return null
+  return (
+    <ul role="list" aria-label={label ?? words.palette.keys} data-slot="key-hints" className={cn("flex min-w-0 items-center gap-3 overflow-hidden whitespace-nowrap", ON_PHONE_HIDDEN)}>
+      {shown.map((command) => (
+        <li key={command.id} className="inline-flex items-center gap-1">
+          <Kbd>{command.shortcut}</Kbd>
+          <span>{command.label}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export { CommandsContext, CommandsProvider, KeyHints, useCommand, useCommandPalette, useCommands }
