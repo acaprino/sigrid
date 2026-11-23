@@ -300,6 +300,35 @@ describe('a sheet beside the page', () => {
     expect(document.querySelector('[data-slot="sheet-content"]')).not.toBeNull()
   })
 
+  test('it says why it closes: Esc, or a press outside it', async () => {
+    const onOpenChange = vi.fn()
+    render(
+      <>
+        <Sheet open modal={false} onOpenChange={onOpenChange}>
+          <SheetContent>
+            <SheetTitle>Details</SheetTitle>
+            <button type="button">Inside</button>
+          </SheetContent>
+        </Sheet>
+        <button type="button">Outside</button>
+      </>,
+    )
+    act(() => screen.getByRole('button', { name: 'Inside' }).focus())
+    await settle()
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Inside' }), { key: 'Escape' })
+    await settle()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape')
+    onOpenChange.mockClear()
+    const outside = screen.getByRole('button', { name: 'Outside' })
+    fireEvent.pointerDown(outside)
+    fireEvent.mouseDown(outside)
+    fireEvent.pointerUp(outside)
+    fireEvent.mouseUp(outside)
+    fireEvent.click(outside)
+    await settle()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside')
+  })
+
   test('modal, as before: the backdrop is there and the viewport takes the pointer', () => {
     render(
       <Sheet open>

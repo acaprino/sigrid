@@ -49,8 +49,12 @@ const ModalContext = React.createContext(true)
 const inToasts = (target: EventTarget | null | undefined): boolean =>
   target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
 
+/** Why a sheet asks to close: the Esc key, a press outside it, or anything else (a close button, the code). */
+export type SheetCloseReason = "escape" | "outside" | "other"
+
 type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpenChange" | "swipeDirection"> & {
-  onOpenChange?: ((open: boolean) => void) | undefined
+  /** `reason` is told when it closes: an app that keeps a form in the sheet may answer a press outside differently from the Esc. */
+  onOpenChange?: ((open: boolean, reason: SheetCloseReason) => void) | undefined
 }
 
 /**
@@ -80,7 +84,7 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
             details.cancel()
             return
           }
-          onOpenChange?.(open)
+          onOpenChange?.(open, details.reason === "escape-key" ? "escape" : details.reason === "outside-press" ? "outside" : "other")
         }}
         {...props}
       />

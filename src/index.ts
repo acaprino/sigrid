@@ -41,6 +41,7 @@ export { SearchField, type SearchFieldProps } from './components/ui/search-field
 export { Sidebar, SidebarGroup, type SidebarGroupProps, type SidebarProps } from './components/ui/sidebar'
 export { Select, type SelectGroup, type SelectOption, type SelectProps } from './components/ui/select'
 export { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet'
+export type { SheetCloseReason } from './components/ui/sheet'
 export { Slider, type SliderProps } from './components/ui/slider'
 export { Switch, type SwitchProps } from './components/ui/switch'
 export { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow, type TableCellAlign, type TableCellProps, type TableHeadProps, type TableProps, type TableRowProps } from './components/ui/table'
