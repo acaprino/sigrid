@@ -198,7 +198,8 @@ and pushes the content, under it a panel over the end of the content, never moda
 (or the rail the user chose), from 620px to 850px a rail, under 620px a drawer. `Sidebar` and `Inspector` read the step
 from the frame; the steps are recommended, and an app passes its own with `steps` (0 switches one off);
 `useAppShell()` gives the step to the app, which shows its «open the menu» button only where the sidebar is
-a drawer.
+a drawer. F6 moves the focus to the next region (title bar, sidebar, content, inspector) and
+Shift+F6 to the one before, skipping a closed one: the frame does it, with nothing for the app to write.
 
 ```tsx
 <AppShell
