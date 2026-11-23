@@ -373,7 +373,8 @@ describe('the canvas', () => {
     const field = screen.getByRole('searchbox', { name: 'Find' })
     fireEvent.change(field, { target: { value: 'photo' } })
     fireEvent.keyDown(field, { key: 'Enter', isComposing: true })
-    expect(item('Photos').getAttribute('aria-selected')).not.toBe('true')
+    // The thing is hidden in a closed group: confirming a candidate must not open the group.
+    expect(screen.queryByRole('treeitem', { name: 'Photos' })).toBeNull()
     fireEvent.keyDown(field, { key: 'Enter' })
     expect(item('Photos').getAttribute('aria-selected')).toBe('true')
   })
