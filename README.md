@@ -371,7 +371,9 @@ comes with the package, at the version the app has installed, and most of it is 
   values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
   `backdrop-blur`, emoji, fonts in CSS); it does not see named classes off the scale, inline styles, or anything of
   the layout: `AGENTS.md` lists what is left to read and to look at. An app keeps its own choices in a
-  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing.
+  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing. One rule is
+  the app's to turn on, `own-class`: it reports every class written by hand and every stylesheet of the app, for an
+  app laid out with the layout parts alone (off by default).
 - A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
   check after:
 
