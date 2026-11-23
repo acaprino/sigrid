@@ -5,21 +5,13 @@
 // all of them. And the main entry stays light: what `src/index.ts` reaches by static imports takes nothing of the
 // libraries that have entries of their own (the table, the long list, the order by hand, the rich text, the graph) or
 // of Motion, which loads only when an app turns animations on.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { describe, expect, test } from 'vitest'
+import { root, walk } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const src = join(root, 'src')
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
-  })
-}
 
 const rel = (file: string) => relative(root, file).replaceAll('\\', '/')
 

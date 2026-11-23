@@ -1,10 +1,10 @@
 // The Motion chunk (`motion-impl`) loads only when needed, breaks nothing if it does not arrive, and the components do not
 // each subscribe a `matchMedia` listener. Every test starts from fresh modules (`vi.resetModules`): the chunk is
 // not already loaded by another test, and `loads` counts how many times it was really requested.
-import { act, render, waitFor } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { settle } from './helpers'
 
-const noop = () => {}
 let loads = 0
 let failures = 0
 
@@ -35,8 +35,7 @@ function fakeMatchMedia(reduce = false) {
   return { query, matchMedia }
 }
 
-/** After mounting, lets effects and microtasks pass: a load that was never requested stays never requested. */
-const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 25))))
+// `settle(25)`: after mounting, lets effects and microtasks pass: a load that was never requested stays never requested.
 
 async function loadModules() {
   const { Checkbox } = await import('../src/components/ui/checkbox')
@@ -45,13 +44,12 @@ async function loadModules() {
   return { Checkbox, Toasts, ...motion }
 }
 
-
 describe('with animations off the chunk does not reach the browser', () => {
   test('the app preference is inherited and can be disabled on a control', async () => {
     fakeMatchMedia(false)
     const { Checkbox, MotionProvider } = await loadModules()
     const { rerender } = render(<MotionProvider animated><Checkbox animated={false} aria-label="A" /></MotionProvider>)
-    await settle()
+    await settle(25)
     expect(loads).toBe(0)
     rerender(<MotionProvider animated><Checkbox aria-label="A" /></MotionProvider>)
     await waitFor(() => expect(loads).toBe(1))
@@ -68,7 +66,7 @@ describe('with animations off the chunk does not reach the browser', () => {
         <Toasts inline animated={false} items={[{ id: 'y', text: 'Moved' }]} />
       </>,
     )
-    await settle()
+    await settle(25)
     expect(loads).toBe(0)
     // Off = zero cost: nobody asks for prefers-reduced-motion, not even a `MediaQueryList` per Checkbox.
     expect(media.matchMedia).not.toHaveBeenCalled()
@@ -84,7 +82,7 @@ describe('with animations off the chunk does not reach the browser', () => {
       </>,
     )
     await waitFor(() => expect(loads).toBe(1))
-    await settle()
+    await settle(25)
     expect(loads).toBe(1)
   })
 
@@ -97,7 +95,7 @@ describe('with animations off the chunk does not reach the browser', () => {
         <Toasts inline animated items={[{ id: 'x', text: 'Done' }]} />
       </>,
     )
-    await settle()
+    await settle(25)
     expect(loads).toBe(0)
   })
 })

@@ -3,20 +3,12 @@
 // form and on SmoothUI for part of the look; the motion is its own code on Fluent 2's token values: INV-007 (provenance and dependencies) and
 // INV-008 (no decorative components, no infinite motion, no springs). An app's product package
 // has its own provenance test for its product components.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
+import { root, walk } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, Record<string, string> | undefined>
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
-  })
-}
 
 const rel = (file: string) => relative(root, file).replaceAll('\\', '/')
 const srcFiles = walk(join(root, 'src'))

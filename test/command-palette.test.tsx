@@ -1,11 +1,10 @@
 // The command palette (`CommandPalette`), the key that opens it (`useCommandKey`) and the view tabs of a toolbar
 // (`ToolbarTabs`): quick access from the keyboard, and the views of an app as words in the bar.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { AppShell, CommandPalette, Toolbar, ToolbarButton, ToolbarTab, ToolbarTabs, filterCommands, useCommandKey, type Command } from '../src'
-
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
+import { flush } from './helpers'
 
 function commands(ran: string[]): Command[] {
   const make = (id: string, label: string, more: Partial<Command> = {}): Command => ({ id, label, onSelect: () => ran.push(id), ...more })

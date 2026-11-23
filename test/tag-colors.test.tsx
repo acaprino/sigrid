@@ -5,19 +5,9 @@ import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import { ChipsInput } from '../src/components/ChipsInput'
 import { TAG_HUES, tagHue } from '../src/internal/tag-color'
+import { contrast } from '../src/theme-engine'
 import { palettes, themeCss } from './theme-tokens'
-
-const noop = () => {}
-// The same WCAG computation as `contrast.test.ts` (which runs in the node environment and cannot be imported from jsdom).
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-const luminance = (hex: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const contrast = (a: string, b: string) => {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
+import { noop } from './helpers'
 
 test('the color comes from the name: case, spaces and the at sign do not change it', () => {
   const h = tagHue('meds')

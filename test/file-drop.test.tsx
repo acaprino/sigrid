@@ -1,19 +1,19 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { FileDrop } from '../src'
-import { dt } from './helpers'
+import { dt, settle } from './helpers'
 
 // `FileDrop` (src/internal/file-drop.tsx): a file dropped on the zone or chosen with the picker, the checks of type,
 // size and count, the words of the app, the busy and the error states.
 
-/** Ark's FileUpload judges the files and opens the picker in a microtask and an animation frame: this lets it. */
-const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 40))))
+// `settle(40)`: Ark's FileUpload judges the files and opens the picker in a microtask and an animation frame.
+
 const zone = () => document.querySelector<HTMLElement>('[data-slot="file-drop"]')!
 const picker = () => zone().querySelector<HTMLInputElement>('input[type="file"]')!
 const trigger = () => screen.getByRole('button', { name: 'Drop a file here, or choose one' })
 const choose = async (files: File[]) => {
   fireEvent.input(picker(), { target: { files } })
-  await settle()
+  await settle(40)
 }
 function sized(name: string, size: number, type = ''): File {
   const f = new File(['x'], name, { type })
@@ -26,7 +26,7 @@ const LABEL = 'Drop a file here, or choose one'
 describe('FileDrop', () => {
   test('a real button named by the label and described by the hint; the input stays out of the tab order and the tree', async () => {
     render(<FileDrop label={LABEL} hint="JSON or CSV, up to 5 MB" onFiles={() => {}} accept={ACCEPT} />)
-    await settle()
+    await settle(40)
     const button = trigger()
     expect(button.tagName).toBe('BUTTON')
     const hint = document.getElementById(button.getAttribute('aria-describedby') ?? '')
@@ -38,14 +38,14 @@ describe('FileDrop', () => {
     // A click opens the picker: dragging is never the only way (WCAG 2.5.7).
     const click = vi.spyOn(picker(), 'click')
     fireEvent.click(button)
-    await settle()
+    await settle(40)
     expect(click).toHaveBeenCalledTimes(1)
   })
 
   test('a chosen file goes to onFiles, and the same file can be chosen again', async () => {
     const onFiles = vi.fn()
     render(<FileDrop label={LABEL} onFiles={onFiles} accept={ACCEPT} maxFileBytes={100} />)
-    await settle()
+    await settle(40)
     const f = sized('backup.json', 10, 'application/json')
     await choose([f])
     await choose([f])
@@ -57,26 +57,26 @@ describe('FileDrop', () => {
     const onFiles = vi.fn()
     const onRefuse = vi.fn()
     render(<FileDrop label={LABEL} onFiles={onFiles} onRefuse={onRefuse} accept={ACCEPT} maxFileBytes={100} />)
-    await settle()
+    await settle(40)
     // Windows can type a CSV as an Excel file: the extension is enough.
     const csv = sized('export.csv', 10, 'application/vnd.ms-excel')
     fireEvent.drop(zone(), { dataTransfer: dt({}, [csv]) })
-    await settle()
+    await settle(40)
     expect(onFiles).toHaveBeenLastCalledWith([csv])
 
     const photo = sized('photo.png', 10, 'image/png')
     fireEvent.drop(zone(), { dataTransfer: dt({}, [photo]) })
-    await settle()
+    await settle(40)
     expect(onRefuse).toHaveBeenLastCalledWith([{ file: photo, reason: 'type' }])
 
     const big = sized('big.json', 101, 'application/json')
     fireEvent.drop(zone(), { dataTransfer: dt({}, [big]) })
-    await settle()
+    await settle(40)
     expect(onRefuse).toHaveBeenLastCalledWith([{ file: big, reason: 'size' }])
 
     const two = [sized('a.json', 1, 'application/json'), sized('b.json', 1, 'application/json')]
     fireEvent.drop(zone(), { dataTransfer: dt({}, two) })
-    await settle()
+    await settle(40)
     expect(onRefuse.mock.lastCall?.[0]).toEqual(two.map((file) => ({ file, reason: 'count' })))
 
     // Text is not a file: refused, without a file.
@@ -100,7 +100,7 @@ describe('FileDrop', () => {
   test('busy: the line says what is happening and is announced; the button keeps focus but opens nothing and takes no drop', async () => {
     const onFiles = vi.fn()
     render(<FileDrop label={LABEL} busy="Reading backup.csv…" onFiles={onFiles} />)
-    await settle()
+    await settle(40)
     const button = trigger()
     button.focus()
     expect(document.activeElement).toBe(button)
@@ -109,16 +109,16 @@ describe('FileDrop', () => {
     expect(screen.getByRole('status').textContent).toBe('Reading backup.csv…')
     const click = vi.spyOn(picker(), 'click')
     fireEvent.click(button)
-    await settle()
+    await settle(40)
     expect(click).not.toHaveBeenCalled()
     fireEvent.drop(zone(), { dataTransfer: dt({}, [sized('a.csv', 1)]) })
-    await settle()
+    await settle(40)
     expect(onFiles).not.toHaveBeenCalled()
   })
 
   test('an error sits under the zone, is announced and describes the button; the border turns destructive', async () => {
     render(<FileDrop label={LABEL} hint="CSV" error="This is not a CSV file." onFiles={() => {}} />)
-    await settle()
+    await settle(40)
     const alert = screen.getByRole('alert')
     expect(alert.textContent).toBe('This is not a CSV file.')
     expect(trigger().getAttribute('aria-describedby')?.split(' ')).toContain(alert.id)

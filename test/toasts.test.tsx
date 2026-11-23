@@ -1,17 +1,15 @@
 // The notices (`Toasts`, on Ark UI's Toast): politeness, undo, timers, pausing, the layer above every overlay of the
 // toolkit, and a click on a notice that never closes a modal window. (An app's own sheets are tested in the app's
 // package.)
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { type ReactElement } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { Dialog, Toasts } from '../src'
 import { ignoreToasts } from '../src/internal/overlay'
-
-const noop = () => {}
+import { noop, settle } from './helpers'
 
 // Ark's toast machines act in a microtask (never inside React's commit): after a render, `settle()` lets them.
-const settle = () => act(async () => {})
 
 test('Toasts are polite and offer undo', async () => {
   const onClick = vi.fn()

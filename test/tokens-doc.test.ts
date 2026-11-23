@@ -4,12 +4,10 @@
 // written again (`node scripts/tokens.mjs`).
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
 import { themeTokens } from '../src/theme-engine'
 import { BASE_THEME } from '../src/themes'
-
-const root = fileURLToPath(new URL('../', import.meta.url))
+import { root } from './helpers'
 
 test('docs/tokens.css is what scripts/tokens.mjs writes from the source as it is now', () => {
   expect(() => execFileSync(process.execPath, [`${root}scripts/tokens.mjs`, '--check'], { stdio: 'pipe' })).not.toThrow()

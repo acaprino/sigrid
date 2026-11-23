@@ -7,20 +7,11 @@ import { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeS
 import type { ThemeDef } from '../src/theme-catalog'
 import { DEFAULT_THEME, THEMES, themeTokens } from './fixtures/sample-themes'
 import type { ThemeId } from './fixtures/sample-themes'
-import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, STATUS, contrast, fromHex, isAccentColor, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
+import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, STATUS, contrast, fromHex, isAccentColor, luminance, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
 import { PALETTE_COMBOS, paletteTheme } from '../src/palette'
 import type { OwnTheme, ThemeTone } from '../src/theme-engine'
 import { palettes } from './theme-tokens'
 
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-const lum = (hex: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const ratio = (a: string, b: string) => {
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
 const mix = (fg: string, bg: string, alpha: number) =>
   '#' + [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)).toString(16).padStart(2, '0')).join('')
 
@@ -42,8 +33,8 @@ test('adjacent tones have distinct surface lightness after rendering in both sch
       expect(low['primary'], name).not.toBe(high['primary'])
     }
     for (const c of steps) {
-      expect(ratio(c['primary']!, c['primary-foreground']!)).toBeGreaterThanOrEqual(AA)
-      expect(ratio(c['sidebar-selected']!, c['sidebar-selected-ink']!)).toBeGreaterThanOrEqual(AA)
+      expect(contrast(c['primary']!, c['primary-foreground']!)).toBeGreaterThanOrEqual(AA)
+      expect(contrast(c['sidebar-selected']!, c['sidebar-selected-ink']!)).toBeGreaterThanOrEqual(AA)
     }
   }
 })
@@ -80,14 +71,14 @@ describe('the catalog', () => {
       // A near-white, never pure white (2026-11-19: "il bianco puro acceca"): light, cool (blue not below red; it was a
       // cream until 2026-11-22), a trace of tint.
       expect(c['paper'], t.id).not.toBe('#ffffff')
-      expect(lum(c['paper']!), t.id).toBeGreaterThan(0.9)
+      expect(luminance(c['paper']!), t.id).toBeGreaterThan(0.9)
       expect(parseInt(c['paper']!.slice(5, 7), 16), t.id).toBeGreaterThanOrEqual(parseInt(c['paper']!.slice(1, 3), 16))
       expect(spread(c['paper']!), t.id).toBeLessThanOrEqual(16)
       if (t.sidebar === 'tenue') {
-        expect(ratio(c['paper']!, c['sidebar-paper']!), `${t.id}: page and sidebar apart`).toBeGreaterThanOrEqual(1.12)
+        expect(contrast(c['paper']!, c['sidebar-paper']!), `${t.id}: page and sidebar apart`).toBeGreaterThanOrEqual(1.12)
         if (t.id !== 'neutro' && t.id !== 'inchiostro') expect(spread(c['sidebar-paper']!), `${t.id}: tinted sidebar`).toBeGreaterThanOrEqual(8)
         // The selected item still stands out on the sidebar.
-        expect(ratio(c['sidebar-paper']!, c['sidebar-selected']!), `${t.id}: selected item`).toBeGreaterThanOrEqual(1.08)
+        expect(contrast(c['sidebar-paper']!, c['sidebar-selected']!), `${t.id}: selected item`).toBeGreaterThanOrEqual(1.08)
       }
     }
   })
@@ -147,31 +138,31 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
   })
 
   test('text: ink and muted hold on every background, with a clear step between the levels', () => {
-    for (const bg of [...BG, ...SEMANTIC]) expect(ratio(t['ink-mute']!, bg)).toBeGreaterThanOrEqual(AA)
+    for (const bg of [...BG, ...SEMANTIC]) expect(contrast(t['ink-mute']!, bg)).toBeGreaterThanOrEqual(AA)
     for (const bg of BG) {
-      expect(ratio(t['ink']!, bg)).toBeGreaterThanOrEqual(7)
-      expect(ratio(t['ink-soft']!, bg) - ratio(t['ink-mute']!, bg)).toBeGreaterThanOrEqual(1.5)
-      expect(ratio(t['ink']!, bg) - ratio(t['ink-soft']!, bg)).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['ink']!, bg)).toBeGreaterThanOrEqual(7)
+      expect(contrast(t['ink-soft']!, bg) - contrast(t['ink-mute']!, bg)).toBeGreaterThanOrEqual(1.5)
+      expect(contrast(t['ink']!, bg) - contrast(t['ink-soft']!, bg)).toBeGreaterThanOrEqual(3)
     }
     expect(t['muted-foreground']).toBe(t['ink-mute'])
   })
 
   test('accent: as text on every background and on its soft background; the filled button holds at rest and on hover, which can be seen', () => {
-    for (const bg of [...BG, t['accent-soft']!]) expect(ratio(t['accent']!, bg), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['primary-foreground']!, t['primary']!)).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['primary-foreground']!, t['accent-hover']!)).toBeGreaterThanOrEqual(AA)
+    for (const bg of [...BG, t['accent-soft']!]) expect(contrast(t['accent']!, bg), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['primary-foreground']!, t['primary']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['primary-foreground']!, t['accent-hover']!)).toBeGreaterThanOrEqual(AA)
     // Hover darkens the fill; a fill that is nearly black has no darker step to show, so it lightens instead. Either
     // way the step can be seen: the two are never the same colour.
-    if (lum(t['primary']!) < 0.02) expect(lum(t['accent-hover']!)).toBeGreaterThan(lum(t['primary']!) * 1.5)
-    else expect(lum(t['accent-hover']!)).toBeLessThan(lum(t['primary']!))
+    if (luminance(t['primary']!) < 0.02) expect(luminance(t['accent-hover']!)).toBeGreaterThan(luminance(t['primary']!) * 1.5)
+    else expect(luminance(t['accent-hover']!)).toBeLessThan(luminance(t['primary']!))
   })
 
   test('the solid fill is visible even without a label (timeline bars, calendar “today”): 3:1 on every background (WCAG 1.4.11)', () => {
     for (const k of ['paper', 'paper-2', 'raised', ...(own ? [] : ['sidebar-paper'])]) {
-      expect(ratio(t['primary']!, t[k]!), 'primary on ' + k).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['primary']!, t[k]!), 'primary on ' + k).toBeGreaterThanOrEqual(3)
     }
     // And the label on the fill stays at 4.5:1: both thresholds together.
-    expect(ratio(t['primary-foreground']!, t['primary']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['primary-foreground']!, t['primary']!)).toBeGreaterThanOrEqual(AA)
   })
 
   test('the filled button has a light label (except Ink in the dark, which is a light button with a dark label); a strong accent takes the label that reads better', () => {
@@ -181,16 +172,16 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
       // The fill is its own color, never the accent as text, and the accent as text reads where the fill would not.
       if (def.fill) expect(t['primary']).not.toBe(t['accent'])
       const label = t['primary-foreground']!
-      expect(lum(label) > 0.8 || lum(label) < 0.02, label).toBe(true)
+      expect(luminance(label) > 0.8 || luminance(label) < 0.02, label).toBe(true)
       return
     }
     if (scheme === 'dark' && mono) {
-      expect(lum(t['primary']!)).toBeGreaterThan(lum(t['primary-foreground']!))
+      expect(luminance(t['primary']!)).toBeGreaterThan(luminance(t['primary-foreground']!))
       return
     }
     // R11 (2026-11-20): with the default tone (Vivid) a livelier fill may take the dark label, the one that reads better.
     const label = t['primary-foreground']!
-    expect(lum(label) > 0.8 || lum(label) < 0.02, label).toBe(true)
+    expect(luminance(label) > 0.8 || luminance(label) < 0.02, label).toBe(true)
     expect(contrast(label, t['primary']!)).toBeGreaterThanOrEqual(4.5)
     // R11 (2026-11-20): by default (Vivid) the fill is a livelier tone of the accent; as designed it is the accent itself.
     if (scheme === 'light') {
@@ -198,7 +189,7 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
       expect(designed['primary']).toBe(designed['accent'])
     }
     // In the dark the fill is a deeper tone of the accent, which as text stays light.
-    else expect(lum(t['primary']!)).toBeLessThan(lum(t['accent']!))
+    else expect(luminance(t['primary']!)).toBeLessThan(luminance(t['accent']!))
   })
 
   test('status: success and warning read on every background and on their soft one; the ink reads on the highlight', () => {
@@ -207,10 +198,10 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
       expect(t[`${name}-soft`]).toBe(fixed[`${name}-soft`])
       // A theme may move the colour just enough to hold on its own surfaces: the lightness only.
       if (!(THEMES.find((x) => x.id === themeId)! as ThemeDef).surfaces) expect(t[name]).toBe(fixed[name])
-      expect(ratio(t[name]!, t[`${name}-soft`]!), `${name} on its soft`).toBeGreaterThanOrEqual(AA)
-      for (const bg of BG) expect(ratio(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t[name]!, t[`${name}-soft`]!), `${name} on its soft`).toBeGreaterThanOrEqual(AA)
+      for (const bg of BG) expect(contrast(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
     }
-    expect(ratio(t['ink']!, t['highlight']!), 'ink on highlight').toBeGreaterThanOrEqual(7)
+    expect(contrast(t['ink']!, t['highlight']!), 'ink on highlight').toBeGreaterThanOrEqual(7)
     // The highlight is seen on every background it can sit on.
     for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
   })
@@ -220,55 +211,55 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     // A curated palette may move the red just enough to hold on its own surfaces.
     if (!(THEMES.find((x) => x.id === themeId)! as ThemeDef).surfaces) expect(t['destructive']).toBe(fixed.destructive)
     expect(t['destructive-soft']).toBe(fixed['destructive-soft'])
-    expect(ratio(t['destructive']!, t['destructive-soft']!)).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['destructive-foreground']!, t['destructive']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['destructive']!, t['destructive-soft']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['destructive-foreground']!, t['destructive']!)).toBeGreaterThanOrEqual(AA)
     for (const bg of BG) {
-      expect(ratio(t['destructive']!, bg), 'destructive on ' + bg).toBeGreaterThanOrEqual(AA)
-      expect(ratio(t['destructive']!, mix(t['destructive-soft']!, bg, 0.8)), 'button on hover').toBeGreaterThanOrEqual(AA)
-      expect(ratio(t['destructive']!, mix(t['destructive']!, bg, 0.1)), 'highlighted menu item').toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['destructive']!, bg), 'destructive on ' + bg).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['destructive']!, mix(t['destructive-soft']!, bg, 0.8)), 'button on hover').toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['destructive']!, mix(t['destructive']!, bg, 0.1)), 'highlighted menu item').toBeGreaterThanOrEqual(AA)
     }
   })
 
   test('controls (WCAG 1.4.11): field border and focus ring at 3:1, dividers below', () => {
     for (const bg of [...BG, ...SEMANTIC]) {
-      expect(ratio(t['input']!, bg), 'input on ' + bg).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['input']!, bg), 'input on ' + bg).toBeGreaterThanOrEqual(3)
       // R8: the ring is solid (a 2px outline), so it is measured at full strength, and it is the accent as text,
       // which reaches 4.5:1 on every background (R9).
-      expect(ratio(t['ring']!, bg), 'ring on ' + bg).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['ring']!, bg), 'ring on ' + bg).toBeGreaterThanOrEqual(4.5)
     }
     // A focused row that is also the selection: the ring on the selection tint.
-    expect(ratio(t['ring']!, t['selected']!), 'ring on selected').toBeGreaterThanOrEqual(3)
+    expect(contrast(t['ring']!, t['selected']!), 'ring on selected').toBeGreaterThanOrEqual(3)
     for (const bg of BG) {
-      expect(ratio(t['line']!, bg)).toBeLessThan(3)
-      expect(ratio(t['input']!, bg)).toBeGreaterThan(ratio(t['line']!, bg))
+      expect(contrast(t['line']!, bg)).toBeLessThan(3)
+      expect(contrast(t['input']!, bg)).toBeGreaterThan(contrast(t['line']!, bg))
     }
     // The ink keeps the 3:1 at half strength it had when it was the ring (its values do not move).
-    for (const bg of BG) expect(ratio(mix(t['ink']!, bg, 0.5), bg), 'ink/50 on ' + bg).toBeGreaterThanOrEqual(3)
+    for (const bg of BG) expect(contrast(mix(t['ink']!, bg, 0.5), bg), 'ink/50 on ' + bg).toBeGreaterThanOrEqual(3)
     expect(t['ring']).toBe(t['accent'])
   })
 
   test('the sidebar and the selected item are readable', () => {
-    expect(ratio(t['sidebar-ink']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['sidebar-mute']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['sidebar-selected-ink']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['selected-ink']!, t['selected']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-ink']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-mute']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-selected-ink']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['selected-ink']!, t['selected']!)).toBeGreaterThanOrEqual(AA)
     // The accent on the bar reads as text on it, and as a mark (3:1) on the selection tint.
-    expect(ratio(t['sidebar-accent']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-accent']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
     // A filled selection (the solid bar of a strong theme) takes its own ink inside: the bar accent does not sit on it.
-    if (!own) expect(ratio(t['sidebar-accent']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(3)
-    expect(ratio(t['sidebar-accent-ink']!, t['sidebar-accent']!)).toBeGreaterThanOrEqual(AA)
+    if (!own) expect(contrast(t['sidebar-accent']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(t['sidebar-accent-ink']!, t['sidebar-accent']!)).toBeGreaterThanOrEqual(AA)
   })
 
   // The dark column (`scura`) is no catalog theme's sidebar any more, but the engine keeps it for whoever asks for it.
   const column = tokensFor({ ...THEMES.find((x) => x.id === themeId)!, sidebar: 'scura' }, scheme)
   test('the dark column, on request: near-black and sober in both schemes, text at 7:1, a lighter selected row', () => {
     const t = column.colors
-    expect(lum(t['sidebar-paper']!)).toBeLessThan(0.02)
+    expect(luminance(t['sidebar-paper']!)).toBeLessThan(0.02)
     const ch = [1, 3, 5].map((i) => parseInt(t['sidebar-paper']!.slice(i, i + 2), 16))
     expect(Math.max(...ch) - Math.min(...ch)).toBeLessThanOrEqual(12)
-    expect(ratio(t['sidebar-ink']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(7)
-    expect(lum(t['sidebar-selected']!)).toBeGreaterThan(lum(t['sidebar-paper']!))
-    expect(ratio(t['sidebar-selected-ink']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(7)
+    expect(contrast(t['sidebar-ink']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(7)
+    expect(luminance(t['sidebar-selected']!)).toBeGreaterThan(luminance(t['sidebar-paper']!))
+    expect(contrast(t['sidebar-selected-ink']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(7)
   })
 
   test('the dark column, on request, has its own colors', () => {
@@ -291,9 +282,9 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     expect(t['sidebar-selected-ink']).toBe(t['selected-ink'])
     expect(t['sidebar-accent']).toBe(t['accent'])
     // A ground a step below the page in light, below it in dark too: the page reads as a sheet on it.
-    expect(lum(t['sidebar-paper']!)).toBeLessThan(lum(t['paper']!))
+    expect(luminance(t['sidebar-paper']!)).toBeLessThan(luminance(t['paper']!))
     // A curated palette keeps its own sidebar color, which may sit further below.
-    if ((def as ThemeDef).surfaces === undefined) expect(ratio(t['sidebar-paper']!, t['paper']!)).toBeLessThan(1.15)
+    if ((def as ThemeDef).surfaces === undefined) expect(contrast(t['sidebar-paper']!, t['paper']!)).toBeLessThan(1.15)
   })
 
   test('the scheme shows: three distinct levels (sidebar/lanes, page, raised) and no mud in the dark', () => {
@@ -301,25 +292,25 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     if (curated) {
       // A curated palette has its own surfaces (a cream sheet, a tinted dark page): the three levels stay in order.
       const up = scheme === 'light' ? 1 : -1
-      expect(up * (lum(t['paper']!) - lum(t['ink']!))).toBeGreaterThan(0)
-      expect(lum(t['raised']!)).toBeGreaterThan(lum(t['paper']!))
-      expect(lum(t['paper']!)).toBeGreaterThan(lum(t['sidebar-paper']!))
-      if (scheme === 'dark') expect(ratio(t['raised']!, t['paper']!)).toBeGreaterThanOrEqual(1.14)
+      expect(up * (luminance(t['paper']!) - luminance(t['ink']!))).toBeGreaterThan(0)
+      expect(luminance(t['raised']!)).toBeGreaterThan(luminance(t['paper']!))
+      expect(luminance(t['paper']!)).toBeGreaterThan(luminance(t['sidebar-paper']!))
+      if (scheme === 'dark') expect(contrast(t['raised']!, t['paper']!)).toBeGreaterThanOrEqual(1.14)
       return
     }
     if (scheme === 'light') {
-      expect(lum(t['paper']!)).toBeGreaterThan(lum(t['ink']!))
+      expect(luminance(t['paper']!)).toBeGreaterThan(luminance(t['ink']!))
       // A near-white page and lighter sheets, never pure white (2026-11-19); the sidebar sits a clear step below.
       expect(t['paper']).not.toBe('#ffffff')
       expect(t['raised']).not.toBe('#ffffff')
-      expect(lum(t['raised']!)).toBeGreaterThan(lum(t['paper']!))
-      expect(lum(t['paper']!)).toBeGreaterThan(lum(t['sidebar-paper']!))
+      expect(luminance(t['raised']!)).toBeGreaterThan(luminance(t['paper']!))
+      expect(luminance(t['paper']!)).toBeGreaterThan(luminance(t['sidebar-paper']!))
     } else {
-      expect(lum(t['paper']!)).toBeLessThan(lum(t['ink']!))
+      expect(luminance(t['paper']!)).toBeLessThan(luminance(t['ink']!))
       // In the dark: sidebar and lanes below the page, and the sheets («Now») stand out clearly above the page.
-      expect(lum(t['sidebar-paper']!)).toBeLessThan(lum(t['paper']!))
-      expect(lum(t['paper-2']!)).toBeLessThanOrEqual(lum(t['paper']!))
-      expect(ratio(t['raised']!, t['paper']!)).toBeGreaterThanOrEqual(1.14)
+      expect(luminance(t['sidebar-paper']!)).toBeLessThan(luminance(t['paper']!))
+      expect(luminance(t['paper-2']!)).toBeLessThanOrEqual(luminance(t['paper']!))
+      expect(contrast(t['raised']!, t['paper']!)).toBeGreaterThanOrEqual(1.14)
       // No muddy or overly tinted backgrounds in the dark: the paper's RGB spread stays sober.
       const ch = [1, 3, 5].map((i) => parseInt(t['paper']!.slice(i, i + 2), 16))
       expect(Math.max(...ch) - Math.min(...ch)).toBeLessThanOrEqual(12)
@@ -334,10 +325,10 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     for (let n = 1; n <= 18; n++) {
       const dot = t[`mark-${n}`]!
       expect(dot, `mark-${n}`).toMatch(/^#[0-9a-f]{6}$/)
-      for (const bg of BG) expect(ratio(dot, bg), `mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
+      for (const bg of BG) expect(contrast(dot, bg), `mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
       // The correction never crushes a color to black or to white: it stays a color.
-      expect(lum(dot), `${dot} is not black`).toBeGreaterThan(0.03)
-      expect(lum(dot), `${dot} is not white`).toBeLessThan(0.75)
+      expect(luminance(dot), `${dot} is not black`).toBeGreaterThan(0.03)
+      expect(luminance(dot), `${dot} is not white`).toBeLessThan(0.75)
       if (themeId === 'inchiostro') expect(spread(dot), `ink mark-${n}`).toBeLessThanOrEqual(22)
     }
   })
@@ -367,7 +358,7 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     expect(t['drop']).toMatch(/^#[0-9a-f]{6}$/)
     if (scheme === 'light') expect(t['drop']).toBe(t['ink'])
     else {
-      expect(lum(t['drop']!)).toBeLessThan(lum(t['sidebar-paper']!))
+      expect(luminance(t['drop']!)).toBeLessThan(luminance(t['sidebar-paper']!))
       expect(tk.shape['--elevation-md']).toContain('inset 0 0 1px color-mix(in srgb, var(--color-ink)')
     }
   })
@@ -398,22 +389,22 @@ describe('the user\'s own theme', () => {
     const t = tk.colors
     const own = tk.attributes['data-sidebar'] === 'own'
     const BG = ['paper', 'paper-2', 'raised', ...(own ? [] : ['sidebar-paper'])].map((k) => t[k]!)
-    for (const bg of [...BG, t['accent-soft']!]) expect(ratio(t['accent']!, bg), `${at}: accent on ${bg}`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['primary-foreground']!, t['primary']!), `${at}: label`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['primary-foreground']!, t['accent-hover']!), `${at}: label on hover`).toBeGreaterThanOrEqual(AA)
+    for (const bg of [...BG, t['accent-soft']!]) expect(contrast(t['accent']!, bg), `${at}: accent on ${bg}`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['primary-foreground']!, t['primary']!), `${at}: label`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['primary-foreground']!, t['accent-hover']!), `${at}: label on hover`).toBeGreaterThanOrEqual(AA)
     for (const bg of BG) {
-      expect(ratio(t['primary']!, bg), `${at}: fill on ${bg}`).toBeGreaterThanOrEqual(3)
-      expect(ratio(t['ink-mute']!, bg), `${at}: muted text on ${bg}`).toBeGreaterThanOrEqual(AA)
-      expect(ratio(t['ink']!, bg), `${at}: text on ${bg}`).toBeGreaterThanOrEqual(7)
-      expect(ratio(t['input']!, bg), `${at}: field border on ${bg}`).toBeGreaterThanOrEqual(3)
-      expect(ratio(t['destructive']!, bg), `${at}: red on ${bg}`).toBeGreaterThanOrEqual(AA)
-      for (let n = 1; n <= 18; n++) expect(ratio(t[`mark-${n}`]!, bg), `${at}: mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['primary']!, bg), `${at}: fill on ${bg}`).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['ink-mute']!, bg), `${at}: muted text on ${bg}`).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ink']!, bg), `${at}: text on ${bg}`).toBeGreaterThanOrEqual(7)
+      expect(contrast(t['input']!, bg), `${at}: field border on ${bg}`).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['destructive']!, bg), `${at}: red on ${bg}`).toBeGreaterThanOrEqual(AA)
+      for (let n = 1; n <= 18; n++) expect(contrast(t[`mark-${n}`]!, bg), `${at}: mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
     }
-    expect(ratio(t['selected-ink']!, t['selected']!), `${at}: selected item`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['ink-mute']!, t['selected']!), `${at}: muted text on the selected item`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['sidebar-ink']!, t['sidebar-paper']!), `${at}: sidebar text`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['sidebar-mute']!, t['sidebar-paper']!), `${at}: sidebar muted text`).toBeGreaterThanOrEqual(AA)
-    expect(ratio(t['sidebar-selected-ink']!, t['sidebar-selected']!), `${at}: selected item of the sidebar`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['selected-ink']!, t['selected']!), `${at}: selected item`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['ink-mute']!, t['selected']!), `${at}: muted text on the selected item`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-ink']!, t['sidebar-paper']!), `${at}: sidebar text`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-mute']!, t['sidebar-paper']!), `${at}: sidebar muted text`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['sidebar-selected-ink']!, t['sidebar-selected']!), `${at}: selected item of the sidebar`).toBeGreaterThanOrEqual(AA)
   }
 
   test('only a #rrggbb counts as a color: anything else leaves the theme as it is', () => {
@@ -480,8 +471,8 @@ describe('the user\'s own theme', () => {
     expect(themeTokens('neutro', 'dark', { accent: '#297abc', background: '#1e1e2e' }).colors['paper']).toBe('#1e1e2e')
     const dark = themeTokens('neutro', 'dark', { accent: '#297abc', background: '#fff5e0' }).colors['paper']!
     const light = themeTokens('neutro', 'light', { accent: '#297abc', background: '#1e1e2e' }).colors['paper']!
-    expect(lum(dark)).toBeLessThan(0.05)
-    expect(lum(light)).toBeGreaterThan(0.85)
+    expect(luminance(dark)).toBeLessThan(0.05)
+    expect(luminance(light)).toBeGreaterThan(0.85)
     expect(apart(hueOf(light)!, hueOf('#1e1e2e')!)).toBeLessThan(40)
   })
 
@@ -495,11 +486,11 @@ describe('the user\'s own theme', () => {
   test('the sidebar: dark with the selected item filled in the accent, or light, whatever the theme', () => {
     const dark = themeTokens('neutro', 'light', { accent: '#4452c4', sidebar: 'dark' })
     expect(dark.attributes['data-sidebar']).toBe('own')
-    expect(lum(dark.colors['sidebar-paper']!)).toBeLessThan(0.05)
+    expect(luminance(dark.colors['sidebar-paper']!)).toBeLessThan(0.05)
     expect(dark.colors['sidebar-selected']).toBe(dark.colors['primary'])
     const light = themeTokens('ultravioletto', 'light', { accent: '#4452c4', sidebar: 'light' })
     expect(light.attributes['data-sidebar']).toBe('shared')
-    expect(lum(light.colors['sidebar-paper']!)).toBeGreaterThan(0.7)
+    expect(luminance(light.colors['sidebar-paper']!)).toBeGreaterThan(0.7)
     // A derived page with a dark sidebar too.
     expect(themeTokens('neutro', 'light', { accent: '#4452c4', background: 'match', sidebar: 'dark' }).attributes['data-sidebar']).toBe('own')
   })
@@ -556,21 +547,21 @@ describe('the user\'s own theme', () => {
       // The sidebar and lanes deepen in both schemes. Even a near-gray has visible steps.
       for (const k of ['paper-2', 'sidebar-paper']) {
         if (scheme === 'light') expect(chroma(at('vivid').colors[k]!), k).toBeGreaterThan(chroma(at('faded').colors[k]!))
-        expect(lum(at('vivid').colors[k]!), k).toBeLessThan(lum(at('faded').colors[k]!))
+        expect(luminance(at('vivid').colors[k]!), k).toBeLessThan(luminance(at('faded').colors[k]!))
       }
     }
   })
 
   test('lighter and darker move the colors as far as readability allows: darker in light and lighter in dark are always seen', () => {
-    const lumOf = (tk: ReturnType<typeof themeTokens>) => mean(marks(tk).map(lum))
+    const lumOf = (tk: ReturnType<typeof themeTokens>) => mean(marks(tk).map(luminance))
     const at = (scheme: 'light' | 'dark', light?: ThemeTone['light']) => themeTokens('professionale', scheme, null, { light: light ?? 'theme' })
     expect(lumOf(at('light', 'darker'))).toBeLessThan(lumOf(at('light')))
     expect(lumOf(at('dark', 'lighter'))).toBeGreaterThan(lumOf(at('dark')))
     // Toward the page the colors stop where they would no longer stand out: never the wrong way.
     expect(lumOf(at('light', 'lighter'))).toBeGreaterThanOrEqual(lumOf(at('light')))
     expect(lumOf(at('dark', 'darker'))).toBeLessThanOrEqual(lumOf(at('dark')))
-    expect(lum(at('light', 'lighter').colors['primary']!)).toBeGreaterThan(lum(at('light', 'darker').colors['primary']!))
-    expect(lum(at('dark', 'lighter').colors['primary']!)).toBeGreaterThan(lum(at('dark', 'darker').colors['primary']!))
+    expect(luminance(at('light', 'lighter').colors['primary']!)).toBeGreaterThan(luminance(at('light', 'darker').colors['primary']!))
+    expect(luminance(at('dark', 'lighter').colors['primary']!)).toBeGreaterThan(luminance(at('dark', 'darker').colors['primary']!))
   })
 
   const TONES: readonly ThemeTone[] = [

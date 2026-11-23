@@ -1,10 +1,9 @@
 // @vitest-environment node
 // The breakpoint of `useMedia`'s narrow query is the theme's `md`: both live in the toolkit.
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
+import { root } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const readFile = (file: string) => readFileSync(`${root}${file}`, 'utf8')
 
 test('the narrow query is the md breakpoint of the theme', () => {

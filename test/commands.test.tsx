@@ -2,13 +2,13 @@
 // anywhere in the window, but a key that belongs to what has the focus is left there (a field, a control, an open
 // surface, a widget that handled it, a place that keeps its own keys); one that cannot be done now does not run and the
 // palette shows it dimmed; the palette with no list shows the registry's commands in their order and Ctrl+K opens it.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { CommandPalette, CommandsProvider, PALETTE_COMMAND, formatKeys, useCommand, useCommands } from '../src'
+import { flush } from './helpers'
 
-// The dialog opens and closes in a frame of its own, as in a browser.
-const flush = () => act(async () => { await new Promise((done) => setTimeout(done, 30)) })
+// `flush()`: the dialog opens and closes in a frame of its own, as in a browser.
 const platform = Object.getOwnPropertyDescriptor(window.navigator, 'platform')
 afterEach(() => {
   if (platform) Object.defineProperty(window.navigator, 'platform', platform)

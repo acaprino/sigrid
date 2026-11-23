@@ -3,8 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { Disclosure } from '../src'
+import { classes } from './helpers'
 
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const panel = () => document.querySelector('[data-slot="disclosure-panel"]') as HTMLElement
 
 describe('Disclosure', () => {

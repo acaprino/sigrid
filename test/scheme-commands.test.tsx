@@ -11,9 +11,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { CommandPalette, CommandsProvider, WordsProvider, applyKeptScheme, colorTheme, themeVariables, useCommands, useSchemeCommands, type SchemeState } from '../src'
+import { flush } from './helpers'
 
-// The dialog opens and closes in a frame of its own, as in a browser.
-const flush = () => act(async () => { await new Promise((done) => setTimeout(done, 30)) })
+// `flush()`: the dialog opens and closes in a frame of its own, as in a browser.
 const THEME = colorTheme({ id: 'tasks', label: 'Tasks', color: '#006398', spot: 'balanced' })
 const DARK = '(prefers-color-scheme: dark)'
 const NAMES = ['Light theme', 'Dark theme', 'System theme']

@@ -8,14 +8,12 @@
 // (`agents/examples`, scripts/agents.mjs), which `sigrid-check` with `own-class` on passes.
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { expect, test } from 'vitest'
 import { CATALOG, KINDS, type FieldSpec, type Kind, type Region } from '../showcase/editor/catalog'
 import { appSource, exportFiles, zip } from '../showcase/editor/codegen'
 import { STARTERS, make, readApp, screen, type AppModel, type Node } from '../showcase/editor/model'
-
-const root = fileURLToPath(new URL('../', import.meta.url))
+import { root } from './helpers'
 
 /** Every component once for each word of each of its choices, with every other field as it starts. */
 function variants(kind: Kind): Node[] {

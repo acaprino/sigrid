@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import { Button, Checkbox, Input } from '../src'
 import { DENSITIES, DENSITY_LIMITS } from '../src/density'
+import { classes, noop } from './helpers'
 
 // Round 3, M-12: every control has an area of at least 24x24 px (44 with a coarse pointer) without changing the look
 // on the desktop. (An app's own row controls, and their areas, are tested in the app's package.)
@@ -10,8 +11,6 @@ import { DENSITIES, DENSITY_LIMITS } from '../src/density'
 
 const v = (variant: string, cls: string) => variant + cls
 const COARSE = 'pointer-coarse:'
-const noop = () => {}
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 
 describe('hit areas: 24px on every pointer, 44px on a coarse one, same look on a desktop', () => {
   test('every Button size is at least 24px tall and, when square, wide, at every density', () => {

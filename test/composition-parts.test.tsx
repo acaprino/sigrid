@@ -33,8 +33,8 @@ import {
   WordsProvider,
   useCommand,
 } from '../src'
+import { classes } from './helpers'
 
-const classes = (el: Element | null) => (el?.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)
 
 describe('a card', () => {

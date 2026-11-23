@@ -2,12 +2,9 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/components/DateField'
+import { flush, noop } from './helpers'
 
-const noop = () => {}
-
-
-// Ark's date picker acts in a microtask and moves focus in an animation frame: the loop is let run.
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
+// `flush()`: Ark's date picker acts in a microtask and moves focus in an animation frame: the loop is let run.
 /** A key on the focused element, then Ark's machine and its focus move. */
 const key = async (name: string, init: KeyboardEventInit = {}) => {
   fireEvent.keyDown(document.activeElement!, { key: name, ...init })

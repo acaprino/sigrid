@@ -7,11 +7,10 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { APP_HEIGHT_VAR, AppShell, BOTTOM_BAR_ROOM_VAR, Page, SHORT, Toolbar, ToolbarTab, ToolbarTabs, useAppHeight } from '../src'
+import { classes, noop } from './helpers'
 
-const noop = () => {}
 const root = document.documentElement
 const read = (name = APP_HEIGHT_VAR) => root.style.getPropertyValue(name)
-const classesOf = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 
 /** A `requestAnimationFrame` that waits to be told: many events in one frame must be one write. */
 let frames: FrameRequestCallback[] = []
@@ -145,8 +144,8 @@ describe('the frame is as tall as what is seen, and says how tall its bottom bar
   test('it is --app-height tall and never taller than its box, and it keeps the height up to date itself', () => {
     visualViewport(741)
     render(<Frame />)
-    expect(classesOf(frame())).toEqual(expect.arrayContaining(['h-(--app-height)', 'max-h-full']))
-    expect(classesOf(frame())).not.toContain('h-full')
+    expect(classes(frame())).toEqual(expect.arrayContaining(['h-(--app-height)', 'max-h-full']))
+    expect(classes(frame())).not.toContain('h-full')
     expect(read()).toBe('741px')
   })
 
@@ -157,11 +156,11 @@ describe('the frame is as tall as what is seen, and says how tall its bottom bar
     expect(frame().hasAttribute('data-screen')).toBe(true)
     expect(bar().hasAttribute('data-screen')).toBe(true)
     expect(read(BOTTOM_BAR_ROOM_VAR)).toBe('49px')
-    expect(classesOf(frame())).toEqual(expect.arrayContaining(['data-screen:pt-(--safe-area-inset-top)', 'data-screen:ps-(--safe-area-inset-left)', 'data-screen:pe-(--safe-area-inset-right)']))
+    expect(classes(frame())).toEqual(expect.arrayContaining(['data-screen:pt-(--safe-area-inset-top)', 'data-screen:ps-(--safe-area-inset-left)', 'data-screen:pe-(--safe-area-inset-right)']))
     // The bar keeps clear of the gesture bar with the MAXIMUM inset (it does not change while the page scrolls), and
     // the frame then does not pad its own foot a second time.
-    expect(classesOf(bar())).toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
-    expect(classesOf(frame())).not.toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
+    expect(classes(bar())).toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
+    expect(classes(frame())).not.toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
     expect(bar().className).not.toMatch(/env\(safe-area-inset-bottom/)
     unmount()
     expect(read(BOTTOM_BAR_ROOM_VAR)).toBe('')
@@ -190,22 +189,22 @@ describe('the frame is as tall as what is seen, and says how tall its bottom bar
     visualViewport(741)
     layOut(741, 0)
     render(<AppShell contentLabel="Today">Text</AppShell>)
-    expect(classesOf(frame())).toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
+    expect(classes(frame())).toContain('data-screen:pb-(--safe-area-max-inset-bottom)')
     expect(read(BOTTOM_BAR_ROOM_VAR)).toBe('')
   })
 
   test('a short window (a phone lying down) keeps the bar at 44px and puts each view\'s word beside its icon', () => {
     render(<Frame />)
     expect(SHORT).toBe('(height < 500px)')
-    expect(classesOf(bar())).toEqual(expect.arrayContaining(['min-h-12', 'short:min-h-11']))
-    expect(classesOf(screen.getByRole('button', { name: 'Today' }))).toEqual(expect.arrayContaining(['flex-col', 'short:flex-row']))
+    expect(classes(bar())).toEqual(expect.arrayContaining(['min-h-12', 'short:min-h-11']))
+    expect(classes(screen.getByRole('button', { name: 'Today' }))).toEqual(expect.arrayContaining(['flex-col', 'short:flex-row']))
   })
 
   test('without ResizeObserver or visualViewport nothing throws: the frame is still --app-height tall', () => {
     vi.stubGlobal('ResizeObserver', undefined)
     vi.stubGlobal('visualViewport', undefined)
     expect(() => render(<Frame />)).not.toThrow()
-    expect(classesOf(frame())).toContain('h-(--app-height)')
+    expect(classes(frame())).toContain('h-(--app-height)')
   })
 })
 
@@ -222,10 +221,10 @@ describe('a page of exactly one screen (`Page fit`)', () => {
   test('outside a frame it is as tall as what is seen less the bottom bar\'s room; the body gives way, the head and the foot do not', () => {
     render(fit)
     expect(page().getAttribute('data-fit')).toBe('')
-    expect(classesOf(page())).toEqual(expect.arrayContaining(['h-(--fit-height)', 'flex', 'flex-col']))
-    expect(classesOf(part('page-body'))).toEqual(expect.arrayContaining(['min-h-0', 'flex-1', 'overflow-y-auto', 'overscroll-contain']))
-    expect(classesOf(part('page-header'))).toContain('shrink-0')
-    expect(classesOf(part('page-footer'))).toContain('shrink-0')
+    expect(classes(page())).toEqual(expect.arrayContaining(['h-(--fit-height)', 'flex', 'flex-col']))
+    expect(classes(part('page-body'))).toEqual(expect.arrayContaining(['min-h-0', 'flex-1', 'overflow-y-auto', 'overscroll-contain']))
+    expect(classes(part('page-header'))).toContain('shrink-0')
+    expect(classes(part('page-footer'))).toContain('shrink-0')
     // In this order: the head, the body, the foot.
     expect(Array.from(page().children).map((el) => el.getAttribute('data-slot'))).toEqual(['page-header', 'page-body', 'page-footer'])
     expect(part('page-body').textContent).toBe('The item')
@@ -233,17 +232,17 @@ describe('a page of exactly one screen (`Page fit`)', () => {
 
   test('in a frame it is as tall as the frame\'s content: the frame has already taken its bars away', () => {
     render(<Frame>{fit}</Frame>)
-    expect(classesOf(page())).toContain('h-full')
-    expect(classesOf(page())).not.toContain('h-(--fit-height)')
+    expect(classes(page())).toContain('h-full')
+    expect(classes(page())).not.toContain('h-(--fit-height)')
   })
 
   test('the head stays where it is when a page turns to fit, and a page that does not fit is as it was', () => {
     const { rerender } = render(<Page header={<p>1 of 12</p>}>x</Page>)
     expect(page().hasAttribute('data-fit')).toBe(false)
-    expect(classesOf(page())).toEqual(expect.arrayContaining(['p-6', 'gap-6', 'max-w-(--content-max)']))
+    expect(classes(page())).toEqual(expect.arrayContaining(['p-6', 'gap-6', 'max-w-(--content-max)']))
     expect(page().firstElementChild!.textContent).toBe('1 of 12')
     rerender(fit)
     // The same margins: what is at the head does not move.
-    expect(classesOf(page())).toContain('p-6')
+    expect(classes(page())).toContain('p-6')
   })
 })

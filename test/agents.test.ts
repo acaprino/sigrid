@@ -6,11 +6,10 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, test } from 'vitest'
 import * as UI from '../src'
+import { root } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const read = (path: string) => readFileSync(`${root}${path}`, 'utf8')
 const pkg = JSON.parse(read('package.json')) as { files: string[]; bin: Record<string, string>; exports: Record<string, unknown> }
 /** The entries an app imports code from: those with types. */

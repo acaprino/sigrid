@@ -5,12 +5,11 @@ import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { Count, FormField, Icon, Input, NavItem, NavList, Select, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from '../src'
 import { NavContext } from '../src/components/ui/nav-list'
+import { classes, settle } from './helpers'
 
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 // Careful: Tailwind also scans `test/`. Class names with a variant are composed, not written whole.
 const coarse = (cls: string) => 'pointer-coarse:' + cls
-// Ark moves the focus and commits a choice after the event, in a frame: the test waits for it, as the browser would.
-const settle = () => act(async () => { await new Promise((done) => setTimeout(done, 120)) })
+// `settle(120)`: Ark moves the focus and commits a choice after the event, in a frame: the test waits for it, as the browser would.
 
 describe('Switch', () => {
   test('a switch with its label: a click on the control or on the label toggles, and the caller gets a boolean', async () => {
@@ -19,11 +18,11 @@ describe('Switch', () => {
     const control = screen.getByRole('switch', { name: 'Start with the system' }) as HTMLInputElement
     expect(control.checked).toBe(false)
     fireEvent.click(control)
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith(true)
     expect(control.checked).toBe(true)
     fireEvent.click(screen.getByText('Start with the system'))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith(false)
   })
 
@@ -48,7 +47,7 @@ describe('Switch', () => {
     const input = screen.getByRole('switch') as HTMLInputElement
     expect(input.disabled).toBe(true)
     fireEvent.click(input)
-    await settle()
+    await settle(120)
     expect(spy).not.toHaveBeenCalled()
     const track = classes(container.querySelector('[data-slot="switch-control"]')!)
     for (const c of ['h-5', 'w-10', 'rounded-full', 'bg-input', 'data-[state=checked]:bg-primary']) expect(track).toContain(c)
@@ -95,13 +94,13 @@ describe('Tabs', () => {
     expect(tab('Mail').getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tabpanel').textContent).toBe('Mail settings')
     fireEvent.click(tab('Calendar'))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith('calendar')
     expect(tab('Calendar').getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tabpanel').textContent).toBe('Calendar settings')
     // A click on the chosen tab is not a change.
     fireEvent.click(tab('Calendar'))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenCalledTimes(1)
   })
 
@@ -145,7 +144,7 @@ describe('Tabs', () => {
     expect(tab('mail').getAttribute('title')).toBe('Draft mail')
     // A click on the chosen tab reaches the caller's handler, though it is not a change of value; the button is its own.
     fireEvent.click(tab('mail'))
-    await settle()
+    await settle(120)
     expect(picked).toHaveBeenLastCalledWith('mail', 'mail')
     fireEvent.click(screen.getByRole('button', { name: 'Close calendar' }))
     expect(closed).toHaveBeenCalledWith('calendar')
@@ -158,10 +157,10 @@ describe('Tabs', () => {
     expect(tab('Calendar').tabIndex).toBe(-1)
     act(() => tab('Mail').focus())
     fireEvent.keyDown(tab('Mail'), { key: 'ArrowRight' })
-    await settle()
+    await settle(120)
     expect(document.activeElement).toBe(tab('Calendar'))
     fireEvent.keyDown(tab('Calendar'), { key: 'ArrowRight' })
-    await settle()
+    await settle(120)
     // «Later» is disabled: the focus wraps to the first tab. (That an arrow also chooses, with automatic activation,
     // is Ark's and needs a real frame clock: it is checked in the browser, on the showcase.)
     expect(document.activeElement).toBe(tab('Mail'))
@@ -186,7 +185,7 @@ describe('Tabs', () => {
     expect(tab('Mail').getAttribute('aria-controls')).toBe('panel-mail')
     act(() => tab('Mail').focus())
     fireEvent.keyDown(tab('Mail'), { key: 'ArrowRight' })
-    await settle()
+    await settle(120)
     expect(document.activeElement).toBe(tab('Calendar'))
   })
 
@@ -195,12 +194,12 @@ describe('Tabs', () => {
     render(<Sample activation="manual" onChange={spy} />)
     act(() => tab('Mail').focus())
     fireEvent.keyDown(tab('Mail'), { key: 'ArrowRight' })
-    await settle()
+    await settle(120)
     expect(document.activeElement).toBe(tab('Calendar'))
     expect(spy).not.toHaveBeenCalled()
     // Enter and Space on a native button are a click: jsdom does not turn the key into one.
     fireEvent.click(tab('Calendar'))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith('calendar')
   })
 

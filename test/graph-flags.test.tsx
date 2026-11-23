@@ -14,6 +14,7 @@ import { Position, type Edge, type EdgeProps, type Node, type ReactFlowProps } f
 import { WordsProvider } from '../src'
 import { linesOf } from '../src/components/GraphCanvas'
 import { GraphCanvas, type Graph, type GraphCanvasProps, type GraphChange, type GraphEdge, type GraphNode } from '../src/graph'
+import { classes } from './helpers'
 
 // What the canvas hands React Flow, kept to be read (as in test/graph-places.test.tsx): React Flow draws as ever.
 const handed = vi.hoisted(() => ({ props: null as ReactFlowProps | null }))
@@ -80,7 +81,6 @@ const stop = () => {
   expect(all).toHaveLength(1)
   return all[0]
 }
-const classes = (el: Element | null | undefined) => (el?.className ?? '').split(' ')
 /** What screen readers hear after the name of a thing: the texts its `aria-describedby` points to. */
 const description = (el: HTMLElement) => (el.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? '').join(' · ')
 /** What the canvas handed React Flow at its last draw. */

@@ -3,23 +3,10 @@
 // light palette and for the dark one (`prefers-color-scheme: dark`). It does not measure the browser: it takes the declared colors and
 // the backgrounds the package draws them on (paper, paper 2, raised).
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { colorTokens, palettes, themeCss, themePalettes } from './theme-tokens'
-
-export { colorTokens }
-
-const root = fileURLToPath(new URL('../', import.meta.url))
-
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-export function luminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-export function contrast(a: string, b: string): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
+import { contrast, luminance } from '../src/theme-engine'
+import { palettes, themeCss } from './theme-tokens'
+import { root } from './helpers'
 
 const { light, dark } = palettes(themeCss)
 /**
@@ -79,7 +66,7 @@ describe.each(PALETTES)('text contrast from the theme tokens, palette %s', (_nam
 })
 
 /** fg with opacity alpha over bg, like a color with /80. */
-export function over(fg: string, bg: string, alpha: number): string {
+function over(fg: string, bg: string, alpha: number): string {
   const c = [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)))
   return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
 }

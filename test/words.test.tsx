@@ -1,7 +1,7 @@
 // The words a component says by itself are placeholders, in English, that an app replaces once for the whole tree
 // (`WordsProvider`), in any language. A component's own prop still wins; the helpers outside a component take the
 // words as their last argument.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import {
   AttachmentMarks,
@@ -33,8 +33,8 @@ import {
   withinLimit,
   type WordsOverride,
 } from '../src'
+import { settle } from './helpers'
 
-const settle = () => act(async () => { await new Promise((done) => setTimeout(done, 120)) })
 const MB = 1024 * 1024
 
 /** An app's words, in Italian: every group, so each component below is seen to read them. */
@@ -165,7 +165,7 @@ describe('an app replaces the words, all or some', () => {
     expect(screen.getByRole('button', { name: 'Togli l’etichetta casa' })).toBeTruthy()
     // The card of the date field: its foot and the calendar's arrows.
     fireEvent.click(document.getElementById('day')!)
-    await settle()
+    await settle(120)
     expect(screen.getByRole('button', { name: 'Precedente: month' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Successivo: month' })).toBeTruthy()
   })
@@ -195,7 +195,7 @@ describe('an app replaces the words, all or some', () => {
         <Toasts items={[{ id: 'a', text: 'Salvato', undo: { onClick: () => {} } }]} onDismiss={() => {}} />
       </WordsProvider>,
     )
-    await settle()
+    await settle(120)
     expect(screen.getByRole('status', { name: 'Avvisi' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Annulla' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Chiudi l’avviso: Salvato' })).toBeTruthy()

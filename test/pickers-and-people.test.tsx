@@ -6,16 +6,15 @@ import { describe, expect, test, vi } from 'vitest'
 import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, DialogContent, DialogRoot, DialogTitle, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
 import { contrast } from '../src'
 import { inkOn } from '../src/components/ui/avatar'
+import { classes, settle } from './helpers'
 
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const coarse = (cls: string) => 'pointer-coarse:' + cls
-// Ark commits in a frame: the test waits for it, as the browser would.
-const settle = () => act(async () => { await new Promise((done) => setTimeout(done, 120)) })
+// `settle(120)`: Ark commits in a frame, the test waits for it, as the browser would.
 /** Writing in a box as a user does: the box has the focus first. */
 const write = async (box: HTMLInputElement, text: string) => {
   act(() => box.focus())
   fireEvent.change(box, { target: { value: text } })
-  await settle()
+  await settle(120)
 }
 // jsdom does no layout, and Ark shows the thumb once it has measured it: the thumb is looked up hidden.
 const thumbOf = (name?: string) => screen.getByRole('slider', { hidden: true, ...(name ? { name } : {}) })
@@ -62,7 +61,7 @@ describe('Slider', () => {
     act(() => thumb.focus())
     for (const [key, want] of [['ArrowRight', 50], ['ArrowUp', 60], ['ArrowDown', 50], ['ArrowLeft', 40], ['End', 100], ['Home', 0]] as const) {
       fireEvent.keyDown(thumb, { key })
-      await settle()
+      await settle(120)
       expect(spy, key).toHaveBeenLastCalledWith(want)
     }
   })
@@ -194,7 +193,7 @@ describe('Combobox', () => {
     // The detail is a second line of the row.
     expect(options()).toEqual(['Ada Lovelaceada@example.com', 'Alan Turing', 'Grace Hopper'])
     fireEvent.click(screen.getByRole('option', { name: /Ada Lovelace/ }))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith('ada')
     expect(box.value).toBe('Ada Lovelace')
   })
@@ -252,7 +251,7 @@ describe('ChipsInput with suggestions', () => {
     // «Home» is in the field already (whatever its case).
     expect(options()).toEqual(['Work', 'Waiting'])
     fireEvent.click(screen.getByRole('option', { name: 'Work' }))
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith(['home', 'Work'])
     expect(box.value).toBe('')
   })
@@ -264,7 +263,7 @@ describe('ChipsInput with suggestions', () => {
     await write(box, 'zebra')
     expect(options()).toEqual([])
     fireEvent.keyDown(box, { key: 'Enter' })
-    await settle()
+    await settle(120)
     expect(spy).toHaveBeenLastCalledWith(['home', 'zebra'])
   })
 })
@@ -313,9 +312,9 @@ describe('a sheet beside the page', () => {
       </>,
     )
     act(() => screen.getByRole('button', { name: 'Inside' }).focus())
-    await settle()
+    await settle(120)
     act(() => screen.getByRole('button', { name: 'Outside' }).focus())
-    await settle()
+    await settle(120)
     expect(onOpenChange).not.toHaveBeenCalled()
     expect(document.querySelector('[data-slot="sheet-content"]')).not.toBeNull()
   })
@@ -334,9 +333,9 @@ describe('a sheet beside the page', () => {
       </>,
     )
     act(() => screen.getByRole('button', { name: 'Inside' }).focus())
-    await settle()
+    await settle(120)
     fireEvent.keyDown(screen.getByRole('button', { name: 'Inside' }), { key: 'Escape' })
-    await settle()
+    await settle(120)
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape')
     onOpenChange.mockClear()
     const outside = screen.getByRole('button', { name: 'Outside' })
@@ -345,7 +344,7 @@ describe('a sheet beside the page', () => {
     fireEvent.pointerUp(outside)
     fireEvent.mouseUp(outside)
     fireEvent.click(outside)
-    await settle()
+    await settle(120)
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside')
   })
 
@@ -370,7 +369,7 @@ describe('Tooltip with a key hint', () => {
       </Tooltip>,
     )
     act(() => screen.getByRole('button').focus())
-    await settle()
+    await settle(120)
     const hint = document.querySelector('[data-slot="tooltip-shortcut"]')!
     expect(hint.textContent).toBe('Ctrl K')
     expect(hint.tagName).toBe('SPAN')
@@ -392,7 +391,7 @@ describe('the date field: limits, locale, words', () => {
   test('the days before `min` and after `max` cannot be chosen; the card has no button that removes the date', async () => {
     render(<DateField id="due" value="2026-11-10" onChange={() => {}} min="2026-11-05" max="2026-11-20" words={{ clear: 'Togli la data' }} />)
     fireEvent.click(document.getElementById('due')!)
-    await settle()
+    await settle(120)
     const day = (n: string) => [...document.querySelectorAll<HTMLElement>('[data-part="table-cell-trigger"]')].find((d) => d.textContent === n && !d.hasAttribute('data-outside-range'))!
     expect(day('4').hasAttribute('data-disabled')).toBe(true)
     expect(day('5').hasAttribute('data-disabled')).toBe(false)
@@ -405,7 +404,7 @@ describe('the date field: limits, locale, words', () => {
     render(<DateTimeField id="remind" value="2026-11-07T09:00" onChange={() => {}} locale="it-IT" words={{ time: 'Ora', done: 'Fatto' }} />)
     expect(document.getElementById('remind')!.textContent).toBe('7 novembre 2026, 09:00')
     fireEvent.click(document.getElementById('remind')!)
-    await settle()
+    await settle(120)
     expect(screen.getByText('Ora')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Fatto' })).toBeTruthy()
   })

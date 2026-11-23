@@ -5,16 +5,15 @@
 // jsdom does no layout and reads no stylesheet: the px of a primitive is read from its class (the token) through the
 // rule of `theme.css` that defines the token. Careful: Tailwind also scans `test/`; no whole variant class is written here.
 import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { Button, DensityChoice, Input, Textarea } from '../src'
 import { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId } from '../src/density'
 import type { Density, DensityDef } from '../src/density'
 import { THEME_ATTRIBUTES, THEME_VARIABLES, copyTheme } from '../src/themes'
+import { root } from './helpers'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = (file: string) => readFileSync(resolve(root, file), 'utf8')
 const css = source('src/styles/theme.css').replace(/\r\n/g, '\n')
 

@@ -2,13 +2,12 @@
 // The snapshots in this file pin the DOM without `animated` of the toolkit's animated primitives (the one from before
 // the animations, plus the later fixes: ARIA attributes of the notices). An app's components are pinned in its own package. The `useId` ids are
 // numbered in the order they appear (`stripIds`): they do not depend on the React format or on the cases rendered before.
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState, type ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Checkbox, Toasts } from '../src'
 import { preloadMotion, useEntrance } from '../src/internal/motion'
-
-const noop = () => {}
+import { noop, settle, systemMotion } from './helpers'
 
 type Extra = Record<string, unknown>
 /** The components touched, with fixed data. `extra` adds props (for example `animated`). */
@@ -30,9 +29,7 @@ export function stripIds(s: string): string {
   })
 }
 
-/** Ark's machines (the notices, the date field, the labels, the upload zone) act in a microtask after the render. */
-const settle = () => act(async () => {})
-
+// `settle()`: Ark's machines (the notices, the date field, the labels, the upload zone) act in a microtask after the render.
 export const html = async (el: ReactElement) => {
   const { baseElement } = render(el)
   await settle()
@@ -40,10 +37,6 @@ export const html = async (el: ReactElement) => {
   cleanup()
   return out
 }
-
-/** `prefers-reduced-motion: reduce` on or off (jsdom has no matchMedia). */
-const systemMotion = (reduce: boolean) =>
-  vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce') ? reduce : false, media: q, addEventListener() {}, removeEventListener() {} }))
 
 /** Fake Web Animations (jsdom does not have them): records every call to `element.animate`. */
 function fakeAnimations() {
@@ -72,7 +65,6 @@ describe('without animations the DOM is the same as today', () => {
 })
 
 // --- The three rules: off = today's DOM; prefers-reduced-motion = nothing moves; on = under 250 ms. ---
-
 
 describe('rule 1: without the setting nothing changes', () => {
   for (const [name, sample] of Object.entries(cases)) {

@@ -1,23 +1,20 @@
 // @vitest-environment node
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { themeTokens } from '../src/theme-engine'
 import { BASE_THEME } from '../src/themes'
+import { root } from './helpers'
 
 // RULE FOR WHOEVER WRITES TESTS HERE: Tailwind also scans `test/` (the automatic scan starts from the package
 // folder). A class name with a variant written out in full in a test (for example a breakpoint or container
 // prefix followed by the class) generates the rule in the compiled CSS, and the checks on `dist/styles.css` pass even
 // when the source has lost it. In tests, variant names are composed with `+`, never in a single literal; in
 // CSS selectors they are written with escape slashes, as below.
-export const root = fileURLToPath(new URL('../', import.meta.url))
-export const css = () => readFileSync(`${root}dist/styles.css`, 'utf8')
+const css = () => readFileSync(`${root}dist/styles.css`, 'utf8')
 
 /** Removes every `@media (prefers-reduced-motion: no-preference) { … }` block, balancing the braces. */
-export function outsideReducedMotion(text: string): string {
+function outsideReducedMotion(text: string): string {
   const marker = '@media (prefers-reduced-motion: no-preference)'
   let out = ''
   let i = 0
@@ -36,7 +33,7 @@ export function outsideReducedMotion(text: string): string {
 }
 
 /** The at-rules (`@media …`, `@supports …`) that enclose position `index` of the CSS, from the outermost. */
-export function enclosingAtRules(text: string, index: number): string[] {
+function enclosingAtRules(text: string, index: number): string[] {
   const stack: string[] = []
   let start = 0
   for (let i = 0; i < index; i++) {
@@ -50,34 +47,6 @@ export function enclosingAtRules(text: string, index: number): string[] {
     } else if (ch === ';') start = i + 1
   }
   return stack.filter((s) => s.startsWith('@')).map((s) => s.replace(/\s+/g, ' '))
-}
-
-/**
- * The declarations that the compiled CSS gives to an element through its classes, each with the conditions
- * (`@media`, `@supports`) that enclose it: this is the CSS the browser applies, not the class names.
- */
-export function declarationsOf(classes: string, text = css()): { prop: string; value: string; conditions: string[] }[] {
-  const found: { prop: string; value: string; conditions: string[] }[] = []
-  for (const cls of classes.split(/\s+/).filter(Boolean)) {
-    const selector = '.' + cls.replace(/[^a-zA-Z0-9_-]/g, '\\$&') + ' {'
-    for (let at = text.indexOf(selector); at >= 0; at = text.indexOf(selector, at + 1)) {
-      const conditions = enclosingAtRules(text, at).filter((c) => c.startsWith('@media') || c.startsWith('@supports'))
-      const body = text.slice(at + selector.length, text.indexOf('}', at))
-      for (const d of body.split(';')) {
-        const colon = d.indexOf(':')
-        if (colon > 0) found.push({ prop: d.slice(0, colon).trim(), value: d.slice(colon + 1).trim(), conditions })
-      }
-    }
-  }
-  return found
-}
-
-/** The value of the `class` attribute of the element the component renders, read from the HTML (not from the source). */
-export function classesOf(element: Parameters<typeof renderToStaticMarkup>[0], tag: string): string {
-  const html = renderToStaticMarkup(element)
-  const match = new RegExp(`<${tag}\\b[^>]*\\sclass="([^"]*)"`).exec(html)
-  expect(match, tag).not.toBeNull()
-  return match![1]!
 }
 
 beforeAll(() => {

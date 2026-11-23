@@ -3,8 +3,7 @@
 // two opt-ins (Snap Layouts and the window theme). Tauri's modules are mocked only to see whether they are loaded.
 import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import { readdirSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { useState } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { TitleBar, WindowControls, type TitleBarDragProps } from '../src'
@@ -26,6 +25,7 @@ import {
   type WindowControlsOptions,
   type WindowThemeOptions,
 } from '../tauri'
+import { flush, root } from './helpers'
 
 // What a page would load of Tauri: each module says when it is loaded.
 const tauri = vi.hoisted(() => ({ loaded: [] as string[], window: undefined as unknown }))
@@ -46,8 +46,6 @@ vi.mock('@tauri-apps/api/event', () => {
   return { listen: async () => () => {} }
 })
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
 /** Dispatches and says whether the default was refused. */
 const refused = (target: EventTarget, event: Event) => !target.dispatchEvent(event)
 const button = (name: string) => document.querySelector<HTMLButtonElement>(`[data-window-control="${name}"]`)

@@ -2,8 +2,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { FormField, InputGroup, InputGroupButton, InputGroupText } from '../src'
+import { classes } from './helpers'
 
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const slot = (root: ParentNode, name: string) => root.querySelector(`[data-slot="${name}"]`) as HTMLElement
 
 describe('InputGroup', () => {

@@ -25,8 +25,7 @@ import { useMergedRef } from '../src/lib/refs'
 import { isEmptyNode } from '../src/lib/utils'
 import { SwapLabel } from '../src/internal/swap-label'
 import { inToasts, TOASTS_ATTR } from '../src/internal/overlay'
-
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
+import { classes } from './helpers'
 
 describe('useMergedRef', () => {
   test('gives the element to a function ref and to an object ref, and takes it back from both', () => {
