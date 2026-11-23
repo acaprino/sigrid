@@ -173,7 +173,7 @@
     },
     {
      "file": "src/components/LookSettings.tsx",
-     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app\npasses its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
+     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is. Every choice is a card with a preview of what it does; the app passes its own words.\nThe icons are not a choice: Sigrid has one set, the same in every app (2026-11-23). The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
      "components": [
       {
        "name": "BaseColorChoice",
@@ -317,27 +317,6 @@
         {
          "name": "text",
          "type": "DensityText",
-         "required": true
-        }
-       ]
-      },
-      {
-       "name": "IconPackChoice",
-       "doc": "The icon pack (R6): anchors for the eye beside the views, the groups and the settings.",
-       "props": [
-        {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
-         "required": true
-        },
-        {
-         "name": "onPack",
-         "type": "(pack: IconPack) => void",
-         "required": true
-        },
-        {
-         "name": "text",
-         "type": "IconPackText",
          "required": true
         }
        ]
@@ -539,26 +518,6 @@
          "type": "Readonly<Record<string, ChoiceText>>",
          "required": true,
          "doc": "Each density's name and note, by id. A density without words here shows its own label."
-        }
-       ]
-      },
-      {
-       "name": "IconPackText",
-       "fields": [
-        {
-         "name": "label",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "hint",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "packs",
-         "type": "Readonly<Record<\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\", ChoiceText>>",
-         "required": true
         }
        ]
       },
@@ -3988,7 +3947,7 @@
     },
     {
      "file": "src/components/ui/tree.tsx",
-     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, an icon of the user's pack, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
+     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, one of Sigrid's icons, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
      "components": [
       {
        "name": "Tree",
@@ -4102,7 +4061,7 @@
         {
          "name": "icon",
          "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
-         "doc": "A meaning of the toolkit's icons (`folder`, `file`…) or of the app's own (`IconPackProvider`'s `icons`), drawn in the user's pack. In a tree where some rows have one, a row without keeps an empty slot (R6)."
+         "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
@@ -4318,19 +4277,12 @@
      ]
     },
     {
-     "file": "src/icon-packs.generated.ts",
-     "about": "Generated by scripts/icon-packs.mjs from the packs' own SVGs (licences in THIRD_PARTY.md). Do not edit by hand.",
-     "also": [
-      "IconArt"
-     ]
-    },
-    {
      "file": "src/icons.tsx",
-     "about": "The icon packs (R6 of the toolkit's rules, 2026-11-20): icons are visual anchors for the eye, and the user picks the\npack in Settings. A component asks for an icon by what it means (`settings`, `delete`), never by a pack's own name:\nthe pack in context draws it. Lucide is the default (line, the toolkit's stroke). Two packs take the colour of the\ntheme: Phosphor Duotone and Solar Duotone, drawn in the text colour with a lighter second tone. Three are in their\nown colours: Fluent Color, Fluent Emoji Flat and Twemoji, drawn emoji that look the same on every device (the\ndevice's own emoji font left the packs on 2026-11-21: the owner did not like it). The drawn packs are not npm\ndependencies: their drawings are in `icon-packs.generated.ts`, written by `scripts/icon-packs.mjs`. Functional\nchrome (chevrons, ×, the search magnifier) stays Lucide.",
+     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
      "components": [
       {
        "name": "Icon",
-       "doc": "An icon by its meaning, drawn by the pack in context (or by `pack`, for a preview of another pack). Decorative: the label next to it names the thing, so it is hidden from screen readers. A name nobody draws (from data, or an app's meaning with no provider above) is an empty slot of the same size, so the row keeps its alignment (R6).",
+       "doc": "An icon by its meaning, drawn from Sigrid's set. Decorative: the label next to it names the thing, so it is hidden from screen readers. A name Sigrid does not draw (from data) is an empty slot of the same size, so the row keeps its alignment (R6).",
        "props": [
         {
          "name": "name",
@@ -4338,79 +4290,16 @@
          "required": true
         },
         {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\""
-        },
-        {
          "name": "className",
          "type": "string"
-        }
-       ]
-      },
-      {
-       "name": "IconPackProvider",
-       "doc": "The pack every `Icon` below draws from: the app passes the user's choice, and with `icons` the meanings of its own (a constant: the same object at every render). A provider without `icons` keeps the ones of the provider above.",
-       "props": [
-        {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
-         "required": true
-        },
-        {
-         "name": "icons",
-         "type": "Readonly<Record<string, IconDrawing>>"
-        },
-        {
-         "name": "children",
-         "type": "ReactNode",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "IconDrawing",
-       "doc": "How an app draws a meaning of its own (a mail app's `inbox`, `reply`): the line drawing is required; a pack left out falls back to it. The drawn packs take a drawing each (its square view box and its SVG content, as `scripts/icon-packs.mjs` writes them). `emoji` may also be the glyph itself, fully qualified (with U+FE0F where the symbol is text by default): the device's font then draws it, in the Emoji pack and in Twemoji.",
-       "fields": [
-        {
-         "name": "lucide",
-         "type": "Glyph",
-         "required": true
-        },
-        {
-         "name": "fluent",
-         "type": "Glyph"
-        },
-        {
-         "name": "duotone",
-         "type": "Drawing"
-        },
-        {
-         "name": "solar",
-         "type": "Drawing"
-        },
-        {
-         "name": "emoji",
-         "type": "string | Drawing"
-        },
-        {
-         "name": "twemoji",
-         "type": "Drawing"
         }
        ]
       }
      ],
      "also": [
-      "DEFAULT_ICON_PACK",
       "ICON_NAMES",
-      "ICON_PACKS",
       "IconName",
-      "IconPack",
-      "IconSet",
-      "isIconName",
-      "isIconPack",
-      "useIconPack"
+      "isIconName"
      ]
     },
     {
@@ -6600,7 +6489,7 @@
    "files": [
     {
      "file": "src/components/RichTextField.tsx",
-     "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith the icons of the pack the user chose (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text and is not a step of the undo: Ctrl+Z never brings the other draft back. The\n  field's own changes never loop back, also when the app hands them back late (a store, a round trip): a value\n  the field itself gave a moment ago is not taken for a new one.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
+     "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith Sigrid's icons (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text and is not a step of the undo: Ctrl+Z never brings the other draft back. The\n  field's own changes never loop back, also when the app hands them back late (a store, a round trip): a value\n  the field itself gave a moment ago is not taken for a new one.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
      "components": [
       {
        "name": "RichTextField",
@@ -6913,7 +6802,7 @@
         {
          "name": "icon",
          "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" | \"account\" | \"a…",
-         "doc": "An icon of the user's pack before the name."
+         "doc": "One of Sigrid's icons before the name."
         },
         {
          "name": "color",
