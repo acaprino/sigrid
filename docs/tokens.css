@@ -1,79 +1,99 @@
 /*
- * @acaprino/sigrid: the design tokens as the code holds them (extracted 2026-11-20, Marionette step
- * `design-system-extract`). A reference, not a stylesheet the package loads: the live sources stay
- * `src/styles/theme.css` (first paint, Tailwind `@theme`), `src/theme-engine.ts` (`themeTokens`, `shapeOf`,
- * `elevationOf`), `src/theme-catalog.ts` (themes and fonts) and `src/internal/motion-impl.tsx` (durations).
- * Every value below names the file it was read from. Colours are those of the default theme (Neutral, `neutro`) in
- * light and dark: every other theme is computed by the engine from `theme-catalog.ts` with the same rules, so its
- * values differ while the names and the guarantees do not. Values the code does not define are listed at the end as
- * gaps, not invented.
+ * @acaprino/sigrid: every design token with its value. Written from the source by scripts/tokens.mjs (do not edit it:
+ * run `node scripts/tokens.mjs`; test/tokens-doc.test.ts fails when it is behind). A reference, not a stylesheet the
+ * package loads: the live sources are src/styles/theme.css, src/theme-engine.ts, src/density.ts and
+ * src/internal/motion-impl.tsx.
+ * The colours are those of the gray baseline (`BASE_THEME`), the first paint of src/styles/theme.css. An app passes its
+ * own themes: the engine computes every colour of them with the same rules, so the values differ while the names and
+ * the guarantees (test/contrast.test.ts, test/theme-engine.test.ts) do not.
  */
 
-/* ———— Colour, light (src/styles/theme.css `@theme`, = themeTokens('neutro', 'light')) ———— */
+/* ———— Colour, light: themeTokens(BASE_THEME, 'light').colors, written on the root by applyTheme ———— */
 :root {
-  /* Surfaces */
-  --color-paper: #fafcfc;          /* the page */
-  --color-paper-2: #f0f3f3;        /* lanes, headers, quiet fills, the segment track */
-  --color-sidebar-paper: #edf0f0;  /* the light sidebar (Park's ground) */
-  --color-raised: #ffffff;         /* sheets, cards, menus, popovers, the segment thumb */
-  /* Ink: three levels, each >= 4.5:1 on paper, paper-2, raised and the sidebar (test/contrast.test.ts) */
-  --color-ink: #141717;
-  --color-ink-soft: #3b3e3e;
-  --color-ink-mute: #616464;
-  /* Lines */
-  --color-line: #dee0e0;           /* decorative dividers: < 3:1 on purpose */
-  --color-input: #87898a;          /* control borders: >= 3:1 (approved deviation from Park's step-7 border) */
-  /* Accent: text, fill, tint */
-  --color-accent: #006f6b;         /* accent as text: >= 4.5:1 on every background and on accent-soft */
-  --color-accent-hover: #00615d;   /* the solid button under the pointer */
-  --color-accent-soft: #d4f3f0;    /* the accent tint */
-  --color-primary: #006f6b;        /* the solid button fill (light: = accent) */
+  --color-paper: #fafcfc; /* the page */
+  --color-paper-2: #eeeeee; /* lanes, headers, quiet fills, the segment track */
+  --color-sidebar-paper: #ededed; /* the sidebar */
+  --color-ink: #161616; /* text, at least 7:1 on every background */
+  --color-ink-soft: #3d3d3d; /* secondary text, at least 4.5:1 */
+  --color-ink-mute: #626262; /* muted text, at least 4.5:1 */
+  --color-line: #dcdcdc; /* decorative dividers, under 3:1 on purpose */
+  --color-accent: #1f1f1f; /* the accent as text and the focus ring: 4.5:1 on every background and on accent-soft */
+  --color-accent-hover: #303030; /* the solid button under the pointer */
+  --color-accent-soft: #ebebeb; /* the accent tint */
+  --color-raised: #fdfefe; /* sheets, cards, menus, popovers */
+  --color-drop: #161616; /* the colour of the shadows */
+  --color-background: #fafcfc;
+  --color-foreground: #161616;
+  --color-popover: #fdfefe;
+  --color-popover-foreground: #161616;
+  --color-primary: #1f1f1f; /* the fill of the one solid button */
   --color-primary-foreground: #ffffff;
-  --color-selected: #ceeeeb;       /* the selection tint */
-  --color-selected-ink: #00504d;
-  /* Focus */
-  --color-ring: #141717;           /* the focus ring: the ink (before the polish pass; rule 8 asks for accent text) */
-  /* Fixed for every theme (src/theme-engine.ts FIXED) */
+  --color-muted-foreground: #626262;
   --color-destructive: #ad2a1e;
   --color-destructive-soft: #fef1ef;
   --color-destructive-foreground: #ffffff;
-  /* Status colours, fixed for every theme (src/theme-engine.ts STATUS; added 2026-11-21) */
   --color-success: #1c6b3f;
   --color-success-soft: #eef8f1;
   --color-warning: #855000;
   --color-warning-soft: #fdf4e3;
-  --color-highlight: #ffe38a;       /* behind a match inside a text, with the ink on it */
-  --color-mark-ink-light: #ffffff;
-  --color-mark-ink-dark: #1b1916;
-  /* The shadow colour (src/theme-engine.ts `drop`: the ink in light) */
-  --color-drop: #141717;
-  /* shadcn aliases kept for the primitives (theme.css): background = paper, foreground = ink, card = popover =
-     raised, secondary = muted = paper-2, muted-foreground = ink-mute, border = line. */
-  /* Data colours: 18 user colours adapted per theme, as dots (`--color-mark-N`, >= 3:1) and icons
-     (`--color-mark-icon-N`, >= 3.5:1); 8 label pairs `--tag-N-bg`/`--tag-N-ink` (>= 4.5:1).
-     Values: src/styles/theme.css. */
+  --color-highlight: #ffe38a; /* behind a match inside a text, with the ink on it */
+  --color-border: #dcdcdc;
+  --color-input: #878787; /* control borders, at least 3:1 */
+  --color-ring: #1f1f1f; /* the focus ring: the accent as text */
+  --color-selected: #dedede; /* the selection tint */
+  --color-selected-ink: #161616;
+  --color-spot: #1f1f1f; /* the theme's second colour as a fill; without one, the fill */
+  --color-spot-foreground: #ffffff;
+  --color-spot-soft: #ebebeb;
+  --color-spot-ink: #1f1f1f;
+  --color-sidebar-ink: #3d3d3d;
+  --color-sidebar-mute: #626262;
+  --color-sidebar-selected: #dedede;
+  --color-sidebar-selected-ink: #161616;
+  --color-sidebar-accent: #1f1f1f;
+  --color-sidebar-accent-ink: #fafcfc;
+  --color-mark-1: #605553;
+  --color-mark-2: #605553;
+  --color-mark-3: #5f5651;
+  --color-mark-4: #5e5651;
+  --color-mark-5: #5d574f;
+  --color-mark-6: #575950;
+  --color-mark-7: #545a53;
+  --color-mark-8: #515b55;
+  --color-mark-9: #525a5a;
+  --color-mark-10: #4f5b5c;
+  --color-mark-11: #525960;
+  --color-mark-12: #56585c;
+  --color-mark-13: #555861;
+  --color-mark-14: #575760;
+  --color-mark-15: #5b565e;
+  --color-mark-16: #5d555c;
+  --color-mark-17: #5f5558;
+  --color-mark-18: #605556;
 }
 
-/* ———— Colour, dark (src/styles/theme.css `prefers-color-scheme: dark`, = themeTokens('neutro', 'dark')) ———— */
+/* ———— Colour, dark: themeTokens(BASE_THEME, 'dark').colors ———— */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper: #171919;
-    --color-paper-2: #101313;
-    --color-sidebar-paper: #101313;
-    --color-raised: #242727;
-    --color-ink: #e3e5e5;
-    --color-ink-soft: #bcbebe;
-    --color-ink-mute: #989a9a;
-    --color-line: #2f3232;
-    --color-input: #6e7171;
-    --color-accent: #81c6c1;
-    --color-accent-hover: #116e6a;
-    --color-accent-soft: #0c3230;
-    --color-primary: #267c77;
-    --color-primary-foreground: #f6fefd;
-    --color-selected: #1a3634;
-    --color-selected-ink: #dbf0ee;
-    --color-ring: #e3e5e5;
+    --color-paper: #1e1e1e;
+    --color-paper-2: #171717;
+    --color-sidebar-paper: #171717;
+    --color-ink: #e4e4e4;
+    --color-ink-soft: #bebebe;
+    --color-ink-mute: #9b9b9b;
+    --color-line: #353535;
+    --color-accent: #dedede;
+    --color-accent-hover: #cfcfcf;
+    --color-accent-soft: #2b2b2b;
+    --color-raised: #2a2a2a;
+    --color-drop: #060606;
+    --color-background: #1e1e1e;
+    --color-foreground: #e4e4e4;
+    --color-popover: #2a2a2a;
+    --color-popover-foreground: #e4e4e4;
+    --color-primary: #dedede;
+    --color-primary-foreground: #0d0d0d;
+    --color-muted-foreground: #9b9b9b;
     --color-destructive: #ff9a8d;
     --color-destructive-soft: #3d2420;
     --color-destructive-foreground: #17161a;
@@ -82,109 +102,301 @@
     --color-warning: #f0b85a;
     --color-warning-soft: #3a2c12;
     --color-highlight: #4f3f08;
-    --color-drop: #050606;
+    --color-border: #353535;
+    --color-input: #747474;
+    --color-ring: #dedede;
+    --color-selected: #333333;
+    --color-selected-ink: #f2f2f2;
+    --color-spot: #dedede;
+    --color-spot-foreground: #0d0d0d;
+    --color-spot-soft: #2b2b2b;
+    --color-spot-ink: #dedede;
+    --color-sidebar-ink: #bebebe;
+    --color-sidebar-mute: #9b9b9b;
+    --color-sidebar-selected: #333333;
+    --color-sidebar-selected-ink: #f2f2f2;
+    --color-sidebar-accent: #dedede;
+    --color-sidebar-accent-ink: #1e1e1e;
+    --color-mark-1: #a19593;
+    --color-mark-2: #a19592;
+    --color-mark-3: #a09690;
+    --color-mark-4: #9f9690;
+    --color-mark-5: #9e978e;
+    --color-mark-6: #979a90;
+    --color-mark-7: #949b92;
+    --color-mark-8: #919b95;
+    --color-mark-9: #929a9a;
+    --color-mark-10: #8e9b9d;
+    --color-mark-11: #9199a1;
+    --color-mark-12: #96989c;
+    --color-mark-13: #9598a2;
+    --color-mark-14: #9797a1;
+    --color-mark-15: #9b969f;
+    --color-mark-16: #9e959c;
+    --color-mark-17: #a19598;
+    --color-mark-18: #a19596;
   }
 }
 
-/* ———— Typography (src/styles/theme.css `@theme`, src/theme-catalog.ts FONTS, src/styles/fonts.css) ———— */
+/* ———— Shape: themeTokens(BASE_THEME, …).shape, written on the root by applyTheme; in dark only what differs ———— */
 :root {
-  --font-sans: "IBM Plex Sans", "Inter", system-ui, sans-serif;  /* 12 more stacks in theme-catalog.ts FONTS */
-  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;  /* inline code (DESIGN.md code-sm) */
-  --text-2xs: 0.75rem;   --text-2xs--line-height: 1.5;              /* 12/18: labels, keys, captions */
-  --text-xs: 0.8125rem;  --text-xs--line-height: calc(1.125 / 0.8125); /* 13/18: dates and counts beside a title */
-  --text-sm: 0.875rem;   --text-sm--line-height: calc(1.25 / 0.875);  /* 14/20: body and controls (md and up) */
-  --text-base: 1rem;     --text-base--line-height: 1.5;               /* 16/24: titles; fields below 860px */
-  --text-lg: 1.125rem;   --text-lg--line-height: calc(1.75 / 1.125);  /* 18/28: the title of a card or a panel of an app (since 2026-11-22) */
-  --text-xl: 1.25rem;    --text-xl--line-height: calc(1.75 / 1.25);   /* 20/28: the title of a section of an app */
-  --text-2xl: 1.5rem;    --text-2xl--line-height: calc(2 / 1.5);      /* 24/32: the title of a page of an app */
-  /* Weights loaded: 400, 500, 600, 700 (IBM Plex Sans, fonts.css). Weights used by the components: 400, 500, 600. */
-}
-
-/* ———— Spacing (Tailwind 4 default: --spacing: 0.25rem, a 4px step; not redefined by the toolkit) ———— */
-:root {
-  --spacing: 0.25rem;
-  /* Control padding in use (src/components/ui/*): 10px (xs button), 12px (sm button, field, select), 14px (md
-     button, segment item); between items of a list 2px (menu, select: Park's gap 0.5); overlay padding 16px, 24px
-     from 768px (dialog). */
-}
-
-/* ———— Density (src/density.ts `DENSITIES`, src/styles/theme.css; added after the extraction) ———— */
-/* `applyDensity` writes `--density-*` on the root and `data-density`; theme.css derives the tokens below from them.
-   `normal` (the default, and the value before any script runs) is one 4px step under the toolkit as extracted (36/32/28px controls). */
-:root {
-  --touch-target: 44px;  /* with a coarse pointer every --control-* and --row-height is max(--touch-target, what the density asks) */
-  --control-md: 36px;    /* compact 32px, large 40px: Button default/lg/icon, Input, Select, DateField, segment item */
-  --control-sm: 32px;    /* compact 28px, large 36px: Button sm, Select sm, time field, close buttons, calendar cells */
-  --control-xs: 28px;    /* compact 24px, large 32px: Button xs, the swatches of the base colour */
-  --pad-md: 12px;        /* compact 10px, large 14px: Button default, segment item */
-  --pad-sm: 10px;        /* compact 8px, large 12px: Button sm, fields, Select (left) */
-  --pad-xs: 8px;         /* compact 6px, large 10px: Button xs, Select (right) */
-  --row-height: 40px;    /* compact 32px, large 48px: least height of a menu or select item, height of their labels */
-  --row-pad: 8px;        /* compact 4px, large 12px: padding above and below a menu or select item */
-  /* A definition's measures are kept inside DENSITY_LIMITS: control 24 to 64px, pad 4 to 32px, row height 24 to 72px,
-     row pad 0 to 24px. */
-}
-
-/* ———— Shape (src/theme-engine.ts `shapeOf`, src/styles/theme.css `@theme`) ———— */
-:root {
-  /* The values of the `soft` shape, the default. A theme may be `sharp` (2/4/6px) or `round` (6/10/14px): `ThemeDef.shape`. */
-  --radius-sm: 4px;      /* Park l1: what sits inside a control (menu item of a select, chip, checkbox box) */
-  --radius-md: 6px;      /* Park l2: controls (buttons, fields, selects, badges, menu items) */
-  --radius-lg: 10px;     /* Park l3: what holds controls (cards, menus, popovers, dialogs, toasts, the segment group) */
-  --radius-xl: 10px;     /* = l3: there is no fourth level */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 10px;
   --radius-button: 6px;
+  --radius-check: 9999px;
   --radius-chip: 6px;
-  --radius-check: 9999px; /* round boxes an app may give its own checkboxes; the toolkit's Checkbox uses rounded-sm */
   --icon-stroke: 1.75;
   --icon-cap: round;
   --icon-join: round;
   --border-width: 1px;
-}
-
-/* ———— Elevation (src/theme-engine.ts `elevationOf`; Park's shadows tokens) ———— */
-:root {
   --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
-  --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-  --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-  --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-  --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-  /* Dark: 0 Npx 2Npx drop at 47% (float 55%), with `inset 0 0 1px` ink at 33% in place of the outer ring. */
+  --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 12%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --elevation-xs: 0 1px 1px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+    --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+    --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+    --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+    --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 55%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+  }
 }
 
-/* ———— Layers (src/components/ui/*, src/internal/overlay.ts) ———— */
+/* ———— Density: densityVariables, written on the root by applyDensity; `normal` is the default ———— */
 :root {
-  /* an app's own drawer: 40 (outside the toolkit); tooltip: 45; dialogs, sheets, menus, selects, popovers, date card: 50;
-     toasts: 70 (TOASTS_LAYER). */
+  --density-control-md: 36px; /* compact 32px, large 40px */
+  --density-control-sm: 32px; /* compact 28px, large 36px */
+  --density-control-xs: 28px; /* compact 24px, large 32px */
+  --density-pad-md: 12px; /* compact 10px, large 14px */
+  --density-pad-sm: 10px; /* compact 8px, large 12px */
+  --density-pad-xs: 8px; /* compact 6px, large 10px */
+  --density-row-height: 40px; /* compact 32px, large 48px */
+  --density-row-pad: 8px; /* compact 4px, large 12px */
 }
 
-/* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ———— */
+/* ———— Declared in src/styles/theme.css (Tailwind's `@theme`, the density and title bar tokens, the label colours,
+   the layout and the heights) ———— */
+@theme {
+  --shadow-xs: var(--elevation-xs);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+  --shadow-float: var(--elevation-float);
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.5;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: calc(1.125 / 0.8125);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-lg--letter-spacing: -0.01em;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-xl--letter-spacing: -0.015em;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-2xl--letter-spacing: -0.02em;
+  --font-sans: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --breakpoint-md: 860px;
+}
 :root {
-  /* Values: Fluent 2's motion tokens (Microsoft, MIT; THIRD_PARTY.md). FLUENT_DURATIONS: faster 100ms, fast 150ms,
-     normal 200ms. FLUENT_CURVES: decelerateMid cubic-bezier(0, 0, 0, 1) for what enters, accelerateMin
-     cubic-bezier(0.8, 0, 0.78, 1) for what leaves, easyEase cubic-bezier(0.33, 0, 0.67, 1) for what moves in place.
-     Durations (DURATION_MS): toast 200ms, row 200ms, sheet 200ms, land 150ms, popup 150ms (CARD_DURATION_MS), mark 100ms.
-     Gestures (GESTURE_MS): press 100ms, tooltip 100ms, follow 100ms, leave 100ms, release 150ms, turn 150ms,
-     slide 150ms, enter 200ms, list 200ms. Travel (TRAVEL_PX): hint 4px, card 8px, row 8px, notice 24px,
-     sheet 32px.
-     Pressed scale 0.96 (PRESS_SCALE), check mark from 0.5. A floating surface is held unseen for one frame, then
-     enters from the side it was placed on. No springs. Tooltip delay 500ms (TOOLTIP_DELAY_MS). */
+  --touch-target: 44px;
 }
-
-/* ———— Breakpoints and sizes (src/styles/theme.css, src/internal/media.ts) ———— */
+:where(:root, [data-density]) {
+  --control-md: var(--density-control-md, 36px);
+  --control-sm: var(--density-control-sm, 32px);
+  --control-xs: var(--density-control-xs, 28px);
+  --pad-md: var(--density-pad-md, 12px);
+  --pad-sm: var(--density-pad-sm, 10px);
+  --pad-xs: var(--density-pad-xs, 8px);
+  --row-height: var(--density-row-height, 40px);
+  --row-pad: var(--density-row-pad, 8px);
+}
+@media (pointer: coarse) {
+  :where(:root, [data-density]) {
+    --control-md: max(var(--touch-target), var(--density-control-md, 36px));
+    --control-sm: max(var(--touch-target), var(--density-control-sm, 32px));
+    --control-xs: max(var(--touch-target), var(--density-control-xs, 28px));
+    --row-height: max(var(--touch-target), var(--density-row-height, 40px));
+  }
+}
 :root {
-  /* --breakpoint-md: 860px (the sidebar stops being a drawer). Phone = (width < 860px) and (pointer: coarse).
-     Control heights: 36px (md), 32px (sm), 28px (xs), 44px (every control with a coarse pointer). */
+  --titlebar-start: env(titlebar-area-x, 0px);
+  --titlebar-end: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+}
+:where(:root, [data-density]) {
+  --titlebar-height: calc(var(--control-sm) + 1rem);
+}
+:where(:root:not([data-scheme]), [data-scheme="light"]) {
+  --tag-1-bg: #fde8e4;
+  --tag-1-ink: #a3291b;
+  --tag-2-bg: #fdf0d5;
+  --tag-2-ink: #7a4a00;
+  --tag-3-bg: #eef3d9;
+  --tag-3-ink: #4d5e12;
+  --tag-4-bg: #e1f2e6;
+  --tag-4-ink: #1f6b3c;
+  --tag-5-bg: #ddf1f1;
+  --tag-5-ink: #155e63;
+  --tag-6-bg: #e2ecfa;
+  --tag-6-ink: #1d4f91;
+  --tag-7-bg: #ece6fb;
+  --tag-7-ink: #5133a6;
+  --tag-8-bg: #fbe4f0;
+  --tag-8-ink: #9a2464;
+}
+@media (prefers-color-scheme: dark) {
+  :where(:root:not([data-scheme])) {
+    --tag-1-bg: #4a221c;
+    --tag-1-ink: #ffb4a6;
+    --tag-2-bg: #43321a;
+    --tag-2-ink: #f6c977;
+    --tag-3-bg: #343a1c;
+    --tag-3-ink: #cfdc8a;
+    --tag-4-bg: #1e3a28;
+    --tag-4-ink: #98dbac;
+    --tag-5-bg: #173a3b;
+    --tag-5-ink: #8fd6d8;
+    --tag-6-bg: #1c2f4d;
+    --tag-6-ink: #a9c8f5;
+    --tag-7-bg: #2f2752;
+    --tag-7-ink: #c8b8fa;
+    --tag-8-bg: #48203a;
+    --tag-8-ink: #f5aed2;
+  }
+}
+:where([data-scheme="dark"]) {
+  --tag-1-bg: #4a221c;
+  --tag-1-ink: #ffb4a6;
+  --tag-2-bg: #43321a;
+  --tag-2-ink: #f6c977;
+  --tag-3-bg: #343a1c;
+  --tag-3-ink: #cfdc8a;
+  --tag-4-bg: #1e3a28;
+  --tag-4-ink: #98dbac;
+  --tag-5-bg: #173a3b;
+  --tag-5-ink: #8fd6d8;
+  --tag-6-bg: #1c2f4d;
+  --tag-6-ink: #a9c8f5;
+  --tag-7-bg: #2f2752;
+  --tag-7-ink: #c8b8fa;
+  --tag-8-bg: #48203a;
+  --tag-8-ink: #f5aed2;
+}
+[data-tag-hue="1"] {
+  --tag-bg: var(--tag-1-bg);
+  --tag-ink: var(--tag-1-ink);
+}
+[data-tag-hue="2"] {
+  --tag-bg: var(--tag-2-bg);
+  --tag-ink: var(--tag-2-ink);
+}
+[data-tag-hue="3"] {
+  --tag-bg: var(--tag-3-bg);
+  --tag-ink: var(--tag-3-ink);
+}
+[data-tag-hue="4"] {
+  --tag-bg: var(--tag-4-bg);
+  --tag-ink: var(--tag-4-ink);
+}
+[data-tag-hue="5"] {
+  --tag-bg: var(--tag-5-bg);
+  --tag-ink: var(--tag-5-ink);
+}
+[data-tag-hue="6"] {
+  --tag-bg: var(--tag-6-bg);
+  --tag-ink: var(--tag-6-ink);
+}
+[data-tag-hue="7"] {
+  --tag-bg: var(--tag-7-bg);
+  --tag-ink: var(--tag-7-ink);
+}
+[data-tag-hue="8"] {
+  --tag-bg: var(--tag-8-bg);
+  --tag-ink: var(--tag-8-ink);
+}
+[data-mark-hue="1"] {
+  --mark-dot: var(--color-mark-1);
+}
+[data-mark-hue="2"] {
+  --mark-dot: var(--color-mark-2);
+}
+[data-mark-hue="3"] {
+  --mark-dot: var(--color-mark-3);
+}
+[data-mark-hue="4"] {
+  --mark-dot: var(--color-mark-4);
+}
+[data-mark-hue="5"] {
+  --mark-dot: var(--color-mark-5);
+}
+[data-mark-hue="6"] {
+  --mark-dot: var(--color-mark-6);
+}
+[data-mark-hue="7"] {
+  --mark-dot: var(--color-mark-7);
+}
+[data-mark-hue="8"] {
+  --mark-dot: var(--color-mark-8);
+}
+[data-mark-hue="9"] {
+  --mark-dot: var(--color-mark-9);
+}
+[data-mark-hue="10"] {
+  --mark-dot: var(--color-mark-10);
+}
+[data-mark-hue="11"] {
+  --mark-dot: var(--color-mark-11);
+}
+[data-mark-hue="12"] {
+  --mark-dot: var(--color-mark-12);
+}
+[data-mark-hue="13"] {
+  --mark-dot: var(--color-mark-13);
+}
+[data-mark-hue="14"] {
+  --mark-dot: var(--color-mark-14);
+}
+[data-mark-hue="15"] {
+  --mark-dot: var(--color-mark-15);
+}
+[data-mark-hue="16"] {
+  --mark-dot: var(--color-mark-16);
+}
+[data-mark-hue="17"] {
+  --mark-dot: var(--color-mark-17);
+}
+[data-mark-hue="18"] {
+  --mark-dot: var(--color-mark-18);
+}
+:root {
+  --grid-columns-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  --grid-columns-md: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  --grid-columns-lg: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
+  --scroll-bounded: calc(var(--app-height) * 0.48);
+  --content-max: 1152px;
+}
+:root {
+  --app-height: 100dvh;
+  --safe-area-max-inset-bottom: env(safe-area-max-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --fit-height: calc(var(--app-height) - var(--bottom-bar-room, 0px));
 }
 
-/*
- * Gaps (not defined by the source; left open for the owner):
- * - no `--text-lg` / `--text-xl` / `--text-2xl` of the toolkit: Tailwind's defaults (18/20/24px) are reachable and
- *   three components use `text-lg` (18px), which no token names;
- * - no z-index scale as tokens: the layers are literal utilities in each component;
- * - no named spacing scale beyond Tailwind's 4px step; no letter-spacing tokens (one literal 0.07em, attachments
- *   heading);
- * - no token for the focus ring's width and offset (each component writes its own: 3px box-shadow at 50%, 2px
- *   outline with offset 1px, 2px or 6px);
- * - no 12-step (Park/Radix) palette: the engine computes each role in OKLCH, so "step 11" and "step 12" have no
- *   names in the code.
- */
+/* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ————
+   Curves: decelerateMid cubic-bezier(0, 0, 0, 1); accelerateMin cubic-bezier(0.8, 0, 0.78, 1); easyEase cubic-bezier(0.33, 0, 0.67, 1).
+   Durations: toast 200ms, mark 100ms, sheet 200ms, row 200ms, popup 150ms, land 150ms.
+   Gestures: press 100ms, release 150ms, tooltip 100ms, follow 100ms, leave 100ms, turn 150ms, slide 150ms, enter 200ms, list 200ms.
+   Travel: hint 4px, card 8px, row 8px, notice 24px, sheet 32px.
+   Pressed scale: 0.96. Touch target: 44px. */
