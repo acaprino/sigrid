@@ -270,7 +270,15 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
     many it hides) and, with `editable`, to draw: the plus hangs a new thing, a drag between two handles joins them,
     Delete takes one away, each asked of the app with `onChange`. The keyboard is the one of a tree and the things
-    are one Tab stop; a screen reader hears a tree. Only what is in the view is drawn; the layout is done again at
+    are one Tab stop; a screen reader hears a tree. With `model="graph"` the lines are relations (calls, imports,
+    data) and not «hangs from»: nothing closes, no thing has an arrow and every one is in sight (`collapsed` and
+    `defaultCollapsed` are the tree mode's). The arrows follow the lines: with `direction="right"` Right goes along
+    a thing's first line out and Left back along its first line in, while Down and Up go through the things in the
+    order given (downwards the axes swap); Home and End reach the first and the last, Enter chooses. Opening is the
+    app's: a double press on a thing or its › button calls `onOpen(id)`, and without `onOpen` there is no › and
+    nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a graph (an
+    application named by `aria-roledescription`) whose things are buttons that say whether they are chosen. In both
+    modes +, − and 0 zoom in, out and fit, as the buttons do. Only what is in the view is drawn; the layout is done again at
     each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
     branches closed (`defaultCollapsed`). `visibleGraph` and
     `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
@@ -301,6 +309,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   import { GraphCanvas } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+  <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
+    onOpen={(id) => setScope(id)} className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

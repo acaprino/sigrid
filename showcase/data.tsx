@@ -261,18 +261,36 @@ const JOINS: GraphEdge[] = [
 const WIDE: GraphNode[] = Array.from({ length: 1000 }, (_, i) => ({ id: `n${i}`, label: `Item ${i + 1}` }))
 const WIDE_JOINS: GraphEdge[] = WIDE.slice(1).map((node, i) => ({ from: `n${Math.floor(i / 4)}`, to: node.id }))
 
+/** The calls between the parts of a service: relations, not «hangs from», with a ring (the queue and the worker call each other). */
+const CALLS: GraphNode[] = [
+  { id: 'gateway', label: 'Gateway', detail: 'Takes the requests' },
+  { id: 'auth', label: 'Sign-in' },
+  { id: 'orders', label: 'Orders', detail: '12 functions' },
+  { id: 'billing', label: 'Billing' },
+  { id: 'queue', label: 'Queue' },
+  { id: 'worker', label: 'Worker' },
+  { id: 'store', label: 'Store', detail: 'Database' },
+]
+const CALL_LINES: GraphEdge[] = [
+  { from: 'gateway', to: 'auth' }, { from: 'gateway', to: 'orders' }, { from: 'orders', to: 'billing' }, { from: 'orders', to: 'queue' },
+  { from: 'queue', to: 'worker' }, { from: 'worker', to: 'queue' }, { from: 'worker', to: 'store' }, { from: 'billing', to: 'store' }, { from: 'auth', to: 'store' },
+]
+
 export function Graphs() {
   const [graph, setGraph] = React.useState({ nodes: PLAN, edges: JOINS })
   const [selected, setSelected] = React.useState<string | null>('design')
   const [picked, setPicked] = React.useState<string | null>(null)
+  const [call, setCall] = React.useState<string | null>(null)
+  const [opened, setOpened] = React.useState<string | null>(null)
   const chosen = graph.nodes.find((node) => node.id === selected)
+  const openedPart = CALLS.find((node) => node.id === opened)
   return (
     <Section
       id="graph"
       title="GraphCanvas"
       note={
         <>
-          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away.
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit.
         </>
       }
     >
@@ -291,6 +309,12 @@ export function Graphs() {
       <Row label="downwards, read only">
         <div data-sample="graph-down" className="w-full max-w-4xl">
           <GraphCanvas aria-label="Plan, from the head" nodes={PLAN} edges={JOINS} direction="down" defaultCollapsed={['content', 'build']} className="h-80" />
+        </div>
+      </Row>
+      <Row label="a graph: nothing closes">
+        <div data-sample="graph-model" className="flex w-full max-w-4xl flex-col gap-3">
+          <GraphCanvas aria-label="Calls of the service" model="graph" nodes={CALLS} edges={CALL_LINES} selected={call} onSelect={setCall} onOpen={setOpened} search className="h-80" />
+          <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press a thing twice, or its ›.'}</p>
         </div>
       </Row>
       <Row label="1,000 things">

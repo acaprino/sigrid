@@ -151,7 +151,8 @@ invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps
 list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
 Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). Things
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
-(`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector. The
+(`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
+relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. The
 examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each

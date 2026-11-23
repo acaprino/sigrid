@@ -203,7 +203,7 @@ export interface Words {
     readonly find: string
     /** The name of the small map of the whole graph. */
     readonly map: string
-    /** The names of the arrow of a thing: to show what hangs from it, to hide it. */
+    /** The names of the arrow of a thing: to show what hangs from it, to hide it. In the graph mode `open` names its › too, which asks the app to open it. */
     readonly open: (item: string) => string
     readonly close: (item: string) => string
     /** What screen readers hear of a closed thing: its name and how many it hides. */
@@ -212,6 +212,8 @@ export interface Words {
     readonly add: (item: string) => string
     /** The name a new thing starts with. */
     readonly newNode: string
+    /** What screen readers call the canvas in the graph mode (`model="graph"`), where it is not a tree. */
+    readonly role: string
   }
   readonly reorder: {
     /** The name of the handle that moves an item («Move Inbox»). */
@@ -396,6 +398,7 @@ export const DEFAULT_WORDS: Words = {
     closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
     add: (item) => `Add under ${item}`,
     newNode: 'New',
+    role: 'graph',
   },
   reorder: {
     handle: (item) => `Move ${item}`,
