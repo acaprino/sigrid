@@ -91,9 +91,17 @@ describe('build output', () => {
     }
   })
 
-  test('index.js and its chunks never require() React: one React, the one of the app (Base UI, use-sync-external-store)', () => {
-    const files = ['dist/index.js', ...readdirSync(`${root}dist/chunks`).map((f) => `dist/chunks/${f}`)]
-    for (const f of files) expect(readFileSync(`${root}${f}`, 'utf8'), f).not.toMatch(/__require\(|require\(["']react/)
+  test('no file of dist is CommonJS: no entry and no chunk ever require()s, so each is an ES module a browser runs as it is (Base UI, use-sync-external-store, React Flow)', () => {
+    const js = (dir: string) => readdirSync(`${root}${dir}`).filter((f) => f.endsWith('.js')).map((f) => `${dir}/${f}`)
+    const files = [...js('dist'), ...js('dist/chunks')]
+    expect(files).toContain('dist/graph.js')
+    for (const f of files) expect(readFileSync(`${root}${f}`, 'utf8'), f).not.toMatch(/__require\(|require\(["']react|module\.exports/)
+  })
+
+  test("the graph's entry takes React's compiler runtime from the app, and has none of its own", () => {
+    const graph = readFileSync(`${root}dist/graph.js`, 'utf8')
+    expect(graph).toMatch(/from\s*["']react\/compiler-runtime["']/)
+    expect(graph).not.toMatch(/\$dispatcherGuard|useRenderCounter/)
   })
 
   test('styles.css has no infinite animation (INV-008, test/provenance.test.ts)', () => {

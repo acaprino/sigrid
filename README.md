@@ -270,10 +270,51 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
     many it hides) and, with `editable`, to draw: the plus hangs a new thing, a drag between two handles joins them,
     Delete takes one away, each asked of the app with `onChange`. The keyboard is the one of a tree and the things
-    are one Tab stop; a screen reader hears a tree. Only what is in the view is drawn; the layout is done again at
-    each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
-    branches closed (`defaultCollapsed`). `visibleGraph` and
-    `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
+    are one Tab stop; a screen reader hears a tree. With `model="graph"` the lines are relations (calls, imports,
+    data) and not «hangs from»: nothing closes, no thing has an arrow and every one is in sight (`collapsed` and
+    `defaultCollapsed` are the tree mode's). The arrows follow the lines: with `direction="right"` Right goes along
+    a thing's first line out and Left back along its first line in, while Down and Up go through the things in the
+    order given; with `direction="down"` the axes swap (Down along the first line out, Up back along the first line
+    in, Right and Left through the order). Home and End reach the first and the last, Enter chooses; from the › of a
+    thing the arrows, Home and End move as from the thing. Opening is the app's, and only for the things it says it
+    opens: a thing with an `openLabel` («Open Orders», the name of its › and of the action) has a › button, and a
+    double press on it or its › calls `onOpen(id)`, once. Without `onOpen`, or on a thing without `openLabel`, there
+    is no › and nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a
+    group named by the app and called a graph (`aria-roledescription`, the word `graph.roleDescription`), whose things
+    are buttons named by their name and second line, described by where their lines lead and come from («leads to
+    Store, Mail · comes from Gateway», the words `graph.leadsTo` and `graph.comesFrom`), the chosen one
+    `aria-current`. With `editable` the plus of the chosen thing adds one after it (`graph.addAfter`). With a finger
+    the › and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
+    the buttons do. Only what is in the view is drawn; the layout is done again at each change (about 30 ms for 200
+    things in sight, 200 ms for a thousand). In the tree mode a larger graph starts with its branches closed
+    (`defaultCollapsed`). In the graph mode every thing is always in sight, so the whole graph is laid out again
+    whenever the app passes new nodes or edges or another `direction` (choosing a thing or moving the focus lays out
+    nothing): a graph of thousands of things costs most of a second at each change, so show a part of it (the scope
+    the user opened). `visibleGraph` and `layoutGraph` are exported for an app that draws the same graph another way
+    (a list, a print).
+    - Two kinds of line. A `GraphEdge` is `{ from, to }` and `to` hangs from `from` (`kind: 'child'`, the default):
+      these lines alone make the tree, what opens and closes, what a closed thing hides, the ranks and the keys. With
+      `kind: 'link'` the line joins two things without any of that (one waits for the other, refers to it, never goes
+      with it) and is drawn while both ends are in sight. Any line may have `label` (words in its middle: keep them
+      short, the gap between two ranks is 56 px), `style` (`solid`, `dashed`, `dotted`), `tone` (`default`, `accent`,
+      which is also thicker, `warning`, `destructive`: the theme's, at 3:1 or more on the canvas) and `directed` (an
+      arrowhead at `to`; a `link` has one unless `false`, a `child` line none unless `true`). What a kind of line
+      means is told by its dash and its words, never by its colour alone. Screen readers hear a thing's `link` lines
+      in its description («waits for, to Screens»); the lines themselves are not read twice.
+    - `steps`, a `Map` from a thing's id to its step numbers, numbers a path through the graph (the steps of a plan,
+      the answer to a question): each thing on it has the selection tint, its numbers in small dots and in its name
+      («Copy, step 2»); the lines between two of them take the accent; what is neither on it nor joined to it is
+      dimmed (the field's finds come first, then the chosen thing and the path together). When the things on the path
+      change, what hides one of them opens, through `onCollapsedChange` when the app keeps `collapsed`; the user may
+      close it again.
+    - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
+      with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
+      whole graph down to 0.2, as it was before there was a floor). A graph too large for that starts at its top left. The edges of the
+      canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
+      wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
+      (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
+      entry of `dist` takes `react` (each is an ES module with no `require`).
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -301,6 +342,17 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   import { GraphCanvas } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+  // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
+  <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
+    onOpen={(id) => setScope(id)} className="h-full" />
+
+  // A path of two steps, a line that waits and one that never goes together; the view moved by the app.
+  const view = useRef<GraphCanvasHandle>(null)
+  <GraphCanvas ref={view} aria-label="Plan" nodes={nodes} className="h-full"
+    edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
+      { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
+    steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
+  <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

@@ -6467,7 +6467,7 @@
    "files": [
     {
      "file": "src/components/GraphCanvas.tsx",
-     "about": "A canvas for a graph of things and what joins them (tasks and what they wait for, the parts of a project, notes\nthat lead to other notes): the user moves over it, looks at one thing and what is joined to it, opens and closes\nwhat hangs from a thing and, where the app lets them, draws: adds a thing, joins two, takes one away. The canvas,\nits pan and zoom, the lines and the joining by hand are React Flow's (`@xyflow/react`), the places of the things\nare dagre's (`@dagrejs/dagre`): npm dependencies, pinned, see THIRD_PARTY.md. The form is the toolkit's. It has its\nown entry of the package (`./graph`) and its own stylesheet (`./graph.css`), so an app without a graph loads neither.\n- The graph is laid out by itself, in ranks: from the start to the end of the line (`direction=\"right\"`) or from\n  the head to the foot (`\"down\"`). The user does not place things by hand, so nothing can be lost off the canvas.\n- A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a\n  line under it. The chosen one has the selection tint (R1); what is joined to it stays as it is and the rest is\n  dimmed, so the eye finds the neighbourhood. The app shows the details of the chosen thing where it likes (the\n  `Inspector` of the frame).\n- A thing with others hanging from it has an arrow: closed, it says how many it hides, and the graph is laid out\n  again without them. What can be reached another way stays in sight.\n- The keyboard is the one of a tree, and the things are one Tab stop: Down and Up go through what is in sight,\n  Right opens or goes to the first thing that hangs, Left closes or goes back to what it hangs from, Home and End\n  reach the ends, Enter chooses. With `editable`, Delete takes the thing away. Screen readers hear a tree: the name\n  of a thing, its level, whether it is open, how many it hides.\n- With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,\n  opening what hides it.\n- With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the\n  chosen thing to hang a new one from it. Every change is asked of the app with `onChange`, which keeps the graph\n  (and its undo, R12): nothing is kept here but what is open and where the view is.\nThe cost is the layout, done again when the graph changes or a thing opens or closes: about 30ms for 200 things in\nsight, 200ms for a thousand, most of a second for three thousand (measured). A larger graph starts with its\nbranches closed (`defaultCollapsed`). Moving the view costs little: only what is in it is drawn.\nNothing moves by itself: the layout jumps to its new places, with or without animations. The name of React Flow\nstays at the foot of the canvas, as its makers ask of whoever does not pay for it.",
+     "about": "A canvas for a graph of things and what joins them (tasks and what they wait for, the parts of a project, notes\nthat lead to other notes, the calls between the parts of a program): the user moves over it, looks at one thing and\nwhat is joined to it, opens and closes what hangs from a thing and, where the app lets them, draws: adds a thing,\njoins two, takes one away. The canvas, its pan and zoom, the lines and the joining by hand are React Flow's\n(`@xyflow/react`), the places of the things are dagre's (`@dagrejs/dagre`): npm dependencies, pinned, see\nTHIRD_PARTY.md. The form is the toolkit's. It has its own entry of the package (`./graph`) and its own stylesheet\n(`./graph.css`), so an app without a graph loads neither.\n- The graph is laid out by itself, in ranks: from the start to the end of the line (`direction=\"right\"`) or from\n  the head to the foot (`\"down\"`). The user does not place things by hand, so nothing can be lost off the canvas.\n- A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a\n  line under it. The chosen one has the selection tint (R1); what is joined to it stays as it is and the rest is\n  dimmed, so the eye finds the neighbourhood. The app shows the details of the chosen thing where it likes (the\n  `Inspector` of the frame).\n- Two ways to read the lines (`model`). In the tree mode, the default, a line says that a thing hangs from another:\n  - A thing with others hanging from it has an arrow: closed, it says how many it hides, and the graph is laid out\n    again without them. What can be reached another way stays in sight.\n  - The keyboard is the one of a tree, and the things are one Tab stop: Down and Up go through what is in sight,\n    Right opens or goes to the first thing that hangs, Left closes or goes back to what it hangs from, Home and End\n    reach the ends, Enter chooses. Screen readers hear a tree: the name of a thing, its level, whether it is open,\n    how many it hides.\n- In the graph mode (`model=\"graph\"`) a line is a relation (a call, an import, data that flows), not «hangs from»:\n  - Nothing closes: every thing is in sight and none has an arrow. Opening a thing is the app's (going into it,\n    showing what it holds), and only for the things it says it opens: a thing with an `openLabel` («Open Orders»)\n    has a › button of that name, and a double press on it or its › calls `onOpen` with its id. Without `onOpen`,\n    or on a thing without `openLabel`, there is no › and nothing opens.\n  - The things are one Tab stop, and the › of the one that has it is the next. Along the ranks the arrows follow the\n    lines: with `direction=\"right\"` Right goes to what the thing's first line leads to and Left back to what its\n    first line comes from, while Down and Up go through the things in the order the app gave them; downwards the\n    axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the › the arrows,\n    Home and End move as from its thing. Screen readers hear a group called a graph, of buttons named by their name\n    and second line, described by where their lines lead and come from, the chosen one `aria-current`.\n- In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit the whole graph, as the buttons\n  at the head of the canvas do, and with `editable` Delete takes the thing away.\n- Two kinds of line. A `child` line (the default) is the one each mode reads as above: in the tree mode these lines\n  alone make the tree, what opens and closes, what a closed thing hides, the ranks and the keys. A `link` line joins\n  two things without any of that (one waits for the other, one refers to the other, the two never go together) and\n  is drawn only while both ends are in sight. A line may have words on it, a dash (`dashed`, `dotted`), a tone of the\n  theme (`accent`, `warning`, `destructive`) and an arrowhead (a `link` has one unless it goes both ways): what a\n  kind of line means is said by its dash and its words, never by its colour alone. Screen readers hear a thing's\n  `link` lines in its description, with their words and the thing at the other end; the lines are not read twice.\n- With `steps` the app numbers a path through the graph (the steps of a plan, the answer to a question): each\n  thing on it has the selection tint and its numbers in small dots and in its name, the lines between two of them\n  take the accent, what is neither on the path nor joined to it is dimmed, and what hides a thing of the path opens.\n- The view is fitted at the first paint (on the path, when there is one), again whenever the box changes size, and\n  with the button or the key: never smaller than a name can be read (`minFitZoom`, about 11px names). A graph too\n  large for that starts at its top left, and the edges of the view fall between things wherever the layout leaves\n  a gap between the floor and 1.5 (a dense graph in a small box may still have one cut). The app\n  moves the view through a `ref`: `focus` (onto some things, opening what hides them), `fit`, `zoomTo`.\n- With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,\n  opening what hides it.\n- With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the\n  chosen thing to hang a new one from it (in the graph mode, to add one after it). Every change is asked of the app\n  with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here but what is open and where the\n  view is.\nThe cost is the layout, done again when the graph changes or a thing opens or closes: about 30ms for 200 things in\nsight, 200ms for a thousand, most of a second for three thousand (measured). In the tree mode a larger graph starts\nwith its branches closed (`defaultCollapsed`); in the graph mode every thing is in sight, so the whole graph is laid\nout at every change of the nodes, the edges or the direction (choosing a thing or moving the focus lays out\nnothing). Moving the view costs little: only what is in it is drawn.\nNothing moves by itself: the layout and the view jump to their new places, with or without animations, so reduced\nmotion is always honoured. The name of React Flow stays at the foot of the canvas, as its makers ask of whoever does\nnot pay for it.",
      "components": [
       {
        "name": "GraphCanvas",
@@ -6490,6 +6490,11 @@
          "required": true
         },
         {
+         "name": "model",
+         "type": "\"graph\" | \"tree\"",
+         "doc": "How the lines are read. `tree` (the default): a thing hangs from another, so a thing with others hanging from it opens and closes, and the keys and the roles are a tree's. `graph`: a line is a relation (a call, an import, data), every thing stays in sight with nothing that closes, the arrows follow the lines, and opening is the app's (`onOpen`)."
+        },
+        {
          "name": "direction",
          "type": "\"right\" | \"down\"",
          "doc": "The ranks go from the start of the line to its end, or from the head to the foot. Default `right`."
@@ -6504,9 +6509,19 @@
          "type": "((id: string | null) => void)"
         },
         {
+         "name": "onOpen",
+         "type": "((id: string) => void)",
+         "doc": "In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its › button. Without it nothing opens."
+        },
+        {
+         "name": "steps",
+         "type": "ReadonlyMap<string, readonly number[]>",
+         "doc": "A path the app numbers through the graph: the id of each thing on it and its step numbers (a thing may be several steps). Each has the selection tint and its numbers, the lines between two of them take the accent, what is neither on it nor joined to it is dimmed. When the things on it change, what hides one of them opens (through `onCollapsedChange` when the app keeps what is closed); the first view is on them."
+        },
+        {
          "name": "collapsed",
          "type": "readonly string[]",
-         "doc": "The ids of the things that are closed, when the app keeps them; otherwise the canvas keeps its own, from `defaultCollapsed`."
+         "doc": "In the tree mode, the ids of the things that are closed, when the app keeps them; otherwise the canvas keeps its own, from `defaultCollapsed`."
         },
         {
          "name": "defaultCollapsed",
@@ -6515,6 +6530,11 @@
         {
          "name": "onCollapsedChange",
          "type": "((ids: string[]) => void)"
+        },
+        {
+         "name": "minFitZoom",
+         "type": "number",
+         "doc": "The smallest scale the view is fitted at (the first view, a change of size, the button, `fit`, `focus`): below it a name could not be read, so a graph too large starts at its top left instead. Default 0.8, names of about 11px; 0 fits the whole graph whatever its size, down to the smallest zoom (0.2). The user can still zoom out by hand."
         },
         {
          "name": "search",
@@ -6537,6 +6557,11 @@
          "doc": "The graph after a change, and the change: the app keeps the graph."
         },
         {
+         "name": "ref",
+         "type": "React.Ref<GraphCanvasHandle>",
+         "doc": "What the app can do to the view: `focus`, `fit`, `zoomTo`."
+        },
+        {
          "name": "className",
          "type": "string",
          "doc": "Classes of the box: its height (`h-96`, or a place in a column that gives it one)."
@@ -6557,6 +6582,30 @@
          "name": "edges",
          "type": "readonly GraphEdge[]",
          "required": true
+        }
+       ]
+      },
+      {
+       "name": "GraphCanvasHandle",
+       "doc": "What the app can do to the view, through the canvas's `ref`. The view jumps: nothing moves by itself.",
+       "fields": [
+        {
+         "name": "focus",
+         "type": "(ids: readonly string[], options?: { padding?: number | undefined; }) => void",
+         "required": true,
+         "doc": "Brings these things into the view, as large as fits and never smaller than `minFitZoom`, opening what hides them. The keyboard focus stays where it is. `padding`: px around them (default 24)."
+        },
+        {
+         "name": "fit",
+         "type": "() => void",
+         "required": true,
+         "doc": "The whole graph in the view, as the button does: never smaller than `minFitZoom`, from the top left when it is too large for that."
+        },
+        {
+         "name": "zoomTo",
+         "type": "(scale: number) => void",
+         "required": true,
+         "doc": "The scale of the view (1 is the things' own size), about the middle of the view."
         }
        ]
       },
@@ -6588,7 +6637,7 @@
       },
       {
        "name": "GraphEdge",
-       "doc": "What joins two things: `to` hangs from `from`.",
+       "doc": "What joins two things: by default, in the tree mode `to` hangs from `from`; in the graph mode the line goes from `from` to `to`.",
        "fields": [
         {
          "name": "from",
@@ -6599,6 +6648,31 @@
          "name": "to",
          "type": "string",
          "required": true
+        },
+        {
+         "name": "kind",
+         "type": "\"link\" | \"child\"",
+         "doc": "`child` (the default): the line of the mode. In the tree mode `to` hangs from `from`, and these lines alone make the tree: what opens and closes, what a closed thing hides, the ranks of the layout, the keys. `link`: a line between two things that changes none of that (one waits for the other, refers to it, never goes with it), and in either mode no rank. Any other value is taken as `child`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "Words on the line, in its middle. Screen readers hear them too, in the description of the two things."
+        },
+        {
+         "name": "style",
+         "type": "\"solid\" | \"dashed\" | \"dotted\"",
+         "doc": "The dash of the line. What a kind of line means is said by its dash and its words, never by its colour alone. Default `solid`."
+        },
+        {
+         "name": "tone",
+         "type": "\"accent\" | \"default\" | \"destructive\" | \"warning\"",
+         "doc": "The colour of the line, among the theme's (each keeps 3:1 on the canvas): `accent` is also thicker. Default the muted ink."
+        },
+        {
+         "name": "directed",
+         "type": "boolean",
+         "doc": "An arrowhead at `to`. Default: a `link` has one, a `child` has none (its rank says which way it goes). `false` for a relation that goes both ways."
         }
        ]
       },
@@ -6630,6 +6704,11 @@
          "name": "color",
          "type": "string",
          "doc": "The colour the user gave the thing (`#rrggbb`): an 8px dot before the name (R10)."
+        },
+        {
+         "name": "openLabel",
+         "type": "string",
+         "doc": "In the graph mode, the name of the action that opens the thing and of its › button («Open Orders»): only a thing with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it."
         }
        ]
       }
