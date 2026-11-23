@@ -15,7 +15,7 @@
 // labels that match and are not in the field yet are listed under it; the arrows move, Enter or a click adds the one
 // reached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).
 // No animation.
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
 import { ComboboxPrimitive as Combobox, createListCollection } from '../components/ui/combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
 import { X } from 'lucide-react'
@@ -141,7 +141,20 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
       box.value = rest
     })
   }
-  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm pointer-coarse:min-h-11 outline-none placeholder:text-muted-foreground" />
+  // The text written and left in the box becomes a label when the focus goes elsewhere (Tab, a click on a button or on the
+  // page): Ark does it only for the focus or the press it hears outside, and not at all under the combobox. A press on a
+  // suggestion keeps the focus in the box, and one that lands on the list is not leaving.
+  const onBlur = (e: FocusEvent<HTMLInputElement>) => {
+    if ((e.relatedTarget as Element | null)?.closest?.('[data-slot="chips-suggestions"]')) return
+    const text = e.currentTarget.value.trim()
+    if (!text) return
+    const next = clean([...value, ...text.split(split)])
+    if (!same(next, value)) onChange(next)
+    // Ark's text and the box's own: the first is what Enter and the list read, the second what is on the screen.
+    tags.setInputValue('')
+    e.currentTarget.value = ''
+  }
+  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm pointer-coarse:min-h-11 outline-none placeholder:text-muted-foreground" />
   return (
     // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field; with the density it is half of what the control height leaves (30px: the chip and the two borders)
     <TagsInput.Control className={cn('flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 rounded-md border border-line px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0 hover:border-input', FOCUS_WITHIN_RING)}>
@@ -206,7 +219,6 @@ export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQu
       editable={false}
       addOnPaste
       delimiter={split}
-      blurBehavior="add"
       translations={translations}
       {...(placeholder === undefined ? {} : { placeholder })}
       className="min-w-0"
@@ -284,7 +296,6 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
         editable={false}
         addOnPaste
         delimiter={split}
-        blurBehavior="add"
         translations={translations}
         {...(placeholder === undefined ? {} : { placeholder })}
         className="min-w-0"
