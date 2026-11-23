@@ -2014,7 +2014,8 @@
        "props": [
         {
          "name": "onOpenChange",
-         "type": "((open: boolean) => void)"
+         "type": "((open: boolean, reason: SheetCloseReason) => void)",
+         "doc": "`reason` is told when it closes: an app that keeps a form in the sheet may answer a press outside differently from the Esc."
         }
        ],
        "passesOn": true
