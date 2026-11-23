@@ -1,0 +1,4301 @@
+{
+ "about": "The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.",
+ "rules": "DESIGN.md",
+ "entries": [
+  {
+   "import": "@acaprino/sigrid",
+   "files": [
+    {
+     "file": "src/color-theme.ts",
+     "about": "A theme from two colours (owner, 2026-11-22: «due colori e poi un accento»): the theme colour sets the buttons, the\nselection, the links and the focus ring; the spot colour is the accent, the one loud colour, kept for the few things\nthat ask for attention now. The grays of the page are the third, quiet colour. The spot is not picked from the whole\nwheel: three colours that go with the theme colour are proposed, from quiet to loud, and the engine then moves each\none until its contrast thresholds hold.",
+     "also": [
+      "colorTheme",
+      "ColorThemePick",
+      "isSpotKind",
+      "SPOT_KINDS",
+      "SpotKind",
+      "spotOf",
+      "spotSuggestions"
+     ]
+    },
+    {
+     "file": "src/colors.ts",
+     "about": "",
+     "also": [
+      "COLOR_NAMES",
+      "colorHue",
+      "COLORS",
+      "markHueAttrs"
+     ]
+    },
+    {
+     "file": "src/components/ColorMatch.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "ColorMatch",
+       "doc": "Two colours for a theme: the theme colour, and the spot colour that goes with it. The spot is not picked from the whole wheel: three colours matched to the theme colour are proposed, from quiet to loud (`spotSuggestions`), besides none and one of the user's own. The sample below is drawn with the theme the two colours give (`colorTheme`).",
+       "props": [
+        {
+         "name": "colors",
+         "type": "readonly { readonly color: string; readonly label: string; }[]",
+         "required": true,
+         "doc": "The theme colours ready to pick, besides one of the user's own."
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "required": true,
+         "doc": "The theme colour, `#rrggbb`."
+        },
+        {
+         "name": "spot",
+         "type": "string | null",
+         "required": true,
+         "doc": "The spot colour: one of the three proposals, a colour of the user's own, or none."
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "onColor",
+         "type": "(color: string) => void",
+         "required": true
+        },
+        {
+         "name": "onSpot",
+         "type": "(spot: SpotKind | string | null) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "{ color: string; spot: string; own: string; none: string; kinds: Record<SpotKind, string>; sample: { action: string; chosen: string; row: string; due: string; running: string; }; }",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ColorMatchProps"
+     ]
+    },
+    {
+     "file": "src/components/Dialog.tsx",
+     "about": "SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)\nSmoothUI's props (`open`, `onOpenChange`, `title`, `description`, `footer`, `children`) match ours;\nplus returning focus and the toolkit's motion preference.",
+     "components": [
+      {
+       "name": "Dialog",
+       "doc": "Modal window on a raised surface: a name to change, a profile, confirmations.",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "Accessible title of the window."
+        },
+        {
+         "name": "description",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "Actions at the bottom (usually a primary `Button` and a `ghost` one)."
+        },
+        {
+         "name": "restoreFocusTo",
+         "type": "React.RefObject<HTMLElement | null>",
+         "doc": "Where focus goes when it closes: the window opens from state, not from a `Trigger` that would get focus back, and without this focus ends up on the `body`. `restoreFocusTo` is the element that opened it; `onCloseAutoFocus` speaks first and can decide for itself (`event.preventDefault()`, then move focus wherever it wants). Both are optional."
+        },
+        {
+         "name": "onCloseAutoFocus",
+         "type": "((event: Event) => void)"
+        },
+        {
+         "name": "drawer",
+         "type": "boolean",
+         "doc": "The form opens in a side panel on the right, like a details sheet. Without it, it is a window in the center of the page: the short confirmations."
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DialogProps"
+     ]
+    },
+    {
+     "file": "src/components/LookSettings.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "BaseColorChoice",
+       "doc": "The base colour: the theme's own colours, one of the ready colours, or any colour. A colour makes the palette (`palette.ts`); `seed` is the colour a new palette starts from (the one on the page, so nothing jumps).",
+       "props": [
+        {
+         "name": "palette",
+         "type": "PalettePick | null",
+         "required": true
+        },
+        {
+         "name": "seed",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onPalette",
+         "type": "(palette: PalettePick | null) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "BaseColorText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ChoiceCard",
+       "doc": "An option: a small preview of what it does, its name and note, and the mark when chosen.",
+       "props": [
+        {
+         "name": "choice",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "note",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onChoose",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "preview",
+         "type": "ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ChoiceCards",
+       "doc": "The options of a choice as cards side by side: two per row on the phone, three (or two) on wider screens.",
+       "props": [
+        {
+         "name": "labelledBy",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "columns",
+         "type": "2 | 3"
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ChoiceGroup",
+       "doc": "A choice with its label and, right below it, what it is for; the options follow. The label names the group for assistive technology (`aria-labelledby` on the options). Level 3 is a choice of the section, level 4 a part of one.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string"
+        },
+        {
+         "name": "level",
+         "type": "3 | 4"
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ChoicePreview",
+       "doc": "The frame of a small preview inside an option: what choosing it looks like.",
+       "props": [
+        {
+         "name": "kind",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DensityChoice",
+       "doc": "The density, among the ones the app offers (the toolkit's presets, `DENSITIES`, or its own definitions): each card draws three rows to scale. `chosen` is the id on the page; the app applies the one picked (`applyDensity`).",
+       "props": [
+        {
+         "name": "densities",
+         "type": "readonly D[]",
+         "required": true
+        },
+        {
+         "name": "chosen",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onDensity",
+         "type": "(density: D) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "DensityText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "IconPackChoice",
+       "doc": "The icon pack (R6): anchors for the eye beside the views, the groups and the settings.",
+       "props": [
+        {
+         "name": "pack",
+         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
+         "required": true
+        },
+        {
+         "name": "onPack",
+         "type": "(pack: IconPack) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "IconPackText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "PaletteComboChoice",
+       "doc": "How the palette shares the page: each card shows the palette that combination makes from the base colour.",
+       "props": [
+        {
+         "name": "theme",
+         "type": "ThemeDef",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "tone",
+         "type": "ThemeTone | null",
+         "required": true
+        },
+        {
+         "name": "palette",
+         "type": "PalettePick | null",
+         "required": true
+        },
+        {
+         "name": "seed",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onPalette",
+         "type": "(palette: PalettePick) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "PaletteComboText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "PaletteStrip",
+       "doc": "A palette, not a miniature of the app (owner, 2026-11-20: «far vedere solo la palette e non tutto lo scheletro»): the page, the sidebar, the selection, the accent and the filled button, in the scheme of the pick.",
+       "props": [
+        {
+         "name": "pick",
+         "type": "ThemePick",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ThemeCatalogChoice",
+       "doc": "The app's ready-made themes, one card each with the theme's palette in the scheme shown. `chosen` is the id of the theme on the page, or null when a palette from a base colour replaces it (then none is chosen).",
+       "props": [
+        {
+         "name": "themes",
+         "type": "readonly ThemeDef[]",
+         "required": true
+        },
+        {
+         "name": "chosen",
+         "type": "string | null",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "tone",
+         "type": "ThemeTone | null",
+         "required": true
+        },
+        {
+         "name": "onTheme",
+         "type": "(id: string) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "ThemeCatalogText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TonePresetChoice",
+       "doc": "The tone, among three: each card shows that tone on the colours in use (the palette, or the theme).",
+       "props": [
+        {
+         "name": "theme",
+         "type": "ThemeDef",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "palette",
+         "type": "PalettePick | null",
+         "required": true
+        },
+        {
+         "name": "tone",
+         "type": "ThemeTone | null",
+         "required": true
+        },
+        {
+         "name": "onTone",
+         "type": "(tone: ThemeTone | null) => void",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "TonePresetText",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TonePreview",
+       "doc": "What a tone changes, side by side: the sidebar's tint and its selected row, four data colours and the filled button.",
+       "props": [
+        {
+         "name": "pick",
+         "type": "ThemePick",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "BaseColorText",
+      "ChoiceText",
+      "DensityText",
+      "IconPackText",
+      "PaletteComboText",
+      "radioArrows",
+      "ThemeCatalogText",
+      "TonePresetText"
+     ]
+    },
+    {
+     "file": "src/components/PortalContainer.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "PortalContainerProvider",
+       "doc": "Where the overlays of this subtree mount: menus, popovers, selects, tooltips and dialogs. By default the page's `document.body`. An app that draws part of its React tree into another document (a popup window, an iframe) wraps that part with the other document's body, so its overlays open there and not in the page that owns the tree. `null` is the page's body: a provider whose element is not there yet (a layer that mounts with its children) keeps its place in the tree, so nothing under it is mounted twice when the element arrives.",
+       "props": [
+        {
+         "name": "container",
+         "type": "HTMLElement | null",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "usePortalContainer"
+     ]
+    },
+    {
+     "file": "src/components/ThemeGallery.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "ThemeGallery",
+       "doc": "A compact theme picker. Each tile samples its own surfaces in the active scheme and tone. A null selection marks the optional custom tile, whose editor belongs to the caller.",
+       "props": [
+        {
+         "name": "themes",
+         "type": "readonly T[]",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "tone",
+         "type": "ThemeTone | null"
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "selected",
+         "type": "T[\"id\"] | null",
+         "required": true
+        },
+        {
+         "name": "onTheme",
+         "type": "(theme: T) => void",
+         "required": true
+        },
+        {
+         "name": "custom",
+         "type": "{ label: string; onChoose: () => void; }"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ThemeGalleryProps"
+     ]
+    },
+    {
+     "file": "src/components/Toasts.tsx",
+     "about": "SmoothUI (MIT) toast 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toast.json)\nPark UI (MIT) toast 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts)\n\nFrom SmoothUI the surface of a notice is left: the dark card (the ink, with the paper as its text, as in the approved\npreview), with the text, the action and the close button on one row, the quick choices on a second one. Park's\ntoast recipe is a light surface card: of it we take the form (l3 corners, the lg elevation, 16px of side padding, the\naction in semibold) and the keys as outline keys, not its colors. Everything it does rests on Ark UI's Toast (`@ark-ui/react/toast`): a\ntoaster store, the `Toaster` region and one toast machine per notice (its time, its leaving). What Ark gives and what\nstays ours:\n- Ark: the region (F6 moves focus to it), the life of a notice (its timer, the \"dismissing\" phase that keeps it in\n  the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable\n  layers (a click on a notice is not \"outside\" an Ark popover).\n- Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed\n  ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; a\n  fourth pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move\n  up one place. Ark's own layouts are not used (`overlap` off): its places follow its own list, which still holds a\n  notice while it leaves, so the others would wait for it to be gone before closing the gap.\n- the region is `role=\"status\"` with `aria-relevant=\"additions\"` and a name in English; a notice is not a `status`\n  with `tabIndex=0` of its own: no extra Tab stop per notice;\n- the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts\n  down (`duration` Infinity), and when it is left each one is rearmed from the start;\n- Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a fourth notice or the caller.\nMotion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with\nprefers-reduced-motion, the same places are plain styles and nothing moves.",
+     "components": [
+      {
+       "name": "Toasts",
+       "doc": "The notices: a column at the bottom right (in the middle on the phone), read by screen readers without interrupting. At most `max` (ten by default), one above the other, the newest at the bottom; one more pushes the oldest out from the top. With `durationMs` and `onDismiss` each notice shows the seconds left and a «×» to close it at once.",
+       "props": [
+        {
+         "name": "items",
+         "type": "ToastItem[]",
+         "required": true,
+         "doc": "The notices, oldest first. The column shows the `max` newest: one more pushes the oldest out (and calls `onDismiss`)."
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "How many the column holds, up to `COLUMN_MAX` (ten, R12 of the toolkit's rules, 2026-11-20)."
+        },
+        {
+         "name": "inline",
+         "type": "boolean",
+         "doc": "In the page flow instead of fixed at the bottom: for documentation and previews."
+        },
+        {
+         "name": "durationMs",
+         "type": "number",
+         "doc": "After how many milliseconds a notice calls `onDismiss`. Without it (or without `onDismiss`) the notices stay until the caller removes them, as before. With the pointer on the column or focus inside it the time is suspended; when it is left the time starts over."
+        },
+        {
+         "name": "onDismiss",
+         "type": "((id: string) => void)",
+         "doc": "Called once per notice when `durationMs` runs out, or when newer notices push it out of the column: the caller removes it from `items`."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The column moves: a notice enters and leaves, the others slide into place (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ToastAction",
+      "ToastItem",
+      "ToastsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/app-shell.tsx",
+     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nWithout a way to measure (a server, a test) the frame is the wide one.",
+     "components": [
+      {
+       "name": "AppShell",
+       "props": [
+        {
+         "name": "titleBar",
+         "type": "React.ReactNode",
+         "doc": "The bar at the top (a `TitleBar`)."
+        },
+        {
+         "name": "tabs",
+         "type": "React.ReactNode",
+         "doc": "Directly under the bar, across the whole window: the views of the app (a `Toolbar` of `ToolbarTabs`), when they are not in the bar."
+        },
+        {
+         "name": "status",
+         "type": "React.ReactNode",
+         "doc": "Under the bar: the last result and a summary, one line."
+        },
+        {
+         "name": "sidebar",
+         "type": "React.ReactNode",
+         "doc": "The navigation (a `Sidebar`)."
+        },
+        {
+         "name": "inspector",
+         "type": "React.ReactNode",
+         "doc": "The details of what is selected (an `Inspector`)."
+        },
+        {
+         "name": "actions",
+         "type": "React.ReactNode",
+         "doc": "Under the content: the actions on it, the primary one last (R3: one)."
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "The foot: the state of the service, counts, the keys that work now."
+        },
+        {
+         "name": "bottomBar",
+         "type": "React.ReactNode",
+         "doc": "Under everything, across the whole window: the views of the app as tabs at the foot (a `Toolbar` of `ToolbarTabs` with `edge=\"top\"`)."
+        },
+        {
+         "name": "desktop",
+         "type": "boolean",
+         "doc": "The frame is the window of a program: chrome that is not selectable, and overlays that open under the title bar. Leave it off for a page in a browser tab."
+        },
+        {
+         "name": "steps",
+         "type": "Partial<AppShellSteps>",
+         "doc": "The app's own steps, all or some, in place of the recommended ones (`APP_SHELL_STEPS`); 0 switches a step off."
+        },
+        {
+         "name": "contentLabel",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the content for screen readers, and where the skip link goes."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The content: what the app is for. It scrolls by itself."
+        }
+       ]
+      },
+      {
+       "name": "AppShellContext",
+       "doc": "The frame around, for the parts that change with its width. Absent outside an `AppShell`.",
+       "passesOn": true
+      },
+      {
+       "name": "Inspector",
+       "doc": "The details or the form of what is selected, at the end of the frame. It is not modal: the rest of the window keeps working beside it. Docked it is a column with a line at its inner edge (R4); in a frame under 1000px it is a raised panel over the end of the content. Closed, the content takes its room.",
+       "props": [
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "What it shows («Details»): its heading and its name for screen readers."
+        },
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)",
+         "doc": "With it, a button in the heading closes the inspector; as a drawer, Esc does too."
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "Under the body, always in sight: the actions on what is selected."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The drawer slides in (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "APP_SHELL_STEPS",
+      "appShellLayout",
+      "AppShellLayout",
+      "AppShellProps",
+      "AppShellSteps",
+      "InspectorProps",
+      "useAppShell"
+     ]
+    },
+    {
+     "file": "src/components/ui/avatar.tsx",
+     "about": "Park UI (MIT) avatar 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/avatar.ts)\nFrom Park's `avatar` recipe comes the form (its subtle variant, its full shape): a round tile with the picture\ncropped to fill it, or the initials in medium weight when there is no picture. Ours: three sizes on the toolkit's\ncontrol heights (36, 32 and 28px at normal density; Park's go from 24 to 64px), 12px initials below the largest, and a\nneutral fill for every person: the quiet gray of the label pills, with the ink. A person's colour is not a fill\n(R10: data colours are dots); an app that gives people a colour puts a dot beside the name.\nBehaviour: Ark UI's Avatar, which shows the initials until the picture has loaded and again if it fails.\nThe name is the avatar's accessible name, unless `decorative` says the name is written beside it.",
+     "components": [
+      {
+       "name": "Avatar",
+       "props": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "The person's name: the accessible name, and the source of the initials."
+        },
+        {
+         "name": "src",
+         "type": "string",
+         "doc": "The picture. Without one, or while it loads, or if it fails: the initials."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\" | \"xs\""
+        },
+        {
+         "name": "decorative",
+         "type": "boolean",
+         "doc": "The name is written beside the avatar: hide it from screen readers."
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "An identity fill, `#rrggbb`, for an app whose people or accounts are told apart by colour (a mail app's accounts). The initials take the ink with the better contrast on it (white or black). Without it the tile is the neutral one (R10: a colour for a person is a dot, not a fill): this is for what the app chose on purpose."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "Drawn in place of the initials (an icon for «all accounts»); the picture still wins when it loads."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AvatarProps",
+      "initials"
+     ]
+    },
+    {
+     "file": "src/components/ui/badge.tsx",
+     "about": "SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/badge.json)\nPark UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)\nFrom Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,\ntabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its\noutline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).\nIcons are 14px (R7).\nFrom SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with\nBase UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its\nlooping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.",
+     "components": [
+      {
+       "name": "Badge",
+       "props": [
+        {
+         "name": "variant",
+         "type": "\"link\" | \"default\" | \"secondary\" | \"destructive\" | \"outline\" | \"ghost\" | null"
+        },
+        {
+         "name": "asChild",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "badgeVariants"
+     ]
+    },
+    {
+     "file": "src/components/ui/button.tsx",
+     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell, so the width is the wider of the\ntwo before, during and after the wait.",
+     "components": [
+      {
+       "name": "Button",
+       "props": [
+        {
+         "name": "variant",
+         "type": "\"link\" | \"default\" | \"secondary\" | \"destructive\" | \"outline\" | \"ghost\" | null"
+        },
+        {
+         "name": "size",
+         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+        },
+        {
+         "name": "asChild",
+         "type": "boolean",
+         "doc": "Renders the child in place of the `<button>` (for a link that looks like a button)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The button goes down a little while pressed (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "hoverScale",
+         "type": "number",
+         "doc": "Scale under the pointer, with `animated`. Default 1: still."
+        },
+        {
+         "name": "tapScale",
+         "type": "number",
+         "doc": "Override the default press scale (0.96 with at most 2px of travel per edge)."
+        },
+        {
+         "name": "loading",
+         "type": "boolean",
+         "doc": "Waiting for the result of its action: the button keeps its size, is `aria-busy=\"true\"` and `aria-disabled=\"true\"`, keeps focus and ignores clicks. No spinner and no looping animation."
+        },
+        {
+         "name": "loadingText",
+         "type": "React.ReactNode",
+         "doc": "The label while `loading` (\"Saving…\"), written by the caller. The button reserves the room of the wider of the two texts, so it does not change size when the wait starts or ends. Absent: the label stays."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "ButtonProps",
+      "buttonVariants",
+      "QUIET_CHIP"
+     ]
+    },
+    {
+     "file": "src/components/ui/calendar.tsx",
+     "about": "Park UI (MIT) date-picker 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts)\n\nFrom Park's `date-picker` recipe (and its component, which draws each day as a plain icon button) comes the look: the\ntitle between two plain arrows, the weekday row in semibold muted text, the days as 36px plain buttons (Park's sm)\nwith l2 corners and a quiet fill under the pointer, the chosen day solid in the accent (Park's solid variant), today\nmarked by a short accent dash under the number, 16px of padding. The grid itself is not written here: it is the day,\nmonth and year views of Ark UI's DatePicker (`@ark-ui/react/date-picker`). It lives inside a `DatePicker.Root` (see\n`internal/date-field.tsx`), which holds the value.\nArk gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,\nHome and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the\ntitle that opens the months and then the years, and the announcement of the month when it changes.\nOurs: the sizes (`--cell-size` is the density token `--control-sm`, 2.25rem at `normal`, 2.75rem with a finger; the days outside the month softer), the names in English (see `CALENDAR_WORDS`), a real `<button>` for each day (Space\nchooses too), the weekday headers left readable by screen readers, with the full name in `abbr`, and Home and End\nfor the start and the end of the week, as in the APG date grid (Ark's go to the start and the end of the month).",
+     "components": [
+      {
+       "name": "Calendar",
+       "props": [
+        {
+         "name": "onPressSelected",
+         "type": "(() => void)",
+         "doc": "A click, Enter or Space on the day that is already chosen calls this instead of choosing it again (the reminder uses it to remove the day)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CALENDAR_WORDS",
+      "CalendarProps",
+      "calendarWords"
+     ]
+    },
+    {
+     "file": "src/components/ui/checkbox.tsx",
+     "about": "SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)\nPark UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)\nFrom Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid\nvariant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`\ntoken (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine\npairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.\nFrom SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type=\"button\">` (`nativeButton`,\nso a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked\ncheck mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`\nalso accept \"indeterminate\", `onCheckedChange` receives `boolean | \"indeterminate\"`, `data-state` on the control), the\ntokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,\n`pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),\nonly after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.",
+     "components": [
+      {
+       "name": "Checkbox",
+       "props": [
+        {
+         "name": "checked",
+         "type": "CheckedState",
+         "doc": "Checked (controlled). \"indeterminate\" shows the dash; a click moves it to `true`."
+        },
+        {
+         "name": "defaultChecked",
+         "type": "CheckedState",
+         "doc": "Initial state when uncontrolled."
+        },
+        {
+         "name": "onCheckedChange",
+         "type": "((checked: CheckedState) => void)",
+         "doc": "Called with the new state when the user checks or unchecks."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "required",
+         "type": "boolean"
+        },
+        {
+         "name": "name",
+         "type": "string"
+        },
+        {
+         "name": "value",
+         "type": "string"
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The mark appears with a short animation when the user checks (off by default, never with prefers-reduced-motion)."
+        }
+       ],
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/combobox.tsx",
+     "about": "Park UI (MIT) combobox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/combobox.ts)\nFrom Park's `combobox` recipe comes the form (its md size, its outline variant): the field is the toolkit's input\n(40px, l2 corners, the 3:1 border) with the chevron at its end, and the list is the select's (l2 corners, the md\nelevation, 4px of padding, a 2px gap, rows at least 40px tall with 8px of side padding and l1 corners). The row\nunder the pointer or the arrows is the quiet fill; the chosen one carries a check, in the ink (Park's is its accent).\nBehaviour: Ark UI's Combobox: typing filters, the arrows move, Enter chooses, Esc closes the list first. The text\nmust end as one of the options: on leaving, a text that is none goes back to the chosen one.\nOurs: the options are filtered here by their label, ignoring case, unless the caller answers `onQuery` with a new\nlist (people from a server); the list is not moved to a portal (as the date field's card: it stays inside the sheet\nthat holds it, and `fixed` keeps a scrolling body from clipping it). No animation.",
+     "components": [
+      {
+       "name": "Combobox",
+       "props": [
+        {
+         "name": "options",
+         "type": "readonly O[]",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "The chosen value, or null."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string | null) => void",
+         "required": true
+        },
+        {
+         "name": "onQuery",
+         "type": "((text: string) => void)",
+         "doc": "The text being typed: with it the caller filters (and may fetch) and passes the new `options`; the list here is then shown as given. Without it the options are filtered by their label."
+        },
+        {
+         "name": "id",
+         "type": "string",
+         "doc": "The id of the text box, for the field's `<label>`."
+        },
+        {
+         "name": "aria-label",
+         "type": "string"
+        },
+        {
+         "name": "aria-describedby",
+         "type": "string"
+        },
+        {
+         "name": "aria-invalid",
+         "type": "boolean | \"true\" | \"false\""
+        },
+        {
+         "name": "placeholder",
+         "type": "string"
+        },
+        {
+         "name": "emptyText",
+         "type": "string",
+         "doc": "What the list says when nothing matches. Absent: the toolkit's words («No results»)."
+        },
+        {
+         "name": "triggerLabel",
+         "type": "string",
+         "doc": "The name of the button that opens the list. Absent: the toolkit's words («Show the options»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "invalid",
+         "type": "boolean"
+        },
+        {
+         "name": "required",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ComboboxOption",
+      "ComboboxProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/command-palette.tsx",
+     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. A command is found by its name and by its `keywords`; every\nword typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
+     "components": [
+      {
+       "name": "CommandPalette",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "commands",
+         "type": "readonly Command[]",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the palette and the placeholder of its field. Absent: the toolkit's words («Type a command»)."
+        },
+        {
+         "name": "emptyText",
+         "type": "string",
+         "doc": "Said when no command holds the text. Absent: the toolkit's words."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The palette fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "Command",
+      "CommandPaletteProps",
+      "filterCommands",
+      "useCommandKey"
+     ]
+    },
+    {
+     "file": "src/components/ui/count.tsx",
+     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`.",
+     "components": [
+      {
+       "name": "Count",
+       "props": [
+        {
+         "name": "value",
+         "type": "string | number | null",
+         "required": true,
+         "doc": "The number, or a text already formatted («99+»)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "What the number counts, for screen readers («unread»): read after the number. Without it the number is read alone."
+        },
+        {
+         "name": "reserve",
+         "type": "boolean",
+         "doc": "Keep the room of a number when there is nothing to show, so a column of counts stays aligned."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CountProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/dialog.tsx",
+     "about": "SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)\nPark UI (MIT) dialog 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts)\nFrom Park's `dialog` recipe comes the form: the window on the raised sheet with l3 corners and the lg elevation in\nplace of a border, 16px of padding (24px from 768px) and as much between its parts; the backdrop is the toolkit's one\nbackdrop (`BACKDROP`: the elevation's `drop` color at 40%, the same for every overlay that dims); the close button is a 36px plain icon button (Park's sm), muted at rest and\nthe ink under the pointer, like the sheet's. The title is 16px semibold (Park's is 18px: R7, text sizes from the\ntoolkit's tokens) and the header is aligned to the start at every width.\n\nFrom the SmoothUI source we keep the Base UI primitives (`Root`, `Portal`, `Backdrop`, `Popup`, `Title`, `Description`,\n`Close`), the layout parts (`DialogHeader`, `DialogFooter`) and the panel structure. Removed: `AlertDialog`,\n`trigger` and the internal state with `AnimatePresence`, the staggered entrance of the children, the spring and the\nrotation of the X on hover, the blur of the page behind the window (decorative effects). The public `Dialog` has no `animated` prop:\nhere there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.",
+     "components": [
+      {
+       "name": "DialogClose",
+       "passesOn": true
+      },
+      {
+       "name": "DialogContent",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "showCloseButton",
+         "type": "boolean"
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DialogDescription",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DialogFooter",
+       "passesOn": true
+      },
+      {
+       "name": "DialogHeader",
+       "passesOn": true
+      },
+      {
+       "name": "DialogOverlay",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DialogPortal",
+       "passesOn": true
+      },
+      {
+       "name": "DialogRoot",
+       "passesOn": true
+      },
+      {
+       "name": "DialogTitle",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DialogTrigger",
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/dropdown-menu.tsx",
+     "about": "SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dropdown-menu.json)\nPark UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)\nFrom Park's `menu` recipe comes the form (md): the card with l3 corners and the md elevation in place of a border,\n4px of padding and 2px between items; items 40px tall with l2 corners and a quiet fill on the highlighted one.\nFrom SmoothUI we keep the primitive (Base UI's `Menu`: Portal, Positioner, Popup, Item, Separator, SubmenuRoot) and\nthe classes of the menu card. We do not keep the item-list API (`items`): the package uses the parts\n(`DropdownMenuTrigger`, `DropdownMenuItem`…) with the same props as before (`asChild`, `onSelect`, `variant`, `inset`,\n`align`, `sideOffset`), so whoever uses them does not change. Removed: the spring and the staggered entrance of the items: with `animated`\ntrue (off by default, never with prefers-reduced-motion) the card enters with a short fade, without a spring.\nBehavior as before: Enter, Space and down arrow on the button open the menu with focus on the first item, the\narrows do not wrap from the last to the first (like Radix), Esc closes and returns focus to the button, search by\ninitial letter comes from Base UI. The button still carries `data-state=\"open\"|\"closed\"`: the \"visible while the menu is\nopen\" rules of the rows (`data-[state=open]:`) read it.",
+     "components": [
+      {
+       "name": "DropdownMenu",
+       "props": [
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean, details?: Menu.Root.ChangeEventDetails) => void)"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuCheckboxItem",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuContent",
+       "props": [
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The card enters with a short fade (off by default, never with prefers-reduced-motion)."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuGroup",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuItem",
+       "props": [
+        {
+         "name": "onSelect",
+         "type": "(((event: BaseUIEvent<React.SyntheticEvent<HTMLDivElement, Event>>) => void) & ((event: React.MouseEvent<HTMLElement>) => void))",
+         "doc": "The item was chosen (click, Enter or Space); then the menu closes."
+        },
+        {
+         "name": "inset",
+         "type": "boolean"
+        },
+        {
+         "name": "variant",
+         "type": "\"default\" | \"destructive\""
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuLabel",
+       "doc": "The heading of a group of items (\"Move to…\"): plain text, as before. It is not `Menu.GroupLabel`, which exists only inside a `Menu.Group`, and here it sits directly in the card.",
+       "props": [
+        {
+         "name": "inset",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuPortal",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuRadioGroup",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuRadioItem",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuSeparator",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuShortcut",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuSub",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuSubContent",
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuSubTrigger",
+       "props": [
+        {
+         "name": "inset",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "DropdownMenuTrigger",
+       "props": [
+        {
+         "name": "asChild",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/empty.tsx",
+     "about": "SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)\nFrom SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s\n(`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no\nillustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,\n`text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:\nempty states sit inside views that already have their own titles, and the title can be markup from the caller\n(the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.\nSpacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px\n(the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.",
+     "components": [
+      {
+       "name": "Empty",
+       "doc": "The empty state of a view or a list: a title, a sentence if needed and an action.",
+       "props": [
+        {
+         "name": "title",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The title of the empty state (text or markup)."
+        },
+        {
+         "name": "description",
+         "type": "React.ReactNode",
+         "doc": "A sentence below the title."
+        },
+        {
+         "name": "action",
+         "type": "React.ReactNode",
+         "doc": "An action below the text (a button)."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "An icon above the title (decorative, `aria-hidden`)."
+        },
+        {
+         "name": "titleClassName",
+         "type": "string",
+         "doc": "Classes for the title, in place of the default ones where they overlap."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "EmptyProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/form-field.tsx",
+     "about": "Park UI (MIT) field 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts)\nFrom Park's `field` recipe comes the form: a column with a 6px gap, the label in 14px medium ink, and the mark of a\nrequired field after the label. Ours (the owner's design of 2026-11-22): the helper text is 12px muted, and the error\nis a box on the soft destructive fill with the text in the destructive red, while the control keeps its border;\nthe required mark is the ink, not the accent (R2), and hidden from screen readers (the control says `required`).\nThe wiring is the toolkit's own, so any of its controls can sit inside (`Input`, `Textarea`, `Select`, `DateField`,\n`ChipsInput`, `Switch`): the one child receives the `id` the label points to, `aria-describedby` with the helper or\nthe error, and `aria-invalid` when there is an error. The error is announced when it appears (`role=\"alert\"`).\nThe headless `Field` of Base UI stays exported for an app that lays a field out by hand.",
+     "components": [
+      {
+       "name": "FormField",
+       "props": [
+        {
+         "name": "label",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The visible label."
+        },
+        {
+         "name": "help",
+         "type": "React.ReactNode",
+         "doc": "A sentence under the control: what to write, a limit."
+        },
+        {
+         "name": "error",
+         "type": "React.ReactNode",
+         "doc": "What is wrong, in words. With it the control is invalid and the sentence takes the helper's place."
+        },
+        {
+         "name": "required",
+         "type": "boolean"
+        },
+        {
+         "name": "id",
+         "type": "string",
+         "doc": "The id of the control, when the caller needs to choose it."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactElement<Wired, string | React.JSXElementConstructor<any>>",
+         "required": true,
+         "doc": "The one control of the field."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "FormFieldProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/input.tsx",
+     "about": "SmoothUI (MIT) input 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/input.json)\nPark UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)",
+     "components": [
+      {
+       "name": "Input",
+       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`.",
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/item-list.tsx",
+     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon, a\ncheckbox), a short fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a button).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nA row is a button, or a link with `href`. The rows of a navigation are `NavItem`: those are places, these are things.",
+     "components": [
+      {
+       "name": "ItemList",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the list for screen readers («Messages»)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ItemRow",
+       "props": [
+        {
+         "name": "title",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "What the thing is: one line, cut with an ellipsis."
+        },
+        {
+         "name": "description",
+         "type": "React.ReactNode",
+         "doc": "A second line under the title: who, where, the first words."
+        },
+        {
+         "name": "leading",
+         "type": "React.ReactNode",
+         "doc": "Before the title: an avatar, an icon, a checkbox."
+        },
+        {
+         "name": "meta",
+         "type": "React.ReactNode",
+         "doc": "A short fact at the end of the row, in tabular figures: a date, a size."
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "After the fact: a `Count`, a label, a button."
+        },
+        {
+         "name": "current",
+         "type": "boolean",
+         "doc": "This row is the one shown in the detail."
+        },
+        {
+         "name": "unread",
+         "type": "boolean",
+         "doc": "Not read yet: a dot in the accent and a stronger title. Absent: the list has no such state and keeps no slot for it."
+        },
+        {
+         "name": "href",
+         "type": "string",
+         "doc": "With it the row is a link."
+        },
+        {
+         "name": "onClick",
+         "type": "React.MouseEventHandler<HTMLElement>"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ItemListProps",
+      "ItemRowProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/kbd.tsx",
+     "about": "Park UI (MIT) kbd 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts)\nThe form is Park's `kbd` recipe, its plain variant (R5): a key hint is 12px text in medium weight, muted, with no box,\nhidden on a phone (narrow and with a finger), where there is no keyboard to press it on. Inside a button it takes\nthe button's own text colour, so it stays readable on a fill. `size` is kept for callers: every size draws the same.",
+     "components": [
+      {
+       "name": "Kbd",
+       "doc": "One key or a combination written as text (\"Ctrl+Enter\", \"Z\", \"Esc\").",
+       "props": [
+        {
+         "name": "size",
+         "type": "KbdSize"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Shortcut",
+       "doc": "A combination drawn key by key, announced once as words: «Ctrl + Enter», or «G then I» for keys pressed in turn (the toolkit's words).",
+       "props": [
+        {
+         "name": "keys",
+         "type": "readonly string[]",
+         "required": true,
+         "doc": "The keys, in order: `[\"Ctrl\", \"Enter\"]`."
+        },
+        {
+         "name": "separator",
+         "type": "React.ReactNode",
+         "doc": "Drawn between two keys: \"+\" for keys held together (the default), anything else for keys pressed in turn."
+        },
+        {
+         "name": "size",
+         "type": "KbdSize"
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "KbdProps",
+      "KbdSize",
+      "ShortcutProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/nav-list.tsx",
+     "about": "The rows of a navigation (R1 and R6 of the owner's rules): a list of places, each a row with an icon slot, a name\nand, at the end, whatever the caller adds (a `Count`). The row of the place the user is in carries\n`aria-current=\"page\"`, the selection tint, stronger text and a short accent bar at its left edge (R1). The icon slot is always there,\n16px wide, so a row without an icon stays aligned with the others (R6). A row is as tall as the density's row, and\nat least 44px with a coarse pointer.\nTwo tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's\nsidebar, where the theme has its own ink and its own selection (`sidebar-*`, the solid sidebar among them).",
+     "components": [
+      {
+       "name": "NavItem",
+       "props": [
+        {
+         "name": "current",
+         "type": "boolean",
+         "doc": "This row is the place the user is in."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "The icon (an `Icon`): without one the slot stays, empty."
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "What follows the name, at the end of the row: a `Count`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "href",
+         "type": "string"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "NavList",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the navigation for screen readers («Mail folders»)."
+        },
+        {
+         "name": "tone",
+         "type": "Tone"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "NavItemProps",
+      "NavListProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/popover.tsx",
+     "about": "SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/popover.json)\nPark UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)\nFrom Park's `popover` recipe comes the form: l3 corners, the lg elevation in place of a border, 16px of padding, 320px\nwide (Park's `xs`), the title 16px medium.\nFrom SmoothUI we keep the primitive (Base UI's `Popover`: Root, Trigger, Portal, Positioner, Popup), the structure of\n`PopoverContent` (Portal + Positioner + Popup) and the classes of the card. The parts stay as before\n(`Popover`, `PopoverTrigger` with `asChild`, `PopoverContent` with `align`/`side`/`sideOffset`, `PopoverAnchor`,\n`PopoverHeader`/`Title`/`Description`), not SmoothUI's `trigger`/`children` API, so whoever uses them does not change.\nRemoved: the spring and the automatic animation: with `animated` true (off by default, never with prefers-reduced-motion)\nthe card enters with a short fade. As before: non-modal, Esc or a click outside close it and focus returns to the\nbutton; the button carries `data-state=\"open\"|\"closed\"`.",
+     "components": [
+      {
+       "name": "Popover",
+       "props": [
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean, details?: PopoverPrimitive.Root.ChangeEventDetails) => void)"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "PopoverAnchor",
+       "doc": "A reference other than the button for the card's position (Base UI has no such part: the Positioner's `anchor`).",
+       "passesOn": true
+      },
+      {
+       "name": "PopoverContent",
+       "props": [
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The card enters with a short fade (off by default, never with prefers-reduced-motion)."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "PopoverDescription",
+       "passesOn": true
+      },
+      {
+       "name": "PopoverHeader",
+       "passesOn": true
+      },
+      {
+       "name": "PopoverTitle",
+       "passesOn": true
+      },
+      {
+       "name": "PopoverTrigger",
+       "props": [
+        {
+         "name": "asChild",
+         "type": "boolean"
+        }
+       ],
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/progress.tsx",
+     "about": "How far a task is: a bar (`Progress`), a ring (`ProgressRing`) or blocks (`ProgressSegments`), one API for the three.\nWritten by hand: Ark's Progress names the bar with its own value («45%») and gives no `aria-valuetext`, and there is no\nkeyboard to inherit; here the app names the bar, the toolkit says the value. The form is Park UI's progress recipe\n(102769c): a track 8px (`sm`) or 10px (`md`) tall with the corners of a control (l1), the range filling it from the\nstart. Not taken from it: the stripes, the gradient of its indeterminate state and its animation (no gradient, no\nloop but the skeletons: DESIGN.md), and the pill shape (round only for avatars, dots and switches, R7).\nThe ring and the blocks are ours; Park's circular recipe was not read.\nThe colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the\nsuccess colour and a failure the destructive one, each with a word (DESIGN.md \"Status\": a colour is never alone).\nNothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a\ngesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the\nswitch (DESIGN.md Colors).\nNot knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.\nFor screen readers: `role=\"progressbar\"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,\n«Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should\nannounce the end and the failure only, in a live region of its own, not every percent.",
+     "components": [
+      {
+       "name": "Progress",
+       "doc": "A bar that fills from the start.",
+       "props": [
+        {
+         "name": "value",
+         "type": "number | null",
+         "required": true,
+         "doc": "How much is done, from 0 to `max`. `null`: it is not known how far it is."
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "The value that means done. 100 by default; for `ProgressSegments`, 10, and it is the number of blocks."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "What is progressing («Upload», «Import»), for screen readers."
+        },
+        {
+         "name": "valueText",
+         "type": "string",
+         "doc": "What the value says, in place of the toolkit's words («16 seconds left»): read by screen readers and shown by `showValue`."
+        },
+        {
+         "name": "countdown",
+         "type": "boolean",
+         "doc": "The value is what is left (a time running out), not what is done: it empties, a full one is the start, not the end, so it is never «Complete». Say what is left in `valueText` («16 seconds left»)."
+        },
+        {
+         "name": "showValue",
+         "type": "boolean",
+         "doc": "Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status)."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "status",
+         "type": "\"error\"",
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ProgressRing",
+       "doc": "A ring that fills from the top, clockwise. With the value falling (the time left) it empties: a countdown.",
+       "props": [
+        {
+         "name": "value",
+         "type": "number | null",
+         "required": true,
+         "doc": "How much is done, from 0 to `max`. `null`: it is not known how far it is."
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "The value that means done. 100 by default; for `ProgressSegments`, 10, and it is the number of blocks."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "What is progressing («Upload», «Import»), for screen readers."
+        },
+        {
+         "name": "valueText",
+         "type": "string",
+         "doc": "What the value says, in place of the toolkit's words («16 seconds left»): read by screen readers and shown by `showValue`."
+        },
+        {
+         "name": "countdown",
+         "type": "boolean",
+         "doc": "The value is what is left (a time running out), not what is done: it empties, a full one is the start, not the end, so it is never «Complete». Say what is left in `valueText` («16 seconds left»)."
+        },
+        {
+         "name": "showValue",
+         "type": "boolean",
+         "doc": "Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status)."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "status",
+         "type": "\"error\"",
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "What the ring holds, in place of the percent («16» for a countdown: pass the time left as the value and it empties)."
+        }
+       ]
+      },
+      {
+       "name": "ProgressSegments",
+       "doc": "Blocks that fill in one by one, like the level of a meter: `value` of `max` blocks (10 by default, at most 24).",
+       "props": [
+        {
+         "name": "value",
+         "type": "number | null",
+         "required": true,
+         "doc": "How much is done, from 0 to `max`. `null`: it is not known how far it is."
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "The value that means done. 100 by default; for `ProgressSegments`, 10, and it is the number of blocks."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "What is progressing («Upload», «Import»), for screen readers."
+        },
+        {
+         "name": "valueText",
+         "type": "string",
+         "doc": "What the value says, in place of the toolkit's words («16 seconds left»): read by screen readers and shown by `showValue`."
+        },
+        {
+         "name": "countdown",
+         "type": "boolean",
+         "doc": "The value is what is left (a time running out), not what is done: it empties, a full one is the start, not the end, so it is never «Complete». Say what is left in `valueText` («16 seconds left»)."
+        },
+        {
+         "name": "showValue",
+         "type": "boolean",
+         "doc": "Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status)."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "status",
+         "type": "\"error\"",
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ProgressProps",
+      "ProgressRingProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/radio-group.tsx",
+     "about": "SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/radio-group.json)\nFrom SmoothUI's RadioGroup we keep: Base UI's Root and Radio (`role=\"radiogroup\"`/`role=\"radio\"` with\n`aria-checked`, a single Tab stop, arrows that move focus and select, wrapping at the ends), the Radio\nrendered as a real `<button type=\"button\">` (`nativeButton`), the Indicator with the filled dot and the optional label.\nAdapted: Base UI does not handle Home and End in the radio group (`enableHomeAndEndKeys: false`), here they go to the first and\nlast enabled radio and select it, like the arrows; `theme.css` tokens (`input` border, dot and selected border\n`ink`, `ring/50` ring), touch area enlarged to 24 px (44 with touch). Removed: all of Motion's animations (cascading\nappearance of the radios, spring on the dot, `useReducedMotion`): the dot is there or it is not, no movement, Motion is not loaded.",
+     "components": [
+      {
+       "name": "RadioGroup",
+       "props": [
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "defaultValue",
+         "type": "string",
+         "doc": "Initial value when uncontrolled."
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "doc": "Selected value (controlled)."
+        },
+        {
+         "name": "onValueChange",
+         "type": "((value: string) => void)",
+         "doc": "Called with the value the user chose (click, Space, arrows, Home, End)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "required",
+         "type": "boolean"
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "doc": "Name for form submission; without a name the group does not enter the form data."
+        },
+        {
+         "name": "orientation",
+         "type": "\"vertical\" | \"horizontal\"",
+         "doc": "Layout only: the arrows work in both directions, as in a WAI-ARIA radio group."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "RadioGroupItem",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The value of this choice."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "Text of the label next to the radio (optional: without it, `aria-label` is needed)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "variant",
+         "type": "\"radio\" | \"swatch\"",
+         "doc": "\"radio\" (default): circle with a border and a filled dot. \"swatch\": filled pill (the color comes from `style`), the selection is an ink ring detached from the pill and focus a wider outline, so selection and focus remain distinct even together; no dot."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "RadioGroupItemProps",
+      "RadioGroupProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/search-field.tsx",
+     "about": "A search box: the toolkit's `Input` as a `type=\"search\"` field, with the magnifier at the start (functional chrome,\n16px, muted) and, while there is text, a button at the end that empties the field and gives it the focus back. The\nbrowser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no\nlabel of its own: the caller names it (`aria-label`, or a `FormField` around it).",
+     "components": [
+      {
+       "name": "SearchField",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text searched for."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "clearLabel",
+         "type": "string",
+         "doc": "The name of the button that empties the field. Absent: the toolkit's words («Clear the search»)."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "SearchFieldProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/select.tsx",
+     "about": "SmoothUI (MIT) select 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/select.json)\nPark UI (MIT) select 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts)\nFrom Park's `select` recipe comes the form: its outline variant at the md size for the button (40px, l2 corners, 12px\nof side padding, a border and no fill, as the fields; 36px at `size=\"sm\"`; R4: a border, never a shadow too; open, the\nborder is the ink), and its list (l2 corners, md elevation in place\nof a border, 4px of padding, items 40px tall with l1 corners and a quiet fill on the highlighted one). The text is\n14px, not Park's 16px (the type scale of the app). The button's border stays `border-input` (3:1, WCAG 1.4.11):\nPark's outline border is lighter.\nFrom SmoothUI we keep the data API (`options`: `{ value, label }`, `value`/`onValueChange`, `aria-label`, `id` on the\nbutton), the shape (button with an arrow, card with the list and the check mark on the chosen item) and the classes\nof the card. SmoothUI's hand-made listbox (createPortal + computed position) is replaced by the primitive\n`Select` from Base UI (Root, Trigger, Value, Icon, Portal, Positioner, Popup, List, Item, ItemText, ItemIndicator): so\nkeyboard (arrows, type-ahead, Enter, Esc), ARIA roles and the portal nested in a modal sheet come from the\nprimitive. The list uses the shared Motion entrance from the trigger.\nStates from Park's recipe (the owner's decision of 2026-11-20): `disabled` is the toolkit's disabled look (half\nopacity, no pointer, out of the Tab order: Base UI's `disabled`), `invalid` sets `aria-invalid` and turns the 3:1\ncontrol border into the destructive colour, also while the list is open (Park's `_invalid`).\nA value that is not among the options leaves the button empty (like the previous `<option hidden>`) and cannot be chosen.",
+     "components": [
+      {
+       "name": "Select",
+       "props": [
+        {
+         "name": "options",
+         "type": "O[]",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "aria-label",
+         "type": "string"
+        },
+        {
+         "name": "aria-describedby",
+         "type": "string",
+         "doc": "The ids of the texts that describe the select (a `FormField`'s helper or error)."
+        },
+        {
+         "name": "aria-invalid",
+         "type": "boolean | \"true\" | \"false\"",
+         "doc": "As `invalid`: what a `FormField` with an error passes to its control."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "size",
+         "type": "\"sm\" | \"default\""
+        },
+        {
+         "name": "groups",
+         "type": "SelectGroup<O>[]",
+         "doc": "Grouped options, with a non-selectable heading (Base UI's `Select.Group`), after `options`."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text when the value is not among the options (default: empty, as before)."
+        },
+        {
+         "name": "renderMark",
+         "type": "((option: O) => React.ReactNode)",
+         "doc": "The mark drawn before an option's label in the list (`aria-hidden`), or null for none. Absent: no mark."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The value cannot be changed: half opacity, no pointer, not reachable with Tab (Base UI's `disabled`)."
+        },
+        {
+         "name": "invalid",
+         "type": "boolean",
+         "doc": "The value is not accepted: `aria-invalid` and the control border in the destructive colour."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SelectGroup",
+      "SelectOption",
+      "SelectProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/sheet.tsx",
+     "about": "SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)\nPark UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)\nFrom Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the\nbackdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).\nFrom SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the\ndrag direction per side and the content marked `Drawer.Content` (a mouse drag that starts\nthere does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the\nstaggering of the children with Motion, the handle of the bottom side. The entrance (32 px from the panel edge, 200 ms) follows\nthe shared Motion preference and respects reduced motion.",
+     "components": [
+      {
+       "name": "Sheet",
+       "doc": "A modal sheet: focus trapped, Esc and a click outside close it, page scrolling is blocked. With `modal={false}` it is a side panel beside the page: no backdrop, the focus is not trapped, the page scrolls and takes clicks, and Esc or a click outside still close it (`disablePointerDismissal` keeps it open on a click outside). A click on the notifications (which sit above, outside the sheet) does not close it: Base UI closes a modal only on what is behind it, and here a second safeguard also cancels the closing caused by focus moving to the notifications.",
+       "props": [
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "SheetClose",
+       "passesOn": true
+      },
+      {
+       "name": "SheetContent",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "side",
+         "type": "SheetSide"
+        },
+        {
+         "name": "showCloseButton",
+         "type": "boolean"
+        },
+        {
+         "name": "onCloseAutoFocus",
+         "type": "((event: Event) => void)",
+         "doc": "On closing, before the focus moves (like Radix's `onCloseAutoFocus`): `event.preventDefault()` says that the caller has already taken care of the focus, and the sheet no longer touches it."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Animate the entrance from the configured edge. Inherits the provider preference."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "SheetDescription",
+       "passesOn": true
+      },
+      {
+       "name": "SheetFooter",
+       "passesOn": true
+      },
+      {
+       "name": "SheetHeader",
+       "passesOn": true
+      },
+      {
+       "name": "SheetTitle",
+       "passesOn": true
+      },
+      {
+       "name": "SheetTrigger",
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/sidebar.tsx",
+     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).",
+     "components": [
+      {
+       "name": "Sidebar",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the navigation for screen readers («Main»); also the title of the drawer."
+        },
+        {
+         "name": "collapsed",
+         "type": "boolean",
+         "doc": "Shrunk to a rail of icons. On a narrow window (the drawer) it is always wide."
+        },
+        {
+         "name": "onCollapsedChange",
+         "type": "((collapsed: boolean) => void)",
+         "doc": "With it, a button at the foot shrinks and widens the sidebar."
+        },
+        {
+         "name": "open",
+         "type": "boolean",
+         "doc": "Below 860px: the drawer is open. Above, the sidebar is always there and this is not read."
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)"
+        },
+        {
+         "name": "header",
+         "type": "React.ReactNode",
+         "doc": "Above the groups: the app's name, a menu that changes workspace. On the rail it is not shown."
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "Below the groups: the account, a link to the settings. On the rail it is not shown."
+        },
+        {
+         "name": "search",
+         "type": "boolean",
+         "doc": "A search box at the top that filters the rows as the user types."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The drawer slides in and the arrows of the groups turn (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "SidebarGroup",
+       "doc": "A group of rows of the sidebar. On the rail the heading is not shown and every group is open, so no icon is hidden; while a search is on every group is open too, and one with no row left is hidden.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The heading of the group («Favorites», «Projects»). Without it the rows stand alone, as the first group often does."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "The icon of the heading (an `Icon`), R6: without one the slot stays, empty."
+        },
+        {
+         "name": "collapsible",
+         "type": "boolean",
+         "doc": "The heading opens and closes the group."
+        },
+        {
+         "name": "defaultOpen",
+         "type": "boolean",
+         "doc": "A group that opens and closes: open at first (the default) or closed."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SidebarGroupProps",
+      "SidebarProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/slider.tsx",
+     "about": "Park UI (MIT) slider 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/slider.ts)\nFrom Park's `slider` recipe comes the form (its md size, its outline variant): a round 8px track, the part up to the\nvalue filled, and a round 20px thumb with a 2px border, centred on the track. Ours: the track is the `input` token\n(3:1 on every background, WCAG 1.4.11; Park's is its hairline border colour), the filled part and the thumb's\nborder are the ink (the accent is kept for the primary action, R2), the thumb is the paper with no shadow (R4: a\nbordered control has no shadow). The thumb's area is 44px with a coarse pointer.\nBehaviour: Ark UI's Slider, one thumb (`role=\"slider\"`): Left and Right move by `step`, PageUp and PageDown by ten\nsteps, Home and End go to the ends; Up and Down act as Right and Left, as the ARIA pattern has it. No animation: the\nthumb follows the pointer.",
+     "components": [
+      {
+       "name": "Slider",
+       "props": [
+        {
+         "name": "value",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: number) => void",
+         "required": true,
+         "doc": "Called with each value while the thumb moves."
+        },
+        {
+         "name": "min",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "step",
+         "type": "number",
+         "doc": "The distance between two values. Default 1."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the slider for screen readers."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SliderProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/steps.tsx",
+     "about": "The steps of a task as a path (a signup, an import, a lesson): numbered dots joined by a line, that light up one by one\nas the user goes. It shows what is done, where the user is and what is left, and the next step by its name: people\nfinish when they know what remains. The accent is progress (R2): a step done is a check on the accent tint, the step\nthe user is on is the one solid dot, the steps to come are a quiet fill with their number, and the line is the accent\nas far as the steps done. Round, as a dot may be (R7). Nothing moves: the state is always on the screen, which\nis what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.\nFor screen readers it is an ordered list; the step the user is on has `aria-current=\"step\"`, and each step says whether it\nis done, current or not started (`words.steps`, in any language).",
+     "components": [
+      {
+       "name": "Steps",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the path for screen readers («Signup»)."
+        },
+        {
+         "name": "steps",
+         "type": "readonly StepItem[]",
+         "required": true
+        },
+        {
+         "name": "current",
+         "type": "number",
+         "required": true,
+         "doc": "The step the user is on, counting from 0. The ones before it are done; `steps.length` means all are done."
+        },
+        {
+         "name": "onStepSelect",
+         "type": "((index: number) => void)",
+         "doc": "With it, each step already done is a button that goes back to it. The step the user is on and those to come are not."
+        },
+        {
+         "name": "orientation",
+         "type": "\"vertical\" | \"horizontal\"",
+         "doc": "`vertical` (the default): a column, with the descriptions beside the dots. `horizontal`: a row; it measures its own width, so it needs one of its own (`w-full`, or a width), and in a place too narrow for the names it keeps the current one and says «Step 2 of 4»."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "StepItem",
+      "StepsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/switch.tsx",
+     "about": "Park UI (MIT) switch 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/switch.ts)\nFrom Park's `switch` recipe comes the form (its md size, its solid variant): a round 40x20px track and a round thumb\nof 16px (Park's 20px thumb at scale 0.8), 2px from the edge, that sits at the start when off and at the end when on.\nOurs: the track at rest is the `input` token (3:1 on every background, WCAG 1.4.11; Park's is its subtle gray) and\nthe track when on is the ink, as the checkbox's fill: the accent is kept for the primary action (R2). The thumb is\nthe paper in both states. No shadow on the thumb (R4: the track is a fill, the thumb a flat dot). The hit area grows\nwith a pseudo-element, as the checkbox's: 28px on every pointer, 44px on a coarse one.\nBehaviour: Ark UI's Switch (a hidden checkbox with `role=\"switch\"` inside a `<label>`; Space toggles). Without\n`animated` the thumb changes place at once; with it (or under a `MotionProvider`) it slides in 100 ms, never with\n`prefers-reduced-motion`.",
+     "components": [
+      {
+       "name": "Switch",
+       "props": [
+        {
+         "name": "checked",
+         "type": "boolean",
+         "doc": "On (controlled)."
+        },
+        {
+         "name": "defaultChecked",
+         "type": "boolean",
+         "doc": "Initial state when uncontrolled."
+        },
+        {
+         "name": "onCheckedChange",
+         "type": "((checked: boolean) => void)",
+         "doc": "Called with the new state when the user turns it on or off."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "invalid",
+         "type": "boolean"
+        },
+        {
+         "name": "required",
+         "type": "boolean"
+        },
+        {
+         "name": "name",
+         "type": "string"
+        },
+        {
+         "name": "id",
+         "type": "string",
+         "doc": "The id of the control itself, for a `<label htmlFor>` elsewhere."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name for screen readers when there is no visible label."
+        },
+        {
+         "name": "aria-describedby",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The visible label, after the control: a click on it toggles too."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The thumb slides to its new place (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SwitchProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/table.tsx",
+     "about": "A table: rows of the same things, each with the same facts in columns. These are the parts of its form and nothing\nmore: a `<table>` in a box that scrolls, a heading row, rows and cells, drawn with the toolkit's tokens so every\ntable of an app reads as the others do.\n- A row is as tall as the density's row (44px with a finger), with a line under it and no other frame (R4).\n- A heading is small muted text (the label size); a column of numbers is set at the end, in tabular figures (R5).\n- The row chosen has the selection tint, stronger text and a short accent bar at its start (R1), as in every list;\n  under the pointer a row takes a share of that tint.\nWhat a table does (sorting, filtering, choosing columns, drawing only the rows in sight) is not here: `DataTable`\n(the `./table` entry of the package) does the first and the last on TanStack Table, and an app with a table of its\nown drives it with the library it likes and draws it with these parts.",
+     "components": [
+      {
+       "name": "Table",
+       "props": [
+        {
+         "name": "containerClassName",
+         "type": "string",
+         "doc": "The classes of the box around the table, which scrolls: its height, where the rows are many."
+        },
+        {
+         "name": "containerRef",
+         "type": "React.Ref<HTMLDivElement>",
+         "doc": "The box around the table, for what has to read its scrolling."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "TableBody",
+       "passesOn": true
+      },
+      {
+       "name": "TableCaption",
+       "doc": "The name of the table, for everyone: above it, small and muted. A table can be named with `aria-label` instead.",
+       "passesOn": true
+      },
+      {
+       "name": "TableCell",
+       "props": [
+        {
+         "name": "align",
+         "type": "TableCellAlign",
+         "doc": "`end`: a number, in tabular figures."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "TableHead",
+       "props": [
+        {
+         "name": "align",
+         "type": "TableCellAlign",
+         "doc": "`end`: over a column of numbers."
+        },
+        {
+         "name": "sticky",
+         "type": "boolean",
+         "doc": "The heading stays in sight while the rows scroll under it."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "TableHeader",
+       "passesOn": true
+      },
+      {
+       "name": "TableRow",
+       "props": [
+        {
+         "name": "current",
+         "type": "boolean",
+         "doc": "This row is the one chosen: the selection tint, stronger text and the accent bar. One for each table (R1)."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "TableCellAlign",
+      "TableCellProps",
+      "TableHeadProps",
+      "TableProps",
+      "TableRowProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/tabs.tsx",
+     "about": "Park UI (MIT) tabs 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts)\nFrom Park's `tabs` recipe comes the form (its md size, its subtle variant): a row of triggers 40px tall with 14px\nsemibold text, 16px of side padding and a 4px gap between them, the chosen one on a tinted sheet with l2 corners,\nand the panels below, 8px away. The tint is the theme's selection (`selected`, with `selected-ink`), the one tint a\nview has for what is chosen (R1); the others are muted text that turns to ink under the pointer. Park's `line`\nvariant (a 2px bar under the chosen tab) is not offered: R1 keeps bars off the toolkit. For a choice with no panels\nuse `ToggleGroup` (Park's `enclosed` look).\nBehaviour: Ark UI's Tabs (`role=\"tablist\"`, one Tab stop, arrows move and, by default, choose; Home and End). With\n`animated` the tint is one sheet that slides from the old tab to the new one (`Highlight` in `motion-impl`).",
+     "components": [
+      {
+       "name": "Tabs",
+       "props": [
+        {
+         "name": "value",
+         "type": "Value",
+         "required": true,
+         "doc": "The chosen tab."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: Value) => void",
+         "required": true
+        },
+        {
+         "name": "activation",
+         "type": "\"manual\" | \"automatic\"",
+         "doc": "`automatic` (the default): the arrows choose as they move. `manual`: they only move, Enter or Space chooses."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The tint slides to the new tab (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "ids",
+         "type": "{ trigger?: ((value: string) => string) | undefined; content?: ((value: string) => string) | undefined; }",
+         "doc": "The ids of the tabs and of their panels by value, for an app that draws the panels itself and names them (`aria-labelledby`). They go to Ark, which finds the tabs by them for the arrows: an `id` set on a tab afterwards would lose the arrows."
+        }
+       ]
+      },
+      {
+       "name": "TabsContent",
+       "doc": "The panel of a tab: in the page only while its tab is chosen, and a Tab stop of its own, after the tabs.",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "TabsList",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the group of tabs for screen readers."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "TabsTrigger",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "After the tab, in the same item: a button that acts on it (closing it). It is not a tab: it keeps its own Tab stop, and the arrows still move from tab to tab. With it the tab and the button sit in one `data-slot=\"tabs-item\"` element."
+        },
+        {
+         "name": "itemClassName",
+         "type": "string",
+         "doc": "The class of that item (only with `end`)."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "TabsContentProps",
+      "TabsListProps",
+      "TabsProps",
+      "TabsTriggerProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/textarea.tsx",
+     "about": "SmoothUI (MIT) textarea 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/textarea.json)\nPark UI (MIT) textarea 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts)",
+     "components": [
+      {
+       "name": "Textarea",
+       "doc": "A multi-line field. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`). Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "passesOn": true
+      }
+     ]
+    },
+    {
+     "file": "src/components/ui/title-bar.tsx",
+     "about": "The bar at the top of a window: the place of its name and of its toolbar, on the same row as the buttons that\nminimize, maximize and close it. It is plain web: on a page in a browser it is the app's top bar and nothing else.\nWhat makes it the frame of a window is given from outside, so the toolkit knows no window API:\n- the empty parts of the bar move the window. The standard way is the `app-region` property, set in theme.css on the\n  bar and taken off every control inside it; a host that marks its drag regions with an attribute of its own gets it\n  through `dragProps`, which the bar, the toolbar inside it, its title and its spacers all carry (such a mark often\n  counts only on the element under the pointer);\n- the room the system keeps for its own buttons over the page (the window-controls overlay of an installed web app)\n  is left free: theme.css reads it into `--titlebar-start` and `--titlebar-end`, and an app can set the two itself;\n- where the system draws no buttons, `WindowControls` draws them and calls the app back; the app talks to its host.\n  On Windows 11 a host can lay the system's own hit area over the maximize button, so the Snap Layouts open from it:\n  the pointer then never reaches the page's button. `maximizeRef` gives the host the button to measure, and\n  `maximizeState` shows on it the hover and the press the system reports (Imago's window does this).\nThe bar is as tall as a dense control and 8px above and below it (`--titlebar-height`), on the page's own surface\nwith a line under it (R4: a line, no shadow). With `size=\"compact\"` it is the thin caption of a classic desktop\nprogram: the smallest control and 2px above and below it (32px at normal density), and the toolbar inside it takes\nthe small size by itself. Nothing else changes: it is a measure, chosen with a parameter.",
+     "components": [
+      {
+       "name": "TitleBar",
+       "props": [
+        {
+         "name": "size",
+         "type": "\"default\" | \"compact\"",
+         "doc": "`compact`: the thin caption of a classic desktop program, with small controls."
+        },
+        {
+         "name": "dragProps",
+         "type": "Readonly<Record<`data-${string}`, string>>",
+         "doc": "The host's own mark of a drag region, if it has one."
+        },
+        {
+         "name": "windowControls",
+         "type": "React.ReactNode",
+         "doc": "The window's buttons (`WindowControls`), at the end of the bar and flush with its corner."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "TitleBarDragContext",
+       "doc": "The drag attributes of the bar around, for the parts inside it that move the window too.",
+       "passesOn": true
+      },
+      {
+       "name": "TitleBarSizeContext",
+       "doc": "The size of the bar around, which the toolbar inside it follows.",
+       "passesOn": true
+      },
+      {
+       "name": "WindowControls",
+       "doc": "The three buttons of a window, for a host that draws none: as tall as the bar, 44px wide, with no gap. The last one takes the accent under the pointer, as in Imago: closing a window destroys nothing, and red is kept for danger. They only call back: what minimizes, maximizes and closes the window is the app's.",
+       "props": [
+        {
+         "name": "maximized",
+         "type": "boolean",
+         "doc": "The window fills the screen: the middle button restores it."
+        },
+        {
+         "name": "onMinimize",
+         "type": "(() => void)",
+         "doc": "Each button is drawn only if its action is given."
+        },
+        {
+         "name": "onMaximizeToggle",
+         "type": "(() => void)"
+        },
+        {
+         "name": "onClose",
+         "type": "(() => void)"
+        },
+        {
+         "name": "maximizeRef",
+         "type": "React.Ref<HTMLButtonElement>",
+         "doc": "The middle button, for a host that needs its rectangle."
+        },
+        {
+         "name": "maximizeState",
+         "type": "\"hover\" | \"pressed\"",
+         "doc": "The pointer over the middle button as the system sees it, when the system and not the page receives it."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TitleBarDragProps",
+      "TitleBarProps",
+      "WindowControlsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/toggle-group.tsx",
+     "about": "SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)\nPark UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)\nFrom Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline\nring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item\nas a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).\nWith `animated` the background of the pressed item is one pill that slides from the old choice to the new one\n(`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.\nFrom SmoothUI we keep the primitive (Base UI's `ToggleGroup` and `Toggle`) and the shape of the segmented control\n(container with a light background, pressed item raised). Adapted: single choice only (the already pressed button\ndoes not turn off: the group always has a value), paper/ink tokens in place of `foreground`/`muted`, no\nshadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`\nbutton (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives\n`role=\"group\"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).",
+     "components": [
+      {
+       "name": "ToggleGroup",
+       "doc": "Single-choice group: a single tab stop, arrows to move, Space/Enter to choose.",
+       "props": [
+        {
+         "name": "value",
+         "type": "Value",
+         "required": true,
+         "doc": "The pressed value."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: Value) => void",
+         "required": true
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the group for screen readers."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The background of the pressed item slides to the new choice (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      },
+      {
+       "name": "ToggleGroupItem",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "highlightClassName",
+         "type": "string",
+         "doc": "With animations on: the classes of the sliding pill (background, corners), in place of the pressed item's own background."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ToggleGroupItemProps",
+      "ToggleGroupProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/toolbar.tsx",
+     "about": "The toolbar: one row of actions that is a single Tab stop. Base UI's `Toolbar` carries the behaviour (the arrows\nmove among the items, Home and End reach the ends, a disabled item stays reachable); the form is the toolkit's\n`Button` recipe at the dense height, so an item is the same control as everywhere else.\n- `ToolbarButton` is an action. With no children it is an icon alone: its `label` is its accessible name and the\n  hint under the pointer (with the `shortcut` after it, as plain text: R5). With children it is an icon and a word.\n  `pressed` makes it a switch (a filter that is on, a panel that is open): the selection tint, never the accent fill.\n  One item of a toolbar may be `variant=\"default\"`, the one solid action of the screen (R3); the rest stay quiet.\n- `ToolbarSearch` is a search box that takes no room until it is asked for: a magnifier that opens into the\n  toolkit's `SearchField` on a press (or when the app opens it from its own key), and closes again with Esc, or when\n  it is left empty. While it holds text it stays open, so what filters the page is always in sight.\n- `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the\n  initial of the product's name, and the name beside it, or the name alone (`mark={false}`). With `page` the place\n  follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.\n- `ToolbarTabs` are the views of the app as words in the bar, after the brand, as in Xiox («Cleanup · Registry ·\n  Developers · Settings»): the view the user is in has the stronger text and a short bar in the accent under it. The\n  same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`), in a bar at the\n  foot of the window (`bottomBar`, with `edge=\"top\"` and, on a narrow window, `layout=\"stacked\"`: the icon over the\n  word), or small in the status bar (`size=\"sm\"` in the `footer`).\n- A button with a word shows its `shortcut` after the word, as plain text («Commands Ctrl K»): the way into the\n  command palette.\n- `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the\n  root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.\nShort of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container\nquery, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon\nand a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.\nWhat the user needs to act (the buttons) is never what gives way.\nTwo sizes, chosen with a parameter: `md`, and `sm` for the dense bars of a classic desktop program (28px items, a\n20px mark). A toolbar in a compact `TitleBar` is `sm` by itself. Text buttons that open a `DropdownMenu` («File»,\n«Edit», «View») make the menu bar of such a program out of the same parts.\nIcons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.",
+     "components": [
+      {
+       "name": "Toolbar",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the toolbar for screen readers («Message actions»)."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\"",
+         "doc": "`md` (the default): 32px items at normal density. `sm`: 28px items, for the dense bars of a classic desktop program. Absent: `sm` in a compact `TitleBar`, `md` elsewhere."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarBrand",
+       "doc": "The app, at the start of the bar: the mark and the name. In a `TitleBar` both move the window. Under 256px of toolbar the name goes and the mark stays.",
+       "props": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the product («Xiox»): shown beside the mark, and the source of its letter."
+        },
+        {
+         "name": "mark",
+         "type": "React.ReactNode",
+         "doc": "In place of the letter, the app's own mark (a 16px drawing): the square stays. `false`: the name alone."
+        },
+        {
+         "name": "page",
+         "type": "string | readonly string[]",
+         "doc": "Where the user is, after the name: «Daodan › Settings». One name, or the path to it. On a toolbar under 448px the app's name gives way and the place stays, after the mark."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarButton",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the action: the accessible name, and the hint of a button that shows an icon alone."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "The drawing, 16px (an `Icon`)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same («Ctrl K»): plain text in the hint."
+        },
+        {
+         "name": "variant",
+         "type": "\"default\" | \"outline\" | \"ghost\"",
+         "doc": "`ghost` (the default) for an action among others, `outline` for one that stands out, `default` for the one solid action (R3)."
+        },
+        {
+         "name": "pressed",
+         "type": "boolean",
+         "doc": "A switch: on or off. Absent: a plain action."
+        },
+        {
+         "name": "keepWord",
+         "type": "boolean",
+         "doc": "With an icon and a word: the word stays on a narrow bar too (by default it gives way under 448px)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "ToolbarGroup",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the group for screen readers («View»)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarSearch",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the search («Search the mail»): of the magnifier, of the field, and its placeholder."
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text searched for."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "open",
+         "type": "boolean",
+         "doc": "Open, when the app decides (its own key opens it). Absent: the toolbar keeps the state."
+        },
+        {
+         "name": "defaultOpen",
+         "type": "boolean"
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)"
+        },
+        {
+         "name": "closed",
+         "type": "\"icon\" | \"field\"",
+         "doc": "Closed, it is the magnifier alone (`icon`, the default) or a quiet field with its name and its key (`field`), for a bar where the search is the main way in. On a narrow bar the field is the magnifier too."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key the app opens it with («Ctrl K»), shown in the hint. The app binds the key."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The placeholder, if it differs from the name."
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarSeparator",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarSpacer",
+       "doc": "Empty room that pushes what follows to the end of the bar; in a `TitleBar` it moves the window.",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarTab",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "A 16px drawing before the word."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarTabs",
+       "doc": "The views of the app, as words in a toolbar. They are places, not panels: the one the user is in is the current page.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the views for screen readers («Views»)."
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The view the user is in."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "edge",
+         "type": "\"top\" | \"bottom\"",
+         "doc": "The edge of its bar the accent bar of the current view sits on: `bottom` (the default) for tabs in or under the title bar, `top` for tabs in a bar at the foot of the window."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\"",
+         "doc": "`sm` for tabs in a status bar: 12px words."
+        },
+        {
+         "name": "layout",
+         "type": "\"inline\" | \"stacked\"",
+         "doc": "`stacked`: the icon over the word, each tab taking an equal share of the bar (a bottom bar on a narrow window)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "ToolbarTitle",
+       "doc": "The name of the window or of the place, in the bar: short of room it is cut with an ellipsis, down to 80px.",
+       "props": [
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "brandInitial",
+      "ToolbarBrandProps",
+      "ToolbarButtonProps",
+      "ToolbarGroupProps",
+      "ToolbarProps",
+      "ToolbarSearchProps",
+      "ToolbarTabProps",
+      "ToolbarTabsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/tooltip.tsx",
+     "about": "SmoothUI (MIT) tooltip 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/tooltip.json)\nPark UI (MIT) tooltip 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts)\nFrom Park's `tooltip` recipe comes the form: a solid ink card with l2 corners, the sm elevation, 12px semibold text,\n8px by 6px of padding.\nFrom SmoothUI we keep the primitive (Base UI's `Tooltip`: Root, Trigger with `render`, Portal, Positioner, Popup) and the\nshape of the card (ink on paper, small text). Adapted to icon-only buttons: the text is the button's accessible\nname (`label`, the same as its `aria-label`), not free content; no Provider (each\nhint has its own delay, 500 ms), no controlled state. Removed: SmoothUI's CSS transitions\n(the opacity and transform transition with the entrance scale): with `animated` true (off by default, never with\nprefers-reduced-motion) the card fades in a few pixels from its button in 100 ms (`enterTooltip` in `motion-impl`).\nBase UI places and labels it.\nThe hint does not capture the pointer (`pointer-events-none`, `disableHoverablePopup`), closes on click on the\nbutton and with Esc, and sits below sheets and windows (`z-[45]`: above the drawer, z-40, below the sheets, z-50). The accessible\nname stays only the `aria-label`: the card is `aria-hidden` (Base UI does not add `aria-describedby`), so a\nscreen reader does not hear it twice.",
+     "components": [
+      {
+       "name": "Tooltip",
+       "doc": "The hint of an icon-only button: it repeats its name on pointer hover and on focus. The button stays the same as before (same `aria-label`, same Tab), without `title`.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The hint text: the button's accessible name, in English."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same («Ctrl K»): plain text after the name, never a boxed key (R5)."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactElement<unknown, string | React.JSXElementConstructor<any>>",
+         "required": true,
+         "doc": "The button (a single element): it receives the hint's handlers via Base UI's `render`, without an extra node."
+        },
+        {
+         "name": "side",
+         "type": "\"top\" | \"right\" | \"bottom\" | \"left\"",
+         "doc": "Where it sits, if there is room. Default below."
+        },
+        {
+         "name": "sideOffset",
+         "type": "number",
+         "doc": "Distance from the button in px."
+        },
+        {
+         "name": "delay",
+         "type": "number",
+         "doc": "Hover delay in ms. Default 500."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The card fades in quickly (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TOOLTIP_DELAY_MS",
+      "TooltipProps"
+     ]
+    },
+    {
+     "file": "src/density.ts",
+     "about": "",
+     "also": [
+      "applyDensity",
+      "DEFAULT_DENSITY",
+      "DENSITIES",
+      "Density",
+      "DENSITY_LIMITS",
+      "DENSITY_VARIABLES",
+      "densityById",
+      "DensityDef",
+      "DensityId",
+      "densityOf",
+      "DensityOverride",
+      "densityVariables",
+      "densityWith",
+      "isDensityId",
+      "TOUCH_TARGET"
+     ]
+    },
+    {
+     "file": "src/harmony.ts",
+     "about": "A theme from two colours, and the accents that go with a base colour (owner, 2026-11-22: «due colori: la base, che\ndi suo è il bianco ma si può cambiare, portata sulle tonalità chiarissime, e un accento scelto con i principi della\ncolorimetria, suggerito in automatico»).\n- The base is the page. Whatever colour is chosen, only its hue stays: it is brought to a very light tone (an OKLCH\n  lightness of 0.985 and a chroma of 0.018 at most), so the page is a white with a breath of that colour and the text\n  keeps its contrast. No base, or a gray one, is the neutral white. In dark the same hue is a very dark tone.\n- The accent is what the eye is led by (R2). It is not picked from the whole wheel: from the base's hue the classical\n  harmonies give the hues that go with it, all on one wheel, OKLCH's, where equal turns are equal steps for the eye:\n  the split complement (150° to either side), the complement (180°), the triad (120°), the neighbours (30°) and the\n  base's own hue. Each is drawn at the lightness and saturation of a button, inside what a screen can show.\n- They are ranked. A split complement comes first: it is clearly another colour without the vibration of the exact\n  opposite. A hue that would read as the red of an error is moved out of its room and ranked lower, and one beside\n  the green of success or the amber of a warning loses a little: an accent must never be taken for a status. A hue\n  between yellow and lime loses more: yellow is itself only when it is light, and at the lightness a button needs\n  under its label it turns to olive.\nA white or gray base has no hue to start from: the proposals are then eight hues spread round the wheel, the blue\nfirst. The theme engine then moves every colour until its contrast thresholds hold, as for any theme.",
+     "also": [
+      "AccentSuggestion",
+      "accentSuggestions",
+      "DuoPick",
+      "duoTheme",
+      "HARMONIES",
+      "Harmony",
+      "pageTint"
+     ]
+    },
+    {
+     "file": "src/icon-packs.generated.ts",
+     "about": "Generated by scripts/icon-packs.mjs from the packs' own SVGs (licences in THIRD_PARTY.md). Do not edit by hand.",
+     "also": [
+      "IconArt"
+     ]
+    },
+    {
+     "file": "src/icons.tsx",
+     "about": "The icon packs (R6 of the toolkit's rules, 2026-11-20): icons are visual anchors for the eye, and the user picks the\npack in Settings. A component asks for an icon by what it means (`settings`, `delete`), never by a pack's own name:\nthe pack in context draws it. Lucide is the default (line, the toolkit's stroke). Two packs take the colour of the\ntheme: Phosphor Duotone and Solar Duotone, drawn in the text colour with a lighter second tone. Three are in their\nown colours: Fluent Color, Fluent Emoji Flat and Twemoji, drawn emoji that look the same on every device (the\ndevice's own emoji font left the packs on 2026-11-21: the owner did not like it). The drawn packs are not npm\ndependencies: their drawings are in `icon-packs.generated.ts`, written by `scripts/icon-packs.mjs`. Functional\nchrome (chevrons, ×, the search magnifier) stays Lucide.",
+     "components": [
+      {
+       "name": "Icon",
+       "doc": "An icon by its meaning, drawn by the pack in context (or by `pack`, for a preview of another pack). Decorative: the label next to it names the thing, so it is hidden from screen readers. A name nobody draws (from data, or an app's meaning with no provider above) is an empty slot of the same size, so the row keeps its alignment (R6).",
+       "props": [
+        {
+         "name": "name",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "required": true
+        },
+        {
+         "name": "pack",
+         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\""
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "IconPackProvider",
+       "doc": "The pack every `Icon` below draws from: the app passes the user's choice, and with `icons` the meanings of its own (a constant: the same object at every render). A provider without `icons` keeps the ones of the provider above.",
+       "props": [
+        {
+         "name": "pack",
+         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
+         "required": true
+        },
+        {
+         "name": "icons",
+         "type": "Readonly<Record<string, IconDrawing>>"
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DEFAULT_ICON_PACK",
+      "ICON_NAMES",
+      "ICON_PACKS",
+      "IconDrawing",
+      "IconName",
+      "IconPack",
+      "IconSet",
+      "isIconName",
+      "isIconPack",
+      "useIconPack"
+     ]
+    },
+    {
+     "file": "src/index.ts",
+     "about": "@acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for\nbehaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the\ngeneric fields and surfaces built on them. No app concepts: each app builds its product components on top of\nthis.",
+     "also": [
+      "CheckboxProps",
+      "InputProps",
+      "TextareaProps"
+     ]
+    },
+    {
+     "file": "src/internal/attachment-viewer.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "AttachmentViewer",
+       "doc": "The preview of an attachment (the app's details sheet opens it with the `preview` prop, the package always exports sixteen components): pages one below the other in a sheet on the right (full width on the phone, a sheet inside the page like a details sheet everywhere else). Only the drawing is here: whoever uses the package opens and draws the document, provides the pages with their measures, provides the image when `onNeedPage` asks for it and chooses the zoom. A page asks for its image only when it is close to entering the view.",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the file."
+        },
+        {
+         "name": "status",
+         "type": "AttachmentViewerStatus",
+         "required": true
+        },
+        {
+         "name": "pages",
+         "type": "ViewerPage[]",
+         "doc": "The pages, in order. They are only looked at when `status.kind === 'ready'`."
+        },
+        {
+         "name": "zoom",
+         "type": "number",
+         "doc": "Zoom: 1 is the width of the column. Chosen by whoever uses the package (also to draw sharp)."
+        },
+        {
+         "name": "onZoomChange",
+         "type": "((zoom: number) => void)"
+        },
+        {
+         "name": "onNeedPage",
+         "type": "((index: number) => void)",
+         "doc": "A page has entered (or is about to enter) the view: whoever uses the package draws it and provides `src`."
+        },
+        {
+         "name": "onOpenOriginal",
+         "type": "(() => void)",
+         "doc": "«Open the original»: downloads the file or opens it in the program. Absent: no button."
+        },
+        {
+         "name": "originalLabel",
+         "type": "string",
+         "doc": "The name of the `onOpenOriginal` action."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The sheet enters from the right (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AttachmentViewerProps",
+      "AttachmentViewerStatus",
+      "VIEWER_ZOOMS",
+      "ViewerPage"
+     ]
+    },
+    {
+     "file": "src/internal/attachments.tsx",
+     "about": "Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)\n\n«Attachments» (a section of an entry's details): the list of the attachments and the zone to add one. From Park's `file-upload`\nrecipe comes the look: the zone on the raised sheet with l3 corners and a 2px dashed border that turns solid (in the\nink, R2) while something is dragged over it, two lines of text (no upload icon: the words say it, R6), and each\nattachment a raised item with l3 corners and the xs shadow in place of Park's hairline (R4: file tiles get a shadow). The control rests on Ark UI's\nFileUpload (`@ark-ui/react/file-upload`).\nArk gives: the button that opens the system picker and the `<input type=\"file\">` behind it (outside the\naccessibility tree and the Tab order, emptied before each choice so the same file can be chosen again), and the\ncheck of every file against the limit (`maxFileSize`): the ones within it are accepted, the others rejected with\ntheir reason. Its list of chosen files is kept empty: a file goes to `onAttach` at once and the list is the caller's\n(`AttachmentView`), with thumbnail, state, «Open» and «Remove» that hand the actions back to `onAction`.\nOurs: the drop (`useDropTarget`: Ark's dropzone takes files only and keeps every other drag for itself, while here a\nlink is an attachment too and dropped text is refused with a message; a dropped file goes through Ark's check like a\nchosen one); the words, in English; the field for a typed link; focus after «Remove». No animation, no preview, no\nnetwork.",
+     "components": [
+      {
+       "name": "AttachmentMarks",
+       "doc": "Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero."
+      },
+      {
+       "name": "AttachmentsSection",
+       "doc": "«Attachments»: the list and the zone to add (drop, «Add a file», a typed link).",
+       "props": [
+        {
+         "name": "attachments",
+         "type": "AttachmentView<A>[]",
+         "required": true
+        },
+        {
+         "name": "onAction",
+         "type": "(action: A) => void",
+         "required": true
+        },
+        {
+         "name": "onAttach",
+         "type": "(payload: AttachPayload) => void",
+         "required": true
+        },
+        {
+         "name": "maxFileBytes",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "thumbnails",
+         "type": "Record<string, string | null | undefined>",
+         "required": true
+        },
+        {
+         "name": "onNeedThumbnail",
+         "type": "((id: string) => void)",
+         "required": true
+        },
+        {
+         "name": "textNotice",
+         "type": "string",
+         "doc": "What the section says when text is dropped on it (text is not an attachment): the app says where text goes instead. Absent: the toolkit's words, a neutral sentence."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AttachmentMarksInput",
+      "AttachmentsSectionProps",
+      "AttachmentState",
+      "AttachmentSummary",
+      "AttachmentView",
+      "stateText",
+      "summarize",
+      "typedUrl"
+     ]
+    },
+    {
+     "file": "src/internal/chips.tsx",
+     "about": "Park UI (MIT) tags-input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts)\n\nFrom Park's `tags-input` recipe (md) comes the look: the field 40px tall with l2 corners and 6px of side padding,\n6px between the chips, each chip 28px tall with l1 corners and its own 20px remove button. What the field does rests\non Ark UI's TagsInput (`@ark-ui/react/tags-input`).\nArk gives: Enter and the comma that close a label, a pasted «a, b, c» split into labels, the text left in the box\nadded when the field is left, the arrows that walk the chips from the box (Delete or Backspace removes the one\nreached), the remove button of each chip with its name, the announcements to screen readers, one Tab stop for the\nwhole field. Ours: the chip is the neutral `Badge` with a dot in the color of its name (`tag-color.ts`, R10); the words are about\n«labels», in English; a label already there is not added again whatever its case; Backspace in the empty box removes\nthe last label at once (Ark would first select it and remove it at the second press); a chip is not edited in place;\na comma that arrives with other text in one go (an autocorrection, a keyboard's suggestion) closes the labels before\nit and leaves the rest in the box (Ark would add the text it had before that event).\nWith `suggestions` the box is also a combobox (Ark UI's Combobox, on the same text box): while the user writes, the\nlabels that match and are not in the field yet are listed under it; the arrows move, Enter or a click adds the one\nreached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).\nNo animation.",
+     "components": [
+      {
+       "name": "ChipsInput",
+       "doc": "A list of labels as chips with an input: add with Enter or comma (also by pasting «a, b, c» or by leaving the input), remove with the chip's button, and with Backspace on an empty input the last one is removed.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "The id of the writing input, for the field's label."
+        },
+        {
+         "name": "value",
+         "type": "string[]",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(next: string[]) => void",
+         "required": true
+        },
+        {
+         "name": "placeholder",
+         "type": "string"
+        },
+        {
+         "name": "suggestions",
+         "type": "readonly string[]",
+         "doc": "Labels to offer while the user writes (the ones used elsewhere, people from an address book). The ones already in the field are left out. Filtered here by the text typed, ignoring case, unless `onQuery` is given."
+        },
+        {
+         "name": "onQuery",
+         "type": "((text: string) => void)",
+         "doc": "The text being typed: with it the caller filters (and may fetch) and passes the new `suggestions`."
+        },
+        {
+         "name": "suggestionsLabel",
+         "type": "string",
+         "doc": "The name of the list of suggestions for screen readers. Absent: the toolkit's words («Suggestions»)."
+        },
+        {
+         "name": "display",
+         "type": "((value: string) => string)",
+         "doc": "What a chip shows in place of its value (a person's name in place of the whole address). The value stays what the caller holds and what a chip is told apart by; a suggestion shows the name and, after it, the value in the muted ink, and is found by either."
+        },
+        {
+         "name": "invalid",
+         "type": "((value: string) => boolean)",
+         "doc": "True for a value that is not valid (an address without its domain): its chip has the destructive border and text, and screen readers hear so after its name. The field does not refuse it: the caller decides what to do with it."
+        },
+        {
+         "name": "separators",
+         "type": "readonly string[]",
+         "doc": "The characters that close a label, each one a single character. Default: the comma. Enter always closes one. A separator typed, pasted or arriving with other text splits it the same way (`[',', ';', ' ']` for addresses)."
+        },
+        {
+         "name": "dot",
+         "type": "boolean",
+         "doc": "The 8px dot in the colour of the label's name (R10), on by default. Off for chips that are not coloured labels (people, addresses)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ChipsInputProps"
+     ]
+    },
+    {
+     "file": "src/internal/date-field.tsx",
+     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)\nFrom Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of\nside padding); the card is Park's date-picker content (l3 corners, the lg elevation).\nThe date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker\n(`@ark-ui/react/date-picker`). Two variants (a form can use both), with the same contract as the native fields they\nreplace: `DateField` gives and receives `YYYY-MM-DD` (or null), `DateTimeField` `YYYY-MM-DDTHH:mm` in local time\n(or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time\nzones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).\nArk gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the\nbutton), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).\nThe card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its\nfocus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.",
+     "components": [
+      {
+       "name": "DateField",
+       "doc": "A local date (a due date, a birthday): a click or Enter on a day chooses it and closes.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "`YYYY-MM-DD` or empty/null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: string | null) => void",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "words",
+         "type": "{ clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
+         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22)."
+        },
+        {
+         "name": "picks",
+         "type": "readonly DatePick[]",
+         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
+        }
+       ]
+      },
+      {
+       "name": "DateRangeField",
+       "doc": "A range of local days (a stay, a leave, a filter): a click chooses the first day, a second one the last and closes; the days between take the selection tint. The two clicks may come in either order, and on the same day for a range of one day. The caller hears of a range only when it has both ends.",
+       "props": [
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "value",
+         "type": "DateRange | null",
+         "required": true,
+         "doc": "The two ends as `YYYY-MM-DD`, or null. A value whose ends are not real dates, or are the wrong way round, reads as null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: DateRange | null) => void",
+         "required": true
+        },
+        {
+         "name": "picks",
+         "type": "readonly DateRangePick[]",
+         "doc": "Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days."
+        }
+       ]
+      },
+      {
+       "name": "DateTimeField",
+       "doc": "A local day and, if needed, a local time (the reminder). Without a date there is no reminder. A click on a day chooses it and immediately gives `YYYY-MM-DDTHH:mm`; a click on the day already chosen removes it (no «Clear the date» button). The time is off by default: the «Time» checkbox turns it on, and when off it is 09:00. With a date already set the checkbox starts on if the time is not the default one. A half-typed time (the empty field while writing) never enters the value: the last valid one stays. «Done» or Esc closes.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "`YYYY-MM-DD` or empty/null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: string | null) => void",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "words",
+         "type": "{ clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
+         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22)."
+        },
+        {
+         "name": "picks",
+         "type": "readonly DatePick[]",
+         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DateFieldProps",
+      "DatePick",
+      "DateRange",
+      "DateRangeFieldProps",
+      "DateRangePick",
+      "DateTimeFieldProps",
+      "dayPicks",
+      "rangePicks"
+     ]
+    },
+    {
+     "file": "src/internal/desktop-guard.ts",
+     "about": "What makes a page behave as the window of a program and not as a page in a browser. An app that runs in a window of\nits own (no address bar, no browser around it) calls `useDesktopGuard()` once; in a browser tab it does not.\n- The keys a browser engine keeps for itself do nothing: reload, print, find, history, the page's source, the\n  developer tools, back and forward (with Ctrl, or with Command on a Mac). They are refused in the capture phase and not stopped, so the app's own handler\n  for the same key (Ctrl+F for its search, Ctrl+S in its editor) still runs.\n- The engine's own menu on a right press is refused, except where it is useful: in a field (it offers editing) and\n  over selected text (Copy). An app's own context menu is not touched: it shows its own.\n- The back and forward buttons of a mouse do not navigate.\n- A picture or a link is not dragged out of the window, unless the app made it draggable.\n`ownKeysIn` names the places that run their own keys and menus (a terminal, a code editor): there nothing is refused.\nThe technique is the one Imago's windows use (its `guardDesktop`); this is the toolkit's own writing of it. The\nnative side of the same guard (navigation limited to the app's origin, new windows refused) is the app's host.",
+     "also": [
+      "DesktopGuardOptions",
+      "guardDesktop",
+      "isBrowserKey",
+      "useDesktopGuard"
+     ]
+    },
+    {
+     "file": "src/internal/drop.ts",
+     "about": "",
+     "also": [
+      "AttachPayload",
+      "DropPayload",
+      "DropTarget",
+      "limitLabel",
+      "MAX_FILE_BYTES",
+      "overLimitNotice",
+      "payloadFromDataTransfer",
+      "useDropTarget",
+      "usePageDrop",
+      "withinLimit"
+     ]
+    },
+    {
+     "file": "src/internal/duration-field.tsx",
+     "about": "A duration field: hours and minutes in two number inputs, four shortcuts and\n«None». The field does not add, convert or check the total: it sends hours and minutes as they are and the app decides\n(up to 24 hours, minutes from 0 to 59; zero and zero means «None»). Two inputs have no syntax to get wrong, and the\nshortcuts cover the frequent cases with one click.",
+     "components": [
+      {
+       "name": "DurationField",
+       "props": [
+        {
+         "name": "value",
+         "type": "DurationParts | null",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(value: DurationParts | null) => void",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DurationFieldProps",
+      "DurationParts"
+     ]
+    },
+    {
+     "file": "src/internal/edge-scroll.ts",
+     "about": "",
+     "also": [
+      "useEdgeAutoScroll"
+     ]
+    },
+    {
+     "file": "src/internal/file-drop.tsx",
+     "about": "Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)\n\nA zone that takes a file: dropped on it, or chosen with the system picker, so dragging is never the only way (WCAG\n2.5.7). The look is the attachments zone's (Park's `file-upload` recipe): the raised sheet with l3 corners and a 2px\ndashed border in the control colour that turns solid ink while a file is dragged over it (the accent is not for this,\nR2), two lines of text and no upload icon (the words say it, R6), 96px tall so it is an easy target with a mouse and a\nfinger. Ark UI's FileUpload gives the real button that opens the picker, the input behind it (outside the\naccessibility tree and the tab order, emptied before each choice so the same file can be chosen again) and the checks\nof type, size and count; the drop is the toolkit's `useDropTarget` (a drag that starts in the page is left alone).\nThe words are the app's: the label (the button's name, the same while dragging or busy), the hint (its description),\nthe line while dragging and while busy, and the error under the zone. Busy, the button keeps its focus and ignores\nclicks and drops, like a loading Button. No animation.",
+     "components": [
+      {
+       "name": "FileDrop",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The main line, and the name of the button that opens the picker: \"Drop a file here, or choose one\"."
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "doc": "The second line, read as the button's description: what the zone takes (\"CSV, up to 5 MB\")."
+        },
+        {
+         "name": "dropLabel",
+         "type": "string",
+         "doc": "The main line while a file is dragged over the zone (\"Drop it here\"); the label when absent."
+        },
+        {
+         "name": "onFiles",
+         "type": "(files: File[]) => void",
+         "required": true,
+         "doc": "The files chosen or dropped that pass the checks (one, unless `multiple`)."
+        },
+        {
+         "name": "onRefuse",
+         "type": "((refused: FileDropRefusal[]) => void)",
+         "doc": "The files that do not pass, each with its reason: the app says why in `error`."
+        },
+        {
+         "name": "accept",
+         "type": "Record<string, string[]>",
+         "doc": "The types taken, as MIME type → extensions: `{ 'text/csv': ['.csv'] }`. A file passes on its type or its extension."
+        },
+        {
+         "name": "maxFileBytes",
+         "type": "number",
+         "doc": "The largest file taken, in bytes."
+        },
+        {
+         "name": "multiple",
+         "type": "boolean",
+         "doc": "Several files at once."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "busy",
+         "type": "string | null",
+         "doc": "Work under way on the file just taken: this line takes the label's place and is announced, the zone takes nothing."
+        },
+        {
+         "name": "error",
+         "type": "ReactNode",
+         "doc": "What went wrong, under the zone and announced at once; the border turns destructive."
+        },
+        {
+         "name": "ref",
+         "type": "Ref<HTMLButtonElement>",
+         "doc": "The button that opens the picker: to give it focus again."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "FileDropProps",
+      "FileDropReason",
+      "FileDropRefusal"
+     ]
+    },
+    {
+     "file": "src/internal/kinds.ts",
+     "about": "",
+     "also": [
+      "AttachmentKind",
+      "ItemKind",
+      "kindIcon",
+      "kindLabel"
+     ]
+    },
+    {
+     "file": "src/internal/lines.ts",
+     "about": "",
+     "also": [
+      "splitLines"
+     ]
+    },
+    {
+     "file": "src/internal/markdown.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "InlineMarkdown",
+       "doc": "An inline line (the title): bold, italic, strikethrough, code, link. No blocks.",
+       "props": [
+        {
+         "name": "text",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "MarkdownBlocks",
+       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings and quotes, with inline Markdown inside.",
+       "props": [
+        {
+         "name": "text",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "hasMarkdown",
+      "parseBlocks",
+      "parseInline",
+      "plainText"
+     ]
+    },
+    {
+     "file": "src/internal/media.ts",
+     "about": "",
+     "also": [
+      "COARSE",
+      "NARROW",
+      "useMedia",
+      "usePhone"
+     ]
+    },
+    {
+     "file": "src/internal/motion.ts",
+     "about": "",
+     "also": [
+      "loadMotion",
+      "MotionImpl",
+      "MotionProvider",
+      "preloadMotion",
+      "useMotion"
+     ]
+    },
+    {
+     "file": "src/internal/overlay.ts",
+     "about": "",
+     "also": [
+      "BACKDROP",
+      "BOTTOM_BAR_ROOM_VAR",
+      "ignoreToasts",
+      "restoreFocus",
+      "SHEET_TOASTS_ROOM",
+      "TOASTS_ATTR",
+      "TOASTS_LAYER",
+      "TOASTS_ROOM_VAR"
+     ]
+    },
+    {
+     "file": "src/internal/swatches.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "Swatches",
+       "doc": "Color choice for what the user colours (a folder, a group): the SmoothUI/Base UI RadioGroup (`components/ui/radio-group`) with solid swatches. Like any radio group: a single Tab stop (the chosen color, or the first), the arrows move and choose wrapping around the ends, Home and End go to the first and the last.",
+       "props": [
+        {
+         "name": "colors",
+         "type": "readonly string[]"
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(color: string) => void",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SwatchesProps"
+     ]
+    },
+    {
+     "file": "src/internal/tag-color.ts",
+     "about": "The colors of a user's labels (tags): eight background/ink pairs per scheme in `theme.css` (`--tag-1-*` …\n`--tag-8-*`), picked from the label's name, so the same name has the same color everywhere and on every device,\nwithout an extra datum. The chips of the labels field (`chips.tsx`) use them, and so can an app's own label pills.",
+     "also": [
+      "TAG_COLOR",
+      "TAG_HUES",
+      "TAG_PILL",
+      "tagColorAttrs",
+      "tagHue"
+     ]
+    },
+    {
+     "file": "src/internal/thumbnail.tsx",
+     "about": "",
+     "components": [
+      {
+       "name": "NeedThumbnail",
+       "doc": "Asks for a thumbnail only once per mounted row: when `when` becomes true it calls `onNeed(id)`, then never again for that id, even if the value stays null (no loop). It draws nothing.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "when",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onNeed",
+         "type": "((id: string) => void)"
+        }
+       ]
+      },
+      {
+       "name": "Thumbnail",
+       "doc": "A square thumbnail (`object-fit: cover`) or, until there is one, a neutral box of the same size. Still.",
+       "props": [
+        {
+         "name": "src",
+         "type": "string | null",
+         "required": true,
+         "doc": "The data URL; null, absent or not acceptable: the neutral box with the mark of the kind."
+        },
+        {
+         "name": "kind",
+         "type": "ItemKind",
+         "required": true,
+         "doc": "The mark of the neutral box."
+        },
+        {
+         "name": "size",
+         "type": "\"row\" | \"sheet\"",
+         "required": true,
+         "doc": "64px in the details, 40px on the rows."
+        },
+        {
+         "name": "label",
+         "type": "string | null",
+         "required": true,
+         "doc": "The name for assistive technology (the kind: «file»), or null if the row already says it or it is not needed. The image always has an empty `alt`: the title next to it already says what it is."
+        },
+        {
+         "name": "onOpen",
+         "type": "(() => void)",
+         "doc": "A click on the thumbnail does what «Open» does. It is a button (never a link), out of the Tab order and hidden from assistive technology: for keyboard and screen readers there is already «Open» in the same row, and two buttons with the same name would be a duplicate."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "safeThumbnail",
+      "ThumbnailProps"
+     ]
+    },
+    {
+     "file": "src/lib/utils.ts",
+     "about": "",
+     "also": [
+      "cn"
+     ]
+    },
+    {
+     "file": "src/palette.ts",
+     "about": "Palettes from one base colour (owner, 2026-11-20: \"selezionando un colore di base deve in automatico creare una\npalette complementare + accento, e far scegliere solo tra 3 combinazioni\"). Material Color Utilities finds the hues\nthat go with the colour (its complement by temperature, its tertiary); the theme engine then builds the theme from\nthem, so every contrast threshold holds as for the catalogue's themes. Two mood colours set the theme, the accent\nmakes it the user's.",
+     "also": [
+      "PALETTE_COMBOS",
+      "PaletteCombo",
+      "palettePick",
+      "PalettePick",
+      "paletteTheme"
+     ]
+    },
+    {
+     "file": "src/theme-catalog.ts",
+     "about": "The shape of a theme definition, and the fonts. The toolkit ships no themes: each app passes its own definitions\nand the engine (theme-engine.ts) derives every colour from them, guaranteeing the contrast\nthresholds. Four things make a theme: the tint of the grays (`hue`) and how strong it is (`chroma`), the accent\n(saturation and hue) and the sidebar: `tenue` (light, the tone of the app's ground), `scura` (a near-black, almost\nneutral column in both schemes) or `piena` (in the theme's colour, with the selected item solid). Optional: a strong\n`fill`, a `second` colour for the selection, or a curated palette's own `surfaces`.",
+     "also": [
+      "DEFAULT_FONT",
+      "DEFAULT_SHAPE",
+      "FontDef",
+      "FontId",
+      "FONTS",
+      "isThemeRadii",
+      "isThemeShape",
+      "PaletteProfile",
+      "SHAPE_RADII",
+      "SidebarKind",
+      "Surfaces",
+      "THEME_SHAPES",
+      "ThemeDef",
+      "ThemeRadii",
+      "ThemeShape"
+     ]
+    },
+    {
+     "file": "src/theme-engine.ts",
+     "about": "",
+     "also": [
+      "contrast",
+      "DEFAULT_TONE_INTENSITY",
+      "DEFAULT_TONE_LIGHT",
+      "fit",
+      "FIXED",
+      "isAccentColor",
+      "luminance",
+      "Oklch",
+      "over",
+      "OWN_BACKGROUNDS",
+      "OWN_SECONDS",
+      "OWN_SIDEBARS",
+      "OWN_TINTS",
+      "ownTheme",
+      "OwnTheme",
+      "presetTone",
+      "STATUS",
+      "ThemeScheme",
+      "themeTokens",
+      "ThemeTokens",
+      "themeTone",
+      "ThemeTone",
+      "toHex",
+      "tokensFor",
+      "TONE_INTENSITIES",
+      "TONE_LIGHTS",
+      "TONE_PRESETS",
+      "TonePreset",
+      "tonePresetOf"
+     ]
+    },
+    {
+     "file": "src/themes.ts",
+     "about": "",
+     "also": [
+      "applyFont",
+      "applyTheme",
+      "BASE_THEME",
+      "copyTheme",
+      "FONT_VARIABLE",
+      "fontById",
+      "isFontId",
+      "THEME_ATTRIBUTES",
+      "THEME_VARIABLES",
+      "ThemePick",
+      "themeVariables",
+      "toneHasEffect"
+     ]
+    },
+    {
+     "file": "src/words.tsx",
+     "about": "The words of the toolkit. A component's content is the app's: what a field holds, what a button says, the title\nof a dialog all come from the caller. What is left here are the few words a component has to say by itself: the\nname of a close button, the announcement of a label added, «Page 2 of 5». They are placeholders, in English: an app\nreplaces them, all or some, once for the whole tree with `WordsProvider`, in the user's language, and again when\nthe language changes. A word that takes a value is a function, so each language orders and inflects it as it needs.\nWhere a component also takes the word as a prop (`placeholder`, `clearLabel`, `textNotice`), the prop wins.\nThe helpers that return a sentence outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`)\ntake the words as their last argument: `useWords()` gives them to an app's own component.",
+     "components": [
+      {
+       "name": "WordsProvider",
+       "doc": "The words every component below says: the app passes its own (a constant for each language: the same object at every render), all or some. A provider inside another replaces only what it names.",
+       "props": [
+        {
+         "name": "words",
+         "type": "WordsOverride",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CalendarSpan",
+      "DEFAULT_WORDS",
+      "useWords",
+      "withWords",
+      "Words",
+      "WordsOverride"
+     ]
+    }
+   ],
+   "fromLibraries": [
+    "Collapsible",
+    "Field",
+    "PopoverPrimitive"
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/table",
+   "files": [
+    {
+     "file": "src/components/DataTable.tsx",
+     "about": "A table of data, ready to use: columns that sort when their heading is pressed, one row that can be chosen, and,\nfor thousands of rows, only the ones in sight in the page. The behaviour is TanStack's (`@tanstack/react-table` for\nthe columns and the sorting, `@tanstack/react-virtual` for the rows in sight: npm dependencies, pinned, see\nTHIRD_PARTY.md); the form is the toolkit's `Table` parts. It lives in its own entry of the package (`./table`), so\nan app without a table does not load either library.\n- A column says its heading, what a cell shows, and the value it sorts by. Without that value the heading is a\n  word and not a button. A press sorts up, a second down, a third puts the rows back as they were given. The\n  heading says how it is sorted with `aria-sort`, and with an arrow for the eye.\n- With `onRowPress` a row is pressed with the pointer or with Enter and Space; the arrows, Home and End move among\n  the rows, which are one Tab stop, as in a list. The chosen row (`current`) has the selection tint (R1).\n- With `virtual` the box needs a height (`className=\"h-96\"`): the rows outside it are not in the page, two spacer\n  rows keep the scrollbar honest, and each row is measured as it is drawn, so any density and a finger's 44px hold.\nAn app that needs more of a table (filters, pinned columns, groups) drives TanStack Table itself and draws it with\n`Table`, `TableRow` and `TableCell`: this component is the common case, not a wall around the library.",
+     "components": [
+      {
+       "name": "DataTable",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the table for screen readers («Files»)."
+        },
+        {
+         "name": "columns",
+         "type": "readonly DataColumn<Row>[]",
+         "required": true
+        },
+        {
+         "name": "rows",
+         "type": "readonly Row[]",
+         "required": true
+        },
+        {
+         "name": "rowId",
+         "type": "(row: Row) => string",
+         "required": true,
+         "doc": "What tells a row from the others, and stays the same when the rows are sorted."
+        },
+        {
+         "name": "sort",
+         "type": "DataSort",
+         "doc": "The sorting, when the app keeps it; otherwise the table keeps its own, starting from `defaultSort`."
+        },
+        {
+         "name": "defaultSort",
+         "type": "DataSort"
+        },
+        {
+         "name": "onSortChange",
+         "type": "((sort: DataSort) => void)"
+        },
+        {
+         "name": "current",
+         "type": "string | null",
+         "doc": "The id of the row chosen: the one shown in the details."
+        },
+        {
+         "name": "onRowPress",
+         "type": "((row: Row) => void)",
+         "doc": "With it, a row is pressed: with the pointer, or with Enter and Space."
+        },
+        {
+         "name": "virtual",
+         "type": "boolean",
+         "doc": "Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`)."
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode",
+         "doc": "In place of the rows when there are none. Absent: the toolkit's words («Nothing to show»)."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes of the box that scrolls: its height."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DataColumn",
+      "DataSort",
+      "DataTableProps",
+      "nextSort"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/virtual",
+   "files": [
+    {
+     "file": "src/components/ui/virtual-list.tsx",
+     "about": "A long list of which only the rows in sight are in the page: ten thousand messages cost what thirty do. The rows\nare the toolkit's own (`ItemRow`, or any `<li>`); this part is the box that scrolls and the choice of which rows to\ndraw, on TanStack Virtual (`@tanstack/react-virtual`, an npm dependency, pinned: THIRD_PARTY.md). It has its own\nentry of the package (`./virtual`), so an app with short lists does not load the library.\n- The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:\n  any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.\n- The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.\n- For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,\n  `aria-posinset`): what is not drawn is still counted.\nThe box needs a height (`className=\"h-96\"`, or a place in a column that gives it one).",
+     "components": [
+      {
+       "name": "VirtualList",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the list for screen readers («Messages»)."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "required": true,
+         "doc": "How many rows the list holds."
+        },
+        {
+         "name": "children",
+         "type": "(index: number) => React.ReactNode",
+         "required": true,
+         "doc": "The row at a place, counted from 0: an `ItemRow`, or any `<li>`."
+        },
+        {
+         "name": "rowKey",
+         "type": "((index: number) => React.Key)",
+         "doc": "What tells the row at a place from the others, where the rows move: its id. Absent: its place."
+        },
+        {
+         "name": "estimateSize",
+         "type": "number",
+         "doc": "The height of a row in px before one is measured. Default 44."
+        },
+        {
+         "name": "overscan",
+         "type": "number",
+         "doc": "How many rows are drawn beyond the ones in sight, on each side. Default 8."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes of the box that scrolls: its height."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "VirtualListProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/reorder",
+   "files": [
+    {
+     "file": "src/components/ui/reorder-list.tsx",
+     "about": "A list the user puts in order: each row has a handle that moves it, with the pointer, a finger or the keyboard. The\nbehaviour is dnd-kit's (`@dnd-kit/core` and `@dnd-kit/sortable`, npm dependencies, pinned: THIRD_PARTY.md); the form\nis the toolkit's. It has its own entry of the package (`./reorder`), so an app with no such list does not load it.\n- The handle is the only thing that drags: the rest of the row keeps its presses, its fields and its text.\n  With the keyboard: Space takes the row, the arrows move it, Space puts it down, Escape puts it back. Screen\n  readers hear where it is at each step, in the app's words (`words.reorder`).\n- The row taken is raised on the sheet colour with the `float` elevation and no border (R4), and follows the pointer\n  up and down only. The others make room for it: at once, or sliding in 200ms where the app has motion on\n  (`animated`, or `MotionProvider`), never with reduced motion.\n- The list is the app's: `onReorder` gives the new order and the app keeps it. Nothing is kept here.",
+     "components": [
+      {
+       "name": "ReorderList",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the list for screen readers («Columns»)."
+        },
+        {
+         "name": "items",
+         "type": "readonly Item[]",
+         "required": true
+        },
+        {
+         "name": "itemId",
+         "type": "(item: Item) => string",
+         "required": true,
+         "doc": "What tells an item from the others."
+        },
+        {
+         "name": "itemName",
+         "type": "(item: Item) => string",
+         "required": true,
+         "doc": "The name of an item: of its handle («Move Inbox»), and what screen readers hear while it moves."
+        },
+        {
+         "name": "onReorder",
+         "type": "(items: Item[], move: { from: number; to: number; }) => void",
+         "required": true,
+         "doc": "The new order, and the place the item left and the one it took, counted from 0."
+        },
+        {
+         "name": "children",
+         "type": "(item: Item) => React.ReactNode",
+         "required": true,
+         "doc": "What a row shows beside its handle."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The rows slide to make room (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "moveItem",
+      "ReorderListProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/rich-text",
+   "files": [
+    {
+     "file": "src/components/RichTextField.tsx",
+     "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith the icons of the pack the user chose (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text; the field's own changes never loop back.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
+     "components": [
+      {
+       "name": "RichTextField",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text, as HTML."
+        },
+        {
+         "name": "onChange",
+         "type": "(html: string) => void",
+         "required": true
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the field for screen readers, where no label names it."
+        },
+        {
+         "name": "aria-describedby",
+         "type": "string"
+        },
+        {
+         "name": "aria-invalid",
+         "type": "boolean | \"true\" | \"false\""
+        },
+        {
+         "name": "required",
+         "type": "boolean",
+         "doc": "Said to screen readers; whether an empty text is accepted is the app's to check."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The text cannot be changed: half opacity, no buttons."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes of the box around the buttons and the text: the least height of the text is its own (`min-h-24`)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "RichTextFieldProps"
+     ]
+    }
+   ]
+  }
+ ]
+}

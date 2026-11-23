@@ -323,6 +323,41 @@ a drawer.
   loops and effects) are checked against DESIGN.md by `test/design-rules.test.ts`. CI runs both (`.github/workflows/ci.yml`,
   job `toolkit`). An exception needs a `design-check-ignore-next-line <rule>: <cause>` comment.
 
+## For coding agents
+
+The package is ready for a coding agent (Claude Code and others) that builds an app with it. What the agent needs
+comes with the package, at the version the app has installed, and most of it is written from the code:
+
+- `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
+  `llms.txt` is the index of what to read.
+- `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
+  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor.
+  `npm run agents` writes both from the source; a test fails when they fall behind it.
+- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
+- `sigrid-check`: the design check, as a command of the package. In an app, `npx sigrid-check` checks `./src`
+  against `DESIGN.md` (colours and sizes written by hand, palette classes, fonts, gradients, blur, emoji) and exits
+  with 1 when it finds something, so an agent can run it and correct itself. An app keeps its own choices in a
+  `sigrid-check.config.json`. It reads files and builds nothing.
+- A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
+  check after:
+
+  ```text
+  /plugin marketplace add acaprino/sigrid
+  /plugin install sigrid@sigrid
+  ```
+
+  Or, for everyone who works on an app, in the app's `.claude/settings.json`:
+
+  ```json
+  {
+    "extraKnownMarketplaces": { "sigrid": { "source": { "source": "github", "repo": "acaprino/sigrid" } } },
+    "enabledPlugins": { "sigrid@sigrid": true }
+  }
+  ```
+
+Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does the same: «For any interface work read
+`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx sigrid-check` after».
+
 ## Use a release
 
 Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/sigrid/releases) (tag

@@ -1,0 +1,12 @@
+{
+  "name": "sigrid",
+  "owner": { "name": "acaprino" },
+  "description": "Claude Code plugins of the Sigrid design system",
+  "plugins": [
+    {
+      "name": "sigrid",
+      "source": "./plugins/sigrid",
+      "description": "Build and review app screens with the @acaprino/sigrid design system: its components, its rules and its check"
+    }
+  ]
+}
