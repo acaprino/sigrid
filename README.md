@@ -167,6 +167,21 @@ useCommandKey(() => setOpen(true))
 ]} />
 ```
 
+An app can also declare each command once, near the state it acts on, and let the toolkit run its key and list it:
+`CommandsProvider` around the app holds a registry; `useCommand({ id, label, group, keys, when, run })` declares a
+command for as long as its component is mounted; a `CommandPalette` with no `commands` lists the declared ones that
+can be done now, and Ctrl+K (Cmd+K on a Mac) opens it. A key is a combination (`Escape`, `F6`, `Ctrl+F`); it does
+nothing while the person types in a field (unless it holds Ctrl or Alt or is a function key), inside an open dialog or
+menu, or in the places `ownKeysIn` names. `useCommands()` gives the list, with each key in the system's words
+(`formatKeys`), and `useCommandPalette()` the palette's open state for a button.
+
+```tsx
+<CommandsProvider>
+  <App />  {/* inside: useCommand({ id: 'close', label: 'Close the detail', keys: 'Escape', when: open, run: close }) */}
+  <CommandPalette />
+</CommandsProvider>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -199,7 +214,7 @@ a drawer.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'

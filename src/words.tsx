@@ -86,6 +86,8 @@ export interface Words {
     readonly placeholder: string
     /** Said when no command holds the text. */
     readonly empty: string
+    /** The name of the command that opens the palette (Ctrl+K), in a list of keys (`CommandsProvider`). */
+    readonly command: string
   }
   /** What a step of `Steps` is, read after its name. */
   readonly steps: {
@@ -289,6 +291,7 @@ export const DEFAULT_WORDS: Words = {
   palette: {
     placeholder: 'Type a command',
     empty: 'No command found',
+    command: 'Commands',
   },
   steps: {
     done: 'done',

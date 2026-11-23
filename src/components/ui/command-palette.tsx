@@ -3,13 +3,15 @@
 // command and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text
 // (R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with
 // Ctrl+K from a button of its title bar.
-// The commands are the app's: the palette knows none. A command is found by its name and by its `keywords`; every
-// word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
+// The commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its
+// registry (`CommandsProvider`, `useCommand`) that can be done now, grouped, and the registry opens it with Ctrl+K. A
+// command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
 import * as React from "react"
 import { Search } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { GROUP_LABEL, ROW_HIGHLIGHT } from "../../lib/rows"
 import { useWords } from "../../words"
+import { CommandsContext, PALETTE_COMMAND, useCommands } from "./commands"
 import { Dialog, DialogContent, DialogTitle } from "./dialog"
 
 export type Command = {
@@ -29,9 +31,11 @@ export type Command = {
 }
 
 export type CommandPaletteProps = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  commands: readonly Command[]
+  /** Open or closed. Absent: the registry's own state (`CommandsProvider`), which Ctrl+K opens. */
+  open?: boolean | undefined
+  onOpenChange?: ((open: boolean) => void) | undefined
+  /** What it lists. Absent: the commands declared in the registry (`useCommand`) that can be done now, by group. */
+  commands?: readonly Command[] | undefined
   /** The name of the palette and the placeholder of its field. Absent: the toolkit's words («Type a command»). */
   label?: string | undefined
   /** Said when no command holds the text. Absent: the toolkit's words. */
@@ -49,8 +53,30 @@ export function filterCommands(commands: readonly Command[], text: string): Comm
   })
 }
 
-function CommandPalette({ open, onOpenChange, commands, label, emptyText, animated }: CommandPaletteProps) {
+// The registry's commands, each group together in the order its first command was declared.
+function grouped(list: readonly Command[]): Command[] {
+  const order = [...new Set(list.map((command) => command.group))]
+  return order.flatMap((group) => list.filter((command) => command.group === group))
+}
+
+const NOTHING = () => {}
+
+function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, commands: commandsProp, label, emptyText, animated }: CommandPaletteProps) {
   const words = useWords()
+  const registry = React.useContext(CommandsContext)
+  const declared = useCommands()
+  const open = openProp ?? registry?.open ?? false
+  const onOpenChange = onOpenChangeProp ?? registry?.setOpen ?? NOTHING
+  const commands = React.useMemo<readonly Command[]>(
+    () =>
+      commandsProp ??
+      grouped(
+        declared
+          .filter((command) => command.id !== PALETTE_COMMAND && command.when !== false)
+          .map((command) => ({ id: command.id, label: command.label, group: command.group, shortcut: command.shortcut, icon: command.icon, keywords: command.keywords, onSelect: command.run })),
+      ),
+    [commandsProp, declared],
+  )
   const name = label ?? words.palette.placeholder
   const [text, setText] = React.useState("")
   const [active, setActive] = React.useState(0)
