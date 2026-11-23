@@ -1,13 +1,13 @@
 /**
- * The theme engine: a theme from the catalog (theme-catalog.ts), in light or in dark, gives the values of all the `--color-*`
- * tokens and of the shape variables. The starting lightness values are those of the approved sketch
+ * The theme engine: a theme definition (its shape is in theme-catalog.ts; the app brings its own themes), in light or in
+ * dark, gives the values of all the `--color-*` tokens and of the shape variables. The starting lightness values are those of the approved sketch
  * (design/bozzetti/lista-attivita.html, `coloriDi`), the same for every theme: that is why every theme reads the same. The colors
  * are computed in OKLCH, brought back to sRGB by reducing chroma, and the contrast is guaranteed in the computation, on the final
  * hex values: a color below the threshold is darkened on light backgrounds and lightened on dark ones until
- * it gets there. Fixed, never from the theme: the destructive red, the ink of the icons on the user's colors.
+ * it gets there. Fixed, never from the theme: the destructive red and the status colours.
  * The solid button (`primary`) is the accent as a fill: in light it coincides with the accent as text, in dark it is a
  * solid and deeper tone of the accent with light text, while the accent as text (`accent`) stays light.
- * A theme with a strong accent (`fill` in the catalog) has a fill of its own, vivid, in both schemes: its label is the
+ * A theme with a strong accent (`fill` in its definition) has a fill of its own, vivid, in both schemes: its label is the
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
@@ -118,12 +118,11 @@ const atLeast = (bgs: readonly string[], min: number | ((bg: string) => number))
 /** The direction that moves a color away from this background: lighter on dark backgrounds, darker on light ones. */
 const awayFrom = (bg: string): -1 | 1 => (luminance(bg) < 0.18 ? 1 : -1)
 
-/* ———— The destructive red, the status colours and the ink of the icons: the same for every theme of the same scheme ———— */
+/* ———— The destructive red and the status colours: the same for every theme of the same scheme ———— */
 
 export const FIXED = {
   light: { destructive: '#ad2a1e', 'destructive-soft': '#fef1ef' },
   dark: { destructive: '#ff9a8d', 'destructive-soft': '#3d2420' },
-  markInk: { 'mark-ink-light': '#ffffff', 'mark-ink-dark': '#1b1916' },
 } as const
 
 /**
@@ -245,8 +244,8 @@ function shiftOf(tone: ThemeTone | null): Shift {
 const PAPER_LIGHT: Oklch = fromHex('#fafcfc')
 const PAGE_LIGHT = toHex(PAPER_LIGHT)
 
-/** Adapts one of the 18 user colors to the theme's profile and to the scheme, guaranteeing 3:1 (dot) or 3.5:1 (icon). */
-function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[], scheme: ThemeScheme, role: 'dot' | 'icon', bar: readonly string[] = [], tone: Shift = NO_SHIFT): string {
+/** Adapts one of the 18 user colors to the theme's profile and to the scheme, as a dot that holds 3:1 on every background. */
+function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[], scheme: ThemeScheme, bar: readonly string[] = [], tone: Shift = NO_SHIFT): string {
   const { C: c0, h: h0 } = fromHex(raw)
   const dark = scheme === 'dark'
   const delta = ((t.hue - h0 + 540) % 360) - 180
@@ -254,16 +253,16 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
   let L: number
   let C: number
   if (t.palette === 'mono') {
-    L = dark ? (role === 'icon' ? 0.74 : 0.68) : role === 'icon' ? 0.39 : 0.46
+    L = dark ? 0.68 : 0.46
     C = Math.min(c0 * 0.1, 0.015)
   } else if (t.palette === 'calm') {
-    L = dark ? (role === 'icon' ? 0.74 : 0.69) : role === 'icon' ? 0.48 : 0.54
+    L = dark ? 0.69 : 0.54
     C = Math.min(Math.max(c0 * 0.78, 0.05), 0.125)
   } else if (t.palette === 'soft') {
-    L = dark ? (role === 'icon' ? 0.75 : 0.7) : role === 'icon' ? 0.49 : 0.55
+    L = dark ? 0.7 : 0.55
     C = Math.min(Math.max(c0 * 0.84, 0.055), 0.145)
   } else {
-    L = dark ? (role === 'icon' ? 0.75 : 0.7) : role === 'icon' ? 0.48 : 0.55
+    L = dark ? 0.7 : 0.55
     C = Math.min(Math.max(c0 * 0.9, 0.06), 0.17)
   }
   // The chosen tone: the same hue, more or less saturated, lighter or darker (then corrected like any other).
@@ -271,7 +270,7 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
   // «Ink» keeps its colors almost gray whatever the tone: its character is the ink, not the color.
   if (t.palette === 'mono') C = Math.min(C, 0.015)
   L += tone.d
-  const min = role === 'icon' ? 3.5 : 3
+  const min = 3
   // The closest lightness that holds on every background, first in the scheme's direction: with a dark sidebar (`bar`)
   // beside a light page the color must stay between the two, so darkening alone would crush it to black. The search
   // stays near the color (it must remain that color); if there is no room for both, the content wins over the sidebar.
@@ -597,10 +596,10 @@ export function themeTokens(theme: ThemeDef, scheme: ThemeScheme, own?: OwnTheme
 }
 
 /**
- * The computation behind `themeTokens`, for any theme definition: also one outside the catalog, such as a catalog theme
- * with another sidebar. Every catalog theme has the light one (`tenue`); the dark column (`scura`) and the solid one
- * (`piena`) stay here, tested, for whoever wants them. `custom`: the definition carries the user's own colors.
- * Internal: not exported by the package.
+ * The computation behind `themeTokens`, for any theme definition as it is, without the user's own colors merged in:
+ * any of the three sidebars, the light one (`tenue`), the dark column (`scura`) or the solid one (`piena`).
+ * `custom`: the definition already carries the user's own colors. Exported by the package, for an app that builds its
+ * theme definitions itself (a palette from one colour does, in `applyTheme`).
  */
 export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone | null, custom = false): ThemeTokens {
   const light = scheme === 'light'
@@ -768,37 +767,25 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const inkHolds = (h: string) => contrast(ink, h) >= 7 + MARGIN
   const highlight = inkHolds(status.highlight) ? status.highlight : hex(settle(fromHex(status.highlight), light ? 1 : -1, inkHolds).c)
 
-  // The user's colors on the content backgrounds, and again on the bar: a bar with its own colors is dark even in the
-  // light scheme, where a color readable on white would sink, so there the colors are adapted as for a dark scheme.
+  // The user's colors on the content backgrounds; beside a solid bar they also hold on it.
   const marks: Record<string, string> = {}
   const solidBar = theme.sidebar === 'piena' ? [sidebar] : []
-  const barBgs = [sidebar, bar['sidebar-selected']!]
-  const barScheme: ThemeScheme = luminance(sidebar) < 0.18 ? 'dark' : 'light'
   for (let i = 0; i < COLORS.length; i++) {
-    marks[`mark-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, 'dot', solidBar, shift)
-    marks[`mark-icon-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, 'icon', solidBar, shift)
-    marks[`sidebar-mark-${i + 1}`] = full ? adaptMarkColor(COLORS[i]!, theme, barBgs, barScheme, 'dot', [], shift) : marks[`mark-${i + 1}`]!
-    marks[`sidebar-mark-icon-${i + 1}`] = full ? adaptMarkColor(COLORS[i]!, theme, barBgs, barScheme, 'icon', [], shift) : marks[`mark-icon-${i + 1}`]!
+    marks[`mark-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, solidBar, shift)
   }
 
   const colors: Record<string, string> = {
     paper, 'paper-2': paper2, 'sidebar-paper': sidebar, ink, 'ink-soft': inkSoft, 'ink-mute': inkMute, line,
     accent, 'accent-hover': accentHover, 'accent-soft': accentSoft, raised, drop,
-    background: paper, foreground: ink, card: raised, 'card-foreground': ink, popover: raised, 'popover-foreground': ink,
-    primary, 'primary-foreground': onFill, secondary: paper2, 'secondary-foreground': ink, muted: paper2, 'muted-foreground': inkMute,
+    background: paper, foreground: ink, popover: raised, 'popover-foreground': ink,
+    primary, 'primary-foreground': onFill, 'muted-foreground': inkMute,
     // The focus ring is the accent as text (R8): 2px, offset 2px, at least 3:1 on every background and on the selection.
-    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent, ...FIXED.markInk,
+    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent,
     selected, 'selected-ink': selectedInk, ...spot, ...bar, ...marks,
   }
   const attributes: Record<string, string> = {
-    // Rows in the open: no card around the group and no ruled line between the rows (theme.css, `data-rows="open"`).
-    'data-rows': 'open',
     // The solid sidebar has its own colors: the CSS redefines the ink there.
     'data-sidebar': full ? 'own' : 'shared',
-    // The selected item of the solid sidebar is a solid background: inside it, count, menu and icon take its text color.
-    // In the dark column it is a lighter neutral row with a short accent bar: the user's colors stay. On the light
-    // bar it is the accent tint, with the same short bar and the count as a fill in the accent.
-    'data-selection': column ? 'bar' : full ? 'filled' : 'tint',
   }
   return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
 }

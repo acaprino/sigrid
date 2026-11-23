@@ -68,20 +68,15 @@
   /* `md:` is the point where the sidebar stops being a drawer. */
   --breakpoint-md: 860px;
 
-  /* Semantic names that the shadcn/ui primitives use internally, mapped onto the paper:
+  /* Semantic names that the toolkit's own primitives (src/components/ui) use, mapped onto the paper:
      they are not part of the vocabulary for whoever builds screens (use paper/ink/accent). */
   --color-background: #fafcfc;
   --color-foreground: #161616;
-  --color-card: #fdfefe;
-  --color-card-foreground: #161616;
   --color-popover: #fdfefe;
   --color-popover-foreground: #161616;
   /* The solid button: the accent as a fill, with light text. */
   --color-primary: #1f1f1f;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #eeeeee;
-  --color-secondary-foreground: #161616;
-  --color-muted: #eeeeee;
   --color-muted-foreground: #626262; /* placeholders and descriptions of the primitives: the same value as ink-mute */
   --color-destructive: #ad2a1e;
   --color-destructive-soft: #fef1ef;
@@ -92,10 +87,6 @@
   /* The focus ring is the accent as text (R8): a 2px outline with a 2px offset, at least 3:1 on every background and on
      the selection tint (src/lib/focus.ts, test/theme-engine.test.ts). */
   --color-ring: #1f1f1f;
-  /* Ink of the icons inside the shapes the user colours: the background is a user color, so the same in
-     both palettes (test/contrast.test.ts). */
-  --color-mark-ink-light: #ffffff;
-  --color-mark-ink-dark: #1b1916;
   --color-destructive-foreground: #ffffff;
   /* Status colours (theme-engine.ts `STATUS`): text colours with a soft background each, and the highlight of a match
      inside a text, with the ink on it. Meanings, never the only signal. */
@@ -111,79 +102,25 @@
   --color-sidebar-selected: #dedede;
   --color-sidebar-selected-ink: #161616;
   --color-mark-1: #605553;
-  --color-mark-icon-1: #4d4240;
   --color-mark-2: #605553;
-  --color-mark-icon-2: #4d4240;
   --color-mark-3: #5f5651;
-  --color-mark-icon-3: #4c433e;
   --color-mark-4: #5e5651;
-  --color-mark-icon-4: #4b433e;
   --color-mark-5: #5d574f;
-  --color-mark-icon-5: #4a443c;
   --color-mark-6: #575950;
-  --color-mark-icon-6: #44463d;
   --color-mark-7: #545a53;
-  --color-mark-icon-7: #414740;
   --color-mark-8: #515b55;
-  --color-mark-icon-8: #3e4842;
   --color-mark-9: #525a5a;
-  --color-mark-icon-9: #3f4747;
   --color-mark-10: #4f5b5c;
-  --color-mark-icon-10: #3c4749;
   --color-mark-11: #525960;
-  --color-mark-icon-11: #3f464d;
   --color-mark-12: #56585c;
-  --color-mark-icon-12: #434548;
   --color-mark-13: #555861;
-  --color-mark-icon-13: #42454d;
   --color-mark-14: #575760;
-  --color-mark-icon-14: #44444d;
   --color-mark-15: #5b565e;
-  --color-mark-icon-15: #47434b;
   --color-mark-16: #5d555c;
-  --color-mark-icon-16: #4a4248;
   --color-mark-17: #5f5558;
-  --color-mark-icon-17: #4c4245;
   --color-mark-18: #605556;
-  --color-mark-icon-18: #4d4243;
   --color-sidebar-accent: #1f1f1f;
   --color-sidebar-accent-ink: #fafcfc;
-  --color-sidebar-mark-1: #605553;
-  --color-sidebar-mark-icon-1: #4d4240;
-  --color-sidebar-mark-2: #605553;
-  --color-sidebar-mark-icon-2: #4d4240;
-  --color-sidebar-mark-3: #5f5651;
-  --color-sidebar-mark-icon-3: #4c433e;
-  --color-sidebar-mark-4: #5e5651;
-  --color-sidebar-mark-icon-4: #4b433e;
-  --color-sidebar-mark-5: #5d574f;
-  --color-sidebar-mark-icon-5: #4a443c;
-  --color-sidebar-mark-6: #575950;
-  --color-sidebar-mark-icon-6: #44463d;
-  --color-sidebar-mark-7: #545a53;
-  --color-sidebar-mark-icon-7: #414740;
-  --color-sidebar-mark-8: #515b55;
-  --color-sidebar-mark-icon-8: #3e4842;
-  --color-sidebar-mark-9: #525a5a;
-  --color-sidebar-mark-icon-9: #3f4747;
-  --color-sidebar-mark-10: #4f5b5c;
-  --color-sidebar-mark-icon-10: #3c4749;
-  --color-sidebar-mark-11: #525960;
-  --color-sidebar-mark-icon-11: #3f464d;
-  --color-sidebar-mark-12: #56585c;
-  --color-sidebar-mark-icon-12: #434548;
-  --color-sidebar-mark-13: #555861;
-  --color-sidebar-mark-icon-13: #42454d;
-  --color-sidebar-mark-14: #575760;
-  --color-sidebar-mark-icon-14: #44444d;
-  --color-sidebar-mark-15: #5b565e;
-  --color-sidebar-mark-icon-15: #47434b;
-  --color-sidebar-mark-16: #5d555c;
-  --color-sidebar-mark-icon-16: #4a4248;
-  --color-sidebar-mark-17: #5f5558;
-  --color-sidebar-mark-icon-17: #4c4245;
-  --color-sidebar-mark-18: #605556;
-  --color-sidebar-mark-icon-18: #4d4243;
   --color-drop: #161616;
   --color-spot: #1f1f1f;
   --color-spot-foreground: #ffffff;
@@ -205,7 +142,7 @@
   }
 }
 
-/* Neutral in dark. It follows the system (`prefers-color-scheme`, which the browser engine takes from the OS setting): no
+/* The gray baseline in dark. It follows the system (`prefers-color-scheme`, which the browser engine takes from the OS setting): no
    window permission and no JavaScript. It redefines all the colors of the light theme with the same names; the contrast
    ratios are the same ones checked for light (test/contrast.test.ts, which proves the two palettes). Intended
    differences: the accent as text is lightened to read on dark, while the solid button (`primary`) is a deep tone
@@ -236,23 +173,16 @@
 
       --color-background: #1e1e1e;
       --color-foreground: #e4e4e4;
-      --color-card: #2a2a2a;
-      --color-card-foreground: #e4e4e4;
       --color-popover: #2a2a2a;
       --color-popover-foreground: #e4e4e4;
       --color-primary: #dedede;
       --color-primary-foreground: #0d0d0d;
-      --color-secondary: #171717;
-      --color-secondary-foreground: #e4e4e4;
-      --color-muted: #171717;
       --color-muted-foreground: #9b9b9b;
       --color-destructive: #ff9a8d;
       --color-destructive-soft: #3d2420;
       --color-border: #353535;
       --color-input: #747474;
       --color-ring: #dedede;
-      --color-mark-ink-light: #ffffff;
-      --color-mark-ink-dark: #1b1916;
       --color-destructive-foreground: #17161a;
       --color-success: #7fd3a0;
       --color-success-soft: #1c3326;
@@ -266,79 +196,25 @@
       --color-sidebar-selected: #333333;
       --color-sidebar-selected-ink: #f2f2f2;
       --color-mark-1: #a19593;
-      --color-mark-icon-1: #b4a8a5;
       --color-mark-2: #a19592;
-      --color-mark-icon-2: #b4a8a5;
       --color-mark-3: #a09690;
-      --color-mark-icon-3: #b3a8a3;
       --color-mark-4: #9f9690;
-      --color-mark-icon-4: #b2a9a2;
       --color-mark-5: #9e978e;
-      --color-mark-icon-5: #b1aaa1;
       --color-mark-6: #979a90;
-      --color-mark-icon-6: #a9aca2;
       --color-mark-7: #949b92;
-      --color-mark-icon-7: #a6ada5;
       --color-mark-8: #919b95;
-      --color-mark-icon-8: #a3aea8;
       --color-mark-9: #929a9a;
-      --color-mark-icon-9: #a4adad;
       --color-mark-10: #8e9b9d;
-      --color-mark-icon-10: #a1aeb0;
       --color-mark-11: #9199a1;
-      --color-mark-icon-11: #a4acb4;
       --color-mark-12: #96989c;
-      --color-mark-icon-12: #a8abaf;
       --color-mark-13: #9598a2;
-      --color-mark-icon-13: #a7aab5;
       --color-mark-14: #9797a1;
-      --color-mark-icon-14: #aaaab4;
       --color-mark-15: #9b969f;
-      --color-mark-icon-15: #aea8b2;
       --color-mark-16: #9e959c;
-      --color-mark-icon-16: #b1a7af;
       --color-mark-17: #a19598;
-      --color-mark-icon-17: #b3a7ab;
       --color-mark-18: #a19596;
-      --color-mark-icon-18: #b4a7a8;
       --color-sidebar-accent: #dedede;
       --color-sidebar-accent-ink: #1e1e1e;
-      --color-sidebar-mark-1: #a19593;
-      --color-sidebar-mark-icon-1: #b4a8a5;
-      --color-sidebar-mark-2: #a19592;
-      --color-sidebar-mark-icon-2: #b4a8a5;
-      --color-sidebar-mark-3: #a09690;
-      --color-sidebar-mark-icon-3: #b3a8a3;
-      --color-sidebar-mark-4: #9f9690;
-      --color-sidebar-mark-icon-4: #b2a9a2;
-      --color-sidebar-mark-5: #9e978e;
-      --color-sidebar-mark-icon-5: #b1aaa1;
-      --color-sidebar-mark-6: #979a90;
-      --color-sidebar-mark-icon-6: #a9aca2;
-      --color-sidebar-mark-7: #949b92;
-      --color-sidebar-mark-icon-7: #a6ada5;
-      --color-sidebar-mark-8: #919b95;
-      --color-sidebar-mark-icon-8: #a3aea8;
-      --color-sidebar-mark-9: #929a9a;
-      --color-sidebar-mark-icon-9: #a4adad;
-      --color-sidebar-mark-10: #8e9b9d;
-      --color-sidebar-mark-icon-10: #a1aeb0;
-      --color-sidebar-mark-11: #9199a1;
-      --color-sidebar-mark-icon-11: #a4acb4;
-      --color-sidebar-mark-12: #96989c;
-      --color-sidebar-mark-icon-12: #a8abaf;
-      --color-sidebar-mark-13: #9598a2;
-      --color-sidebar-mark-icon-13: #a7aab5;
-      --color-sidebar-mark-14: #9797a1;
-      --color-sidebar-mark-icon-14: #aaaab4;
-      --color-sidebar-mark-15: #9b969f;
-      --color-sidebar-mark-icon-15: #aea8b2;
-      --color-sidebar-mark-16: #9e959c;
-      --color-sidebar-mark-icon-16: #b1a7af;
-      --color-sidebar-mark-17: #a19598;
-      --color-sidebar-mark-icon-17: #b3a7ab;
-      --color-sidebar-mark-18: #a19596;
-      --color-sidebar-mark-icon-18: #b4a7a8;
       --color-drop: #060606;
       --color-spot: #dedede;
       --color-spot-foreground: #0d0d0d;
@@ -348,9 +224,9 @@
   }
 }
 
-/* The theme and font chosen in Settings → Appearance are not here: `applyTheme` and `applyFont` (src/themes.ts)
+/* The theme and font an app chooses are not here: `applyTheme` and `applyFont` (src/themes.ts)
    put on the root the variables computed by `themeTokens` (src/theme-engine.ts) and the attributes `data-theme`,
-   `data-scheme`, `data-font`. The two blocks above are Neutral in light and in dark, for the first paint: they are generated
+   `data-scheme`, `data-font`. The two blocks above are the gray baseline (`BASE_THEME`) in light and in dark, for the first paint: they are generated
    and checked by test/first-paint.test.ts (`UPDATE_THEME_CSS=1` rewrites them). */
 
 /* Density (src/density.ts): `applyDensity` writes the measures of the chosen density on the root as `--density-*` and
@@ -551,24 +427,24 @@
     --tag-ink: var(--tag-8-ink);
   }
   /* The eighteen free colors (of a folder, a group, a mark) adapted to the active theme (`markHueAttrs` in `colors.ts`). */
-  [data-mark-hue="1"] { --mark-dot: var(--color-mark-1); --mark-icon: var(--color-mark-icon-1); }
-  [data-mark-hue="2"] { --mark-dot: var(--color-mark-2); --mark-icon: var(--color-mark-icon-2); }
-  [data-mark-hue="3"] { --mark-dot: var(--color-mark-3); --mark-icon: var(--color-mark-icon-3); }
-  [data-mark-hue="4"] { --mark-dot: var(--color-mark-4); --mark-icon: var(--color-mark-icon-4); }
-  [data-mark-hue="5"] { --mark-dot: var(--color-mark-5); --mark-icon: var(--color-mark-icon-5); }
-  [data-mark-hue="6"] { --mark-dot: var(--color-mark-6); --mark-icon: var(--color-mark-icon-6); }
-  [data-mark-hue="7"] { --mark-dot: var(--color-mark-7); --mark-icon: var(--color-mark-icon-7); }
-  [data-mark-hue="8"] { --mark-dot: var(--color-mark-8); --mark-icon: var(--color-mark-icon-8); }
-  [data-mark-hue="9"] { --mark-dot: var(--color-mark-9); --mark-icon: var(--color-mark-icon-9); }
-  [data-mark-hue="10"] { --mark-dot: var(--color-mark-10); --mark-icon: var(--color-mark-icon-10); }
-  [data-mark-hue="11"] { --mark-dot: var(--color-mark-11); --mark-icon: var(--color-mark-icon-11); }
-  [data-mark-hue="12"] { --mark-dot: var(--color-mark-12); --mark-icon: var(--color-mark-icon-12); }
-  [data-mark-hue="13"] { --mark-dot: var(--color-mark-13); --mark-icon: var(--color-mark-icon-13); }
-  [data-mark-hue="14"] { --mark-dot: var(--color-mark-14); --mark-icon: var(--color-mark-icon-14); }
-  [data-mark-hue="15"] { --mark-dot: var(--color-mark-15); --mark-icon: var(--color-mark-icon-15); }
-  [data-mark-hue="16"] { --mark-dot: var(--color-mark-16); --mark-icon: var(--color-mark-icon-16); }
-  [data-mark-hue="17"] { --mark-dot: var(--color-mark-17); --mark-icon: var(--color-mark-icon-17); }
-  [data-mark-hue="18"] { --mark-dot: var(--color-mark-18); --mark-icon: var(--color-mark-icon-18); }
+  [data-mark-hue="1"] { --mark-dot: var(--color-mark-1); }
+  [data-mark-hue="2"] { --mark-dot: var(--color-mark-2); }
+  [data-mark-hue="3"] { --mark-dot: var(--color-mark-3); }
+  [data-mark-hue="4"] { --mark-dot: var(--color-mark-4); }
+  [data-mark-hue="5"] { --mark-dot: var(--color-mark-5); }
+  [data-mark-hue="6"] { --mark-dot: var(--color-mark-6); }
+  [data-mark-hue="7"] { --mark-dot: var(--color-mark-7); }
+  [data-mark-hue="8"] { --mark-dot: var(--color-mark-8); }
+  [data-mark-hue="9"] { --mark-dot: var(--color-mark-9); }
+  [data-mark-hue="10"] { --mark-dot: var(--color-mark-10); }
+  [data-mark-hue="11"] { --mark-dot: var(--color-mark-11); }
+  [data-mark-hue="12"] { --mark-dot: var(--color-mark-12); }
+  [data-mark-hue="13"] { --mark-dot: var(--color-mark-13); }
+  [data-mark-hue="14"] { --mark-dot: var(--color-mark-14); }
+  [data-mark-hue="15"] { --mark-dot: var(--color-mark-15); }
+  [data-mark-hue="16"] { --mark-dot: var(--color-mark-16); }
+  [data-mark-hue="17"] { --mark-dot: var(--color-mark-17); }
+  [data-mark-hue="18"] { --mark-dot: var(--color-mark-18); }
 }
 
 @layer base {

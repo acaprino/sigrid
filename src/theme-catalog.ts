@@ -109,7 +109,8 @@ export interface FontDef {
 
 /**
  * The fonts to choose from, all with an open license (OFL) and inside the app (no network): IBM Plex Sans (the default)
- * and Inter are in `styles/fonts.css`, the client imports the others from `@fontsource` (client/src/fonts.ts). Inter stays in the stack
+ * and Inter are in `styles/fonts.css`; an app that offers another one loads its faces itself (from `@fontsource`, for
+ * instance). Inter stays in the stack
  * of each one: a glyph that a font does not have (outside the Latin alphabet) is drawn in Inter.
  */
 export const FONTS = [

@@ -37,8 +37,8 @@ const PALETTES: [string, Record<string, string>][] = [
 const BACKGROUNDS = ['paper', 'paper-2', 'raised'] as const
 /** The muted text: every use of it must stay readable. `muted-foreground` is the placeholder of the primitives. */
 const MUTED = ['ink-mute', 'muted-foreground'] as const
-/** The same backgrounds with shadcn's semantic names, used by the primitives. */
-const SEMANTIC_BACKGROUNDS = ['background', 'card', 'popover', 'muted', 'secondary'] as const
+/** The same backgrounds with the semantic names the primitives use. */
+const SEMANTIC_BACKGROUNDS = ['background', 'popover'] as const
 const AA = 4.5
 
 describe.each(PALETTES)('text contrast from the theme tokens, palette %s', (_name, t) => {
@@ -270,13 +270,6 @@ describe.each(PALETTES)('the sidebar, the light bar of Park UI, palette %s', (_n
 
   test('the focus ring inside the bar (the accent as text, solid) reaches 3:1', () => {
     for (const bg of [bar, selected]) expect(contrast(t['ring']!, bg)).toBeGreaterThanOrEqual(3)
-  })
-
-  test('the eighteen user colors on the bar reach 3:1 (dots) and 3.5:1 (icons)', () => {
-    for (let n = 1; n <= 18; n++) {
-      expect(contrast(t[`sidebar-mark-${n}`]!, bar), `sidebar-mark-${n}`).toBeGreaterThanOrEqual(3)
-      expect(contrast(t[`sidebar-mark-icon-${n}`]!, bar), `sidebar-mark-icon-${n}`).toBeGreaterThanOrEqual(3.5)
-    }
   })
 
 })

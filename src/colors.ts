@@ -54,7 +54,7 @@ export function colorHue(color: string | null | undefined): number | null {
   return COLOR_INDEX[color.toLowerCase()] ?? null
 }
 
-/** The attribute that links a palette color to the theme's adaptive `--color-mark-N` and `--color-mark-icon-N` tokens. */
+/** The attribute that links a palette color to the theme's adaptive `--color-mark-N` token (read as `--mark-dot`). */
 export function markHueAttrs(color: string | null | undefined): { 'data-mark-hue'?: string } {
   const h = colorHue(color)
   return h === null ? {} : { 'data-mark-hue': String(h) }

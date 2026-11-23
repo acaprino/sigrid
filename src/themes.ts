@@ -35,7 +35,7 @@ function tokensOf(pick: ThemePick): ThemeTokens {
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
 /** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-rows', 'data-selection', 'data-sidebar', 'data-font', 'data-density'] as const
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-font', 'data-density'] as const
 
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
