@@ -368,6 +368,16 @@ describe('the canvas', () => {
     expect(item('Content').getAttribute('aria-expanded')).toBe('true')
   })
 
+  test('with an IME, Enter that confirms a candidate in the field chooses nothing', () => {
+    render(<Sample />)
+    const field = screen.getByRole('searchbox', { name: 'Find' })
+    fireEvent.change(field, { target: { value: 'photo' } })
+    fireEvent.keyDown(field, { key: 'Enter', isComposing: true })
+    expect(item('Photos').getAttribute('aria-selected')).not.toBe('true')
+    fireEvent.keyDown(field, { key: 'Enter' })
+    expect(item('Photos').getAttribute('aria-selected')).toBe('true')
+  })
+
   test("the words are the app's", () => {
     render(
       <WordsProvider words={{ graph: { open: (thing) => `Apri ${thing}`, closed: (thing, hidden) => `${thing}, chiuso, ne nasconde ${hidden}`, find: 'Trova' } }}>

@@ -1462,7 +1462,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               value={query}
               onValueChange={setQuery}
               onKeyDown={(event) => {
-                if (event.key !== 'Enter' || !found1) return
+                // With an IME, Enter confirms the candidate being composed: it must not reveal a thing.
+                if (event.key !== 'Enter' || event.nativeEvent.isComposing || !found1) return
                 event.preventDefault()
                 reveal(found1.id)
               }}
