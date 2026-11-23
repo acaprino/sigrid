@@ -50,7 +50,9 @@ const buttonVariants = cva(
         // Park plain: text only; a quiet fill under the pointer. A step quieter than Park's (soft ink): here it
         // is the weakest action of a row, next to a solid or a surface one.
         ghost: "text-ink-soft hover:bg-ink/6 hover:text-ink active:bg-ink/9",
-        link: "text-ink underline-offset-4 hover:underline",
+        // A link is underlined at rest, as a link in a text is (`md-link`): without the line it reads as plain text
+        // until the pointer finds it. The line is muted, and takes the text colour under the pointer.
+        link: "text-ink underline decoration-ink-mute underline-offset-2 hover:decoration-current",
       },
       size: {
         // A control is 36px tall (44px with a finger, from the base classes). The heights and the side padding are the

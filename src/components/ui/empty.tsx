@@ -23,7 +23,11 @@ export type EmptyProps = Omit<React.ComponentProps<"div">, "title"> & {
   titleClassName?: string | undefined
 }
 
-/** The empty state of a view or a list: a title, a sentence if needed and an action. */
+/**
+ * The empty state of a view or a list: a title, a sentence if needed and an action. Also the end of a task of several
+ * steps: the title says what happened with its particulars («240 € sent to Sam Lee»), the sentence what happens next,
+ * the action moves on. A task of several steps never ends on a notice alone.
+ */
 function Empty({ action, className, description, icon, title, titleClassName, ...props }: EmptyProps) {
   return (
     <div data-slot="empty" className={cn("flex w-full flex-col items-center justify-center gap-2 text-center", className)} {...props}>

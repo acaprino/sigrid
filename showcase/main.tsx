@@ -38,6 +38,7 @@ import {
   Combobox,
   SearchField,
   CopyButton,
+  Disclosure,
   InputGroup,
   InputGroupButton,
   InputGroupText,
@@ -1532,7 +1533,7 @@ function Pickers() {
   const [labels, setLabels] = React.useState(['Home'])
   const [panel, setPanel] = React.useState(false)
   return (
-    <Section id="pickers" title="Slider, SearchField, InputGroup, CopyButton, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a button that copies and says so; a choice from a list filtered while typing; a person as a neutral round tile.">
+    <Section id="pickers" title="Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a button that copies and says so; a row that opens in place what few people need; a choice from a list filtered while typing; a person as a neutral round tile.">
       <Row label="slider">
         <div className="flex w-64 flex-col gap-2">
           <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
@@ -1564,6 +1565,28 @@ function Pickers() {
         <CopyButton value="SIGRID-2026" label="Copy the code" />
         <CopyButton value="SIGRID-2026" label="Copy the code" showLabel variant="outline" />
         <CopyButton value="SIGRID-2026" label="Copy the code" showLabel disabled />
+      </Row>
+      <Row label="disclosure">
+        <div className="flex w-64 flex-col gap-3">
+          <FormField label="Name">
+            <Input defaultValue="Quarterly report" />
+          </FormField>
+          <Disclosure label="Add a note">
+            <FormField label="Note">
+              <Input placeholder="For whoever opens it" />
+            </FormField>
+          </Disclosure>
+        </div>
+        <div className="flex w-64 flex-col gap-3">
+          <Disclosure label="Advanced" summary="2 set" defaultOpen>
+            <FormField label="Retention" help="Days before a file is removed.">
+              <InputGroup defaultValue="30" end={<InputGroupText>days</InputGroupText>} />
+            </FormField>
+          </Disclosure>
+        </div>
+        <Disclosure label="Not available" disabled>
+          <span />
+        </Disclosure>
       </Row>
       <Row label="combobox">
         <FormField label="Assignee" className="w-64">

@@ -30,7 +30,7 @@ const badgeVariants = cva(
         outline:
           "border-border text-foreground [a&]:hover:bg-paper-2 [a&]:hover:text-ink",
         ghost: "[a&]:hover:bg-paper-2 [a&]:hover:text-ink",
-        link: "text-ink underline-offset-4 [a&]:hover:underline",
+        link: "text-ink underline decoration-ink-mute underline-offset-2 [a&]:hover:decoration-current",
       },
     },
     defaultVariants: {

@@ -104,7 +104,10 @@ function InputGroupText({ children, className }: InputGroupTextProps) {
 export type InputGroupButtonProps = Omit<React.ComponentProps<"button">, "children"> & {
   /** The name of the action. With an `icon` it is the accessible name and the hint; without one it is the word shown. */
   label: string
-  /** The drawing, 16px (an `Icon`). With it the button shows the icon alone. */
+  /**
+   * The drawing, 16px (an `Icon`). With it the button shows the icon alone: only for a drawing everyone reads the same
+   * way (search, close, copy, empty). Any other action shows its word.
+   */
   icon?: React.ReactNode
   /** A switch (show the password): on or off. Absent: a plain action. */
   pressed?: boolean | undefined

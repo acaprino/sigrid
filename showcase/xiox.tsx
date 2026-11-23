@@ -179,10 +179,10 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
           footer={
             <>
               <span>Winapp2 260915 loaded · {ITEMS.length} items</span>
+              {/* Only the keys no control in sight already shows: Enter is on the button that cleans. */}
               <span className="ms-auto inline-flex items-center gap-3">
                 <span className="inline-flex items-center gap-1"><Kbd>↑↓</Kbd> move</span>
                 <span className="inline-flex items-center gap-1"><Kbd>Space</Kbd> toggle</span>
-                <span className="inline-flex items-center gap-1"><Kbd>↵</Kbd> clean</span>
               </span>
             </>
           }

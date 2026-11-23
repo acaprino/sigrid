@@ -427,7 +427,8 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
                 <span>{preview ? 'Preview: sample mail, sending is off' : 'Connected'}</span>
                 <span className="tabular-nums">{toRead} to read</span>
                 <span className="ms-auto inline-flex items-center gap-3">
-                  {(['N write', 'R reply', 'E archive', 'Z undo'] as const).map((hint) => (
+                  {/* Only the keys no control in sight already shows: N, R and E are on their buttons. */}
+                  {(['Z undo'] as const).map((hint) => (
                     <span key={hint} className="inline-flex items-center gap-1">
                       <Kbd>{hint.slice(0, 1)}</Kbd> {hint.slice(2)}
                     </span>

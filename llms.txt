@@ -16,6 +16,7 @@ The paths are relative to the root of the package (in an app: node_modules/@acap
 - [DESIGN.md](DESIGN.md): the rules R1 to R14, the tokens, each component's form
 - [docs/patterns.md](docs/patterns.md): the frame of an app, its regions, four screens to start from
 - [docs/mobile.md](docs/mobile.md): what the toolkit does on a phone and what an app adds
+- [docs/design-laws.md](docs/design-laws.md): how to design and review a screen, law by law, and what is the toolkit's own look
 - [README.md](README.md): setup, themes, density, words, icons, the entries of the package
 
 ## Optional

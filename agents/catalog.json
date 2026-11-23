@@ -1698,6 +1698,59 @@
      ]
     },
     {
+     "file": "src/components/ui/disclosure.tsx",
+     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.",
+     "components": [
+      {
+       "name": "Disclosure",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What the row holds, in the words people would look for («Add a coupon», «Advanced»)."
+        },
+        {
+         "name": "summary",
+         "type": "React.ReactNode",
+         "doc": "A fact about what is inside, at the end of the row while it tells something («3 set», «Off»)."
+        },
+        {
+         "name": "defaultOpen",
+         "type": "boolean",
+         "doc": "Open at first, for a row that keeps its own state. Default closed."
+        },
+        {
+         "name": "open",
+         "type": "boolean",
+         "doc": "Open or closed, when the app keeps it."
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "What opens under the row."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DisclosureProps"
+     ]
+    },
+    {
      "file": "src/components/ui/dropdown-menu.tsx",
      "about": "SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dropdown-menu.json)\nPark UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)\nFrom Park's `menu` recipe comes the form (md): the card with l3 corners and the md elevation in place of a border,\n4px of padding and 2px between items; items 40px tall with l2 corners and a quiet fill on the highlighted one.\nFrom SmoothUI we keep the primitive (Base UI's `Menu`: Portal, Positioner, Popup, Item, Separator, SubmenuRoot) and\nthe classes of the menu card. We do not keep the item-list API (`items`): the package uses the parts\n(`DropdownMenuTrigger`, `DropdownMenuItem`…) with the same props as before (`asChild`, `onSelect`, `variant`, `inset`,\n`align`, `sideOffset`), so whoever uses them does not change. Removed: the spring and the staggered entrance of the items: with `animated`\ntrue (off by default, never with prefers-reduced-motion) the card enters with a short fade, without a spring.\nBehavior as before: Enter, Space and down arrow on the button open the menu with focus on the first item, the\narrows do not wrap from the last to the first (like Radix), Esc closes and returns focus to the button, search by\ninitial letter comes from Base UI. The button still carries `data-state=\"open\"|\"closed\"`: the \"visible while the menu is\nopen\" rules of the rows (`data-[state=open]:`) read it.",
      "components": [
@@ -1816,7 +1869,7 @@
      "components": [
       {
        "name": "Empty",
-       "doc": "The empty state of a view or a list: a title, a sentence if needed and an action.",
+       "doc": "The empty state of a view or a list: a title, a sentence if needed and an action. Also the end of a task of several steps: the title says what happened with its particulars («240 € sent to Sam Lee»), the sentence what happens next, the action moves on. A task of several steps never ends on a notice alone.",
        "props": [
         {
          "name": "title",
@@ -1934,7 +1987,7 @@
         {
          "name": "icon",
          "type": "React.ReactNode",
-         "doc": "The drawing, 16px (an `Icon`). With it the button shows the icon alone."
+         "doc": "The drawing, 16px (an `Icon`). With it the button shows the icon alone: only for a drawing everyone reads the same way (search, close, copy, empty). Any other action shows its word."
         },
         {
          "name": "pressed",

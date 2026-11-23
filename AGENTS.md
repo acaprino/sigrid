@@ -37,6 +37,7 @@ through `Icon`), the same in every app, and the user does not choose another.
 | A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
+| How to design and review a screen: twenty laws of use, and what is Sigrid's own | `docs/design-laws.md` |
 | What changes on a phone, and what does not | `docs/mobile.md` |
 | Setup, themes, density, words, icons, the entries of the package | `README.md` |
 | How a component is made | `src/`, which comes with the package |
