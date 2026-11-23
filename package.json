@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "repository": "github:acaprino/sigrid",
-  "description": "A design system for React apps: theme engine and colours, tokens and fonts, primitives on Ark UI and Base UI with Park UI's form, and its own short, opt-in motion.",
+  "description": "A UI system for React apps in four levels, made for coding agents: a toolkit (theme engine, tokens, primitives on Ark UI and Base UI with Park UI's form), advanced components, a layout system, and an app system for Tauri.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

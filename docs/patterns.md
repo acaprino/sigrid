@@ -187,12 +187,26 @@ it behave as a program. They are Imago's techniques; on a page in a browser tab 
   an editor in `ownKeysIn` and it keeps its keys.
 - `TitleBar` with `dragProps` and `WindowControls`, as above.
 
+In Tauri, `@acaprino/sigrid/tauri` wires them from the page, with nothing of Tauri loaded in a browser:
+
+```tsx
+import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
+
+const ownWindow = readHost().ownWindow // a Tauri window on a computer
+const controls = useWindowControls({ enabled: ownWindow, onError: (what, error) => say(`${what} failed`) })
+<TitleBar dragProps={ownWindow ? DRAG_REGION : undefined} windowControls={ownWindow ? <WindowControls {...controls} /> : undefined} />
+```
+
+`useZoom` gives the window Ctrl with + - 0 and the wheel; `useSnapLayouts` and `useWindowTheme` are opt-in, with the
+names of the app's own native commands; `TAURI_PERMISSIONS` lists what the app's capability file grants.
+
 The gallery shows the same app with and without these switches: view Examples, where a to-do list and a mail client
 are drawn in a browser tab and in a Tauri window, on a computer and on a phone, with a table of what the host changes.
 
 What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
-web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
+web view is lost. The native skeleton of an app (`src-tauri`) is made by the tauri-app-builder plugin of Claude Code;
+Imago's `imago-shell` crate does these for Tauri on Windows.
 
 ## Progress of a task
 
