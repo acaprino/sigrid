@@ -22,6 +22,7 @@ import { Input } from '../components/ui/input'
 import { useEntrance } from './motion'
 import { cn } from '../lib/utils'
 import { FOCUS_FIELD } from '../lib/focus'
+import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
 
 const DEFAULT_LOCALE = 'en-US'
 const longDates = new Map<string, Intl.DateTimeFormat>()
@@ -49,11 +50,7 @@ function parseDay(value: string | null | undefined): CalendarDate | null {
 const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate(locale).format(new Date(day.year, day.month - 1, day.day))
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
-const TRIGGER_CLASS = cn(
-  'flex h-(--control-md) w-full min-w-0 items-center gap-2 rounded-md pointer-coarse:min-h-11 border border-line bg-transparent px-(--pad-sm) py-1 text-left text-base md:text-sm',
-  'hover:border-input',
-  FOCUS_FIELD,
-)
+const TRIGGER_CLASS = cn(FIELD_SURFACE, FIELD_HEIGHT, 'flex w-full min-w-0 items-center gap-2 px-(--pad-sm) py-1 text-left', FIELD_TEXT, FIELD_HOVER, FIELD_OFF, FOCUS_FIELD)
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.
 const NO_TRIGGER_NAME = () => undefined as unknown as string
@@ -159,7 +156,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange,
       className="min-w-0"
     >
       <DatePicker.Control ref={control}>
-        <DatePicker.Trigger data-slot="date-field" className={cn(TRIGGER_CLASS, 'disabled:pointer-events-none disabled:opacity-50')}>
+        <DatePicker.Trigger data-slot="date-field" className={TRIGGER_CLASS}>
           <CalendarIcon className="size-4 shrink-0 text-ink-soft" aria-hidden />
           <span className={cn('truncate', text ? undefined : 'text-ink-soft')}>{text ?? placeholder}</span>
         </DatePicker.Trigger>

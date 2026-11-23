@@ -225,10 +225,11 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
   })
 
   test('selects and the tags box use the light divider border, like the other fields (the design of 2026-11-22)', () => {
-    const line = (file: string, needle: string) => readFileSync(`${root}${file}`, 'utf8').split('\n').find((l) => l.includes(needle)) ?? ''
+    const text = (file: string) => readFileSync(`${root}${file}`, 'utf8')
+    // Every field takes its surface from one place (`lib/field.ts`), and that surface has the light divider border.
+    expect(text('src/lib/field.ts')).toMatch(/FIELD_SURFACE = '[^']*\bborder-line\b/)
     // The native `<select>`s became Base UI's Select: the border sits on its button.
-    expect(line('src/components/ui/select.tsx', 'flex w-full items-center justify-between')).toContain('border-line')
-    expect(line('src/internal/chips.tsx', 'flex min-h-(--control-md) w-full')).toContain('border-line')
+    for (const f of ['src/components/ui/select.tsx', 'src/internal/chips.tsx', 'src/components/ui/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
   })
 })
 
@@ -298,8 +299,9 @@ describe('text colors in the sources', () => {
   })
 
   test('placeholders and descriptions of the primitives use the muted-foreground token', () => {
+    expect(readFileSync(`${root}src/lib/field.ts`, 'utf8')).toMatch(/FIELD_TEXT = '[^']*placeholder:text-muted-foreground/)
     for (const f of ['src/components/ui/input.tsx', 'src/components/ui/textarea.tsx']) {
-      expect(readFileSync(`${root}${f}`, 'utf8'), f).toContain('placeholder:text-muted-foreground')
+      expect(readFileSync(`${root}${f}`, 'utf8'), f).toContain('FIELD_TEXT')
     }
   })
 

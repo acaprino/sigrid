@@ -13,6 +13,8 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 import { cn } from "../../lib/utils"
 import { useEntrance } from "../../internal/motion"
+import { useMergedRef } from "../../lib/refs"
+import { renderWithOpenState } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
 
 type PopoverState = { open: boolean; anchor: Element | null; setAnchor: (el: Element | null) => void }
@@ -76,14 +78,7 @@ function PopoverContent({
   const container = usePortalContainer()
   const state = React.useContext(PopoverStateContext)
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el))
-  const refs = React.useCallback(
-    (el: HTMLDivElement | null) => {
-      enter(el)
-      if (typeof ref === "function") ref(el)
-      else if (ref) ref.current = el
-    },
-    [enter, ref]
-  )
+  const refs = useMergedRef(enter, ref)
   return (
     <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Positioner
@@ -98,9 +93,7 @@ function PopoverContent({
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
-          // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a sheet,
-          // a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
-          render={(renderProps, state) => <div {...renderProps} data-state={state.open ? "open" : "closed"} />}
+          render={renderWithOpenState}
           ref={refs}
           className={cn(
             "w-80 origin-(--transform-origin) rounded-lg bg-popover p-4 text-sm text-popover-foreground shadow-lg outline-hidden",
@@ -116,14 +109,7 @@ function PopoverContent({
 /** A reference other than the button for the card's position (Base UI has no such part: the Positioner's `anchor`). */
 function PopoverAnchor({ ref, ...props }: React.ComponentProps<"div">) {
   const setAnchor = React.useContext(PopoverStateContext)?.setAnchor
-  const refs = React.useCallback(
-    (el: HTMLDivElement | null) => {
-      setAnchor?.(el)
-      if (typeof ref === "function") ref(el)
-      else if (ref) ref.current = el
-    },
-    [setAnchor, ref]
-  )
+  const refs = useMergedRef(setAnchor, ref)
   return <div data-slot="popover-anchor" ref={refs} {...props} />
 }
 

@@ -59,6 +59,7 @@ import { BOTTOM_BAR_ROOM_VAR } from "../../internal/overlay"
 import { useWords } from "../../words"
 import { PortalContainerProvider, usePortalContainer } from "../PortalContainer"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
+import { Button, QUIET_ICON } from "./button"
 import { TOASTS_ATTR } from "../../internal/overlay"
 
 // The regions F6 goes through, in order: inside the frame, or (the inspector shown as a drawer, a sheet, and the column
@@ -371,9 +372,9 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
     <div data-slot="inspector-header" className="flex min-h-(--row-height) shrink-0 items-center gap-2 border-b border-line ps-4 pe-2">
       <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{title}</h2>
       {onOpenChange ? (
-        <button type="button" data-slot="inspector-close" aria-label={words.common.close} onClick={() => onOpenChange(false)} className={cn("flex size-(--control-xs) shrink-0 items-center justify-center rounded-md text-ink-mute pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink", FOCUS_RING)}>
+        <Button variant="ghost" size="icon-xs" data-slot="inspector-close" aria-label={words.common.close} onClick={() => onOpenChange(false)} className={QUIET_ICON}>
           <XIcon aria-hidden="true" className="size-4" />
-        </button>
+        </Button>
       ) : null}
     </div>
   )

@@ -21,7 +21,7 @@
 // - `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,
 //   hidden on a phone).
 import * as React from "react"
-import { FIELDS } from "../../internal/desktop-guard"
+import { FIELDS, within } from "../../internal/desktop-guard"
 import { cn } from "../../lib/utils"
 import { DEFAULT_WORDS, useWords, type Words } from "../../words"
 import { Kbd, ON_PHONE_HIDDEN } from "./kbd"
@@ -159,10 +159,6 @@ const CONTROLS = 'button, a[href], summary, [role="button"], [role="tab"], [role
 const CONTROL_KEYS = new Set(["enter", " ", "arrowup", "arrowdown", "arrowleft", "arrowright", "home", "end", "pageup", "pagedown", "delete", "backspace"])
 // In a field, the keys that move the caret or edit, with Ctrl or Alt too (a word to the left, the start of the line).
 const CARET_KEYS = new Set(["arrowup", "arrowdown", "arrowleft", "arrowright", "home", "end", "pageup", "pagedown", "delete", "backspace", "enter", "tab"])
-const within = (event: Event, selector: string) => {
-  const target = event.target as Element | null
-  return target !== null && typeof target.closest === "function" && target.closest(selector) !== null
-}
 
 /** Whether a key press that matches a command belongs to what has the focus instead. */
 function leftToFocus(want: Combination, event: KeyboardEvent): boolean {

@@ -10,7 +10,10 @@ import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 import { Button } from "./button"
 import { Tooltip } from "./tooltip"
-import { cn } from "../../lib/utils"
+import { cn, isEmptyNode } from "../../lib/utils"
+import { useMergedRef } from "../../lib/refs"
+import { FIELD_HEIGHT, FIELD_SURFACE, FIELD_TEXT } from "../../lib/field"
+import { FOCUS_FIELD_HAS_INPUT } from "../../lib/focus"
 
 /** Inside a group, and whether its field is off: the buttons of a field that is off are off too. `null` outside one. */
 const InputGroupContext = React.createContext<{ disabled: boolean } | null>(null)
@@ -30,28 +33,26 @@ export type InputGroupProps = Omit<React.ComponentProps<"input">, "children"> & 
 // The ring is the field's own (`FOCUS_FIELD`, on the border), shown when the keyboard focus is in the text: a button
 // of the group shows its own ring, so the two are never drawn together. Under the pointer the border goes one step
 // darker, as on `Input`. Off: the whole fades once (a button inside does not fade again). Invalid: the red border, unless a `FormField` around it says what is wrong in its own box.
-const GROUP_CLASS =
-  "flex h-(--control-md) w-full min-w-0 items-center rounded-md border border-line bg-transparent pointer-coarse:min-h-11 outline-hidden has-[input:focus-visible]:outline-solid has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-1 has-[input:focus-visible]:outline-ring has-[input:disabled]:opacity-50 [&:has(input:disabled)_button]:opacity-100 [&:not(:has(input[aria-invalid=true])):hover]:border-input [&:has(input[aria-invalid=true]):not([data-invalid]_*)]:border-destructive"
+// The surface and the height are every field's (`lib/field.ts`); the states are read from the `<input>` inside.
+const GROUP_CLASS = cn(
+  FIELD_SURFACE,
+  FIELD_HEIGHT,
+  "flex w-full min-w-0 items-center",
+  FOCUS_FIELD_HAS_INPUT,
+  "has-[input:disabled]:opacity-50 [&:has(input:disabled)_button]:opacity-100 [&:not(:has(input[aria-invalid=true])):hover]:border-input [&:has(input[aria-invalid=true]):not([data-invalid]_*)]:border-destructive",
+)
 
 // The text of `Input` (14px, 16px on a phone so iOS does not zoom), with no border, corners or ring of its own: those
 // are the group's.
-const INPUT_CLASS =
-  "h-full w-full min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm"
+const INPUT_CLASS = cn("h-full w-full min-w-0 flex-1 bg-transparent outline-none disabled:cursor-not-allowed", FIELD_TEXT)
 
 const SLOT_CLASS = "flex h-full shrink-0 items-center gap-0.5 text-ink-mute"
 
 function InputGroup({ start, end, className, disabled, ref, ...props }: InputGroupProps) {
   const own = React.useRef<HTMLInputElement | null>(null)
-  const setRef = React.useCallback(
-    (el: HTMLInputElement | null) => {
-      own.current = el
-      if (typeof ref === "function") return ref(el)
-      if (ref) ref.current = el
-    },
-    [ref],
-  )
+  const setRef = useMergedRef(own, ref)
   const group = React.useMemo(() => ({ disabled: disabled === true }), [disabled])
-  const has = (part: React.ReactNode) => part !== undefined && part !== null && part !== false
+  const has = (part: React.ReactNode) => !isEmptyNode(part)
   return (
     <InputGroupContext.Provider value={group}>
       <div
@@ -95,7 +96,7 @@ export type InputGroupTextProps = {
 /** Words or an icon that are part of the field and are not pressed. Muted, in the field's own text size. */
 function InputGroupText({ children, className }: InputGroupTextProps) {
   return (
-    <span data-slot="input-group-text" className={cn("flex items-center px-(--pad-xs) text-base whitespace-nowrap select-none md:text-sm [&_svg]:size-4", className)}>
+    <span data-slot="input-group-text" className={cn("flex items-center px-(--pad-xs) whitespace-nowrap select-none [&_svg]:size-4", FIELD_TEXT, className)}>
       {children}
     </span>
   )
@@ -121,7 +122,7 @@ export type InputGroupButtonProps = Omit<React.ComponentProps<"button">, "childr
  */
 function InputGroupButton({ label, icon, pressed, animated, disabled, className, ...props }: InputGroupButtonProps) {
   const off = disabled || useInputGroup()?.disabled === true
-  if (icon === undefined || icon === null || icon === false) {
+  if (isEmptyNode(icon)) {
     return (
       <Button variant="ghost" size="xs" data-slot="input-group-button" aria-pressed={pressed} disabled={off} className={className} {...props}>
         {label}

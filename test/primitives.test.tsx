@@ -73,14 +73,21 @@ test('primitives carry no automatic motion classes', () => {
 // heading of a group of rows, are the same in a menu, a select, a combo box, the labels field and the sidebar.
 test('every list highlights a row the same way and heads a group the same way', async () => {
   const { readFileSync } = await import('node:fs')
-  const { ROW_HIGHLIGHT, ROW_HOVER, ROW_CHOSEN, GROUP_LABEL } = await import('../src/lib/rows')
+  const { ROW_HIGHLIGHT, ROW_HIGHLIGHTED, ROW_HOVER, ROW_CHOSEN, GROUP_LABEL, LIST_ROW, LIST_CARD } = await import('../src/lib/rows')
   const source = (file: string) => readFileSync(`${process.cwd()}/src/${file}`, 'utf8')
   expect(ROW_HIGHLIGHT).toBe('bg-selected/60 text-ink')
-  // A row reached in a card: the share of the selection tint, never the page's second paper (it was next to invisible).
+  // A row reached in a card: the share of the selection tint, never the page's second paper (it was next to invisible),
+  // taken from the shared module by every list that floats (a menu, a select, a combo box, the suggestions of the
+  // labels field), never typed again by hand.
+  expect(ROW_HIGHLIGHTED).toBe(`data-highlighted:${ROW_HIGHLIGHT.split(' ').join(' data-highlighted:')}`)
+  expect(LIST_ROW).toContain(ROW_HIGHLIGHTED)
+  expect(LIST_ROW.split(' ')).toEqual(expect.arrayContaining(['min-h-(--row-height)', 'py-(--row-pad)', 'data-[disabled]:pointer-events-none', 'data-[disabled]:opacity-50']))
   for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/combobox.tsx', 'internal/chips.tsx']) {
-    expect(source(file), file).toMatch(/highlighted\]?:bg-selected\/60/)
-    expect(source(file), file).not.toMatch(/highlighted\]?:bg-paper-2/)
+    expect(source(file), file).toContain('LIST_ROW')
+    expect(source(file), file).toContain('LIST_CARD')
+    expect(source(file), file).not.toMatch(/highlighted\]?:bg-(selected|paper)/)
   }
+  expect(LIST_CARD.split(' ')).toEqual(expect.arrayContaining(['bg-popover', 'shadow-md', 'rounded-md', 'overflow-y-auto']))
   expect(source('components/ui/nav-list.tsx')).toContain('hover:bg-selected/60')
   // A list of things and a tree: one row under the pointer, one chosen row with its tint and its accent bar (R1), taken
   // from the shared module, never drawn again by hand.

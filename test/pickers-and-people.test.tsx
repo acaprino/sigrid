@@ -143,7 +143,8 @@ describe('SearchField', () => {
     fireEvent.change(box, { target: { value: 'invoice' } })
     expect(spy).toHaveBeenLastCalledWith('invoice')
     const clear = screen.getByRole('button', { name: 'Clear the search' })
-    expect(classes(clear)).toContain(coarse('size-11'))
+    // A ghost icon button: 44px with a finger, as every button.
+    expect(classes(clear)).toEqual(expect.arrayContaining([coarse('min-h-11'), coarse('min-w-11'), 'hover:bg-ink/6', 'active:bg-ink/9']))
     fireEvent.click(clear)
     expect(spy).toHaveBeenLastCalledWith('')
     expect(box.value).toBe('')
@@ -215,8 +216,11 @@ describe('Combobox', () => {
     const { rerender } = render(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} />)
     const c = classes(screen.getByRole('combobox'))
     for (const cls of ['h-(--control-md)', 'border-line', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
+    expect(screen.getByRole('combobox').getAttribute('aria-invalid')).toBeNull()
     rerender(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} aria-invalid />)
-    expect(classes(screen.getByRole('combobox'))).toContain('border-destructive')
+    // The border of every field: the destructive colour while the box says it is invalid, and no darker one under the pointer.
+    expect(screen.getByRole('combobox').getAttribute('aria-invalid')).toBe('true')
+    expect(classes(screen.getByRole('combobox'))).toEqual(expect.arrayContaining(['aria-invalid:border-destructive', 'not-aria-invalid:hover:border-input']))
   })
 })
 

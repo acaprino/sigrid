@@ -8,7 +8,7 @@
 import * as React from "react"
 import { Collapsible } from "@base-ui/react/collapsible"
 import { Icon } from "../../icons"
-import { cn } from "../../lib/utils"
+import { cn, isEmptyNode } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 
 export type DisclosureProps = {
@@ -48,7 +48,7 @@ function Disclosure({ label, summary, defaultOpen = false, open, onOpenChange, d
           <Icon name="chevron" />
         </span>
         <span className="min-w-0">{label}</span>
-        {summary === undefined || summary === null || summary === false ? null : (
+        {isEmptyNode(summary) ? null : (
           <span data-slot="disclosure-summary" className="ms-2 text-xs font-normal text-ink-mute tabular-nums">
             {summary}
           </span>

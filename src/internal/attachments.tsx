@@ -15,12 +15,13 @@
 // chosen one); the words, in English; the field for a typed link; focus after «Remove». No animation, no preview, no
 // network.
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { FileUpload, useFileUpload } from '@ark-ui/react/file-upload'
+import { FileUpload } from '@ark-ui/react/file-upload'
 import { Paperclip } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Tooltip } from '../components/ui/tooltip'
 import { limitLabel, overLimitNotice, useDropTarget, type AttachPayload, type DropPayload } from './drop'
+import { DROP_BUTTON, DROP_HINT, DROP_TITLE, DROP_ZONE, DROP_ZONE_ACTIVE, useFileChoice } from './file-drop'
 import { kindIcon, kindLabel, type AttachmentKind } from './kinds'
 import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { NeedThumbnail, Thumbnail } from './thumbnail'
@@ -122,8 +123,6 @@ export function typedUrl(value: string): string | null {
   }
 }
 
-const NO_FILES: File[] = []
-
 export type AttachmentsSectionProps<A> = {
   attachments: AttachmentView<A>[]
   onAction: (action: A) => void
@@ -162,29 +161,17 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
     target?.focus()
   }, [attachments])
 
-  // Ark's FileUpload, used for its picker and its check: its own list of files stays empty (`acceptedFiles`), so each
-  // choice is judged on its own and the same file can be added twice, as the caller's list allows.
-  const upload = useFileUpload({
-    acceptedFiles: NO_FILES,
+  // Ark's FileUpload, used for its picker and its check (`useFileChoice`): each choice is judged on its own and the
+  // same file can be added twice, as the caller's list allows. The drop is `useDropTarget` below, on the whole zone.
+  const upload = useFileChoice({
     maxFiles: Number.MAX_SAFE_INTEGER,
-    maxFileSize: maxFileBytes,
-    // The drop is `useDropTarget` below, on the whole zone.
-    allowDrop: false,
-    onFileAccept: ({ files }) => {
-      if (!files.length) return
+    maxFileBytes,
+    onFiles: (files) => {
       setNotice(null)
       onAttach({ kind: 'files', files })
     },
-    onFileReject: ({ files }) => {
-      if (!files.length) return
-      // The limit comes first: a file over `maxFileBytes` is never sent, the others are.
-      setNotice(overLimitNotice(files.filter((r) => r.errors.includes('FILE_TOO_LARGE')).map((r) => r.file), maxFileBytes, words))
-      // Two files with the same name and size in one choice: Ark takes the second for a copy of the first. Both were chosen.
-      const twins = files.filter((r) => r.errors.every((e) => e === 'FILE_EXISTS')).map((r) => r.file)
-      if (twins.length) onAttach({ kind: 'files', files: twins })
-      // Forgotten at once: the same file refused again must say so again.
-      upload.clearRejectedFiles()
-    },
+    // The limit comes first: a file over `maxFileBytes` is never sent, the others are.
+    onRefuse: (refused) => setNotice(overLimitNotice(refused.filter((r) => r.errors.includes('FILE_TOO_LARGE')).map((r) => r.file), maxFileBytes, words)),
   })
   const send = (payload: DropPayload) => {
     if (payload.kind === 'text') {
@@ -278,7 +265,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
           data-slot="file-upload"
           data-drop-active={drop.active}
           // While something is dragged over it the dashed edge turns solid ink: the accent is not for this (R2).
-          className={cn('space-y-2 rounded-lg border-2 border-dashed border-input bg-raised p-1.5', drop.active && 'border-solid border-ring bg-paper-2')}
+          className={cn('space-y-2', DROP_ZONE, drop.active && DROP_ZONE_ACTIVE)}
         >
           {/* The zone is the control (name and keyboard: a real button); the input stays outside it and outside the accessibility tree. */}
           <FileUpload.HiddenInput />
@@ -287,10 +274,10 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
             // Named by what it shows (its title and the hint under it), not by a shorter label of its own: whoever
             // speaks to the screen says the words they see (WCAG 2.5.3).
             data-slot="file-upload-trigger"
-            className={cn('flex w-full flex-col items-center justify-center rounded-md px-6 py-4 text-center hover:bg-ink/4', FOCUS_RING)}
+            className={cn(DROP_BUTTON, 'hover:bg-ink/4', FOCUS_RING)}
           >
-            <span className="block text-sm font-medium text-ink">{drop.active ? said.dropHere : said.addFile}</span>
-            <span className="mt-1 block text-xs text-ink-soft">{said.hint(limitLabel(maxFileBytes))}</span>
+            <span className={DROP_TITLE}>{drop.active ? said.dropHere : said.addFile}</span>
+            <span className={DROP_HINT}>{said.hint(limitLabel(maxFileBytes))}</span>
           </FileUpload.Trigger>
           <form onSubmit={onLink} className="flex items-center gap-2 px-1 pb-1">
             <label htmlFor={linkId} className="sr-only">

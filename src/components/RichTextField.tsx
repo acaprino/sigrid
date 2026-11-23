@@ -20,6 +20,7 @@ import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/r
 import StarterKit from '@tiptap/starter-kit'
 import { Icon, type IconName } from '../icons'
 import { FOCUS_WITHIN_FIELD } from '../lib/focus'
+import { FIELD_HOVER_DATA, FIELD_SURFACE } from '../lib/field'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
 import { Toolbar, ToolbarButton, ToolbarSeparator } from './ui/toolbar'
@@ -155,7 +156,7 @@ function RichTextField({ value, onChange, id, required = false, disabled = false
     if (value !== editor.getHTML()) editor.chain().setMeta('addToHistory', false).setContent(value, { emitUpdate: false }).run()
   }, [editor, value])
   return (
-    <div data-slot="rich-text" data-disabled={disabled ? '' : undefined} data-invalid={aria['aria-invalid'] === true || aria['aria-invalid'] === 'true' ? '' : undefined} className={cn('flex flex-col rounded-md border border-line bg-transparent data-invalid:border-destructive data-disabled:opacity-50', FOCUS_WITHIN_FIELD, className)}>
+    <div data-slot="rich-text" data-disabled={disabled ? '' : undefined} data-invalid={aria['aria-invalid'] === true || aria['aria-invalid'] === 'true' ? '' : undefined} className={cn('flex flex-col', FIELD_SURFACE, FIELD_HOVER_DATA, 'data-disabled:opacity-50', FOCUS_WITHIN_FIELD, className)}>
       {disabled || !editor ? null : <Bar editor={editor} />}
       <EditorContent editor={editor} data-slot="rich-text-content" className="min-h-0 flex-1 overflow-y-auto" />
     </div>

@@ -8,7 +8,7 @@
 // the error, and `aria-invalid` when there is an error. The error is announced when it appears (`role="alert"`).
 // The headless `Field` of Base UI stays exported for an app that lays a field out by hand.
 import * as React from "react"
-import { cn } from "../../lib/utils"
+import { cn, isEmptyNode } from "../../lib/utils"
 
 type Wired = {
   id?: string | undefined
@@ -32,7 +32,7 @@ export type FormFieldProps = {
   children: React.ReactElement<Wired>
 }
 
-const shown = (text: React.ReactNode) => text != null && text !== false && text !== ""
+const shown = (text: React.ReactNode) => !isEmptyNode(text)
 
 function FormField({ label, help, error, required, id, className, children }: FormFieldProps) {
   const own = React.useId()

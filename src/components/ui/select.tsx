@@ -20,8 +20,9 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { GROUP_LABEL } from "../../lib/rows"
+import { GROUP_LABEL, LIST_CARD, LIST_ROW } from "../../lib/rows"
 import { FOCUS_FIELD } from "../../lib/focus"
+import { FIELD_HOVER, FIELD_OFF_NOW, FIELD_SURFACE, FIELD_TEXT } from "../../lib/field"
 import { usePortalContainer } from "../PortalContainer"
 import { useEntrance } from "../../internal/motion"
 
@@ -58,8 +59,8 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
   invalid?: boolean | undefined
 }
 
-const ITEM_CLASS =
-  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-sm py-(--row-pad) pr-8 pl-2 text-sm outline-none select-none data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink data-[disabled]:opacity-50"
+/** The row of every list (`LIST_ROW`), with room at its end for the check of the chosen one. */
+const ITEM_CLASS = cn(LIST_ROW, "pr-8")
 
 function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
   return (
@@ -98,10 +99,14 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         aria-describedby={aria["aria-describedby"]}
         aria-invalid={invalid || undefined}
         data-slot="select-trigger"
+        // The field's surface, text, hover and invalid border (`lib/field.ts`); open, the border is the ink.
         className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-md border border-line bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
-          invalid ? "border-destructive" : "hover:border-input data-[popup-open]:border-ring",
-          disabled && "pointer-events-none cursor-not-allowed opacity-50",
+          "flex w-full items-center justify-between gap-2 pr-(--pad-xs) pl-(--pad-sm) text-left pointer-coarse:min-h-11",
+          FIELD_SURFACE,
+          FIELD_TEXT,
+          FIELD_HOVER,
+          "not-aria-invalid:data-[popup-open]:border-ring",
+          disabled && FIELD_OFF_NOW,
           FOCUS_FIELD,
           size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
           className,
@@ -119,7 +124,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
           <SelectPrimitive.Popup
             ref={enter}
             data-slot="select-content"
-            className="flex max-h-80 min-w-[max(var(--anchor-width),10rem)] flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md outline-none"
+            className={cn(LIST_CARD, "min-w-[max(var(--anchor-width),10rem)]")}
           >
             <SelectPrimitive.List aria-label={aria["aria-label"]}>
               {options.map((o) => (

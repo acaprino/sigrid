@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Input as InputPrimitive } from '@base-ui/react/input'
 import { cn } from '../../lib/utils'
 import { FOCUS_FIELD } from '../../lib/focus'
+import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from '../../lib/field'
 
 // The form is Park's `input` recipe, md size and outline variant: 40px tall, l2 corners, 12px of side padding, no fill.
 // Park's border is its gray step 7, lighter than 3:1: here it stays `border-input` (>= 3:1 on every background,
@@ -11,11 +12,17 @@ import { FOCUS_FIELD } from '../../lib/focus'
 // Adaptation of SmoothUI's primitive: border `border-input` instead of `border-foreground/25`; the toolkit's focus ring (`lib/focus.ts`, R8) instead of `focus-ring`; no
 // `state-transition` nor any other transition: without `animated` the field has no motion styles. `pointer-coarse:min-h-11`
 // keeps the 44 px with touch. No default `type` (SmoothUI sets `text`): the attribute stays whatever is passed.
+// The parts every field shares are in `lib/field.ts`: this is the field the others follow.
 const INPUT_CLASS = cn(
-  'h-(--control-md) w-full min-w-0 rounded-md pointer-coarse:min-h-11 border border-line bg-transparent px-(--pad-sm) py-1 text-base file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+  FIELD_SURFACE,
+  FIELD_HEIGHT,
+  'w-full min-w-0 px-(--pad-sm) py-1',
+  FIELD_TEXT,
+  'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground',
+  FIELD_OFF,
   FOCUS_FIELD,
   // Under the pointer the border goes one step darker: the field answers before it is clicked.
-  'not-aria-invalid:hover:border-input aria-invalid:border-destructive',
+  FIELD_HOVER,
 )
 
 /**

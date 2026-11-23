@@ -194,7 +194,7 @@ test('chips: the placeholder shows only with no tags; the box border is the ligh
   expect(box.className.split(' ')).toContain('border-line')
   // The darker border is only under the pointer.
   expect(box.className.split(' ')).not.toContain('border-input')
-  expect(box.className.split(' ')).toContain('hover:border-input')
+  expect(box.className.split(' ').some((c) => c.endsWith(':hover:border-input'))).toBe(true)
 })
 
 // The remove button of a chip, named and with its tooltip.
