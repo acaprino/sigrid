@@ -49,7 +49,10 @@ export type ComboboxProps<O extends ComboboxOption = ComboboxOption> = {
   className?: string | undefined
 }
 
-const POSITIONING = { placement: "bottom-start", sameWidth: true, gutter: 4, strategy: "fixed" } as const
+// The boundary is the page, not the scrolling window around the field: inside a window that scrolls, its own box would be the
+// edge the card fits in, and a card taller than the window would be squeezed or pushed out of the screen.
+const PAGE = () => document.documentElement
+const POSITIONING = { placement: "bottom-start", sameWidth: true, gutter: 4, strategy: "fixed", boundary: PAGE } as const
 
 function Combobox<O extends ComboboxOption = ComboboxOption>({
   options,

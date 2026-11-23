@@ -167,6 +167,27 @@ useCommandKey(() => setOpen(true))
 ]} />
 ```
 
+An app can also declare each command once, near the state it acts on, and let the toolkit run its key and list it:
+`CommandsProvider` around the app holds a registry; `useCommand({ id, label, group, keys, when, run })` declares a
+command for as long as its component is mounted; a `CommandPalette` with no `commands` lists the declared ones in their
+order, by group, those that cannot be done now (`when: false`) dimmed, and Ctrl+K (Cmd+K on a Mac) opens it: that is
+the registry's own command, `PALETTE_COMMAND`, turned off with `palette={false}`. A key is written as
+`KeyboardEvent.key` names it after `Ctrl`, `Alt` and `Shift` (`Escape`, `F6`, `Ctrl+F`, `Shift+?`, `Ctrl++`). Where it
+belongs to what has the focus it is left there: a plain key in a field (but Escape and the function keys), Enter,
+Space and the arrows on a control, a key without Ctrl or Alt in an open dialog or menu, a plain key a widget handled,
+every key in the places `ownKeysIn` names. `useCommands()` gives the list, each key in the words of the system and of
+the app (`formatKeys`, `Words.keys`), and `useCommandPalette()` the palette's open state for a button. `KeyHints`, in
+the window's foot, names the keys that work now of the commands the app picks:
+`footer={<KeyHints ids={[PALETTE_COMMAND, 'search', 'close']} />}` («Ctrl K Commands · Ctrl F Search in this view»),
+hidden on a phone.
+
+```tsx
+<CommandsProvider>
+  <App />  {/* inside: useCommand({ id: 'close', label: 'Close the detail', keys: 'Escape', when: open, run: close }) */}
+  <CommandPalette />
+</CommandsProvider>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -177,7 +198,8 @@ and pushes the content, under it a panel over the end of the content, never moda
 (or the rail the user chose), from 620px to 850px a rail, under 620px a drawer. `Sidebar` and `Inspector` read the step
 from the frame; the steps are recommended, and an app passes its own with `steps` (0 switches one off);
 `useAppShell()` gives the step to the app, which shows its «open the menu» button only where the sidebar is
-a drawer.
+a drawer. F6 moves the focus to the next region (title bar, sidebar, content, inspector) and
+Shift+F6 to the one before, skipping a closed one: the frame does it, with nothing for the app to write.
 
 ```tsx
 <AppShell
@@ -199,7 +221,7 @@ a drawer.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -371,7 +393,9 @@ comes with the package, at the version the app has installed, and most of it is 
   values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
   `backdrop-blur`, emoji, fonts in CSS); it does not see named classes off the scale, inline styles, or anything of
   the layout: `AGENTS.md` lists what is left to read and to look at. An app keeps its own choices in a
-  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing.
+  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing. One rule is
+  the app's to turn on, `own-class`: it reports every class written by hand and every stylesheet of the app, for an
+  app laid out with the layout parts alone (off by default).
 - A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
   check after:
 

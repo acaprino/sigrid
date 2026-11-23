@@ -32,7 +32,9 @@ the app, and do not add another component library for something the toolkit has.
    `/reorder`, `/rich-text`, `/graph`; the graph also needs `@import "@acaprino/sigrid/graph.css"`).
 3. Use the tokens for everything else: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,
    `border-line`, `bg-selected`, `bg-accent`, `text-accent`, the radii `rounded-sm|md|lg`, the shadows
-   `shadow-xs|sm|md|lg|float`, the sizes `h-(--control-md)`, `min-h-(--row-height)`, `px-(--pad-md)`.
+   `shadow-xs|sm|md|lg|float`, the sizes `h-(--control-md)`, `min-h-(--row-height)`, `px-(--pad-md)`. An app that
+   writes no class of its own lays out with `Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`,
+   `Page` and `Text` instead, and turns the rule `own-class` on (below).
 4. Run the check (below) and fix what it finds. Then, if the project lets you run the app on this machine, look at
    the screen in a browser, wide and at 390px; if it does not, say that you did not.
 
@@ -95,6 +97,11 @@ colour that is the content) is marked on the line above, with its reason, and ne
 reads: `// design-check-ignore-next-line color-value: an invoice number, not a colour` (in JSX,
 `{/* design-check-ignore-next-line … */}`). An app keeps wider choices (files to leave out, a rule turned off) in a
 `sigrid-check.config.json` in the same folder; its `rules` are laid over the toolkit's.
+
+One rule is the app's to turn on: with `{ "rules": { "own-class": "error" } }` in `sigrid-check.config.json` the check
+also reports every class written by hand (`className=`, `class=`, a `…ClassName` prop, `classList.add(`,
+`setAttribute('class'`) and every stylesheet of the app, for an app that has no interface code of its own. It is off
+by default. A stylesheet the app must keep says so with `/* design-check-ignore own-class: <reason> */`.
 
 ## Work on the toolkit itself
 
