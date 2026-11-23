@@ -133,6 +133,10 @@ describe('lines that do not hang', () => {
       const shown = visibleGraph(GRAPH, closed).order
       expect(layoutGraph(LINKED, shown, 'right'), closed.join()).toEqual(layoutGraph(GRAPH, shown, 'right'))
     }
+    // An edge with a `kind` of the app's own hangs, as every edge did before there were kinds.
+    const own = { nodes: GRAPH.nodes, edges: GRAPH.edges.map((edge) => ({ ...edge, kind: 'member' }) as unknown as GraphEdge) }
+    expect(visibleGraph(own, ['a'])).toEqual(visibleGraph(GRAPH, ['a']))
+    expect(linesOf(own.edges, layoutGraph(own, visibleGraph(own, []).order, 'right'), { direction: 'right', chosen: null, marked: null, dimmed: null, editable: false }).lines.every((line) => !line.id.endsWith('#link') && line.markerEnd === undefined)).toBe(true)
     // A `link` to a hidden thing does not make it «reached another way», as a `child` line would.
     expect(visibleGraph(LINKED, ['a']).hidden.get('a')).toBe(2)
     expect(visibleGraph({ nodes: GRAPH.nodes, edges: [...GRAPH.edges, { from: 'b1', to: 'a1' }] }, ['a']).hidden.get('a')).toBe(1)

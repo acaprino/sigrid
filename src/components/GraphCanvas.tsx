@@ -74,7 +74,7 @@ export type GraphEdge = {
   /**
    * `child` (the default): `to` hangs from `from`. These lines alone make the tree: what opens and closes, what a
    * closed thing hides, the ranks of the layout, the keys. `link`: a line between two things that changes none of that
-   * (one waits for the other, refers to it, never goes with it).
+   * (one waits for the other, refers to it, never goes with it). Any other value is taken as `child`.
    */
   kind?: 'child' | 'link' | undefined
   /** Words on the line, in its middle. Screen readers hear them too, in the description of the two things. */
@@ -146,7 +146,9 @@ export type GraphCanvasProps = {
 /** The sizes of a thing in px, which the layout needs before anything is drawn: `w-52`, and `h-11` or `h-14` with a second line. */
 const WIDTH = 208
 const heightOf = (node: GraphNode) => (node.detail ? 56 : 44)
-const isChild = (edge: GraphEdge) => (edge.kind ?? 'child') === 'child'
+// Only `link` is a link: an edge that carries a `kind` field of the app's own (an object with more fields is still a
+// `GraphEdge`) hangs, as every edge did before there were kinds.
+const isChild = (edge: GraphEdge) => edge.kind !== 'link'
 /** The zoom the user can reach with the buttons and the wheel, and the default floor of a fit: names of 14px stay about 11px. */
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 1.5
