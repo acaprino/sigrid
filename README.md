@@ -274,14 +274,24 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     data) and not «hangs from»: nothing closes, no thing has an arrow and every one is in sight (`collapsed` and
     `defaultCollapsed` are the tree mode's). The arrows follow the lines: with `direction="right"` Right goes along
     a thing's first line out and Left back along its first line in, while Down and Up go through the things in the
-    order given (downwards the axes swap); Home and End reach the first and the last, Enter chooses. Opening is the
-    app's: a double press on a thing or its › button calls `onOpen(id)`, and without `onOpen` there is no › and
-    nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a graph (an
-    application named by `aria-roledescription`) whose things are buttons that say whether they are chosen. In both
-    modes +, − and 0 zoom in, out and fit, as the buttons do. Only what is in the view is drawn; the layout is done again at
-    each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
-    branches closed (`defaultCollapsed`). `visibleGraph` and
-    `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
+    order given; with `direction="down"` the axes swap (Down along the first line out, Up back along the first line
+    in, Right and Left through the order). Home and End reach the first and the last, Enter chooses; from the › of a
+    thing the arrows, Home and End move as from the thing. Opening is the app's, and only for the things it says it
+    opens: a thing with an `openLabel` («Open Orders», the name of its › and of the action) has a › button, and a
+    double press on it or its › calls `onOpen(id)`, once. Without `onOpen`, or on a thing without `openLabel`, there
+    is no › and nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a
+    group named by the app and called a graph (`aria-roledescription`, the word `graph.roleDescription`), whose things
+    are buttons named by their name and second line, described by where their lines lead and come from («leads to
+    Store, Mail · comes from Gateway», the words `graph.leadsTo` and `graph.comesFrom`), the chosen one
+    `aria-current`. With `editable` the plus of the chosen thing adds one after it (`graph.addAfter`). With a finger
+    the › and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
+    the buttons do. Only what is in the view is drawn; the layout is done again at each change (about 30 ms for 200
+    things in sight, 200 ms for a thousand). In the tree mode a larger graph starts with its branches closed
+    (`defaultCollapsed`). In the graph mode every thing is always in sight, so the whole graph is laid out again
+    whenever the app passes new nodes or edges or another `direction` (choosing a thing or moving the focus lays out
+    nothing): a graph of thousands of things costs most of a second at each change, so show a part of it (the scope
+    the user opened). `visibleGraph` and `layoutGraph` are exported for an app that draws the same graph another way
+    (a list, a print).
     - Two kinds of line. A `GraphEdge` is `{ from, to }` and `to` hangs from `from` (`kind: 'child'`, the default):
       these lines alone make the tree, what opens and closes, what a closed thing hides, the ranks and the keys. With
       `kind: 'link'` the line joins two things without any of that (one waits for the other, refers to it, never goes
@@ -332,6 +342,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   import { GraphCanvas } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+  // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
   <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
     onOpen={(id) => setScope(id)} className="h-full" />
 

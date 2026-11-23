@@ -387,7 +387,7 @@ describe('the canvas with a path and with lines that do not hang', () => {
     }
   })
   const item = (name: string | RegExp) => screen.getByRole('treeitem', { name })
-  const description = (el: HTMLElement) => document.getElementById(el.getAttribute('aria-describedby') ?? '')?.textContent ?? ''
+  const description = (el: HTMLElement) => (el.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? '').join(' · ')
   const dim = (el: HTMLElement) => el.className.includes('opacity-40')
 
   test('a thing of the path says its steps in its name and shows them as numbers; what hides it opens', () => {
@@ -446,8 +446,10 @@ describe('the canvas with a path and with lines that do not hang', () => {
   test('in the graph mode too, a thing of the path says its steps, shows its numbers and is described by its links', () => {
     const { container } = render(<GraphCanvas aria-label="Plan" model="graph" nodes={LINKED.nodes} edges={LINKED.edges} steps={new Map([['a1', [1]]])} />)
     const copy = screen.getByRole('button', { name: 'Copy, step 1' })
-    expect(copy.getAttribute('aria-pressed')).toBe('false')
-    expect(description(copy)).toBe('waits for, to Screens. never with, with Photos')
+    // On the path, not chosen.
+    expect(copy.hasAttribute('aria-current')).toBe(false)
+    // The graph mode's own lines first, then the links.
+    expect(description(copy)).toBe('comes from Content · waits for, to Screens. never with, with Photos')
     expect(container.querySelector('[data-slot="graph-steps"]')!.textContent).toBe('1')
   })
 

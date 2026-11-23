@@ -67,10 +67,10 @@ const ITALIAN: WordsOverride = {
 
 describe('the placeholders: English, every group filled', () => {
   test('every word is a non-empty text, or a function that gives one', () => {
-    // Each parameter by its name: a list (`keys`, `steps`) gets a list, any other 2, then 3.
+    // Each parameter by its name: a list (`keys`, `steps`, `items`) gets a list, any other 2, then 3.
     const sample = (fn: (...args: never[]) => unknown) => {
       const names = (/^\(?([^)=]*)\)?\s*=>/.exec(String(fn))?.[1] ?? '').split(',').map((name) => name.trim())
-      return (fn as (...args: unknown[]) => unknown)(...names.map((name, at) => (name === 'keys' || name === 'steps' ? [2, 3] : at + 2)))
+      return (fn as (...args: unknown[]) => unknown)(...names.map((name, at) => (['keys', 'steps', 'items'].includes(name) ? [2, 3] : at + 2)))
     }
     for (const [group, words] of Object.entries(DEFAULT_WORDS)) {
       for (const [name, word] of Object.entries(words as Record<string, unknown>)) {

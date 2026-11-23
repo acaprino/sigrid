@@ -289,15 +289,18 @@ const CLOSED_GROUPS = GROUPS.filter((node) => node.detail).map((node) => node.id
 const WIDE: GraphNode[] = Array.from({ length: 1000 }, (_, i) => ({ id: `n${i}`, label: `Item ${i + 1}` }))
 const WIDE_JOINS: GraphEdge[] = WIDE.slice(1).map((node, i) => ({ from: `n${Math.floor(i / 4)}`, to: node.id }))
 
-/** The calls between the parts of a service: relations, not «hangs from», with a ring (the queue and the worker call each other). */
+/**
+ * The calls between the parts of a service: relations, not «hangs from», with a ring (the queue and the worker call
+ * each other). The orders and the store hold parts of their own, so the app opens them: they name the action.
+ */
 const CALLS: GraphNode[] = [
   { id: 'gateway', label: 'Gateway', detail: 'Takes the requests' },
   { id: 'auth', label: 'Sign-in' },
-  { id: 'orders', label: 'Orders', detail: '12 functions' },
+  { id: 'orders', label: 'Orders', detail: '12 functions', openLabel: 'Open Orders' },
   { id: 'billing', label: 'Billing' },
   { id: 'queue', label: 'Queue' },
   { id: 'worker', label: 'Worker' },
-  { id: 'store', label: 'Store', detail: 'Database' },
+  { id: 'store', label: 'Store', detail: 'Database', openLabel: 'Open Store' },
 ]
 const CALL_LINES: GraphEdge[] = [
   { from: 'gateway', to: 'auth' }, { from: 'gateway', to: 'orders' }, { from: 'orders', to: 'billing' }, { from: 'orders', to: 'queue' },
@@ -320,7 +323,7 @@ export function Graphs() {
       title="GraphCanvas"
       note={
         <>
-          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>.
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing the app opens (one with an <Code>openLabel</Code>) asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>.
         </>
       }
     >
@@ -365,7 +368,7 @@ export function Graphs() {
       <Row label="a graph: nothing closes">
         <div data-sample="graph-model" className="flex w-full max-w-4xl flex-col gap-3">
           <GraphCanvas aria-label="Calls of the service" model="graph" nodes={CALLS} edges={CALL_LINES} selected={call} onSelect={setCall} onOpen={setOpened} search className="h-80" />
-          <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press a thing twice, or its ›.'}</p>
+          <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press Orders or Store twice, or its ›.'}</p>
         </div>
       </Row>
       <Row label="1,000 things">
