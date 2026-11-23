@@ -38,6 +38,41 @@ export function isThemeShape(value: unknown): value is ThemeShape {
   return (THEME_SHAPES as readonly unknown[]).includes(value)
 }
 
+/**
+ * How deep the dark scheme of a theme is: how dark its page is and how far below it the sidebar sits; the sheets, the
+ * lines and the selection follow the page. `standard` is the anthracite every theme had before 2026-11-23; `deep` is a
+ * near-black page with a wider step down to the sidebar; `soft` is a lighter charcoal, the page closer to its sheets
+ * and its sidebar (the engine's contrast thresholds leave no room for lighter sheets: `DARK_LADDER` in theme-engine.ts).
+ */
+export type DarkDepth = 'deep' | 'standard' | 'soft'
+export const DARK_DEPTHS = ['deep', 'standard', 'soft'] as const satisfies readonly DarkDepth[]
+export const DEFAULT_DARK_DEPTH: DarkDepth = 'standard'
+/**
+ * The tint of the dark backgrounds: `neutral` grays, or `theme`, the hue of the theme's grays (`ThemeDef.hue`) at a low
+ * chroma the engine sets. A theme whose grays have no chroma has no hue to give and stays neutral.
+ */
+export type DarkTint = 'neutral' | 'theme'
+export const DARK_TINTS = ['neutral', 'theme'] as const satisfies readonly DarkTint[]
+export const DEFAULT_DARK_TINT: DarkTint = 'neutral'
+
+/** The dark scheme of a theme, as parameters the engine computes the backgrounds from (`ThemeDef.dark`). */
+export interface ThemeDark {
+  /** Absent: `DEFAULT_DARK_DEPTH`. */
+  readonly depth?: DarkDepth | undefined
+  /** Absent: `DEFAULT_DARK_TINT`. */
+  readonly tint?: DarkTint | undefined
+}
+
+/** The dark parameters read from anywhere (a saved value): only what is valid and not the default stays; with nothing left, there are none. */
+export function themeDark(value: unknown): ThemeDark | null {
+  if (typeof value !== 'object' || value === null) return null
+  const v = value as Record<string, unknown>
+  const depth = (DARK_DEPTHS as readonly unknown[]).includes(v['depth']) && v['depth'] !== DEFAULT_DARK_DEPTH ? (v['depth'] as DarkDepth) : undefined
+  const tint = (DARK_TINTS as readonly unknown[]).includes(v['tint']) && v['tint'] !== DEFAULT_DARK_TINT ? (v['tint'] as DarkTint) : undefined
+  if (!depth && !tint) return null
+  return { ...(depth ? { depth } : {}), ...(tint ? { tint } : {}) }
+}
+
 /** How the 18 free colors (marks and their icons) adapt to the theme's character. */
 export type PaletteProfile = 'mono' | 'calm' | 'crisp' | 'soft'
 
@@ -60,6 +95,11 @@ export interface ThemeDef {
    * numbers (0 to 64; `button` and `chip` to 9999, a pill): the radii of `shape`.
    */
   readonly radii?: ThemeRadii | undefined
+  /**
+   * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
+   * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
+   */
+  readonly dark?: ThemeDark | undefined
   /**
    * A strong accent: the OKLCH lightness and chroma of the fill (the hue is the accent's). Without it the fill is the
    * accent as text in light, and a deeper tone of it in dark. The engine still guarantees the label and the 3:1.

@@ -75,7 +75,13 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    never reaches the browser.
 4. **Colours: the theme engine** (`src/theme-engine.ts`, `src/theme-catalog.ts`, `src/themes.ts`, `src/colors.ts`):
    every colour is computed from the chosen theme and scheme and written as tokens on the root (`applyTheme`); the
-   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. A theme can also be made
+   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. In dark the backgrounds
+   are a neutral anthracite unless the theme sets its dark parameters (`ThemeDef.dark`), which the engine turns into
+   the whole ladder: `depth` is how dark the page is and how far below it the sidebar sits (`deep` a near-black page
+   at OKLCH lightness 0.20, `standard` 0.235, the default, `soft` 0.25, the page closer to its sheets), and `tint`
+   is `neutral` (the default) or `theme`, the hue of the theme's grays at a low chroma (0.016, or 0.008 for a warm
+   hue; a theme whose grays have no chroma stays neutral). Every contrast threshold holds on all six; `themeDark`
+   reads a saved value. A curated palette (`surfaces`, and so `colorTheme`) keeps its own backgrounds. A theme can also be made
    from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
    for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
    `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
