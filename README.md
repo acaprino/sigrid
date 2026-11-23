@@ -203,17 +203,24 @@ a drawer.
 - Four entries of their own, each on a library that an app loads only if it imports the entry (the versions are
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
-    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`); one row can
-    be chosen (`current`, `onRowPress`, arrows among the rows); with `virtual` only the rows in sight are in the
-    page. For filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and
-    its parts, which are in the main entry.
+    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
+    be chosen (`current`, `onRowPress`): the rows are one Tab stop, which follows the focus; the arrows, Home and End
+    move among them; a press on a control inside a cell (a button, a link, a field) is that control's, not the
+    row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
+    Make `columns` once (outside the component, or with `useMemo`): a new array at every paint sorts again. For
+    filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and its parts,
+    which are in the main entry.
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
-    items there are and where each one is.
+    items there are and where each one is. Each place gives one row, never none.
   - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
     pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
+    While a row is taken Escape is the list's, so a dialog or a sheet around it stays open.
   - `./rich-text`: `RichTextField`, on TipTap: bold, italic, underline, two kinds of list, a quote, undo and redo,
-    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control.
+    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control. A value
+    that comes from outside (another draft) takes the place of the text and is not a step of the undo; a value of
+    its own that the app hands back late (a store, a round trip to a native side) is known as its own, so the app
+    may keep the value wherever it likes.
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -331,7 +338,8 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor.
+  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  with the `host.ts` they import; they pass `sigrid-check`.
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
