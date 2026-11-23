@@ -1,15 +1,13 @@
-/* The stylesheet of the graph canvas (`GraphCanvas`, the `./graph` entry): what React Flow needs to lay its canvas
-   out (its `base.css`, which has no look of its own), and its colours taken from the toolkit's tokens, so the canvas
-   follows the theme and the scheme as everything else does. An app imports it once, after `theme.css`:
-   `@import "@acaprino/sigrid/graph.css";`. */
+/* The stylesheet of the graph canvas and of the key of its lines (`GraphCanvas`, `GraphLegend`, the `./graph`
+   entry): what React Flow needs to lay its canvas out (its `base.css`, which has no look of its own), and its colours
+   taken from the toolkit's tokens, so the canvas follows the theme and the scheme as everything else does. An app
+   imports it once, after `theme.css`: `@import "@acaprino/sigrid/graph.css";`. */
 @import "@xyflow/react/dist/base.css";
 
 .react-flow {
   --xy-background-color: transparent;
   --xy-background-pattern-color: var(--color-line);
-  --xy-edge-stroke: var(--color-ink-mute);
   --xy-edge-stroke-selected: var(--color-ink);
-  --xy-edge-stroke-width: 1;
   --xy-connectionline-stroke: var(--color-accent);
   --xy-connectionline-stroke-width: 2;
   --xy-handle-background-color: var(--color-ink-mute);
@@ -28,39 +26,17 @@
   --xy-attribution-background-color: transparent;
 }
 
-/* The lines of the chosen thing: the ink, a little thicker, over the others. */
-.react-flow__edge.sigrid-graph-near .react-flow__edge-path {
-  stroke: var(--color-ink-soft);
-  stroke-width: 1.5;
-}
-
-/* The dash of a line says its kind with its words, never its colour alone. A dotted line is a little thicker, so its
-   dots are seen. */
-.react-flow__edge.sigrid-graph-dashed .react-flow__edge-path {
-  stroke-dasharray: 6 4;
-}
-.react-flow__edge.sigrid-graph-dotted .react-flow__edge-path {
-  stroke-dasharray: 0 4;
-  stroke-linecap: round;
-  stroke-width: 2;
-}
-
-/* The tones of a line, from the theme (each keeps 3:1 on the canvas). The accent, the path's, is thicker. */
-.react-flow__edge.sigrid-graph-accent .react-flow__edge-path {
-  stroke: var(--color-accent);
-  stroke-width: 2;
-}
-.react-flow__edge.sigrid-graph-warning .react-flow__edge-path {
-  stroke: var(--color-warning);
-}
-.react-flow__edge.sigrid-graph-destructive .react-flow__edge-path {
-  stroke: var(--color-destructive);
-}
-
-/* The line of the path between two of its things (`steps`): as thick as the accent, also when it keeps a tone of its
-   own (a warning stays a warning on the path). */
-.react-flow__edge.sigrid-graph-path .react-flow__edge-path {
-  stroke-width: 2;
+/* A line is drawn as `graph-lines.ts` says: the colour of its tone, its width, its dash and its ends, also for a line
+   of the chosen thing (the soft ink, a little thicker) and the path's (as thick as the accent). Each line of the
+   canvas (`linesOf`) and each sample of the key (`GraphLegend`) carries them as custom properties, and this one rule
+   draws both, so the key and the lines cannot part. What a kind of line means is said by its dash and its words,
+   never by its colour alone. */
+.react-flow__edge .react-flow__edge-path,
+.sigrid-graph-sample {
+  stroke: var(--sigrid-line-stroke);
+  stroke-width: var(--sigrid-line-width);
+  stroke-dasharray: var(--sigrid-line-dash);
+  stroke-linecap: var(--sigrid-line-cap);
 }
 
 /* With a path, a line to a dimmed thing is dimmed as the thing is. */

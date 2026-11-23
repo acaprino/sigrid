@@ -499,6 +499,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
+      `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
+      many lines of that kind there are (a `Count`: zero shows nothing); `aria-label` names the list. Each entry is a
+      short sample of the line (hidden from screen readers), its word and its count, in a row that wraps on a narrow
+      window. The samples are drawn by the same definitions as the canvas's lines (`src/components/graph-lines.ts` and
+      one rule of `graph.css`), so the key and the lines cannot part. The word is always there: a tone is never said
+      by its colour alone. It keys the lines only, not the things.
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
@@ -525,7 +532,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
 
   // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
-  import { GraphCanvas } from '@acaprino/sigrid/graph'
+  import { GraphCanvas, GraphLegend } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
@@ -538,6 +545,9 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
       { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
     steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
+  // Its key, under it: each kind of line, its word and how many there are.
+  <GraphLegend aria-label="Kinds of line" entries={[{ label: 'Hangs from', count: tree.length },
+    { label: 'Needs the text', style: 'dashed', tone: 'warning', count: 1 }, { label: 'Not the same week', style: 'dotted', tone: 'destructive', count: 1 }]} />
   <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}

@@ -8,7 +8,7 @@ import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
 import { RichTextField } from '../src/rich-text'
-import { GraphCanvas, type GraphCanvasHandle, type GraphEdge, type GraphNode } from '../src/graph'
+import { GraphCanvas, GraphLegend, type GraphCanvasHandle, type GraphEdge, type GraphLegendEntry, type GraphNode } from '../src/graph'
 import '../src/styles/graph.css'
 import { Code, Row, Section } from './parts'
 
@@ -265,6 +265,15 @@ const LINKS: GraphEdge[] = [
   { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' },
 ]
 const PATH = new Map<string, readonly number[]>([['tokens', [1]], ['screens', [2]], ['pages', [3]], ['test', [4]]])
+/** How many of the plan's lines have this dash and this tone. */
+const linesLike = (style: GraphEdge['style'], tone: GraphEdge['tone']) => LINKS.filter((edge) => (edge.style ?? 'solid') === style && (edge.tone ?? 'default') === tone).length
+/** The key of the plan's lines, under it: each kind it draws, its word and how many there are. */
+const KEY: GraphLegendEntry[] = [
+  { label: 'Hangs from, or comes first', count: linesLike('solid', 'default') },
+  { label: 'Needs the final text', style: 'dashed', tone: 'warning', count: linesLike('dashed', 'warning') },
+  { label: 'Not the same week', style: 'dotted', tone: 'destructive', count: linesLike('dotted', 'destructive') },
+  { label: 'A step of the path', tone: 'accent' },
+]
 
 /** 37 things in 15 groups, every group closed, as a large graph starts: a few lines across groups, and a path of two steps. */
 const GROUPS: GraphNode[] = []
@@ -323,7 +332,7 @@ export function Graphs() {
       title="GraphCanvas"
       note={
         <>
-          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing the app opens (one with an <Code>openLabel</Code>) asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>.
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing the app opens (one with an <Code>openLabel</Code>) asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>. Under a graph, <Code>GraphLegend</Code> is the key of its lines: each kind, its word and how many there are, each sample drawn by the same definitions as the lines.
         </>
       }
     >
@@ -344,9 +353,10 @@ export function Graphs() {
           <GraphCanvas aria-label="Plan, from the head" nodes={PLAN} edges={JOINS} direction="down" defaultCollapsed={['content', 'build']} className="h-80" />
         </div>
       </Row>
-      <Row label="a path, and lines that do not hang">
-        <div data-sample="graph-path" className="w-full max-w-4xl">
+      <Row label="a path, lines that do not hang, and their key">
+        <div data-sample="graph-path" className="flex w-full max-w-4xl flex-col gap-3">
           <GraphCanvas aria-label="Plan, with its path" nodes={PLAN} edges={LINKS} steps={PATH} className="h-112" />
+          <GraphLegend aria-label="Kinds of line" entries={KEY} />
         </div>
       </Row>
       <Row label="37 things in 15 groups">

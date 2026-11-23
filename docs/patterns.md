@@ -159,7 +159,8 @@ Text with a little form (a message, a note) is written in a `RichTextField` (`@a
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
 (`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
 relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. The
-examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
+examples use them: the Archive and the composer of the mail client, the Stack of the to-do list. Lines of several
+kinds have their key under the canvas: a `GraphLegend`, from the same entry.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each
 choice is a row with its name at the start and its control at the end; a choice takes effect at once, with no Save
