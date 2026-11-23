@@ -4,9 +4,10 @@
 // Mail: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useState, type ReactNode } from 'react'
 import {
-  AppShell, Avatar, Button, Count, Icon, Inspector, ItemList, ItemRow, Kbd, NavItem, Sidebar, SidebarGroup,
-  Switch, TitleBar, Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab,
-  ToolbarTabs, useAppShell, useDesktopGuard, useMedia, WindowControls, type ToastItem,
+  AppShell, Avatar, Button, Cluster, Column, Count, DrawerButton, Heading, Icon, Inspector, ItemList, ItemRow,
+  KeyHints, NavItem, SettingRow, Sidebar, SidebarGroup, SidebarRow, Switch, Text, TitleBar, Toasts, Toolbar,
+  ToolbarBrand, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard,
+  useMedia, WindowControls, type ToastItem,
 } from '@acaprino/sigrid'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
@@ -14,11 +15,6 @@ type Screen = 'inbox' | 'settings'
 const SCREENS: Record<Screen, string> = { inbox: 'Inbox', settings: 'Settings' }
 // Where the app runs: a Tauri window of its own on a computer, or a browser (or a phone, where the system draws the window).
 const HOST = readHost()
-
-/** The button that opens the sidebar: in the bar only where the frame has taken the sidebar out of the layout. */
-function MenuButton({ onOpen }: { onOpen: () => void }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<Icon name="sidebarOpen" />} onClick={onOpen} /> : null
-}
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('inbox')
@@ -44,7 +40,7 @@ export function App() {
 
   const content: Record<Screen, ReactNode> = {
     inbox: (
-      <div className="flex min-h-full flex-col gap-4 p-2">
+      <Column gap="lg" pad="sm">
         <ItemList aria-label="Messages">
           <ItemRow
             title="Maria Rossi"
@@ -91,56 +87,45 @@ export function App() {
             }}
           />
         </ItemList>
-      </div>
+      </Column>
     ),
     settings: (
-      <div className="flex min-h-full flex-col gap-4 p-4 mx-auto w-full max-w-prose">
-        <h2 className="text-xl font-semibold text-ink">Accounts</h2>
-        <div className="flex flex-col gap-0">
-          <button
-            type="button"
-            className="flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
-          >
-            <span className="flex min-w-0 flex-col">
-              <span>Work</span>
-              <span className="text-xs text-ink-mute">alex@studio-example.com</span>
-            </span>
-            <span className="inline-flex text-ink-mute"><Icon name="chevron" /></span>
-          </button>
-          <div
-            className="flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
-          >
-            <span className="flex min-w-0 flex-col"><span>Notices of new mail</span></span>
-            <Switch aria-label="Notices of new mail" defaultChecked />
-          </div>
-        </div>
-      </div>
+      <Column gap="lg" pad="lg" width="prose">
+        <Heading>Accounts</Heading>
+        <Column gap="xs">
+          <SettingRow label="Work" description="alex@studio-example.com" onClick={() => {}} />
+          <SettingRow
+            label="Notices of new mail"
+            control={<Switch aria-label="Notices of new mail" defaultChecked />}
+          />
+        </Column>
+      </Column>
     ),
   }
   const inspector: Partial<Record<Screen, ReactNode>> = {
     inbox: (
       <Inspector title="Message" open={details} onOpenChange={setDetails}>
-        <div className="flex flex-col gap-4">
-          <h3 className="text-base font-semibold text-ink">Q4 proposal: can you review by Thursday?</h3>
-          <div className="flex items-center gap-3">
+        <Column gap="lg">
+          <Heading size="small">Q4 proposal: can you review by Thursday?</Heading>
+          <Cluster gap="md" wrap={false}>
             <Avatar name="Maria Rossi" size="sm" decorative />
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium text-ink">Maria Rossi</span>
-              <span className="truncate text-xs text-ink-mute">maria.rossi@studio-example.com, to you</span>
-            </div>
-          </div>
-          <p className="text-sm text-ink-soft">
+            <Column gap="xs">
+              <Text variant="strong">Maria Rossi</Text>
+              <Text variant="note">maria.rossi@studio-example.com, to you</Text>
+            </Column>
+          </Cluster>
+          <Text as="p" variant="soft">
             I attached the draft of the Q4 proposal. Two numbers on page 3 still need your eye: the travel budget and the cost of the two new licences.
-          </p>
-        </div>
+          </Text>
+        </Column>
       </Inspector>
     ),
   }
   const actions: Partial<Record<Screen, ReactNode>> = {
     inbox: (
       <>
-        <Button variant="outline" className="w-fit" onClick={() => say('Archived')}>Archive</Button>
-        <Button className="w-fit" onClick={() => say('A reply would open here')}>Reply</Button>
+        <Button variant="outline" onClick={() => say('Archived')}>Archive</Button>
+        <Button onClick={() => say('A reply would open here')}>Reply</Button>
       </>
     ),
   }
@@ -156,7 +141,7 @@ export function App() {
             windowControls={ownWindow ? <WindowControls {...windowControls} /> : undefined}
           >
             <Toolbar aria-label="Mail">
-              <MenuButton onOpen={() => setMenu(true)} />
+              <DrawerButton onOpen={() => setMenu(true)} />
               <ToolbarBrand name="Mail" page={SCREENS[screen]} />
               <ToolbarSpacer />
               <ToolbarSearch
@@ -192,12 +177,7 @@ export function App() {
             aria-label="Places"
             open={menu}
             onOpenChange={setMenu}
-            footer={
-              <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-                <Avatar name="Alex" size="xs" decorative />
-                <span className="min-w-0 flex-1 truncate">Alex</span>
-              </div>
-            }
+            footer={<SidebarRow leading={<Avatar name="Alex" size="xs" decorative />}>Alex</SidebarRow>}
           >
             <SidebarGroup label="Folders" icon={<Icon name="inbox" />}>
               <NavItem
@@ -229,11 +209,11 @@ export function App() {
         footer={
           !narrow ? (
             <>
-              <span className="tabular-nums">Connected</span>
-              <span className="tabular-nums">2 to read</span>
+              <Text>Connected</Text>
+              <Text>2 to read</Text>
               <ToolbarSpacer />
-              <span className="inline-flex items-center gap-1"><Kbd>R</Kbd>reply</span>
-              <span className="inline-flex items-center gap-1"><Kbd>E</Kbd>archive</span>
+              <KeyHints ids={[{ keys: 'R', label: 'reply' }]} />
+              <KeyHints ids={[{ keys: 'E', label: 'archive' }]} />
             </>
           ) : undefined
         }

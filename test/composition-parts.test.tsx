@@ -99,7 +99,7 @@ describe('a dot', () => {
         <Dot />
       </>,
     )
-    const [given, state, plain] = [...container.querySelectorAll('[data-slot="dot"]')]
+    const [given, state, plain] = [...container.querySelectorAll('[data-slot="dot"]')] as [Element, Element, Element]
     expect(classes(given)).toEqual(expect.arrayContaining(['size-2', 'rounded-full', 'bg-(--mark-dot)']))
     expect(given?.getAttribute('data-mark-hue')).not.toBeNull()
     expect(classes(state)).toContain('bg-success')

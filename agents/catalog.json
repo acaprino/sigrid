@@ -1093,8 +1093,48 @@
      ]
     },
     {
+     "file": "src/components/ui/card.tsx",
+     "about": "A surface that holds a group of content that stands apart from the page: the one thing to do now, the item being\nsorted, a card of a board, a summary beside a message. Two forms (R4): `raised`, the raised surface with the smallest\nshadow and no border (a card that can be picked up, a board's card); `quiet`, the quiet fill of the page with no\nshadow (a lane, a group of rows, a note set apart). The large corner, as every surface that holds controls.\nNot every group is a card («Lines and space, not boxes», docs/design-laws.md): a group is told first by the space\naround it (`Column`, `Section`), then by a line; a card is for the few groups that are a thing of their own.\nIts inside is a pile (`Column`'s steps): what is in it is laid out with no class of the app's own, and a class or a\nstyle passed in spite of the types never reaches the page.",
+     "components": [
+      {
+       "name": "Card",
+       "doc": "A group of content on a surface of its own: raised with a shadow, or on the quiet fill.",
+       "props": [
+        {
+         "name": "variant",
+         "type": "\"raised\" | \"quiet\"",
+         "doc": "`raised` (the default): the raised surface and the smallest shadow; `quiet`: the quiet fill, no shadow. Never a border."
+        },
+        {
+         "name": "pad",
+         "type": "Space",
+         "doc": "The space inside its edges (default `lg`, 16px)."
+        },
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space between its parts (default `md`, 12px)."
+        },
+        {
+         "name": "as",
+         "type": "\"article\" | \"div\" | \"li\" | \"section\"",
+         "doc": "The element it is: a `div` (the default), a section (name it with `aria-label`), an article, a list item."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "CardProps"
+     ]
+    },
+    {
      "file": "src/components/ui/checkbox.tsx",
-     "about": "SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)\nPark UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)\nFrom Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid\nvariant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`\ntoken (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine\npairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.\nFrom SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type=\"button\">` (`nativeButton`,\nso a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked\ncheck mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`\nalso accept \"indeterminate\", `onCheckedChange` receives `boolean | \"indeterminate\"`, `data-state` on the control), the\ntokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,\n`pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),\nonly after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.",
+     "about": "SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)\nPark UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)\nFrom Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid\nvariant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`\ntoken (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine\npairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.\nFrom SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type=\"button\">` (`nativeButton`,\nso a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked\ncheck mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`\nalso accept \"indeterminate\", `onCheckedChange` receives `boolean | \"indeterminate\"`, `data-state` on the control), the\ntokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,\n`pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),\nonly after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.\nWith `label` the box comes with its words: one `<label>` around both, so a press on the words checks it too, the\nrow as tall as the smallest control (44px with a finger), in the text of what is around it.",
      "components": [
       {
        "name": "Checkbox",
@@ -1142,6 +1182,11 @@
          "name": "animated",
          "type": "boolean",
          "doc": "The mark appears with a short animation when the user checks (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "label",
+         "type": "React.ReactNode",
+         "doc": "Its words, beside it: a press on them checks it too, and they name it for screen readers."
         }
        ],
        "passesOn": true
@@ -1368,7 +1413,7 @@
     },
     {
      "file": "src/components/ui/commands.tsx",
-     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- A command that chooses one of several (light, dark or the system's look: `useSchemeCommands`) says whether it is the\n  one in use (`checked`): the palette marks it with a check in the ink, as a chosen option of a list.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.\n- `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,\n  hidden on a phone).",
+     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- A command that chooses one of several (light, dark or the system's look: `useSchemeCommands`) says whether it is the\n  one in use (`checked`): the palette marks it with a check in the ink, as a chosen option of a list.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.\n- `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,\n  hidden on a phone).\n- An app that is one part of a larger page (a sample in a gallery, a widget) names its own place (`keysIn`): its keys\n  run only while the focus is inside it, so two apps on one page do not both answer one key.",
      "components": [
       {
        "name": "CommandsProvider",
@@ -1383,6 +1428,11 @@
          "name": "palette",
          "type": "boolean",
          "doc": "Whether Ctrl+K opens the registry's palette (default true). False leaves Ctrl+K to an app that opens its palette itself."
+        },
+        {
+         "name": "keysIn",
+         "type": "string",
+         "doc": "A selector for the one place whose keys are the app's (`'[data-app=\"mail\"]'`), for an app that is one part of a larger page: a key pressed with the focus elsewhere runs no command. Absent: the whole window."
         },
         {
          "name": "children",
@@ -1620,6 +1670,57 @@
      ]
     },
     {
+     "file": "src/components/ui/description-list.tsx",
+     "about": "The facts of one thing as names and values, in two columns: the names in the muted ink at the start, the values in\nthe ink beside them, one fact a line (the details of an item in an inspector: its name, its level, its path). It is a\n`<dl>`, so a screen reader reads each name with its value. A value that is code, a path or an id is set in the\nmonospace face and broken anywhere, so a long one wraps in a narrow inspector instead of widening it.",
+     "components": [
+      {
+       "name": "DescriptionList",
+       "doc": "Names and values, side by side: the facts of one thing.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly (false | DescriptionItem | null | undefined)[]",
+         "required": true,
+         "doc": "The facts, in the order they are read. A fact may be left out with `null` or `false`."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "Its name for screen readers, where the heading above it does not name it."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "DescriptionItem",
+       "doc": "One fact: its name and its value.",
+       "fields": [
+        {
+         "name": "name",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "What the fact is («Level»)."
+        },
+        {
+         "name": "value",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "What it is worth («Recommended»)."
+        },
+        {
+         "name": "code",
+         "type": "boolean",
+         "doc": "The value is code, a path or an id: the monospace face, broken anywhere."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DescriptionListProps"
+     ]
+    },
+    {
      "file": "src/components/ui/dialog.tsx",
      "about": "SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)\nPark UI (MIT) dialog 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts)\nFrom Park's `dialog` recipe comes the form: the window on the raised sheet with l3 corners and the lg elevation in\nplace of a border, 16px of padding (24px from 768px) and as much between its parts; the backdrop is the toolkit's one\nbackdrop (`BACKDROP`: the elevation's `drop` color at 40%, the same for every overlay that dims); the close button is a 36px plain icon button (Park's sm), muted at rest and\nthe ink under the pointer, like the sheet's. The title is 16px semibold (Park's is 18px: R7, text sizes from the\ntoolkit's tokens) and the header is aligned to the start at every width.\n\nFrom the SmoothUI source we keep the Base UI primitives (`Root`, `Portal`, `Backdrop`, `Popup`, `Title`, `Description`,\n`Close`), the layout parts (`DialogHeader`, `DialogFooter`) and the panel structure. Removed: `AlertDialog`,\n`trigger` and the internal state with `AnimatePresence`, the staggered entrance of the children, the spring and the\nrotation of the X on hover, the blur of the page behind the window (decorative effects). The public `Dialog` has no `animated` prop:\nhere there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.",
      "components": [
@@ -1751,6 +1852,62 @@
      ]
     },
     {
+     "file": "src/components/ui/dot.tsx",
+     "about": "A dot of 8px: a colour the person gave to a thing (a project, a label, an account), never a fill (R10), or the state\nof a thing told by a mark (available, waiting, failed). A colour of the palette (`COLORS`) is drawn in the theme's\nown shade of it (`markHueAttrs`, the dot of `GraphCanvas`), so it keeps 3:1 on the page in every theme; a state takes\nits status colour. A dot is never alone (R2, «A fact by its form»): the word beside it says what it means, so the dot\nitself is hidden from screen readers.",
+     "components": [
+      {
+       "name": "Dot",
+       "doc": "An 8px dot in a person's colour or in the colour of a state, beside the word that names it.",
+       "props": [
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "A colour the person chose, one of the palette's (`COLORS`): drawn in the theme's shade of it."
+        },
+        {
+         "name": "tone",
+         "type": "\"neutral\" | \"accent\" | \"success\" | \"warning\" | \"danger\"",
+         "doc": "The state it marks, where there is no `color`: `neutral` (the default), `accent`, `success`, `warning`, `danger`."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DotProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/drawer-button.tsx",
+     "about": "The button in the bar that opens the sidebar, where the frame has taken the sidebar out of the layout and made it a\ndrawer (`useAppShell().sidebar === 'drawer'`, under 620px of the frame's width): on a wider frame the sidebar is in\nsight, and the button is not drawn (docs/patterns.md, «Start from the one frame»). It is a `ToolbarButton`, an icon\nwith its name as a hint, the first thing of the bar; the app keeps the drawer's state and passes it to `Sidebar open`.",
+     "components": [
+      {
+       "name": "DrawerButton",
+       "doc": "Opens the sidebar where it is a drawer; elsewhere it is not there.",
+       "props": [
+        {
+         "name": "onOpen",
+         "type": "() => void",
+         "required": true,
+         "doc": "Opens the drawer: the app sets the `open` it passes to its `Sidebar`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "Its name, and its hint. Absent: the toolkit's words («Open the menu»)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DrawerButtonProps"
+     ]
+    },
+    {
      "file": "src/components/ui/dropdown-menu.tsx",
      "about": "SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dropdown-menu.json)\nPark UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)\nFrom Park's `menu` recipe comes the form (md): the card with l3 corners and the md elevation in place of a border,\n4px of padding and 2px between items; items 40px tall with l2 corners and a quiet fill on the highlighted one.\nFrom SmoothUI we keep the primitive (Base UI's `Menu`: Portal, Positioner, Popup, Item, Separator, SubmenuRoot) and\nthe classes of the menu card. We do not keep the item-list API (`items`): the package uses the parts\n(`DropdownMenuTrigger`, `DropdownMenuItem`…) with the same props as before (`asChild`, `onSelect`, `variant`, `inset`,\n`align`, `sideOffset`), so whoever uses them does not change. Removed: the spring and the staggered entrance of the items: with `animated`\ntrue (off by default, never with prefers-reduced-motion) the card enters with a short fade, without a spring.\nBehavior as before: Enter, Space and down arrow on the button open the menu with focus on the first item, the\narrows do not wrap from the last to the first (like Radix), Esc closes and returns focus to the button, search by\ninitial letter comes from Base UI. The button still carries `data-state=\"open\"|\"closed\"`: the \"visible while the menu is\nopen\" rules of the rows (`data-[state=open]:`) read it.",
      "components": [
@@ -1865,7 +2022,7 @@
     },
     {
      "file": "src/components/ui/empty.tsx",
-     "about": "SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)\nFrom SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s\n(`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no\nillustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,\n`text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:\nempty states sit inside views that already have their own titles, and the title can be markup from the caller\n(the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.\nSpacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px\n(the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.",
+     "about": "SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)\nFrom SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s\n(`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). With `fill` it is the whole of a view\nthat has nothing to show: as tall as its region, centred in it, with a page's margins, so an app writes no class for it. Adapted: words only, no\nillustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,\n`text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:\nempty states sit inside views that already have their own titles, and the title can be markup from the caller\n(the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.\nSpacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px\n(the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.",
      "components": [
       {
        "name": "Empty",
@@ -1896,6 +2053,11 @@
          "name": "titleClassName",
          "type": "string",
          "doc": "Classes for the title, in place of the default ones where they overlap."
+        },
+        {
+         "name": "fill",
+         "type": "boolean",
+         "doc": "The whole of a view: as tall as the region it is in, centred in it, with the margins of a page (24px)."
         }
        ],
        "passesOn": true
@@ -1952,6 +2114,41 @@
      ],
      "also": [
       "FormFieldProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/heading.tsx",
+     "about": "The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,\na small title 16px (a dialog, a message in a card), all semibold in the ink; or the small label over a group (12px,\nmedium, muted: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.\nAn icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it\nwrites none (the owner's rule of 2026-11-23).",
+     "components": [
+      {
+       "name": "Heading",
+       "doc": "A title of a page, a section, a card or a group: one size for each, from the type scale.",
+       "props": [
+        {
+         "name": "size",
+         "type": "\"label\" | \"section\" | \"small\" | \"page\" | \"card\"",
+         "doc": "`page` 24px, `section` 20px (the default), `card` 18px, `small` 16px; `label` the small muted label over a group."
+        },
+        {
+         "name": "level",
+         "type": "6 | 4 | 3 | 2 | 5 | 1",
+         "doc": "The level of the heading in the screen's outline (1 to 6). Absent: 1 for a page, 2 for a section, 3 for the others."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "An icon before the words (an `Icon`), muted."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "HeadingProps"
      ]
     },
     {
@@ -2169,7 +2366,7 @@
     },
     {
      "file": "src/components/ui/layout.tsx",
-     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,\n`Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,\n`Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.",
      "components": [
       {
        "name": "Cluster",
@@ -2201,6 +2398,11 @@
          "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
         },
         {
+         "name": "wrap",
+         "type": "boolean",
+         "doc": "False: one line whatever the width (an avatar and the words beside it); a part that can give way (a `Column`, a `Text`) narrows and wraps its own words. Default true."
+        },
+        {
          "name": "children",
          "type": "React.ReactNode"
         }
@@ -2230,6 +2432,11 @@
          "name": "as",
          "type": "LayoutElement",
          "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
+        },
+        {
+         "name": "width",
+         "type": "\"page\" | \"prose\"",
+         "doc": "The widest it grows, centred in its place: `prose` a column of text (about 65 characters), `page` a column of content that reads as one (768px). Absent: as wide as its place."
         },
         {
          "name": "children",
@@ -2391,8 +2598,8 @@
        "props": [
         {
          "name": "variant",
-         "type": "\"body\" | \"caption\" | \"muted\" | \"kicker\"",
-         "doc": "`muted`: words of less weight, in the muted ink; `caption`: a small line under a thing; `kicker`: the small label above a title. `body` (the default) is the text around it."
+         "type": "\"soft\" | \"strong\" | \"body\" | \"caption\" | \"note\" | \"muted\" | \"kicker\"",
+         "doc": "`body` (the default) is the text around it; `soft`: running text, the body of a message or a paragraph under a title; `strong`: the words that carry a line (a name, a subject), at medium weight in the colour of the line; `muted`: words of less weight, in the muted ink; `note`: a 13px muted line beside or under a title (a date, an address); `caption`: a small line under a thing; `kicker`: the small label above a title."
         },
         {
          "name": "as",
@@ -2642,7 +2849,7 @@
     },
     {
      "file": "src/components/ui/progress.tsx",
-     "about": "How far a task is: a bar (`Progress`), a ring (`ProgressRing`) or blocks (`ProgressSegments`), one API for the three.\nWritten by hand: Ark's Progress names the bar with its own value («45%») and gives no `aria-valuetext`, and there is no\nkeyboard to inherit; here the app names the bar, the toolkit says the value. The form is Park UI's progress recipe\n(102769c): a track 8px (`sm`) or 10px (`md`) tall with the corners of a control (l1), the range filling it from the\nstart. Not taken from it: the stripes, the gradient of its indeterminate state and its animation (no gradient, no\nloop but the skeletons: DESIGN.md), and the pill shape (round only for avatars, dots and switches, R7).\nThe ring and the blocks are ours; Park's circular recipe was not read.\nThe colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the\nsuccess colour and a failure the destructive one, each with a word (DESIGN.md \"Status\": a colour is never alone).\nNothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a\ngesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the\nswitch (DESIGN.md Colors).\nNot knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.\nFor screen readers: `role=\"progressbar\"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,\n«Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should\nannounce the end and the failure only, in a live region of its own, not every percent.",
+     "about": "How far a task is: a bar (`Progress`), a ring (`ProgressRing`) or blocks (`ProgressSegments`), one API for the three.\nWritten by hand: Ark's Progress names the bar with its own value («45%») and gives no `aria-valuetext`, and there is no\nkeyboard to inherit; here the app names the bar, the toolkit says the value. The form is Park UI's progress recipe\n(102769c): a track 8px (`sm`) or 10px (`md`) tall with the corners of a control (l1), the range filling it from the\nstart. Not taken from it: the stripes, the gradient of its indeterminate state and its animation (no gradient, no\nloop but the skeletons: DESIGN.md), and the pill shape (round only for avatars, dots and switches, R7).\nThe ring and the blocks are ours; Park's circular recipe was not read.\nThe colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the\nsuccess colour and a failure the destructive one, each with a word (DESIGN.md \"Status\": a colour is never alone).\nNothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a\ngesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the\nswitch (DESIGN.md Colors).\nNot knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.\nIn a line of words (the frame's status row, docs/patterns.md «Progress of a task») the bar is `inline`: a fixed width\nthat does not give way, so the words beside it stay put while the value moves.\nFor screen readers: `role=\"progressbar\"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,\n«Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should\nannounce the end and the failure only, in a live region of its own, not every percent.",
      "components": [
       {
        "name": "Progress",
@@ -2683,6 +2890,11 @@
         {
          "name": "size",
          "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "inline",
+         "type": "boolean",
+         "doc": "In a line of words (the frame's status row): 192px, and it never gives way, so the words around it keep their place. Absent: as wide as its place."
         },
         {
          "name": "status",
@@ -2734,6 +2946,11 @@
         {
          "name": "size",
          "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "inline",
+         "type": "boolean",
+         "doc": "In a line of words (the frame's status row): 192px, and it never gives way, so the words around it keep their place. Absent: as wide as its place."
         },
         {
          "name": "status",
@@ -2790,6 +3007,11 @@
         {
          "name": "size",
          "type": "\"md\" | \"sm\""
+        },
+        {
+         "name": "inline",
+         "type": "boolean",
+         "doc": "In a line of words (the frame's status row): 192px, and it never gives way, so the words around it keep their place. Absent: as wide as its place."
         },
         {
          "name": "status",
@@ -3083,6 +3305,62 @@
      ]
     },
     {
+     "file": "src/components/ui/separator.tsx",
+     "about": "A hairline between two groups of a page or a panel, in the divider's colour: what tells two groups apart where the\nspace between them is not enough («Lines and space, not boxes», docs/design-laws.md). It is a horizontal rule, read\nby screen readers as a separator, and takes no room of its own: the pile around it spaces it. The separators of a\nbar and of a menu are their own (`ToolbarSeparator`, `DropdownMenuSeparator`).",
+     "components": [
+      {
+       "name": "Separator",
+       "doc": "A line across its place, between two groups.",
+       "props": [
+        {
+         "name": "decorative",
+         "type": "boolean",
+         "doc": "Only a drawing (between two groups that are already told apart for a screen reader): hidden from screen readers."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SeparatorProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/setting-row.tsx",
+     "about": "A choice of a settings page (docs/patterns.md, «Sidebar and page»): its name, and a line under it if it needs one, at\nthe start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them\nreads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)\nhas no control: the whole row is the button, with a chevron at its end.\nIt is at least 48px tall, and 44px with a finger at any density. The control names itself (`aria-label` with the\nrow's name): the row only lays it out.",
+     "components": [
+      {
+       "name": "SettingRow",
+       "doc": "One choice of a settings page: the name at the start, the control at the end.",
+       "props": [
+        {
+         "name": "label",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The name of the choice («Reminders»)."
+        },
+        {
+         "name": "description",
+         "type": "React.ReactNode",
+         "doc": "A line under the name: what it does, what it is set to."
+        },
+        {
+         "name": "control",
+         "type": "React.ReactNode",
+         "doc": "The control at the end. Absent with `onClick`: the row opens more."
+        },
+        {
+         "name": "onClick",
+         "type": "React.MouseEventHandler<HTMLButtonElement>",
+         "doc": "The row is a button that opens more, with a chevron at its end, and holds no control."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SettingRowProps"
+     ]
+    },
+    {
      "file": "src/components/ui/sheet.tsx",
      "about": "SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)\nPark UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)\nFrom Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the\nbackdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).\nFrom SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the\ndrag direction per side and the content marked `Drawer.Content` (a mouse drag that starts\nthere does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the\nstaggering of the children with Motion, the handle of the bottom side. The entrance (32 px from the panel edge, 200 ms) follows\nthe shared Motion preference and respects reduced motion.",
      "components": [
@@ -3153,6 +3431,36 @@
      ],
      "also": [
       "SheetCloseReason"
+     ]
+    },
+    {
+     "file": "src/components/ui/sidebar-row.tsx",
+     "about": "A line of the sidebar that is not a place: what sits in its `header` or its `footer`, as the account (an avatar and a\nname) or a switch of what the rows show (a check box and its words). It lines up with the rows of the navigation\n(their padding, at every density) and keeps their height, 44px with a finger; its words take the sidebar's ink and\nare cut with an ellipsis; the actions on the whole sidebar (a new folder, close all) sit at its end. It is not a\nbutton: what can be pressed in it is the controls it holds.",
+     "components": [
+      {
+       "name": "SidebarRow",
+       "doc": "A row of the sidebar's head or foot: the account, a switch of the view, the name of the list with its actions.",
+       "props": [
+        {
+         "name": "leading",
+         "type": "React.ReactNode",
+         "doc": "Before the words: an avatar, a check box, an icon."
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "At the end: the actions on the whole sidebar, small quiet buttons with their name."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The words, on one line."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SidebarRowProps"
      ]
     },
     {
@@ -3743,7 +4051,7 @@
     },
     {
      "file": "src/components/ui/toggle-group.tsx",
-     "about": "SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)\nPark UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)\nFrom Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline\nring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item\nas a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).\nWith `animated` the background of the pressed item is one pill that slides from the old choice to the new one\n(`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.\nFrom SmoothUI we keep the primitive (Base UI's `ToggleGroup` and `Toggle`) and the shape of the segmented control\n(container with a light background, pressed item raised). Adapted: single choice only (the already pressed button\ndoes not turn off: the group always has a value), paper/ink tokens in place of `foreground`/`muted`, no\nshadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`\nbutton (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives\n`role=\"group\"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).",
+     "about": "SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)\nPark UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)\nFrom Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline\nring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item\nas a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).\nWith `animated` the background of the pressed item is one pill that slides from the old choice to the new one\n(`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.\nFrom SmoothUI we keep the primitive (Base UI's `ToggleGroup` and `Toggle`) and the shape of the segmented control\n(container with a light background, pressed item raised). Adapted: single choice only (the already pressed button\ndoes not turn off: the group always has a value), paper/ink tokens in place of `foreground`/`muted`, no\nshadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`\nbutton (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives\n`role=\"group\"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).\nThe group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as\nwide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.",
      "components": [
       {
        "name": "ToggleGroup",
@@ -3778,6 +4086,11 @@
          "name": "animated",
          "type": "boolean",
          "doc": "The background of the pressed item slides to the new choice (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "fill",
+         "type": "boolean",
+         "doc": "As wide as its place, the items sharing it equally (a switch across a phone). Absent: as wide as its items."
         }
        ]
       },
@@ -6212,7 +6525,7 @@
         },
         {
          "name": "sidebar",
-         "type": "{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; }",
+         "type": "{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; readonly open: string; }",
          "required": true
         },
         {
@@ -6350,7 +6663,7 @@
         },
         {
          "name": "sidebar",
-         "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; }>"
+         "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; readonly open: string; }>"
         },
         {
          "name": "search",

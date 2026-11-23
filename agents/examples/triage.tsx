@@ -4,9 +4,9 @@
 // Triage: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useState, type ReactNode } from 'react'
 import {
-  AppShell, Button, DateField, FormField, Icon, Input, Page, Progress, Select, Textarea, TitleBar, Toasts,
-  ToggleGroup, ToggleGroupItem, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs,
-  useDesktopGuard, useMedia, WindowControls, type ToastItem,
+  AppShell, Button, Card, Cluster, Column, DateField, FormField, Heading, Icon, Input, Page, Progress, Select,
+  Text, Textarea, TitleBar, Toasts, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarBrand, ToolbarButton,
+  ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard, useMedia, WindowControls, type ToastItem,
 } from '@acaprino/sigrid'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
@@ -36,12 +36,12 @@ export function App() {
   const content: Record<Screen, ReactNode> = {
     sort: (
       <Page fit>
-        <ToggleGroup aria-label="Which items" value={choice} onValueChange={setChoice} className="w-fit">
+        <ToggleGroup aria-label="Which items" value={choice} onValueChange={setChoice}>
           <ToggleGroupItem value="new">New</ToggleGroupItem>
           <ToggleGroupItem value="waiting">Waiting</ToggleGroupItem>
         </ToggleGroup>
         <Progress aria-label="Sorted" value={25} showValue />
-        <section className="flex flex-col gap-3 rounded-lg bg-raised shadow-xs p-4">
+        <Card>
           <FormField label="Title">
             <Input placeholder="Call the plumber about the leak" autoComplete="off" />
           </FormField>
@@ -57,40 +57,34 @@ export function App() {
             />
           </FormField>
           <FormField label="When"><DateField value={day} onChange={setDay} /></FormField>
-          <div className="flex flex-wrap items-center gap-2 justify-start">
-            <Button variant="outline" size="sm" className="w-fit" onClick={() => say('Set to today')}>
-              Today
-            </Button>
-            <Button variant="outline" size="sm" className="w-fit" onClick={() => say('Set to tomorrow')}>
-              Tomorrow
-            </Button>
-            <Button variant="outline" size="sm" className="w-fit" onClick={() => say('Set to next week')}>
-              Next week
-            </Button>
-          </div>
-        </section>
+          <Cluster>
+            <Button variant="outline" size="sm" onClick={() => say('Set to today')}>Today</Button>
+            <Button variant="outline" size="sm" onClick={() => say('Set to tomorrow')}>Tomorrow</Button>
+            <Button variant="outline" size="sm" onClick={() => say('Set to next week')}>Next week</Button>
+          </Cluster>
+        </Card>
       </Page>
     ),
     write: (
-      <div className="flex min-h-full flex-col gap-4 p-4 mx-auto w-full max-w-prose">
-        <h2 className="text-xl font-semibold text-ink">Write it all down</h2>
+      <Column gap="lg" pad="lg" width="prose">
+        <Heading>Write it all down</Heading>
         <FormField label="What is on your mind" help="Each line is an item to sort.">
           <Textarea placeholder="One thing on each line" />
         </FormField>
-      </div>
+      </Column>
     ),
   }
   const actions: Partial<Record<Screen, ReactNode>> = {
     sort: (
       <>
-        <Button variant="outline" className="w-fit" onClick={() => say('Moved to the end')}>Later</Button>
-        <Button className="w-fit" onClick={() => say('Sorted')}>Looks good</Button>
+        <Button variant="outline" onClick={() => say('Moved to the end')}>Later</Button>
+        <Button onClick={() => say('Sorted')}>Looks good</Button>
       </>
     ),
   }
   const status: Partial<Record<Screen, ReactNode>> = {
     sort: (
-      <><span className="tabular-nums">3 of 12 sorted</span></>
+      <><Text>3 of 12 sorted</Text></>
     ),
   }
 

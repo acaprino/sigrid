@@ -120,6 +120,8 @@ test('Space on a day chooses it too: a day is a native button', async () => {
   render(<Controlled initial="2026-11-07" onChange={onChange} />)
   await openField('Due date')
   await key('ArrowRight')
+  // Ark moves focus in a frame, which a busy machine can run late: wait for the day itself, not for the clock.
+  await expectFocus('Sunday, November 8, 2026')
   // Space on a native button is a click.
   await press(document.activeElement!)
   expect(onChange).toHaveBeenCalledWith('2026-11-08')
