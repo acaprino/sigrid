@@ -5815,6 +5815,22 @@
        ]
       },
       {
+       "name": "ThemeDark",
+       "doc": "The dark scheme of a theme, as parameters the engine computes the backgrounds from (`ThemeDef.dark`).",
+       "fields": [
+        {
+         "name": "depth",
+         "type": "DarkDepth",
+         "doc": "Absent: `DEFAULT_DARK_DEPTH`."
+        },
+        {
+         "name": "tint",
+         "type": "DarkTint",
+         "doc": "Absent: `DEFAULT_DARK_TINT`."
+        }
+       ]
+      },
+      {
        "name": "ThemeDef",
        "fields": [
         {
@@ -5864,6 +5880,11 @@
          "name": "radii",
          "type": "ThemeRadii",
          "doc": "The corner radii in px, for an app whose corners are none of the three shapes (for example 4/6/8/12): `sm`, `md`, `lg` and `xl` go to `--radius-sm`, `-md`, `-lg` and `-xl`; `button` and `chip` default to `md`. Absent, or not whole numbers (0 to 64; `button` and `chip` to 9999, a pill): the radii of `shape`."
+        },
+        {
+         "name": "dark",
+         "type": "ThemeDark",
+         "doc": "The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value: the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here."
         },
         {
          "name": "fill",
@@ -5923,6 +5944,12 @@
       }
      ],
      "also": [
+      "DARK_DEPTHS",
+      "DARK_TINTS",
+      "DarkDepth",
+      "DarkTint",
+      "DEFAULT_DARK_DEPTH",
+      "DEFAULT_DARK_TINT",
       "DEFAULT_FONT",
       "DEFAULT_SHAPE",
       "FontId",
@@ -5933,6 +5960,7 @@
       "SHAPE_RADII",
       "SidebarKind",
       "THEME_SHAPES",
+      "themeDark",
       "ThemeShape"
      ]
     },
