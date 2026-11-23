@@ -2,7 +2,7 @@
 // context or from `pack`, and a saved value outside the lists is refused, a pack that left the toolkit among them.
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, type IconPack, type IconSet } from '../src'
+import { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, type IconName, type IconPack, type IconSet } from '../src'
 
 test('the packs, in the order Settings shows them: Lucide (the default), the two in the colour of the theme, the three in full colour', () => {
   expect(ICON_PACKS).toEqual(['lucide', 'duotone', 'solar', 'fluent', 'emoji', 'twemoji'])
@@ -50,6 +50,23 @@ test('the drawn packs: one drawing per meaning, none shared, a picture in its ow
       return drawing
     })
     expect(new Set(drawings).size, pack).toBe(ICON_NAMES.length)
+  }
+})
+
+test('the rows of a tree of files: a folder, a folder shown open and a file, three meanings drawn apart', () => {
+  for (const name of ['folder', 'folderOpen', 'file']) expect(isIconName(name), name).toBe(true)
+  const draw = (name: IconName, pack?: IconPack) => {
+    const { container, unmount } = render(<Icon name={name} pack={pack} />)
+    const html = container.querySelector('svg')!.outerHTML
+    unmount()
+    return html
+  }
+  // Every pack but Fluent Color, which has no open folder, tells the open folder from the shut one.
+  for (const pack of ICON_PACKS.filter((p) => p !== 'fluent')) {
+    expect(draw('folderOpen', pack), pack).not.toBe(draw('folder', pack))
+    expect(draw('file', pack), pack).not.toBe(draw('folder', pack))
+    // A folder is not the action that makes one.
+    expect(draw('folder', pack), pack).not.toBe(draw('newFolder', pack))
   }
 })
 

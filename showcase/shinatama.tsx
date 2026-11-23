@@ -129,18 +129,19 @@ const FILES: readonly TreeNode[] = [
   {
     id: '.claude',
     name: '.claude',
-    icon: 'newFolder',
+    icon: 'folder',
+    openIcon: 'folderOpen',
     children: [
-      { id: '.claude/agents', name: 'agents', icon: 'newFolder', children: [{ id: '.claude/agents/billing-retries.md', name: 'billing-retries.md', icon: 'attach', meta: '6 KB' }] },
-      { id: '.claude/settings.local.json', name: 'settings.local.json', icon: 'attach', meta: '703 B' },
+      { id: '.claude/agents', name: 'agents', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.claude/agents/billing-retries.md', name: 'billing-retries.md', icon: 'file', meta: '6 KB' }] },
+      { id: '.claude/settings.local.json', name: 'settings.local.json', icon: 'file', meta: '703 B' },
     ],
   },
-  { id: '.github', name: '.github', icon: 'newFolder', children: [{ id: '.github/workflows', name: 'workflows', icon: 'newFolder', children: [{ id: '.github/workflows/ci.yml', name: 'ci.yml', icon: 'attach', meta: '1 KB' }] }] },
-  { id: 'docs', name: 'docs', icon: 'newFolder', children: [{ id: 'docs/billing.md', name: 'billing.md', icon: 'attach', meta: '4 KB' }] },
-  { id: 'src', name: 'src', icon: 'newFolder', children: [{ id: 'src/retry.ts', name: 'retry.ts', icon: 'attach', meta: '3 KB' }, { id: 'src/charge.ts', name: 'charge.ts', icon: 'attach', meta: '5 KB' }] },
-  { id: 'test', name: 'test', icon: 'newFolder', children: [{ id: 'test/checkout.spec.ts', name: 'checkout.spec.ts', icon: 'attach', meta: '2 KB' }] },
-  { id: 'package.json', name: 'package.json', icon: 'attach', meta: '2 KB' },
-  { id: 'README.md', name: 'README.md', icon: 'attach', meta: '9 KB' },
+  { id: '.github', name: '.github', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.github/workflows', name: 'workflows', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.github/workflows/ci.yml', name: 'ci.yml', icon: 'file', meta: '1 KB' }] }] },
+  { id: 'docs', name: 'docs', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'docs/billing.md', name: 'billing.md', icon: 'file', meta: '4 KB' }] },
+  { id: 'src', name: 'src', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'src/retry.ts', name: 'retry.ts', icon: 'file', meta: '3 KB' }, { id: 'src/charge.ts', name: 'charge.ts', icon: 'file', meta: '5 KB' }] },
+  { id: 'test', name: 'test', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'test/checkout.spec.ts', name: 'checkout.spec.ts', icon: 'file', meta: '2 KB' }] },
+  { id: 'package.json', name: 'package.json', icon: 'file', meta: '2 KB' },
+  { id: 'README.md', name: 'README.md', icon: 'file', meta: '9 KB' },
 ]
 
 const PLAN = `# Billing retries
@@ -329,7 +330,7 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         <Toolbar aria-label="Tabs of pane 1" className="min-h-(--control-md) flex-none border-b border-line px-1">
           <ToolbarTabs aria-label="Open in pane 1" value={dock} onValueChange={setDock}>
             {DOCK.map((d) => (
-              <ToolbarTab key={d.id} value={d.id} icon={<Icon name={d.id === 'files' ? 'newFolder' : 'threads'} />}>{d.label}</ToolbarTab>
+              <ToolbarTab key={d.id} value={d.id} icon={<Icon name={d.id === 'files' ? 'folder' : 'threads'} />}>{d.label}</ToolbarTab>
             ))}
           </ToolbarTabs>
           <ToolbarButton label="New tab" icon={<Icon name="plus" />} animated={animated} />

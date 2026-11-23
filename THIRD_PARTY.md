@@ -74,8 +74,11 @@ Notes:
 - `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
 - `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
-  branches, children loaded when a branch opens). Kept on top: the filter by name, which opens what leads to a find and
-  gives back what the person had opened; the failure of a load said in the row; the rows named by their name alone.
+  branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
+  ever and asks again on a second Enter), dropped when the app gives another node; the filter, which opens what leads to
+  a find and gives back what the person had opened; the failure of a load said in the row; the rows named by their name
+  alone; the branch's control made its `treeitem`, and its rows drawn only while it is open (not Ark's `Branch` and
+  `BranchContent`).
 
 ## Park UI
 

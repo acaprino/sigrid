@@ -210,26 +210,48 @@ hidden on a phone.
 ## A tree of rows
 
 `Tree` is a list of nested rows on Ark UI's TreeView, for files and folders or any hierarchy: each node has an `id`, a
-`name`, an `icon` (a meaning of the toolkit's icons or of the app's own, drawn in the user's pack), a short fact at the
-end (`meta`, in tabular figures) and either `children` or `hasChildren`, whose rows `loadChildren` brings when the
-branch is first opened. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right opens a
-branch and then goes in, Left closes it and then goes out, Home and End reach the ends, the first letters typed reach a
-name, `*` opens the branches beside the row, Enter, Space or a press choose (and open or close a branch). One row is
-chosen: `selected` and `onSelect` for the app's choice, or `defaultSelected`; the open branches likewise (`expanded`,
-`onExpandedChange`, `defaultExpanded`). A branch that loads says «Loading»; one whose load failed says «Not loaded» and
-stays closed, and opening it again tries again. With `search` a field above the rows filters them by name: what is
-found shows with the branches that lead to it opened, and clearing the field gives back what the person had opened. A
-screen reader hears a tree named by the app, each row by its name, with its level, whether it is open and whether it is
-chosen, and the fact or the state of its load after it. It is not the graph: `GraphCanvas` draws things joined by
-lines.
+`name`, an `icon` (a meaning of the toolkit's icons, `folder` and `file` among them, or of the app's own, drawn in the
+user's pack) and an `openIcon` for a branch while it is open (`folderOpen`), a short fact at the end (`meta`, in tabular
+figures) and a `count` after it (a `Count`, R5), and either `children` or `hasChildren`, whose rows `loadChildren` brings
+when the branch is first opened. The rows look like every list of things (`ItemRow`): under the pointer a share of the
+selection tint, the chosen row the whole tint and the short accent bar at its start. The rows are one Tab stop (the
+chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
+out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
+Space or a press choose (and open or close a branch). One row is chosen: `selected` and `onSelect` for the app's choice,
+or `defaultSelected`; the open branches likewise (`expanded`, `onExpandedChange`, called only when the list changes,
+`defaultExpanded`). The chevron is the sidebar's and turns only with `animated`. A closed branch's rows are not in the
+page.
+
+A branch that loads says «Loading» and takes no second opening; one whose load failed says «Not loaded» and stays
+closed, and opening it again tries again. Loaded children belong to the node object they were loaded for: build the
+nodes once (a constant, state, `useMemo`); when the app gives another object for an id (another project, a refresh) or
+none, its children are dropped and a load still under way is given up (its signal aborts), so one project's rows never
+show in another.
+
+With `search` a field above the rows filters them; the text can also be the app's (`query`, `onQueryChange`,
+`defaultQuery`), typed in that field or in one of the app's own (then without `search`). `match(node, query)` says what
+is found (by default the name holds the text, whatever the case): a node found shows with all it holds, a branch that
+leads to one shows opened, and an app counts the finds with the same function over its nodes. A branch never loaded is
+not searched: to have it searched, give its children. Nothing found says «No results», the word of every search. What
+the person opens or closes while filtering is theirs: clearing the filter gives back their own branches, with those
+changes.
+
+A screen reader hears a tree named by the app; the row that has the focus is the `treeitem` itself, branch or leaf,
+named by its name, with its level, whether it is open and whether it is chosen, and the fact, the count or the state of
+its load after it. It is not the graph: `GraphCanvas` draws things joined by lines.
 
 ```tsx
-<Tree aria-label="Files" search selected={file} onSelect={setFile} defaultExpanded={['src']}
-  nodes={[
-    { id: 'src', name: 'src', icon: 'newFolder', children: [{ id: 'src/app.ts', name: 'app.ts', icon: 'attach', meta: '4 KB' }] },
-    { id: 'remote', name: 'remote', icon: 'newFolder', hasChildren: true },
-  ]}
+const FILES: TreeNode[] = [
+  { id: 'src', name: 'src', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'src/app.ts', name: 'app.ts', icon: 'file', meta: '4 KB' }] },
+  { id: 'remote', name: 'remote', icon: 'folder', openIcon: 'folderOpen', hasChildren: true },
+]
+
+<Tree aria-label="Files" nodes={FILES} search selected={file} onSelect={setFile} defaultExpanded={['src']}
   loadChildren={(node, signal) => fetchFolder(node.id, signal)} className="h-full" />
+
+// The app's filter: the whole path, and the count of finds with the same function.
+const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
+<Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
 ```
 
 ## The frame of an app
@@ -447,7 +469,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   as their last argument, and `useWords()` gives them to an app's own component.
 - Icons: `Icon` draws a meaning (`settings`, `delete`) with the pack the user chose (`IconPackProvider`). The toolkit
   draws what apps have in common (`ICON_NAMES`: the views and settings, the menu entries, and the actions of a mail,
-  calendar or editing screen: `mail`, `reply`, `archive`, `bold`, `undo`, `attach`, `windowMinimize`…), in every pack; an
+  calendar or editing screen: `mail`, `reply`, `archive`, `bold`, `undo`, `attach`, `windowMinimize`…, and the rows of a
+  tree of files: `folder`, `folderOpen`, `file`), in every pack; an
   app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ invoice: { lucide: Receipt,
   fluent: ReceiptColor, emoji: '\u{1F9FE}' } }}>`, then `<Icon name="invoice" />`. The line drawing is required; a pack left
   out falls back to it; a name nobody draws is an empty slot of the same size.

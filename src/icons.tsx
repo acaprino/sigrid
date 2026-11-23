@@ -30,7 +30,10 @@ import {
   Database,
   Download,
   Ellipsis,
+  FileIcon,
+  Folder,
   FolderInput,
+  FolderOpen,
   FolderPlus,
   FolderTree,
   FunnelX,
@@ -116,6 +119,7 @@ import {
   DesignIdeasColor,
   DismissCircleColor,
   DiversityColor,
+  DocumentColor,
   DocumentFolderColor,
   DocumentTextColor,
   EditColor,
@@ -165,8 +169,9 @@ export function isIconPack(value: unknown): value is IconPack {
 }
 
 /**
- * What an icon can mean: the main views, the sidebar's groups, the settings sections, and the entries of the menus
- * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort).
+ * What an icon can mean: the main views, the sidebar's groups, the settings sections, the entries of the menus
+ * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort), and the rows of a tree of
+ * files (`folder`, `folderOpen` for a folder shown open, `file`).
  */
 export const ICON_NAMES = [
   'all',
@@ -195,6 +200,9 @@ export const ICON_NAMES = [
   'moveRight',
   'delete',
   'newFolder',
+  'folder',
+  'folderOpen',
+  'file',
   'profile',
   'structure',
   'signOut',
@@ -332,6 +340,9 @@ const PACKS: Readonly<Record<IconPack, Readonly<Record<IconName, Glyph>>>> = {
     moveRight: ArrowRight,
     delete: Trash2,
     newFolder: FolderPlus,
+    folder: Folder,
+    folderOpen: FolderOpen,
+    file: FileIcon,
     profile: UserPen,
     structure: FolderTree,
     signOut: LogOut,
@@ -417,6 +428,10 @@ const PACKS: Readonly<Record<IconPack, Readonly<Record<IconName, Glyph>>>> = {
     moveRight: turned('-rotate-90'),
     delete: DismissCircleColor,
     newFolder: AddCircleColor,
+    // No folder in the colour set: the folder with a page stands for a folder, shut or open; a page for a file.
+    folder: DocumentFolderColor,
+    folderOpen: DocumentFolderColor,
+    file: DocumentColor,
     profile: ContactCardColor,
     structure: OrgColor,
     signOut: LockClosedColor,

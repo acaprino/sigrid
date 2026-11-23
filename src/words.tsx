@@ -69,7 +69,7 @@ export interface Words {
     readonly expand: string
     /** The search box that filters the rows: its name and its placeholder. */
     readonly search: string
-    /** Said when no row holds the text searched for. */
+    /** Said when no row holds the text searched for: by the sidebar's search, and by a `Tree`'s filter. */
     readonly empty: string
   }
   readonly search: {
@@ -83,10 +83,8 @@ export interface Words {
     readonly failed: string
     /** Read after `failed` by screen readers: how to try again (the branch loads again when it is opened again). */
     readonly retry: string
-    /** The field that filters the tree by name: its name and its placeholder. */
+    /** The field that filters the tree by name: its name and its placeholder. Nothing found says `sidebar.empty`, as every search of rows. */
     readonly filter: string
-    /** Said when no name holds the text of the filter. */
-    readonly empty: string
   }
   readonly list: {
     /** Read before the title of a row not read yet (`ItemRow`). */
@@ -332,7 +330,6 @@ export const DEFAULT_WORDS: Words = {
     failed: 'Not loaded',
     retry: 'Open it to try again',
     filter: 'Filter by name',
-    empty: 'No match',
   },
   list: {
     unread: 'Unread',

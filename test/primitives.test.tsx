@@ -73,7 +73,7 @@ test('primitives carry no automatic motion classes', () => {
 // heading of a group of rows, are the same in a menu, a select, a combo box, the labels field and the sidebar.
 test('every list highlights a row the same way and heads a group the same way', async () => {
   const { readFileSync } = await import('node:fs')
-  const { ROW_HIGHLIGHT, GROUP_LABEL } = await import('../src/lib/rows')
+  const { ROW_HIGHLIGHT, ROW_HOVER, ROW_CHOSEN, GROUP_LABEL } = await import('../src/lib/rows')
   const source = (file: string) => readFileSync(`${process.cwd()}/src/${file}`, 'utf8')
   expect(ROW_HIGHLIGHT).toBe('bg-selected/60 text-ink')
   // A row reached in a card: the share of the selection tint, never the page's second paper (it was next to invisible).
@@ -82,6 +82,14 @@ test('every list highlights a row the same way and heads a group the same way', 
     expect(source(file), file).not.toMatch(/highlighted\]?:bg-paper-2/)
   }
   expect(source('components/ui/nav-list.tsx')).toContain('hover:bg-selected/60')
+  // A list of things and a tree: one row under the pointer, one chosen row with its tint and its accent bar (R1), taken
+  // from the shared module, never drawn again by hand.
+  expect(ROW_HOVER).toBe(`hover:${ROW_HIGHLIGHT.split(' ').join(' hover:')}`)
+  expect(ROW_CHOSEN.split(' ')).toEqual(expect.arrayContaining(['aria-[current=true]:bg-selected', 'aria-[current=true]:text-selected-ink', 'aria-[current=true]:before:bg-primary']))
+  for (const file of ['components/ui/item-list.tsx', 'components/ui/tree.tsx']) {
+    expect(source(file), file).toMatch(/ROW_HOVER[\s\S]*ROW_CHOSEN/)
+    expect(source(file), file).not.toContain('aria-[current=true]:before:bg-primary')
+  }
   // The heading of a group: the one overline, wherever a group has a heading.
   expect(GROUP_LABEL).toBe('text-2xs font-semibold tracking-[0.07em] uppercase')
   for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/sidebar.tsx', 'internal/attachments.tsx']) expect(source(file), file).toContain('GROUP_LABEL')
