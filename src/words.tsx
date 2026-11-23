@@ -114,6 +114,7 @@ export interface Words {
   readonly scheme: {
     /** The heading they sit under in the palette. */
     readonly group: string
+    /** Each name stands alone, without the heading: a screen reader says the row and its state («Light theme, checked»), not the group. */
     readonly light: string
     readonly dark: string
     /** The choice that follows the system's light or dark setting. */
@@ -367,9 +368,9 @@ export const DEFAULT_WORDS: Words = {
   },
   scheme: {
     group: 'Look',
-    light: 'Light',
-    dark: 'Dark',
-    system: 'Follow the system',
+    light: 'Light theme',
+    dark: 'Dark theme',
+    system: 'System theme',
     keywords: 'look theme scheme mode appearance',
   },
   keys: {

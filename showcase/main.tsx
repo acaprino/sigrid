@@ -153,6 +153,7 @@ import {
   useMedia,
   isIconName,
   WordsProvider,
+  useWords,
   AppShellContext,
   type AttachmentView,
   type DateRange,
@@ -1016,9 +1017,10 @@ type PatternId = keyof typeof PATTERNS
 
 /**
  * The gallery of layout patterns: complete screens made only of the toolkit's parts, at the widths where the frame
- * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits.
+ * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits. Its palette also holds
+ * the scheme's three commands, acting on the showcase's own scheme (`scheme`, `onScheme`).
  */
-function Shells({ animated }: { animated: boolean }) {
+function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: ThemeScheme; onScheme: (scheme: ThemeScheme) => void }) {
   const [pattern, setPattern] = React.useState<PatternId>('list-detail')
   const [width, setWidth] = React.useState('1040')
   const [place, setPlace] = React.useState('all')
@@ -1040,6 +1042,16 @@ function Shells({ animated }: { animated: boolean }) {
   const [palette, setPalette] = React.useState(false)
   const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
   useCommandKey(() => setPalette(true))
+  // The scheme's commands as `useSchemeCommands` declares them in an app: its words, icons and checks. The hook is not
+  // mounted here: it would put a second scheme on the page's root, which the showcase keeps itself (the moon,
+  // `?scheme=`), light or dark. So the rows act on the showcase's scheme, and «System theme» puts the system's now.
+  const schemeWords = useWords().scheme
+  const systemDark = useMedia('(prefers-color-scheme: dark)')
+  const schemeCommands = [
+    { id: 'scheme-light', label: schemeWords.light, icon: <Icon name="sun" />, checked: scheme === 'light', onSelect: () => onScheme('light') },
+    { id: 'scheme-dark', label: schemeWords.dark, icon: <Icon name="moon" />, checked: scheme === 'dark', onSelect: () => onScheme('dark') },
+    { id: 'scheme-system', label: schemeWords.system, icon: <Icon name="appearance" />, checked: false, onSelect: () => onScheme(systemDark ? 'dark' : 'light') },
+  ].map((command) => ({ ...command, group: schemeWords.group, keywords: schemeWords.keywords }))
   const commandsButton = (
     <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Terminal aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
       Commands
@@ -1083,6 +1095,7 @@ function Shells({ animated }: { animated: boolean }) {
           { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
           ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
           ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+          ...schemeCommands,
         ]}
       />
     </TitleBar>
@@ -2630,7 +2643,7 @@ function App() {
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} scheme={scheme} onScheme={setScheme} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>

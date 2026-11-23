@@ -7,7 +7,8 @@
 // registry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it
 // with Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
 // A command that chooses one of several (`checked`: light, dark, the system's look) is an option checked or not: the one
-// in use has a check at the end of its row, in the ink (R2), as the chosen option of a combo box; the others keep its
+// in use has a check at the end of its row, in the ink (R2), the look of `Combobox`'s chosen option; for a screen reader
+// it is `aria-checked` on the option, because `aria-selected` marks the highlighted row. The others keep the check's
 // room, so a key after it does not move.
 import * as React from "react"
 import { Check, Search } from "lucide-react"
