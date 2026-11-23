@@ -1571,6 +1571,58 @@
      ]
     },
     {
+     "file": "src/components/ui/content-split.tsx",
+     "about": "Two panes in the content region: a column of fixed width at the start with the list the thing is chosen from, and\nbeside it the thing chosen, read or worked on in the room that is left (a mail client's messages and the message, a\nfile browser's tree and the file). The frame's inspector is for the details or the form of what is selected, in\n300px; this is for when the thing chosen is the work itself and needs the width.\n- Each pane scrolls by itself; a hairline at the column's inner edge parts them (R4: a line, not a box).\n- It measures its own width, as the frame does, never the screen's: with less room than the column and as much\n  again for the other pane (`step`, by default twice the column), one pane is on screen at a time, the one `show`\n  names. The other stays in the page, hidden, so the way back finds the list as it was left. The app is told when\n  the form changes (`onPanesChange`): with one pane it shows its own way back to the list (a «back» button in the bar).\n- Without a way to measure (a server, a test) it has its two panes, as the frame is the wide one.\nThe column's widths are steps of the scale: `sm` 240px, `md` 320px, `lg` 360px (a column of messages with a line of\neach under the sender).",
+     "components": [
+      {
+       "name": "ContentSplit",
+       "doc": "A column of fixed width with a list, and the thing chosen beside it; one at a time where the two do not fit.",
+       "props": [
+        {
+         "name": "aside",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The column at the start: the list the thing is chosen from."
+        },
+        {
+         "name": "asideLabel",
+         "type": "string",
+         "required": true,
+         "doc": "The column's name for screen readers («Messages», «Files»): it is a region of its own."
+        },
+        {
+         "name": "width",
+         "type": "\"md\" | \"sm\" | \"lg\"",
+         "doc": "The column's width: `sm` 240px, `md` 320px (the default), `lg` 360px."
+        },
+        {
+         "name": "show",
+         "type": "\"aside\" | \"main\"",
+         "doc": "The pane on screen when only one fits: the column (`aside`, the default) or the thing chosen (`main`)."
+        },
+        {
+         "name": "step",
+         "type": "number",
+         "doc": "The width of the split, in px, under which one pane shows at a time. Absent: twice the column's width. 0: always two."
+        },
+        {
+         "name": "onPanesChange",
+         "type": "((panes: 1 | 2) => void)",
+         "doc": "The form changed: 2 panes side by side, or 1 at a time. Told once at first, when the split has measured itself."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The other pane: the thing chosen, in the room that is left."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ContentSplitProps"
+     ]
+    },
+    {
      "file": "src/components/ui/copy-button.tsx",
      "about": "A button that puts a text on the clipboard and says that it did. After the press the copy icon is a check and the\nword is «Copied» for two seconds, then both go back: the answer is where the eye already is, so no notice is needed\n(a toast is for an action that can be taken back). Nothing moves: the icon keeps its box and the word the room of\nthe wider of its two texts. Screen readers hear «Copied» (a polite status), or that the system refused.\nAlone it is a quiet icon button with a hint; with `showLabel` it shows its word; in an `InputGroup` it takes the\nsize of the group's buttons and is off with the field.",
      "components": [
@@ -2235,7 +2287,7 @@
     },
     {
      "file": "src/components/ui/item-list.tsx",
-     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
+     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
      "components": [
       {
        "name": "ItemList",
@@ -2266,9 +2318,19 @@
          "doc": "What the thing is: one line, cut with an ellipsis."
         },
         {
+         "name": "wrapTitle",
+         "type": "boolean",
+         "doc": "The title takes up to two lines before it is cut: a list on a narrow screen, where a long name would lose its end."
+        },
+        {
          "name": "description",
          "type": "React.ReactNode",
          "doc": "A second line under the title: who, where, the first words."
+        },
+        {
+         "name": "facts",
+         "type": "readonly ItemFact[]",
+         "doc": "Short facts under the title (and under `description`), 8px apart, wrapping to a new line rather than cut."
         },
         {
          "name": "leading",
@@ -2284,6 +2346,16 @@
          "name": "end",
          "type": "React.ReactNode",
          "doc": "After the fact: a `Count`, a label. Not a control: the row is itself a button or a link."
+        },
+        {
+         "name": "control",
+         "type": "React.ReactNode",
+         "doc": "One control beside the row's button (a `Checkbox` with its own `aria-label`, «Complete «Pay the rent»»): the list item holds the two side by side, inside the row's tint. Two tab stops; a press on the control does not open the row."
+        },
+        {
+         "name": "controlSide",
+         "type": "\"start\" | \"end\"",
+         "doc": "Where the control is: at the `start` of the row (the default: a box to tick) or at its `end`."
         },
         {
          "name": "current",
@@ -2311,6 +2383,35 @@
         {
          "name": "className",
          "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "ItemFact",
+       "doc": "A short fact of a row, in the line under its title.",
+       "fields": [
+        {
+         "name": "text",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The words of the fact («@home», «Kitchen renovation», «1/3»)."
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "A colour the person gave to it (a label's, a project's), one of the palette's: an 8px dot before the words (R10)."
+        },
+        {
+         "name": "tone",
+         "type": "\"strong\" | \"accent\"",
+         "doc": "`strong`: the medium weight, for the fact that matters most (a priority). `accent`: semibold in the accent, for one of the accent's places only (today, R2); on the chosen row it is the row's own ink, as every fact there."
+        },
+        {
+         "name": "numeric",
+         "type": "boolean",
+         "doc": "Tabular figures: a count, a time."
         }
        ]
       }
@@ -3392,6 +3493,11 @@
          "type": "SheetSide"
         },
         {
+         "name": "width",
+         "type": "SheetWidth",
+         "doc": "At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot."
+        },
+        {
          "name": "showCloseButton",
          "type": "boolean"
         },
@@ -3430,7 +3536,8 @@
       }
      ],
      "also": [
-      "SheetCloseReason"
+      "SheetCloseReason",
+      "SheetWidth"
      ]
     },
     {
@@ -6913,7 +7020,7 @@
    "files": [
     {
      "file": "src/components/ui/virtual-list.tsx",
-     "about": "A long list of which only the rows in sight are in the page: ten thousand messages cost what thirty do. The rows\nare the toolkit's own (`ItemRow`, or any `<li>`); this part is the box that scrolls and the choice of which rows to\ndraw, on TanStack Virtual (`@tanstack/react-virtual`, an npm dependency, pinned: THIRD_PARTY.md). It has its own\nentry of the package (`./virtual`), so an app with short lists does not load the library.\n- The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:\n  any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.\n- The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.\n- For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,\n  `aria-posinset`): what is not drawn is still counted.\nThe box needs a height (`className=\"h-96\"`, or a place in a column that gives it one).",
+     "about": "A long list of which only the rows in sight are in the page: ten thousand messages cost what thirty do. The rows\nare the toolkit's own (`ItemRow`, or any `<li>`); this part is the box that scrolls and the choice of which rows to\ndraw, on TanStack Virtual (`@tanstack/react-virtual`, an npm dependency, pinned: THIRD_PARTY.md). It has its own\nentry of the package (`./virtual`), so an app with short lists does not load the library.\n- The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:\n  any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.\n- The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.\n- For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,\n  `aria-posinset`): what is not drawn is still counted.\nThe box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),\nas `Empty fill` and `Page fit` are, so an app writes no class for it; `pad` is the room inside the box, around the\nrows, a step of the scale.",
      "components": [
       {
        "name": "VirtualList",
@@ -6952,9 +7059,19 @@
          "doc": "How many rows are drawn beyond the ones in sight, on each side. Default 8."
         },
         {
+         "name": "fill",
+         "type": "boolean",
+         "doc": "As tall as the region that holds it, which gives it its height (the content of the frame, a pane): the box scrolls, not the region."
+        },
+        {
+         "name": "pad",
+         "type": "Space",
+         "doc": "The room inside the box, around the rows: 4, 8, 12, 16 or 24px. Absent: none."
+        },
+        {
          "name": "className",
          "type": "string",
-         "doc": "Classes of the box that scrolls: its height."
+         "doc": "Classes of the box that scrolls: its height, where it is not `fill`."
         }
        ]
       }
