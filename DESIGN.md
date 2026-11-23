@@ -47,7 +47,7 @@ x-zsd:
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R7: radii 4, 6 and 10px, or a theme's `sharp` 2/4/6 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
-      - "R8: the focus ring is 2px in the accent text colour with a 2px offset, at least 3:1 in every theme, on every control."
+      - "R8: the focus ring is 2px in the accent text colour, 2px away (a field: on its border), 3:1 or more in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
     must-avoid:
@@ -587,7 +587,7 @@ Thumbnails show an attachment's image, cropped square. Its alternative text is e
 
 ## Accessibility
 
-Every focusable control shows the ring of `x-zsd.accessibility`: width, offset and colour. Inside the inverted toast the ring takes the toast text colour. Text keeps 4.5:1 and control borders and rings keep 3:1 on every surface of every theme; `test/contrast.test.ts` and `test/theme-engine.test.ts` check this. Hidden inputs show focus through their label.
+Every control shows the ring of `x-zsd.accessibility`: width, offset, colour. Inside the inverted toast the ring takes the toast text colour. Text keeps 4.5:1 and control borders and rings keep 3:1 on every surface of every theme; `test/contrast.test.ts` and `test/theme-engine.test.ts` check this. Hidden inputs show focus through their label.
 
 ### Review checks
 
