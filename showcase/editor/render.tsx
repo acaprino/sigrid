@@ -8,15 +8,14 @@ import {
   AppShellContext,
   Avatar,
   BOTTOM_BAR_ROOM_VAR,
-  Icon,
+  Column,
   Inspector,
   Sidebar,
+  SidebarRow,
   TitleBar,
   Toasts,
   Toolbar,
-  ToolbarButton,
   WindowControls,
-  useAppShell,
   useDesktopGuard,
   useMedia,
   type AppShellLayout,
@@ -24,25 +23,16 @@ import {
 } from '../../src/index'
 import { isEl, isExpr, isJson, isSlot, isWhen, type Child, type Scope, type Val } from './ir'
 import type { AppModel, Settings } from './model'
-import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, contentClass, planOf, screenBody, visible, type ScreenPlan } from './plan'
+import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, planOf, screenBody, visible, type ScreenPlan } from './plan'
 
 /** Under this width of the frame the sidebar is a drawer: the app is laid out as on a phone. */
 export const NARROW_PX = Sigrid.APP_SHELL_STEPS.rail
 export type HostKind = 'web' | 'native'
 
-/* ———— The helpers a generated app defines for itself (codegen.ts writes the same source) ———— */
-
-/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
-function MenuButton({ onOpen }: { onOpen?: () => void }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<Icon name="sidebarOpen" />} onClick={onOpen} /> : null
-}
-
-const HELPERS: Record<string, React.ElementType> = { MenuButton }
-
+/** The part an element names: one of the toolkit's, or a fragment. An app made in the editor has no part of its own. */
 function tagOf(tag: string): React.ElementType | null {
   if (tag === 'Fragment') return React.Fragment
-  if (/^[a-z]/.test(tag)) return tag as keyof React.JSX.IntrinsicElements
-  return HELPERS[tag] ?? ((Sigrid as unknown as Record<string, React.ElementType | undefined>)[tag] ?? null)
+  return (Sigrid as unknown as Record<string, React.ElementType | undefined>)[tag] ?? null
 }
 
 const valueOf = (value: Val, scope: Scope): unknown => (isEl(value) ? draw(value, scope) : isExpr(value) ? value.run(scope) : isJson(value) ? value.$json : value)
@@ -106,14 +96,7 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, status,
       onOpenChange={onMenu}
       search={settings.sidebarSearch || undefined}
       animated={animated}
-      footer={
-        settings.account ? (
-          <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-            <Avatar name={settings.account} size="xs" decorative />
-            <span className="min-w-0 flex-1 truncate">{settings.account}</span>
-          </div>
-        ) : undefined
-      }
+      footer={settings.account ? <SidebarRow leading={<Avatar name={settings.account} size="xs" decorative />}>{settings.account}</SidebarRow> : undefined}
     >
       {nav}
     </Sidebar>
@@ -270,7 +253,7 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
         foot={region('foot', plan.settings.foot)}
         bottom={region('bottom', plan.settings.bottom)}
         content={draw(screenBody(screen, screen.content), scope)}
-        details={screen.details ? <div className={DETAILS_CLASS}>{drawAll(screen.details, scope)}</div> : null}
+        details={screen.details ? <Column {...DETAILS_PROPS}>{drawAll(screen.details, scope)}</Column> : null}
         actions={screen.actions ? <>{drawAll(screen.actions, scope)}</> : null}
         menu={menu}
         onMenu={setMenu}

@@ -3,11 +3,14 @@
 // fields that set it, and what it draws: one description (`build`, ir.ts) that the canvas, the run page and the export
 // all read. A component knows nothing of the editor's library: puck.tsx turns the fields into its controls.
 //
-// The class names here are whole words, never put together from pieces: the stylesheet of the showcase and the one of
-// an exported app are both made by reading the source for them.
+// What a component draws is made of the toolkit's parts and nothing else: no HTML element and no class (the owner's rule
+// of 2026-11-23, AGENTS.md: an app writes no class of its own), so the exported app passes `sigrid-check` with
+// `own-class` on (test/editor-export.test.ts). The only class names here are those of `box`, the box the canvas draws
+// around a component to drag it by, which is the editor's and is never exported; they are whole words, never put
+// together from pieces, as the stylesheet of the showcase is made by reading the source for them.
 import type { IconName } from '../../src/index'
 import { ICON_NAMES } from '../../src/index'
-import { call, equals, flag, h, handler, json, list, lit, name, not, number, oneOf, slug, text, type Call, type Child, type El, type Expr } from './ir'
+import { call, equals, flag, h, handler, json, list, lit, name, not, number, oneOf, slug, text, type Call, type Child, type El, type Expr, type Val } from './ir'
 
 /** Where a component can be dropped. */
 export type Region = 'bar' | 'tabs' | 'bottom' | 'sidebar' | 'group' | 'content' | 'status' | 'actions' | 'footer'
@@ -54,8 +57,8 @@ export type BuildCtx = {
   readonly screenName: Expr
   /** A value this component keeps while the app runs. */
   readonly state: (hint: string, initial: unknown, type?: string) => { readonly value: Expr; readonly set: Expr; readonly name: string; readonly setter: string }
-  /** The components dropped into a slot, inside an element of their own: a column, a row, a card. */
-  readonly box: (slot: string, tag: string, props: Record<string, string>) => Child
+  /** The components dropped into a slot, inside a part of the toolkit of their own: a column, a row, a card. */
+  readonly box: (slot: string, tag: string, props: Record<string, Val>) => Child
   /** The components dropped into a slot, as they are: the element around them is the caller's. `as` lays them out on the canvas. */
   readonly spread: (slot: string, as: string) => readonly Child[]
   /** The call an action makes, if it makes one. */
@@ -87,29 +90,35 @@ export const ICON_OPTIONS: readonly Option[] = [[NO_ICON, 'No icon'], ...ICON_NA
 const icon = (value: unknown): El | undefined => (typeof value === 'string' && value !== NO_ICON && (ICON_NAMES as readonly string[]).includes(value) ? h('Icon', { name: value }) : undefined)
 
 const ACTION: FieldSpec = { kind: 'action', label: 'On press' }
+/** A press that does nothing: a row that opens more, set to no action, is still a button. */
+const NOTHING: Expr = { $expr: '() => {}', run: () => () => {} }
 /** A button that runs the job cannot be pressed again while the job runs. */
 const waits = (p: Props, ctx: BuildCtx): Expr | undefined => (p['action'] === 'job' && ctx.job ? name('busy') : undefined)
 /** A button of a bar that shows the details, on a screen that has none, stays in its place disabled (R14). */
 const idle = (p: Props, ctx: BuildCtx): Expr | undefined => ((p['action'] === 'details' || p['action'] === 'show') && ctx.details ? ctx.noDetails : undefined)
 const SAID: FieldSpec = { kind: 'text', label: 'What the notice says', placeholder: 'Saved', only: (p) => p['action'] === 'say' }
 
-const GAPS = { none: 'gap-0', xs: 'gap-1', sm: 'gap-2', md: 'gap-3', lg: 'gap-4', xl: 'gap-6' } as const
-const GAP_OPTIONS: readonly Option[] = [['none', 'None'], ['xs', '4'], ['sm', '8'], ['md', '12'], ['lg', '16'], ['xl', '24']]
-const gapOf = (value: unknown) => GAPS[oneOf(value, ['lg', 'none', 'xs', 'sm', 'md', 'xl'] as const)]
+// The steps of the toolkit's spacing scale (`Space`). «None», from apps made before the layout parts, is the smallest step.
+const GAP_OPTIONS: readonly Option[] = [['xs', '4'], ['sm', '8'], ['md', '12'], ['lg', '16'], ['xl', '24']]
+const gapOf = (value: unknown) => (value === 'none' ? 'xs' : oneOf(value, ['lg', 'xs', 'sm', 'md', 'xl'] as const))
 
 const BUTTON_VARIANTS: readonly Option[] = [['default', 'Solid'], ['outline', 'Outline'], ['secondary', 'Quiet'], ['ghost', 'Plain'], ['destructive', 'Delete'], ['link', 'Link']]
 
-const HEADINGS = {
-  page: ['h1', 'text-2xl font-semibold text-ink'],
-  section: ['h2', 'text-xl font-semibold text-ink'],
-  card: ['h3', 'text-lg font-semibold text-ink'],
-  small: ['h3', 'text-base font-semibold text-ink'],
-} as const
-const TONES = { ink: 'text-ink', soft: 'text-ink-soft', mute: 'text-ink-mute' } as const
-const SIZES = { sm: 'text-sm', xs: 'text-xs', base: 'text-base' } as const
-const ALIGN = { start: 'justify-start', center: 'justify-center', end: 'justify-end', between: 'justify-between' } as const
-const COLUMNS = { '2': 'grid gap-4 @lg:grid-cols-2', '3': 'grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3', '4': 'grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-4' } as const
-const PADS = { sm: 'p-2', md: 'p-4', lg: 'p-6' } as const
+/** The tones of a paragraph, as `Text` names them; a quiet line made small, as apps made before the layout parts did, is a note. */
+const TONES = { soft: 'soft', ink: 'body', mute: 'muted', note: 'note', caption: 'caption' } as const
+/** The narrowest column of a grid of so many columns: the grid takes as many as the width holds (`Grid min`). */
+const COLUMNS = { '2': 'lg', '3': 'md', '4': 'sm' } as const
+/** The padding of a card, as a step of the scale: 8, 16 or 24px. */
+const PADS = { sm: 'sm', md: 'lg', lg: 'xl' } as const
+/**
+ * The parts that keep the width of their content (a button, a badge): in a pile, which stretches its parts, each is put
+ * in a row of its own (plan.ts `piled`); in a row, or a region that is one, it stands as it is.
+ */
+export const FITS = new WeakSet<El>()
+const own = (el: El): El => {
+  FITS.add(el)
+  return el
+}
 
 /** The box the canvas draws around a component: a column of one, so the component inside is stretched as it is in a column of the app. */
 export const BOX = 'flex min-w-0 flex-col'
@@ -234,7 +243,7 @@ export const CATALOG = {
     fields: {},
     fresh: {},
     box: () => 'flex shrink-0 items-center',
-    build: () => h('MenuButton', { onOpen: handler(call('setMenu', true)) }),
+    build: () => h('DrawerButton', { onOpen: handler(call('setMenu', true)) }),
   },
   Spacer: {
     label: 'Space',
@@ -306,7 +315,7 @@ export const CATALOG = {
     into: ['content'],
     fields: { gap: { kind: 'choice', label: 'Space between', options: GAP_OPTIONS }, items: { kind: 'slot', label: 'Components', takes: 'content' } },
     fresh: { gap: 'lg', items: [] },
-    build: (p, ctx) => ctx.box('items', 'div', { className: `flex flex-col ${gapOf(p['gap'])}` }),
+    build: (p, ctx) => ctx.box('items', 'Column', { gap: gapOf(p['gap']) }),
   },
   Row: {
     label: 'Row',
@@ -320,7 +329,10 @@ export const CATALOG = {
       items: { kind: 'slot', label: 'Components', takes: 'content' },
     },
     fresh: { gap: 'sm', align: 'start', items: [] },
-    build: (p, ctx) => ctx.box('items', 'div', { className: `flex flex-wrap items-center ${gapOf(p['gap'])} ${ALIGN[oneOf(p['align'], ['start', 'center', 'end', 'between'] as const)]}` }),
+    build: (p, ctx) => {
+      const align = oneOf(p['align'], ['start', 'center', 'end', 'between'] as const)
+      return ctx.box('items', 'Cluster', { gap: gapOf(p['gap']) === 'sm' ? undefined : gapOf(p['gap']), justify: align === 'start' ? undefined : align })
+    },
   },
   Grid: {
     label: 'Grid',
@@ -330,7 +342,7 @@ export const CATALOG = {
     into: ['content'],
     fields: { columns: { kind: 'choice', label: 'Columns', options: [['2', '2'], ['3', '3'], ['4', '4']] }, items: { kind: 'slot', label: 'Components', takes: 'content' } },
     fresh: { columns: '2', items: [] },
-    build: (p, ctx) => h('div', { className: '@container' }, ctx.box('items', 'div', { className: COLUMNS[oneOf(p['columns'], ['2', '3', '4'] as const)] })),
+    build: (p, ctx) => ctx.box('items', 'Grid', { min: COLUMNS[oneOf(p['columns'], ['2', '3', '4'] as const)], gap: 'lg' }),
   },
   Card: {
     label: 'Card',
@@ -344,7 +356,7 @@ export const CATALOG = {
       items: { kind: 'slot', label: 'Components', takes: 'content' },
     },
     fresh: { look: 'raised', pad: 'md', items: [] },
-    build: (p, ctx) => ctx.box('items', 'section', { className: `flex flex-col gap-3 rounded-lg ${p['look'] === 'quiet' ? 'bg-paper-2' : 'bg-raised shadow-xs'} ${PADS[oneOf(p['pad'], ['md', 'sm', 'lg'] as const)]}` }),
+    build: (p, ctx) => ctx.box('items', 'Card', { variant: p['look'] === 'quiet' ? 'quiet' : undefined, pad: PADS[oneOf(p['pad'], ['md', 'sm', 'lg'] as const)] === 'lg' ? undefined : PADS[oneOf(p['pad'], ['md', 'sm', 'lg'] as const)] }),
   },
   Panel: {
     label: 'Panel',
@@ -359,7 +371,7 @@ export const CATALOG = {
     },
     fresh: { title: 'Items', subtitle: '', items: [] },
     box: () => `${BOX} min-h-0 flex-1`,
-    build: (p, ctx) => h('Panel', { title: text(p['title'], 'Panel'), subtitle: text(p['subtitle']) || undefined, className: 'min-h-0 flex-1' }, ctx.box('items', 'div', { className: 'flex flex-col gap-3 px-4 pb-4' })),
+    build: (p, ctx) => h('Panel', { title: text(p['title'], 'Panel'), subtitle: text(p['subtitle']) || undefined }, ctx.box('items', 'Column', { gap: 'md', pad: 'lg' })),
   },
   Divider: {
     label: 'Line',
@@ -369,7 +381,7 @@ export const CATALOG = {
     into: ['content'],
     fields: {},
     fresh: {},
-    build: () => h('hr', { className: 'border-line' }),
+    build: () => h('Separator'),
   },
 
   /* ——— Text ——— */
@@ -382,8 +394,8 @@ export const CATALOG = {
     fields: { text: { kind: 'text', label: 'Text' }, level: { kind: 'choice', label: 'Of', options: [['page', 'A page'], ['section', 'A section'], ['card', 'A card'], ['small', 'A dialog']] } },
     fresh: { text: 'Today', level: 'section' },
     build: (p) => {
-      const [tag, className] = HEADINGS[oneOf(p['level'], ['section', 'page', 'card', 'small'] as const)]
-      return h(tag, { className }, text(p['text'], 'Heading'))
+      const size = oneOf(p['level'], ['section', 'page', 'card', 'small'] as const)
+      return h('Heading', { size: size === 'section' ? undefined : size }, text(p['text'], 'Heading'))
     },
   },
   Text: {
@@ -394,11 +406,13 @@ export const CATALOG = {
     into: ['content'],
     fields: {
       text: { kind: 'area', label: 'Text' },
-      tone: { kind: 'choice', label: 'Tone', options: [['soft', 'Body'], ['ink', 'Strong'], ['mute', 'Quiet']] },
-      size: { kind: 'choice', label: 'Size', options: [['sm', '14'], ['xs', '13'], ['base', '16']] },
+      tone: { kind: 'choice', label: 'Tone', options: [['soft', 'Body'], ['ink', 'Ink'], ['mute', 'Quiet'], ['note', 'Small'], ['caption', 'Caption']] },
     },
-    fresh: { text: 'A sentence that says what this is for.', tone: 'soft', size: 'sm' },
-    build: (p) => h('p', { className: `${SIZES[oneOf(p['size'], ['sm', 'xs', 'base'] as const)]} ${TONES[oneOf(p['tone'], ['soft', 'ink', 'mute'] as const)]}` }, text(p['text'])),
+    fresh: { text: 'A sentence that says what this is for.', tone: 'soft' },
+    build: (p) => {
+      const tone = oneOf(p['tone'], ['soft', 'ink', 'mute', 'note', 'caption'] as const)
+      return h('Text', { as: 'p', variant: TONES[tone === 'mute' && p['size'] === 'xs' ? 'note' : tone] }, text(p['text']))
+    },
   },
   Markdown: {
     label: 'Formatted text',
@@ -431,7 +445,8 @@ export const CATALOG = {
     box: (p) => (flag(p['wide']) ? BOX : `${BOX} w-fit`),
     build: (p, ctx) => {
       const variant = oneOf(p['variant'], ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const)
-      return h('Button', { variant: variant === 'default' ? undefined : variant, size: p['size'] === 'sm' ? 'sm' : undefined, className: flag(p['wide']) ? 'w-full' : 'w-fit', disabled: waits(p, ctx), onClick: handler(ctx.act(p['action'], p['said'])) }, icon(p['icon']), text(p['label'], 'Button'))
+      const button = h('Button', { variant: variant === 'default' ? undefined : variant, size: p['size'] === 'sm' ? 'sm' : undefined, disabled: waits(p, ctx), onClick: handler(ctx.act(p['action'], p['said'])) }, icon(p['icon']), text(p['label'], 'Button'))
+      return flag(p['wide']) ? button : own(button)
     },
   },
 
@@ -494,7 +509,7 @@ export const CATALOG = {
     fresh: { label: 'Print the contract', on: false },
     build: (p) => {
       const label = text(p['label'], 'Done')
-      return h('label', { className: 'flex min-h-(--control-xs) items-center gap-2 text-sm text-ink' }, h('Checkbox', { 'aria-label': label, defaultChecked: flag(p['on']) ? true : undefined }), h('span', null, label))
+      return h('Checkbox', { label, defaultChecked: flag(p['on']) ? true : undefined })
     },
   },
   Segment: {
@@ -514,7 +529,7 @@ export const CATALOG = {
       const options = named(p['options'])
       const wide = flag(p['wide'])
       const chosen = ctx.state('choice', options[0]?.value ?? '')
-      return h('ToggleGroup', { 'aria-label': text(p['label'], 'Choice'), value: chosen.value, onValueChange: chosen.set, className: wide ? 'w-full' : 'w-fit' }, options.map((option) => h('ToggleGroupItem', { value: option.value, className: wide ? 'flex-1 px-2' : undefined }, option.label)))
+      return h('ToggleGroup', { 'aria-label': text(p['label'], 'Choice'), value: chosen.value, onValueChange: chosen.set, fill: wide ? true : undefined }, options.map((option) => h('ToggleGroupItem', { value: option.value }, option.label)))
     },
   },
   Setting: {
@@ -536,15 +551,15 @@ export const CATALOG = {
       const label = text(p['label'], 'Setting')
       const about = text(p['about'])
       const control = oneOf(p['control'], ['switch', 'segment', 'more'] as const)
-      const words = h('span', { className: 'flex min-w-0 flex-col' }, h('span', null, label), about ? h('span', { className: 'text-xs text-ink-mute' }, about) : null)
-      const row = 'flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink'
-      if (control === 'more') return h('button', { type: 'button', className: row, onClick: handler(ctx.act(p['action'])) }, words, h('span', { className: 'inline-flex text-ink-mute' }, h('Icon', { name: 'chevron' })))
+      const description = about || undefined
+      // A row that opens more is a button as a whole; it does something only where its action does.
+      if (control === 'more') return h('SettingRow', { label, description, onClick: handler(ctx.act(p['action'])) ?? NOTHING })
       if (control === 'segment') {
         const options = named(p['options'])
         const chosen = ctx.state('setting', options[0]?.value ?? '')
-        return h('div', { className: row }, words, h('ToggleGroup', { 'aria-label': label, value: chosen.value, onValueChange: chosen.set }, options.map((option) => h('ToggleGroupItem', { value: option.value }, option.label))))
+        return h('SettingRow', { label, description, control: h('ToggleGroup', { 'aria-label': label, value: chosen.value, onValueChange: chosen.set }, options.map((option) => h('ToggleGroupItem', { value: option.value }, option.label))) })
       }
-      return h('div', { className: row }, words, h('Switch', { 'aria-label': label, defaultChecked: flag(p['on']) ? true : undefined }))
+      return h('SettingRow', { label, description, control: h('Switch', { 'aria-label': label, defaultChecked: flag(p['on']) ? true : undefined }) })
     },
   },
 
@@ -608,17 +623,19 @@ export const CATALOG = {
       lanes: { kind: 'rows', label: 'Lanes', named: 'name', of: { name: { kind: 'text', label: 'Name' }, cards: { kind: 'area', label: 'Cards, one on each line' } }, fresh: { name: 'Lane', cards: 'A card' } },
     },
     fresh: { lanes: [{ name: 'To do', cards: 'Renew the identity card\nBook the train to Rome' }, { name: 'Doing', cards: 'Draft of the quote' }, { name: 'Done', cards: 'Pay the waste tax' }] },
+    // The lanes are as many columns as the width holds; on a narrow one they go one under the other.
     build: (p) =>
       h(
-        'div',
-        { className: 'flex items-start gap-3 overflow-x-auto' },
+        'Grid',
+        { min: 'sm' },
         list(p['lanes']).map((lane) => {
+          const name = text(lane['name'], 'Lane')
           const cards = text(lane['cards']).split('\n').map((card) => card.trim()).filter(Boolean)
           return h(
-            'section',
-            { className: 'flex w-56 shrink-0 flex-col gap-2 rounded-lg bg-paper-2 p-2' },
-            h('h3', { className: 'flex items-center gap-2 px-1 text-sm font-semibold text-ink' }, text(lane['name'], 'Lane'), h('span', { className: 'text-2xs font-normal text-ink-mute tabular-nums' }, String(cards.length))),
-            cards.map((card) => h('div', { className: 'rounded-md bg-raised p-2 text-sm text-ink shadow-xs' }, card)),
+            'Card',
+            { as: 'section', 'aria-label': name, variant: 'quiet', pad: 'sm', gap: 'sm' },
+            h('Cluster', { gap: 'sm' }, h('Text', { variant: 'strong' }, name), h('Count', { value: cards.length, label: 'cards' })),
+            cards.map((card) => h('Card', { pad: 'sm' }, card)),
           )
         }),
       ),
@@ -633,7 +650,7 @@ export const CATALOG = {
     fresh: { title: 'Nothing here', about: 'Add the first one with the plus in the bar.', button: '', action: 'none', said: '' },
     build: (p, ctx) => {
       const label = text(p['button'])
-      return h('Empty', { className: 'py-10', title: text(p['title'], 'Nothing here'), description: text(p['about']) || undefined, action: label ? h('Button', { variant: 'outline', onClick: handler(ctx.act(p['action'], p['said'])) }, label) : undefined })
+      return h('Empty', { fill: true, title: text(p['title'], 'Nothing here'), description: text(p['about']) || undefined, action: label ? h('Button', { variant: 'outline', onClick: handler(ctx.act(p['action'], p['said'])) }, label) : undefined })
     },
   },
   Person: {
@@ -647,7 +664,7 @@ export const CATALOG = {
     build: (p) => {
       const who = text(p['name'], 'Someone')
       const line = text(p['line'])
-      return h('div', { className: 'flex items-center gap-3' }, h('Avatar', { name: who, size: 'sm', decorative: true }), h('div', { className: 'flex min-w-0 flex-col' }, h('span', { className: 'truncate text-sm font-medium text-ink' }, who), line ? h('span', { className: 'truncate text-xs text-ink-mute' }, line) : null))
+      return h('Cluster', { gap: 'md', wrap: false }, h('Avatar', { name: who, size: 'sm', decorative: true }), h('Column', { gap: 'xs' }, h('Text', { variant: 'strong' }, who), line ? h('Text', { variant: 'note' }, line) : null))
     },
   },
 
@@ -661,7 +678,7 @@ export const CATALOG = {
     fields: { text: { kind: 'text', label: 'Text' }, look: { kind: 'choice', label: 'Look', options: [['secondary', 'Quiet'], ['default', 'Solid'], ['outline', 'Outline']] } },
     fresh: { text: 'Preview', look: 'secondary' },
     box: () => `${BOX} w-fit shrink-0`,
-    build: (p) => h('Badge', { variant: oneOf(p['look'], ['secondary', 'default', 'outline'] as const), className: 'w-fit' }, text(p['text'], 'Label')),
+    build: (p) => own(h('Badge', { variant: oneOf(p['look'], ['secondary', 'default', 'outline'] as const) }, text(p['text'], 'Label'))),
   },
   Progress: {
     label: 'Progress',
@@ -699,7 +716,7 @@ export const CATALOG = {
     build: (p) => {
       const steps = list(p['steps']).map((step) => ({ label: text(step['label'], 'Step'), ...(text(step['about']) ? { description: text(step['about']) } : {}) }))
       const row = flag(p['row'])
-      return h('Steps', { 'aria-label': text(p['label'], 'Steps'), steps: json(steps), current: Math.max(0, Math.round(number(p['at'], 1)) - 1), orientation: row ? 'horizontal' : undefined, className: row ? 'w-full' : undefined })
+      return h('Steps', { 'aria-label': text(p['label'], 'Steps'), steps: json(steps), current: Math.max(0, Math.round(number(p['at'], 1)) - 1), orientation: row ? 'horizontal' : undefined })
     },
   },
 
@@ -713,7 +730,7 @@ export const CATALOG = {
     fields: { text: { kind: 'text', label: 'Text' } },
     fresh: { text: 'Connected' },
     box: () => 'flex shrink-0',
-    build: (p) => h('span', { className: 'tabular-nums' }, text(p['text'], 'Connected')),
+    build: (p) => h('Text', null, text(p['text'], 'Connected')),
   },
   KeyHint: {
     label: 'Key and word',
@@ -724,7 +741,7 @@ export const CATALOG = {
     fields: { keys: { kind: 'text', label: 'Key' }, word: { kind: 'text', label: 'What it does' } },
     fresh: { keys: 'Z', word: 'undo' },
     box: () => 'flex shrink-0',
-    build: (p) => h('span', { className: 'inline-flex items-center gap-1' }, h('Kbd', null, text(p['keys'], 'Z')), text(p['word'])),
+    build: (p) => h('KeyHints', { ids: json([{ keys: text(p['keys'], 'Z'), label: text(p['word']) }]) }),
   },
   Job: {
     label: 'Job',
@@ -749,13 +766,13 @@ export const CATALOG = {
       const running = h(
         'Fragment',
         null,
-        h('Badge', { variant: 'secondary', className: 'shrink-0' }, text(p['state'], 'Working')),
-        h('span', { className: 'shrink-0 text-ink-soft' }, label),
-        h('Progress', { 'aria-label': label, value: name('job'), size: 'sm', className: 'w-48 shrink-0' }),
-        h('span', { className: 'shrink-0 font-semibold text-ink tabular-nums' }, name('job'), '%'),
-        items.length > 0 ? h('span', { className: 'min-w-0 truncate' }, itemAt(items)) : null,
+        h('Badge', { variant: 'secondary' }, text(p['state'], 'Working')),
+        h('Text', { variant: 'soft' }, label),
+        h('Progress', { 'aria-label': label, value: name('job'), size: 'sm', inline: true }),
+        h('Text', { variant: 'strong' }, name('job'), '%'),
+        items.length > 0 ? h('Text', null, itemAt(items)) : null,
       )
-      return h('Fragment', null, { $when: busy, then: running }, { $when: not(busy), then: h('span', { className: 'min-w-0 truncate text-ink-soft' }, text(p['result'], 'Done')) })
+      return h('Fragment', null, { $when: busy, then: running }, { $when: not(busy), then: h('Text', { variant: 'soft' }, text(p['result'], 'Done')) })
     },
   },
 } as const satisfies Record<string, Def>

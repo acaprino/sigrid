@@ -579,11 +579,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     is, in a browser tab or as a native window in Tauri; for a phone it is drawn with the 44px sizes of a finger.
   - «Run» is the app running by itself (`/run.html`, which also opens in a tab of its own, or on a phone): its
     state, its navigation and its notices work, from the same description the export prints.
-  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`), in a project
+  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`: no class, no
+    style and no element of its own, so it passes `sigrid-check` with `own-class` on), in a project
     that runs in a browser as it is (Vite, Tailwind, the entry file with the look) and as a native app in Tauri after
     the steps of its README (the window's bar and buttons, the browser's keys taken away, the safe areas of a phone).
     `test/editor-export.test.ts` type-checks that source against the toolkit, for the apps the editor starts from and
-    for one that holds every component in every setting. The app can also be saved as data and opened again.
+    for one that holds every component in every setting, and fails on a class, a style or an element of its own in it
+    or in the examples written from it for agents (`agents/examples`). The app can also be saved as data and opened again.
   - The inspector holds the component chosen, the screen, the app and the look: everything the toolkit lets an app
     configure (scheme, the theme's two colours, the tone of the accents, the corner shape, the font, the density and
     each of its measures, motion; the icons are Sigrid's one set, not a choice). What is made is kept in the browser.
