@@ -166,6 +166,29 @@ describe('Tabs', () => {
     expect(document.activeElement).toBe(tab('Mail'))
   })
 
+  test('ids: the tabs and the panels carry the names the app gives them, and the arrows still find the tabs', async () => {
+    function Named() {
+      const [value, setValue] = useState('mail')
+      return (
+        <Tabs value={value} onValueChange={setValue} ids={{ trigger: (v) => `tab-${v}`, content: (v) => `panel-${v}` }}>
+          <TabsList aria-label="Settings">
+            <TabsTrigger value="mail">Mail</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )
+    }
+    render(<Named />)
+    expect(tab('Mail').id).toBe('tab-mail')
+    expect(tab('Calendar').id).toBe('tab-calendar')
+    // The chosen tab points at the panel the app drew under that name.
+    expect(tab('Mail').getAttribute('aria-controls')).toBe('panel-mail')
+    act(() => tab('Mail').focus())
+    fireEvent.keyDown(tab('Mail'), { key: 'ArrowRight' })
+    await settle()
+    expect(document.activeElement).toBe(tab('Calendar'))
+  })
+
   test('manual activation: the arrows only move, and the tab is chosen as a button is (Enter, Space or a click)', async () => {
     const spy = vi.fn()
     render(<Sample activation="manual" onChange={spy} />)
