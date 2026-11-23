@@ -11,6 +11,7 @@ import { HOSTS, type AppProps, type Device, type HostKind, type Look } from './h
 import { Code, Page, Section } from './parts'
 import { Qamille } from './qamille'
 import { Shinatama } from './shinatama'
+import { Xiox } from './xiox'
 
 const params = new URLSearchParams(location.search)
 const initialDevice: Device = params.get('device') === 'phone' ? 'phone' : 'desktop'
@@ -77,6 +78,11 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
       <Section id="examples-shinatama" icon="threads" title="Shinatama, a workspace for terminal agents" note="A trial: what a desktop app with no UI code of its own needs from the toolkit. The bar, the sidebar, the inspector, the notice and the counts are the toolkit's; the terminal panes and their tiling are not in it. The places where the toolkit falls short are marked GAP in showcase/shinatama.tsx. The Projects button opens the inspector.">
         <div className="max-w-full overflow-x-auto p-1 pb-6">
           <Shinatama animated={animated} density={density} look={look} />
+        </div>
+      </Section>
+      <Section id="examples-xiox" icon="layout" title="Xiox, a cleaner: the sheet frame" note="The frame in its second form (AppShell frame=&quot;sheet&quot;): the title bar and the sidebar on the window's ground, the work area one sheet with a corner. The sections are tabs in the bar, the list is a Panel with its filter and its search, the details are the inspector, the actions and the keys are at the foot. The other examples use the default form, with lines.">
+        <div className="max-w-full overflow-x-auto p-1 pb-6">
+          <Xiox animated={animated} density={density} look={look} />
         </div>
       </Section>
       <Section id="examples-hosts"icon="layout" title="Web and native: what changes" note="The app is the same page in the four hosts. What changes is around it, and it is a few switches; the toolkit imports no shell, so the host is passed in from outside.">

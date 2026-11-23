@@ -411,6 +411,12 @@
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
+/* In the sheet frame (`AppShell frame="sheet"`) the bar sits on the window's ground: no fill and no line of its own,
+   the top edge of the sheet under it is the line. Only the frame's own bar: a frame drawn inside it keeps its line. */
+[data-slot="app-shell"][data-frame="sheet"] > [data-slot="title-bar"] {
+  border-bottom-width: 0;
+  background-color: transparent;
+}
 
 /* The frame of an app as the window of a program (`AppShell desktop`, src/components/ui/app-shell.tsx). Its chrome is
    not selectable and keeps the arrow cursor; the content, the body of the inspector, every field and what carries

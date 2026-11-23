@@ -40,7 +40,9 @@ const say = (parts) => ts.displayPartsToString(parts).replace(/\s+/g, ' ').trim(
  * comment of the file, `//` lines or a block, before the imports or right after them.
  */
 function headComment(source) {
-  const text = source.text.replace(/\r\n/g, '\n')
+  // The positions are the compiler's, in the text as read: line ends are made `\n` only in what is taken from it, so a
+  // checkout with CRLF (Windows) writes the same catalogue as one with LF.
+  const text = source.text
   const first = source.statements.find((statement) => !ts.isImportDeclaration(statement))
   for (const at of [0, first ? first.getFullStart() : -1]) {
     if (at < 0) continue
@@ -48,7 +50,7 @@ function headComment(source) {
     // Lines of `//` that follow one another are one comment; a block is one by itself.
     const lines = []
     for (const range of ranges) {
-      const piece = text.slice(range.pos, range.end)
+      const piece = text.slice(range.pos, range.end).replace(/\r\n/g, '\n')
       if (range.kind === ts.SyntaxKind.SingleLineCommentTrivia) lines.push(piece.replace(/^\/\/ ?/, ''))
       else if (lines.length === 0) return piece.replace(/^\/\*+\s?|\s*\*+\/$/g, '').split('\n').map((line) => line.replace(/^\s*\* ?/, '')).join('\n').trim()
       else break

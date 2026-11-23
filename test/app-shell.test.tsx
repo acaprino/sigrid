@@ -22,9 +22,10 @@ function Layout() {
   return <p data-testid="layout">{layout.sidebar} {layout.inspector}</p>
 }
 
-function App({ onInspector, onCollapsed }: { onInspector?: (open: boolean) => void; onCollapsed?: (collapsed: boolean) => void }) {
+function App({ onInspector, onCollapsed, frame }: { onInspector?: (open: boolean) => void; onCollapsed?: (collapsed: boolean) => void; frame?: 'line' | 'sheet' }) {
   return (
     <AppShell
+      frame={frame}
       contentLabel="Messages"
       titleBar={<header>Mail</header>}
       status={<span>Saved</span>}
@@ -117,4 +118,35 @@ test('the steps are a recommendation: an app passes its own, and a step at 0 nev
   )
   resize(400)
   expect(screen.getByTestId('layout').textContent).toBe('full drawer')
+})
+
+test('the frame is drawn with lines by default; `frame="sheet"` puts the work area on a sheet over the ground', () => {
+  const { unmount } = render(<App />)
+  expect(document.querySelector('[data-slot="app-shell"]')?.getAttribute('data-frame')).toBe('line')
+  expect(document.querySelector('[data-slot="app-shell-work"]')?.hasAttribute('data-sheet')).toBe(false)
+  unmount()
+  render(<App frame="sheet" />)
+  expect(document.querySelector('[data-slot="app-shell"]')?.getAttribute('data-frame')).toBe('sheet')
+  // The regions stay the same: only their form changes.
+  expect(screen.getByRole('main', { name: 'Messages' })).toBeTruthy()
+  expect(screen.getByRole('status').textContent).toBe('Saved')
+  expect(document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')).toBe('beside')
+})
+
+test('the sheet has its corner and its start edge only where a sidebar lies beside it', () => {
+  const resize = observed()
+  render(<App frame="sheet" />)
+  const work = () => document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')
+  resize(1200)
+  expect(work()).toBe('beside')
+  resize(700)
+  expect(work()).toBe('beside')
+  // Under 620px the sidebar is a drawer: the sheet reaches the window's edge, with no corner.
+  resize(500)
+  expect(work()).toBe('alone')
+})
+
+test('a sheet frame without a sidebar has no corner either', () => {
+  render(<AppShell contentLabel="Page" frame="sheet">Text</AppShell>)
+  expect(document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')).toBe('alone')
 })
