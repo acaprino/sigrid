@@ -215,7 +215,8 @@ describe('the tree mode is the default and is as it was', () => {
     const opened = vi.fn<(id: string) => void>()
     render(<GraphCanvas aria-label="Calls" nodes={NODES} edges={EDGES} onOpen={opened} />)
     expect(screen.getByRole('tree', { name: 'Calls' })).toBeTruthy()
-    expect(screen.queryByRole('application')).toBeNull()
+    // React Flow's own box is an application in both modes; the canvas named «Calls» is a tree here.
+    expect(screen.queryByRole('application', { name: 'Calls' })).toBeNull()
     expect(screen.getAllByRole('treeitem')).toHaveLength(NODES.length)
     const gateway = screen.getByRole('treeitem', { name: 'Gateway' })
     expect(gateway.getAttribute('aria-expanded')).toBe('true')
