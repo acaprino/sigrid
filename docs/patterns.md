@@ -2,7 +2,7 @@
 
 How to put the toolkit's parts together into a whole screen. These are recommendations, drawn from what works in the
 suite's apps (Imago's frame is their source): nothing here is checked by a program, and an app that has a reason does
-otherwise. The owner's rules R1 to R13 (`DESIGN.md`) are a separate matter: those are checked.
+otherwise. The owner's rules R1 to R14 (`DESIGN.md`) are a separate matter: those are checked.
 
 The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, view
 Practices, section «Layout patterns». The parts are optimized for these layouts, and work outside them too.
@@ -33,6 +33,22 @@ Recommended:
 - Keep one solid action in the window (R3). Where there is an action bar it is there, last; otherwise it is in the
   toolbar, last before the window's buttons.
 - Show the button that opens the sidebar only where the sidebar is a drawer (`useAppShell().sidebar === 'drawer'`).
+
+## The shared controls stay where they are (R14)
+
+A control every page of an app shares never moves from one page to the next: an ADHD eye that has to look for it
+again is distracted, and frustrated. The owner's rule of 2026-11-23, above all on a phone.
+
+- The title bar, the views (tabs in the bar, under it or at the foot), the sidebar, the footer and the bottom bar are
+  the same on every page: the same parts, in the same order, in the same place. Build them once, outside the pages.
+- A shared control that does nothing on one page stays, disabled; it is not taken away, and nothing slides into its
+  place.
+- The primary action is always in the same place: the end of the action bar, or the end of the toolbar, on every
+  page that has one.
+- A page's own tools go in its own regions (the content, a `Panel`'s header and tools, the inspector), never between
+  the shared controls.
+- On a phone the bar at the head and the views at the foot are there on every page, in the same order; a page does
+  not hide them, and a sheet opens over them, not in their place.
 
 ## Two forms of the frame: lines, or a sheet
 

@@ -46,6 +46,7 @@ x-zsd:
       - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
+      - "R14: controls every page shares keep their place, above all on a phone."
       - "R7: radii 4, 6 and 10px, or a theme's `sharp` 2/4/6 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour, 2px away (a field: on its border), 3:1 or more in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
@@ -415,7 +416,7 @@ components:
 
 ## Overview
 
-The toolkit is the shared design system of the owner's apps. Ark UI and Base UI supply behaviour, Park UI recipes the form, the theme engine every colour. Apps pass their own themes; these values are examples. The owner rules R1 to R13 are in `x-zsd.preferences`.
+The toolkit is the shared design system of the owner's apps. Ark UI and Base UI supply behaviour, Park UI recipes the form, the theme engine every colour. Apps pass their own themes; these values are examples. The owner rules R1 to R14 are in `x-zsd.preferences`.
 
 ### Implementation
 
@@ -441,7 +442,7 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 - `destructive`: Use for destructive text and invalid borders.
 - `on-destructive`: Use for text on a filled `destructive` surface.
 - `destructive-soft`: Use for the error box of a field and an invalid chip.
-- `subtle-fill`: Use for quiet fills: the secondary button, label pills and chips (`QUIET_CHIP`). The code draws it as the ink at 6%: the value is that fill over `surface`.
+- `subtle-fill`: Use for quiet fills: the secondary button, label pills and chips (`QUIET_CHIP`). It is the ink at 6% over `surface`.
 - `backdrop`: Use behind every overlay that dims the page (`BACKDROP`). It is the drop colour at 40%.
 
 ### Data colours
@@ -567,11 +568,11 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Do's and Don'ts
 
-- Do keep one solid primary action on each screen.
-- Do give navigation items and headings an icon (R6).
-- Do show data colours as dots.
-- Do write key hints as plain text.
-- Do not add a colour outside the theme engine.
+- Do keep one primary action (R3).
+- Do give navigation an icon (R6).
+- Do keep shared controls still (R14).
+- Do write plain key hints (R5).
+- Do not add colours by hand.
 
 ## Motion
 

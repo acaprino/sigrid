@@ -13,7 +13,7 @@ press, one clear action at a time. It runs in a browser and in a Tauri window, o
 |---|---|
 | Which component there is, its props and what each is for | `agents/catalog.json` (written from the source: file, what it is, components and their props, the object types those props are made of) |
 | A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx` (with `agents/examples/host.ts`, which they import) |
-| The rules (R1 to R13), the tokens and what each component looks like | `DESIGN.md` |
+| The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
 | What changes on a phone, and what does not | `docs/mobile.md` |
 | Setup, themes, density, words, icons, the entries of the package | `README.md` |
