@@ -28,8 +28,18 @@ const syncExternalStore = {
   },
 }
 
+// React Flow imports `react-compiler-runtime`, CommonJS with `require("react")`: inlined, it became `__require("react")`,
+// which a browser ES module (Vite's dev server) cannot run. It is React's own `react/compiler-runtime` (React 19),
+// left to the app like `react` itself.
+const compilerRuntime = {
+  name: 'react-compiler-runtime-external',
+  setup(b) {
+    b.onResolve({ filter: /^react-compiler-runtime$/ }, () => ({ path: 'react/compiler-runtime', external: true }))
+  },
+}
+
 await build({
-  plugins: [syncExternalStore],
+  plugins: [syncExternalStore, compilerRuntime],
   // The main entry, and one for each part that rests on a library an app may not need (a table, a long list, a
   // list put in order by dragging, formatted text, a graph): what they share with the main entry is in common chunks.
   entryPoints: ['index', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => `${root}src/${entry}.ts`),
@@ -42,7 +52,7 @@ await build({
   platform: 'browser',
   target: 'es2020',
   jsx: 'automatic',
-  external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client'],
+  external: ['react', 'react-dom', 'react/jsx-runtime', 'react/compiler-runtime', 'react-dom/client'],
   logLevel: 'warning',
 })
 
