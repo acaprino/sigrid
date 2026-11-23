@@ -19,7 +19,8 @@ It knows nothing of any app: no app's name, concepts or product components. The 
 window API of a desktop shell (its title bar is plain web, and a shell drives it from outside: see
 [Toolbar and title bar](#toolbar-and-title-bar)); what is Tauri's lives apart, in `tauri/`. An app builds its product
 components on top of it, usually in a package of its own that re-exports what the app needs from here.
-MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
+MIT licence (`LICENSE`). The third-party code it adapts (all MIT), and the libraries and fonts it rests on with
+their licences, are listed in `THIRD_PARTY.md`.
 
 ## Use it
 
@@ -91,13 +92,13 @@ Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.
 ## Density
 
 Density is data, like the themes (`src/density.ts`). The toolkit ships three presets, `DENSITIES`; `normal` is the
-default and equals the sizes the toolkit had before density existed.
+default, a 4px step under Park UI's md form (Park's md is `large` here).
 
 | | control heights (md/sm/xs) | side padding (md/sm/xs) | row height | row padding |
 |---|---|---|---|---|
-| `compact` | 36 / 32 / 28px | 12 / 10 / 8px | 32px | 4px |
-| `normal` | 40 / 36 / 32px | 14 / 12 / 10px | 40px | 8px |
-| `large` | 44 / 40 / 36px | 16 / 14 / 12px | 48px | 12px |
+| `compact` | 32 / 28 / 24px | 10 / 8 / 6px | 32px | 4px |
+| `normal` | 36 / 32 / 28px | 12 / 10 / 8px | 40px | 8px |
+| `large` | 40 / 36 / 32px | 14 / 12 / 10px | 48px | 12px |
 
 - `applyDensity(root, density)` takes a preset id or a `DensityDef` (an app's own, or a preset with some measures
   changed: `densityWith('compact', { row: { height: 28 } })`). It writes the measures on the element as `--density-*`
@@ -513,7 +514,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
   (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
   not part of this: it stays the app's.
-- Upgrading from 4.x: the icon packs went in the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
+- Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
   `IconPackChoice` and `IconPackText` are gone: drop the choice of a pack from the app's settings and stop saving it (a
   pack saved before is ignored). `IconPackProvider`, `useIconPack`, `IconSet`, `IconDrawing`, `IconArt` and `Icon`'s
   `pack` prop are gone: remove the provider around the app (`Icon` draws Lucide without it), and ask for a meaning of
@@ -541,8 +542,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 ## Design rules, showcase and checks
 
 - `DESIGN.md`: the design file (zero-slop-design format): the tokens of the default theme in light and dark, the
-  owner's rules R1 to R10 of 2026-11-20 (accent in four places only, border or shadow, plain key hints and counts,
-  icons that inform, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots…), the approved
+  owner's rules R1 to R14, from 2026-11-20 on (the accent only where to look and what to press, one solid button,
+  border or shadow, plain key hints and tabular counts, icons from the one set, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots, the Vivid tone by default, undo in time order, an Advanced fold in each settings section, shared controls that never move…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
   which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
@@ -550,18 +551,19 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 - `docs/mobile.md`: the system on a phone. The idea (the same app in one column, one job on each screen, act at the
   foot, undo and do not ask), what the toolkit does by itself (44px with a finger, 16px fields, the drawer, the date
   card as a sheet…) with the measures at 390px, what an app adds (which navigation, the bar, actions, forms, sheets),
-  six layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
+  seven layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
   frame as wide as a phone under «Phone layouts», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: the design system shown with its own frame (`AppShell`), in five views as tabs in the bar. Philosophy,
   Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
-  examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
-  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows three
+  examples (the layout gallery and the phone layouts are in Practices); Components shows the components (all but a few, which `showcase/vite.config.mjs` names) in their variants, sizes and states
+  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows four
   whole apps of the suite made of these parts: a to-do list (Ethel) and a mail client (Qamille), each on a computer
   and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`), and a
   desktop workspace for terminal agents (Shinatama), as a native app on a computer only, whose missing parts are marked
-  `GAP:` in `showcase/shinatama.tsx`: sketches with made-up content and each app's own theme, with what the host
+  `GAP:` in `showcase/shinatama.tsx`, and a cleaner for Windows (Xiox) in the sheet frame (`AppShell frame="sheet"`),
+  also a native app on a computer only: sketches with made-up content and each app's own theme, with what the host
   changes and what it does not. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
@@ -606,11 +608,14 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: three whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
-  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`.
+  `agents/examples/`: four whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`. `tasks.tsx` and
+  `mail.tsx` are in the frame with lines, `workspace.tsx` in the sheet frame (laid out as Xiox), and `triage.tsx` is a
+  screen that fits (`Page fit`).
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
-- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
+- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`, `docs/design-laws.md`: the rules and the guides, inside the
+  package.
 - `sigrid-check`: the design check, as a command of the package. In an app, `npx --no sigrid-check` checks `./src`
   against `DESIGN.md` and exits with 1 when it finds something, so an agent can run it and correct itself. It finds
   values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
@@ -644,9 +649,10 @@ Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does th
 Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/sigrid/releases) (tag
 `v<version>`). The repository is public: no login is needed to download. Each release holds three files:
 
-- `acaprino-sigrid-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
-  `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
-  `provenance.json`.
+- `acaprino-sigrid-<version>.tgz`: the package, with what `files` in `package.json` lists: `dist/`, `src/` (Tailwind's
+  `@source` and the `./theme.css`, `./fonts.css` and `./src/*` exports need it), `tauri/`, `bin/` (`sigrid-check`),
+  `agents/`, `docs/`, `tools/zero-slop-design/`, `AGENTS.md`, `DESIGN.md`, `llms.txt`, `LICENSE`, `THIRD_PARTY.md`,
+  `README.md` and `provenance.json`, with `package.json` itself.
 - `manifest.json`: `{ "version", "packages": [{ "name", "file", "sha256" }] }`, the SHA-256 of the package.
 - `SHA256SUMS`: `<sha256>  <file>` for every other file of the release.
 
@@ -665,16 +671,20 @@ fetches the three files at once.
 release was built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked
 file by file. `commit` is the parent of the `v<version>` tag: the tag's own commit ("release v<version>") only changes the
 version in `package.json` and `package-lock.json`, and the package was built with that version already written.
-The release is built by `npm run release` (`scripts/release.mjs`: build, typecheck, tests, then pack). To try it
+The release is built by `npm run release` (`scripts/release.mjs`: build, the checks CI runs, tests, then pack). To try it
 locally, `npm run release -- --skip-test` fills `release/` (not committed) without the tests.
 
 ## Build and test
 
 ```bash
 npm ci
-npm run typecheck   # tsc --noEmit
-npm run build       # dist/index.js (+ chunks/, Motion separate), dist/index.d.ts, dist/styles.css, dist/fonts/
-npm test            # vitest run
+npm run design:lint          # DESIGN.md is a valid zero-slop-design file
+npm run design:check         # the sources against DESIGN.md
+npm run typecheck            # tsc --noEmit, the sources and tauri/
+npm run showcase:typecheck   # the showcase
+npm run typecheck:test       # the sources and the tests together
+npm run build                # dist/index.js (+ chunks/, Motion separate), dist/index.d.ts, dist/styles.css, dist/fonts/
+npm test                     # vitest run
 ```
 
 An app's product package bundles the toolkit from this `dist` (its build and tests can rebuild it when the sources are

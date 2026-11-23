@@ -228,7 +228,8 @@ NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to t
 Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Lucide, an npm dependency, installed and
 unmodified, never copied into `src/` (`src/icons.tsx` names each meaning's drawing).
 
-- `lucide-react` (ISC, Lucide contributors, https://lucide.dev).
+- `lucide-react` (ISC, Copyright (c) 2026 Lucide Icons and Contributors, https://lucide.dev), 1.70.0, pinned to the
+  exact version.
 
 The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
 Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.
@@ -359,6 +360,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Motion, colour and class helpers
+
+Five more npm dependencies, pinned to the exact version, installed and unmodified, never copied into `src/`. Each
+licence is the one in the package's own folder in `node_modules`.
+
+- **Motion**: `motion` 14.6.0 (**MIT**, Copyright (c) 2024 Motion B.V., https://github.com/motiondivision/motion),
+  with `framer-motion`, `motion-dom` and `motion-utils` 14.6.0 (**MIT**, Copyright (c) 2018 Framer B.V.) that it
+  depends on. Only `src/internal/motion-impl.tsx` imports it, and the build keeps it in a chunk of its own, loaded only
+  when an app turns motion on (`animated` or `MotionProvider`).
+- **Material Color Utilities**: `@material/material-color-utilities` 0.4.0 (**Apache-2.0**, Google,
+  https://github.com/material-foundation/material-color-utilities). The tonal palette (HCT) that `src/palette.ts`
+  builds from an accent.
+- **class-variance-authority**: `class-variance-authority` 0.7.1 (**Apache-2.0**, Joe Bell,
+  https://github.com/joe-bell/cva). The variants and sizes of `ui/button.tsx` and `ui/badge.tsx`.
+- **clsx**: `clsx` 2.1.1 (**MIT**, Copyright (c) Luke Edwards, https://github.com/lukeed/clsx), and **tailwind-merge**:
+  `tailwind-merge` 3.7.0 (**MIT**, Copyright (c) 2021 Dany Castillo, https://github.com/dcastil/tailwind-merge). Joined
+  in `cn` (`src/lib/utils.ts`), which every part uses to put its classes together.
+
+## Fonts
+
+The woff2 files under `src/styles/fonts/` come with the package, unmodified (`src/styles/fonts.css` loads them). The
+copyright and the licence below are the ones written in the files' own name table.
+
+- **IBM Plex Sans** 3.201 (**SIL Open Font License 1.1**, Copyright 2019 IBM Corp.): the
+  Latin and extended Latin files of `@fontsource/ibm-plex-sans` 5.2, weights 400, 500 and 600
+  (`ibm-plex-sans-latin-*.woff2`, `ibm-plex-sans-latin-ext-*.woff2`). The default font of the interface.
+- **Inter** 4.001 (**SIL Open Font License 1.1**, Copyright 2016 The Inter Project Authors, https://github.com/rsms/inter):
+  `inter-0.woff2` to `inter-6.woff2`, at the same three weights. The fallback in every stack, for the glyphs outside
+  Latin.
 
 ## zero-slop-design
 

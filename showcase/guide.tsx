@@ -1,5 +1,5 @@
 // The three guide views of the showcase: the philosophy, the guidelines and the practices of the design system. They say
-// in words what DESIGN.md (the rules, R1 to R13), the README, docs/patterns.md and docs/mobile.md (each view's «On a
+// in words what DESIGN.md (the rules, R1 to R14), the README, docs/patterns.md and docs/mobile.md (each view's «On a
 // phone») say, and show each point with the
 // toolkit's own parts, so they follow the theme chosen in Look. Figures that live in code (densities, corner radii, the
 // frame's steps) are read from the exports, never copied: a copy would fall behind. The wording of the rules and the
@@ -26,6 +26,10 @@ import {
   NavList,
   SHAPE_RADII,
   Switch,
+  ToggleGroup,
+  ToggleGroupItem,
+  Toolbar,
+  ToolbarButton,
   THEME_SHAPES,
   TOUCH_TARGET,
   cn,
@@ -272,6 +276,24 @@ const Rules = ({ children }: { children: React.ReactNode }) => (
   </ol>
 )
 
+/** R14 live: the switch at the start of its row and the add button stay where they are in both views; the board has no
+ *  search, so its place stays empty (`absent`). */
+function StableDemo() {
+  const [view, setView] = React.useState('list')
+  return (
+    <>
+      <ToggleGroup aria-label="Sample view" value={view} onValueChange={setView}>
+        <ToggleGroupItem value="list">List</ToggleGroupItem>
+        <ToggleGroupItem value="board">Board</ToggleGroupItem>
+      </ToggleGroup>
+      <Toolbar aria-label="Sample tools">
+        <ToolbarButton label="Search" icon={<Icon name="search" />} absent={view === 'board'} />
+        <ToolbarButton label="Add" icon={<Icon name="plus" />} variant="outline" />
+      </Toolbar>
+    </>
+  )
+}
+
 const DOTS: readonly (readonly [string, string])[] = [
   ['Travel', COLORS[10] as string],
   ['Contracts', COLORS[4] as string],
@@ -376,7 +398,7 @@ const CHECKS: readonly (readonly [string, string])[] = [
 
 export function GuidelinesView() {
   return (
-    <Page title="Guidelines" lead="The rules of the design file, R1 to R13. Unlike the practices, these are rules: the code checks the ones it can read, and the tests check the contrast of every theme.">
+    <Page title="Guidelines" lead="The rules of the design file, R1 to R14. Unlike the practices, these are rules: the code checks the ones it can read, and the tests check the contrast of every theme.">
       <Section id="guidelines-accent" icon="now" title="Where the eye goes" note="The accent, the one solid action and the tone: what the eye finds first on a screen.">
         <Rules>
           <Rule
@@ -481,7 +503,7 @@ export function GuidelinesView() {
           </Rule>
         </Rules>
       </Section>
-      <Section id="guidelines-access" icon="check" title="Readable, reachable, reversible" note="Focus, contrast, undo and the folds that keep a settings page short.">
+      <Section id="guidelines-access" icon="check" title="Readable, reachable, reversible" note="Focus, contrast, undo, the folds that keep a settings page short and the controls that keep their place.">
         <Rules>
           <Rule
             id="R8"
@@ -502,6 +524,9 @@ export function GuidelinesView() {
           </Rule>
           <Rule id="R13" title="Advanced fold" see={<See view="practices" id="patterns">See the layout patterns</See>}>
             Every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default.
+          </Rule>
+          <Rule id="R14" title="Controls keep their place" example={<StableDemo />} see={<See view="components" id="toolbar">See the Toolbar</See>}>
+            Controls every page shares keep their place, above all on a phone. A two-state switch stays where it is in both states, at the start of its row. A tool a view lacks keeps its place, empty: the tools beside it do not move.
           </Rule>
         </Rules>
       </Section>

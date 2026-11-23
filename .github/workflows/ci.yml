@@ -30,6 +30,13 @@ jobs:
       - name: typecheck
         run: npm run typecheck
 
+      - name: typecheck the showcase
+        run: npm run showcase:typecheck
+
+      # The tests and the sources together, with the lib of Node 22 (tsconfig.test.json).
+      - name: typecheck the tests
+        run: npm run typecheck:test
+
       - name: test
         run: npm test
 
