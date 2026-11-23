@@ -303,3 +303,31 @@ test('chips: a suggestion shows the name and the value after it, and is found by
   await settle()
   expect(spy).toHaveBeenLastCalledWith(['sara.conti@gmail.com'])
 })
+
+test('chips: the text left in the box becomes a label when the focus goes elsewhere, with and without suggestions', async () => {
+  const plain = vi.fn()
+  const { unmount } = render(<Chips spy={plain} />)
+  const box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
+  act(() => box.focus())
+  await typed(box, 'home')
+  fireEvent.blur(box)
+  await settle()
+  expect(plain).toHaveBeenLastCalledWith(['home'])
+  expect(box.value).toBe('')
+  // Nothing written: nothing is added.
+  plain.mockClear()
+  fireEvent.blur(box)
+  await settle()
+  expect(plain).not.toHaveBeenCalled()
+  unmount()
+
+  const spy = vi.fn()
+  render(<Recipients spy={spy} suggestions={Object.keys(PEOPLE)} />)
+  const to = screen.getByLabelText('To') as HTMLInputElement
+  act(() => to.focus())
+  await typed(to, 'left@x.it')
+  fireEvent.blur(to)
+  await settle()
+  expect(spy).toHaveBeenLastCalledWith(['left@x.it'])
+  expect(to.value).toBe('')
+})
