@@ -12,6 +12,7 @@ import { Tabs as TabsPrimitive } from "@ark-ui/react/tabs"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
+import { steadyLabel } from "../../internal/steady-label"
 
 type Impl = NonNullable<ReturnType<typeof useMotion>>
 const TabsContext = React.createContext<{ value: string; motion: Impl | null; id: string } | null>(null)
@@ -102,7 +103,8 @@ function TabsTrigger({ value, disabled, className, children, end, itemClassName,
       className={cn(TRIGGER, motion && "isolate data-[selected]:bg-transparent", className)}
     >
       {motion && tabs && tabs.value === value ? <motion.Highlight id={tabs.id} className="absolute inset-0 -z-10 rounded-[inherit] bg-selected" /> : null}
-      {children}
+      {/* As wide chosen as not: the tabs beside it never move. */}
+      {steadyLabel(children)}
     </TabsPrimitive.Trigger>
   )
   if (end === undefined) return trigger

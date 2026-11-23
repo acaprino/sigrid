@@ -1,5 +1,6 @@
 // The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an
-// automatic grid, a spacer, a named section, an area that scrolls, the body of a page, and the weight of a line of text.
+// automatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,
+// `Page fit`), and the weight of a line of text.
 // Every space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and
 // one passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's
 // rule of 2026-11-23: an app has no interface code of its own).
@@ -9,6 +10,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { AppShellContext } from "./app-shell"
 
 /** A step of the spacing scale: 4, 8, 12, 16 or 24px. */
 export type Space = "xs" | "sm" | "md" | "lg" | "xl"
@@ -183,14 +185,54 @@ function ScrollArea({ bounded = false, pad, children, ...props }: ScrollAreaProp
 }
 
 export type PageProps = LayoutAttributes & {
+  /**
+   * One screen and no more (a screen worked through one item at a time: sort, triage, a step). The page is as tall as
+   * what the person sees: in an `AppShell` its content, elsewhere `--fit-height` (the visible height less the bottom
+   * bar's room). `header` and `footer` keep their height and the body between them is the part that gives way: a large
+   * text, a small phone, the keyboard or a phone lying down make the body scroll, never the document, which does not
+   * bounce or pull to refresh while the page is shown.
+   */
+  fit?: boolean | undefined
+  /** At the head: the title, a switch, a count. In a `fit` page it never gives way. */
+  header?: React.ReactNode
+  /** At the foot: the answers, the solid one last (R3). In a `fit` page it never gives way and stays in sight. */
+  footer?: React.ReactNode
   children?: React.ReactNode
 }
 
-/** The body of a page in the content region: as wide as the content may be (`--content-max`), centred, with its margins and the sections spaced `xl` apart. */
-function Page({ children, ...props }: PageProps) {
+const PAGE = "mx-auto flex w-full max-w-(--content-max) min-w-0 flex-col p-6"
+
+/**
+ * The body of a page in the content region: as wide as the content may be (`--content-max`), centred, with its margins
+ * and the sections spaced `xl` apart. With `fit`, one screen exactly, the body giving way between its head and its foot.
+ * The margins are the same with or without `fit`, so what is at the head stays where it is when a page turns to fit.
+ */
+function Page({ fit = false, header, footer, children, ...props }: PageProps) {
+  const framed = React.useContext(AppShellContext) !== undefined
+  if (!fit) {
+    return (
+      <div {...own(props)} data-slot="page" className={cn(PAGE, "gap-6")}>
+        {header}
+        {children}
+        {footer}
+      </div>
+    )
+  }
   return (
-    <div {...own(props)} data-slot="page" className="mx-auto flex w-full max-w-(--content-max) min-w-0 flex-col gap-6 p-6">
-      {children}
+    <div {...own(props)} data-slot="page" data-fit="" className={cn(PAGE, "gap-4", framed ? "h-full" : "h-(--fit-height)")}>
+      {header ? (
+        <div data-slot="page-header" className="flex shrink-0 flex-col gap-3">
+          {header}
+        </div>
+      ) : null}
+      <div data-slot="page-body" className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain">
+        {children}
+      </div>
+      {footer ? (
+        <div data-slot="page-footer" className="flex shrink-0 flex-col gap-3">
+          {footer}
+        </div>
+      ) : null}
     </div>
   )
 }

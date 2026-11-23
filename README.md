@@ -47,6 +47,10 @@ The `@source` is how Tailwind finds the classes the toolkit's components use. Af
 the dev server: Tailwind's watch does not scan `node_modules` again, so the CSS stays the old one and misses the
 classes of the new version (a dialog that is not centred, for one).
 
+On a phone, give the page `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`
+and put `AppShell` in it as it is: the frame is as tall as what is seen and keeps clear of the notch and the gesture
+bar by itself, so no `h-dvh`, `h-screen` or `100vh` goes around it (`docs/mobile.md`, «Heights and orientation»).
+
 To depend on a published version instead of a checkout, see [Use a release](#use-a-release) below.
 
 To migrate from `@acaprino/toolkit`, update the dependency name and all imports, including stylesheet imports,
@@ -236,7 +240,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -398,8 +402,17 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 - `./styles.css`: the compiled CSS, for a page that does not compile Tailwind itself.
 - DOM hooks an app can rely on: the stack of notices carries `data-toasts` (`TOASTS_ATTR`) and writes the room it takes
   at the bottom of the window to `--toasts-room` on the root (`TOASTS_ROOM_VAR`; sheets keep their foot above it with
-  `SHEET_TOASTS_ROOM`); an app with a bottom bar sets `--bottom-bar-room` on the root (`BOTTOM_BAR_ROOM_VAR`) and the
-  notices sit above it.
+  `SHEET_TOASTS_ROOM`); `AppShell` writes what it keeps at its foot (its actions, footer and `bottomBar`) to
+  `--bottom-bar-room` on the root (`BOTTOM_BAR_ROOM_VAR`), an app with a bar of its own sets it, and the notices sit
+  above it.
+- Heights (`docs/mobile.md`, «Heights and orientation»): `useAppHeight()` keeps `--app-height` on the root as the
+  height of what the person sees (`visualViewport`: the browser's bars, the keyboard, a rotation; `APP_HEIGHT_VAR`);
+  `AppShell` runs it by itself and is that tall, and where it is the whole screen it keeps clear of the device's edges.
+  The tokens: `--app-height` (`100dvh` until measured), `--fit-height` (it less the bottom bar's room),
+  `--safe-area-max-inset-bottom` (the foot's room at its maximum, never the live inset) and
+  `--safe-area-inset-top|left|right`; the variant `short:` and the query `SHORT` for a window under 500px tall.
+  `Page fit` is a page of exactly one screen whose body gives way. A tool a view lacks keeps its place with
+  `absent` (`ToolbarButton`, `ToolbarSearch`), and the words of a segment, a tab or a view are as wide chosen as not.
 
 ## Design rules, showcase and checks
 

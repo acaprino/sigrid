@@ -34,9 +34,10 @@ export const TOASTS_ROOM_VAR = '--toasts-room'
 export const SHEET_TOASTS_ROOM = 'pb-[max(1.5rem,calc(var(--toasts-room,0px)_+_0.5rem))]'
 
 /**
- * The space an app's bottom bar takes at the bottom of the window (for example a tab bar on the phone, with the safe
- * area): the app sets it on the root (`0px` or unset without a bar), and the stack of notices sits that much higher.
- * The toolkit only reads it (`Toasts`).
+ * The space kept at the bottom of the window (a tab bar on the phone, with the safe area; the actions and the footer
+ * of the frame above it): the stack of notices sits that much higher (`Toasts`), and a page that fits outside a frame
+ * leaves it (`--fit-height`). `AppShell` writes it on the root where it is the whole screen; an app with a bar of its
+ * own, outside the frame, sets it itself (`0px` or unset without a bar).
  */
 export const BOTTOM_BAR_ROOM_VAR = '--bottom-bar-room'
 

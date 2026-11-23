@@ -4,6 +4,11 @@ import { useSyncExternalStore } from 'react'
 export const NARROW = '(width < 860px)'
 /** A finger, not a mouse: row swiping and the 44px sizes apply here. */
 export const COARSE = '(pointer: coarse)'
+/**
+ * A short window: under 500px tall, a phone lying down or a window shrunk in height. The frame keeps its bars thin
+ * there (the bottom bar is 44px); in classes it is the `short:` variant of theme.css.
+ */
+export const SHORT = '(height < 500px)'
 
 /**
  * True if the media query holds now, and updates when it changes. Without `matchMedia` (tests in jsdom, server-side

@@ -9,13 +9,13 @@
 //   app is put on its root, and what a component opens mounts inside it.
 import * as React from 'react'
 import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
-import { APP_SHELL_STEPS, FormField, Icon, IconPackProvider, Input, MotionProvider, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
+import { APP_SHELL_STEPS, FormField, Icon, IconPackProvider, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
 import { touchDensity } from '../phone'
 import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
 import { equals, flag, type Child, type Expr } from './ir'
 import { applyLook } from './look'
 import { hasRegion, type AppModel, type Node, type Screen } from './model'
-import { DETAILS_CLASS, contentClass, shownWhen, visible } from './plan'
+import { DETAILS_CLASS, FIT_CLASS, contentClass, shownWhen, visible } from './plan'
 import { Frame, draw, type HostKind } from './render'
 
 /* ———— What the canvas is told by the editor around it ———— */
@@ -251,6 +251,7 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
   const layout = appShellLayout(env.width)
   const narrow = env.width < APP_SHELL_STEPS.rail
   const row = 'flex min-w-0 flex-1 items-center self-stretch'
+  // A screen that fits is the toolkit's `Page fit` here too: the place to drop into is its body, which gives way.
   return (
     <div data-canvas-frame="" className="h-dvh bg-paper text-ink">
       <Frame
@@ -266,7 +267,17 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
         nav={Nav && visible(app.settings.sidebar, narrow) ? <Nav className="flex flex-col" minEmptyHeight={64} /> : null}
         foot={Foot && visible(app.settings.foot, narrow) ? <Foot className={cn(row, 'gap-3')} minEmptyHeight={20} /> : null}
         bottom={Bottom && visible(app.settings.bottom, narrow) ? <Bottom className={cn(row, 'gap-1')} minEmptyHeight={40} /> : null}
-        content={Content ? <Content className={contentClass(screen)} minEmptyHeight={160} /> : null}
+        content={
+          Content ? (
+            screen.fit ? (
+              <Page fit>
+                <Content className={FIT_CLASS} minEmptyHeight={160} />
+              </Page>
+            ) : (
+              <Content className={contentClass(screen)} minEmptyHeight={160} />
+            )
+          ) : null
+        }
         details={Details && screen.details === 'on' ? <Details className={DETAILS_CLASS} minEmptyHeight={120} /> : null}
         actions={Actions && screen.actionsOn ? <Actions className={cn(row, 'justify-end gap-2')} minEmptyHeight={36} /> : null}
         menu={env.menu}

@@ -51,8 +51,8 @@ const HOST_ROWS: readonly (readonly [string, React.ReactNode, React.ReactNode])[
   ['The bar at the head', "The app's top bar and nothing more", <>It is the window's bar: <Code>dragProps</Code> for the host's drag mark, <Code>WindowControls</Code> at its end</>],
   ['What opens', 'Over the whole page', 'Under the title bar, so the window can still be moved and closed'],
   ["The browser's keys and menu", 'Left to the browser: reload, find, back', <>Taken away with <Code>useDesktopGuard()</Code>; a field keeps its own menu</>],
-  ['The edges of a phone', 'The browser keeps the page clear of them', <>The app keeps the room free itself: <Code>viewport-fit=cover</Code> and <Code>env(safe-area-inset-*)</Code></>],
-  ['The height of a phone', <><Code>h-dvh</Code>: what the browser's bars leave</>, 'The whole screen'],
+  ['The edges of a phone', 'The browser keeps the page clear of them', <>The frame keeps clear of them by itself (<Code>viewport-fit=cover</Code>, the device&apos;s insets, the foot at its maximum)</>],
+  ['The height of a phone', <>What the browser&apos;s bars and the keyboard leave: the frame measures it (<Code>--app-height</Code>)</>, 'The whole screen, measured the same way'],
   ['What only the host can do', 'Nothing more than a page does', 'The place and size of the window between runs, an icon in the tray that keeps the app running, notices of the system, opening at sign-in'],
 ]
 

@@ -772,14 +772,51 @@ svg.lucide[stroke-width="2"] {
 }
 
 /* The measures of the layout parts (layout.tsx): the columns of `Grid`, each at least its `min` wide and as many as the
-   width holds; the height `ScrollArea bounded` never passes, about half the window as it is now (`dvh`); the widest the body of a page
-   (`Page`) grows, DESIGN.md's `content-max`. */
+   width holds; the height `ScrollArea bounded` never passes, about half of what the person sees now (`--app-height`, below); the
+   widest the body of a page (`Page`) grows, DESIGN.md's `content-max`. */
 @layer theme {
   :root {
     --grid-columns-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
     --grid-columns-md: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
     --grid-columns-lg: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
-    --scroll-bounded: 48dvh;
+    --scroll-bounded: calc(var(--app-height) * 0.48);
     --content-max: 1152px;
+  }
+}
+
+/* The heights a screen is laid out to, and the room the device keeps at its edges (docs/mobile.md, «Heights and
+   orientation»). A height is the host's, never a guess:
+   - `--app-height` is what the person sees: `useAppHeight` (which `AppShell` runs by itself) writes it in px from
+     `visualViewport`, so it follows the browser's bars, the keyboard, a rotation and a window resized; until a script
+     writes it, and where none does, it is `100dvh`. Never `100vh`: with the address bar showing, that is taller than
+     the screen, and a page that fits still scrolls.
+   - `--safe-area-max-inset-bottom` is the most the device keeps at the foot (the gesture bar, the home indicator). From
+     Chrome 135 on Android a page with `viewport-fit=cover` is drawn under that bar, and the bar slides away while the
+     page scrolls: `env(safe-area-inset-bottom)` then changes while the page scrolls, so it must never size anything (a
+     height that changes with the scroll is a page that scrolls by itself, and Chrome then does not slide the bar).
+     Room is kept with the maximum, which does not change; where the browser has no maximum, the live inset, then 0.
+   - the other three sides do not slide: their insets are the device's own (the notch, a phone lying down).
+   - `--fit-height` is a screen that must fit, outside a frame: what the person sees less the room kept at the foot
+     (`--bottom-bar-room`, which an app with a bar of its own sets; `AppShell` writes it for what it keeps there). */
+@layer theme {
+  :root {
+    --app-height: 100dvh;
+    --safe-area-max-inset-bottom: env(safe-area-max-inset-bottom, env(safe-area-inset-bottom, 0px));
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-left: env(safe-area-inset-left, 0px);
+    --safe-area-inset-right: env(safe-area-inset-right, 0px);
+    --fit-height: calc(var(--app-height) - var(--bottom-bar-room, 0px));
+  }
+}
+
+/* `short:` is a window under 500px tall: a phone lying down, a window shrunk in height (`SHORT` in media.ts). There the
+   frame keeps its bars thin: the bottom bar is 44px and its views put the word beside the icon. */
+@custom-variant short (@media (height < 500px));
+
+/* A page that must fit one screen (`Page fit`) does not move while it is shown: no bounce, no pull to refresh, no glow
+   at its edges (a document that cannot scroll still shows them). */
+@layer base {
+  html:has([data-slot="page"][data-fit]) {
+    overscroll-behavior-y: none;
   }
 }

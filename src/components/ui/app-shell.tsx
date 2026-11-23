@@ -39,10 +39,23 @@
 // them), so the round is one. In a region the focus goes to the place the user is in (`aria-current`), else to the first
 // thing that takes it; the content takes it itself when it holds nothing that does.
 // Without a way to measure (a server, a test) the frame is the wide one.
+// Its height is the host's, never a guess (docs/mobile.md, «Heights and orientation»):
+// - it is as tall as what the person sees (`--app-height`, which it keeps up to date itself with `useAppHeight`: the
+//   browser's bars, the keyboard, a rotation), and never taller than the box it is put in, so a frame in a box of the
+//   app's keeps to the box (in a box taller than the window, `className="h-full"` makes it fill the box); the app adds
+//   no `h-dvh`;
+// - where it is the whole screen (as tall as what is seen: `data-screen`), it keeps clear of the device's edges (the
+//   notch, the status bar, the gesture bar: `env(safe-area-inset-*)`, the foot with its maximum, which does not change
+//   while the page scrolls), and it writes how much it keeps at its foot (the actions, the footer, the bottom bar) to
+//   `--bottom-bar-room` on the root, so the notices sit above it;
+// - under 500px of height (`short:`, a phone lying down) the bottom bar is 44px and its views put the word beside the
+//   icon, so the bar does not eat the screen.
 import * as React from "react"
 import { XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
+import { useAppHeight, visibleHeight } from "../../internal/app-height"
+import { BOTTOM_BAR_ROOM_VAR } from "../../internal/overlay"
 import { useWords } from "../../words"
 import { PortalContainerProvider, usePortalContainer } from "../PortalContainer"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
@@ -118,7 +131,11 @@ export type AppShellProps = {
   actions?: React.ReactNode
   /** The foot: the state of the service, counts, the keys that work now. */
   footer?: React.ReactNode
-  /** Under everything, across the whole window: the views of the app as tabs at the foot (a `Toolbar` of `ToolbarTabs` with `edge="top"`). */
+  /**
+   * Under everything, across the whole window: the views of the app as tabs at the foot (a `Toolbar` of `ToolbarTabs`
+   * with `edge="top"`). Where the frame is the whole screen it keeps clear of the gesture bar, and its height (with the
+   * actions and the footer above it) is written to `--bottom-bar-room`.
+   */
   bottomBar?: React.ReactNode
   /**
    * The frame is the window of a program: chrome that is not selectable, and overlays that open under the title bar.
@@ -164,6 +181,45 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
     observer.observe(el)
     return () => observer.disconnect()
   }, [inspectorStep, sidebarStep, railStep])
+  useAppHeight()
+  // What the frame keeps at its foot, under the content: the actions, the footer, the bottom bar.
+  const actionsBox = React.useRef<HTMLDivElement>(null)
+  const footerBox = React.useRef<HTMLElement>(null)
+  const bar = React.useRef<HTMLDivElement>(null)
+  const hasBar = Boolean(bottomBar)
+  const hasActions = Boolean(actions)
+  const hasFooter = Boolean(footer)
+  // Is the frame the whole screen? Then it keeps clear of the device's edges and says how much room it keeps at its
+  // foot, so the notices sit above it. A frame in a box of the app's (a preview, a dialog) does neither. Read on the
+  // elements, with no render of its own.
+  React.useLayoutEffect(() => {
+    const el = root.current
+    if (!el || typeof ResizeObserver === "undefined") return
+    const html = document.documentElement
+    const foot = [actionsBox.current, footerBox.current, bar.current]
+    let wrote = false
+    const read = () => {
+      const whole = Math.abs(el.getBoundingClientRect().height - visibleHeight()) <= 1
+      el.toggleAttribute("data-screen", whole)
+      bar.current?.toggleAttribute("data-screen", whole)
+      const room = whole ? foot.reduce((sum, part) => sum + (part?.offsetHeight ?? 0), 0) : 0
+      if (room > 0) {
+        html.style.setProperty(BOTTOM_BAR_ROOM_VAR, `${room}px`)
+        wrote = true
+      } else if (wrote) {
+        html.style.removeProperty(BOTTOM_BAR_ROOM_VAR)
+        wrote = false
+      }
+    }
+    read()
+    const observer = new ResizeObserver(read)
+    observer.observe(el)
+    for (const part of foot) if (part) observer.observe(part)
+    return () => {
+      observer.disconnect()
+      if (wrote) html.style.removeProperty(BOTTOM_BAR_ROOM_VAR)
+    }
+  }, [hasBar, hasActions, hasFooter])
   const id = React.useId()
   // F6 and Shift+F6, from wherever the focus is in the frame (or nowhere): the next region that has something to focus.
   React.useEffect(() => {
@@ -234,19 +290,19 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
             {inspector}
           </div>
           {actions ? (
-            <div data-slot="app-shell-actions" className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-4 py-2">
+            <div ref={actionsBox} data-slot="app-shell-actions" className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-4 py-2">
               {actions}
             </div>
           ) : null}
           {footer ? (
-            <footer data-slot="app-shell-footer" className={cn(STRIP, "min-h-(--control-xs) border-t border-line")}>
+            <footer ref={footerBox} data-slot="app-shell-footer" className={cn(STRIP, "min-h-(--control-xs) border-t border-line")}>
               {footer}
             </footer>
           ) : null}
         </div>
       </div>
       {bottomBar ? (
-        <div data-slot="app-shell-bottom" className="flex min-h-12 shrink-0 items-stretch border-t border-line px-2 select-none">
+        <div ref={bar} data-slot="app-shell-bottom" className="flex min-h-12 shrink-0 items-stretch border-t border-line px-2 select-none short:min-h-11 data-screen:pb-(--safe-area-max-inset-bottom)">
           {bottomBar}
         </div>
       ) : null}
@@ -270,7 +326,14 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
         data-desktop={desktop ? "" : undefined}
         data-sidebar={layout.sidebar}
         data-inspector={layout.inspector}
-        className={cn("relative flex h-full min-h-0 w-full flex-col text-ink", sheet ? "bg-sidebar-paper in-data-[sidebar=own]:bg-paper-2" : "bg-paper", className)}
+        className={cn(
+          "relative flex h-(--app-height) max-h-full min-h-0 w-full flex-col text-ink",
+          "data-screen:pt-(--safe-area-inset-top) data-screen:ps-(--safe-area-inset-left) data-screen:pe-(--safe-area-inset-right)",
+          // With a bottom bar the bar keeps clear of the gesture bar, with its own fill under it.
+          !hasBar && "data-screen:pb-(--safe-area-max-inset-bottom)",
+          sheet ? "bg-sidebar-paper in-data-[sidebar=own]:bg-paper-2" : "bg-paper",
+          className,
+        )}
       >
         <a href={`#${id}`} data-slot="app-shell-skip" className={cn("sr-only top-2 left-2 z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-ink shadow-lg focus:not-sr-only focus:absolute", FOCUS_RING)}>
           {words.shell.skip}

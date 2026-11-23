@@ -3,9 +3,11 @@
 // - a browser tab on a computer: a strip with the address. The page is the app; the browser keeps its keys;
 // - a Tauri window on a computer, with `decorations: false`: nothing is drawn around the app, which draws its own bar
 //   and the window's buttons (`TitleBar` with `dragProps` and `WindowControls`, `AppShell desktop`);
-// - a browser on a phone: the address bar above the page, which is as tall as what is left (`h-dvh`);
+// - a browser on a phone: the address bar above the page, which is as tall as what is left (the frame measures it:
+//   `--app-height`);
 // - a Tauri app on a phone: the page reaches under the clock and the home indicator (`viewport-fit=cover`), and the
-//   app keeps that room free (`env(safe-area-inset-*)`). The clock and the indicator are the system's, drawn here.
+//   frame keeps that room free itself (`env(safe-area-inset-*)`, the foot at its maximum). The clock and the indicator
+//   are the system's, drawn here.
 // The strips are `aria-hidden`: they are scenery. The frame of a phone is drawn with the sizes a finger gets
 // (`touchDensity`, phone.tsx says why), and the overlays of an app open inside its frame, in a layer of their own.
 // Each app brings its own theme (the toolkit ships none): it is put on the frame, in the scheme and the shape chosen
@@ -145,8 +147,8 @@ export function Host({ device, host, animated, theme, look, address, density, no
   const [foot, setFoot] = React.useState(0)
   const phone = device === 'phone'
   const measures: DensityDef = phone ? touchDensity(density) : densityOf(density)
-  // The notices sit above what the app keeps at its foot: the bar of the views, the status strip, the actions (an app
-  // says how much room that is with `--bottom-bar-room`).
+  // The notices sit above what the app keeps at its foot: the bar of the views, the status strip, the actions (a frame
+  // that is the whole screen writes that room to `--bottom-bar-room`; this one is in a box, so the host measures it).
   React.useLayoutEffect(() => {
     const el = region.current
     if (!el) return
