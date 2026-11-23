@@ -163,6 +163,7 @@ import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
+import { LayoutParts } from './layout-parts'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -267,6 +268,7 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
+  { label: 'Layout', icon: 'layout', ids: ['layout'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
@@ -2377,6 +2379,7 @@ function App() {
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
+      <LayoutParts />
       <Keys />
       <Fields />
       <FormFields />

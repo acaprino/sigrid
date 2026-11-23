@@ -465,6 +465,8 @@ Use weights 400, 500 and 600 only. Use tabular numbers for counts.
 
 Use the `xs` to `section` spacing steps. Controls use `control-md`; dense rows `control-sm`, `control-xs`. `pad-md`, `pad-sm`, `pad-xs`, `hairline` stay inside controls; rows use `row-height`, `row-pad`. `x-zsd.density` holds compact and large.
 
+An app lays out a screen with the layout parts and writes no class of its own: `Stack` piles parts, `Cluster` sets them in a row that wraps, `Split` puts two groups at the two ends of a row, `Grid` reflows cells into as many columns as the width holds, `Spacer` pushes what follows to the end, `Section` names a part with its heading and icon, `ScrollArea` scrolls a named region, `Page` holds the body of a page at `content-max`, and `Text` gives a line its weight (muted, caption, kicker). Their spaces are the `xs` to `xl` steps and nothing else.
+
 ### Responsive behavior
 
 Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer controls and rows grow to `touch-target` (approved exception to R7). Key hints disappear on a phone (narrow and coarse).
