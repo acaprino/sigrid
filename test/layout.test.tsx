@@ -140,3 +140,32 @@ test('a class or a style passed in spite of the types never reaches the page: a 
     expect(el.getAttribute('style'), name).toBeNull()
   }
 })
+
+test('every gap and every padding of every part is a step of the scale', () => {
+  const PADS: [Space, string][] = [['xs', 'p-1'], ['sm', 'p-2'], ['md', 'p-3'], ['lg', 'p-4'], ['xl', 'p-6']]
+  for (const [space, gap] of SCALE) {
+    const { unmount } = render(
+      <>
+        <Column gap={space}>a</Column>
+        <Cluster gap={space}>b</Cluster>
+        <Split gap={space}>c</Split>
+        <Grid gap={space}>d</Grid>
+        <Section title="S" gap={space}>e</Section>
+      </>,
+    )
+    for (const name of ['column', 'cluster', 'split', 'grid', 'section']) expect(classes(slot(name)), `${name} ${space}`).toContain(gap)
+    unmount()
+  }
+  for (const [space, pad] of PADS) {
+    const { unmount } = render(
+      <>
+        <Column pad={space}>a</Column>
+        <Cluster pad={space}>b</Cluster>
+        <Split pad={space}>c</Split>
+        <ScrollArea aria-label="A" pad={space}>d</ScrollArea>
+      </>,
+    )
+    for (const name of ['column', 'cluster', 'split', 'scroll-area']) expect(classes(slot(name)), `${name} ${space}`).toContain(pad)
+    unmount()
+  }
+})
