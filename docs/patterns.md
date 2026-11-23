@@ -239,7 +239,8 @@ Imago's `imago-shell` crate does these for Tauri on Windows.
   («Analysis done · 13.48 GB to delete»).
 - A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
 - Where it is not known how far it is, `value={null}`: a track and the word «In progress». Nothing loops.
-- Do not make screen readers read every percent: say the end and the failure in a live region of the app (`Toasts`).
+- Do not make screen readers read every percent: say the end in a toast (`Toasts`), and the failure with a `Note`
+  `tone="error"` beside the progress (announced as it appears, with «Retry» as its action): one look for a failure.
 
 ## What to avoid
 

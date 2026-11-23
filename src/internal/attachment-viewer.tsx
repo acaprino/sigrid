@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Download, Minus, Plus } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import { Note } from '../components/ui/note'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../components/ui/sheet'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
@@ -107,14 +108,22 @@ export function AttachmentViewer({ open, onOpenChange, title, status, pages = []
     )
   } else if (status.kind === 'error') {
     body = (
-      // The sentence says what happened: no alert icon on top of it (R6).
-      <div role="alert" className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center text-sm text-ink-soft">
-        <p className="max-w-xs">{status.message}</p>
-        {onOpenOriginal ? (
-          <Button variant="outline" onClick={onOpenOriginal}>
-            {originalLabel}
-          </Button>
-        ) : null}
+      // A failure has one look in every app: a `Note` with `tone="error"` (its icon, its red, «Error» read before the
+      // sentence, announced as it appears), with the original as what to do instead. Nothing to try again here: the
+      // app that opens the file gives a new status.
+      <div className="flex flex-1 flex-col items-center justify-center p-6">
+        <Note
+          tone="error"
+          title={status.message}
+          className="max-w-md"
+          actions={
+            onOpenOriginal ? (
+              <Button variant="outline" onClick={onOpenOriginal}>
+                {originalLabel}
+              </Button>
+            ) : undefined
+          }
+        />
       </div>
     )
   } else {

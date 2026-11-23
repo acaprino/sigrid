@@ -20,7 +20,7 @@ export interface Words {
     readonly undo: string
     /** The name of the region that holds the notices. */
     readonly notices: string
-    /** What screen readers hear before the text of a notice that is an error. */
+    /** What screen readers hear before the text of an error: a notice that is an error, and a `Note` with `tone="error"` («Error: Could not reach the server»). */
     readonly error: string
     /** How a key combination is read: keys pressed together, and one after the other. */
     readonly keysTogether: (keys: readonly string[]) => string
@@ -148,12 +148,11 @@ export interface Words {
     readonly complete: string
     readonly error: string
   }
-  /** The tone of a `Note`, read by screen readers before its title («Error: Could not reach the server»). */
+  /** The tone of a `Note`, read by screen readers before its title («Warning: The map is out of date»). An error says `common.error`. */
   readonly note: {
     readonly info: string
     readonly success: string
     readonly warning: string
-    readonly error: string
   }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
@@ -404,7 +403,6 @@ export const DEFAULT_WORDS: Words = {
     info: 'Information',
     success: 'Success',
     warning: 'Warning',
-    error: 'Error',
   },
   shell: {
     skip: 'Skip to the content',

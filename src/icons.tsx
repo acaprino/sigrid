@@ -19,7 +19,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  CircleAlert,
+  CircleX,
   Clapperboard,
   Clock,
   Cloud,
@@ -95,8 +95,9 @@ import { cn } from './lib/utils'
 /**
  * What an icon can mean: the main views, the sidebar's groups, the settings sections, the entries of the menus
  * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort), the rows of a tree of
- * files (`folder`, `folderOpen` for a folder shown open, `file`), and the four tones of a `Note` (`info`, `check`,
- * `alert` for a warning, `error`: the circle with «!» that marks an error in a notice too).
+ * files (`folder`, `folderOpen` for a folder shown open, `file`), and the four tones of a message (`info`, `check`,
+ * `alert` for a warning, `error` for a failure). `error` is the one look of a failure, the circle with an X, wherever
+ * one is shown: a `Note`, a toast, a progress and a step that failed; it is never `info` (the circle with an «i»).
  */
 export const ICON_NAMES = [
   'all',
@@ -278,7 +279,7 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   stop: SquareStop,
   video: Video,
   alert: TriangleAlert,
-  error: CircleAlert,
+  error: CircleX,
 }
 
 /**

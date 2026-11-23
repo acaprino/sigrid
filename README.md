@@ -303,21 +303,48 @@ const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
 `Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
 information (`tone`: `error`, `warning`, `success`, `info`, the default), with a `title`, its text (the children), an
 optional list (`items`, one entry each) and the buttons that answer it (`actions`). It has no close button: it goes
-when its cause is gone. A notice that goes by itself is a toast (`Toasts`), a view with nothing in it is `Empty`.
+when its cause is gone.
+
+One need, one look. Which to use:
+
+| What the page has to say | Use |
+|---|---|
+| Something failed: a view, a panel or a file that could not be read, a task that stopped | `Note` with `tone="error"`, with «Retry» as its action when it can be tried again |
+| There is nothing here: an empty list, a search with no result, a view not filled yet | `Empty` |
+| Something passed: saved, moved, sent, with «Undo» | a toast (`Toasts`) |
+
+A failure has the same mark wherever it is shown: Sigrid's `error` icon, the circle with an X, in a `Note`, in a toast
+with `kind: 'error'`, in a `ProgressRing` and before the «Failed» of a `Progress` or `ProgressSegments` with
+`status="error"`, and in the dot of a step of `Steps` that failed.
 
 Each tone is said three ways, never by colour alone: its icon from Sigrid's set (`info`, `check`, `alert`, `error`), its
 colour from the theme engine's status tokens (the soft fill of `success`, `warning` or `destructive`; information has
 none and is never the accent, so it is the quiet fill, the ink at 6%), and a word that screen readers read before the
-title («Error: Could not reach the server», `useWords().note`). An error or a warning is announced when it appears
-(`role="alert"`); information and a success are not, and are met in the page's order. A note that turns into an error
-in place is not announced again: give the error a `key` of its own, so it is a new note. The form is Park UI's alert,
-flat in the page: a fill, with neither a border nor a shadow (R4). The actions are `outline` or `ghost`; a solid button
-only if it is the one primary action of its screen (R3).
+title («Error: Could not reach the server»: an error says `useWords().common.error`, the word of an error toast, and
+the other tones `useWords().note`). So a title does not start with the tone's word («Error: …», «Warning: …»): it
+would be read twice. An error or a warning is announced when it appears (`role="alert"`); information and a success
+are not, and are met in the page's order. A warning that is a fact of the item shown («Read only», «Out of date») takes
+`announce={false}`: it is not read again at each selection. A note whose tone changes in place is drawn anew, so an
+information that becomes an error is announced as it appears (a button inside it that had the focus loses it).
+
+A long word (a path, a JSON value, an address) breaks where it must, in the title, the text and the list, so the note
+never grows wider than its place. A tool's output, with its line breaks, goes in the text as `<Text pre>`. The form is
+Park UI's alert, flat in the page: a fill, with neither a border nor a shadow (R4). The actions are `outline` or
+`ghost`, whose labels read at 4.5:1 on the four fills in every theme; a solid button only if it is the one primary
+action of its screen (R3).
 
 ```tsx
 <Note tone="error" title="Could not reach the server" items={failed.map((file) => file.name)}
   actions={<Button variant="outline" onClick={retry}>Retry</Button>}>
   The map was drawn before these files were read.
+</Note>
+
+<Note tone="warning" announce={false} title="Read only">
+  It belongs to another project.
+</Note>
+
+<Note tone="error" title="The analysis stopped">
+  <Text pre>{log}</Text>
 </Note>
 ```
 
@@ -538,7 +565,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
   never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
-  `bold`, `undo`, `attach`, `windowMinimize`…) and the rows of a tree of files (`folder`, `folderOpen`, `file`). An icon
+  `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`) and the
+  four tones of a message (`info`, `check`, `alert`, and `error`, the circle with an X of every failure). An icon
   a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
   (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
   not part of this: it stays the app's.

@@ -127,6 +127,7 @@ import {
   TAG_COLOR,
   TAG_HUES,
   TAG_PILL,
+  Text,
   Textarea,
   Thumbnail,
   Toasts,
@@ -730,7 +731,7 @@ function StepsSection() {
     </div>
   )
   return (
-    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with a cross and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
+    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with the circle with an X (the one look of a failure, as in a Note error) and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
       <Row label="a wizard">
         <div className="flex flex-col gap-4">
           <Steps aria-label="Signup" steps={SIGNUP} current={current} onStepSelect={setCurrent} />
@@ -2029,8 +2030,9 @@ function Empties() {
 
 function Notes() {
   const [shown, setShown] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
   return (
-    <Section id="note" title="Note" note="A message that stays in the page until the app removes it: information, a success, a warning or an error. Each tone has its icon and its colour, and screen readers hear its word before the title; an error and a warning are announced when they appear, information and a success are not. A title, its text, a list and the buttons that answer it, outline or ghost (R3); no close button. A fill, flat in the page: neither a border nor a shadow (R4).">
+    <Section id="note" title="Note" note="A message that stays in the page until the app removes it: information, a success, a warning or an error. One look for a failure: an error note (the circle with an X, as in a toast, a progress and a step), never an empty state. Each tone has its icon and its colour, and screen readers hear its word before the title; an error and a warning are announced when they appear (unless announce is false: a fact of the item shown), information and a success are not, and a tone that changes is announced as a new note. A title, its text, a list and the buttons that answer it, outline or ghost (R3); no close button; a long word breaks to fit. A fill, flat in the page: neither a border nor a shadow (R4).">
       <Row label="tones">
         <div className="flex w-full max-w-xl flex-col gap-3">
           <Note tone="info" title="Drawn from a sample">
@@ -2062,6 +2064,16 @@ function Notes() {
           </Note>
         </div>
       </Row>
+      <Row label="long words">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="error" title="Could not read C:/Users/someone/AppData/Local/projects/a-very-long-folder-name-without-any-space/settings.json" actions={<Button variant="outline">Retry</Button>}>
+            <Text pre>{'error: expected a value at line 3, column 14\n  "paths": ["src/**/*.ts", ,]\n                            ^'}</Text>
+          </Note>
+          <Note tone="warning" announce={false} title="Read only">
+            It belongs to another project: a fact of the item shown, not announced at each selection.
+          </Note>
+        </div>
+      </Row>
       <Row label="live">
         <div className="flex w-full max-w-xl flex-col items-start gap-3">
           <Button variant="outline" data-sample="note-toggle" onClick={() => setShown(!shown)}>
@@ -2072,6 +2084,16 @@ function Notes() {
               Files changed since it was drawn: a screen reader hears this as it appears.
             </Note>
           ) : null}
+          <Button variant="outline" data-sample="note-tone" onClick={() => setFailed(!failed)}>
+            {failed ? 'Read the files again' : 'Fail the reading'}
+          </Button>
+          <Note
+            tone={failed ? 'error' : 'info'}
+            title={failed ? 'Could not read the files' : 'Reading the files'}
+            actions={failed ? <Button variant="outline" onClick={() => setFailed(false)}>Retry</Button> : undefined}
+          >
+            {failed ? 'The same note, now an error: drawn anew, so a screen reader hears it.' : 'The map fills in as they are read.'}
+          </Note>
         </div>
       </Row>
     </Section>
