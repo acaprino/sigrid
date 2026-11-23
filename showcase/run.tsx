@@ -6,7 +6,7 @@
 import './run.css'
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
-import { Button, Empty, IconPackProvider, MotionProvider, applyDensity } from '../src/index'
+import { Button, Empty, MotionProvider, applyDensity } from '../src/index'
 import { applyLook } from './editor/look'
 import { STORE_KEY, loadApp } from './editor/model'
 import { RunApp } from './editor/render'
@@ -46,12 +46,10 @@ function Run() {
   }
   return (
     <MotionProvider animated={app.look.animated}>
-      <IconPackProvider pack={app.look.icons}>
-        <div className="h-dvh bg-paper text-ink">
-          {/* The editor around this page, if there is one, is told where the user went: it shows the same screen. */}
-          <RunApp app={app} host={host} screen={params.get('screen') ?? undefined} onScreen={(id) => window.parent !== window && window.parent.postMessage({ type: 'sigrid-run-screen', id }, location.origin)} />
-        </div>
-      </IconPackProvider>
+      <div className="h-dvh bg-paper text-ink">
+        {/* The editor around this page, if there is one, is told where the user went: it shows the same screen. */}
+        <RunApp app={app} host={host} screen={params.get('screen') ?? undefined} onScreen={(id) => window.parent !== window && window.parent.postMessage({ type: 'sigrid-run-screen', id }, location.origin)} />
+      </div>
     </MotionProvider>
   )
 }

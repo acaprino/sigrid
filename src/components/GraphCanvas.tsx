@@ -103,7 +103,7 @@ export type GraphNode = {
   label: string
   /** A second line under the name: a state, a date, a person. */
   detail?: string | undefined
-  /** An icon of the user's pack before the name. */
+  /** One of Sigrid's icons before the name. */
   icon?: IconName | undefined
   /** The colour the user gave the thing (`#rrggbb`): an 8px dot before the name (R10). */
   color?: string | undefined

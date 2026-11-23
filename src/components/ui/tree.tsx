@@ -1,6 +1,6 @@
 // Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)
 // A tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with
-// its name, an icon of the user's pack, a short fact and a count at its end, and the rows it holds under it, one level in.
+// its name, one of Sigrid's icons, a short fact and a count at its end, and the rows it holds under it, one level in.
 // Behaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right
 // opens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End
 // reach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the
@@ -46,7 +46,7 @@ export type TreeNode = {
   id: string
   /** What the row says; the filter by default and the first letters typed look for it. */
   name: string
-  /** A meaning of the toolkit's icons (`folder`, `file`…) or of the app's own (`IconPackProvider`'s `icons`), drawn in the user's pack. In a tree where some rows have one, a row without keeps an empty slot (R6). */
+  /** A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6). */
   icon?: IconName | (string & {}) | undefined
   /** The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed. */
   openIcon?: IconName | (string & {}) | undefined

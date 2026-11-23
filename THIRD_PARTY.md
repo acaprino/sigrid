@@ -223,27 +223,15 @@ NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to t
 ```
 
 
-## Icon packs
+## Icons
 
-Two npm dependencies, installed and unmodified, never copied into `src/` (`src/icons.tsx` picks between them):
+Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Lucide, an npm dependency, installed and
+unmodified, never copied into `src/` (`src/icons.tsx` names each meaning's drawing).
 
-- `lucide-react` (ISC, Lucide contributors): the default pack.
-- `@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation", repository
-  https://github.com/microsoft/fluentui-system-icons): the optional `fluent` pack. Its repository's licence is plain
-  MIT, without the fonts-and-icons note of the Fluent UI repository.
+- `lucide-react` (ISC, Lucide contributors, https://lucide.dev).
 
-Four packs are not dependencies: their drawings, one per meaning and unmodified, are in `src/icon-packs.generated.ts`,
-written by `scripts/icon-packs.mjs` from the Iconify API (https://iconify.design):
-
-- Phosphor Icons, duotone weight (MIT, "Copyright (c) 2023 Phosphor Icons", https://github.com/phosphor-icons/core):
-  the `duotone` pack.
-- Solar Icons, bold duotone style (CC BY 4.0, by 480 Design, https://www.figma.com/community/file/1166831539721848736):
-  the `solar` pack. Attribution: "Solar Icons by 480 Design".
-- Fluent Emoji, flat style (MIT, "Copyright (c) Microsoft Corporation", https://github.com/microsoft/fluentui-emoji):
-  the `emoji` pack.
-- Twemoji (graphics CC BY 4.0, "Copyright 2019 Twitter, Inc and other contributors",
-  https://github.com/twitter/twemoji): the `twemoji` pack. Attribution: "Twemoji by Twitter, Inc and other
-  contributors".
+The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
+Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.
 
 ## TanStack Table, TanStack Virtual, dnd-kit and TipTap
 

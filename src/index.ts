@@ -67,9 +67,9 @@ export { Dialog, type DialogProps } from './components/Dialog'
 export { PortalContainerProvider, usePortalContainer } from './components/PortalContainer'
 export { Toasts, type ToastAction, type ToastItem, type ToastsProps } from './components/Toasts'
 
-// Look settings: the base colour, the combination, the tone, the icon pack and the ready-made themes, as cards with a
+// Look settings: the base colour, the combination, the tone, the density and the ready-made themes, as cards with a
 // preview each; the app passes its words.
-export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, DensityChoice, IconPackChoice, PaletteComboChoice, PaletteStrip, ThemeCatalogChoice, TonePresetChoice, TonePreview, radioArrows, type BaseColorText, type ChoiceText, type DensityText, type IconPackText, type PaletteComboText, type ThemeCatalogText, type TonePresetText } from './components/LookSettings'
+export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, DensityChoice, PaletteComboChoice, PaletteStrip, ThemeCatalogChoice, TonePresetChoice, TonePreview, radioArrows, type BaseColorText, type ChoiceText, type DensityText, type PaletteComboText, type ThemeCatalogText, type TonePresetText } from './components/LookSettings'
 
 // Motion: the hook and the loader; Motion itself stays in a separate chunk, loaded only with animations on.
 export { MotionProvider, loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'
@@ -93,7 +93,7 @@ export { BACKDROP, BOTTOM_BAR_ROOM_VAR, SHEET_TOASTS_ROOM, TOASTS_ATTR, TOASTS_L
 export { Swatches, type SwatchesProps } from './internal/swatches'
 export { TAG_COLOR, TAG_HUES, TAG_PILL, tagColorAttrs, tagHue } from './internal/tag-color'
 export { NeedThumbnail, Thumbnail, safeThumbnail, type ThumbnailProps } from './internal/thumbnail'
-export { DEFAULT_ICON_PACK, ICON_NAMES, ICON_PACKS, Icon, IconPackProvider, isIconName, isIconPack, useIconPack, type IconArt, type IconDrawing, type IconName, type IconPack, type IconSet } from './icons'
+export { ICON_NAMES, Icon, isIconName, type IconName } from './icons'
 export { PALETTE_COMBOS, palettePick, paletteTheme, type PaletteCombo, type PalettePick } from './palette'
 export { HARMONIES, accentSuggestions, duoTheme, pageTint, type AccentSuggestion, type DuoPick, type Harmony } from './harmony'
 export { SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, type ColorThemePick, type SpotKind } from './color-theme'

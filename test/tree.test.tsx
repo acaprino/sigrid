@@ -7,7 +7,7 @@
 // at a class is the 44px a row asks for with a finger, which jsdom cannot measure.
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Icon, IconPackProvider, Tree, WordsProvider, type IconName, type TreeNode } from '../src'
+import { Icon, Tree, WordsProvider, type IconName, type TreeNode } from '../src'
 
 const FILES: readonly TreeNode[] = [
   {
@@ -57,9 +57,9 @@ const description = (el: Element) =>
 const stops = () => Array.from(document.querySelectorAll('[role="tree"] [tabindex="0"]'))
 /** What a row draws before its name: the chevron's slot, then the icon's (R6). */
 const marks = (row: Element) => Array.from(row.firstElementChild?.children ?? [])
-/** The drawing an `Icon` of that name makes in that pack, anywhere. */
-const drawing = (name: IconName, pack: 'duotone') => {
-  const { container, unmount } = render(<Icon name={name} pack={pack} />)
+/** The drawing an `Icon` of that name makes, anywhere. */
+const drawing = (name: IconName) => {
+  const { container, unmount } = render(<Icon name={name} />)
   const svg = container.querySelector('svg')!.outerHTML
   unmount()
   return svg
@@ -140,16 +140,12 @@ describe('the rows a screen reader hears', () => {
     expect(item('src').hasAttribute('aria-current')).toBe(false)
   })
 
-  test("icons in the user's pack, the open branch's own; an empty slot for a row without one, none in a tree without icons; 44px with a finger", async () => {
-    const { unmount } = render(
-      <IconPackProvider pack="duotone">
-        <Tree aria-label="Files" nodes={FILES} />
-      </IconPackProvider>,
-    )
+  test("Sigrid's icons, the open branch's own; an empty slot for a row without one, none in a tree without icons; 44px with a finger", async () => {
+    const { unmount } = render(<Tree aria-label="Files" nodes={FILES} />)
     await screen.findByRole('tree', { name: 'Files' })
     const icon = (name: string) => marks(item(name))[1]?.querySelector('svg')?.outerHTML
-    expect(icon('package.json')).toBe(drawing('file', 'duotone'))
-    expect(icon('src')).toBe(drawing('folder', 'duotone'))
+    expect(icon('package.json')).toBe(drawing('file'))
+    expect(icon('src')).toBe(drawing('folder'))
     // A row without an icon keeps the slot, empty, so the names line up (R6).
     expect(marks(item('README.md'))).toHaveLength(2)
     expect(icon('README.md')).toBeUndefined()
@@ -159,10 +155,10 @@ describe('the rows a screen reader hears', () => {
     await focus(item('src'))
     await press('ArrowRight')
     await opens('src')
-    expect(icon('src')).toBe(drawing('folderOpen', 'duotone'))
+    expect(icon('src')).toBe(drawing('folderOpen'))
     await press('*')
     await opens('assets')
-    expect(icon('assets')).toBe(drawing('folder', 'duotone'))
+    expect(icon('assets')).toBe(drawing('folder'))
     unmount()
     render(<Tree aria-label="Plain" nodes={[{ id: 'a', name: 'One' }, { id: 'b', name: 'Two' }]} />)
     await screen.findByRole('tree', { name: 'Plain' })

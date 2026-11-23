@@ -322,7 +322,7 @@ function mainSource(app: AppModel): string {
   const preset = DENSITIES.find((d) => d.id === look.density.id)
   const density = preset ? lit(preset.id) : literal(look.density)
   const own = look.colors === 'own' ? `duoTheme({ base: ${lit(look.page)}, accent: ${lit(look.accent)} })` : 'null'
-  const parts = ['BASE_THEME', 'IconPackProvider', 'MotionProvider', 'applyDensity', 'applyFont', 'applyTheme', 'presetTone', ...(look.colors === 'own' ? ['duoTheme'] : [])].sort((a, b) => a.localeCompare(b))
+  const parts = ['BASE_THEME', 'MotionProvider', 'applyDensity', 'applyFont', 'applyTheme', 'presetTone', ...(look.colors === 'own' ? ['duoTheme'] : [])].sort((a, b) => a.localeCompare(b))
   return `import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ${parts.join(', ')} } from '@acaprino/sigrid'
@@ -339,9 +339,7 @@ applyFont(root, ${lit(look.font)})
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MotionProvider animated={${look.animated === true ? 'true' : 'false'}}>
-      <IconPackProvider pack={${lit(look.icons)}}>
-        <App />
-      </IconPackProvider>
+      <App />
     </MotionProvider>
   </StrictMode>,
 )

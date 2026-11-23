@@ -1,7 +1,7 @@
 // The look of an app as data, and the panel that sets it: everything the toolkit lets an app configure (scheme, the
 // two colours of the theme, the tone of the accents, the corner shape, the font, the density and each of its measures,
-// the icon pack, motion). The editor keeps it with the app, puts it on the canvas and on the run page, and the export
-// writes it into the app's entry file.
+// motion). The icons are not part of it: Sigrid has one set, the same in every app. The editor keeps the look with the
+// app, puts it on the canvas and on the run page, and the export writes it into the app's entry file.
 import * as React from 'react'
 import {
   BASE_THEME,
@@ -10,7 +10,6 @@ import {
   DENSITIES,
   DENSITY_LIMITS,
   FONTS,
-  ICON_PACKS,
   Select,
   Slider,
   Switch,
@@ -31,13 +30,11 @@ import {
   type DensityDef,
   type FontId,
   type Harmony,
-  type IconPack,
   type ThemeScheme,
   type ThemeShape,
   type TonePreset,
   isFontId,
   densityOf,
-  isIconPack,
 } from '../../src/index'
 
 export type Look = {
@@ -54,20 +51,20 @@ export type Look = {
   shape: ThemeShape
   font: FontId
   density: DensityDef
-  icons: IconPack
   animated: boolean
 }
 const SEEDS: readonly string[] = COLORS.filter((_, i) => i % 3 === 1)
 const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
 // The canvas starts in colour: on the gray baseline the accent, the tone and the selection would all read as gray.
-export const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
+export const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, animated: false }
 const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
 
 const HEX = /^#[0-9a-f]{6}$/i
 /**
  * A look from data of any origin (a file someone made, what the browser kept), made whole: a value that is missing
  * or not one the toolkit knows takes its starting value. A look that the theme engine cannot take would leave the
- * editor and the run page blank, and it would stay so, because the document is kept in the browser.
+ * editor and the run page blank, and it would stay so, because the document is kept in the browser. An icon pack kept
+ * from before (`icons`) is left out: Sigrid has one set.
  */
 export function readLook(value: unknown): Look {
   const start = structuredClone(START_LOOK)
@@ -85,7 +82,6 @@ export function readLook(value: unknown): Look {
     font: isFontId(given['font']) ? given['font'] : start.font,
     // Every measure a whole number inside the toolkit's limits; anything else is the normal density.
     density: densityOf(given['density']),
-    icons: isIconPack(given['icons']) ? given['icons'] : start.icons,
     animated: given['animated'] === true,
   }
 }
@@ -257,10 +253,6 @@ export function LookPanel({ look, onLook }: { look: Look; onLook: (change: Parti
         <Measure label="Smallest button padding" value={d.pad.xs} min={L.pad.min} max={L.pad.max} onChange={(xs) => density({ pad: { xs } })} />
         <Measure label="Row height" value={d.row.height} min={L.rowHeight.min} max={L.rowHeight.max} onChange={(height) => density({ row: { height } })} />
         <Measure label="Row padding" value={d.row.pad} min={L.rowPad.min} max={L.rowPad.max} onChange={(pad) => density({ row: { pad } })} />
-      </Group>
-      <Group label="Icons">
-        <Select aria-label="Icon pack" options={ICON_PACKS.map((pack) => ({ value: pack, label: title(pack) }))} value={look.icons} onValueChange={(v) => onLook({ icons: v as IconPack })} />
-        <p className="text-xs text-ink-mute">The drawings of every icon of the app.</p>
       </Group>
       <Group label="Motion">
         <label className="flex items-center justify-between gap-4 text-sm text-ink">

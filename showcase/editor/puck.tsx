@@ -9,7 +9,7 @@
 //   app is put on its root, and what a component opens mounts inside it.
 import * as React from 'react'
 import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
-import { APP_SHELL_STEPS, FormField, Icon, IconPackProvider, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
+import { APP_SHELL_STEPS, FormField, Icon, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
 import { touchDensity } from '../phone'
 import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
 import { equals, flag, type Child, type Expr } from './ir'
@@ -131,7 +131,7 @@ function fieldOf(spec: FieldSpec, screens: AppModel['screens']): Field {
   }
 }
 
-/** The icon of a component: its drawing, and the list of every icon the packs draw. */
+/** The icon of a component: its drawing, and the list of every icon Sigrid draws. */
 function IconField({ value, onChange, field }: { value: unknown; onChange: (value: string) => void; field: { label?: string } }) {
   const chosen = typeof value === 'string' ? value : 'none'
   return (
@@ -365,9 +365,7 @@ export function CanvasDocument({ children, document: doc }: { children: React.Re
   }, [doc])
   return (
     <MotionProvider animated={false}>
-      <IconPackProvider pack={look.icons}>
-        <PortalContainerProvider container={layer}>{children}</PortalContainerProvider>
-      </IconPackProvider>
+      <PortalContainerProvider container={layer}>{children}</PortalContainerProvider>
     </MotionProvider>
   )
 }

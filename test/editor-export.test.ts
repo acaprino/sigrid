@@ -127,11 +127,12 @@ test('a name with a line break stays inside its comment, and what is not a yes i
   // The name is the first line, a comment, and no line of the source starts with what the name tried to add.
   expect(source.split(/\r?\n|\u2028|\u2029/)[0]).toMatch(/^\/\/ Line one export const injected/)
   expect(source).not.toMatch(/^export const (injected|again)/m)
-  const hostile = { ...bare(), look: { ...bare().look, animated: 'false}><script/><X animated={true' as unknown as boolean, icons: `x'"y` as unknown as AppModel['look']['icons'] } }
+  const hostile = { ...bare(), look: { ...bare().look, animated: 'false}><script/><X animated={true' as unknown as boolean } }
   const main = exportFiles(hostile, { version: '0.0.0' }).find((file) => file.path === 'src/main.tsx')!.text
   expect(main).toContain('<MotionProvider animated={false}>')
   expect(main).not.toContain('<script')
-  expect(main).toMatch(/<IconPackProvider pack=\{.+\}>/)
+  // The icons are not chosen: Sigrid has one set, so the entry file names no pack.
+  expect(main).not.toMatch(/IconPack|pack=/)
 })
 
 test('two choices of one name have two values', () => {
@@ -164,7 +165,7 @@ test('data of any origin is made into an app that draws: a look, a region and an
     ],
   })!
   const start = STARTERS[0]!.make().look
-  expect(read.look).toEqual({ ...start, scheme: 'light', colors: 'own', tone: start.tone, shape: start.shape, font: start.font, icons: 'lucide', accent: start.accent, page: null, animated: false, accentAuto: start.accentAuto, density: read.look.density })
+  expect(read.look).toEqual({ ...start, scheme: 'light', colors: 'own', tone: start.tone, shape: start.shape, font: start.font, accent: start.accent, page: null, animated: false, accentAuto: start.accentAuto, density: read.look.density })
   expect(read.look.density.id).toBe('normal')
   const content = read.screens[0]!.content
   expect(content.map((node) => node.type)).toEqual(['Button', 'Button', 'Stack'])
@@ -172,9 +173,10 @@ test('data of any origin is made into an app that draws: a look, a region and an
   expect(inside.map((node) => node.type)).toEqual(['Text'])
   const ids = [...content, ...inside].map((node) => node.props['id'])
   expect(new Set(ids).size).toBe(ids.length)
-  // What is right is kept as it is.
+  // What is right is kept as it is; an icon pack kept from before is left out (Sigrid has one set).
   const kept = readApp({ name: 'x', look: { scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true }, screens: [{ name: 'One' }] })!
-  expect(kept.look).toMatchObject({ scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true })
+  expect(kept.look).toMatchObject({ scheme: 'dark', accent: '#4452C4', animated: true })
+  expect(kept.look).not.toHaveProperty('icons')
 })
 
 test('the zip of an export holds every file, stored, with its checksum', () => {

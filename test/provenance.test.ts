@@ -202,14 +202,15 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     // The note of Fluent UI's licence is about its fonts and icons: none comes with the token values.
     expect(section).toContain('No font of Fluent is used anywhere in the toolkit, and no icon comes with these token values.')
     expect(section).toContain('https://aka.ms/fluentui-assets-license')
-    // Values, not code: the tokens package is not a dependency. The only package of Fluent installed is its icons,
-    // listed with their own licence (plain MIT, from fluentui-system-icons) under «Icon packs».
-    expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual(['@fluentui/react-icons'])
-    const iconsAt = text.indexOf('\n## Icon packs\n')
+    // Values, not code: no package of Fluent is a dependency (its colour icons left with the other packs, 2026-11-23).
+    expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual([])
+    // The icons are one set, Lucide, listed under «Icons».
+    const iconsAt = text.indexOf('\n## Icons\n')
     const icons = text.slice(iconsAt, text.indexOf('\n## ', iconsAt + 1))
     expect(iconsAt).toBeGreaterThan(-1)
-    expect(icons).toContain('`@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation"')
     expect(icons).toContain('`lucide-react` (ISC')
+    expect(icons).not.toContain('@fluentui/react-icons')
+    expect(text).not.toContain('\n## Icon packs\n')
     // The token values as they are in Fluent's two files at that commit; the toolkit declares only the ones it uses.
     const durations: Record<string, number> = { ultraFast: 50, faster: 100, fast: 150, normal: 200, gentle: 250, slow: 300, slower: 400, ultraSlow: 500 }
     const curves: Record<string, readonly number[]> = {
