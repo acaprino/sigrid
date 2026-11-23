@@ -208,6 +208,10 @@ export interface Words {
     readonly close: (item: string) => string
     /** What screen readers hear of a closed thing: its name and how many it hides. */
     readonly closed: (item: string, hidden: number) => string
+    /** What screen readers hear of a thing of the graph mode that holds others the app keeps out of sight (`hidden` of a node): its name and how many («Orders, hides 12»). */
+    readonly hides: (item: string, hidden: number) => string
+    /** The word after the name of a thing outside what the graph is about (`external` of a node), in the muted ink; also said in its name. */
+    readonly external: string
     /** The name of the button that hangs a new thing from one, in the tree mode. */
     readonly add: (item: string) => string
     /** The name of the button that adds a new thing after one, joined by a line from it, in the graph mode. */
@@ -408,6 +412,8 @@ export const DEFAULT_WORDS: Words = {
     open: (item) => `Open ${item}`,
     close: (item) => `Close ${item}`,
     closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
+    hides: (item, hidden) => `${item}, hides ${hidden}`,
+    external: 'external',
     add: (item) => `Add under ${item}`,
     addAfter: (item) => `Add after ${item}`,
     leadsTo: (items) => `leads to ${items.join(', ')}`,

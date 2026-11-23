@@ -320,6 +320,22 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       arrowhead at `to`; a `link` has one unless `false`, a `child` line none unless `true`). What a kind of line
       means is told by its dash and its words, never by its colour alone. Screen readers hear a thing's `link` lines
       in its description («waits for, to Screens»); the lines themselves are not read twice.
+    - What the app marks on its things and lines. `selected` takes one id or several, for an app that draws one of
+      its things as several (an entity in each place it is): each has the selection tint and is chosen for screen
+      readers (`aria-selected`, and the tree is then `aria-multiselectable`; `aria-current` in the graph mode), what
+      is joined to any of them stays, and the first of them in the order of the things holds the Tab stop; `onSelect`
+      still gets the one thing the user chooses. The ids are read by what they are, so a new list of the same ids at
+      every draw draws nothing again. A node with `external: true` says «external» after its name, in the muted ink
+      (the word `graph.external`), and in its name, never with a dashed border (R4). In the graph mode a node's
+      `hidden` (read above 0) is how many things the app keeps out of sight in it (a group it has not opened): the
+      count at its end, as a closed thing of the tree shows it, and in its name («Orders, hides 12», the word
+      `graph.hides`); the tree mode counts what a closed thing hides by itself. An edge with `labelShown: 'chosen'`
+      draws its words only while one of its two things is chosen (`always`, the default, draws them always); either
+      way they are heard in the description of its things. Every edge is a line of its own: two edges between the
+      same two things are two lines, each with its words, named by the edge's `id` when it has one (React Flow's id
+      too), otherwise by its two ends and, for a second one, a number; with `editable`, taking a line away takes that
+      edge alone. Without the app's routes two such lines lie one on the other; with them (`points`) each follows its
+      own.
     - `steps`, a `Map` from a thing's id to its step numbers, numbers a path through the graph (the steps of a plan,
       the answer to a question): each thing on it has the selection tint, its numbers in small dots and in its name
       («Copy, step 2»); the lines between two of them take the accent; what is neither on it nor joined to it is
@@ -376,6 +392,11 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
     nodes={parts.map((part) => ({ ...part, ...layout.nodes[part.id] }))}
     edges={calls.map((call) => ({ ...call, points: layout.edges[call.id] }))} className="h-full" />
+  // One of the app's things drawn in several places, another's service, a group not opened, words on a choice, and
+  // two lines between the same two parts (each with its own id).
+  <GraphCanvas aria-label="Map" model="graph" selected={entity ? drawnAs(entity) : null} onSelect={choose}
+    nodes={parts.map((part) => ({ id: part.id, label: part.name, external: part.outside, hidden: part.closed ? part.count : undefined }))}
+    edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, label: call.kind, labelShown: call.flow ? 'always' : 'chosen' }))} className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
