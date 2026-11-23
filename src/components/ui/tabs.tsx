@@ -26,9 +26,14 @@ export type TabsProps<Value extends string> = {
   children?: React.ReactNode
   /** The tint slides to the new tab (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
+  /**
+   * The ids of the tabs and of their panels by value, for an app that draws the panels itself and names them (`aria-labelledby`).
+   * They go to Ark, which finds the tabs by them for the arrows: an `id` set on a tab afterwards would lose the arrows.
+   */
+  ids?: { trigger?: ((value: string) => string) | undefined; content?: ((value: string) => string) | undefined } | undefined
 }
 
-function Tabs<Value extends string>({ value, onValueChange, activation = "automatic", className, children, animated }: TabsProps<Value>) {
+function Tabs<Value extends string>({ value, onValueChange, activation = "automatic", className, children, animated, ids }: TabsProps<Value>) {
   const motion = useMotion(animated)
   const id = React.useId()
   const context = React.useMemo(() => ({ value, motion, id }), [value, motion, id])
@@ -40,6 +45,7 @@ function Tabs<Value extends string>({ value, onValueChange, activation = "automa
         if (details.value !== value) onValueChange(details.value as Value)
       }}
       activationMode={activation}
+      {...(ids ? { ids } : {})}
       className={cn("flex flex-col gap-2", className)}
     >
       <TabsContext.Provider value={context}>{children}</TabsContext.Provider>
