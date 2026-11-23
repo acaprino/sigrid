@@ -1844,6 +1844,243 @@
      ]
     },
     {
+     "file": "src/components/ui/layout.tsx",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page, and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`), which the pages of Daodan were laid out with.",
+     "components": [
+      {
+       "name": "Cluster",
+       "doc": "A row of parts side by side that wraps to the next line when the room runs out: buttons, fields, chips.",
+       "props": [
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space between its parts, across and down when they wrap (default `sm`)."
+        },
+        {
+         "name": "pad",
+         "type": "Space"
+        },
+        {
+         "name": "justify",
+         "type": "\"center\" | \"start\" | \"end\" | \"between\"",
+         "doc": "Where the parts gather along the row (default `start`)."
+        },
+        {
+         "name": "align",
+         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "doc": "How they line up across the row (default `center`)."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Grid",
+       "doc": "Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window.",
+       "props": [
+        {
+         "name": "min",
+         "type": "\"md\" | \"sm\" | \"lg\"",
+         "doc": "The narrowest a column may be before the grid takes one column fewer: `sm` 12rem, `md` 17rem (the default), `lg` 24rem."
+        },
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space between the cells (default `md`)."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Page",
+       "doc": "The body of a page in the content region: as wide as the content may be (`--content-max`), centred, with its margins and the sections spaced `xl` apart.",
+       "props": [
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "ScrollArea",
+       "doc": "An area that scrolls by itself: reached with Tab and scrolled with the arrows, as a region named for screen readers.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Defines a string value that labels the current element. Its name for a screen reader: an area that scrolls is a stop of the keyboard, so it is named."
+        },
+        {
+         "name": "bounded",
+         "type": "boolean",
+         "doc": "Never taller than about half the window, so a long list does not push the rest of the page away."
+        },
+        {
+         "name": "pad",
+         "type": "Space"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Section",
+       "doc": "A named part of a page: a heading with its icon, and under it the parts. It is a region named by its heading.",
+       "props": [
+        {
+         "name": "title",
+         "type": "string | (string & React.ReactElement<unknown, string | React.JSXElementConstructor<any>>) | (string & Iterable<React.ReactNode>) | (string & React.ReactPortal) | (string & Promise<AwaitedReactNode>)",
+         "required": true,
+         "doc": "The heading: the name of the section, and of its region for a screen reader."
+        },
+        {
+         "name": "level",
+         "type": "4 | 3 | 2",
+         "doc": "The level of the heading: 2 (the default) for a part of a page, 3 or 4 for a part inside one."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "The icon before the heading (an `Icon`), R6: without one the slot stays, empty, so the headings line up."
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "At the end of the heading's row: an action on the whole section, a count."
+        },
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space under the heading and between the parts (default `sm`)."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Spacer",
+       "doc": "The empty room that pushes what follows it to the end of a row."
+      },
+      {
+       "name": "Split",
+       "doc": "Two groups at the two ends of one row, such as a heading and its action; on a narrow width the second goes under.",
+       "props": [
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space kept between the two groups, and between the lines when they wrap (default `md`)."
+        },
+        {
+         "name": "pad",
+         "type": "Space"
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "Two parts: the first at the start of the row, the second at its end (a title and its action)."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Stack",
+       "doc": "A pile of parts, one under the other.",
+       "props": [
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space between its parts (default `sm`)."
+        },
+        {
+         "name": "pad",
+         "type": "Space",
+         "doc": "The space inside its edges. Absent: none."
+        },
+        {
+         "name": "align",
+         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Text",
+       "doc": "A line of text at the weight it carries: the text around it, muted, a caption or a kicker.",
+       "props": [
+        {
+         "name": "variant",
+         "type": "\"body\" | \"caption\" | \"muted\" | \"kicker\"",
+         "doc": "`muted`: words of less weight, in the muted ink; `caption`: a small line under a thing; `kicker`: the small label above a title. `body` (the default) is the text around it."
+        },
+        {
+         "name": "as",
+         "type": "\"span\" | \"div\" | \"p\"",
+         "doc": "The element: a `span` (the default), a paragraph or a block."
+        },
+        {
+         "name": "pre",
+         "type": "boolean",
+         "doc": "Keep the text's line breaks and spaces and wrap its long words: the output of a tool, a path, a message as it came."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "ClusterProps",
+      "GridProps",
+      "LayoutAttributes",
+      "LayoutElement",
+      "PageProps",
+      "ScrollAreaProps",
+      "SectionProps",
+      "Space",
+      "SplitProps",
+      "StackProps",
+      "TextProps"
+     ]
+    },
+    {
      "file": "src/components/ui/nav-list.tsx",
      "about": "The rows of a navigation (R1 and R6 of the owner's rules): a list of places, each a row with an icon slot, a name\nand, at the end, whatever the caller adds (a `Count`). The row of the place the user is in carries\n`aria-current=\"page\"`, the selection tint, stronger text and a short accent bar at its left edge (R1). The icon slot is always there,\n16px wide, so a row without an icon stays aligned with the others (R6). A row is as tall as the density's row, and\nat least 44px with a coarse pointer.\nA row may have a second line under its name (`description`) and, beside it, controls of its own (`actions`: a button\nthat adds to the place, a menu). The controls sit outside the row, which is itself a button or a link; the rail shows\nneither.\nTwo tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's\nsidebar, where the theme has its own ink and its own selection (`sidebar-*`, the solid sidebar among them).",
      "components": [
