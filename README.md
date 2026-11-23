@@ -1,9 +1,24 @@
 # Sigrid UI
 
-Sigrid is the shared design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
-knows nothing of any app: no app's name, concepts or product components, and no window API of a desktop shell (its
-title bar is plain web, and a shell drives it from outside: see [Toolbar and title bar](#toolbar-and-title-bar)). An app builds
-its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
+Sigrid is the UI system shared by a suite of React apps, ADHD first, in four levels:
+
+1. **A toolkit.** The single source of truth for colours, tokens, fonts, primitives and motion (`@acaprino/sigrid`).
+2. **Advanced components.** A table, a long list, a list put in order by hand, a rich text field and a graph canvas, each
+   on an entry of its own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
+3. **A layout system.** The one frame of an app (`AppShell`) in two forms, with lines or as a sheet (Xiox's frame), its
+   regions and the widths where it gives way, `Panel`, the layout parts, and the patterns of `docs/patterns.md` and
+   `docs/mobile.md`.
+4. **An app system for Tauri.** The title bar, the window's buttons and the desktop guard, which are plain web, and
+   `@acaprino/sigrid/tauri`, which wires them to a Tauri window from the page. The app editor of the showcase lays a
+   whole app out and exports it as a project. The native skeleton (`src-tauri`) is the tauri-app-builder plugin's.
+
+All four are made for coding agents: `AGENTS.md`, a catalogue written from the source (`agents/`), whole example apps,
+a check (`sigrid-check`) and a Claude Code plugin.
+
+It knows nothing of any app: no app's name, concepts or product components. The toolkit's source (`src/`) knows no
+window API of a desktop shell (its title bar is plain web, and a shell drives it from outside: see
+[Toolbar and title bar](#toolbar-and-title-bar)); what is Tauri's lives apart, in `tauri/`. An app builds its product
+components on top of it, usually in a package of its own that re-exports what the app needs from here.
 MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
 
 ## Use it
@@ -38,7 +53,7 @@ To migrate from `@acaprino/toolkit`, update the dependency name and all imports,
 to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at your checkout. Releases through
 `v1.0.1` carry the original package and tarball names.
 
-## The four layers
+## What the toolkit rests on
 
 1. **Behaviour: two libraries, each for what it does best.** **Base UI** (`@base-ui/react`, pinned to 1.9.0) carries
    the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, toolbar, checkbox, radio group,
@@ -255,7 +270,15 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
     many it hides) and, with `editable`, to draw: the plus hangs a new thing, a drag between two handles joins them,
     Delete takes one away, each asked of the app with `onChange`. The keyboard is the one of a tree and the things
-    are one Tab stop; a screen reader hears a tree. Only what is in the view is drawn; the layout is done again at
+    are one Tab stop; a screen reader hears a tree. With `model="graph"` the lines are relations (calls, imports,
+    data) and not «hangs from»: nothing closes, no thing has an arrow and every one is in sight (`collapsed` and
+    `defaultCollapsed` are the tree mode's). The arrows follow the lines: with `direction="right"` Right goes along
+    a thing's first line out and Left back along its first line in, while Down and Up go through the things in the
+    order given (downwards the axes swap); Home and End reach the first and the last, Enter chooses. Opening is the
+    app's: a double press on a thing or its › button calls `onOpen(id)`, and without `onOpen` there is no › and
+    nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a graph (an
+    application named by `aria-roledescription`) whose things are buttons that say whether they are chosen. In both
+    modes +, − and 0 zoom in, out and fit, as the buttons do. Only what is in the view is drawn; the layout is done again at
     each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
     branches closed (`defaultCollapsed`). `visibleGraph` and
     `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
@@ -276,9 +299,9 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       close it again.
     - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
       with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
-      whole graph down to 0.2, as before 3.4.0). A graph too large for that starts at its top left. The edges of the
-      canvas fall between things, never across one: the view moves a little, or is a little smaller or larger, until
-      they do. The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
+      whole graph down to 0.2, as before 4.1.0). A graph too large for that starts at its top left. The edges of the
+      canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
+      wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
@@ -309,13 +332,15 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   import { GraphCanvas } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+  <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
+    onOpen={(id) => setScope(id)} className="h-full" />
 
   // A path of two steps, a line that waits and one that never goes together; the view moved by the app.
   const view = useRef<GraphCanvasHandle>(null)
   <GraphCanvas ref={view} aria-label="Plan" nodes={nodes} className="h-full"
     edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
       { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
-    steps={new Map([['copy', [1]], ['pages', [2]]])} />
+    steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
   <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   ```
 
@@ -414,8 +439,8 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
-  with the `host.ts` they import; they pass `sigrid-check`.
+  `agents/examples/`: three whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`.
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.

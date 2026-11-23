@@ -87,3 +87,8 @@
   color: inherit;
   text-decoration: none;
 }
+
+/* A line the user picked to take away (with `editable`) looks picked whatever its tone. */
+.react-flow .react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--color-ink);
+}

@@ -3,7 +3,7 @@
 // what is drawn of a thousand) is driven in a browser, on the showcase (section «GraphCanvas»). Here: what is in sight
 // with some things closed, where the layout puts things, what a path opens, where the view goes, which lines are drawn
 // and how, and what the canvas is for a keyboard and a screen reader.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
@@ -410,10 +410,24 @@ describe('the canvas with a path and with lines that do not hang', () => {
     expect(description(item('Screens'))).toBe('waits for, from Copy')
     expect(description(item('Content'))).toBe('from Launch')
     expect(item('Design').hasAttribute('aria-describedby')).toBe(false)
+    // A `child` line with words is said too.
+    cleanup()
+    render(<GraphCanvas aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges.map((edge) => (edge.to === 'b1' ? { ...edge, label: 'drawn by' } : edge))} />)
+    expect(description(item('Screens'))).toBe('drawn by, from Design')
+    cleanup()
+    render(<GraphCanvas aria-label="Plan" nodes={LINKED.nodes} edges={LINKED.edges} />)
     // Still one Tab stop, and the keys follow only what hangs: Right from «Launch» goes to «Content», not along a link.
     expect(screen.getAllByRole('treeitem').filter((el) => el.tabIndex === 0)).toHaveLength(1)
     fireEvent.keyDown(item('Launch'), { key: 'ArrowRight' })
     expect(document.activeElement).toBe(item('Content'))
+  })
+
+  test('in the graph mode too, a thing of the path says its steps, shows its numbers and is described by its links', () => {
+    const { container } = render(<GraphCanvas aria-label="Plan" model="graph" nodes={LINKED.nodes} edges={LINKED.edges} steps={new Map([['a1', [1]]])} />)
+    const copy = screen.getByRole('button', { name: 'Copy, step 1' })
+    expect(copy.getAttribute('aria-pressed')).toBe('false')
+    expect(description(copy)).toBe('waits for, to Screens. never with, with Photos')
+    expect(container.querySelector('[data-slot="graph-steps"]')!.textContent).toBe('1')
   })
 
   test('a `link` to a hidden thing neither shows it nor changes how many a closed thing hides', () => {
@@ -564,6 +578,23 @@ describe('the canvas with a path and with lines that do not hang', () => {
       expect(inSight('g1')).toBe(true)
       act(() => view.current!.zoomTo(1.2))
       expect(viewOf(container).zoom).toBeCloseTo(1.2, 3)
+    })
+
+    test('when the box changes size, the chosen thing stays in sight', async () => {
+      const { container } = render(<GraphCanvas aria-label="Groups" nodes={GROUPS.nodes} edges={GROUPS.edges} defaultCollapsed={ALL_GROUPS.filter((id) => id !== 'g15')} selected="g15-2" />)
+      await act(async () => {})
+      const inSight = (id: string, w: number, h: number) => {
+        const v = viewOf(container)
+        const box = drawnBoxes(container, GROUPS).find((b) => b.id === id)!
+        const left = v.x + box.x * v.zoom
+        const top = v.y + box.y * v.zoom
+        return left >= 0 && top >= 0 && left + box.width * v.zoom <= w && top + box.height * v.zoom <= h
+      }
+      // The first view starts at the top: the chosen thing, at the foot of the column, is out of it.
+      expect(inSight('g15-2', 1280, 800)).toBe(false)
+      resize(900, 700)
+      expect(inSight('g15-2', 900, 700)).toBe(true)
+      expect(viewOf(container).zoom).toBeGreaterThanOrEqual(0.8)
     })
 
     test('`minFitZoom` 0 fits the whole graph, however small it gets', async () => {

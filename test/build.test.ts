@@ -196,7 +196,7 @@ describe('build output', () => {
       visit(entry)
       return seen
     }
-    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js']
+    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js', 'tauri.js']
 
     // Since the package has more than one entry, the code that asks for Motion can sit in a chunk the entries share.
     test('what index.js loads reaches that chunk only through one dynamic import(), never a static import', () => {
@@ -230,6 +230,18 @@ describe('build output', () => {
       expect(has('graph.js', /node_modules\/@xyflow\//)).toBe(true)
       expect(has('graph.js', /node_modules\/@dagrejs\//)).toBe(true)
       for (const entry of ['table.js', 'virtual.js', 'reorder.js', 'graph.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
+    })
+
+    // The Tauri entry: its own file with its types, Tauri's API outside the bundle and asked for only with `import()`,
+    // and nothing of it in what the main entry loads.
+    test('tauri.js and tauri.d.ts exist, and Tauri\'s API is reached only through import(), never bundled', () => {
+      expect(existsSync(`${dist}tauri.d.ts`)).toBe(true)
+      expect(readFileSync(`${dist}tauri.d.ts`, 'utf8')).toMatch(/from '\.\/tauri\/index'/)
+      const all = [...loaded('tauri.js').values()].join('\n')
+      expect(all).toMatch(/import\(\s*["']@tauri-apps\/api\/window["']\s*\)/)
+      expect(all).not.toMatch(/(?:from|import)\s*["']@tauri-apps\//)
+      expect(all).not.toMatch(/__TAURI_INTERNALS__\.invoke|node_modules\/@tauri-apps\//)
+      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/@tauri-apps|__TAURI_INTERNALS__/)
     })
   })
 

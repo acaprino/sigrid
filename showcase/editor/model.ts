@@ -1,7 +1,9 @@
-// An app as the editor keeps it: its name, its look, the regions of the frame that every screen shares (the bar at the
-// head, the sidebar, the tabs, the strip and the bar at the foot), and its screens, each with what is its own (the
-// content, the details, the actions). It is plain data: kept in the browser, copied and read back as JSON, and the one
-// thing the run page and the export are given. Also here: the apps to start from, and where the data is kept.
+// An app as the editor keeps it: its name, its look, the form of its frame (`line` or Xiox's `sheet`), the regions of
+// the frame that every screen shares (the bar at the head, and the sidebar, the tabs, the strip and the bar at the foot
+// where the app has them), and its screens, each with what is its own (the content, the details, the actions). Only the
+// bar and the content are always there: every other region is the app's choice. It is plain data: kept in the browser,
+// copied and read back as JSON, and the one thing the run page and the export are given. Also here: the apps and the
+// layouts to start from, and where the data is kept.
 import type { IconName } from '../../src/index'
 import { CATALOG, iconName, isKind, type FieldSpec, type Kind, type Region } from './catalog'
 import { flag, list, oneOf, slug, text } from './ir'
@@ -17,11 +19,20 @@ export const VIS: readonly Vis[] = ['off', 'always', 'wide', 'narrow']
 /** The regions every screen shares, by the name of their slot. */
 export const SHARED = ['bar', 'tabs', 'nav', 'foot', 'bottom'] as const
 export type SharedSlot = (typeof SHARED)[number]
+/** The setting that says whether a shared region is there and where. The bar has none: it is always there. */
+export const SHARED_VIS = { tabs: 'tabs', nav: 'sidebar', foot: 'foot', bottom: 'bottom' } as const satisfies Record<Exclude<SharedSlot, 'bar'>, keyof Settings>
+/** Whether the app has a shared region at all, at some width. */
+export const hasRegion = (settings: Settings, slot: SharedSlot): boolean => slot === 'bar' || settings[SHARED_VIS[slot]] !== 'off'
 /** The regions of one screen. */
-export const OWN = ['content', 'details', 'actions'] as const
+export const OWN = ['content', 'status', 'details', 'actions'] as const
 export type OwnSlot = (typeof OWN)[number]
 
 export type Settings = {
+  /**
+   * The form of the frame (`AppShell frame`): `line`, one surface with lines between the regions, or `sheet`, Xiox's
+   * (the bar and the sidebar on the window's ground, the work one sheet with a corner).
+   */
+  frame: 'line' | 'sheet'
   /** `compact`: the thin caption of a classic desktop program. */
   barSize: 'default' | 'compact'
   sidebar: Vis
@@ -40,8 +51,12 @@ export type Screen = {
   /** The room around the content, and how wide it may grow: the whole place, a page, or a column of text. */
   pad: 'none' | 'sm' | 'md' | 'lg'
   width: 'full' | 'page' | 'prose'
-  /** The line under the bar: the last result, a summary. Empty: no line. */
-  status: string
+  /**
+   * The row under the bar (in the sheet frame, the head of the sheet): the last result, a summary, the progress of a
+   * job. Off: no row.
+   */
+  statusOn: boolean
+  statusItems: Node[]
   details: 'off' | 'on'
   detailsTitle: string
   actionsOn: boolean
@@ -63,7 +78,7 @@ export function make(kind: Kind, set: Record<string, unknown> = {}): Node {
 }
 
 export function screen(name: string, icon: IconName, set: Partial<Screen> = {}): Screen {
-  return { id: slug(name, 'screen'), name, icon, pad: 'md', width: 'page', status: '', details: 'off', detailsTitle: 'Details', actionsOn: false, content: [], detailsItems: [], actions: [], ...set }
+  return { id: slug(name, 'screen'), name, icon, pad: 'md', width: 'page', statusOn: false, statusItems: [], details: 'off', detailsTitle: 'Details', actionsOn: false, content: [], detailsItems: [], actions: [], ...set }
 }
 
 /** A name no other screen has: «Screen», «Screen 2». */
@@ -86,12 +101,13 @@ export function copyNodes(nodes: readonly Node[]): Node[] {
 
 export const isNodes = (value: unknown): value is Node[] => Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === 'object' && item !== null && typeof (item as Node).type === 'string' && typeof (item as Node).props === 'object')
 
-const SETTINGS: Settings = { barSize: 'default', sidebar: 'off', sidebarSearch: false, account: '', tabs: 'off', bottom: 'off', foot: 'off' }
+const SETTINGS: Settings = { frame: 'line', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: '', tabs: 'off', bottom: 'off', foot: 'off' }
 const NO_SHARED = (): Record<SharedSlot, Node[]> => ({ bar: [], tabs: [], nav: [], foot: [], bottom: [] })
 
 /* ———— Apps to start from ———— */
 
-export type Starter = { id: string; name: string; about: string; make: () => AppModel }
+/** `app`: a whole app, with its content. `layout`: the regions of a frame with little in them, to start from. */
+export type Starter = { id: string; name: string; kind: 'app' | 'layout'; about: string; make: () => AppModel }
 
 function tasks(): AppModel {
   const rows = [
@@ -200,14 +216,158 @@ function mail(): AppModel {
   }
 }
 
+function workspace(): AppModel {
+  const rows = [
+    { title: 'Browser cache', line: 'Pages and images saved to load faster', fact: '1.50 GB', unread: false },
+    { title: 'Cookies', line: 'Sites in the keep list stay signed in', fact: '40 MB', unread: false },
+    { title: 'Model cache', line: 'Models downloaded for local tools', fact: '14.0 GB', unread: false },
+    { title: 'Package cache', line: 'Packages a package manager downloaded', fact: '2.10 GB', unread: false },
+    { title: 'Temporary files', line: 'Left behind by installers', fact: '640 MB', unread: false },
+  ]
+  const category = (label: string, icon: IconName, count: number) => make('NavItem', { label, icon, count })
+  // The job of the whole window, at the head of every view: the row does not come and go from one view to the next.
+  const job = () => make('Job', { result: 'Analysis done · 18.3 GB to clean', items: 'System\nBrowser\nDevelopment\nApplications' })
+  return {
+    version: 1,
+    name: 'Workspace',
+    look: structuredClone(START_LOOK),
+    start: 'cleanup',
+    // Xiox's frame: the views are tabs in the bar, the categories a sidebar on the window's ground, the work one sheet.
+    // On a phone the views go to the foot and the categories are a drawer, opened from the bar.
+    settings: { ...SETTINGS, frame: 'sheet', sidebar: 'always', bottom: 'narrow', foot: 'wide' },
+    shared: {
+      ...NO_SHARED(),
+      bar: [
+        make('MenuButton'),
+        make('Brand', { page: 'none' }),
+        make('ViewTabs', { show: 'wide' }),
+        make('Spacer'),
+        make('BarButton', { label: 'Commands', icon: 'search', variant: 'outline', shortcut: 'Ctrl K', action: 'say', said: 'The command palette would open here' }),
+      ],
+      nav: [make('NavGroup', { label: 'Categories', icon: 'labels', items: [category('System', 'settings', 6), category('Browser', 'link', 5), category('Development', 'ai', 4), category('Applications', 'all', 44)] })],
+      bottom: [make('BottomTabs')],
+      foot: [make('FootText', { text: '5 items' }), make('Spacer'), make('KeyHint', { keys: '↑↓', word: 'move' }), make('KeyHint', { keys: 'Space', word: 'select' }), make('KeyHint', { keys: '↵', word: 'clean' })],
+    },
+    screens: [
+      screen('Cleanup', 'delete', {
+        pad: 'none',
+        width: 'full',
+        statusOn: true,
+        statusItems: [job()],
+        details: 'on',
+        detailsTitle: 'Item',
+        actionsOn: true,
+        content: [make('Panel', { title: 'Cleanup', subtitle: '5 items · 2 selected', items: [make('List', { label: 'Items', rows, chosen: true, action: 'show' })] })],
+        detailsItems: [
+          make('Heading', { text: 'Browser cache', level: 'small' }),
+          make('Label', { text: 'Recommended' }),
+          make('Text', { text: 'Pages and images the browser saved to load faster. It saves them again as you browse.' }),
+        ],
+        actions: [make('Button', { label: 'Analyze', variant: 'outline', icon: 'refresh', action: 'job' }), make('Button', { label: 'Clean 2 items', action: 'say', said: '2 items cleaned' })],
+      }),
+      screen('Registry', 'structure', {
+        pad: 'none',
+        width: 'full',
+        statusOn: true,
+        statusItems: [job()],
+        content: [make('Panel', { title: 'Registry', subtitle: 'Not analyzed yet', items: [make('Empty', { title: 'Nothing analyzed yet', about: 'Analyze to find what can be cleaned.' })] })],
+      }),
+      screen('Settings', 'settings', {
+        width: 'prose',
+        statusOn: true,
+        statusItems: [job()],
+        content: [make('Heading', { text: 'Settings', level: 'section' }), make('Stack', { gap: 'none', items: [make('Setting', { label: 'Skip what is in use', about: 'Programs that are open keep their files' }), make('Setting', { label: 'Keep list', control: 'more' })] })],
+      }),
+    ],
+  }
+}
+
+/* The layouts: few components, no sidebar, each a way to lay a screen out. */
+
+function tabsOnly(): AppModel {
+  return {
+    version: 1,
+    name: 'My app',
+    look: structuredClone(START_LOOK),
+    start: 'home',
+    // The screens are tabs under the bar where there is room, and tabs at the foot on a phone.
+    settings: { ...SETTINGS, tabs: 'wide', bottom: 'narrow' },
+    shared: { ...NO_SHARED(), bar: [make('Brand', { page: 'none' }), make('Spacer'), make('BarButton', { label: 'New', icon: 'plus', variant: 'outline' })], tabs: [make('ViewTabs')], bottom: [make('BottomTabs')] },
+    screens: [
+      screen('Home', 'all', { content: [make('Heading', { text: 'Home', level: 'page' }), make('Text', { text: 'What the app is for, on its first screen.' })] }),
+      screen('Activity', 'history', { content: [make('Empty', { title: 'Nothing yet', about: 'What happens shows up here.' })] }),
+      screen('Settings', 'settings', { width: 'prose', content: [make('Heading', { text: 'Settings', level: 'section' }), make('Stack', { gap: 'none', items: [make('Setting', { label: 'Notices' })] })] }),
+    ],
+  }
+}
+
+function tabsDetails(): AppModel {
+  return {
+    version: 1,
+    name: 'My app',
+    look: structuredClone(START_LOOK),
+    start: 'items',
+    // Views of one screen as tabs under the bar; the details of the row chosen beside the list, a panel on a phone.
+    settings: { ...SETTINGS, tabs: 'always' },
+    shared: {
+      ...NO_SHARED(),
+      bar: [make('Brand', { page: 'none' }), make('Spacer'), make('BarSearch'), make('BarButton', { label: 'New', icon: 'plus', variant: 'outline' })],
+      tabs: [make('ViewTabs', { source: 'custom', tabs: [{ label: 'All' }, { label: 'Open' }, { label: 'Closed' }] })],
+    },
+    screens: [
+      screen('Items', 'all', {
+        pad: 'sm',
+        width: 'full',
+        details: 'on',
+        detailsTitle: 'Item',
+        content: [make('List', { label: 'Items', action: 'show' })],
+        detailsItems: [make('Field', { label: 'Title', placeholder: 'Kitchen quote, second version' }), make('Field', { label: 'Notes', kind: 'area' }), make('Segment', { label: 'State', options: [{ label: 'Open' }, { label: 'Closed' }], wide: true })],
+      }),
+    ],
+  }
+}
+
+function listDetails(): AppModel {
+  return {
+    version: 1,
+    name: 'My app',
+    look: structuredClone(START_LOOK),
+    start: 'list',
+    // One screen: the list, the details of the row chosen beside it, and the actions on it under the content.
+    settings: { ...SETTINGS },
+    shared: { ...NO_SHARED(), bar: [make('Brand', { page: 'none' }), make('Spacer'), make('BarSearch')] },
+    screens: [
+      screen('List', 'all', {
+        pad: 'sm',
+        width: 'full',
+        details: 'on',
+        actionsOn: true,
+        content: [make('List', { label: 'Items', action: 'show' })],
+        detailsItems: [make('Heading', { text: 'Kitchen quote, second version', level: 'small' }), make('Person'), make('Text', { text: 'The details of the row chosen in the list.' })],
+        actions: [make('Button', { label: 'Archive', variant: 'outline', action: 'say', said: 'Archived' }), make('Button', { label: 'Open', action: 'say', said: 'It would open here' })],
+      }),
+    ],
+  }
+}
+
 function blank(): AppModel {
   return { version: 1, name: 'My app', look: structuredClone(START_LOOK), start: 'home', settings: { ...SETTINGS }, shared: { ...NO_SHARED(), bar: [make('Brand'), make('Spacer')] }, screens: [screen('Home', 'all')] }
 }
 
 export const STARTERS: readonly Starter[] = [
-  { id: 'tasks', name: 'Tasks', about: 'A to-do list: a sidebar on a computer, tabs at the foot on a phone, a list with its details, a board and a settings page.', make: tasks },
-  { id: 'mail', name: 'Mail', about: 'A mail client: folders in a sidebar that is a drawer on a phone, a list, the message beside it, its actions under it.', make: mail },
-  { id: 'blank', name: 'Blank', about: 'A bar with the name of the app and one empty screen.', make: blank },
+  { id: 'tasks', name: 'Tasks', kind: 'app', about: 'A to-do list: a sidebar on a computer, tabs at the foot on a phone, a list with its details, a board and a settings page.', make: tasks },
+  { id: 'mail', name: 'Mail', kind: 'app', about: 'A mail client: folders in a sidebar that is a drawer on a phone, a list, the message beside it, its actions under it.', make: mail },
+  {
+    id: 'workspace',
+    name: 'Workspace',
+    kind: 'app',
+    about: 'Laid out as Xiox, in the sheet frame: the views as tabs in the bar with a «Commands» button, a sidebar of categories, a status row, a list in a panel, the details, the actions and the keys at the foot.',
+    make: workspace,
+  },
+  { id: 'tabs', name: 'Tabs', kind: 'layout', about: 'No sidebar: three screens as tabs under the bar, at the foot on a phone.', make: tabsOnly },
+  { id: 'tabs-details', name: 'Tabs and details', kind: 'layout', about: 'No sidebar: views as tabs under the bar, a list, and the details of the row chosen beside it.', make: tabsDetails },
+  { id: 'list-details', name: 'List and details', kind: 'layout', about: 'No sidebar and no tabs: one list, the details of the row chosen beside it, the actions under it.', make: listDetails },
+  { id: 'blank', name: 'Blank', kind: 'layout', about: 'A bar with the name of the app and one empty screen.', make: blank },
 ]
 
 /* ———— Reading an app back: from the browser, or from a file someone made ———— */
@@ -243,6 +403,8 @@ export function readApp(value: unknown): AppModel | null {
   const ids = new Set<string>()
   const screens = list(data['screens']).map((s): Screen => {
     const named = text(s['name'], 'Screen')
+    // An app saved when the status row was one line of text: the line is a fact in the row.
+    const said = text(s['status'])
     let id = slug(text(s['id']) || named, 'screen')
     while (seen.has(id)) id = `${id}-2`
     seen.add(id)
@@ -252,7 +414,8 @@ export function readApp(value: unknown): AppModel | null {
       icon: iconName(s['icon']),
       pad: oneOf(s['pad'], ['md', 'none', 'sm', 'lg'] as const),
       width: oneOf(s['width'], ['page', 'full', 'prose'] as const),
-      status: text(s['status']),
+      statusOn: flag(s['statusOn']) || (s['statusOn'] === undefined && said !== ''),
+      statusItems: nodes(Array.isArray(s['statusItems']) ? s['statusItems'] : said ? [{ type: 'FootText', props: { text: said } }] : [], 'status', ids),
       details: s['details'] === 'on' ? 'on' : 'off',
       detailsTitle: text(s['detailsTitle'], 'Details'),
       actionsOn: flag(s['actionsOn']),
@@ -268,6 +431,8 @@ export function readApp(value: unknown): AppModel | null {
     look: readLook(data['look']),
     start: screens.some((s) => s.id === data['start']) ? (data['start'] as string) : screens[0]!.id,
     settings: {
+      // An app saved before the frame had two forms has the line one.
+      frame: settings['frame'] === 'sheet' ? 'sheet' : 'line',
       barSize: settings['barSize'] === 'compact' ? 'compact' : 'default',
       sidebar: oneOf(settings['sidebar'], VIS),
       sidebarSearch: flag(settings['sidebarSearch']),
@@ -304,5 +469,5 @@ export function saveApp(app: AppModel): void {
 /** How many components an app holds, slots included. */
 export function countNodes(app: AppModel): number {
   const count = (list: readonly Node[]): number => list.reduce((sum, node) => sum + 1 + Object.values(node.props).reduce<number>((inner, value) => inner + (isNodes(value) ? count(value) : 0), 0), 0)
-  return SHARED.reduce((sum, slot) => sum + count(app.shared[slot]), 0) + app.screens.reduce((sum, s) => sum + count(s.content) + count(s.detailsItems) + count(s.actions), 0)
+  return SHARED.reduce((sum, slot) => sum + count(app.shared[slot]), 0) + app.screens.reduce((sum, s) => sum + count(s.content) + count(s.statusItems) + count(s.detailsItems) + count(s.actions), 0)
 }

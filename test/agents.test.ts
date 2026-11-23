@@ -71,7 +71,8 @@ describe('the catalogue for agents', () => {
   })
 
   test('the paths in it are the same on every system', () => {
-    for (const entry of catalog.entries) for (const file of entry.files) expect(file.file).toMatch(/^src\/[\w./-]+$/)
+    // The Tauri entry's source is outside `src/` (test/no-shell.test.ts).
+    for (const entry of catalog.entries) for (const file of entry.files) expect(file.file).toMatch(/^(?:src|tauri)\/[\w./-]+$/)
   })
 
   test('every file with a component says what it is, and a constant is not taken for a component', () => {

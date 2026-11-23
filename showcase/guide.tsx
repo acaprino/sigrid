@@ -146,7 +146,15 @@ const PHONE_PRINCIPLES: readonly { icon: IconName; title: string; refs: string; 
   { icon: 'check', title: 'Nothing shrinks', refs: 'R7', text: `The text sizes are the ones of the wide window, a field is 16px so the page does not zoom, and every control and row is at least ${TOUCH_TARGET}px at every density.` },
 ]
 
-/** The four layers of the README, each with where to see it. */
+/** The four levels of the README: what Sigrid is, each with where to see it. */
+const LEVELS: readonly { name: string; text: string; view?: 'components' | 'practices' | 'examples'; id?: string; see?: string }[] = [
+  { name: 'Toolkit', text: 'The theme engine, the tokens, the fonts and the primitives: buttons, fields, lists, menus, dialogs, sheets, notices, the command palette.', view: 'components', id: 'button', see: 'the components' },
+  { name: 'Advanced components', text: 'A table, a long list, a list put in order by hand, a rich text field and a graph canvas, each on an entry of its own, so an app loads only what it uses.' },
+  { name: 'Layout system', text: 'The one frame of an app, AppShell, with lines or as a sheet, its regions and the widths where it gives way; Panel, the layout parts, and the patterns for a computer and a phone.', view: 'practices', id: 'practices-frame', see: 'the frame' },
+  { name: 'App system for Tauri', text: 'The title bar, the window’s buttons and the desktop guard, wired to a Tauri window by @acaprino/sigrid/tauri; the app editor lays a whole app out and exports it. The native skeleton is the tauri-app-builder plugin’s.', view: 'examples', id: 'examples-xiox', see: 'an app in the sheet frame' },
+]
+
+/** What the toolkit rests on, as the README says it, each with where to see it. */
 const LAYERS: readonly { name: string; text: string; id: string; see: string }[] = [
   { name: 'Behaviour', text: 'Base UI carries the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip. Ark UI carries the richer parts Base UI lacks: date picker, tags input, file upload, combobox, slider, tabs.', id: 'select', see: 'Select' },
   { name: 'Form', text: "Park UI's recipes, translated by hand to Tailwind classes: the sizes, variants, corner levels and elevation of every primitive.", id: 'button', see: 'Button' },
@@ -156,7 +164,25 @@ const LAYERS: readonly { name: string; text: string; id: string; see: string }[]
 
 export function PhilosophyView() {
   return (
-    <Page title="Philosophy" lead="Sigrid is the design system shared by a suite of apps for to-do lists, mail and more, made ADHD first: calm surfaces, one accent that shows where to look and what to click, and one clear action at a time.">
+    <Page title="Philosophy" lead="Sigrid is the UI system shared by a suite of apps for to-do lists, mail and more, in four levels, all made for coding agents. ADHD first: calm surfaces, one accent that shows where to look and what to click, one clear action at a time, and controls that stay where they are.">
+      <Section id="philosophy-levels" icon="structure" title="Four levels" note="From a button to a whole app in a window. Each level rests on the one before, and an agent reads all four in AGENTS.md, the catalogue and the examples.">
+        <ol role="list" className="@container flex flex-col">
+          {LEVELS.map((level, i) => (
+            <li key={level.name} className="grid gap-1 border-t border-line py-4 first:border-t-0 @2xl:grid-cols-[2rem_12rem_minmax(0,1fr)] @2xl:gap-4">
+              <span className="text-sm text-ink-mute tabular-nums">{i + 1}</span>
+              <h3 className="text-sm font-semibold text-ink">{level.name}</h3>
+              <div className="min-w-0">
+                <p className="max-w-prose text-sm text-ink-soft">{level.text}</p>
+                {level.view && level.id ? (
+                  <See view={level.view} id={level.id}>
+                    See {level.see}
+                  </See>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Section>
       <Section id="philosophy-idea" icon="colors" title="Calm surfaces, one accent" note="Neutral surfaces carry the content. The accent means one of two things: act here, or this is on. Everything else stays neutral, so the accent keeps its pull (R2). The gray baseline has no hue, so there the accent is the ink: pick a coloured theme in Look to see the screen below follow it.">
         <div className="@container">
           <div className="grid items-start gap-6 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
@@ -201,7 +227,7 @@ export function PhilosophyView() {
           See the phone layouts
         </See>
       </Section>
-      <Section id="philosophy-layers" icon="structure" title="Four layers, each from its best source" note="Nothing is invented twice: behaviour, form, motion and colour each come from the place that does it best.">
+      <Section id="philosophy-layers" icon="structure" title="What the toolkit rests on" note="Nothing is invented twice: behaviour, form, motion and colour each come from the place that does it best.">
         <ol role="list" className="@container flex flex-col">
           {LAYERS.map((layer, i) => (
             <li key={layer.name} className="grid gap-1 border-t border-line py-4 first:border-t-0 @2xl:grid-cols-[2rem_8rem_minmax(0,1fr)] @2xl:gap-4">

@@ -1,7 +1,8 @@
 // The app editor: a whole app made of the toolkit's parts, by dragging. What is edited is the frame every app of the
 // suite has (`AppShell`): its regions are the places components are dropped into, and each region takes only what
-// belongs there (docs/patterns.md). An app has screens; the bar, the sidebar, the tabs and the foot are shared by all
-// of them, the content, the details and the actions are each screen's own.
+// belongs there (docs/patterns.md). An app has screens; the bar, and the regions the app chooses to have (a sidebar,
+// tabs, the bar and the strip at the foot), are shared by all of them and are the same on each (R14); the content,
+// the status row, the details and the actions are each screen's own. The frame is the line one or Xiox's sheet.
 // - The canvas is the app at the width of a device (a phone, a tablet, a laptop, or the room there is), in a browser
 //   tab or as a native window in Tauri. One layout serves them all: a region can be there always, or only where the
 //   frame is narrow or wide, and so can any component.
@@ -56,7 +57,7 @@ import { exportFiles, zip } from './editor/codegen'
 import { slug } from './editor/ir'
 import { LookPanel, type Look } from './editor/look'
 import { STARTERS, copyNodes, countNodes, freshScreenName, loadApp, readApp, saveApp, screen as newScreen, type AppModel, type Screen, type Settings, type Vis } from './editor/model'
-import { CanvasDocument, EditEnvContext, FIELD_CONTROLS, configOf, fromData, paletteOf, toData, type EditEnv } from './editor/puck'
+import { CanvasDocument, EditEnvContext, FIELD_CONTROLS, configOf, fromData, paletteOf, rootSlots, toData, type EditEnv } from './editor/puck'
 import type { HostKind } from './editor/render'
 import { Address, Clock, HomeIndicator } from './hosts'
 
@@ -87,8 +88,8 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-/** A choice of a few words: its name above, the words in a row. */
-function Choice<Value extends string>({ label, value, options, onChange }: { label: string; value: Value; options: readonly (readonly [Value, string])[]; onChange: (value: Value) => void }) {
+/** A choice of a few words: its name above, the words in a row, and what it is for under them. */
+function Choice<Value extends string>({ label, about, value, options, onChange }: { label: string; about?: string; value: Value; options: readonly (readonly [Value, string])[]; onChange: (value: Value) => void }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-medium text-ink">{label}</span>
@@ -99,6 +100,7 @@ function Choice<Value extends string>({ label, value, options, onChange }: { lab
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
+      {about ? <span className="text-xs text-ink-mute">{about}</span> : null}
     </div>
   )
 }
@@ -112,6 +114,26 @@ const OnOff = ({ label, about, checked, onChange }: { label: string; about?: str
     <Switch aria-label={label} checked={checked} onCheckedChange={onChange} />
   </label>
 )
+
+/**
+ * A region every screen shares: a switch that adds it to the app or takes it away (what it holds is kept, for when it
+ * comes back), and while it is there, at which widths, and what else it has.
+ */
+function RegionSetting({ label, about, value, fresh, where, help, onChange, children }: { label: string; about: string; value: Vis; fresh: Vis; where: readonly Vis[]; help?: string; onChange: (value: Vis) => void; children?: React.ReactNode }) {
+  return (
+    <div data-region-setting={label} className="flex flex-col gap-3">
+      <OnOff label={label} about={about} checked={value !== 'off'} onChange={(on) => onChange(on ? fresh : 'off')} />
+      {value !== 'off' ? (
+        <>
+          <FormField label="Shown" help={help}>
+            <Select aria-label={`${label}, shown`} options={vis(...where)} value={value} onValueChange={(next) => onChange(next as Vis)} />
+          </FormField>
+          {children}
+        </>
+      ) : null}
+    </div>
+  )
+}
 
 function download(name: string, data: string | Uint8Array, type: string) {
   const url = URL.createObjectURL(new Blob([typeof data === 'string' ? data : new Uint8Array(data)], { type }))
@@ -150,6 +172,12 @@ function PartPanel() {
   )
 }
 
+/** The solid button of a screen's actions is somewhere other than at the end (R3, R14). */
+const solidNotLast = (screen: Screen): boolean => {
+  const at = screen.actions.findIndex((node) => node.type === 'Button' && (node.props['variant'] ?? 'default') === 'default')
+  return at !== -1 && at !== screen.actions.length - 1
+}
+
 function ScreenPanel({ app, screen, onScreen, onDuplicate, onDelete, onStart }: { app: AppModel; screen: Screen; onScreen: (change: Partial<Screen>) => void; onDuplicate: () => void; onDelete: () => void; onStart: () => void }) {
   return (
     <div data-panel="screen" className="flex flex-col gap-4">
@@ -174,9 +202,8 @@ function ScreenPanel({ app, screen, onScreen, onDuplicate, onDelete, onStart }: 
           </FormField>
         ) : null}
         <OnOff label="Actions" about="A bar under the content, the main action last." checked={screen.actionsOn} onChange={(actionsOn) => onScreen({ actionsOn })} />
-        <FormField label="Status line" help="Under the bar: the last result, one line. Empty: no line.">
-          <Input value={screen.status} onChange={(event) => onScreen({ status: event.target.value })} autoComplete="off" />
-        </FormField>
+        {screen.actionsOn && solidNotLast(screen) ? <p className="text-xs text-ink-soft">The solid button is not last in the actions: on every screen the main action is at the end of the bar, where the eye finds it again.</p> : null}
+        <OnOff label="Status row" about="Under the bar: the last result, a summary, the progress of a job." checked={screen.statusOn} onChange={(statusOn) => onScreen({ statusOn })} />
       </Group>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onDuplicate}>
@@ -202,32 +229,38 @@ function AppPanel({ app, onApp, onSettings, onReplace, onSay }: { app: AppModel;
         <FormField label="Name" help="In the bar, and the name of the exported project.">
           <Input value={app.name} onChange={(event) => onApp({ name: event.target.value })} autoComplete="off" />
         </FormField>
+        <Choice
+          label="Frame"
+          about={s.frame === 'sheet' ? 'As Xiox: the bar and the sidebar on the window’s ground, the work one sheet with a corner.' : 'One surface, with a line between the regions.'}
+          value={s.frame}
+          options={[['line', 'Line'], ['sheet', 'Sheet']]}
+          onChange={(frame) => onSettings({ frame })}
+        />
         <Choice label="The bar at the head" value={s.barSize} options={[['default', 'Regular'], ['compact', 'Compact']]} onChange={(barSize) => onSettings({ barSize })} />
       </Group>
-      <Group label="Regions every screen shares">
-        <FormField label="Sidebar" help="Always: a rail on a tablet, a drawer on a phone (give the bar a menu button). Wide only: on a phone it is gone, and the tabs at the foot take its place.">
-          <Select options={vis('off', 'always', 'wide')} value={s.sidebar} onValueChange={(sidebar) => onSettings({ sidebar: sidebar as Vis })} />
-        </FormField>
-        {s.sidebar !== 'off' ? (
-          <>
-            <OnOff label="A search box in the sidebar" checked={s.sidebarSearch} onChange={(sidebarSearch) => onSettings({ sidebarSearch })} />
-            <FormField label="Account at its foot" help="A name, with its avatar. Empty: nothing there.">
-              <Input value={s.account} onChange={(event) => onSettings({ account: event.target.value })} autoComplete="off" />
-            </FormField>
-          </>
-        ) : null}
-        <FormField label="Tabs under the bar">
-          <Select options={vis('off', 'always', 'wide', 'narrow')} value={s.tabs} onValueChange={(tabs) => onSettings({ tabs: tabs as Vis })} />
-        </FormField>
-        <FormField label="Bar at the foot" help="Where the thumb reaches: the views of a phone, up to five.">
-          <Select options={vis('off', 'always', 'narrow', 'wide')} value={s.bottom} onValueChange={(bottom) => onSettings({ bottom: bottom as Vis })} />
-        </FormField>
-        <FormField label="Strip at the foot" help="The state of the service, counts, keys. With a finger it is as tall as a control: leave it to wide frames.">
-          <Select options={vis('off', 'always', 'wide')} value={s.foot} onValueChange={(foot) => onSettings({ foot: foot as Vis })} />
-        </FormField>
+      <Group label="Regions">
+        <p className="text-xs text-ink-mute">What every screen shares, besides the bar. Each one is a choice; the content is always there, and the details, the actions and the status row are each screen’s own.</p>
+        <RegionSetting label="Sidebar" about="The places of the app, at the start." value={s.sidebar} fresh="always" where={['always', 'wide']} help="Always: a rail on a tablet, a drawer on a phone (give the bar a menu button). Wide only: on a phone it is gone, and the tabs at the foot take its place." onChange={(sidebar) => onSettings({ sidebar })}>
+          <OnOff label="A search box in the sidebar" checked={s.sidebarSearch} onChange={(sidebarSearch) => onSettings({ sidebarSearch })} />
+          <FormField label="Account at its foot" help="A name, with its avatar. Empty: nothing there.">
+            <Input value={s.account} onChange={(event) => onSettings({ account: event.target.value })} autoComplete="off" />
+          </FormField>
+        </RegionSetting>
+        <RegionSetting label="Tabs under the bar" about="The views, across the window." value={s.tabs} fresh="always" where={['always', 'wide', 'narrow']} onChange={(tabs) => onSettings({ tabs })} />
+        <RegionSetting label="Bar at the foot" about="Where the thumb reaches: the views of a phone, up to five." value={s.bottom} fresh="narrow" where={['always', 'narrow', 'wide']} onChange={(bottom) => onSettings({ bottom })} />
+        <RegionSetting label="Strip at the foot" about="The state of the service, counts, keys." value={s.foot} fresh="wide" where={['always', 'wide']} help="With a finger it is as tall as a control: leave it to wide frames." onChange={(foot) => onSettings({ foot })} />
       </Group>
       <Group label="Start again from">
-        <Select aria-label="An app to start from" options={STARTERS.map((option) => ({ value: option.id, label: option.name }))} value={starter} onValueChange={setStarter} />
+        <Select
+          aria-label="An app or a layout to start from"
+          options={[]}
+          groups={[
+            { label: 'Apps', options: STARTERS.filter((option) => option.kind === 'app').map((option) => ({ value: option.id, label: option.name })) },
+            { label: 'Layouts', options: STARTERS.filter((option) => option.kind === 'layout').map((option) => ({ value: option.id, label: option.name })) },
+          ]}
+          value={starter}
+          onValueChange={setStarter}
+        />
         <p className="text-xs text-ink-mute">{STARTERS.find((option) => option.id === starter)?.about}</p>
         <Button variant="outline" size="sm" className="w-fit" onClick={() => onReplace(STARTERS.find((option) => option.id === starter)!.make())}>
           Replace this app
@@ -366,9 +399,11 @@ function Chosen({ onChosen }: { onChosen: (id: string | null) => void }) {
 
 const params = new URLSearchParams(location.search)
 const startDevice = (Object.keys(DEVICES) as Device[]).find((device) => device === params.get('device')) ?? 'fill'
+/** `?starter=workspace`: the app to start from where this browser keeps none yet. What is kept is never replaced. */
+const firstStarter = STARTERS.find((starter) => starter.id === params.get('starter')) ?? STARTERS[0]!
 
 function Editor() {
-  const [app, setApp] = React.useState<AppModel>(() => loadApp() ?? STARTERS[0]!.make())
+  const [app, setApp] = React.useState<AppModel>(() => loadApp() ?? firstStarter.make())
   const [screenId, setScreenId] = React.useState(app.start)
   // The canvas is made again for another screen and for another app: its history starts over.
   const [epoch, setEpoch] = React.useState(0)
@@ -452,7 +487,7 @@ function Editor() {
   }
   const duplicateScreen = () => {
     const name = freshScreenName(app, `${screen.name} copy`)
-    const made: Screen = { ...screen, id: slug(name, 'screen'), name, content: copyNodes(screen.content), detailsItems: copyNodes(screen.detailsItems), actions: copyNodes(screen.actions) }
+    const made: Screen = { ...screen, id: slug(name, 'screen'), name, content: copyNodes(screen.content), statusItems: copyNodes(screen.statusItems), detailsItems: copyNodes(screen.detailsItems), actions: copyNodes(screen.actions) }
     setApp((now) => ({ ...now, screens: [...now.screens, made] }))
     setScreenId(made.id)
     setEpoch((n) => n + 1)
@@ -467,14 +502,42 @@ function Editor() {
   }
 
   const screensKey = app.screens.map((s) => `${s.id}:${s.name}`).join('|')
-  const config = React.useMemo(() => configOf(app.screens), [screensKey])
+  // The regions the canvas has: a region added or taken away makes the canvas again, as another screen does. Only
+  // while editing: while the app runs in the frame the screen in sight follows the app, and the frame must stay.
+  const slots = rootSlots(app, screen)
+  const slotsSeen = React.useRef(slots.join('|'))
+  // Made again, the canvas makes the panels around it again too: the switch that was pressed keeps the focus, and the
+  // settings keep their scroll. Both are read here, while the panels that go are still on the page.
+  const kept = React.useRef<{ label: string | null; scroll: number }>({ label: null, scroll: 0 })
+  if (mode === 'edit' && slotsSeen.current !== slots.join('|')) {
+    const focused = document.activeElement
+    kept.current = {
+      label: focused?.getAttribute('role') === 'switch' ? focused.getAttribute('aria-label') : null,
+      scroll: document.querySelector<HTMLElement>('[data-slot="inspector-body"]')?.scrollTop ?? 0,
+    }
+    slotsSeen.current = slots.join('|')
+  }
+  const slotsKey = slotsSeen.current
+  const config = React.useMemo(() => configOf(app.screens, slots), [screensKey, slotsKey])
+  const slotsBefore = React.useRef(slotsKey)
+  React.useEffect(() => {
+    if (slotsBefore.current === slotsKey) return
+    slotsBefore.current = slotsKey
+    const frame = requestAnimationFrame(() => {
+      const body = document.querySelector<HTMLElement>('[data-slot="inspector-body"]')
+      if (body) body.scrollTop = kept.current.scroll
+      const label = kept.current.label
+      if (label) document.querySelector<HTMLElement>(`[role="switch"][aria-label="${CSS.escape(label)}"]`)?.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [slotsKey])
   // The screen the canvas was made with. While the app runs in the frame the user goes to other screens, and the
   // canvas, still mounted, still holds this one: what it changes belongs here, not to the screen in sight.
   const drawn = React.useRef(latest.current.screen.id)
   const data = React.useMemo(() => {
     drawn.current = latest.current.screen.id
     return toData(latest.current.app, latest.current.screen)
-  }, [epoch])
+  }, [epoch, slotsKey])
   const onChange = React.useCallback((next: Data) => setApp((now) => fromData(now, drawn.current, next)), [])
   const onChosen = React.useCallback((id: string | null) => {
     if (id) {
@@ -490,7 +553,7 @@ function Editor() {
 
   return (
     <EditEnvContext.Provider value={env}>
-      <Puck key={epoch} config={config} data={data} onChange={onChange} iframe={{ enabled: true }} overrides={{ iframe: CanvasDocument, fieldTypes: FIELD_CONTROLS, drawerItem: PaletteItem }}>
+      <Puck key={`${epoch}:${slotsKey}`} config={config} data={data} onChange={onChange} iframe={{ enabled: true }} overrides={{ iframe: CanvasDocument, fieldTypes: FIELD_CONTROLS, drawerItem: PaletteItem }}>
         <Chosen onChosen={onChosen} />
         <PaletteFilter find={find} />
         <div className="h-dvh overflow-hidden bg-paper text-ink">
@@ -607,9 +670,7 @@ function Editor() {
                 <span className="tabular-nums">
                   Frame {frameWidth}px: {narrow ? 'narrow' : 'wide'}
                 </span>
-                <span>
-                  sidebar {app.settings.sidebar === 'off' || (app.settings.sidebar === 'wide' && narrow) ? 'not there' : layout.sidebar === 'full' ? 'whole' : `a ${layout.sidebar}`}
-                </span>
+                {app.settings.sidebar !== 'off' ? <span>sidebar {app.settings.sidebar === 'wide' && narrow ? 'not there here' : layout.sidebar === 'full' ? 'whole' : `a ${layout.sidebar}`}</span> : null}
                 {screen.details === 'on' ? <span>details {layout.inspector === 'docked' ? 'docked' : 'a panel'}</span> : null}
                 <span className="tabular-nums">
                   {app.screens.length} {app.screens.length === 1 ? 'screen' : 'screens'}, {total} {total === 1 ? 'component' : 'components'}

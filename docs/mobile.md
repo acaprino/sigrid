@@ -14,7 +14,7 @@ or in the browser's device mode, to see what follows the pointer itself.
 
 ## The idea
 
-Sigrid is ADHD first: calm surfaces, one accent, one clear action at a time (`DESIGN.md`, R1 to R13). A phone does not
+Sigrid is ADHD first: calm surfaces, one accent, one clear action at a time (`DESIGN.md`, R1 to R14). A phone does not
 change that. It makes it stricter, because there is room for one thing.
 
 1. **The same app, in one column.** Do not design a second app. The regions of the frame give way in a fixed order
@@ -87,6 +87,9 @@ The page:
 
 The frame:
 
+- Keep the shared controls where they are on every screen (R14): the bar at the head and the views at the foot are
+  there on every page, in the same order and place; a control that does nothing on a page is disabled, not taken
+  away. On a phone a control that moves is one the thumb misses. `docs/patterns.md` says how.
 - Let `AppShell` measure itself. Do not switch on `usePhone()` to lay a screen out: a narrow window with a mouse wants
   the same layout. Use `usePhone()` for what belongs to a finger on a small screen: a swipe on a row, capture from the
   plus.

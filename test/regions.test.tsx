@@ -62,3 +62,26 @@ test('Shift+F6 goes the other way, and a closed inspector is skipped', () => {
   press()
   expect(focused()).toBe(screen.getByRole('button', { name: 'New message' }))
 })
+
+test('a region the frame does not have is skipped, even when another frame on the page has one; so is one with nothing to focus', () => {
+  render(
+    <>
+      <AppShell contentLabel="Messages" titleBar={<TitleBar><p>Only words</p></TitleBar>} inspector={<Inspector title="Details" open><button type="button">Edit</button></Inspector>}>
+        <p>The list</p>
+      </AppShell>
+      {/* A sidebar of something else on the page, not of this frame. */}
+      <Sidebar aria-label="Elsewhere">
+        <SidebarGroup>
+          <NavItem>Other</NavItem>
+        </SidebarGroup>
+      </Sidebar>
+    </>,
+  )
+  // The title bar holds nothing that takes the focus, and the frame has no sidebar: from nowhere, the content.
+  press()
+  expect(focused()).toBe(screen.getByRole('main', { name: 'Messages' }))
+  press()
+  expect(focused()).toBe(screen.getByRole('button', { name: 'Edit' }))
+  press()
+  expect(focused()).toBe(screen.getByRole('main', { name: 'Messages' }))
+})

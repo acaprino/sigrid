@@ -24,7 +24,7 @@ import {
 } from '../../src/index'
 import { isEl, isExpr, isJson, isSlot, isWhen, type Child, type Scope, type Val } from './ir'
 import type { AppModel, Settings } from './model'
-import { DETAILS_CLASS, contentClass, planOf, visible, type ScreenPlan } from './plan'
+import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, contentClass, planOf, visible, type ScreenPlan } from './plan'
 
 /** Under this width of the frame the sidebar is a drawer: the app is laid out as on a phone. */
 export const NARROW_PX = Sigrid.APP_SHELL_STEPS.rail
@@ -40,6 +40,7 @@ function MenuButton({ onOpen }: { onOpen?: () => void }) {
 const HELPERS: Record<string, React.ElementType> = { MenuButton }
 
 function tagOf(tag: string): React.ElementType | null {
+  if (tag === 'Fragment') return React.Fragment
   if (/^[a-z]/.test(tag)) return tag as keyof React.JSX.IntrinsicElements
   return HELPERS[tag] ?? ((Sigrid as unknown as Record<string, React.ElementType | undefined>)[tag] ?? null)
 }
@@ -67,12 +68,13 @@ export const drawAll = (children: readonly Child[], scope: Scope): React.ReactNo
 export type FrameProps = {
   name: string
   settings: Settings
-  screen: Pick<ScreenPlan, 'id' | 'name' | 'status' | 'detailsTitle'>
+  screen: Pick<ScreenPlan, 'id' | 'name' | 'detailsTitle'>
   host: HostKind
   narrow: boolean
   /** What each region holds. Null: the region is not there. */
   bar: React.ReactNode
   tabs: React.ReactNode | null
+  status: React.ReactNode | null
   nav: React.ReactNode | null
   foot: React.ReactNode | null
   bottom: React.ReactNode | null
@@ -93,7 +95,7 @@ export type FrameProps = {
 
 const DOCKED: AppShellLayout = { sidebar: 'full', inspector: 'docked' }
 
-export function Frame({ name, settings, screen, host, narrow, bar, tabs, nav, foot, bottom, content, details, actions, menu, onMenu, detailsOpen, onDetails, animated, edit }: FrameProps) {
+export function Frame({ name, settings, screen, host, narrow, bar, tabs, status, nav, foot, bottom, content, details, actions, menu, onMenu, detailsOpen, onDetails, animated, edit }: FrameProps) {
   // A window of its own on a computer: the app draws the window's bar. On a phone the system draws everything.
   const ownWindow = host === 'native' && !narrow
   const [maximized, setMaximized] = React.useState(false)
@@ -124,6 +126,7 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, nav, fo
   return (
     <AppShell
       desktop={ownWindow}
+      frame={settings.frame === 'sheet' ? 'sheet' : undefined}
       contentLabel={screen.name}
       titleBar={
         <TitleBar
@@ -135,7 +138,7 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, nav, fo
         </TitleBar>
       }
       tabs={tabs ? <Toolbar aria-label="Views">{tabs}</Toolbar> : undefined}
-      status={screen.status ? <span>{screen.status}</span> : undefined}
+      status={status ?? undefined}
       sidebar={
         !edit || !sidebar ? (
           sidebar
@@ -201,6 +204,13 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
   const [details, setDetails] = React.useState(() => window.matchMedia(`(min-width: ${Sigrid.APP_SHELL_STEPS.inspector}px)`).matches)
   const [values, setValues] = React.useState<Record<string, unknown>>({})
   const [notices, setNotices] = React.useState<ToastItem[]>([])
+  // The app's job: how far it is, in percent, while it runs (codegen.ts writes the same timer).
+  const [job, setJob] = React.useState<number | null>(null)
+  React.useEffect(() => {
+    if (job === null) return
+    const timer = setTimeout(() => setJob(job >= 100 ? null : Math.min(100, job + JOB_STEP)), JOB_TICK_MS)
+    return () => clearTimeout(timer)
+  }, [job])
   const count = React.useRef(0)
   const root = React.useRef<HTMLDivElement>(null)
   const narrow = useMedia(`(width < ${NARROW_PX}px)`)
@@ -232,6 +242,10 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
     setDetails,
     toggleDetails: () => setDetails((open) => !open),
     say: (said: string) => setNotices((list) => [...list, { id: `notice-${(count.current += 1)}`, text: said }]),
+    job,
+    busy: job !== null,
+    runJob: () => setJob(0),
+    inspector: Object.fromEntries(plan.screens.map((s) => [s.id, s.details !== null])),
   }
   for (const state of plan.states) {
     scope[state.name] = state.name in values ? values[state.name] : state.initial
@@ -249,6 +263,7 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
         animated={app.look.animated}
         bar={drawAll(plan.shared.bar, scope)}
         tabs={region('tabs', plan.settings.tabs)}
+        status={screen.status ? <>{drawAll(screen.status, scope)}</> : null}
         nav={region('nav', plan.settings.sidebar)}
         foot={region('foot', plan.settings.foot)}
         bottom={region('bottom', plan.settings.bottom)}

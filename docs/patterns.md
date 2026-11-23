@@ -2,7 +2,7 @@
 
 How to put the toolkit's parts together into a whole screen. These are recommendations, drawn from what works in the
 suite's apps (Imago's frame is their source): nothing here is checked by a program, and an app that has a reason does
-otherwise. The owner's rules R1 to R13 (`DESIGN.md`) are a separate matter: those are checked.
+otherwise. The owner's rules R1 to R14 (`DESIGN.md`) are a separate matter: those are checked.
 
 The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, view
 Practices, section «Layout patterns». The parts are optimized for these layouts, and work outside them too.
@@ -34,6 +34,22 @@ Recommended:
   toolbar, last before the window's buttons.
 - Show the button that opens the sidebar only where the sidebar is a drawer (`useAppShell().sidebar === 'drawer'`).
 
+## The shared controls stay where they are (R14)
+
+A control every page of an app shares never moves from one page to the next: an ADHD eye that has to look for it
+again is distracted, and frustrated. The owner's rule of 2026-11-23, above all on a phone.
+
+- The title bar, the views (tabs in the bar, under it or at the foot), the sidebar, the footer and the bottom bar are
+  the same on every page: the same parts, in the same order, in the same place. Build them once, outside the pages.
+- A shared control that does nothing on one page stays, disabled; it is not taken away, and nothing slides into its
+  place.
+- The primary action is always in the same place: the end of the action bar, or the end of the toolbar, on every
+  page that has one.
+- A page's own tools go in its own regions (the content, a `Panel`'s header and tools, the inspector), never between
+  the shared controls.
+- On a phone the bar at the head and the views at the foot are there on every page, in the same order; a page does
+  not hide them, and a sheet opens over them, not in their place.
+
 ## Two forms of the frame: lines, or a sheet
 
 The frame has two forms with the same regions and the same steps; `frame` chooses one.
@@ -48,7 +64,8 @@ The frame has two forms with the same regions and the same steps; `frame` choose
 
 Recommended for the sheet, as Xiox does it: the views as tabs in the bar, «Commands» with its shortcut before the
 window's buttons (`ToolbarButton variant="outline"` with `shortcut="Ctrl K"`), the status row at the head of the
-sheet, the content as a `Panel`, the actions at its foot, and the keys of the view in the footer (`Kbd`). The gallery
+sheet, the content as a `Panel`, the actions at its foot, and the keys that work now in the footer (`KeyHints`, read from
+the registry of commands, with `{ keys: 'F6', label: … }` for the frame's own move between regions). The gallery
 shows it: view Examples, section «Xiox».
 
 A `Panel` lays out a region inside: a header with the title, a line that says how much is there and the tools of the
@@ -134,7 +151,8 @@ invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps
 list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
 Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). Things
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
-(`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector. The
+(`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
+relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. The
 examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each
@@ -172,12 +190,26 @@ it behave as a program. They are Imago's techniques; on a page in a browser tab 
   an editor in `ownKeysIn` and it keeps its keys.
 - `TitleBar` with `dragProps` and `WindowControls`, as above.
 
+In Tauri, `@acaprino/sigrid/tauri` wires them from the page, with nothing of Tauri loaded in a browser:
+
+```tsx
+import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
+
+const ownWindow = readHost().ownWindow // a Tauri window on a computer
+const controls = useWindowControls({ enabled: ownWindow, onError: (what, error) => say(`${what} failed`) })
+<TitleBar dragProps={ownWindow ? DRAG_REGION : undefined} windowControls={ownWindow ? <WindowControls {...controls} /> : undefined} />
+```
+
+`useZoom` gives the window Ctrl with + - 0 and the wheel; `useSnapLayouts` and `useWindowTheme` are opt-in, with the
+names of the app's own native commands; `TAURI_PERMISSIONS` lists what the app's capability file grants.
+
 The gallery shows the same app with and without these switches: view Examples, where a to-do list and a mail client
 are drawn in a browser tab and in a Tauri window, on a computer and on a phone, with a table of what the host changes.
 
 What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
-web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
+web view is lost. The native skeleton of an app (`src-tauri`) is made by the tauri-app-builder plugin of Claude Code;
+Imago's `imago-shell` crate does these for Tauri on Windows.
 
 ## Progress of a task
 
@@ -187,6 +219,11 @@ web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
 - One thing with a size (a file, an export): `Progress` under its name, with the speed or the size beside the name; at
   the end the text says «Complete» and the size takes the speed's place. A failure keeps the range where it stopped
   (`status="error"`), and Retry is the one solid action.
+- A job of the whole window (an analysis, a scan, a cleaning), as Xiox does it: the frame's `status` row is its
+  progress while it runs, and appears there by itself, under the tabs. In order: the state as a word («Analyzing»),
+  the job, a `Progress` of a fixed width, how far as text («36%»), and the item it is on; what the row says at its end
+  stays. The list is frozen meanwhile: what the job works on cannot change. At the end the row says the result
+  («Analysis done · 13.48 GB to delete»).
 - A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
 - Where it is not known how far it is, `value={null}`: a track and the word «In progress». Nothing loops.
 - Do not make screen readers read every percent: say the end and the failure in a live region of the app (`Toasts`).

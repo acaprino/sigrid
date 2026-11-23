@@ -9,12 +9,15 @@
 //   menu, setMenu(open)       the drawer
 //   details, setDetails(open), toggleDetails()  the inspector: open at the start only where it is docked
 //   say(text)                 a notice at the foot of the window
+//   job, busy, runJob()       the app's job: how far it is (null when it does not run), whether it runs, the way to start it
 import { CATALOG, isKind, type BuildCtx } from './catalog'
 import { call, equals, h, name, not, text, type Child, type Expr, type StateDecl } from './ir'
-import { SHARED, type AppModel, type Node, type Screen, type Settings, type SharedSlot } from './model'
+import { SHARED, hasRegion, type AppModel, type Node, type Screen, type Settings, type SharedSlot } from './model'
 
-export type ScreenPlan = Pick<Screen, 'id' | 'name' | 'icon' | 'pad' | 'width' | 'status' | 'detailsTitle'> & {
+export type ScreenPlan = Pick<Screen, 'id' | 'name' | 'icon' | 'pad' | 'width' | 'detailsTitle'> & {
   readonly content: readonly Child[]
+  /** Null: this screen has no status row. */
+  readonly status: readonly Child[] | null
   /** Null: this screen has no inspector. */
   readonly details: readonly Child[] | null
   /** Null: this screen has no action bar. */
@@ -28,14 +31,19 @@ export type Plan = {
   readonly screens: readonly ScreenPlan[]
   readonly shared: Readonly<Record<SharedSlot, readonly Child[]>>
   readonly states: readonly StateDecl[]
-  /** What the frame has to provide, because something in the app uses it. */
-  readonly uses: { readonly say: boolean; readonly menu: boolean; readonly details: boolean }
+  /**
+   * What the frame has to provide, because something in the app uses it. `job`: a Job is in a status row, so there is a
+   * job and its timer; `runJob`: something presses to start it.
+   */
+  readonly uses: { readonly say: boolean; readonly menu: boolean; readonly details: boolean; readonly job: boolean; readonly runJob: boolean }
 }
 
 /** The names the frame takes for itself: a component's state is given another. */
-const RESERVED = ['screen', 'setScreen', 'go', 'menu', 'setMenu', 'details', 'setDetails', 'toggleDetails', 'narrow', 'notices', 'setNotices', 'say', 'content', 'inspector', 'actions', 'status']
+const RESERVED = ['screen', 'setScreen', 'go', 'menu', 'setMenu', 'details', 'setDetails', 'toggleDetails', 'narrow', 'notices', 'setNotices', 'say', 'job', 'setJob', 'busy', 'runJob', 'content', 'inspector', 'actions', 'status']
 
 export const SCREEN_NAME: Expr = { $expr: 'SCREENS[screen]', run: (scope) => (scope['SCREENS'] as Record<string, string> | undefined)?.[scope['screen'] as string] }
+/** The screen in sight has no details: `inspector` is the record of the screens that have them. */
+const NO_DETAILS: Expr = { $expr: '!inspector[screen]', run: (scope) => !(scope['inspector'] as Record<string, unknown> | undefined)?.[scope['screen'] as string] }
 
 /** The visibility a component asks for, as the condition it is drawn under. Null: always. */
 export function shownWhen(show: unknown): Expr | null {
@@ -45,8 +53,9 @@ export function shownWhen(show: unknown): Expr | null {
 export function planOf(app: AppModel): Plan {
   const states: StateDecl[] = []
   const taken = new Set(RESERVED)
-  const uses = { say: false, menu: app.settings.sidebar !== 'off', details: app.screens.some((s) => s.details === 'on') }
+  const uses = { say: false, menu: app.settings.sidebar !== 'off', details: app.screens.some((s) => s.details === 'on'), job: app.screens.some((s) => s.statusOn && s.statusItems.some((node) => node.type === 'Job')), runJob: false }
   const screens = app.screens.map((s) => ({ id: s.id, name: s.name, icon: s.icon }))
+  const noDetails = uses.details && app.screens.some((s) => s.details !== 'on') ? NO_DETAILS : undefined
   const known = new Set(screens.map((s) => s.id))
 
   const state: BuildCtx['state'] = (hint, initial, type) => {
@@ -68,6 +77,12 @@ export function planOf(app: AppModel): Plan {
       uses.say = true
       return call('say', text(said) || 'Done')
     }
+    // With no job in a status row there is nothing to run: the button does nothing.
+    if (action === 'job') {
+      if (!uses.job) return undefined
+      uses.runJob = true
+      return call('runJob')
+    }
     return undefined
   }
   const current: BuildCtx['current'] = (action) => (typeof action === 'string' && action.startsWith('go:') && known.has(action.slice(3)) ? equals('screen', action.slice(3)) : undefined)
@@ -76,13 +91,14 @@ export function planOf(app: AppModel): Plan {
     nodes.flatMap((node): Child[] => {
       if (!isKind(node.type)) return []
       const inside = (slot: string) => build(Array.isArray(node.props[slot]) ? (node.props[slot] as Node[]) : [])
-      const ctx: BuildCtx = { appName: app.name, details: uses.details, screens, screenName: SCREEN_NAME, state, act, current, box: (slot, tag, props) => h(tag, props, inside(slot)), spread: (slot) => inside(slot) }
+      const ctx: BuildCtx = { appName: app.name, details: uses.details, job: uses.job, noDetails, screens, screenName: SCREEN_NAME, state, act, current, box: (slot, tag, props) => h(tag, props, inside(slot)), spread: (slot) => inside(slot) }
       const drawn = CATALOG[node.type].build(node.props, ctx)
       const when = shownWhen(node.props['show'])
       return [when ? { $when: when, then: drawn } : drawn]
     })
 
-  const shared = Object.fromEntries(SHARED.map((slot) => [slot, build(app.shared[slot])])) as Record<SharedSlot, Child[]>
+  // A region the app does not have is not built: what is kept in it (for when it comes back) declares no state.
+  const shared = Object.fromEntries(SHARED.map((slot) => [slot, hasRegion(app.settings, slot) ? build(app.shared[slot]) : []])) as Record<SharedSlot, Child[]>
   return {
     name: app.name,
     start: known.has(app.start) ? app.start : (screens[0]?.id ?? ''),
@@ -94,9 +110,9 @@ export function planOf(app: AppModel): Plan {
       icon: s.icon,
       pad: s.pad,
       width: s.width,
-      status: s.status,
       detailsTitle: s.detailsTitle,
       content: build(s.content),
+      status: s.statusOn ? build(s.statusItems) : null,
       details: s.details === 'on' ? build(s.detailsItems) : null,
       actions: s.actionsOn ? build(s.actions) : null,
     })),
@@ -112,6 +128,10 @@ const WIDTH = { full: '', page: 'mx-auto w-full max-w-3xl', prose: 'mx-auto w-fu
 
 /** The classes of the column that holds a screen's content. */
 export const contentClass = (s: Pick<Screen, 'pad' | 'width'>): string => ['flex min-h-full flex-col gap-4', PAD[s.pad], WIDTH[s.width]].filter(Boolean).join(' ')
+/** A job goes up by this many percent at each tick of its timer: from nothing to done in about four seconds. */
+export const JOB_STEP = 5
+export const JOB_TICK_MS = 200
+
 /** The classes of the column inside the inspector. */
 export const DETAILS_CLASS = 'flex flex-col gap-4'
 

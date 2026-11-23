@@ -1,4 +1,5 @@
-// @acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for
+// @acaprino/sigrid, its main entry: the toolkit and the layout system of the shared UI system (its advanced components and
+// the wiring of a native window are entries of their own). Theme engine and colours, tokens and fonts, primitives (Ark UI for
 // behaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the
 // generic fields and surfaces built on them. No app concepts: each app builds its product components on top of
 // this.
@@ -23,7 +24,7 @@ export { Button, QUIET_CHIP, buttonVariants, type ButtonProps } from './componen
 export { CALENDAR_WORDS, Calendar, calendarWords, type CalendarProps } from './components/ui/calendar'
 export { Checkbox } from './components/ui/checkbox'
 export { CommandPalette, filterCommands, useCommandKey, type Command, type CommandPaletteOpenness, type CommandPaletteProps } from './components/ui/command-palette'
-export { CommandsProvider, KeyHints, PALETTE_COMMAND, formatKeys, useCommand, useCommandPalette, useCommands, type CommandDeclaration, type CommandsProviderProps, type KeyHintsProps, type KeyNames } from './components/ui/commands'
+export { CommandsProvider, KeyHints, PALETTE_COMMAND, formatKeys, useCommand, useCommandPalette, useCommands, type CommandDeclaration, type CommandsProviderProps, type KeyHint, type KeyHintsProps, type KeyNames } from './components/ui/commands'
 export { Combobox, type ComboboxOption, type ComboboxProps } from './components/ui/combobox'
 export { Count, type CountProps } from './components/ui/count'
 export { Steps, type StepItem, type StepsProps } from './components/ui/steps'

@@ -1,6 +1,6 @@
 {
   "name": "sigrid",
-  "description": "Build and review app screens with the @acaprino/sigrid design system: its components, its rules and its check",
+  "description": "Build and review app screens with the @acaprino/sigrid UI system: its components, its frame and layouts, its Tauri window, its rules and its check",
   "author": {
     "name": "acaprino"
   },
