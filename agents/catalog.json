@@ -173,7 +173,7 @@
     },
     {
      "file": "src/components/LookSettings.tsx",
-     "about": "",
+     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app\npasses its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
      "components": [
       {
        "name": "BaseColorChoice",
@@ -3815,7 +3815,7 @@
     },
     {
      "file": "src/internal/attachment-viewer.tsx",
-     "about": "",
+     "about": "A page of the document: the measures reserve its place before the image arrives.",
      "components": [
       {
        "name": "AttachmentViewer",
@@ -4662,7 +4662,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "React elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
      "components": [
       {
        "name": "InlineMarkdown",
@@ -4963,7 +4963,7 @@
     },
     {
      "file": "src/internal/thumbnail.tsx",
-     "about": "",
+     "about": "The only sources a thumbnail accepts: a JPEG or PNG image in base64, whole in the string. No `javascript:`,\n`data:text/html`, `data:image/svg+xml` (it can carry script), `http:` or `blob:`: the thumbnail comes from the app as\na data URL and no other value must ever reach `src`.",
      "components": [
       {
        "name": "NeedThumbnail",
