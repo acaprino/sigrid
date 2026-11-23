@@ -395,19 +395,6 @@
     --titlebar-height: calc(var(--control-sm) + 1rem);
   }
 }
-
-/* The measures of the layout parts (layout.tsx): the columns of `Grid`, each at least its `min` wide and as many as the
-   width holds; the height `ScrollArea bounded` never passes, about half the window; the widest the body of a page
-   (`Page`) grows, DESIGN.md's `content-max`. */
-@layer theme {
-  :root {
-    --grid-min-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
-    --grid-min-md: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
-    --grid-min-lg: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
-    --scroll-bounded: 48vh;
-    --content-max: 1152px;
-  }
-}
 [data-slot="title-bar"] {
   min-height: var(--titlebar-height);
   padding-inline: calc(var(--titlebar-start) + 0.5rem) calc(var(--titlebar-end) + 0.5rem);
@@ -775,5 +762,18 @@ svg.lucide[stroke-width="2"] {
   :focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 2px;
+  }
+}
+
+/* The measures of the layout parts (layout.tsx): the columns of `Grid`, each at least its `min` wide and as many as the
+   width holds; the height `ScrollArea bounded` never passes, about half the window as it is now (`dvh`); the widest the body of a page
+   (`Page`) grows, DESIGN.md's `content-max`. */
+@layer theme {
+  :root {
+    --grid-columns-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+    --grid-columns-md: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+    --grid-columns-lg: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
+    --scroll-bounded: 48dvh;
+    --content-max: 1152px;
   }
 }

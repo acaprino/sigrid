@@ -27,6 +27,9 @@ function own(props: LayoutAttributes): LayoutAttributes {
   return rest
 }
 
+// A list keeps its role: Tailwind takes the bullets away, and some screen readers then stop calling it a list.
+const listRole = (as: LayoutElement) => (as === "ul" || as === "ol" ? "list" : undefined)
+
 const ALIGN = { stretch: "items-stretch", start: "items-start", center: "items-center", end: "items-end" } as const
 const JUSTIFY = { start: "justify-start", center: "justify-center", end: "justify-end", between: "justify-between" } as const
 
@@ -37,6 +40,7 @@ export type ColumnProps = LayoutAttributes & {
   pad?: Space | undefined
   /** How its parts sit across it: stretched to its width (the default), or at its start, centre or end. */
   align?: keyof typeof ALIGN | undefined
+  /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
   children?: React.ReactNode
 }
@@ -45,7 +49,7 @@ export type ColumnProps = LayoutAttributes & {
 function Column({ gap = "sm", pad, align = "stretch", as = "div", children, ...props }: ColumnProps) {
   const Tag = as
   return (
-    <Tag {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align])}>
       {children}
     </Tag>
   )
@@ -54,11 +58,13 @@ function Column({ gap = "sm", pad, align = "stretch", as = "div", children, ...p
 export type ClusterProps = LayoutAttributes & {
   /** The space between its parts, across and down when they wrap (default `sm`). */
   gap?: Space | undefined
+  /** The space inside its edges. Absent: none. */
   pad?: Space | undefined
   /** Where the parts gather along the row (default `start`). */
   justify?: keyof typeof JUSTIFY | undefined
   /** How they line up across the row (default `center`). */
   align?: keyof typeof ALIGN | undefined
+  /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
   children?: React.ReactNode
 }
@@ -67,7 +73,7 @@ export type ClusterProps = LayoutAttributes & {
 function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "div", children, ...props }: ClusterProps) {
   const Tag = as
   return (
-    <Tag {...own(props)} data-slot="cluster" className={cn("flex min-w-0 flex-wrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="cluster" className={cn("flex min-w-0 flex-wrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align])}>
       {children}
     </Tag>
   )
@@ -76,7 +82,9 @@ function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "d
 export type SplitProps = LayoutAttributes & {
   /** The space kept between the two groups, and between the lines when they wrap (default `md`). */
   gap?: Space | undefined
+  /** The space inside its edges. Absent: none. */
   pad?: Space | undefined
+  /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
   /** Two parts: the first at the start of the row, the second at its end (a title and its action). */
   children?: React.ReactNode
@@ -86,20 +94,21 @@ export type SplitProps = LayoutAttributes & {
 function Split({ gap = "md", pad, as = "div", children, ...props }: SplitProps) {
   const Tag = as
   return (
-    <Tag {...own(props)} data-slot="split" className={cn("flex min-w-0 flex-wrap items-center justify-between", GAP[gap], pad && PAD[pad])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="split" className={cn("flex min-w-0 flex-wrap items-center justify-between", GAP[gap], pad && PAD[pad])}>
       {children}
     </Tag>
   )
 }
 
-// The columns are custom properties of theme.css: `repeat(auto-fit, minmax(min(<width>, 100%), 1fr))`.
-const COLUMNS = { sm: "grid-cols-(--grid-min-sm)", md: "grid-cols-(--grid-min-md)", lg: "grid-cols-(--grid-min-lg)" } as const
+// The column tracks are custom properties of theme.css: `repeat(auto-fit, minmax(min(<width>, 100%), 1fr))`.
+const COLUMNS = { sm: "grid-cols-(--grid-columns-sm)", md: "grid-cols-(--grid-columns-md)", lg: "grid-cols-(--grid-columns-lg)" } as const
 
 export type GridProps = LayoutAttributes & {
   /** The narrowest a column may be before the grid takes one column fewer: `sm` 12rem, `md` 17rem (the default), `lg` 24rem. */
   min?: keyof typeof COLUMNS | undefined
   /** The space between the cells (default `md`). */
   gap?: Space | undefined
+  /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
   children?: React.ReactNode
 }
@@ -108,7 +117,7 @@ export type GridProps = LayoutAttributes & {
 function Grid({ min = "md", gap = "md", as = "div", children, ...props }: GridProps) {
   const Tag = as
   return (
-    <Tag {...own(props)} data-slot="grid" className={cn("grid min-w-0", COLUMNS[min], GAP[gap])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="grid" className={cn("grid min-w-0", COLUMNS[min], GAP[gap])}>
       {children}
     </Tag>
   )
@@ -119,7 +128,8 @@ function Spacer() {
   return <span aria-hidden="true" data-slot="spacer" className="flex-auto" />
 }
 
-export type SectionProps = LayoutAttributes & {
+// `title` is the heading here, not the HTML attribute of a hint.
+export type SectionProps = Omit<LayoutAttributes, "title"> & {
   /** The heading: the name of the section, and of its region for a screen reader. */
   title: React.ReactNode
   /** The level of the heading: 2 (the default) for a part of a page, 3 or 4 for a part inside one. */
@@ -143,7 +153,7 @@ function Section({ title, level = 2, icon, end, gap = "sm", children, ...props }
         <span aria-hidden="true" data-slot="section-icon" className="inline-flex size-4 shrink-0 items-center justify-center text-ink-mute [&_svg]:size-4">
           {icon}
         </span>
-        <Heading id={id} className={cn("min-w-0 flex-1 truncate font-semibold text-ink", level === 2 ? "text-base" : "text-sm")}>
+        <Heading id={id} className={cn("min-w-0 flex-1 truncate font-semibold text-ink", level === 2 ? "text-lg" : "text-base")}>
           {title}
         </Heading>
         {end}
@@ -158,6 +168,7 @@ export type ScrollAreaProps = LayoutAttributes & {
   "aria-label": string
   /** Never taller than about half the window, so a long list does not push the rest of the page away. */
   bounded?: boolean | undefined
+  /** The space inside its edges. Absent: none. */
   pad?: Space | undefined
   children?: React.ReactNode
 }

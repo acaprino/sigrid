@@ -34,7 +34,7 @@ export function LayoutParts() {
               </Cluster>
             </Split>
             <Grid>
-              <LayoutSection title="Files" icon={<Icon name="structure" />} end={<Badge variant="secondary">{FILES.length}</Badge>}>
+              <LayoutSection level={3} title="Files" icon={<Icon name="structure" />} end={<Badge variant="secondary">{FILES.length}</Badge>}>
                 <ScrollArea aria-label="Files of billing-service" bounded>
                   <Column as="ul" gap="xs">
                     {FILES.map((file) => (
@@ -45,7 +45,7 @@ export function LayoutParts() {
                   </Column>
                 </ScrollArea>
               </LayoutSection>
-              <LayoutSection title="Languages" icon={<Icon name="labels" />}>
+              <LayoutSection level={3} title="Languages" icon={<Icon name="labels" />}>
                 <Column gap="xs">
                   <Cluster>
                     <Text>TypeScript</Text>

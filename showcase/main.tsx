@@ -2414,10 +2414,10 @@ function App() {
           </div>
         </Row>
       </Section>
+      <LayoutParts />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
-      <LayoutParts />
       <Keys />
       <Fields />
       <FormFields />
