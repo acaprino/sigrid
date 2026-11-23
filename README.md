@@ -264,7 +264,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     may keep the value wherever it likes.
 
   - `./graph` (with the stylesheet `./graph.css`): `GraphCanvas`, on React Flow for the canvas and dagre for the
-    places. A graph of things and what joins them, laid out by itself in ranks (`direction="right"` or `"down"`), to
+    places. A graph of things and what joins them, laid out by itself in ranks (`direction="right"` or `"down"`) or
+    drawn where the app laid it out (below), to
     move over (pan, zoom, fit, a small map with `minimap`, a field that finds a thing with `search`), to examine (the
     chosen thing has the selection tint, what is joined to it stays and the rest is dimmed; the app shows its details
     where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
@@ -290,8 +291,19 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     (`defaultCollapsed`). In the graph mode every thing is always in sight, so the whole graph is laid out again
     whenever the app passes new nodes or edges or another `direction` (choosing a thing or moving the focus lays out
     nothing): a graph of thousands of things costs most of a second at each change, so show a part of it (the scope
-    the user opened). `visibleGraph` and `layoutGraph` are exported for an app that draws the same graph another way
-    (a list, a print).
+    the user opened). An app that lays the graph out itself (a layout engine of its own, such as ELK in a worker, or
+    by hand) gives each thing its place, `x` and `y` (the top left corner of its box, in px), and may give its size,
+    `width` and `height` (by default 208 wide and 44 tall, 56 with a second line); a line may carry its route,
+    `points`, from its start to its end (a layout's start point, bends and end point; `null` is no route). In both
+    modes the things are drawn there at that size, a line with two points or more follows its route in straight
+    pieces, the others go from side to side, and the canvas lays nothing out. All or nothing: the places are read
+    only when every thing has an `x` and a `y`; when one has none (a thing just added with the plus) dagre places them
+    all, at the sizes given, and no line follows a route, until the app places it. `layoutKey` names the layout the
+    places come from (as the app tells one from another: the direction, the things and the lines it laid out): when
+    it changes, the view fits the whole graph again once the new places are drawn, and a draw on the same key
+    (another choice, new flags, the same places) keeps the view where the user moved it. Pass the new key with the new
+    places. Without it the view is fitted at the first paint only. `visibleGraph` and `layoutGraph` are exported for
+    an app that draws the same graph another way (a list, a print).
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -322,6 +334,10 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
   <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
     onOpen={(id) => setScope(id)} className="h-full" />
+  // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
+  <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
+    nodes={parts.map((part) => ({ ...part, ...layout.nodes[part.id] }))}
+    edges={calls.map((call) => ({ ...call, points: layout.edges[call.id] }))} className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

@@ -7,6 +7,14 @@
 // (`./graph.css`), so an app without a graph loads neither.
 // - The graph is laid out by itself, in ranks: from the start to the end of the line (`direction="right"`) or from
 //   the head to the foot (`"down"`). The user does not place things by hand, so nothing can be lost off the canvas.
+// - Or the app lays it out, with a layout engine of its own (ELK in a worker) or by hand: a thing with an `x` and a
+//   `y` is drawn there, a line with `points` follows that route, and nothing is laid out here. All or nothing: the app's places are read only when every thing it passes has one;
+//   when one has none (a thing just added with the plus) dagre places them all again, until the app places it. A
+//   thing's `width` and `height` are its size in both cases (dagre lays out with them); without them it is 208px
+//   wide and 44px tall, 56px with a second line.
+// - The view is fitted to the whole graph at the first paint, and again after a new layout: when the app's
+//   `layoutKey` changes. A draw on the same key (another choice, new flags, the same places) keeps the view where
+//   the user moved it.
 // - A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a
 //   line under it. The chosen one has the selection tint (R1); what is joined to it stays as it is and the rest is
 //   dimmed, so the eye finds the neighbourhood. The app shows the details of the chosen thing where it likes (the
@@ -41,12 +49,12 @@
 // sight, 200ms for a thousand, most of a second for three thousand (measured). In the tree mode a larger graph starts
 // with its branches closed (`defaultCollapsed`); in the graph mode every thing is in sight, so the whole graph is laid
 // out at every change of the nodes, the edges or the direction (choosing a thing or moving the focus lays out
-// nothing). Moving the view costs little: only what is in it is drawn.
+// nothing). With the app's places nothing is laid out here. Moving the view costs little: only what is in it is drawn.
 // Nothing moves by itself: the layout jumps to its new places, with or without animations. The name of React Flow
 // stays at the foot of the canvas, as its makers ask of whoever does not pay for it.
 import * as React from 'react'
 import dagre from '@dagrejs/dagre'
-import { Background, BackgroundVariant, Handle, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type Node, type NodeProps } from '@xyflow/react'
+import { Background, BackgroundVariant, BaseEdge, Handle, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type EdgeProps, type Node, type NodeProps } from '@xyflow/react'
 import { Maximize } from 'lucide-react'
 import { Icon, type IconName } from '../icons'
 import { markHueAttrs } from '../colors'
@@ -74,10 +82,29 @@ export type GraphNode = {
    * with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it.
    */
   openLabel?: string | undefined
+  /**
+   * Where the app placed the thing, when it lays the graph out itself (a layout engine of its own, by hand): the top
+   * left corner of its box, in px. Read only when every thing has an `x` and a `y`; otherwise the canvas places them
+   * all.
+   */
+  x?: number | undefined
+  y?: number | undefined
+  /** The width and the height of its box in px, also when the canvas places it. Default 208 wide, 44 tall or 56 with a second line. */
+  width?: number | undefined
+  height?: number | undefined
 }
 
 /** What joins two things: in the tree mode `to` hangs from `from`; in the graph mode the line goes from `from` to `to`. */
-export type GraphEdge = { from: string; to: string }
+export type GraphEdge = {
+  from: string
+  to: string
+  /**
+   * The route of the line when the app placed the things: its points from start to end, in px (a layout's start
+   * point, bends and end point). Read only with the app's places; without it, or with fewer than two points, the line
+   * goes from one side of a thing to the facing side of the other.
+   */
+  points?: readonly { x: number; y: number }[] | null | undefined
+}
 
 export type Graph = { nodes: readonly GraphNode[]; edges: readonly GraphEdge[] }
 
@@ -97,6 +124,13 @@ export type GraphCanvasProps = {
   model?: 'tree' | 'graph' | undefined
   /** The ranks go from the start of the line to its end, or from the head to the foot. Default `right`. */
   direction?: 'right' | 'down' | undefined
+  /**
+   * The name of the layout the places come from, as the app tells one layout from another (the direction, the things
+   * and the lines it laid out). When it changes the view fits the whole graph again, once the new places are drawn;
+   * while it stays, a new draw (another choice, new flags, the same places) keeps the view where the user moved it.
+   * Pass the new key with the new places. Without it the view is fitted at the first paint only.
+   */
+  layoutKey?: string | undefined
   /** The id of the thing chosen: the one whose details the app shows. */
   selected?: string | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
@@ -118,9 +152,29 @@ export type GraphCanvasProps = {
   className?: string | undefined
 }
 
-/** The sizes of a thing in px, which the layout needs before anything is drawn: `w-52`, and `h-11` or `h-14` with a second line. */
+/**
+ * The size of a thing in px, which the layout needs before anything is drawn: the app's `width` and `height`, or 208
+ * wide and 44 tall, 56 with a second line. React Flow gives its box that size and the thing fills it.
+ */
 const WIDTH = 208
-const heightOf = (node: GraphNode) => (node.detail ? 56 : 44)
+const finite = (value: number | undefined): value is number => typeof value === 'number' && Number.isFinite(value)
+const widthOf = (node: GraphNode) => (finite(node.width) && node.width > 0 ? node.width : WIDTH)
+const heightOf = (node: GraphNode) => (finite(node.height) && node.height > 0 ? node.height : node.detail ? 56 : 44)
+
+/**
+ * The app's places, when it placed every thing it passes (an `x` and a `y` on each); otherwise null, and the canvas
+ * lays the whole graph out. Not some of each: a place of dagre's would land on the places of another layout. Of two
+ * things with one id, the first, as everywhere here.
+ */
+function placesOf(nodes: readonly GraphNode[]): Map<string, { x: number; y: number }> | null {
+  if (nodes.length === 0) return null
+  const places = new Map<string, { x: number; y: number }>()
+  for (const node of nodes) {
+    if (!finite(node.x) || !finite(node.y)) return null
+    if (!places.has(node.id)) places.set(node.id, { x: node.x, y: node.y })
+  }
+  return places
+}
 
 /** What hangs from each thing and what each hangs from, in the order the joins were given. Joins to things that are not there are left out. */
 function links(graph: Graph) {
@@ -203,13 +257,16 @@ function wholeGraph(graph: Graph): { order: string[]; level: Map<string, number>
   return { order, level, hidden: new Map<string, number>() }
 }
 
-/** The place of each thing in sight, by ranks: the top left corner of its box, in px. */
+/**
+ * The place of each thing in sight, by ranks: the top left corner of its box, in px. Each box has the thing's size
+ * (`width`, `height`, or the canvas's); the places the app may give (`x`, `y`) are not read here.
+ */
 export function layoutGraph(graph: Graph, shown: readonly string[], direction: 'right' | 'down'): Map<string, { x: number; y: number }> {
   const inSight = new Set(shown)
   const g = new dagre.graphlib.Graph()
   g.setGraph({ rankdir: direction === 'right' ? 'LR' : 'TB', nodesep: 16, ranksep: 56, marginx: 16, marginy: 16 })
   g.setDefaultEdgeLabel(() => ({}))
-  for (const node of graph.nodes) if (inSight.has(node.id)) g.setNode(node.id, { width: WIDTH, height: heightOf(node) })
+  for (const node of graph.nodes) if (inSight.has(node.id)) g.setNode(node.id, { width: widthOf(node), height: heightOf(node) })
   for (const edge of graph.edges) if (inSight.has(edge.from) && inSight.has(edge.to) && edge.from !== edge.to) g.setEdge(edge.from, edge.to)
   dagre.layout(g)
   const places = new Map<string, { x: number; y: number }>()
@@ -217,7 +274,7 @@ export function layoutGraph(graph: Graph, shown: readonly string[], direction: '
     if (!inSight.has(node.id)) continue
     const at = g.node(node.id)
     // dagre gives the middle of a box.
-    places.set(node.id, { x: Math.round(at.x - WIDTH / 2), y: Math.round(at.y - heightOf(node) / 2) })
+    places.set(node.id, { x: Math.round(at.x - widthOf(node) / 2), y: Math.round(at.y - heightOf(node) / 2) })
   }
   return places
 }
@@ -290,8 +347,8 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
       aria-label={has && !data.open ? words.closed(node.label, data.hidden) : node.label}
       onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
       className={cn(
-        'group relative flex w-52 cursor-default items-center gap-2 rounded-md bg-raised px-3 text-sm text-ink shadow-sm',
-        node.detail ? 'h-14' : 'h-11',
+        // The size of its box, which React Flow is given (`widthOf`, `heightOf`).
+        'group relative flex size-full cursor-default items-center gap-2 rounded-md bg-raised px-3 text-sm text-ink shadow-sm',
         data.chosen && 'bg-selected font-semibold text-selected-ink',
         data.dim && 'opacity-40',
         FOCUS_RING,
@@ -346,7 +403,8 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   // Where its lines lead and where the lines into it come from, said after its name.
   const relations = [data.leadsTo.length > 0 ? words.leadsTo(data.leadsTo) : '', data.comesFrom.length > 0 ? words.comesFrom(data.comesFrom) : ''].filter(Boolean).join(' · ')
   return (
-    <div data-thing={node.id} className={cn('relative w-52', node.detail ? 'h-14' : 'h-11', data.dim && 'opacity-40')}>
+    // The size of its box, which React Flow is given (`widthOf`, `heightOf`).
+    <div data-thing={node.id} className={cn('relative size-full', data.dim && 'opacity-40')}>
       <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
       <div
         role="button"
@@ -414,7 +472,55 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   )
 })
 
+type Points = readonly { x: number; y: number }[]
+
+/** Where the label of a route sits: the middle of its longest piece, where it has the most room (as Imago's view). */
+function middleOf(points: Points): { x: number; y: number } | undefined {
+  let middle: { x: number; y: number } | undefined
+  let longest = -1
+  for (let at = 1; at < points.length; at += 1) {
+    const from = points[at - 1]
+    const to = points[at]
+    if (!from || !to) continue
+    const length = Math.hypot(to.x - from.x, to.y - from.y)
+    if (length <= longest) continue
+    longest = length
+    middle = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
+  }
+  return middle
+}
+
+/**
+ * A line along the route the app gave (`points` of a `GraphEdge`, with the app's places): straight pieces from point
+ * to point, the corners as the app's layout made them. What React Flow hands a line besides (an arrowhead, a label,
+ * a style) is drawn by its `BaseEdge`, as on the other lines. It reads nothing of React Flow's state.
+ */
+const Route = React.memo(function Route({ id, data, style, markerStart, markerEnd, label, labelStyle, labelShowBg, labelBgStyle, labelBgPadding, labelBgBorderRadius, interactionWidth }: EdgeProps<Edge<{ points: Points }, 'route'>>) {
+  const points: Points = data?.points ?? []
+  const path = points.map((at, index) => `${index === 0 ? 'M' : 'L'}${at.x},${at.y}`).join(' ')
+  const middle = middleOf(points)
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={style}
+      markerStart={markerStart}
+      markerEnd={markerEnd}
+      label={label}
+      labelX={middle?.x}
+      labelY={middle?.y}
+      labelStyle={labelStyle}
+      labelShowBg={labelShowBg}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+      interactionWidth={interactionWidth}
+    />
+  )
+})
+
 const NODE_TYPES = { thing: Thing, point: Point }
+const EDGE_TYPES = { route: Route }
 /** The whole graph in the view, never larger than it is, with room around it and, at the head, for the field and the buttons. */
 const FIT = { maxZoom: 1, padding: { top: '64px', bottom: '24px', x: '24px' } } as const
 /** Nothing closed: the graph mode's, the same list at every draw. */
@@ -424,7 +530,7 @@ const NO_NAMES: readonly string[] = []
 let made = 0
 const freshId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `node-${Date.now()}-${++made}`)
 
-function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = null, onSelect, onOpen, collapsed, defaultCollapsed, onCollapsedChange, search = false, minimap = false, editable = false, onChange, className, ...props }: GraphCanvasProps) {
+function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, collapsed, defaultCollapsed, onCollapsedChange, search = false, minimap = false, editable = false, onChange, className, ...props }: GraphCanvasProps) {
   const words = useWords().graph
   const flow = useReactFlow()
   const box = React.useRef<HTMLDivElement>(null)
@@ -454,7 +560,10 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     return named
   }, [tree, below, above, byId])
   const sight = React.useMemo(() => (tree ? visibleGraph(graph, closed) : wholeGraph(graph)), [tree, graph, closed])
-  const places = React.useMemo(() => layoutGraph(graph, sight.order, direction), [graph, sight, direction])
+  // The app's places when it gave them all, and then nothing is laid out here (in the tree mode a thing opened or
+  // closed keeps its place); otherwise dagre's.
+  const given = React.useMemo(() => placesOf(nodes), [nodes])
+  const places = React.useMemo(() => given ?? layoutGraph(graph, sight.order, direction), [given, graph, sight, direction])
   const [query, setQuery] = React.useState('')
   const word = query.trim().toLowerCase()
   const found = React.useMemo(() => (word ? new Set(nodes.filter((node) => `${node.label} ${node.detail ?? ''}`.toLowerCase().includes(word)).map((node) => node.id)) : null), [nodes, word])
@@ -476,7 +585,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     const rect = el.getBoundingClientRect()
     if (rect.left < frame.left || rect.right > frame.right || rect.top < frame.top || rect.bottom > frame.bottom) {
       const node = byId.get(id)
-      void flow.setCenter(at.x + WIDTH / 2, at.y + (node ? heightOf(node) : 44) / 2, { zoom: flow.getZoom(), duration: 0 })
+      void flow.setCenter(at.x + (node ? widthOf(node) : WIDTH) / 2, at.y + (node ? heightOf(node) : 44) / 2, { zoom: flow.getZoom(), duration: 0 })
     }
     return true
   }
@@ -577,7 +686,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
             id,
             type: tree ? 'thing' : 'point',
             position: at,
-            width: WIDTH,
+            width: widthOf(node),
             height: heightOf(node),
             draggable: false,
             selectable: false,
@@ -593,17 +702,22 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     () =>
       edges
         .filter((edge) => sight.level.has(edge.from) && sight.level.has(edge.to) && edge.from !== edge.to)
-        .map((edge) => ({
-          id: `${edge.from}→${edge.to}`,
-          source: edge.from,
-          target: edge.to,
-          type: 'smoothstep',
-          focusable: false,
-          selectable: editable,
-          // The lines of the chosen thing are told from the others (graph.css).
-          className: chosen && (edge.from === chosen || edge.to === chosen) ? 'sigrid-graph-near' : undefined,
-        })),
-    [edges, sight, chosen, editable],
+        .map((edge) => {
+          // Along the app's route only with the app's places: a route of its layout would cross dagre's.
+          const route = given && edge.points && edge.points.length > 1 ? edge.points : null
+          return {
+            id: `${edge.from}→${edge.to}`,
+            source: edge.from,
+            target: edge.to,
+            type: route ? 'route' : 'smoothstep',
+            data: route ? { points: route } : undefined,
+            focusable: false,
+            selectable: editable,
+            // The lines of the chosen thing are told from the others (graph.css).
+            className: chosen && (edge.from === chosen || edge.to === chosen) ? 'sigrid-graph-near' : undefined,
+          }
+        }),
+    [edges, sight, given, chosen, editable],
   )
   // The library keeps what it measures and what the user picks on the nodes it is given: they are handed over whole
   // at every change of the graph, and its own changes are laid over them.
@@ -616,6 +730,25 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
   const zoomIn = () => void flow.zoomIn({ duration: 0 })
   const zoomOut = () => void flow.zoomOut({ duration: 0 })
   const fit = () => void flow.fitView({ ...FIT, duration: 0 })
+  // After a new layout the view fits the whole graph; on a draw of the same layout it stays where the user put it.
+  // Which one it is, the app says with `layoutKey`, as Imago's view is told (`draw(scene, refit)`) and as an app that
+  // lays out with an engine of its own already knows (the direction, the things and the lines it laid out): the
+  // canvas cannot tell by itself. A draw of the same layout hands it new objects for the same places (another choice,
+  // new flags), and in the tree mode dagre places things again at every opening, where a view that jumped would lose
+  // the user. Without a key the view is fitted at the first paint alone (`fitView` below), as before.
+  // The fit is asked for one draw after the key changes: the new things reach React Flow through `setFlowNodes`, a
+  // draw later, and a fit asked for in this draw could be done on the old ones. The tick is that draw.
+  const fittedTo = React.useRef(layoutKey)
+  const [refit, setRefit] = React.useState(0)
+  React.useEffect(() => {
+    if (fittedTo.current === layoutKey) return
+    fittedTo.current = layoutKey
+    setRefit((count) => count + 1)
+  }, [layoutKey])
+  React.useEffect(() => {
+    // Only at a new tick, whatever else changed.
+    if (refit > 0) fit()
+  }, [refit])
   // The keys of the canvas, read at its box. +, − and 0 from anywhere in it but a field (the search keeps what is
   // typed into it), = as + (the same key without Shift); the others are the things' (`thingKey`). With Ctrl or Cmd
   // they are the browser's own zoom; Shift is let through, since on some keyboards it makes the +.
@@ -670,6 +803,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, node) => onSelect?.(node.id)}
