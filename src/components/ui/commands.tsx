@@ -20,6 +20,8 @@
 //   one declared last runs.
 // - `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,
 //   hidden on a phone).
+// - An app that is one part of a larger page (a sample in a gallery, a widget) names its own place (`keysIn`): its keys
+//   run only while the focus is inside it, so two apps on one page do not both answer one key.
 import * as React from "react"
 import { FIELDS } from "../../internal/desktop-guard"
 import { cn } from "../../lib/utils"
@@ -179,6 +181,8 @@ export type CommandsProviderProps = {
   ownKeysIn?: string | undefined
   /** Whether Ctrl+K opens the registry's palette (default true). False leaves Ctrl+K to an app that opens its palette itself. */
   palette?: boolean | undefined
+  /** A selector for the one place whose keys are the app's (`'[data-app="mail"]'`), for an app that is one part of a larger page: a key pressed with the focus elsewhere runs no command. Absent: the whole window. */
+  keysIn?: string | undefined
   children?: React.ReactNode
 }
 
@@ -186,7 +190,7 @@ export type CommandsProviderProps = {
  * The registry of an app's commands, around the whole app (outside `AppShell`): it runs their keys, holds the palette's
  * open state for a `CommandPalette` with no list, and holds Ctrl+K itself.
  */
-function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProviderProps) {
+function CommandsProvider({ ownKeysIn, palette = true, keysIn, children }: CommandsProviderProps) {
   const words = useWords()
   const [registry] = React.useState(createRegistry)
   const [open, setOpen] = React.useState(false)
@@ -206,7 +210,7 @@ function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProvi
   }, [registry, words.palette.command])
   React.useEffect(() => {
     const listen = (event: KeyboardEvent) => {
-      if (event.isComposing || (ownKeysIn && within(event, ownKeysIn))) return
+      if (event.isComposing || (ownKeysIn && within(event, ownKeysIn)) || (keysIn && !within(event, keysIn))) return
       for (const command of registry.all().reverse()) {
         if (!command.keys || command.when === false) continue
         const want = combination(command.keys)
@@ -218,7 +222,7 @@ function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProvi
     }
     window.addEventListener("keydown", listen)
     return () => window.removeEventListener("keydown", listen)
-  }, [registry, ownKeysIn, mac])
+  }, [registry, ownKeysIn, keysIn, mac])
   const value = React.useMemo(() => ({ registry, open, setOpen, mac }), [registry, open, mac])
   return <CommandsContext.Provider value={value}>{children}</CommandsContext.Provider>
 }

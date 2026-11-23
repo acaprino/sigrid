@@ -11,6 +11,8 @@
 // gesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the
 // switch (DESIGN.md Colors).
 // Not knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.
+// In a line of words (the frame's status row, docs/patterns.md «Progress of a task») the bar is `inline`: a fixed width
+// that does not give way, so the words beside it stay put while the value moves.
 // For screen readers: `role="progressbar"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,
 // «Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should
 // announce the end and the failure only, in a live region of its own, not every percent.
@@ -36,6 +38,8 @@ export type ProgressProps = {
   /** Shows the value as text while it is under way. Done, failed and not knowing how far it is always say their word: a colour is never alone (DESIGN.md Status). */
   showValue?: boolean | undefined
   size?: "sm" | "md" | undefined
+  /** In a line of words (the frame's status row): 192px, and it never gives way, so the words around it keep their place. Absent: as wide as its place. */
+  inline?: boolean | undefined
   /** `error`: the task failed. The range stays where it stopped, in red, and the text says so. */
   status?: "error" | undefined
   className?: string | undefined
@@ -75,10 +79,10 @@ const Text = ({ mood, children }: { mood: Mood; children: React.ReactNode }) => 
 )
 
 /** A bar that fills from the start. */
-function Progress({ size = "md", showValue, className, ...props }: ProgressProps) {
+function Progress({ size = "md", showValue, inline = false, className, ...props }: ProgressProps) {
   const p = useProgress(props)
   return (
-    <div data-slot="progress" data-state={p.mood} className={cn("flex w-full flex-col gap-1.5", className)}>
+    <div data-slot="progress" data-state={p.mood} className={cn("flex w-full flex-col gap-1.5", inline && "w-48 shrink-0", className)}>
       <div {...p.aria} aria-label={props["aria-label"]} className={cn("w-full overflow-hidden rounded-sm", TRACK, size === "sm" ? "h-2" : "h-2.5")}>
         <div data-slot="progress-range" className={cn("h-full", FILL[p.mood])} style={{ width: `${p.fraction * 100}%` }} />
       </div>
