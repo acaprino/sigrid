@@ -67,7 +67,8 @@ const ITALIAN: WordsOverride = {
 
 describe('the placeholders: English, every group filled', () => {
   test('every word is a non-empty text, or a function that gives one', () => {
-    const sample = (fn: (...args: never[]) => unknown) => (fn as (...args: unknown[]) => unknown)(fn.length && String(fn).includes('keys') ? ['A', 'B'] : 2, 3)
+    // A word that joins a list (the keys of a shortcut, the names a thing of a graph leads to) is given one.
+    const sample = (fn: (...args: never[]) => unknown) => (fn as (...args: unknown[]) => unknown)(fn.length && String(fn).includes('.join(') ? ['A', 'B'] : 2, 3)
     for (const [group, words] of Object.entries(DEFAULT_WORDS)) {
       for (const [name, word] of Object.entries(words as Record<string, unknown>)) {
         const at = `${group}.${name}`

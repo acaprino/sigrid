@@ -20,23 +20,28 @@
 //     how many it hides.
 // - In the graph mode (`model="graph"`) a line is a relation (a call, an import, data that flows), not «hangs from»:
 //   - Nothing closes: every thing is in sight and none has an arrow. Opening a thing is the app's (going into it,
-//     showing what it holds): a double press on it or its › button calls `onOpen` with its id. Without `onOpen` there
-//     is no › and nothing opens.
+//     showing what it holds), and only for the things it says it opens: a thing with an `openLabel` («Open Orders»)
+//     has a › button of that name, and a double press on it or its › calls `onOpen` with its id. Without `onOpen`,
+//     or on a thing without `openLabel`, there is no › and nothing opens.
 //   - The things are one Tab stop, and the › of the one that has it is the next. Along the ranks the arrows follow the
 //     lines: with `direction="right"` Right goes to what the thing's first line leads to and Left back to what its
 //     first line comes from, while Down and Up go through the things in the order the app gave them; downwards the
-//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. Screen readers hear a
-//     graph of buttons, each saying whether it is chosen.
-// - In both modes +, − and 0 zoom in, out and fit the whole graph, as the buttons at the head of the canvas do, and
-//   with `editable` Delete takes the thing away.
+//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the › the arrows,
+//     Home and End move as from its thing. Screen readers hear a group called a graph, of buttons named by their name
+//     and second line, described by where their lines lead and come from, the chosen one `aria-current`.
+// - In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit the whole graph, as the buttons
+//   at the head of the canvas do, and with `editable` Delete takes the thing away.
 // - With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,
 //   opening what hides it.
 // - With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the
-//   chosen thing to hang a new one from it. Every change is asked of the app with `onChange`, which keeps the graph
-//   (and its undo, R12): nothing is kept here but what is open and where the view is.
+//   chosen thing to hang a new one from it (in the graph mode, to add one after it). Every change is asked of the app
+//   with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here but what is open and where the
+//   view is.
 // The cost is the layout, done again when the graph changes or a thing opens or closes: about 30ms for 200 things in
-// sight, 200ms for a thousand, most of a second for three thousand (measured). A larger graph starts with its
-// branches closed (`defaultCollapsed`). Moving the view costs little: only what is in it is drawn.
+// sight, 200ms for a thousand, most of a second for three thousand (measured). In the tree mode a larger graph starts
+// with its branches closed (`defaultCollapsed`); in the graph mode every thing is in sight, so the whole graph is laid
+// out at every change of the nodes, the edges or the direction (choosing a thing or moving the focus lays out
+// nothing). Moving the view costs little: only what is in it is drawn.
 // Nothing moves by itself: the layout jumps to its new places, with or without animations. The name of React Flow
 // stays at the foot of the canvas, as its makers ask of whoever does not pay for it.
 import * as React from 'react'
@@ -47,6 +52,7 @@ import { Icon, type IconName } from '../icons'
 import { markHueAttrs } from '../colors'
 import { FOCUS_RING } from '../lib/focus'
 import { cn } from '../lib/utils'
+import { FIELDS } from '../internal/desktop-guard'
 import { useWords } from '../words'
 import { Count } from './ui/count'
 import { SearchField } from './ui/search-field'
@@ -63,6 +69,11 @@ export type GraphNode = {
   icon?: IconName | undefined
   /** The colour the user gave the thing (`#rrggbb`): an 8px dot before the name (R10). */
   color?: string | undefined
+  /**
+   * In the graph mode, the name of the action that opens the thing and of its › button («Open Orders»): only a thing
+   * with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it.
+   */
+  openLabel?: string | undefined
 }
 
 /** What joins two things: in the tree mode `to` hangs from `from`; in the graph mode the line goes from `from` to `to`. */
@@ -89,7 +100,7 @@ export type GraphCanvasProps = {
   /** The id of the thing chosen: the one whose details the app shows. */
   selected?: string | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
-  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on it or by its › button. Without it nothing opens. */
+  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its › button. Without it nothing opens. */
   onOpen?: ((id: string) => void) | undefined
   /** In the tree mode, the ids of the things that are closed, when the app keeps them; otherwise the canvas keeps its own, from `defaultCollapsed`. */
   collapsed?: readonly string[] | undefined
@@ -223,18 +234,24 @@ type Drawn = {
   stop: boolean
   editable: boolean
   direction: 'right' | 'down'
-  /** In the graph mode, whether the app opens things: the › of a thing and a double press on it. */
+  /** In the graph mode, whether the app opens things (`onOpen`): a thing with an `openLabel` then has a › and opens on a double press. */
   opens: boolean
+  /** In the graph mode, the names of what the thing's lines lead to and of what the lines into it come from. */
+  leadsTo: readonly string[]
+  comesFrom: readonly string[]
   onToggle: (id: string) => void
   onAdd: (id: string) => void
   onOpen: (id: string) => void
-  onKey: (event: React.KeyboardEvent<HTMLDivElement>, id: string) => void
   onFocus: (id: string) => void
 }
 
 const HANDLE = 'size-2! min-h-0! min-w-0! rounded-full! border-0! bg-ink-mute!'
 /** The small buttons on a thing: the plus that hangs a new one, the arrow that opens and closes, the › that opens. */
 const ON_THING = 'nodrag nopan inline-flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-ink/6 [&_svg]:size-3.5'
+/** With a finger a button on a thing is 44px, as every control (DESIGN.md, the exception to R7; as `Button` does). */
+const TOUCH = 'pointer-coarse:min-h-11 pointer-coarse:min-w-11'
+/** The element of a thing that takes the focus: the item of the tree, the button of the graph mode. */
+const SURFACE = '[data-slot="graph-node"]'
 
 /** What a thing shows: its icon or the dot of its colour, its name and the line under it. */
 function Face({ node, chosen }: { node: GraphNode; chosen: boolean }) {
@@ -265,12 +282,12 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
       role="treeitem"
       data-slot="graph-node"
       data-node-id={node.id}
+      data-thing={node.id}
       tabIndex={data.stop ? 0 : -1}
       aria-level={data.level}
       aria-selected={data.chosen}
       aria-expanded={has ? data.open : undefined}
       aria-label={has && !data.open ? words.closed(node.label, data.hidden) : node.label}
-      onKeyDown={(event) => data.onKey(event, node.id)}
       onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
       className={cn(
         'group relative flex w-52 cursor-default items-center gap-2 rounded-md bg-raised px-3 text-sm text-ink shadow-sm',
@@ -315,58 +332,76 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
 /**
  * A thing on the canvas in the graph mode. The surface is the button that chooses it; the buttons on it (the plus, the
  * › that opens) lie over its end, beside that button and not inside it: what a button holds is read as its name, so a
- * button inside another would not be reached.
+ * button inside another would not be reached. The box around them (`data-thing`) is where the keys pressed on any of
+ * them find their thing.
  */
 const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   const words = useWords().graph
+  const described = React.useId()
   const { node, direction, editable } = data
   const add = editable && data.chosen
-  const ends = (add ? 1 : 0) + (data.opens ? 1 : 0)
+  // Only a thing the app says it opens has a ›, under the app's name for the action, and opens on a double press.
+  const openLabel = data.opens && node.openLabel ? node.openLabel : undefined
+  const ends = (add ? 1 : 0) + (openLabel ? 1 : 0)
+  // Where its lines lead and where the lines into it come from, said after its name.
+  const relations = [data.leadsTo.length > 0 ? words.leadsTo(data.leadsTo) : '', data.comesFrom.length > 0 ? words.comesFrom(data.comesFrom) : ''].filter(Boolean).join(' · ')
   return (
-    <div className={cn('relative w-52', node.detail ? 'h-14' : 'h-11', data.dim && 'opacity-40')}>
+    <div data-thing={node.id} className={cn('relative w-52', node.detail ? 'h-14' : 'h-11', data.dim && 'opacity-40')}>
       <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
       <div
         role="button"
         data-slot="graph-node"
         data-node-id={node.id}
         tabIndex={data.stop ? 0 : -1}
-        aria-label={node.label}
-        aria-pressed={data.chosen}
-        onKeyDown={(event) => data.onKey(event, node.id)}
+        // Its name and its second line, as the eye reads them.
+        aria-label={node.detail ? `${node.label}, ${node.detail}` : node.label}
+        // The chosen thing is the one the app shows: a single choice, not a toggle that is pressed.
+        aria-current={data.chosen ? 'true' : undefined}
+        aria-describedby={relations ? described : undefined}
         onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
-        onDoubleClick={data.opens ? () => data.onOpen(node.id) : undefined}
+        onDoubleClick={openLabel ? () => data.onOpen(node.id) : undefined}
         className={cn(
           'flex size-full cursor-default items-center gap-2 rounded-md bg-raised ps-3 text-sm text-ink shadow-sm',
-          // Room at the end for the buttons that lie over it.
-          ends === 2 ? 'pe-18' : ends === 1 ? 'pe-10' : 'pe-3',
+          // Room at the end for the buttons that lie over it, and more with a finger, where each is 44px.
+          ends === 2 ? 'pe-18 pointer-coarse:pe-25' : ends === 1 ? 'pe-10 pointer-coarse:pe-14' : 'pe-3',
           data.chosen && 'bg-selected font-semibold text-selected-ink',
           FOCUS_RING,
         )}
       >
         <Face node={node} chosen={data.chosen} />
       </div>
+      {relations ? (
+        <span id={described} className="sr-only">
+          {relations}
+        </span>
+      ) : null}
       {ends > 0 ? (
-        <span className="absolute inset-y-0 end-2 flex items-center gap-2">
+        <span className="absolute inset-y-0 end-2 flex items-center gap-2 pointer-coarse:gap-0">
           {add ? (
-            <button type="button" tabIndex={-1} data-slot="graph-add" aria-label={words.add(node.label)} onClick={(event) => { event.stopPropagation(); data.onAdd(node.id) }} className={cn(ON_THING, 'text-selected-ink', FOCUS_RING)}>
-              <Icon name="plus" />
-            </button>
+            <Tooltip label={words.addAfter(node.label)}>
+              <button type="button" tabIndex={-1} data-slot="graph-add" aria-label={words.addAfter(node.label)} onClick={(event) => { event.stopPropagation(); data.onAdd(node.id) }} className={cn(ON_THING, TOUCH, 'text-selected-ink', FOCUS_RING)}>
+                <Icon name="plus" />
+              </button>
+            </Tooltip>
           ) : null}
-          {data.opens ? (
-            <Tooltip label={words.open(node.label)}>
+          {openLabel ? (
+            <Tooltip label={openLabel}>
               <button
                 type="button"
                 // The next Tab stop after the thing that has it: the way to open from the keyboard.
                 tabIndex={data.stop ? 0 : -1}
                 data-slot="graph-open"
-                aria-label={words.open(node.label)}
+                aria-label={openLabel}
                 onClick={(event) => {
                   event.stopPropagation()
+                  // A double press is two clicks: the second one (`detail` 2) opens nothing more. From the keyboard
+                  // (`detail` 0) and with one click it opens.
+                  if (event.detail > 1) return
                   data.onOpen(node.id)
                 }}
                 onDoubleClick={(event) => event.stopPropagation()}
                 onFocus={() => data.onFocus(node.id)}
-                className={cn(ON_THING, 'text-ink-mute hover:text-ink', FOCUS_RING)}
+                className={cn(ON_THING, TOUCH, 'text-ink-mute hover:text-ink', FOCUS_RING)}
               >
                 <Icon name="chevron" />
               </button>
@@ -384,8 +419,8 @@ const NODE_TYPES = { thing: Thing, point: Point }
 const FIT = { maxZoom: 1, padding: { top: '64px', bottom: '24px', x: '24px' } } as const
 /** Nothing closed: the graph mode's, the same list at every draw. */
 const NOTHING: readonly string[] = []
-/** A field keeps the keys typed into it. */
-const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+/** No names: the relations of a thing in the tree mode, which does not say them. */
+const NO_NAMES: readonly string[] = []
 let made = 0
 const freshId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `node-${Date.now()}-${++made}`)
 
@@ -404,6 +439,20 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     onCollapsedChange?.(next)
   }
   const { below, above } = React.useMemo(() => links(graph), [graph])
+  // Each thing by its id, once for the graph; the first of two with the same id, as the layout reads them.
+  const byId = React.useMemo(() => {
+    const map = new Map<string, GraphNode>()
+    for (const node of nodes) if (!map.has(node.id)) map.set(node.id, node)
+    return map
+  }, [nodes])
+  // In the graph mode, the names of what each thing leads to and comes from: its description for screen readers.
+  const relations = React.useMemo(() => {
+    const named = new Map<string, { leadsTo: readonly string[]; comesFrom: readonly string[] }>()
+    if (tree) return named
+    const name = (id: string) => byId.get(id)?.label ?? id
+    for (const [id, to] of below) named.set(id, { leadsTo: to.map(name), comesFrom: (above.get(id) ?? []).map(name) })
+    return named
+  }, [tree, below, above, byId])
   const sight = React.useMemo(() => (tree ? visibleGraph(graph, closed) : wholeGraph(graph)), [tree, graph, closed])
   const places = React.useMemo(() => layoutGraph(graph, sight.order, direction), [graph, sight, direction])
   const [query, setQuery] = React.useState('')
@@ -426,7 +475,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     const frame = box.current!.getBoundingClientRect()
     const rect = el.getBoundingClientRect()
     if (rect.left < frame.left || rect.right > frame.right || rect.top < frame.top || rect.bottom > frame.bottom) {
-      const node = nodes.find((it) => it.id === id)
+      const node = byId.get(id)
       void flow.setCenter(at.x + WIDTH / 2, at.y + (node ? heightOf(node) : 44) / 2, { zoom: flow.getZoom(), duration: 0 })
     }
     return true
@@ -435,8 +484,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
     if (wanted.current !== null && sight.level.has(wanted.current) && focus(wanted.current)) wanted.current = null
   })
 
-  const latest = React.useRef({ graph, closed, sight, below, above, onSelect, onOpen, onChange, setClosed, focus, editable, tree, direction })
-  latest.current = { graph, closed, sight, below, above, onSelect, onOpen, onChange, setClosed, focus, editable, tree, direction }
+  // What the handlers handed to the things read when they run: the things keep the same handlers at every draw.
+  const latest = React.useRef({ graph, closed, sight, onSelect, onOpen, onChange, setClosed })
+  latest.current = { graph, closed, sight, onSelect, onOpen, onChange, setClosed }
   const handlers = React.useMemo(() => {
     const toggle = (id: string) => {
       const now = latest.current
@@ -461,53 +511,67 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
       now.onChange?.({ nodes: now.graph.nodes.filter((node) => node.id !== id), edges: now.graph.edges.filter((edge) => !gone.includes(edge)) }, { kind: 'remove', nodes: [id], edges: gone })
       now.onSelect?.(null)
     }
-    const key = (event: React.KeyboardEvent<HTMLDivElement>, id: string) => {
-      if (event.target !== event.currentTarget || event.ctrlKey || event.metaKey || event.altKey) return
-      const now = latest.current
-      const order = now.sight.order
-      const at = order.indexOf(id)
-      let to: string | undefined
-      if (event.key === 'Home') to = order[0]
-      else if (event.key === 'End') to = order[order.length - 1]
-      else if (event.key === 'Enter' || event.key === ' ') now.onSelect?.(id)
-      else if ((event.key === 'Delete' || event.key === 'Backspace') && now.editable) remove(id)
-      else if (now.tree) {
-        // A tree's: Down and Up through what is in sight, Right opens or goes in, Left closes or goes back.
-        const children = now.below.get(id) ?? []
-        const open = !now.closed.includes(id)
-        if (event.key === 'ArrowDown') to = order[at + 1]
-        else if (event.key === 'ArrowUp') to = order[at - 1]
-        else if (event.key === 'ArrowRight') {
-          if (children.length > 0 && !open) toggle(id)
-          else to = children.find((child) => now.sight.level.has(child))
-        } else if (event.key === 'ArrowLeft') {
-          if (children.length > 0 && open) toggle(id)
-          else to = (now.above.get(id) ?? []).find((parent) => now.sight.level.has(parent))
-        } else return
-      } else {
-        // A graph's: along the ranks an arrow follows the thing's first line, forwards to where it leads or back to
-        // where it comes from (every thing is in sight); across them it goes through the things in the app's order.
-        const right = now.direction === 'right'
-        if (event.key === (right ? 'ArrowRight' : 'ArrowDown')) to = now.below.get(id)?.[0]
-        else if (event.key === (right ? 'ArrowLeft' : 'ArrowUp')) to = now.above.get(id)?.[0]
-        else if (event.key === (right ? 'ArrowDown' : 'ArrowRight')) to = order[at + 1]
-        else if (event.key === (right ? 'ArrowUp' : 'ArrowLeft')) to = order[at - 1]
-        else return
-      }
-      event.preventDefault()
-      event.stopPropagation()
-      if (to !== undefined) now.focus(to)
-    }
-    return { toggle, add, key, open: (id: string) => latest.current.onOpen?.(id), focus: (id: string) => setFocused(id) }
+    return { toggle, add, remove, open: (id: string) => latest.current.onOpen?.(id), focus: (id: string) => setFocused(id) }
   }, [words.newNode])
 
-  const drawn = React.useMemo<Node<Drawn>[]>(
+  /**
+   * The keys of the things, read at the box; true when one was used. The thing is the one the key was pressed on or,
+   * in the graph mode, the one whose button (its ›, its plus) has the focus: from there the arrows, Home and End move
+   * as from the thing, while Enter and Space are the button's own (they press it) and Delete is the thing's alone.
+   * In the tree mode the keys are the item's own, as a tree's.
+   */
+  const thingKey = (event: React.KeyboardEvent<HTMLDivElement>, target: Element): boolean => {
+    const id = target.closest<HTMLElement>('[data-thing]')?.dataset.thing
+    const own = target.matches(SURFACE)
+    if (id === undefined || !sight.level.has(id) || (tree && !own)) return false
+    const order = sight.order
+    const at = order.indexOf(id)
+    let to: string | undefined
+    if (event.key === 'Home') to = order[0]
+    else if (event.key === 'End') to = order[order.length - 1]
+    else if (event.key === 'Enter' || event.key === ' ') {
+      if (!own) return false
+      onSelect?.(id)
+    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (!own || !editable) return false
+      handlers.remove(id)
+    } else if (tree) {
+      // A tree's: Down and Up through what is in sight, Right opens or goes in, Left closes or goes back.
+      const children = below.get(id) ?? []
+      const open = !closed.includes(id)
+      if (event.key === 'ArrowDown') to = order[at + 1]
+      else if (event.key === 'ArrowUp') to = order[at - 1]
+      else if (event.key === 'ArrowRight') {
+        if (children.length > 0 && !open) handlers.toggle(id)
+        else to = children.find((child) => sight.level.has(child))
+      } else if (event.key === 'ArrowLeft') {
+        if (children.length > 0 && open) handlers.toggle(id)
+        else to = (above.get(id) ?? []).find((parent) => sight.level.has(parent))
+      } else return false
+    } else {
+      // A graph's: along the ranks an arrow follows the thing's first line, forwards to where it leads or back to
+      // where it comes from (every thing is in sight); across them it goes through the things in the app's order.
+      const right = direction === 'right'
+      if (event.key === (right ? 'ArrowRight' : 'ArrowDown')) to = below.get(id)?.[0]
+      else if (event.key === (right ? 'ArrowLeft' : 'ArrowUp')) to = above.get(id)?.[0]
+      else if (event.key === (right ? 'ArrowDown' : 'ArrowRight')) to = order[at + 1]
+      else if (event.key === (right ? 'ArrowUp' : 'ArrowLeft')) to = order[at - 1]
+      else return false
+    }
+    if (to !== undefined) focus(to)
+    return true
+  }
+
+  // Every thing as it is drawn but for the Tab stop, which moves at every arrow: it is set on its own thing below, so
+  // the others keep the same data, and React Flow does not draw them again.
+  const still = React.useMemo<Node<Drawn>[]>(
     () =>
       sight.order.flatMap((id) => {
-        const node = nodes.find((it) => it.id === id)
+        const node = byId.get(id)
         const at = places.get(id)
         if (!node || !at) return []
         const dim = found ? !found.has(id) : near ? !near.has(id) : false
+        const related = relations.get(id)
         return [
           {
             id,
@@ -518,12 +582,13 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
             draggable: false,
             selectable: false,
             focusable: false,
-            data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: id === chosen, dim, stop: id === stop, editable, direction, opens, onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onKey: handlers.key, onFocus: handlers.focus },
+            data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: id === chosen, dim, stop: false, editable, direction, opens, leadsTo: related?.leadsTo ?? NO_NAMES, comesFrom: related?.comesFrom ?? NO_NAMES, onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onFocus: handlers.focus },
           },
         ]
       }),
-    [sight, nodes, places, found, near, below, closed, chosen, stop, editable, direction, tree, opens, handlers],
+    [sight, byId, places, found, near, below, closed, chosen, editable, direction, tree, opens, relations, handlers],
   )
+  const drawn = React.useMemo<Node<Drawn>[]>(() => still.map((it) => (it.id === stop ? { ...it, data: { ...it.data, stop: true } } : it)), [still, stop])
   const lines = React.useMemo<Edge[]>(
     () =>
       edges
@@ -551,15 +616,17 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
   const zoomIn = () => void flow.zoomIn({ duration: 0 })
   const zoomOut = () => void flow.zoomOut({ duration: 0 })
   const fit = () => void flow.fitView({ ...FIT, duration: 0 })
-  // From anywhere in the canvas but a field (the search keeps what is typed into it). With Ctrl or Cmd they are the
-  // browser's own zoom; Shift is let through, since on some keyboards it makes the +.
-  const zoomKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  // The keys of the canvas, read at its box. +, − and 0 from anywhere in it but a field (the search keeps what is
+  // typed into it), = as + (the same key without Shift); the others are the things' (`thingKey`). With Ctrl or Cmd
+  // they are the browser's own zoom; Shift is let through, since on some keyboards it makes the +.
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return
-    if (event.target instanceof Element && event.target.closest(FIELD)) return
+    const target = event.target instanceof Element ? event.target : null
+    if (!target || target.closest(FIELDS)) return
     if (event.key === '+' || event.key === '=') zoomIn()
     else if (event.key === '-') zoomOut()
     else if (event.key === '0') fit()
-    else return
+    else if (!thingKey(event, target)) return
     event.preventDefault()
     event.stopPropagation()
   }
@@ -587,17 +654,19 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
   }
 
   return (
-    // What a screen reader meets is this box; the library's own canvas inside it says nothing of its own.
-    // - In the tree mode, a tree of items.
-    // - In the graph mode the lines are not «hangs from», so it is not a tree. The box is an application: its keys are
-    //   its own (the arrows along the lines, Home, End, Enter, +, − and 0), so a screen reader hands them over instead
-    //   of reading the page with them. `aria-roledescription` names it a graph.
-    // - Each thing is a button that says whether it is chosen (`aria-pressed`, which holds for several), one Tab stop
-    //   as in the tree. Not a listbox: an option cannot hold the › that opens it, and inside a listbox the app's
-    //   commands give up their keys (`commands.tsx`).
-    <div ref={box} role={tree ? 'tree' : 'application'} aria-roledescription={tree ? undefined : words.role} {...props} data-slot="graph" onKeyDown={zoomKey} className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', className)}>
+    // What a screen reader meets is this box, named by the app. Inside it React Flow's own box is always an
+    // `application` (the library sets the role after the props it is given, so a `role` passed to it does nothing);
+    // a screen reader inside it hands the keys to the canvas.
+    // - In the tree mode, a tree of items. The library's application sits between the tree and its items: a known
+    //   limit, since that box is the library's to draw.
+    // - In the graph mode the lines are not «hangs from», so it is not a tree, and not a second application around the
+    //   library's: a group, which `aria-roledescription` calls a graph (the word `graph.roleDescription`).
+    // - Each thing is a button: its name and second line name it, where its lines lead and come from describe it, and
+    //   the chosen one is `aria-current` (a single choice, not a toggle). One Tab stop as in the tree. Not a listbox:
+    //   an option cannot hold the › that opens it, and inside a listbox the app's commands give up their keys
+    //   (`commands.tsx`).
+    <div ref={box} role={tree ? 'tree' : 'group'} aria-roledescription={tree ? undefined : words.roleDescription} {...props} data-slot="graph" onKeyDown={onKeyDown} className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', className)}>
       <ReactFlow
-        role="presentation"
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={NODE_TYPES}

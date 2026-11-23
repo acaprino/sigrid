@@ -203,17 +203,22 @@ export interface Words {
     readonly find: string
     /** The name of the small map of the whole graph. */
     readonly map: string
-    /** The names of the arrow of a thing: to show what hangs from it, to hide it. In the graph mode `open` names its › too, which asks the app to open it. */
+    /** The names of the arrow of a thing in the tree mode: to show what hangs from it, to hide it. (The › of the graph mode is named by the app: `openLabel`.) */
     readonly open: (item: string) => string
     readonly close: (item: string) => string
     /** What screen readers hear of a closed thing: its name and how many it hides. */
     readonly closed: (item: string, hidden: number) => string
-    /** The name of the button that hangs a new thing from one. */
+    /** The name of the button that hangs a new thing from one, in the tree mode. */
     readonly add: (item: string) => string
+    /** The name of the button that adds a new thing after one, joined by a line from it, in the graph mode. */
+    readonly addAfter: (item: string) => string
+    /** What screen readers hear after the name of a thing in the graph mode: the names of what its lines lead to, and of what the lines into it come from. */
+    readonly leadsTo: (items: readonly string[]) => string
+    readonly comesFrom: (items: readonly string[]) => string
     /** The name a new thing starts with. */
     readonly newNode: string
-    /** What screen readers call the canvas in the graph mode (`model="graph"`), where it is not a tree. */
-    readonly role: string
+    /** What screen readers call the kind of thing the canvas is in the graph mode (`model="graph"`), where it is not a tree: its `aria-roledescription`. */
+    readonly roleDescription: string
   }
   readonly reorder: {
     /** The name of the handle that moves an item («Move Inbox»). */
@@ -397,8 +402,11 @@ export const DEFAULT_WORDS: Words = {
     close: (item) => `Close ${item}`,
     closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
     add: (item) => `Add under ${item}`,
+    addAfter: (item) => `Add after ${item}`,
+    leadsTo: (items) => `leads to ${items.join(', ')}`,
+    comesFrom: (items) => `comes from ${items.join(', ')}`,
     newNode: 'New',
-    role: 'graph',
+    roleDescription: 'graph',
   },
   reorder: {
     handle: (item) => `Move ${item}`,
