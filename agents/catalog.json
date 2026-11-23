@@ -173,7 +173,7 @@
     },
     {
      "file": "src/components/LookSettings.tsx",
-     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app\npasses its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
+     "about": "",
      "components": [
       {
        "name": "BaseColorChoice",
@@ -815,7 +815,7 @@
     },
     {
      "file": "src/components/ui/app-shell.tsx",
-     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nWithout a way to measure (a server, a test) the frame is the wide one.",
+     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nTwo forms, chosen with `frame`, with the same regions and steps:\n- `line` (the default): one surface, the page, with a line between the regions;\n- `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's\n  ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is\n  one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the\n  large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a\n  sidebar of its own colours (`data-sidebar=\"own\"`, a dark or solid column) keeps its column on the lanes' surface.\n  Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nWithout a way to measure (a server, a test) the frame is the wide one.",
      "components": [
       {
        "name": "AppShell",
@@ -864,6 +864,11 @@
          "name": "desktop",
          "type": "boolean",
          "doc": "The frame is the window of a program: chrome that is not selectable, and overlays that open under the title bar. Leave it off for a page in a browser tab."
+        },
+        {
+         "name": "frame",
+         "type": "\"line\" | \"sheet\"",
+         "doc": "`line` (the default): one surface with lines between the regions. `sheet`: the title bar and the sidebar on the window's ground, the work area one sheet with a corner, as in Xiox."
         },
         {
          "name": "steps",
@@ -1917,6 +1922,61 @@
      "also": [
       "NavItemProps",
       "NavListProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/panel.tsx",
+     "about": "A panel: the inner layout of a region of the frame (the content, the inspector), as Imago's `im-panel` and Xiox's\nlist are laid out. A header with the title, a line beside it that says how much is there («70 items · 8 selected»)\nand the tools of the whole panel at its end (a filter, a switch); under it a row of tools (a search, «Fold all»);\nthen the body, which alone scrolls; and a foot that stays in sight (the actions on what is in the panel).\nEvery part is optional but the title. The panel paints nothing: it lies on the surface of the region that holds it\n(the page, or the sheet of `AppShell frame=\"sheet\"`), and only the foot has a line above it (R4). It is a region\nnamed by its title, so a screen reader can jump to it.",
+     "components": [
+      {
+       "name": "Panel",
+       "doc": "A titled region with a header, a row of tools, a body that scrolls and a foot that stays.",
+       "props": [
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the panel: its heading and the name of its region."
+        },
+        {
+         "name": "subtitle",
+         "type": "React.ReactNode",
+         "doc": "Beside the title, quieter: how much is there, what is chosen."
+        },
+        {
+         "name": "actions",
+         "type": "React.ReactNode",
+         "doc": "At the end of the header: the tools of the whole panel (a filter, a switch)."
+        },
+        {
+         "name": "tools",
+         "type": "React.ReactNode",
+         "doc": "A row under the header: a search, a «Fold all»."
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "Under the body, always in sight: the actions on what the panel holds, the primary one last."
+        },
+        {
+         "name": "level",
+         "type": "3 | 2",
+         "doc": "The level of the heading: 2 (the default), or 3 for a panel inside a region that has its own heading."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The body: it scrolls by itself."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "PanelProps"
      ]
     },
     {
@@ -3755,7 +3815,7 @@
     },
     {
      "file": "src/internal/attachment-viewer.tsx",
-     "about": "A page of the document: the measures reserve its place before the image arrives.",
+     "about": "",
      "components": [
       {
        "name": "AttachmentViewer",
@@ -4602,7 +4662,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "React elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
      "components": [
       {
        "name": "InlineMarkdown",
@@ -4903,7 +4963,7 @@
     },
     {
      "file": "src/internal/thumbnail.tsx",
-     "about": "The only sources a thumbnail accepts: a JPEG or PNG image in base64, whole in the string. No `javascript:`,\n`data:text/html`, `data:image/svg+xml` (it can carry script), `http:` or `blob:`: the thumbnail comes from the app as\na data URL and no other value must ever reach `src`.",
+     "about": "",
      "components": [
       {
        "name": "NeedThumbnail",

@@ -34,6 +34,27 @@ Recommended:
   toolbar, last before the window's buttons.
 - Show the button that opens the sidebar only where the sidebar is a drawer (`useAppShell().sidebar === 'drawer'`).
 
+## Two forms of the frame: lines, or a sheet
+
+The frame has two forms with the same regions and the same steps; `frame` chooses one.
+
+- `line`, the default: one surface, the page, with a line between the regions.
+- `sheet`, Xiox's frame: the title bar and the sidebar sit on the window's ground, with no line and no fill of their
+  own; the work area (status, content, inspector, actions, footer) is one sheet of the page's surface, with a line at
+  its top and, where a sidebar lies beside it, at its start, with the large corner there. The ground is the sidebar's
+  surface, so a light sidebar and the ground are one; a theme whose sidebar has colours of its own (a dark or solid
+  column) keeps its column, and the ground is the lanes' surface. Where the sidebar is a drawer, or there is none, the
+  sheet has no corner. No glass: the toolkit draws no blur.
+
+Recommended for the sheet, as Xiox does it: the views as tabs in the bar, «Commands» with its shortcut before the
+window's buttons (`ToolbarButton variant="outline"` with `shortcut="Ctrl K"`), the status row at the head of the
+sheet, the content as a `Panel`, the actions at its foot, and the keys of the view in the footer (`Kbd`). The gallery
+shows it: view Examples, section «Xiox».
+
+A `Panel` lays out a region inside: a header with the title, a line that says how much is there and the tools of the
+whole panel at its end (a filter); a row of tools under it (a search); a body that alone scrolls; a foot that stays in
+sight, with a line above it. It paints nothing: it lies on the surface of the region that holds it.
+
 ## The title bar and its toolbar
 
 - Start the bar with the app (`ToolbarBrand`): a square in the accent with the initial of its name, and the name. It
