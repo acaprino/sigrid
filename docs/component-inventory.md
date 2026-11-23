@@ -328,7 +328,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - **States**: entering, resting, held (pointer or focus: time suspended), leaving (inert), pushed out by a fourth; pressed quick choice (paper fill).
 - **Tokens**: `ink` (card), `paper` (text), `shadow-lg`, `radius-lg`, `paper` at 15% (hover), at 40% (outline of choices, hint box F05), `text-sm`, timer `text-xs`.
 - **Composition**: Ark `Toast` (Toaster group, root props, Title) + `Button` (ghost xs).
-- **Accessibility**: region `role="status"`, `aria-relevant="additions"`, F6 reaches it; Esc does not close a notice; the timer is `aria-hidden`.
+- **Accessibility**: region `role="status"`, `aria-relevant="additions"`, Alt+T reaches it, and in an `AppShell` F6 does in the frame's round (F6 was Ark's key here until 2026-11-23, when it became the frame's); Esc does not close a notice; the timer is `aria-hidden`.
 - **Ark parity**: real Ark; not used: description, actionTrigger, closeTrigger (own buttons, with the toolkit's form).
 - **Park parity**: l3, lg shadow — same; colours inverted (F39 approved); padding 6px (F28).
 - **Findings**: F01 (region ring), F05, F28, F34, F39.

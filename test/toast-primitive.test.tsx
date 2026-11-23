@@ -52,10 +52,10 @@ describe('the region', () => {
     expect(r.style.zIndex).toBe('')
   })
 
-  test('it is Ark\'s toast group: F6 brings the focus to the column', async () => {
+  test('it is Ark\'s toast group: Alt+T brings the focus to the column (in a frame, F6 reaches it in the frame\'s round)', async () => {
     render(<Toasts max={3} items={two} />)
     await settle()
-    fireEvent.keyDown(document.body, { key: 'F6', code: 'F6' })
+    fireEvent.keyDown(document.body, { key: 't', code: 'KeyT', altKey: true })
     await settle()
     expect(document.activeElement).toBe(region())
   })
