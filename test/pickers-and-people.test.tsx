@@ -279,6 +279,27 @@ describe('a sheet beside the page', () => {
     expect(classes(document.querySelector('[data-slot="sheet-content"]')!)).toContain('pointer-events-auto')
   })
 
+  test('`modal={false}`: the focus going to the page does not close it', async () => {
+    const onOpenChange = vi.fn()
+    render(
+      <>
+        <Sheet open modal={false} onOpenChange={onOpenChange}>
+          <SheetContent>
+            <SheetTitle>Details</SheetTitle>
+            <button type="button">Inside</button>
+          </SheetContent>
+        </Sheet>
+        <button type="button">Outside</button>
+      </>,
+    )
+    act(() => screen.getByRole('button', { name: 'Inside' }).focus())
+    await settle()
+    act(() => screen.getByRole('button', { name: 'Outside' }).focus())
+    await settle()
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-slot="sheet-content"]')).not.toBeNull()
+  })
+
   test('modal, as before: the backdrop is there and the viewport takes the pointer', () => {
     render(
       <Sheet open>
