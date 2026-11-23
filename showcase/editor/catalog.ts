@@ -40,6 +40,8 @@ export type Props = Readonly<Record<string, unknown>>
 /** What a component is given to describe itself. The canvas, the run page and the export each provide their own. */
 export type BuildCtx = {
   readonly appName: string
+  /** Some screen of the app has details: only then is there a `details` to read. */
+  readonly details: boolean
   readonly screens: readonly { readonly id: string; readonly name: string; readonly icon: IconName }[]
   /** The name of the screen in sight, as an expression. */
   readonly screenName: Expr
@@ -160,7 +162,7 @@ export const CATALOG = {
       const word = flag(p['word']) || !drawn
       return h(
         'ToolbarButton',
-        { label, icon: drawn, shortcut: text(p['shortcut']) || undefined, variant: variant === 'ghost' ? undefined : variant, keepWord: flag(p['keepWord']) && word ? true : undefined, pressed: p['action'] === 'details' ? name('details') : undefined, onClick: handler(ctx.act(p['action'], p['said'])) },
+        { label, icon: drawn, shortcut: text(p['shortcut']) || undefined, variant: variant === 'ghost' ? undefined : variant, keepWord: flag(p['keepWord']) && word ? true : undefined, pressed: p['action'] === 'details' && ctx.details ? name('details') : undefined, onClick: handler(ctx.act(p['action'], p['said'])) },
         word ? label : null,
       )
     },
@@ -702,7 +704,7 @@ export const CATALOG = {
 
 export type Kind = keyof typeof CATALOG
 export const KINDS = Object.keys(CATALOG) as Kind[]
-export const isKind = (value: unknown): value is Kind => typeof value === 'string' && value in CATALOG
+export const isKind = (value: unknown): value is Kind => typeof value === 'string' && Object.prototype.hasOwnProperty.call(CATALOG, value)
 export const defOf = (kind: Kind): Def => CATALOG[kind]
 /** The components a region takes. */
 export const takenBy = (region: Region): Kind[] => KINDS.filter((kind) => (CATALOG[kind].into as readonly Region[]).includes(region))
@@ -710,15 +712,17 @@ export const GROUPS: readonly Group[] = ['Bar', 'Navigation', 'Layout', 'Text', 
 
 /* ———— Builders shared by two components ———— */
 
-/** Rows with a name, as the options of a control: the value is the name as a word. Two rows of one name stay two. */
+/** Rows with a name, as the options of a control: the value is the name as a word. Two rows of one name stay two, each with a value of its own. */
 function named(rows: unknown): { value: string; label: string }[] {
-  const seen = new Map<string, number>()
+  const taken = new Set<string>()
   return list(rows).map((row) => {
     const label = text(row['label'], 'Choice')
     const base = slug(label, 'choice')
-    const times = (seen.get(base) ?? 0) + 1
-    seen.set(base, times)
-    return { value: times === 1 ? base : `${base}-${times}`, label }
+    // «A», «A», «A 2»: a value is given once, so the third is `a-2-2` and not a second `a-2`.
+    let value = base
+    for (let times = 2; taken.has(value); times++) value = `${base}-${times}`
+    taken.add(value)
+    return { value, label }
   })
 }
 

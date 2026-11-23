@@ -193,6 +193,7 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   const narrow = env.width < APP_SHELL_STEPS.rail
   const ctx: BuildCtx = {
     appName: env.app.name,
+    details: env.app.screens.some((screen) => screen.details === 'on'),
     screens: env.app.screens,
     screenName: fixed(env.screen.name),
     // On the canvas nothing runs: a value is what it starts as, and a press selects the component.

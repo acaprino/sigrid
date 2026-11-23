@@ -17,7 +17,7 @@ export type VirtualListProps = {
   "aria-label": string
   /** How many rows the list holds. */
   count: number
-  /** The row at a place, counted from 0: an `ItemRow`, or any `<li>`. */
+  /** The row at a place, counted from 0: an `ItemRow`, or any `<li>`. One element for each place, never none. */
   children: (index: number) => React.ReactNode
   /** What tells the row at a place from the others, where the rows move: its id. Absent: its place. */
   rowKey?: ((index: number) => React.Key) | undefined
@@ -48,8 +48,9 @@ function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8,
       row.setAttribute("aria-setsize", String(count))
       row.setAttribute("aria-posinset", String(item.index + 1))
     })
-    const height = rows[0]?.getBoundingClientRect().height ?? 0
-    if (height > 0 && Math.abs(height - size) > 0.01) setSize(height)
+    // The height of the layout, not the one drawn: a list in a preview that is scaled down has rows as tall as ever.
+    const height = rows[0]?.offsetHeight ?? 0
+    if (height > 0 && height !== size) setSize(height)
   })
   React.useLayoutEffect(() => virtualizer.measure(), [size, virtualizer])
   const first = drawn[0]

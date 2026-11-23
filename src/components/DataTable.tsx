@@ -7,9 +7,15 @@
 //   word and not a button. A press sorts up, a second down, a third puts the rows back as they were given. The
 //   heading says how it is sorted with `aria-sort`, and with an arrow for the eye.
 // - With `onRowPress` a row is pressed with the pointer or with Enter and Space; the arrows, Home and End move among
-//   the rows, which are one Tab stop, as in a list. The chosen row (`current`) has the selection tint (R1).
+//   the rows, which are one Tab stop, as in a list: the row that had the focus last, or the chosen one, or the first
+//   in sight. A press on a control inside a cell (a button, a link, a field) is that control's and not the row's.
+//   The chosen row (`current`) has the selection tint (R1).
 // - With `virtual` the box needs a height (`className="h-96"`): the rows outside it are not in the page, two spacer
 //   rows keep the scrollbar honest, and each row is measured as it is drawn, so any density and a finger's 44px hold.
+//   Home and End go to the first and the last row of the data. A row scrolled far out of sight is no longer in the
+//   page, and the focus it had goes with it: Tab comes back to a row in sight.
+// - `columns` is best made once (outside the component, or with `useMemo`): a new array at every paint sorts the
+//   rows again at every paint.
 // An app that needs more of a table (filters, pinned columns, groups) drives TanStack Table itself and draws it with
 // `Table`, `TableRow` and `TableCell`: this component is the common case, not a wall around the library.
 import * as React from 'react'
@@ -102,8 +108,10 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
       })),
     [columns],
   )
-  // The library takes any row as data; what it gives back is read here as the app's own rows.
-  const data = React.useMemo(() => [...rows] as RowData[], [rows])
+  // The library takes any row as data; what it gives back is read here as the app's own rows. New columns are new
+  // data too: the library keeps what a row sorts by, and a column that sorts by something else must be read again.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const data = React.useMemo(() => [...rows] as RowData[], [rows, columns])
   const sorting: SortingState = React.useMemo(() => (sorted ? [{ id: sorted.column, desc: sorted.descending }] : []), [sorted])
   const table = useTable({ features, columns: defs, data, getRowId: (row) => rowId(row as Row), state: { sorting } })
   const model = table.getRowModel().rows
@@ -117,13 +125,41 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
   const after = last ? virtualizer.getTotalSize() - last.end : 0
   const indexes = drawn ? drawn.map((item) => item.index) : model.map((_, index) => index)
 
-  // One Tab stop for the rows: the chosen one if it is in the page, otherwise the first one drawn.
-  const stop = current != null && indexes.some((index) => model[index]?.id === current) ? current : model[indexes[0] ?? 0]?.id
+  // One Tab stop for the rows: the row that had the focus last, else the chosen one, else the first one in sight
+  // (with `virtual` the first rows drawn are above the box, kept ready for a scroll up).
+  const [focused, setFocused] = React.useState<string | null>(null)
+  const drawnIds = indexes.map((index) => model[index]?.id)
+  const offset = virtual ? (virtualizer.scrollOffset ?? 0) : 0
+  const inSight = drawn?.find((item) => item.start >= offset)?.index ?? indexes[0] ?? 0
+  const stop = focused != null && drawnIds.includes(focused) ? focused : current != null && drawnIds.includes(current) ? current : model[inSight]?.id
+  // The row to give the focus to once it is drawn: the first or the last of the data, reached with Home or End.
+  const wanted = React.useRef<string | null>(null)
+  React.useLayoutEffect(() => {
+    if (wanted.current === null) return
+    const row = Array.from(box.current?.querySelectorAll<HTMLTableRowElement>(ROW) ?? []).find((el) => el.dataset['rowId'] === wanted.current)
+    if (!row) return
+    wanted.current = null
+    row.focus()
+  })
   const move = (event: React.KeyboardEvent<HTMLTableRowElement>, row: Row) => {
     if (event.target !== event.currentTarget) return
     const from = event.currentTarget
     const all = Array.from(from.parentElement?.querySelectorAll<HTMLTableRowElement>(ROW) ?? [])
     const at = all.indexOf(from)
+    if (virtual && (event.key === 'Home' || event.key === 'End') && model.length > 0) {
+      // The ends of the data, which may not be in the page: scroll there, and take the focus when the row is drawn.
+      event.preventDefault()
+      const to = event.key === 'Home' ? 0 : model.length - 1
+      wanted.current = model[to]?.id ?? null
+      virtualizer.scrollToIndex(to)
+      // The row may be in the page already, and then nothing is drawn again.
+      const there = all.find((el) => el.dataset['rowId'] === wanted.current)
+      if (there) {
+        wanted.current = null
+        there.focus()
+      }
+      return
+    }
     const to = event.key === 'ArrowDown' ? all[at + 1] : event.key === 'ArrowUp' ? all[at - 1] : event.key === 'Home' ? all[0] : event.key === 'End' ? all[all.length - 1] : undefined
     if (to) {
       event.preventDefault()
@@ -133,11 +169,17 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
       onRowPress?.(row)
     }
   }
+  /** A press on a control inside a cell is that control's. */
+  const press = (event: React.MouseEvent<HTMLTableRowElement>, row: Row) => {
+    const inner = (event.target as HTMLElement).closest('button, a, input, select, textarea, label, [role="button"], [role="link"], [role="checkbox"], [role="switch"], [role="menuitem"], [contenteditable="true"]')
+    if (inner && inner !== event.currentTarget && event.currentTarget.contains(inner)) return
+    onRowPress?.(row)
+  }
 
   return (
     <Table containerRef={box} containerClassName={className} aria-rowcount={virtual ? model.length + 1 : undefined} {...props}>
       <TableHeader>
-        <tr>
+        <tr aria-rowindex={virtual ? 1 : undefined}>
           {columns.map((column) => {
             const direction = sorted?.column === column.id ? (sorted.descending ? 'descending' : 'ascending') : 'none'
             return (
@@ -167,7 +209,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
       <TableBody>
         {model.length === 0 ? (
           <tr data-slot="table-empty">
-            <td colSpan={columns.length} className="px-3 py-10 text-center text-sm text-ink-mute">
+            <td colSpan={Math.max(1, columns.length)} className="px-3 py-10 text-center text-sm text-ink-mute">
               {empty ?? words.table.empty}
             </td>
           </tr>
@@ -186,10 +228,12 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
               key={item.id}
               ref={virtual ? virtualizer.measureElement : undefined}
               data-index={index}
+              data-row-id={item.id}
               aria-rowindex={virtual ? index + 2 : undefined}
               current={current != null && item.id === current}
               tabIndex={onRowPress ? (item.id === stop ? 0 : -1) : undefined}
-              onClick={onRowPress ? () => onRowPress(row) : undefined}
+              onClick={onRowPress ? (event) => press(event, row) : undefined}
+              onFocus={onRowPress ? (event) => (event.target === event.currentTarget ? setFocused(item.id) : undefined) : undefined}
               onKeyDown={onRowPress ? (event) => move(event, row) : undefined}
               className={onRowPress ? 'cursor-default' : undefined}
             >

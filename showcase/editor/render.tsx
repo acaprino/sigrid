@@ -205,9 +205,12 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
   const root = React.useRef<HTMLDivElement>(null)
   const narrow = useMedia(`(width < ${NARROW_PX}px)`)
   useDesktopGuard(host === 'native' && !narrow)
+  // Only when another screen is asked for: an edit makes a new plan, and must not take the user back to the first screen.
+  const screensNow = React.useRef(plan.screens)
+  screensNow.current = plan.screens
   React.useEffect(() => {
-    if (asked && plan.screens.some((s) => s.id === asked)) setScreenId(asked)
-  }, [asked, plan])
+    if (asked && screensNow.current.some((s) => s.id === asked)) setScreenId(asked)
+  }, [asked])
   const screen = plan.screens.find((s) => s.id === screenId) ?? plan.screens[0]
   useFootRoom(root, [screenId, narrow, plan])
   if (!screen) return null

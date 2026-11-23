@@ -79,10 +79,26 @@ function check(files: Record<string, string>): string[] {
     .map((d) => `${d.file ? `${d.file.fileName.replace(root, '')}:${d.file.getLineAndCharacterOfPosition(d.start ?? 0).line + 1} ` : ''}${ts.flattenDiagnosticMessageText(d.messageText, '\n')}`)
 }
 
+/**
+ * An app with nothing but a bar and one screen (no details, no sidebar, no actions), whose buttons still ask for
+ * each of them, and whose words hold what could end a comment, a string or a tag.
+ */
+function bare(): AppModel {
+  const nasty = 'A "b" \'c\' \\ {d} <e> ${f} */ &amp;\rg\u2028h'
+  const actions = ['details', 'show', 'menu', 'say', 'go:nowhere', 'none']
+  return {
+    ...STARTERS.find((starter) => starter.id === 'blank')!.make(),
+    name: `Line one\nexport const injected = 1 //\u2028export const again = 2 //`,
+    settings: { barSize: 'default', sidebar: 'off', sidebarSearch: false, account: nasty, tabs: 'off', bottom: 'off', foot: 'off' },
+    shared: { bar: actions.map((action) => make('BarButton', { label: nasty, action, said: nasty })), tabs: [], nav: [], foot: [], bottom: [] },
+    screens: [screen('One', 'all', { status: nasty, content: [make('Heading', { text: nasty }), make('Text', { text: nasty }), make('Button', { label: nasty, action: 'details' }), make('Segment', { options: [{ label: 'A' }, { label: 'A' }, { label: 'A 2' }] })] })],
+  }
+}
+
 const TAURI = 'export declare function getCurrentWindow(): { minimize(): Promise<void>; toggleMaximize(): Promise<void>; close(): Promise<void> }\n'
 
 test('the source of every app the editor starts from, and of every component, type-checks against the toolkit', () => {
-  const apps: Record<string, AppModel> = { everything: everything(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
+  const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
   const files: Record<string, string> = { 'tauri-window.d.ts': TAURI }
   for (const [id, app] of Object.entries(apps)) {
     const made = exportFiles(app, { version: '0.0.0' })
@@ -106,6 +122,61 @@ test('an app read back from its own data is the same app, and data that is not a
   const mended = readApp({ name: 7, screens: [{ name: 'One', content: [{ type: 'Nope', props: {} }, { type: 'Button', props: { label: 3 } }] }] })!
   expect(mended.screens[0]!.content.map((node) => node.type)).toEqual(['Button'])
   expect(appSource(mended)).toContain('<Button')
+})
+
+test('a name with a line break stays inside its comment, and what is not a yes is a no', () => {
+  const source = appSource(bare())
+  // The name is the first line, a comment, and no line of the source starts with what the name tried to add.
+  expect(source.split(/\r?\n|\u2028|\u2029/)[0]).toMatch(/^\/\/ Line one export const injected/)
+  expect(source).not.toMatch(/^export const (injected|again)/m)
+  const hostile = { ...bare(), look: { ...bare().look, animated: 'false}><script/><X animated={true' as unknown as boolean, icons: `x'"y` as unknown as AppModel['look']['icons'] } }
+  const main = exportFiles(hostile, { version: '0.0.0' }).find((file) => file.path === 'src/main.tsx')!.text
+  expect(main).toContain('<MotionProvider animated={false}>')
+  expect(main).not.toContain('<script')
+  expect(main).toMatch(/<IconPackProvider pack=\{.+\}>/)
+})
+
+test('two choices of one name have two values', () => {
+  const source = appSource(bare())
+  const values = [...source.matchAll(/<ToggleGroupItem value="([^"]+)"/g)].map((m) => m[1])
+  expect(values).toHaveLength(3)
+  expect(new Set(values).size).toBe(3)
+})
+
+test('data of any origin is made into an app that draws: a look, a region and an id are checked', () => {
+  const read = readApp({
+    name: 'x',
+    look: { scheme: 'auto', density: null, tone: 'loud', shape: 7, font: 'comic', icons: 'none', accent: 'red', page: 'javascript:1', animated: 'yes', colors: 'all' },
+    screens: [
+      {
+        name: 'One',
+        content: [
+          // Parts of a bar: with no toolbar around them the page would not draw.
+          { type: 'BarButton', props: {} },
+          { type: 'BarSearch', props: {} },
+          { type: 'ViewTabs', props: {} },
+          // A name every object has is not a component.
+          { type: 'constructor', props: {} },
+          { type: 'toString', props: {} },
+          { type: 'Button', props: { id: 'same' } },
+          { type: 'Button', props: { id: 'same' } },
+          { type: 'Stack', props: { id: 'same', items: [{ type: 'BarButton', props: {} }, { type: 'Text', props: { id: 'same' } }] } },
+        ],
+      },
+    ],
+  })!
+  const start = STARTERS[0]!.make().look
+  expect(read.look).toEqual({ ...start, scheme: 'light', colors: 'own', tone: start.tone, shape: start.shape, font: start.font, icons: 'lucide', accent: start.accent, page: null, animated: false, accentAuto: start.accentAuto, density: read.look.density })
+  expect(read.look.density.id).toBe('normal')
+  const content = read.screens[0]!.content
+  expect(content.map((node) => node.type)).toEqual(['Button', 'Button', 'Stack'])
+  const inside = content[2]!.props['items'] as Node[]
+  expect(inside.map((node) => node.type)).toEqual(['Text'])
+  const ids = [...content, ...inside].map((node) => node.props['id'])
+  expect(new Set(ids).size).toBe(ids.length)
+  // What is right is kept as it is.
+  const kept = readApp({ name: 'x', look: { scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true }, screens: [{ name: 'One' }] })!
+  expect(kept.look).toMatchObject({ scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true })
 })
 
 test('the zip of an export holds every file, stored, with its checksum', () => {

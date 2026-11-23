@@ -39,7 +39,7 @@ function literalLines(value: unknown, depth: number, room: number): string[] {
 }
 
 /** Text between two tags, as JSX reads it: as it is where that is safe, otherwise as a string in braces. */
-const jsxText = (value: string) => (/^[^{}<>&\n]+$/.test(value) && value === value.trim() && !/\s{2,}/.test(value) ? value : `{${lit(value)}}`)
+const jsxText = (value: string) => (/^[^{}<>&\n\r\u2028\u2029]+$/.test(value) && value === value.trim() && !/\s{2,}/.test(value) ? value : `{${lit(value)}}`)
 
 const openTag = (el: El) => (el.tag === 'Fragment' ? '' : el.tag)
 
@@ -270,7 +270,8 @@ export function appSource(app: AppModel): string {
   const react = ['useState', ...(plan.uses.say ? ['useLayoutEffect'] : [])].sort()
 
   return [
-    `// ${plan.name}: made with the Sigrid app editor. Every part is the toolkit's own; change anything.`,
+    // The name is on one line whatever it holds: a line break in it would end the comment and start code.
+    `// ${plan.name.replace(/[\r\n\u2028\u2029]+/g, ' ')}: made with the Sigrid app editor. Every part is the toolkit's own; change anything.`,
     `import { ${react.join(', ')}, type ReactNode } from 'react'`,
     ...importLines(names, '@acaprino/sigrid'),
     "import { OWN_WINDOW, closeWindow, minimizeWindow, toggleMaximizeWindow } from './host'",
@@ -345,8 +346,8 @@ applyFont(root, ${lit(look.font)})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MotionProvider animated={${String(look.animated)}}>
-      <IconPackProvider pack=${lit(look.icons)}>
+    <MotionProvider animated={${look.animated === true ? 'true' : 'false'}}>
+      <IconPackProvider pack={${lit(look.icons)}}>
         <App />
       </IconPackProvider>
     </MotionProvider>
@@ -424,7 +425,7 @@ opens under that bar, and takes the browser's own keys away. In a browser none o
 2. In \`src-tauri/tauri.conf.json\`, give the window no decorations, so the app's own bar is the only one:
 
    \`\`\`json
-   "app": { "windows": [{ "title": "${app.name.replace(/"/g, '')}", "width": 1100, "height": 760, "minWidth": 360, "minHeight": 600, "decorations": false }] }
+   "app": { "windows": [{ "title": ${JSON.stringify(app.name)}, "width": 1100, "height": 760, "minWidth": 360, "minHeight": 600, "decorations": false }] }
    \`\`\`
 
 3. In \`src-tauri/capabilities/default.json\`, let the page move the window and press its buttons:

@@ -60,7 +60,8 @@ export function planOf(app: AppModel): Plan {
   const act: BuildCtx['act'] = (action, said) => {
     if (typeof action !== 'string') return undefined
     if (action.startsWith('go:')) return known.has(action.slice(3)) ? call('go', action.slice(3)) : undefined
-    if (action === 'menu') return call('setMenu', true)
+    // With no sidebar there is no menu to open: the button does nothing, as with details an app does not have.
+    if (action === 'menu') return uses.menu ? call('setMenu', true) : undefined
     if (action === 'details') return uses.details ? call('toggleDetails') : undefined
     if (action === 'show') return uses.details ? call('setDetails', true) : undefined
     if (action === 'say') {
@@ -75,7 +76,7 @@ export function planOf(app: AppModel): Plan {
     nodes.flatMap((node): Child[] => {
       if (!isKind(node.type)) return []
       const inside = (slot: string) => build(Array.isArray(node.props[slot]) ? (node.props[slot] as Node[]) : [])
-      const ctx: BuildCtx = { appName: app.name, screens, screenName: SCREEN_NAME, state, act, current, box: (slot, tag, props) => h(tag, props, inside(slot)), spread: (slot) => inside(slot) }
+      const ctx: BuildCtx = { appName: app.name, details: uses.details, screens, screenName: SCREEN_NAME, state, act, current, box: (slot, tag, props) => h(tag, props, inside(slot)), spread: (slot) => inside(slot) }
       const drawn = CATALOG[node.type].build(node.props, ctx)
       const when = shownWhen(node.props['show'])
       return [when ? { $when: when, then: drawn } : drawn]

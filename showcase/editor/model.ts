@@ -3,9 +3,9 @@
 // content, the details, the actions). It is plain data: kept in the browser, copied and read back as JSON, and the one
 // thing the run page and the export are given. Also here: the apps to start from, and where the data is kept.
 import type { IconName } from '../../src/index'
-import { CATALOG, iconName, isKind, type Kind } from './catalog'
+import { CATALOG, iconName, isKind, type FieldSpec, type Kind, type Region } from './catalog'
 import { flag, list, oneOf, slug, text } from './ir'
-import { START_LOOK, type Look } from './look'
+import { START_LOOK, readLook, type Look } from './look'
 
 /** A component in a region: what it is and how it is set. `props.id` tells it apart; a slot is a list of these. */
 export type Node = { type: string; props: Record<string, unknown> }
@@ -212,17 +212,26 @@ export const STARTERS: readonly Starter[] = [
 
 /* ———— Reading an app back: from the browser, or from a file someone made ———— */
 
-const nodes = (value: unknown): Node[] =>
-  list(value)
-    .filter((item) => isKind(item['type']) && typeof item['props'] === 'object' && item['props'] !== null)
+/**
+ * The components of a region, from data of any origin: a kind the catalogue does not have, or one that this region
+ * does not take (a button of the bar in the content has no toolbar around it, and the page would not draw), is left
+ * out. Two components never share an id: the canvas tells them apart by it.
+ */
+function nodes(value: unknown, region: Region, ids: Set<string>): Node[] {
+  return list(value)
+    .filter((item) => isKind(item['type']) && (CATALOG[item['type']].into as readonly Region[]).includes(region) && typeof item['props'] === 'object' && item['props'] !== null)
     .map((item) => {
       const kind = item['type'] as Kind
       const given = item['props'] as Record<string, unknown>
-      const props: Record<string, unknown> = { ...structuredClone(CATALOG[kind].fresh), show: 'always', ...given, id: typeof given['id'] === 'string' && given['id'] ? given['id'] : uid(kind) }
+      let id = typeof given['id'] === 'string' && given['id'] ? given['id'] : uid(kind)
+      while (ids.has(id)) id = uid(kind)
+      ids.add(id)
+      const props: Record<string, unknown> = { ...structuredClone(CATALOG[kind].fresh), show: 'always', ...given, id }
       // A slot holds components, whatever was written there.
-      for (const [key, field] of Object.entries(CATALOG[kind].fields)) if (field.kind === 'slot') props[key] = nodes(given[key])
+      for (const [key, field] of Object.entries(CATALOG[kind].fields) as [string, FieldSpec][]) if (field.kind === 'slot') props[key] = nodes(given[key], field.takes, ids)
       return { type: kind, props }
     })
+}
 
 /** An app from data of any origin, made whole: what is missing or of another kind takes its starting value. Null: not an app. */
 export function readApp(value: unknown): AppModel | null {
@@ -231,6 +240,7 @@ export function readApp(value: unknown): AppModel | null {
   const settings = (typeof data['settings'] === 'object' && data['settings'] !== null ? data['settings'] : {}) as Record<string, unknown>
   const shared = (typeof data['shared'] === 'object' && data['shared'] !== null ? data['shared'] : {}) as Record<string, unknown>
   const seen = new Set<string>()
+  const ids = new Set<string>()
   const screens = list(data['screens']).map((s): Screen => {
     const named = text(s['name'], 'Screen')
     let id = slug(text(s['id']) || named, 'screen')
@@ -246,17 +256,16 @@ export function readApp(value: unknown): AppModel | null {
       details: s['details'] === 'on' ? 'on' : 'off',
       detailsTitle: text(s['detailsTitle'], 'Details'),
       actionsOn: flag(s['actionsOn']),
-      content: nodes(s['content']),
-      detailsItems: nodes(s['detailsItems']),
-      actions: nodes(s['actions']),
+      content: nodes(s['content'], 'content', ids),
+      detailsItems: nodes(s['detailsItems'], 'content', ids),
+      actions: nodes(s['actions'], 'actions', ids),
     }
   })
   if (screens.length === 0) return null
-  const look = typeof data['look'] === 'object' && data['look'] !== null ? { ...structuredClone(START_LOOK), ...(data['look'] as Partial<Look>) } : structuredClone(START_LOOK)
   return {
     version: 1,
     name: text(data['name'], 'My app'),
-    look,
+    look: readLook(data['look']),
     start: screens.some((s) => s.id === data['start']) ? (data['start'] as string) : screens[0]!.id,
     settings: {
       barSize: settings['barSize'] === 'compact' ? 'compact' : 'default',
@@ -267,7 +276,7 @@ export function readApp(value: unknown): AppModel | null {
       bottom: oneOf(settings['bottom'], VIS),
       foot: oneOf(settings['foot'], VIS),
     },
-    shared: { bar: nodes(shared['bar']), tabs: nodes(shared['tabs']), nav: nodes(shared['nav']), foot: nodes(shared['foot']), bottom: nodes(shared['bottom']) },
+    shared: { bar: nodes(shared['bar'], 'bar', ids), tabs: nodes(shared['tabs'], 'tabs', ids), nav: nodes(shared['nav'], 'sidebar', ids), foot: nodes(shared['foot'], 'footer', ids), bottom: nodes(shared['bottom'], 'bottom', ids) },
     screens,
   }
 }
