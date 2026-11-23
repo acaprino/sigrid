@@ -179,6 +179,26 @@ export interface Words {
     /** What a table says when it has no rows. */
     readonly empty: string
   }
+  readonly graph: {
+    /** The names of the buttons that move the view, and of their row. */
+    readonly view: string
+    readonly zoomIn: string
+    readonly zoomOut: string
+    readonly fit: string
+    /** The name of the field that finds a thing, and what it shows while empty. */
+    readonly find: string
+    /** The name of the small map of the whole graph. */
+    readonly map: string
+    /** The names of the arrow of a thing: to show what hangs from it, to hide it. */
+    readonly open: (item: string) => string
+    readonly close: (item: string) => string
+    /** What screen readers hear of a closed thing: its name and how many it hides. */
+    readonly closed: (item: string, hidden: number) => string
+    /** The name of the button that hangs a new thing from one. */
+    readonly add: (item: string) => string
+    /** The name a new thing starts with. */
+    readonly newNode: string
+  }
   readonly reorder: {
     /** The name of the handle that moves an item («Move Inbox»). */
     readonly handle: (item: string) => string
@@ -339,6 +359,19 @@ export const DEFAULT_WORDS: Words = {
   table: {
     sortBy: (column) => `Sort by ${column}`,
     empty: 'Nothing to show',
+  },
+  graph: {
+    view: 'View',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    fit: 'Fit the view',
+    find: 'Find',
+    map: 'Map',
+    open: (item) => `Open ${item}`,
+    close: (item) => `Close ${item}`,
+    closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
+    add: (item) => `Add under ${item}`,
+    newNode: 'New',
   },
   reorder: {
     handle: (item) => `Move ${item}`,

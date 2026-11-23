@@ -23,6 +23,7 @@ const ENTRIES = [
   ['@acaprino/sigrid/virtual', 'src/virtual.ts'],
   ['@acaprino/sigrid/reorder', 'src/reorder.ts'],
   ['@acaprino/sigrid/rich-text', 'src/rich-text.ts'],
+  ['@acaprino/sigrid/graph', 'src/graph.ts'],
 ]
 
 const config = ts.readConfigFile(`${root}tsconfig.json`, ts.sys.readFile)

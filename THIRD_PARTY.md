@@ -256,6 +256,13 @@ toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
   with `@tiptap/core`, the extensions of the starter kit and the ProseMirror packages (**MIT**, Marijn Haverbeke) under
   them. The editing of `RichTextField`. The three packages are pinned to one version, which TipTap asks for.
 
+- **React Flow**: `@xyflow/react` 13.0.2 (**MIT**, Copyright (c) 2019-2025 webkid GmbH), with `@xyflow/system`,
+  `zustand` and `classcat` that it depends on. The canvas of `GraphCanvas`: pan and zoom, the lines, the joining of
+  two things by hand, the small map. Its `base.css` (layout only, no look) is inside the package's `graph.css`. Its
+  name stays in sight at the foot of the canvas, as its makers ask of whoever does not subscribe to React Flow Pro.
+- **dagre**: `@dagrejs/dagre` 3.1.3 (**MIT**, Copyright (c) 2012-2014 Chris Pettitt), with `@dagrejs/graphlib`. The
+  places of the things of `GraphCanvas`, by ranks.
+
 The test `test/provenance.test.ts` checks the pinned versions, that this list and the imports match, and that the main
 entry of the package imports none of them.
 
@@ -265,6 +272,7 @@ entry of the package imports none of them.
 | `src/components/ui/virtual-list.tsx` | `@tanstack/react-virtual` | `./virtual` |
 | `src/components/ui/reorder-list.tsx` | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `./reorder` |
 | `src/components/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
+| `src/components/GraphCanvas.tsx` | `@dagrejs/dagre`, `@xyflow/react` | `./graph` |
 
 ## SmoothUI
 

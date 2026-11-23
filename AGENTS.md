@@ -28,7 +28,8 @@ the app, and do not add another component library for something the toolkit has.
 1. Start from `AppShell` and fill only the regions the screen needs (`docs/patterns.md` says what goes where). The
    frame measures its own width and gives way by itself: do not write breakpoints for the sidebar or the inspector.
 2. Take every control from the toolkit. Import from `@acaprino/sigrid`; the table, the virtual list, the list put in
-   order by hand and the rich text field have entries of their own (`/table`, `/virtual`, `/reorder`, `/rich-text`).
+   order by hand, the rich text field and the graph canvas have entries of their own (`/table`, `/virtual`,
+   `/reorder`, `/rich-text`, `/graph`; the graph also needs `@import "@acaprino/sigrid/graph.css"`).
 3. Use the tokens for everything else: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,
    `border-line`, `bg-selected`, `bg-accent`, `text-accent`, the radii `rounded-sm|md|lg`, the shadows
    `shadow-xs|sm|md|lg|float`, the sizes `h-(--control-md)`, `min-h-(--row-height)`, `px-(--pad-md)`.

@@ -5495,6 +5495,11 @@
          "required": true
         },
         {
+         "name": "graph",
+         "type": "{ readonly view: string; readonly zoomIn: string; readonly zoomOut: string; readonly fit: string; readonly find: string; readonly map: string; readonly open: (item: string) => string; readonly close:…",
+         "required": true
+        },
+        {
          "name": "reorder",
          "type": "{ readonly handle: (item: string) => string; readonly role: string; readonly instructions: string; readonly taken: (item: string, position: number, total: number) => string; readonly moved: (item: st…",
          "required": true
@@ -5589,6 +5594,10 @@
         {
          "name": "table",
          "type": "Partial<{ readonly sortBy: (column: string) => string; readonly empty: string; }>"
+        },
+        {
+         "name": "graph",
+         "type": "Partial<{ readonly view: string; readonly zoomIn: string; readonly zoomOut: string; readonly fit: string; readonly find: string; readonly map: string; readonly open: (item: string) => string; readonl…"
         },
         {
          "name": "reorder",
@@ -5934,6 +5943,186 @@
      ],
      "also": [
       "RichTextFieldProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/graph",
+   "files": [
+    {
+     "file": "src/components/GraphCanvas.tsx",
+     "about": "A canvas for a graph of things and what joins them (tasks and what they wait for, the parts of a project, notes\nthat lead to other notes): the user moves over it, looks at one thing and what is joined to it, opens and closes\nwhat hangs from a thing and, where the app lets them, draws: adds a thing, joins two, takes one away. The canvas,\nits pan and zoom, the lines and the joining by hand are React Flow's (`@xyflow/react`), the places of the things\nare dagre's (`@dagrejs/dagre`): npm dependencies, pinned, see THIRD_PARTY.md. The form is the toolkit's. It has its\nown entry of the package (`./graph`) and its own stylesheet (`./graph.css`), so an app without a graph loads neither.\n- The graph is laid out by itself, in ranks: from the start to the end of the line (`direction=\"right\"`) or from\n  the head to the foot (`\"down\"`). The user does not place things by hand, so nothing can be lost off the canvas.\n- A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a\n  line under it. The chosen one has the selection tint (R1); what is joined to it stays as it is and the rest is\n  dimmed, so the eye finds the neighbourhood. The app shows the details of the chosen thing where it likes (the\n  `Inspector` of the frame).\n- A thing with others hanging from it has an arrow: closed, it says how many it hides, and the graph is laid out\n  again without them. What can be reached another way stays in sight.\n- The keyboard is the one of a tree, and the things are one Tab stop: Down and Up go through what is in sight,\n  Right opens or goes to the first thing that hangs, Left closes or goes back to what it hangs from, Home and End\n  reach the ends, Enter chooses. With `editable`, Delete takes the thing away. Screen readers hear a tree: the name\n  of a thing, its level, whether it is open, how many it hides.\n- With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,\n  opening what hides it.\n- With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the\n  chosen thing to hang a new one from it. Every change is asked of the app with `onChange`, which keeps the graph\n  (and its undo, R12): nothing is kept here but what is open and where the view is.\nThe cost is the layout, done again when the graph changes or a thing opens or closes: about 30ms for 200 things in\nsight, 200ms for a thousand, most of a second for three thousand (measured). A larger graph starts with its\nbranches closed (`defaultCollapsed`). Moving the view costs little: only what is in it is drawn.\nNothing moves by itself: the layout jumps to its new places, with or without animations. The name of React Flow\nstays at the foot of the canvas, as its makers ask of whoever does not pay for it.",
+     "components": [
+      {
+       "name": "GraphCanvas",
+       "doc": "The canvas with the store the library needs around it.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the graph for screen readers («Dependencies»)."
+        },
+        {
+         "name": "nodes",
+         "type": "readonly GraphNode[]",
+         "required": true
+        },
+        {
+         "name": "edges",
+         "type": "readonly GraphEdge[]",
+         "required": true
+        },
+        {
+         "name": "direction",
+         "type": "\"right\" | \"down\"",
+         "doc": "The ranks go from the start of the line to its end, or from the head to the foot. Default `right`."
+        },
+        {
+         "name": "selected",
+         "type": "string | null",
+         "doc": "The id of the thing chosen: the one whose details the app shows."
+        },
+        {
+         "name": "onSelect",
+         "type": "((id: string | null) => void)"
+        },
+        {
+         "name": "collapsed",
+         "type": "readonly string[]",
+         "doc": "The ids of the things that are closed, when the app keeps them; otherwise the canvas keeps its own, from `defaultCollapsed`."
+        },
+        {
+         "name": "defaultCollapsed",
+         "type": "readonly string[]"
+        },
+        {
+         "name": "onCollapsedChange",
+         "type": "((ids: string[]) => void)"
+        },
+        {
+         "name": "search",
+         "type": "boolean",
+         "doc": "A field that finds things by name."
+        },
+        {
+         "name": "minimap",
+         "type": "boolean",
+         "doc": "A small map of the whole graph in a corner."
+        },
+        {
+         "name": "editable",
+         "type": "boolean",
+         "doc": "The user can hang a new thing, join two and take one away. Each change is asked for with `onChange`."
+        },
+        {
+         "name": "onChange",
+         "type": "((next: Graph, change: GraphChange) => void)",
+         "doc": "The graph after a change, and the change: the app keeps the graph."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes of the box: its height (`h-96`, or a place in a column that gives it one)."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "Graph",
+       "fields": [
+        {
+         "name": "nodes",
+         "type": "readonly GraphNode[]",
+         "required": true
+        },
+        {
+         "name": "edges",
+         "type": "readonly GraphEdge[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "GraphChange",
+       "doc": "What the user did to the graph: a thing hung from another, two things joined, things and joins taken away.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"add\""
+        },
+        {
+         "name": "node",
+         "type": "GraphNode"
+        },
+        {
+         "name": "edge",
+         "type": "GraphEdge"
+        },
+        {
+         "name": "nodes",
+         "type": "readonly string[]"
+        },
+        {
+         "name": "edges",
+         "type": "readonly GraphEdge[]"
+        }
+       ]
+      },
+      {
+       "name": "GraphEdge",
+       "doc": "What joins two things: `to` hangs from `from`.",
+       "fields": [
+        {
+         "name": "from",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "to",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "GraphNode",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the thing: one line, cut with an ellipsis."
+        },
+        {
+         "name": "detail",
+         "type": "string",
+         "doc": "A second line under the name: a state, a date, a person."
+        },
+        {
+         "name": "icon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifications\" | \"settin…",
+         "doc": "An icon of the user's pack before the name."
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "The colour the user gave the thing (`#rrggbb`): an 8px dot before the name (R10)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "GraphCanvasProps",
+      "layoutGraph",
+      "visibleGraph"
      ]
     }
    ]

@@ -200,7 +200,7 @@ a drawer.
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
-- Four entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+- Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
     value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
@@ -221,6 +221,18 @@ a drawer.
     that comes from outside (another draft) takes the place of the text and is not a step of the undo; a value of
     its own that the app hands back late (a store, a round trip to a native side) is known as its own, so the app
     may keep the value wherever it likes.
+
+  - `./graph` (with the stylesheet `./graph.css`): `GraphCanvas`, on React Flow for the canvas and dagre for the
+    places. A graph of things and what joins them, laid out by itself in ranks (`direction="right"` or `"down"`), to
+    move over (pan, zoom, fit, a small map with `minimap`, a field that finds a thing with `search`), to examine (the
+    chosen thing has the selection tint, what is joined to it stays and the rest is dimmed; the app shows its details
+    where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
+    many it hides) and, with `editable`, to draw: the plus hangs a new thing, a drag between two handles joins them,
+    Delete takes one away, each asked of the app with `onChange`. The keyboard is the one of a tree and the things
+    are one Tab stop; a screen reader hears a tree. Only what is in the view is drawn; the layout is done again at
+    each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
+    branches closed (`defaultCollapsed`). `visibleGraph` and
+    `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -243,6 +255,11 @@ a drawer.
   </ReorderList>
 
   <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
+
+  // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
+  import { GraphCanvas } from '@acaprino/sigrid/graph'
+  <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
+    selected={chosen} onSelect={setChosen} search minimap className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
