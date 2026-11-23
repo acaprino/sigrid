@@ -48,7 +48,8 @@ The frame has two forms with the same regions and the same steps; `frame` choose
 
 Recommended for the sheet, as Xiox does it: the views as tabs in the bar, «Commands» with its shortcut before the
 window's buttons (`ToolbarButton variant="outline"` with `shortcut="Ctrl K"`), the status row at the head of the
-sheet, the content as a `Panel`, the actions at its foot, and the keys of the view in the footer (`Kbd`). The gallery
+sheet, the content as a `Panel`, the actions at its foot, and the keys that work now in the footer (`KeyHints`, read from
+the registry of commands, with `{ keys: 'F6', label: … }` for the frame's own move between regions). The gallery
 shows it: view Examples, section «Xiox».
 
 A `Panel` lays out a region inside: a header with the title, a line that says how much is there and the tools of the
