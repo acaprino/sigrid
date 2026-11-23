@@ -3,7 +3,7 @@
 // rows show a label is tested in the app's package.)
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { ChipsInput } from '../src/internal/chips'
+import { ChipsInput } from '../src/components/ChipsInput'
 import { TAG_HUES, tagHue } from '../src/internal/tag-color'
 import { palettes, themeCss } from './theme-tokens'
 

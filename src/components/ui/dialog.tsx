@@ -19,7 +19,7 @@ import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { Button, QUIET_ICON } from "./button"
 import { BACKDROP, inTitleBar, inToasts, renderWithOpenState } from "../../internal/overlay"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 import { useEntrance } from "../../internal/motion"
 import { useMergedRef } from "../../lib/refs"
 

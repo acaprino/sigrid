@@ -78,7 +78,7 @@ export type CheckboxProps = React.ComponentProps<typeof import('./components/ui/
 
 // Surfaces.
 export { Dialog, type DialogProps } from './components/Dialog'
-export { PortalContainerProvider, usePortalContainer } from './components/PortalContainer'
+export { PortalContainerProvider, usePortalContainer } from './internal/portal-container'
 export { Toasts, type ToastAction, type ToastItem, type ToastsProps } from './components/Toasts'
 
 // Look settings: the base colour, the combination, the tone, the density and the ready-made themes, as cards with a
@@ -89,12 +89,12 @@ export { BaseColorChoice, ChoiceCard, ChoiceCards, ChoiceGroup, ChoicePreview, D
 export { MotionProvider, loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'
 
 // Fields, content and behaviour helpers.
-export { AttachmentMarks, AttachmentsSection, stateText, summarize, typedUrl, type AttachmentMarksInput, type AttachmentState, type AttachmentSummary, type AttachmentView, type AttachmentsSectionProps } from './internal/attachments'
-export { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps, type AttachmentViewerStatus, type ViewerPage } from './internal/attachment-viewer'
-export { ChipsInput, type ChipsInputProps } from './internal/chips'
-export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateFieldProps, type DatePick, type DateRange, type DateRangeFieldProps, type DateRangePick, type DateTimeFieldProps } from './internal/date-field'
+export { AttachmentMarks, AttachmentsSection, stateText, summarize, typedUrl, type AttachmentMarksInput, type AttachmentState, type AttachmentSummary, type AttachmentView, type AttachmentsSectionProps } from './components/Attachments'
+export { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps, type AttachmentViewerStatus, type ViewerPage } from './components/AttachmentViewer'
+export { ChipsInput, type ChipsInputProps } from './components/ChipsInput'
+export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateFieldProps, type DatePick, type DateRange, type DateRangeFieldProps, type DateRangePick, type DateTimeFieldProps } from './components/DateField'
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
-export { DurationField, type DurationFieldProps, type DurationParts } from './internal/duration-field'
+export { DurationField, type DurationFieldProps, type DurationParts } from './components/DurationField'
 export { FileDrop, type FileDropProps, type FileDropReason, type FileDropRefusal } from './internal/file-drop'
 export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions } from './internal/desktop-guard'
 export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './internal/kinds'
@@ -102,7 +102,7 @@ export { InlineMarkdown, MarkdownBlocks, hasMarkdown, parseBlocks, parseInline, 
 export { COARSE, NARROW, SHORT, useMedia, usePhone } from './internal/media'
 export { APP_HEIGHT_VAR, useAppHeight } from './internal/app-height'
 export { BACKDROP, BOTTOM_BAR_ROOM_VAR, SHEET_TOASTS_ROOM, TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR, ignoreToasts, restoreFocus } from './internal/overlay'
-export { Swatches, type SwatchesProps } from './internal/swatches'
+export { Swatches, type SwatchesProps } from './components/Swatches'
 export { TAG_COLOR, TAG_HUES, TAG_PILL, tagColorAttrs, tagHue } from './internal/tag-color'
 export { NeedThumbnail, Thumbnail, safeThumbnail, type ThumbnailProps } from './internal/thumbnail'
 export { ICON_NAMES, Icon, isIconName, type IconName } from './icons'

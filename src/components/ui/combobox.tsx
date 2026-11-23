@@ -170,6 +170,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   )
 }
 
-// The labels field (`internal/chips.tsx`) builds its list of suggestions on the same primitive: it takes it from
+// The labels field (`components/ChipsInput.tsx`) builds its list of suggestions on the same primitive: it takes it from
 // here, so this is the one file that rests on Ark's Combobox.
 export { Combobox, ComboboxPrimitive, createListCollection }

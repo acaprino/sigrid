@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/internal/date-field'
+import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/components/DateField'
 
 const noop = () => {}
 

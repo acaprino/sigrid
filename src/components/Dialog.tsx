@@ -13,7 +13,7 @@ import {
 } from './ui/dialog'
 import { restoreFocus, SHEET_TOASTS_ROOM } from '../internal/overlay'
 import { cn } from '../lib/utils'
-import { usePortalContainer } from './PortalContainer'
+import { usePortalContainer } from '../internal/portal-container'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from './ui/sheet'
 
 export type DialogProps = {

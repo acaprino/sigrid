@@ -5,7 +5,7 @@
 // with l2 corners and a quiet fill under the pointer, the chosen day solid in the accent (Park's solid variant), today
 // marked by a short accent dash under the number, 16px of padding. The grid itself is not written here: it is the day,
 // month and year views of Ark UI's DatePicker (`@ark-ui/react/date-picker`). It lives inside a `DatePicker.Root` (see
-// `internal/date-field.tsx`), which holds the value.
+// `components/DateField.tsx`), which holds the value.
 // Ark gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,
 // Home and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the
 // title that opens the months and then the years, and the announcement of the month when it changes.

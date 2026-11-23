@@ -82,7 +82,7 @@ test('every list highlights a row the same way and heads a group the same way', 
   expect(ROW_HIGHLIGHTED).toBe(`data-highlighted:${ROW_HIGHLIGHT.split(' ').join(' data-highlighted:')}`)
   expect(LIST_ROW).toContain(ROW_HIGHLIGHTED)
   expect(LIST_ROW.split(' ')).toEqual(expect.arrayContaining(['min-h-(--row-height)', 'py-(--row-pad)', 'data-[disabled]:pointer-events-none', 'data-[disabled]:opacity-50']))
-  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/combobox.tsx', 'internal/chips.tsx']) {
+  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/combobox.tsx', 'components/ChipsInput.tsx']) {
     expect(source(file), file).toContain('LIST_ROW')
     expect(source(file), file).toContain('LIST_CARD')
     expect(source(file), file).not.toMatch(/highlighted\]?:bg-(selected|paper)/)
@@ -99,7 +99,7 @@ test('every list highlights a row the same way and heads a group the same way', 
   }
   // The heading of a group: the one overline, wherever a group has a heading.
   expect(GROUP_LABEL).toBe('text-2xs font-semibold tracking-[0.07em] uppercase')
-  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/sidebar.tsx', 'internal/attachments.tsx']) expect(source(file), file).toContain('GROUP_LABEL')
+  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/sidebar.tsx', 'components/Attachments.tsx']) expect(source(file), file).toContain('GROUP_LABEL')
 })
 
 test('what is on or chosen is the accent, in every control: no control keeps the ink for it', async () => {

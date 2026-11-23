@@ -150,8 +150,8 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     test('a file that rests on Ark does not also import the Base UI primitive it replaced', () => {
       const replaced: Record<string, RegExp> = {
         'src/components/Toasts.tsx': /@base-ui\/react\/toast/,
-        'src/internal/date-field.tsx': /@base-ui\/react\/popover|ui\/popover/,
-        'src/internal/chips.tsx': /@base-ui\/react\/input/,
+        'src/components/DateField.tsx': /@base-ui\/react\/popover|ui\/popover/,
+        'src/components/ChipsInput.tsx': /@base-ui\/react\/input/,
       }
       for (const [file, old] of Object.entries(replaced)) expect(readFileSync(join(root, file), 'utf8'), file).not.toMatch(old)
       // Base UI's Toast is used by nothing else: it is out of the package.

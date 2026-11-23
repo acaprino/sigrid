@@ -144,15 +144,15 @@ describe('normal is what the toolkit is before any script runs', () => {
     has('src/components/ui/toggle-group.tsx', '"inline-flex h-', 'h-(--control-md)', 'min-w-(--control-md)', 'px-(--pad-md)')
     // Date field: the surface of Input; the time field 32px.
     has('src/lib/field.ts', 'export const FIELD_HEIGHT', 'h-(--control-md)')
-    has('src/internal/date-field.tsx', 'const TRIGGER_CLASS', 'FIELD_HEIGHT', 'px-(--pad-sm)')
-    has('src/internal/date-field.tsx', 'w-28', 'h-(--control-sm)')
+    has('src/components/DateField.tsx', 'const TRIGGER_CLASS', 'FIELD_HEIGHT', 'px-(--pad-sm)')
+    has('src/components/DateField.tsx', 'w-28', 'h-(--control-sm)')
     // The close button of a dialog and of a sheet: 32px.
     has('src/components/ui/button.tsx', '"icon-sm":', 'size-(--control-sm)')
     has('src/components/ui/dialog.tsx', 'render={<Button', 'size="icon-sm"')
     has('src/components/ui/sheet.tsx', 'render={<Button', 'size="icon-sm"')
     // Calendar cells: 32px. Chips box: at least 36px, its padding what a 28px chip and the two borders leave (3px).
     has('src/components/ui/calendar.tsx', 'data-slot="calendar"', '[--cell-size:var(--control-sm)]')
-    has('src/internal/chips.tsx', '<TagsInput.Control', 'min-h-(--control-md)', 'py-[calc((var(--control-md)_-_30px)/2)]')
+    has('src/components/ChipsInput.tsx', '<TagsInput.Control', 'min-h-(--control-md)', 'py-[calc((var(--control-md)_-_30px)/2)]')
     expect((tokens(null)['--control-md']! - 30) / 2).toBe(3)
   })
 })

@@ -45,9 +45,9 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/components/ui/combobox.tsx` | `combobox` | `@ark-ui/react/combobox` |
 | `src/components/ui/tabs.tsx` | `tabs` | `@ark-ui/react/tabs` |
 | `src/components/ui/calendar.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
-| `src/internal/date-field.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
-| `src/internal/chips.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
-| `src/internal/attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/DateField.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
+| `src/components/ChipsInput.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
+| `src/components/Attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/internal/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/components/ui/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
 
@@ -57,10 +57,10 @@ Notes:
   bottom, the oldest pushed out from the top) is laid out here, because Ark's `max` keeps a new notice waiting instead
   of pushing the oldest out and its layouts follow a list that still holds a notice while it leaves. Its motion is the
   toolkit's list transition (`NOTICES` in `motion-impl`).
-- `ui/calendar.tsx` and `internal/date-field.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
+- `ui/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
   its keyboard, month and year views). The roughly 380 lines of grid and keyboard code written here before are gone.
   Kept on top: a native `<button>` per day, the weekday headers readable by screen readers, Home and End for the week.
-- `internal/chips.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
+- `components/ChipsInput.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
   `ui/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
   are compared ignoring case, a chip is not edited in place.
 - `ui/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
@@ -71,7 +71,7 @@ Notes:
   a portal; the options are filtered here unless the caller answers `onQuery`.
 - `ui/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
-- `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
+- `components/Attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
 - `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
   branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
@@ -125,9 +125,9 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/components/ui/form-field.tsx` | `field` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts |
 | `src/components/ui/calendar.tsx` | `date-picker` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts |
 | `src/components/Toasts.tsx` | `toast` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts |
-| `src/internal/date-field.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
-| `src/internal/chips.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
-| `src/internal/attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/DateField.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
+| `src/components/ChipsInput.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
+| `src/components/Attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
 
@@ -138,7 +138,7 @@ with the accent-tint selection of the approved preview).
 Notes:
 - `Toasts.tsx` keeps SmoothUI's dark card (the inverted ink surface of the approved preview); Park's toast is a light
   surface card, so of it only the form is taken (l3, lg elevation, padding, the semibold action, outline keys).
-- `ui/calendar.tsx`, `internal/chips.tsx`, `internal/attachments.tsx` have nothing of SmoothUI left: their look is
+- `ui/calendar.tsx`, `components/ChipsInput.tsx`, `components/Attachments.tsx` have nothing of SmoothUI left: their look is
   Park's (date-picker, tags-input, file-upload), their behaviour Ark UI's. They left the SmoothUI table.
 - Park's checkbox is square with l1 corners, and that is the toolkit's checkbox. An app can round its own, through
   `--radius-check`.
@@ -295,8 +295,8 @@ The files below are copied from the SmoothUI registry and **adapted** for `@acap
 tokens from `src/styles/theme.css`, animations off by default (the `animated` prop, never with `prefers-reduced-motion`),
 no springs, loops or decorative effects. Since the Park restyle (2026-11-19) their form (sizes, variants, corners,
 elevation) is Park UI's (see above): what stays from SmoothUI is the structure, the `data-slot`s and the API. `Toasts.tsx`
-keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `internal/chips.tsx`
-and `internal/attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
+keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `components/ChipsInput.tsx`
+and `components/Attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
 for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Slug SmoothUI | Source |
@@ -323,14 +323,14 @@ Notes:
 - `Toasts.tsx` keeps from `toast` only the surface of a notice (the dark card: text, action and close button on one
   row, the quick choices on a second); its form is Park's `toast`. Its primitive is Ark UI's Toast and its motion is the toolkit's list transition: the
   SmoothUI enter/exit values are gone.
-- `ui/calendar.tsx` and `internal/date-field.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
+- `ui/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
   DatePicker, the look Park's `date-picker`, and they left the table.
 - `ui/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
   primitive (keyboard, ARIA and a portal nested in the sheet).
 - `ui/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
 - `ui/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
   is not copied); it serves a segmented switch (a choice between a few views, for example).
-- `internal/chips.tsx` (Ark's TagsInput, Park's `tags-input`) and `internal/attachments.tsx` (Ark's FileUpload, Park's
+- `components/ChipsInput.tsx` (Ark's TagsInput, Park's `tags-input`) and `components/Attachments.tsx` (Ark's FileUpload, Park's
   `file-upload`) no longer have anything of SmoothUI and left the table.
 - `ui/empty.tsx`, `ui/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
   hint repeats the button's accessible name and is `aria-hidden`.

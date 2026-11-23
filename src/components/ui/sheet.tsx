@@ -16,7 +16,7 @@ import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../../internal/motion"
 import { BACKDROP, inTitleBar, inToasts, openState } from "../../internal/overlay"
 import { useMergedRef } from "../../lib/refs"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
 

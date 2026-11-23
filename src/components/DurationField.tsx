@@ -3,8 +3,8 @@
 // (up to 24 hours, minutes from 0 to 59; zero and zero means «None»). Two inputs have no syntax to get wrong, and the
 // shortcuts cover the frequent cases with one click.
 import { useId } from 'react'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { useWords } from '../words'
 
 export type DurationParts = { hours: number; minutes: number }

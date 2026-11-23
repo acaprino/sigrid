@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/react'
 import { expect, it } from 'vitest'
 import { Dialog } from '../src/components/Dialog'
-import { PortalContainerProvider } from '../src/components/PortalContainer'
+import { PortalContainerProvider } from '../src/internal/portal-container'
 
 // Part of an app drawn into another document (a popup window, an iframe): its overlays belong to that document.
 

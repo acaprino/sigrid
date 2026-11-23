@@ -23,7 +23,7 @@ import { cn } from "../../lib/utils"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW } from "../../lib/rows"
 import { FOCUS_FIELD } from "../../lib/focus"
 import { FIELD_HOVER, FIELD_OFF_NOW, FIELD_SURFACE, FIELD_TEXT } from "../../lib/field"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 import { useEntrance } from "../../internal/motion"
 
 /**

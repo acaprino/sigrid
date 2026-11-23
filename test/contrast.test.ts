@@ -229,7 +229,7 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
     // Every field takes its surface from one place (`lib/field.ts`), and that surface has the light divider border.
     expect(text('src/lib/field.ts')).toMatch(/FIELD_SURFACE = '[^']*\bborder-line\b/)
     // The native `<select>`s became Base UI's Select: the border sits on its button.
-    for (const f of ['src/components/ui/select.tsx', 'src/internal/chips.tsx', 'src/components/ui/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
+    for (const f of ['src/components/ui/select.tsx', 'src/components/ChipsInput.tsx', 'src/components/ui/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
   })
 })
 

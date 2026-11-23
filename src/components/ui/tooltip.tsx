@@ -17,7 +17,7 @@ import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import { cn } from "../../lib/utils"
 import { useEntrance } from "../../internal/motion"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 
 /** The delay before the hint appears, on pointer hover. On focus (Tab) it appears right away, as in Base UI. */
 export const TOOLTIP_DELAY_MS = 500

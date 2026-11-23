@@ -502,7 +502,7 @@ app's, and is in the gallery (Components, «Card, Heading, Dot, …»).
 | 10px text | `kbd.tsx` Shortcut separator; `markdown.tsx` check mark |
 | 3px radius | `markdown.tsx` check box |
 | 6px vertical padding | `Toasts.tsx` notice root (`py-1.5`) |
-| 12px / 20px icons | `badge.tsx`, `attachments.tsx` (marks, upload), `chips.tsx` (remove), `empty.tsx`, `thumbnail.tsx` (sheet), `attachment-viewer.tsx` (loader, alert) |
+| 12px / 20px icons | `badge.tsx`, `Attachments.tsx` (marks, upload), `ChipsInput.tsx` (remove), `empty.tsx`, `thumbnail.tsx` (sheet), `AttachmentViewer.tsx` (loader, alert) |
 | 3px focus ring at 50% | 16 places (F01) |
 | font weight 700 face | `styles/fonts.css` |
 

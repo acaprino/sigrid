@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { ChipsInput } from '../src/internal/chips'
+import { ChipsInput } from '../src/components/ChipsInput'
 
 // The labels field (chips) on Ark UI's TagsInput, with Park's `tags-input` form. No motion. (How an app shows labels
 // elsewhere is tested in the app's package.)

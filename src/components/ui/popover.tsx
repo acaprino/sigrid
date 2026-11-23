@@ -15,7 +15,7 @@ import { cn } from "../../lib/utils"
 import { useEntrance } from "../../internal/motion"
 import { useMergedRef } from "../../lib/refs"
 import { renderWithOpenState } from "../../internal/overlay"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 
 type PopoverState = { open: boolean; anchor: Element | null; setAnchor: (el: Element | null) => void }
 const PopoverStateContext = React.createContext<PopoverState | null>(null)

@@ -16,16 +16,16 @@
 // reached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).
 // No animation.
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
-import { ComboboxPrimitive as Combobox, createListCollection } from '../components/ui/combobox'
+import { ComboboxPrimitive as Combobox, createListCollection } from './ui/combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
 import { X } from 'lucide-react'
-import { Badge } from '../components/ui/badge'
-import { Tooltip } from '../components/ui/tooltip'
+import { Badge } from './ui/badge'
+import { Tooltip } from './ui/tooltip'
 import { cn } from '../lib/utils'
 import { FOCUS_RING, FOCUS_WITHIN_FIELD } from '../lib/focus'
 import { FIELD_HOVER_DATA, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
 import { LIST_CARD, LIST_ROW } from '../lib/rows'
-import { TAG_PILL, tagColorAttrs } from './tag-color'
+import { TAG_PILL, tagColorAttrs } from '../internal/tag-color'
 import { useWords, type Words } from '../words'
 
 export type ChipsInputProps = {

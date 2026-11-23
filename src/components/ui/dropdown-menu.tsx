@@ -19,7 +19,7 @@ import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../../lib/rows
 import { useEntrance } from "../../internal/motion"
 import { useMergedRef } from "../../lib/refs"
 import { renderWithOpenState } from "../../internal/overlay"
-import { usePortalContainer } from "../PortalContainer"
+import { usePortalContainer } from "../../internal/portal-container"
 
 /** The open state of the menu, for the button's `data-state`, and its immediate reading for the keyboard. */
 type MenuState = { open: boolean; openRef: React.RefObject<boolean> }

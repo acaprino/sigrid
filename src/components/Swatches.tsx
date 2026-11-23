@@ -1,5 +1,5 @@
 import { COLORS, colorHue, markHueAttrs } from '../colors'
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group'
+import { RadioGroup, RadioGroupItem } from './ui/radio-group'
 import { useWords, type Words } from '../words'
 
 export type SwatchesProps = {
