@@ -274,6 +274,19 @@ entry of the package imports none of them.
 | `src/components/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
 | `src/components/GraphCanvas.tsx` | `@dagrejs/dagre`, `@xyflow/react` | `./graph` |
 
+## Tauri's API
+
+The `./tauri` entry wires the toolkit's window parts to a Tauri window, from the page's side. Its source is `tauri/`,
+outside `src/`: the toolkit itself knows no shell (`test/no-shell.test.ts`).
+
+- **Tauri**: `@tauri-apps/api` 2.12.5 (**Apache-2.0 OR MIT**, Copyright (c) 2017 - Present Tauri Apps Contributors,
+  https://github.com/tauri-apps/tauri). Not a dependency: an optional peer (`^2.0.0`), which an app installs only if
+  it imports `@acaprino/sigrid/tauri`, and a development dependency pinned to the exact version, for the types and the
+  tests. Installed and unmodified, never copied. `tauri/api.ts` imports it only inside its functions, with `import()`,
+  and the build keeps it out of the bundle: a page in a browser that imports the entry loads none of it.
+- The ways of the window's buttons, of the zoom and of Snap Layouts are those of Imago's windows (the owner's own
+  app), written again for the entry.
+
 ## SmoothUI
 
 - Project: SmoothUI, https://smoothui.dev (repository https://github.com/educlopez/smoothui)

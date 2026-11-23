@@ -708,7 +708,7 @@
     },
     {
      "file": "src/components/Toasts.tsx",
-     "about": "SmoothUI (MIT) toast 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toast.json)\nPark UI (MIT) toast 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts)\n\nFrom SmoothUI the surface of a notice is left: the dark card (the ink, with the paper as its text, as in the approved\npreview), with the text, the action and the close button on one row, the quick choices on a second one. Park's\ntoast recipe is a light surface card: of it we take the form (l3 corners, the lg elevation, 16px of side padding, the\naction in semibold) and the keys as outline keys, not its colors. Everything it does rests on Ark UI's Toast (`@ark-ui/react/toast`): a\ntoaster store, the `Toaster` region and one toast machine per notice (its time, its leaving). What Ark gives and what\nstays ours:\n- Ark: the region (F6 moves focus to it), the life of a notice (its timer, the \"dismissing\" phase that keeps it in\n  the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable\n  layers (a click on a notice is not \"outside\" an Ark popover).\n- Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed\n  ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; a\n  fourth pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move\n  up one place. Ark's own layouts are not used (`overlap` off): its places follow its own list, which still holds a\n  notice while it leaves, so the others would wait for it to be gone before closing the gap.\n- the region is `role=\"status\"` with `aria-relevant=\"additions\"` and a name in English; a notice is not a `status`\n  with `tabIndex=0` of its own: no extra Tab stop per notice;\n- the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts\n  down (`duration` Infinity), and when it is left each one is rearmed from the start;\n- Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a fourth notice or the caller.\nMotion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with\nprefers-reduced-motion, the same places are plain styles and nothing moves.",
+     "about": "SmoothUI (MIT) toast 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toast.json)\nPark UI (MIT) toast 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts)\n\nFrom SmoothUI the surface of a notice is left: the dark card (the ink, with the paper as its text, as in the approved\npreview), with the text, the action and the close button on one row, the quick choices on a second one. Park's\ntoast recipe is a light surface card: of it we take the form (l3 corners, the lg elevation, 16px of side padding, the\naction in semibold) and the keys as outline keys, not its colors. Everything it does rests on Ark UI's Toast (`@ark-ui/react/toast`): a\ntoaster store, the `Toaster` region and one toast machine per notice (its time, its leaving). What Ark gives and what\nstays ours:\n- Ark: the region (Alt+T moves focus to it, Ark's own key; in an `AppShell` F6 reaches it in the round of the frame), the life of a notice (its timer, the \"dismissing\" phase that keeps it in\n  the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable\n  layers (a click on a notice is not \"outside\" an Ark popover).\n- Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed\n  ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; a\n  fourth pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move\n  up one place. Ark's own layouts are not used (`overlap` off): its places follow its own list, which still holds a\n  notice while it leaves, so the others would wait for it to be gone before closing the gap.\n- the region is `role=\"status\"` with `aria-relevant=\"additions\"` and a name in English; a notice is not a `status`\n  with `tabIndex=0` of its own: no extra Tab stop per notice;\n- the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts\n  down (`duration` Infinity), and when it is left each one is rearmed from the start;\n- Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a fourth notice or the caller.\nMotion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with\nprefers-reduced-motion, the same places are plain styles and nothing moves.",
      "components": [
       {
        "name": "Toasts",
@@ -815,7 +815,7 @@
     },
     {
      "file": "src/components/ui/app-shell.tsx",
-     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nTwo forms, chosen with `frame`, with the same regions and steps:\n- `line` (the default): one surface, the page, with a line between the regions;\n- `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's\n  ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is\n  one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the\n  large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a\n  sidebar of its own colours (`data-sidebar=\"own\"`, a dark or solid column) keeps its column on the lanes' surface.\n  Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nF6 moves the focus to the next region (title bar, sidebar, content, inspector) and Shift+F6 to the one before, round\nagain, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the app to write\n(after Imago's `regions`). In a region the focus goes to the place the user is in (`aria-current`), else to the first\nthing that takes it; the content takes it itself when it holds nothing that does.\nWithout a way to measure (a server, a test) the frame is the wide one.",
+     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nTwo forms, chosen with `frame`, with the same regions and steps:\n- `line` (the default): one surface, the page, with a line between the regions;\n- `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's\n  ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is\n  one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the\n  large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a\n  sidebar of its own colours (`data-sidebar=\"own\"`, a dark or solid column) keeps its column on the lanes' surface.\n  Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nF6 moves the focus to the next region (title bar, sidebar, content, inspector, the notices) and Shift+F6 to the one\nbefore, round again, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the\napp to write (after Imago's `regions`). The frame answers F6 before anything else does (the notices' own F6 among\nthem), so the round is one. In a region the focus goes to the place the user is in (`aria-current`), else to the first\nthing that takes it; the content takes it itself when it holds nothing that does.\nWithout a way to measure (a server, a test) the frame is the wide one.",
      "components": [
       {
        "name": "AppShell",
@@ -1432,9 +1432,9 @@
        "props": [
         {
          "name": "ids",
-         "type": "readonly string[]",
+         "type": "readonly (string | KeyHint)[]",
          "required": true,
-         "doc": "The commands it names, by id, in this order; of those, the ones with a key that can be done now are shown. `PALETTE_COMMAND` names Ctrl+K."
+         "doc": "What it names, in this order: a command by its id (shown when it has a key and can be done now; `PALETTE_COMMAND` names Ctrl+K), or a key that is not a command (`{ keys: 'F6', label: 'Next region' }`)."
         },
         {
          "name": "aria-label",
@@ -1490,6 +1490,22 @@
          "type": "() => void",
          "required": true,
          "doc": "What it does; the one of the latest render runs."
+        }
+       ]
+      },
+      {
+       "name": "KeyHint",
+       "doc": "A key that is not a command of the registry but works all the same (F6 of the frame): its key and its name.",
+       "fields": [
+        {
+         "name": "keys",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
         }
        ]
       },
@@ -4224,7 +4240,7 @@
     },
     {
      "file": "src/index.ts",
-     "about": "@acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for\nbehaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the\ngeneric fields and surfaces built on them. No app concepts: each app builds its product components on top of\nthis.\nTheme engine, catalog and colours: the single source of truth for colours.",
+     "about": "@acaprino/sigrid, its main entry: the toolkit and the layout system of the shared UI system (its advanced components and\nthe wiring of a native window are entries of their own). Theme engine and colours, tokens and fonts, primitives (Ark UI for\nbehaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the\ngeneric fields and surfaces built on them. No app concepts: each app builds its product components on top of\nthis.\nTheme engine, catalog and colours: the single source of truth for colours.",
      "also": [
       "CheckboxProps",
       "InputProps",
@@ -6622,6 +6638,463 @@
       "GraphCanvasProps",
       "layoutGraph",
       "visibleGraph"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/tauri",
+   "files": [
+    {
+     "file": "tauri/api.ts",
+     "about": "The calls the `./tauri` entry makes to a Tauri window, and the one place that loads Tauri's API. Each part of the\nentry takes an `api` to call instead (a test passes a fake window, webview, `invoke` or `listen`); what it leaves out\nis `tauriApi`, which imports `@tauri-apps/api` only inside its functions, the first time one is called. So a page in\na browser that imports the entry loads nothing of Tauri. The types are the entry's own: they name no type of\n`@tauri-apps/api`, and `tauriApi` checks that Tauri's window and webview fit them.",
+     "types": [
+      {
+       "name": "TauriApi",
+       "doc": "What the entry calls in Tauri.",
+       "fields": [
+        {
+         "name": "window",
+         "type": "() => TauriWindow | Promise<TauriWindow>",
+         "required": true
+        },
+        {
+         "name": "webview",
+         "type": "() => TauriWebview | Promise<TauriWebview>",
+         "required": true
+        },
+        {
+         "name": "invoke",
+         "type": "(command: string, args?: Record<string, unknown>) => Promise<unknown>",
+         "required": true,
+         "doc": "A command of the app's native side."
+        },
+        {
+         "name": "listen",
+         "type": "<T>(event: string, handler: (event: { payload: T; }) => void) => Promise<Unlisten>",
+         "required": true,
+         "doc": "An event the native side sends."
+        }
+       ]
+      },
+      {
+       "name": "TauriWebview",
+       "doc": "The webview as the entry calls it: what `getCurrentWebview()` gives, or a fake one.",
+       "fields": [
+        {
+         "name": "setZoom",
+         "type": "(scale: number) => Promise<unknown>",
+         "required": true,
+         "doc": "1 is 100%."
+        }
+       ]
+      },
+      {
+       "name": "TauriWindow",
+       "doc": "The window as the entry calls it: what `getCurrentWindow()` gives, or a fake one.",
+       "fields": [
+        {
+         "name": "minimize",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "toggleMaximize",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "close",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "isMaximized",
+         "type": "() => Promise<boolean>",
+         "required": true
+        },
+        {
+         "name": "onResized",
+         "type": "(handler: () => void) => Promise<Unlisten>",
+         "required": true,
+         "doc": "Calls `handler` at each change of the window's size, until the returned function is called."
+        },
+        {
+         "name": "setTheme",
+         "type": "(theme: \"light\" | \"dark\" | null) => Promise<unknown>",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "tauriApi",
+      "TauriCall",
+      "TauriErrorHandler",
+      "Unlisten"
+     ]
+    },
+    {
+     "file": "tauri/host.ts",
+     "about": "Where the page runs, and the mark of the bar that moves the window. Both are plain reading: nothing of Tauri is\ncalled or loaded, so they work in a browser and on a server too.\n- A page in a Tauri window finds `__TAURI_INTERNALS__` on its window; a page in a browser does not.\n- A window of its own is Tauri on a computer: its decorations are off, and the app draws the bar and its three\n  buttons (`TitleBar` with `WindowControls`). On a phone the system draws its own.\n- `DRAG_REGION` goes to `TitleBar`'s `dragProps`: Tauri moves the window from a press on an element that carries\n  it, and maximizes it with a double press. It counts only on the element under the pointer, which is why the bar\n  hands it to its toolbar, its title and its spacers.",
+     "types": [
+      {
+       "name": "TauriHost",
+       "doc": "Where the page runs.",
+       "fields": [
+        {
+         "name": "native",
+         "type": "boolean",
+         "required": true,
+         "doc": "In a Tauri window."
+        },
+        {
+         "name": "mobile",
+         "type": "boolean",
+         "required": true,
+         "doc": "On a phone or a tablet, in Tauri or in a browser."
+        },
+        {
+         "name": "ownWindow",
+         "type": "boolean",
+         "required": true,
+         "doc": "In a window of its own on a computer (Tauri, not on a phone): the app draws the window's bar and buttons."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DRAG_REGION",
+      "readHost"
+     ]
+    },
+    {
+     "file": "tauri/permissions.ts",
+     "about": "The permissions of Tauri 2 the entry's calls need, for the app's capability file (`src-tauri/capabilities/*.json`).\nThe plain skeleton of an app grants `core:default`: it holds what only reads (whether the window is maximized, the\ndouble press that maximizes from the bar) and listening to events, but not the calls that change the window. The\nidentifiers are those of Tauri's core permissions (https://v2.tauri.app/reference/acl/core-permissions/); a\npermission already in `core:default` is listed too, for a capability that does not grant it.\nA command of the app's own (Snap Layouts, a window theme through a command) needs no core permission: Tauri allows\nthe app's commands to all its windows, unless the app narrows them with `AppManifest::commands` in its `build.rs`.",
+     "also": [
+      "TAURI_PERMISSIONS"
+     ]
+    },
+    {
+     "file": "tauri/snap-layouts.ts",
+     "about": "Snap Layouts on Windows 11, for a native side that offers them: opt-in, with the names the app's shell uses.\nWindows opens its layouts from the system's own maximize button. A window without a frame has none, so a shell\ncan lay the system's hit area over the page's maximize button; then the pointer never reaches the page's button,\nand the shell sends back its hover and press. This file does the page's half:\n- it sends the button's rectangle to the app's command (`command`), in physical pixels (the page's pixels times\n  `devicePixelRatio`, rounded) as `{ x, y, width, height }`, when it changes, again at each resize of the window\n  (maximized, the shell places its area again) and after a change of zoom; a send that fails is sent again at the\n  next change. When the button goes away a rectangle of zero size is sent, so the shell takes its area away;\n- it listens to the app's event (`event`), whose payload is `{ hover, pressed }`, and gives `maximizeState`.\n`useSnapLayouts` gives `maximizeRef` and `maximizeState`, the two props of `WindowControls` for it. The plain\nskeleton of a Tauri app has no such command: without one, an app does not use this.",
+     "types": [
+      {
+       "name": "CaptionRect",
+       "doc": "A rectangle in physical pixels.",
+       "fields": [
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "y",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "width",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "SnapLayoutsOptions",
+       "fields": [
+        {
+         "name": "command",
+         "type": "string",
+         "required": true,
+         "doc": "The app's command that takes the maximize button's rectangle (Imago's is `window_caption_maximize`)."
+        },
+        {
+         "name": "event",
+         "type": "string",
+         "required": true,
+         "doc": "The app's event with `{ hover, pressed }` of that button (Imago's is `caption-maximize`)."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed call goes: `snapLayouts` for the command, `listen` for the event."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake `invoke` and `listen` in a test)."
+        }
+       ]
+      },
+      {
+       "name": "SnapLayoutsWiring",
+       "doc": "The props of `WindowControls` for Snap Layouts.",
+       "fields": [
+        {
+         "name": "maximizeRef",
+         "type": "(button: HTMLButtonElement | null) => void",
+         "required": true
+        },
+        {
+         "name": "maximizeState",
+         "type": "\"hover\" | \"pressed\"",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useSnapLayouts"
+     ]
+    },
+    {
+     "file": "tauri/window-controls.ts",
+     "about": "The three buttons of a window of its own, wired to the Tauri window: what `useWindowControls` gives is the props of\nthe toolkit's `WindowControls`, so an app writes `<WindowControls {...useWindowControls({ onError })} />`.\nWhether the window is maximized is read at once and again at each change of its size; when several answers are on\ntheir way (a window resized fast) only the last one asked is shown. A refused or failed call goes to `onError`, never\ninto an unhandled rejection. The listening stops on unmount, also when Tauri answers after it.",
+     "types": [
+      {
+       "name": "WindowControlsOptions",
+       "fields": [
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed call goes. Without it a failure is dropped, never thrown."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given. Off, the buttons do nothing."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake window in a test)."
+        }
+       ]
+      },
+      {
+       "name": "WindowControlsWiring",
+       "doc": "The props of `WindowControls`, wired to the window.",
+       "fields": [
+        {
+         "name": "maximized",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onMinimize",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "onMaximizeToggle",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "onClose",
+         "type": "() => void",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useWindowControls"
+     ]
+    },
+    {
+     "file": "tauri/window-theme.ts",
+     "about": "The theme of the window, opt-in: the scheme the page draws (`light` or `dark`) told to the window, so that what the\nsystem draws around and behind the page (the frame on a computer that keeps one, a backdrop) matches it. It goes\nthrough the window's `setTheme`, or, when the app names a command of its own, to that command with\n`{ theme: 'light' | 'dark' }` (`args` gives other arguments). It is sent when the scheme changes, not at each draw;\na send that fails goes to `onError` and the next change tries again.",
+     "types": [
+      {
+       "name": "WindowThemeOptions",
+       "fields": [
+        {
+         "name": "command",
+         "type": "string",
+         "doc": "The app's command that takes the theme. Without it, the window's own `setTheme`."
+        },
+        {
+         "name": "args",
+         "type": "((scheme: \"light\" | \"dark\") => Record<string, unknown>)",
+         "doc": "The arguments of `command` for a scheme. Default `{ theme: scheme }`."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed send goes, as `setTheme`."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake window or `invoke` in a test)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useWindowTheme"
+     ]
+    },
+    {
+     "file": "tauri/zoom.ts",
+     "about": "The zoom of the page, as a program has it: Ctrl with + or = (in), - (out) and 0 (back to 100%), or Ctrl and the\nwheel, from 50% to 200% in steps of 10% (WCAG 1.4.4 asks for 200%). Tauri leaves the engine's own zoom keys off\n(`zoomHotkeysEnabled`), so the page does it and gives the level to the webview (`setZoom`). On a Mac, Command takes\nthe place of Ctrl for the keys.\nThe level is kept in the webview's `localStorage`, which is the app's on that machine, and set again at the next\nstart. A level the webview refuses goes back to the last one it took, and is not kept.\nA key or a wheel whose default a part of the page already took (a canvas that zooms itself) is left to that part.\n`createZoom` is the controller without React (the settings of an app share it with the keys); `useZoom` puts it on\nthe document for as long as a component is mounted and gives the level to show.",
+     "types": [
+      {
+       "name": "UseZoomOptions",
+       "doc": "The options of `useZoom`: those of `createZoom`, and whether it acts. The level comes back from the hook.",
+       "fields": [
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed `setZoom` goes."
+        },
+        {
+         "name": "storageKey",
+         "type": "string",
+         "doc": "Where the level is kept. Default `sigrid.zoom`; an app gives its own to keep a level it already saved."
+        },
+        {
+         "name": "storage",
+         "type": "Store | null",
+         "doc": "Default: the page's `localStorage`. `null` keeps nothing."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake webview in a test)."
+        }
+       ]
+      },
+      {
+       "name": "ZoomController",
+       "doc": "One zoom for the page: the keys, the wheel and an app's own control share it.",
+       "fields": [
+        {
+         "name": "ready",
+         "type": "Promise<void>",
+         "required": true,
+         "doc": "Settles when the saved level was given to the webview (or refused, and the level is back at 100%)."
+        },
+        {
+         "name": "level",
+         "type": "() => number",
+         "required": true,
+         "doc": "The level shown now: 1 is 100%."
+        },
+        {
+         "name": "set",
+         "type": "(level: number) => Promise<boolean>",
+         "required": true,
+         "doc": "Shows `level` at once and resolves to whether the webview took it."
+        },
+        {
+         "name": "step",
+         "type": "(direction: 1 | -1 | 0) => Promise<boolean>",
+         "required": true,
+         "doc": "One step: 1 in, -1 out, 0 back to 100%."
+        },
+        {
+         "name": "attach",
+         "type": "(doc: Document) => () => void",
+         "required": true,
+         "doc": "Takes the zoom keys and Ctrl with the wheel on `doc`; returns the function that lets them go."
+        }
+       ]
+      },
+      {
+       "name": "ZoomKey",
+       "doc": "What `zoomKey` reads of a key.",
+       "fields": [
+        {
+         "name": "key",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "code",
+         "type": "string"
+        },
+        {
+         "name": "ctrlKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "metaKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "altKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "shiftKey",
+         "type": "boolean",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ZoomOptions",
+       "fields": [
+        {
+         "name": "storageKey",
+         "type": "string",
+         "doc": "Where the level is kept. Default `sigrid.zoom`; an app gives its own to keep a level it already saved."
+        },
+        {
+         "name": "storage",
+         "type": "Store | null",
+         "doc": "Default: the page's `localStorage`. `null` keeps nothing."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed `setZoom` goes."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake webview in a test)."
+        },
+        {
+         "name": "onChange",
+         "type": "((level: number) => void)",
+         "doc": "Called with the level at each change, also when a refused one goes back. Not for the first one."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "clampZoom",
+      "createZoom",
+      "stepZoom",
+      "useZoom",
+      "zoomKey"
      ]
     }
    ]

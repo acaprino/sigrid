@@ -4,16 +4,19 @@ This file is for a coding agent (Claude Code and others) that builds or changes 
 `@acaprino/sigrid`. It comes with the package: in an app it is at `node_modules/@acaprino/sigrid/AGENTS.md`, and the
 paths below start from that folder. The last section is for work on the toolkit itself.
 
-Sigrid is a React design system, ADHD first: calm neutral surfaces, one accent that says where to look and what to
-press, one clear action at a time. It runs in a browser and in a Tauri window, on a computer and on a phone.
+Sigrid is a React UI system in four levels: a toolkit (primitives, tokens, themes), advanced components (a table, a
+long list, a graph…), a layout system (the frame, its two forms, the patterns) and an app system for Tauri (the window
+wired by `@acaprino/sigrid/tauri`). ADHD first: calm neutral surfaces, one accent that says where to look and what to
+press, one clear action at a time, and shared controls that never move (R14). It runs in a browser and in a Tauri
+window, on a computer and on a phone.
 
 ## Read before you write
 
 | To know | Read |
 |---|---|
 | Which component there is, its props and what each is for | `agents/catalog.json` (written from the source: file, what it is, components and their props, the object types those props are made of) |
-| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx` (with `agents/examples/host.ts`, which they import) |
-| The rules (R1 to R13), the tokens and what each component looks like | `DESIGN.md` |
+| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame) |
+| The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
 | What changes on a phone, and what does not | `docs/mobile.md` |
 | Setup, themes, density, words, icons, the entries of the package | `README.md` |
@@ -27,6 +30,11 @@ the app, and do not add another component library for something the toolkit has.
 
 1. Start from `AppShell` and fill only the regions the screen needs (`docs/patterns.md` says what goes where). The
    frame measures its own width and gives way by itself: do not write breakpoints for the sidebar or the inspector.
+   It has two forms: with lines (the default) or `frame="sheet"` (Xiox's: the work area one sheet on the window's
+   ground). Lay a region out inside with `Panel`.
+   In a Tauri app, take where it runs, the drag attribute and the window's buttons from `@acaprino/sigrid/tauri`
+   (`readHost`, `DRAG_REGION`, `useWindowControls`); it is page side only, and the native skeleton is the
+   tauri-app-builder plugin's.
 2. Take every control from the toolkit. Import from `@acaprino/sigrid`; the table, the virtual list, the list put in
    order by hand, the rich text field and the graph canvas have entries of their own (`/table`, `/virtual`,
    `/reorder`, `/rich-text`, `/graph`; the graph also needs `@import "@acaprino/sigrid/graph.css"`).

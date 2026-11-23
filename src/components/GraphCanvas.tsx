@@ -124,10 +124,24 @@ export function visibleGraph(graph: Graph, collapsed: readonly string[]): { orde
     if (!closed.has(id)) for (const next of below.get(id) ?? []) walk(next, depth + 1)
   }
   const roots = graph.nodes.filter((node) => (above.get(node.id) ?? []).length === 0).map((node) => node.id)
+  // What a start reaches with nothing closed: a thing reached and not in sight is hidden by something closed.
+  const reached = new Set<string>()
+  const reach = (id: string) => {
+    if (reached.has(id)) return
+    reached.add(id)
+    for (const next of below.get(id) ?? []) reach(next)
+  }
   // A graph that is all one ring hangs from nothing: its first thing is where it is read from.
-  for (const id of roots.length > 0 ? roots : graph.nodes.slice(0, 1).map((node) => node.id)) walk(id, 1)
-  // What no root reaches (a ring beside the rest) is read after it.
-  for (const node of graph.nodes) if (!level.has(node.id) && ![...above.get(node.id)!].some((id) => closed.has(id) || !level.has(id))) walk(node.id, 1)
+  for (const id of roots.length > 0 ? roots : graph.nodes.slice(0, 1).map((node) => node.id)) {
+    reach(id)
+    walk(id, 1)
+  }
+  // What no start reaches at all (a ring beside the rest) is read after it, from its first thing.
+  for (const node of graph.nodes) {
+    if (reached.has(node.id)) continue
+    reach(node.id)
+    walk(node.id, 1)
+  }
   const hidden = new Map<string, number>()
   for (const id of closed) {
     if (!level.has(id)) continue

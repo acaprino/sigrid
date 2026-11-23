@@ -33,9 +33,10 @@
 //   sidebar of its own colours (`data-sidebar="own"`, a dark or solid column) keeps its column on the lanes' surface.
 //   Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.
 // The `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.
-// F6 moves the focus to the next region (title bar, sidebar, content, inspector) and Shift+F6 to the one before, round
-// again, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the app to write
-// (after Imago's `regions`). In a region the focus goes to the place the user is in (`aria-current`), else to the first
+// F6 moves the focus to the next region (title bar, sidebar, content, inspector, the notices) and Shift+F6 to the one
+// before, round again, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the
+// app to write (after Imago's `regions`). The frame answers F6 before anything else does (the notices' own F6 among
+// them), so the round is one. In a region the focus goes to the place the user is in (`aria-current`), else to the first
 // thing that takes it; the content takes it itself when it holds nothing that does.
 // Without a way to measure (a server, a test) the frame is the wide one.
 import * as React from "react"
@@ -45,19 +46,28 @@ import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
 import { useWords } from "../../words"
 import { PortalContainerProvider, usePortalContainer } from "../PortalContainer"
 import { Sheet, SheetContent, SheetTitle } from "./sheet"
+import { TOASTS_ATTR } from "../../internal/overlay"
 
-// The regions F6 goes through, in order. The inspector shown as a drawer is a sheet, which may sit in a layer outside the frame.
-const REGIONS = ['[data-slot="title-bar"]', '[data-slot="sidebar"]', '[data-slot="app-shell-content"]', '[data-slot="inspector"], [data-inspector-form="drawer"]']
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex], [contenteditable="true"]'
-const shown = (el: Element) => el.closest("[hidden], [inert], [aria-hidden=\"true\"]") === null
-const takes = (el: HTMLElement) => el.tabIndex >= 0 && shown(el) && !el.matches("[disabled]")
+// The regions F6 goes through, in order: inside the frame, or (the inspector shown as a drawer, a sheet, and the column
+// of notices) in a layer of the page.
+const REGIONS: readonly { inside: string; page?: string }[] = [
+  { inside: '[data-slot="title-bar"]' },
+  { inside: '[data-slot="sidebar"]' },
+  { inside: '[data-slot="app-shell-content"]' },
+  { inside: '[data-slot="inspector"]', page: '[data-inspector-form="drawer"]' },
+  { inside: `[${TOASTS_ATTR}]`, page: `[${TOASTS_ATTR}]` },
+]
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex], [contenteditable=""], [contenteditable="true"]'
+// An open surface that is not a region of the round keeps F6 (a menu, a list of options, a dialog other than the inspector).
+const SURFACES = '[role="dialog"]:not([data-inspector-form]), [role="alertdialog"], [role="menu"], [role="listbox"]'
+const visible = (el: Element) => el.closest("[hidden], [inert], [aria-hidden=\"true\"]") === null
+const takes = (el: HTMLElement) => el.tabIndex >= 0 && visible(el) && !el.matches(":disabled")
 
-/** Where the focus lands in a region: the place the user is in, else the first thing that takes the focus, else the region if it takes it. */
-function entryOf(region: HTMLElement): HTMLElement | null {
-  const current = region.querySelector<HTMLElement>('[aria-current="page"], [aria-current="true"]')
-  if (current && takes(current)) return current
-  const first = Array.from(region.querySelectorAll<HTMLElement>(FOCUSABLE)).find(takes)
-  return first ?? (region.hasAttribute("tabindex") ? region : null)
+/** Where the focus may land in a region, in order: the place the user is in, the things that take the focus, the region itself if it takes it. */
+function entriesOf(region: HTMLElement): HTMLElement[] {
+  const current = Array.from(region.querySelectorAll<HTMLElement>('[aria-current="page"], [aria-current="true"]')).filter(takes)
+  const focusable = Array.from(region.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(takes)
+  return [...current, ...focusable, ...(region.hasAttribute("tabindex") ? [region] : [])]
 }
 
 /** The widths, in px of the frame, at which the layout changes: the recommended ones, which an app can replace. */
@@ -160,27 +170,36 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
     const el = root.current
     if (!el) return
     const doc = el.ownerDocument
+    // A region of this frame, not of a frame inside its content (a sample, a preview).
+    const own = (region: Element) => region.closest('[data-slot="app-shell"]') === el
     const listen = (event: KeyboardEvent) => {
       if (event.key !== "F6" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return
-      const found = REGIONS.map((selector) => el.querySelector<HTMLElement>(selector) ?? doc.querySelector<HTMLElement>(selector))
+      const found = REGIONS.map(({ inside, page }) => Array.from(el.querySelectorAll<HTMLElement>(inside)).find(own) ?? (page ? doc.querySelector<HTMLElement>(page) : null))
       const active = doc.activeElement
-      const outside = active !== null && active !== doc.body && active !== doc.documentElement && !el.contains(active) && !found.some((region) => region?.contains(active))
-      if (outside) return
+      const nowhere = active === null || active === doc.body || active === doc.documentElement
+      // With the focus nowhere, the outermost frame answers; with it somewhere, the frame it is in (or one of its
+      // regions in a layer of the page); an open surface that is not a region keeps F6.
+      if (nowhere ? el.parentElement?.closest('[data-slot="app-shell"]') : !(active.closest('[data-slot="app-shell"]') === el || found.some((region) => region?.contains(active)))) return
+      if (!nowhere && active.closest(SURFACES) && !found.some((region) => region?.contains(active))) return
       const step = event.shiftKey ? -1 : 1
       const at = found.findIndex((region) => region !== null && active !== null && region.contains(active))
       const from = at === -1 ? (step === 1 ? -1 : 0) : at
       for (let k = 1; k <= found.length; k += 1) {
         const region = found[(((from + step * k) % found.length) + found.length) % found.length]
-        const entry = region && shown(region) ? entryOf(region) : null
-        if (entry) {
-          event.preventDefault()
+        if (!region || !visible(region)) continue
+        // The first place that really takes the focus: one hidden by a style does not, and the next is tried.
+        for (const entry of entriesOf(region)) {
           entry.focus()
+          if (doc.activeElement !== entry) continue
+          // Answered here and no further: an app's command on F6 does not run too.
+          event.preventDefault()
+          event.stopPropagation()
           return
         }
       }
     }
-    doc.addEventListener("keydown", listen)
-    return () => doc.removeEventListener("keydown", listen)
+    doc.addEventListener("keydown", listen, { capture: true })
+    return () => doc.removeEventListener("keydown", listen, { capture: true })
   }, [])
   const [overlays, setOverlays] = React.useState<HTMLDivElement | null>(null)
   // Until the layer is there (the first render), the overlays go where they would have gone without the frame.

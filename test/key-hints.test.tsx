@@ -50,3 +50,12 @@ test('with nothing to name it draws nothing, and its name can be the app\'s', ()
   )
   expect(screen.getByRole('list', { name: 'Tasti' })).toBeTruthy()
 })
+
+test('a key that is not a command of the registry, such as the frame\'s F6, is named as it is given', () => {
+  render(
+    <CommandsProvider>
+      <KeyHints ids={[PALETTE_COMMAND, { keys: 'F6', label: 'Next region' }]} />
+    </CommandsProvider>,
+  )
+  expect([...screen.getByRole('list', { name: 'Keys' }).querySelectorAll('li')].map((item) => item.textContent)).toEqual(['Ctrl KCommands', 'F6Next region'])
+})

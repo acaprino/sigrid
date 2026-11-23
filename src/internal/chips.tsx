@@ -228,10 +228,7 @@ export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQu
   )
 }
 
-// The boundary is the page, not the scrolling window around the field: inside a window that scrolls, its own box would be the
-// edge the card fits in, and a card taller than the window would be squeezed or pushed out of the screen.
-const PAGE = () => document.documentElement
-const POSITIONING = { placement: 'bottom-start', sameWidth: true, gutter: 4, strategy: 'fixed', boundary: PAGE } as const
+const POSITIONING = { placement: 'bottom-start', sameWidth: true, gutter: 4, strategy: 'fixed' } as const
 
 /** The labels field with a list of suggestions under it: the two Ark machines share the text box and what is typed. */
 function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel, display, invalid, dot, split }: Omit<ChipsInputProps, 'placeholder' | 'suggestions' | 'separators'> & { placeholder: string | undefined; suggestions: readonly string[]; split: RegExp }) {

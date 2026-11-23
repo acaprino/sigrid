@@ -257,9 +257,12 @@ function useCommandPalette(): { open: boolean; setOpen: (open: boolean) => void 
   return { open: context?.open ?? false, setOpen: context?.setOpen ?? (() => {}) }
 }
 
+/** A key that is not a command of the registry but works all the same (F6 of the frame): its key and its name. */
+export type KeyHint = { keys: string; label: string }
+
 export type KeyHintsProps = {
-  /** The commands it names, by id, in this order; of those, the ones with a key that can be done now are shown. `PALETTE_COMMAND` names Ctrl+K. */
-  ids: readonly string[]
+  /** What it names, in this order: a command by its id (shown when it has a key and can be done now; `PALETTE_COMMAND` names Ctrl+K), or a key that is not a command (`{ keys: 'F6', label: 'Next region' }`). */
+  ids: readonly (string | KeyHint)[]
   /** Its name for screen readers. Absent: the toolkit's words («Keys»). */
   "aria-label"?: string | undefined
 }
@@ -272,14 +275,19 @@ export type KeyHintsProps = {
 function KeyHints({ ids, "aria-label": label }: KeyHintsProps) {
   const words = useWords()
   const commands = useCommands()
-  const shown = ids.flatMap((id) => commands.filter((command) => command.id === id && command.shortcut !== undefined && command.when !== false))
+  const context = React.useContext(CommandsContext)
+  const shown = ids.flatMap((id) =>
+    typeof id === "string"
+      ? commands.filter((command) => command.id === id && command.shortcut !== undefined && command.when !== false).map((command) => ({ key: command.id, shortcut: command.shortcut, label: command.label }))
+      : [{ key: `keys:${id.keys}`, shortcut: formatKeys(id.keys, context?.mac ?? false, words.keys), label: id.label }],
+  )
   if (shown.length === 0) return null
   return (
     <ul role="list" aria-label={label ?? words.palette.keys} data-slot="key-hints" className={cn("flex min-w-0 items-center gap-3 overflow-hidden whitespace-nowrap", ON_PHONE_HIDDEN)}>
-      {shown.map((command) => (
-        <li key={command.id} className="inline-flex items-center gap-1">
-          <Kbd>{command.shortcut}</Kbd>
-          <span>{command.label}</span>
+      {shown.map((hint) => (
+        <li key={hint.key} className="inline-flex items-center gap-1">
+          <Kbd>{hint.shortcut}</Kbd>
+          <span>{hint.label}</span>
         </li>
       ))}
     </ul>

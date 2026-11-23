@@ -1,9 +1,24 @@
 # Sigrid UI
 
-Sigrid is the shared design system for React apps: the single source of truth for colours, tokens, fonts, primitives and motion. It
-knows nothing of any app: no app's name, concepts or product components, and no window API of a desktop shell (its
-title bar is plain web, and a shell drives it from outside: see [Toolbar and title bar](#toolbar-and-title-bar)). An app builds
-its product components on top of it, usually in a package of its own that re-exports what the app needs from here.
+Sigrid is the UI system shared by a suite of React apps, ADHD first, in four levels:
+
+1. **A toolkit.** The single source of truth for colours, tokens, fonts, primitives and motion (`@acaprino/sigrid`).
+2. **Advanced components.** A table, a long list, a list put in order by hand, a rich text field and a graph canvas, each
+   on an entry of its own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
+3. **A layout system.** The one frame of an app (`AppShell`) in two forms, with lines or as a sheet (Xiox's frame), its
+   regions and the widths where it gives way, `Panel`, the layout parts, and the patterns of `docs/patterns.md` and
+   `docs/mobile.md`.
+4. **An app system for Tauri.** The title bar, the window's buttons and the desktop guard, which are plain web, and
+   `@acaprino/sigrid/tauri`, which wires them to a Tauri window from the page. The app editor of the showcase lays a
+   whole app out and exports it as a project. The native skeleton (`src-tauri`) is the tauri-app-builder plugin's.
+
+All four are made for coding agents: `AGENTS.md`, a catalogue written from the source (`agents/`), whole example apps,
+a check (`sigrid-check`) and a Claude Code plugin.
+
+It knows nothing of any app: no app's name, concepts or product components. The toolkit's source (`src/`) knows no
+window API of a desktop shell (its title bar is plain web, and a shell drives it from outside: see
+[Toolbar and title bar](#toolbar-and-title-bar)); what is Tauri's lives apart, in `tauri/`. An app builds its product
+components on top of it, usually in a package of its own that re-exports what the app needs from here.
 MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
 
 ## Use it
@@ -38,7 +53,7 @@ To migrate from `@acaprino/toolkit`, update the dependency name and all imports,
 to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at your checkout. Releases through
 `v1.0.1` carry the original package and tarball names.
 
-## The four layers
+## What the toolkit rests on
 
 1. **Behaviour: two libraries, each for what it does best.** **Base UI** (`@base-ui/react`, pinned to 1.9.0) carries
    the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, toolbar, checkbox, radio group,
@@ -383,8 +398,8 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
-  with the `host.ts` they import; they pass `sigrid-check`.
+  `agents/examples/`: three whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`.
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.

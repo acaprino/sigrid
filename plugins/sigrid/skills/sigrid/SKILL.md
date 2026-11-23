@@ -22,7 +22,7 @@ installed, say so and stop: do not write from memory.
 2. `agents/catalog.json`: look up every component you are about to use, and its props. It is large: search it for
    the component's name instead of reading it whole.
 3. For a new screen, `docs/patterns.md` and one of `agents/examples/*.tsx`; for a phone, `docs/mobile.md`.
-4. `DESIGN.md` when a rule is in doubt (R1 to R13, tokens, each component's form).
+4. `DESIGN.md` when a rule is in doubt (R1 to R14, tokens, each component's form).
 
 The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) say where its product components live and what it
 keeps to itself: they come first where they speak.

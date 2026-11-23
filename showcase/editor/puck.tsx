@@ -12,9 +12,9 @@ import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
 import { APP_SHELL_STEPS, FormField, Icon, IconPackProvider, Input, MotionProvider, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
 import { touchDensity } from '../phone'
 import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
-import { equals, type Child, type Expr } from './ir'
+import { equals, flag, type Child, type Expr } from './ir'
 import { applyLook } from './look'
-import type { AppModel, Node, Screen } from './model'
+import { hasRegion, type AppModel, type Node, type Screen } from './model'
 import { DETAILS_CLASS, contentClass, shownWhen, visible } from './plan'
 import { Frame, draw, type HostKind } from './render'
 
@@ -46,10 +46,31 @@ const useEnv = (): EditEnv => {
  * three of the screen in sight. Their names are the words the outline shows, and they are listed from the foot of the
  * frame to its head, because the outline lists them the other way round.
  */
-const ROOT_SLOTS = { Bottom: 'bottom', Footer: 'footer', Actions: 'actions', Details: 'content', Content: 'content', Sidebar: 'sidebar', Tabs: 'tabs', Bar: 'bar' } as const
+const ROOT_SLOTS = { Bottom: 'bottom', Footer: 'footer', Actions: 'actions', Details: 'content', Content: 'content', Status: 'status', Sidebar: 'sidebar', Tabs: 'tabs', Bar: 'bar' } as const
+export type RootSlot = keyof typeof ROOT_SLOTS
+
+/**
+ * The slots of the root that the app and the screen have: a region the app does not have (a sidebar, the tabs) is
+ * neither drawn nor listed in the outline. What it held stays in the app, for when it comes back.
+ */
+export function rootSlots(app: AppModel, screen: Screen): RootSlot[] {
+  const has: Record<RootSlot, boolean> = {
+    Bar: true,
+    Tabs: hasRegion(app.settings, 'tabs'),
+    Sidebar: hasRegion(app.settings, 'nav'),
+    Status: screen.statusOn,
+    Content: true,
+    Details: screen.details === 'on',
+    Actions: screen.actionsOn,
+    Footer: hasRegion(app.settings, 'foot'),
+    Bottom: hasRegion(app.settings, 'bottom'),
+  }
+  return (Object.keys(ROOT_SLOTS) as RootSlot[]).filter((slot) => has[slot])
+}
 
 export function toData(app: AppModel, screen: Screen): Data {
-  const props: Record<keyof typeof ROOT_SLOTS, Node[]> = { Bar: app.shared.bar, Tabs: app.shared.tabs, Sidebar: app.shared.nav, Footer: app.shared.foot, Bottom: app.shared.bottom, Content: screen.content, Details: screen.detailsItems, Actions: screen.actions }
+  const all: Record<RootSlot, Node[]> = { Bar: app.shared.bar, Tabs: app.shared.tabs, Sidebar: app.shared.nav, Footer: app.shared.foot, Bottom: app.shared.bottom, Content: screen.content, Status: screen.statusItems, Details: screen.detailsItems, Actions: screen.actions }
+  const props = Object.fromEntries(rootSlots(app, screen).map((slot) => [slot, all[slot]]))
   return { root: { props: structuredClone(props) }, content: [], zones: {} } as unknown as Data
 }
 
@@ -58,10 +79,12 @@ const plain = (value: unknown): Node[] => (Array.isArray(value) ? (value as Comp
 /** The app with what the canvas holds now: the shared regions, and the regions of one screen. */
 export function fromData(app: AppModel, screenId: string, data: Data): AppModel {
   const props = ((data.root as { props?: Record<string, unknown> }).props ?? {}) as Record<string, unknown>
+  // A slot the canvas does not have keeps what the app holds there.
+  const read = (slot: RootSlot, kept: Node[]): Node[] => (slot in props ? plain(props[slot]) : kept)
   return {
     ...app,
-    shared: { bar: plain(props['Bar']), tabs: plain(props['Tabs']), nav: plain(props['Sidebar']), foot: plain(props['Footer']), bottom: plain(props['Bottom']) },
-    screens: app.screens.map((s) => (s.id === screenId ? { ...s, content: plain(props['Content']), detailsItems: plain(props['Details']), actions: plain(props['Actions']) } : s)),
+    shared: { bar: read('Bar', app.shared.bar), tabs: read('Tabs', app.shared.tabs), nav: read('Sidebar', app.shared.nav), foot: read('Footer', app.shared.foot), bottom: read('Bottom', app.shared.bottom) },
+    screens: app.screens.map((s) => (s.id === screenId ? { ...s, content: read('Content', s.content), statusItems: read('Status', s.statusItems), detailsItems: read('Details', s.detailsItems), actions: read('Actions', s.actions) } : s)),
   }
 }
 
@@ -93,7 +116,7 @@ function fieldOf(spec: FieldSpec, screens: AppModel['screens']): Field {
       return {
         type: 'select',
         label: spec.label,
-        options: [{ value: 'none', label: 'Nothing' }, ...screens.map((s) => ({ value: `go:${s.id}`, label: `Go to «${s.name}»` })), { value: 'menu', label: 'Open the menu' }, { value: 'show', label: 'Show the details' }, { value: 'details', label: 'Show or hide the details' }, { value: 'say', label: 'Show a notice' }],
+        options: [{ value: 'none', label: 'Nothing' }, ...screens.map((s) => ({ value: `go:${s.id}`, label: `Go to «${s.name}»` })), { value: 'menu', label: 'Open the menu' }, { value: 'show', label: 'Show the details' }, { value: 'details', label: 'Show or hide the details' }, { value: 'say', label: 'Show a notice' }, { value: 'job', label: 'Run the job' }],
       }
     case 'rows':
       return {
@@ -194,6 +217,8 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   const ctx: BuildCtx = {
     appName: env.app.name,
     details: env.app.screens.some((screen) => screen.details === 'on'),
+    job: env.app.screens.some((screen) => screen.statusOn && screen.statusItems.some((node) => node.type === 'Job')),
+    noDetails: env.app.screens.some((screen) => screen.details !== 'on') ? fixed(env.screen.details !== 'on') : undefined,
     screens: env.app.screens,
     screenName: fixed(env.screen.name),
     // On the canvas nothing runs: a value is what it starts as, and a press selects the component.
@@ -205,7 +230,9 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   }
   const drawn: Child = def.build(props, ctx)
   const when = shownWhen(props['show'])
-  const scope = { screen: env.screen.id, narrow, details: env.details }
+  // A job runs only in the app; a Job can be shown running here, at an even 40%.
+  const running = flag(props['preview'])
+  const scope = { screen: env.screen.id, narrow, details: env.details, busy: running, job: running ? 40 : null }
   // A component that this width hides stays on the canvas, faint, so it can still be chosen and set.
   const hidden = when !== null && !when.run(scope)
   return (
@@ -215,10 +242,10 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   )
 }
 
-type RootProps = Record<keyof typeof ROOT_SLOTS, SlotComponent>
+type RootProps = Partial<Record<RootSlot, SlotComponent>>
 
 /** The frame of the app on the canvas: every region that is there at this width is a place to drop into. */
-function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Details, Actions }: RootProps) {
+function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, Details, Actions }: RootProps) {
   const env = useEnv()
   const { app, screen } = env
   const layout = appShellLayout(env.width)
@@ -233,14 +260,15 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Details,
         screen={screen}
         host={env.host}
         narrow={narrow}
-        bar={<Bar className={cn(row, 'gap-1')} minEmptyHeight={32} />}
-        tabs={visible(app.settings.tabs, narrow) ? <Tabs className={cn(row, 'gap-1')} minEmptyHeight={32} /> : null}
-        nav={visible(app.settings.sidebar, narrow) ? <Nav className="flex flex-col" minEmptyHeight={64} /> : null}
-        foot={visible(app.settings.foot, narrow) ? <Foot className={cn(row, 'gap-3')} minEmptyHeight={20} /> : null}
-        bottom={visible(app.settings.bottom, narrow) ? <Bottom className={cn(row, 'gap-1')} minEmptyHeight={40} /> : null}
-        content={<Content className={contentClass(screen)} minEmptyHeight={160} />}
-        details={screen.details === 'on' ? <Details className={DETAILS_CLASS} minEmptyHeight={120} /> : null}
-        actions={screen.actionsOn ? <Actions className={cn(row, 'justify-end gap-2')} minEmptyHeight={36} /> : null}
+        bar={Bar ? <Bar className={cn(row, 'gap-1')} minEmptyHeight={32} /> : null}
+        tabs={Tabs && visible(app.settings.tabs, narrow) ? <Tabs className={cn(row, 'gap-1')} minEmptyHeight={32} /> : null}
+        status={Status && screen.statusOn ? <Status className={cn(row, 'gap-3')} minEmptyHeight={24} /> : null}
+        nav={Nav && visible(app.settings.sidebar, narrow) ? <Nav className="flex flex-col" minEmptyHeight={64} /> : null}
+        foot={Foot && visible(app.settings.foot, narrow) ? <Foot className={cn(row, 'gap-3')} minEmptyHeight={20} /> : null}
+        bottom={Bottom && visible(app.settings.bottom, narrow) ? <Bottom className={cn(row, 'gap-1')} minEmptyHeight={40} /> : null}
+        content={Content ? <Content className={contentClass(screen)} minEmptyHeight={160} /> : null}
+        details={Details && screen.details === 'on' ? <Details className={DETAILS_CLASS} minEmptyHeight={120} /> : null}
+        actions={Actions && screen.actionsOn ? <Actions className={cn(row, 'justify-end gap-2')} minEmptyHeight={36} /> : null}
         menu={env.menu}
         onMenu={() => {}}
         detailsOpen={layout.inspector === 'docked' || env.details}
@@ -265,8 +293,11 @@ export function paletteOf(find: string): Record<string, { title: string; compone
   )
 }
 
-/** The library's configuration: the catalogue, with the screens of this app as the places an action can go to. */
-export function configOf(screens: AppModel['screens']): Config {
+/**
+ * The library's configuration: the catalogue, with the screens of this app as the places an action can go to, and the
+ * regions the app and the screen in sight have as the slots of the root.
+ */
+export function configOf(screens: AppModel['screens'], slots: readonly RootSlot[]): Config {
   const components = Object.fromEntries(
     KINDS.map((kind) => {
       const def = defOf(kind)
@@ -290,7 +321,7 @@ export function configOf(screens: AppModel['screens']): Config {
     components,
     categories,
     root: {
-      fields: Object.fromEntries(Object.entries(ROOT_SLOTS).map(([slot, region]) => [slot, { type: 'slot', allow: takenBy(region) }])),
+      fields: Object.fromEntries(slots.map((slot) => [slot, { type: 'slot', allow: takenBy(ROOT_SLOTS[slot]) }])),
       render: (props: Record<string, unknown>) => <Root {...(props as unknown as RootProps)} />,
     },
   } as unknown as Config

@@ -57,10 +57,7 @@ const TRIGGER_CLASS = cn(
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.
 const NO_TRIGGER_NAME = () => undefined as unknown as string
-// The boundary is the page, not the scrolling window around the field: inside a window that scrolls, its own box would be the
-// edge the card fits in, and a card taller than the window would be squeezed or pushed out of the screen.
-const PAGE = () => document.documentElement
-const POSITIONING = { placement: 'bottom-start', gutter: 4, strategy: 'fixed', boundary: PAGE } as const
+const POSITIONING = { placement: 'bottom-start', gutter: 4, strategy: 'fixed' } as const
 
 // On a phone (narrow and with a finger, as `usePhone`) the card is a sheet at the bottom of the window, not a card under
 // the field: there the calendar is taller than what is left under the field, and it would end below the window. The
