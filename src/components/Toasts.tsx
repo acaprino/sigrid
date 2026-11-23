@@ -301,7 +301,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   const words = useWords()
   // Ark's toaster store, one per column. `pause` and `resume` are the region's (pointer or focus inside): Ark would resume
   // each notice with the time it had left, here the time starts over and is driven by `paused` below.
-  const [store] = useState(() => ({ ...createToaster({ placement: 'bottom-end', overlap: false, max: Number.MAX_SAFE_INTEGER, gap: GAP, hotkey: ['F6'], pauseOnPageIdle: false, removeDelay: 0 }), pause() {}, resume() {} }))
+  const [store] = useState(() => ({ ...createToaster({ placement: 'bottom-end', overlap: false, max: Number.MAX_SAFE_INTEGER, gap: GAP, hotkey: ['altKey', 'KeyT'], pauseOnPageIdle: false, removeDelay: 0 }), pause() {}, resume() {} }))
   // The latest `onDismiss`, without making it a dependency: a caller that passes a new one on every render
   // must not make the timer restart.
   const dismiss = useRef(onDismiss)
