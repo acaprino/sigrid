@@ -20,6 +20,8 @@ export interface Words {
     readonly undo: string
     /** The name of the region that holds the notices. */
     readonly notices: string
+    /** The name of the button that closes a notice, from the notice's text. */
+    readonly closeNotice: (text: string) => string
     /** What screen readers hear before the text of a notice that is an error. */
     readonly error: string
     /** How a key combination is read: keys pressed together, and one after the other. */
@@ -39,10 +41,6 @@ export interface Words {
     readonly noDateTime: string
     /** The button text of a range field without a value. */
     readonly noRange: string
-    /** No longer shown: the date cards have no button that removes the date (2026-11-22). Kept so an app's words still fit. */
-    readonly clear: string
-    /** No longer shown, as `clear`. */
-    readonly clearRange: string
     /** The quick choices above the calendar (`dayPicks`, `rangePicks`). */
     readonly today: string
     readonly tomorrow: string
@@ -304,6 +302,7 @@ export const DEFAULT_WORDS: Words = {
     close: 'Close',
     undo: 'Undo',
     notices: 'Notices',
+    closeNotice: (text) => `Close the notice: ${text}`,
     error: 'Error',
     keysTogether: (keys) => keys.join(' + '),
     keysInSequence: (keys) => keys.join(' then '),
@@ -317,8 +316,6 @@ export const DEFAULT_WORDS: Words = {
     noDate: 'No date',
     noDateTime: 'No date and time',
     noRange: 'No dates',
-    clear: 'Clear the date',
-    clearRange: 'Clear the dates',
     today: 'Today',
     tomorrow: 'Tomorrow',
     weekend: 'This weekend',

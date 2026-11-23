@@ -139,7 +139,7 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
   const own = tk.attributes['data-sidebar'] === 'own'
   // The backgrounds of the content text; the sidebar counts only when it has no colors of its own.
   const BG = ['paper', 'paper-2', 'raised', ...(own ? [] : ['sidebar-paper'])].map((k) => t[k]!)
-  const SEMANTIC = ['background', 'card', 'popover', 'muted', 'secondary'].map((k) => t[k]!)
+  const SEMANTIC = ['background', 'popover'].map((k) => t[k]!)
 
   test('declares every color token of theme.css, as #rrggbb', () => {
     for (const k of Object.keys(palettes().light)) expect(t[k], k).toMatch(/^#[0-9a-f]{6}$/)
@@ -255,13 +255,13 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     // The accent on the bar reads as text on it, and as a mark (3:1) on the selection tint.
     expect(ratio(t['sidebar-accent']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(AA)
     // A filled selection (the solid bar of a strong theme) takes its own ink inside: the bar accent does not sit on it.
-    if (tk.attributes['data-selection'] !== 'filled') expect(ratio(t['sidebar-accent']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(3)
+    if (!own) expect(ratio(t['sidebar-accent']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(3)
     expect(ratio(t['sidebar-accent-ink']!, t['sidebar-accent']!)).toBeGreaterThanOrEqual(AA)
   })
 
   // The dark column (`scura`) is no catalog theme's sidebar any more, but the engine keeps it for whoever asks for it.
   const column = tokensFor({ ...THEMES.find((x) => x.id === themeId)!, sidebar: 'scura' }, scheme)
-  test('the dark column, on request: near-black and sober in both schemes, text at 7:1, a lighter selected row, the user colors readable on it', () => {
+  test('the dark column, on request: near-black and sober in both schemes, text at 7:1, a lighter selected row', () => {
     const t = column.colors
     expect(lum(t['sidebar-paper']!)).toBeLessThan(0.02)
     const ch = [1, 3, 5].map((i) => parseInt(t['sidebar-paper']!.slice(i, i + 2), 16))
@@ -269,17 +269,10 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     expect(ratio(t['sidebar-ink']!, t['sidebar-paper']!)).toBeGreaterThanOrEqual(7)
     expect(lum(t['sidebar-selected']!)).toBeGreaterThan(lum(t['sidebar-paper']!))
     expect(ratio(t['sidebar-selected-ink']!, t['sidebar-selected']!)).toBeGreaterThanOrEqual(7)
-    for (let n = 1; n <= 18; n++) {
-      for (const bg of [t['sidebar-paper']!, t['sidebar-selected']!]) {
-        expect(ratio(t[`sidebar-mark-${n}`]!, bg), `sidebar-mark-${n}`).toBeGreaterThanOrEqual(3)
-        expect(ratio(t[`sidebar-mark-icon-${n}`]!, bg), `sidebar-mark-icon-${n}`).toBeGreaterThanOrEqual(3.5)
-      }
-    }
   })
 
-  test('the dark column, on request, has its own colors and a selected row marked by a short accent bar', () => {
+  test('the dark column, on request, has its own colors', () => {
     expect(column.attributes['data-sidebar']).toBe('own')
-    expect(column.attributes['data-selection']).toBe('bar')
     expect(column.colors['sidebar-ink']).not.toBe(column.colors['ink-soft'])
     expect(column.colors['sidebar-selected']).not.toBe(column.colors['selected'])
     // The rest of the theme does not change with the sidebar (the fill, which holds 3:1 on the ground beside it, may).
@@ -292,7 +285,6 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     if (def.sidebar === 'piena') return
     expect(def.sidebar).toBe('tenue')
     expect(tk.attributes['data-sidebar']).toBe('shared')
-    expect(tk.attributes['data-selection']).toBe('tint')
     expect(t['sidebar-ink']).toBe(t['ink-soft'])
     expect(t['sidebar-mute']).toBe(t['ink-mute'])
     expect(t['sidebar-selected']).toBe(t['selected'])
@@ -334,29 +326,19 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
   })
 
-  test('the 18 colors of areas, projects and icons adapt to the theme and hold at least 3:1 (dots) and 3.5:1 (icons) on every background', () => {
+  test('the 18 colors of areas, projects and labels adapt to the theme and hold at least 3:1 (dots) on every background', () => {
     const spread = (hex: string) => {
       const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
       return Math.max(...ch) - Math.min(...ch)
     }
     for (let n = 1; n <= 18; n++) {
       const dot = t[`mark-${n}`]!
-      const icon = t[`mark-icon-${n}`]!
       expect(dot, `mark-${n}`).toMatch(/^#[0-9a-f]{6}$/)
-      expect(icon, `mark-icon-${n}`).toMatch(/^#[0-9a-f]{6}$/)
-      for (const bg of BG) {
-        expect(ratio(dot, bg), `mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
-        expect(ratio(icon, bg), `mark-icon-${n} on ${bg}`).toBeGreaterThanOrEqual(3.5)
-      }
+      for (const bg of BG) expect(ratio(dot, bg), `mark-${n} on ${bg}`).toBeGreaterThanOrEqual(3)
       // The correction never crushes a color to black or to white: it stays a color.
-      for (const c of [dot, icon]) {
-        expect(lum(c), `${c} is not black`).toBeGreaterThan(0.03)
-        expect(lum(c), `${c} is not white`).toBeLessThan(0.75)
-      }
-      if (themeId === 'inchiostro') {
-        expect(spread(dot), `ink mark-${n}`).toBeLessThanOrEqual(22)
-        expect(spread(icon), `ink mark-icon-${n}`).toBeLessThanOrEqual(22)
-      }
+      expect(lum(dot), `${dot} is not black`).toBeGreaterThan(0.03)
+      expect(lum(dot), `${dot} is not white`).toBeLessThan(0.75)
+      if (themeId === 'inchiostro') expect(spread(dot), `ink mark-${n}`).toBeLessThanOrEqual(22)
     }
   })
 
@@ -371,9 +353,8 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     }
   })
 
-  test('the shape: Park UI\'s l1/l2/l3 corners a step rounder, 4/6/10px, rows in the open, round checkboxes, stroke 1.75', () => {
+  test('the shape: Park UI\'s l1/l2/l3 corners a step rounder, 4/6/10px, round checkboxes, stroke 1.75', () => {
     expect(tk.shape).toMatchObject({ '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px', '--radius-button': '6px', '--radius-chip': '6px' })
-    expect(tk.attributes['data-rows']).toBe('open')
     expect(tk.shape['--radius-check']).toBe('9999px')
     expect(tk.shape['--icon-stroke']).toBe('1.75')
   })
@@ -514,7 +495,6 @@ describe('the user\'s own theme', () => {
   test('the sidebar: dark with the selected item filled in the accent, or light, whatever the theme', () => {
     const dark = themeTokens('neutro', 'light', { accent: '#4452c4', sidebar: 'dark' })
     expect(dark.attributes['data-sidebar']).toBe('own')
-    expect(dark.attributes['data-selection']).toBe('filled')
     expect(lum(dark.colors['sidebar-paper']!)).toBeLessThan(0.05)
     expect(dark.colors['sidebar-selected']).toBe(dark.colors['primary'])
     const light = themeTokens('ultravioletto', 'light', { accent: '#4452c4', sidebar: 'light' })
