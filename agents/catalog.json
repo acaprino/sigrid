@@ -6469,6 +6469,463 @@
      ]
     }
    ]
+  },
+  {
+   "import": "@acaprino/sigrid/tauri",
+   "files": [
+    {
+     "file": "tauri/api.ts",
+     "about": "The calls the `./tauri` entry makes to a Tauri window, and the one place that loads Tauri's API. Each part of the\nentry takes an `api` to call instead (a test passes a fake window, webview, `invoke` or `listen`); what it leaves out\nis `tauriApi`, which imports `@tauri-apps/api` only inside its functions, the first time one is called. So a page in\na browser that imports the entry loads nothing of Tauri. The types are the entry's own: they name no type of\n`@tauri-apps/api`, and `tauriApi` checks that Tauri's window and webview fit them.",
+     "types": [
+      {
+       "name": "TauriApi",
+       "doc": "What the entry calls in Tauri.",
+       "fields": [
+        {
+         "name": "window",
+         "type": "() => TauriWindow | Promise<TauriWindow>",
+         "required": true
+        },
+        {
+         "name": "webview",
+         "type": "() => TauriWebview | Promise<TauriWebview>",
+         "required": true
+        },
+        {
+         "name": "invoke",
+         "type": "(command: string, args?: Record<string, unknown>) => Promise<unknown>",
+         "required": true,
+         "doc": "A command of the app's native side."
+        },
+        {
+         "name": "listen",
+         "type": "<T>(event: string, handler: (event: { payload: T; }) => void) => Promise<Unlisten>",
+         "required": true,
+         "doc": "An event the native side sends."
+        }
+       ]
+      },
+      {
+       "name": "TauriWebview",
+       "doc": "The webview as the entry calls it: what `getCurrentWebview()` gives, or a fake one.",
+       "fields": [
+        {
+         "name": "setZoom",
+         "type": "(scale: number) => Promise<unknown>",
+         "required": true,
+         "doc": "1 is 100%."
+        }
+       ]
+      },
+      {
+       "name": "TauriWindow",
+       "doc": "The window as the entry calls it: what `getCurrentWindow()` gives, or a fake one.",
+       "fields": [
+        {
+         "name": "minimize",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "toggleMaximize",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "close",
+         "type": "() => Promise<unknown>",
+         "required": true
+        },
+        {
+         "name": "isMaximized",
+         "type": "() => Promise<boolean>",
+         "required": true
+        },
+        {
+         "name": "onResized",
+         "type": "(handler: () => void) => Promise<Unlisten>",
+         "required": true,
+         "doc": "Calls `handler` at each change of the window's size, until the returned function is called."
+        },
+        {
+         "name": "setTheme",
+         "type": "(theme: \"light\" | \"dark\" | null) => Promise<unknown>",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "tauriApi",
+      "TauriCall",
+      "TauriErrorHandler",
+      "Unlisten"
+     ]
+    },
+    {
+     "file": "tauri/host.ts",
+     "about": "Where the page runs, and the mark of the bar that moves the window. Both are plain reading: nothing of Tauri is\ncalled or loaded, so they work in a browser and on a server too.\n- A page in a Tauri window finds `__TAURI_INTERNALS__` on its window; a page in a browser does not.\n- A window of its own is Tauri on a computer: its decorations are off, and the app draws the bar and its three\n  buttons (`TitleBar` with `WindowControls`). On a phone the system draws its own.\n- `DRAG_REGION` goes to `TitleBar`'s `dragProps`: Tauri moves the window from a press on an element that carries\n  it, and maximizes it with a double press. It counts only on the element under the pointer, which is why the bar\n  hands it to its toolbar, its title and its spacers.",
+     "types": [
+      {
+       "name": "TauriHost",
+       "doc": "Where the page runs.",
+       "fields": [
+        {
+         "name": "native",
+         "type": "boolean",
+         "required": true,
+         "doc": "In a Tauri window."
+        },
+        {
+         "name": "mobile",
+         "type": "boolean",
+         "required": true,
+         "doc": "On a phone or a tablet, in Tauri or in a browser."
+        },
+        {
+         "name": "ownWindow",
+         "type": "boolean",
+         "required": true,
+         "doc": "In a window of its own on a computer (Tauri, not on a phone): the app draws the window's bar and buttons."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DRAG_REGION",
+      "readHost"
+     ]
+    },
+    {
+     "file": "tauri/permissions.ts",
+     "about": "The permissions of Tauri 2 the entry's calls need, for the app's capability file (`src-tauri/capabilities/*.json`).\nThe plain skeleton of an app grants `core:default`: it holds what only reads (whether the window is maximized, the\ndouble press that maximizes from the bar) and listening to events, but not the calls that change the window. The\nidentifiers are those of Tauri's core permissions (https://v2.tauri.app/reference/acl/core-permissions/); a\npermission already in `core:default` is listed too, for a capability that does not grant it.\nA command of the app's own (Snap Layouts, a window theme through a command) needs no core permission: Tauri allows\nthe app's commands to all its windows, unless the app narrows them with `AppManifest::commands` in its `build.rs`.",
+     "also": [
+      "TAURI_PERMISSIONS"
+     ]
+    },
+    {
+     "file": "tauri/snap-layouts.ts",
+     "about": "Snap Layouts on Windows 11, for a native side that offers them: opt-in, with the names the app's shell uses.\nWindows opens its layouts from the system's own maximize button. A window without a frame has none, so a shell\ncan lay the system's hit area over the page's maximize button; then the pointer never reaches the page's button,\nand the shell sends back its hover and press. This file does the page's half:\n- it sends the button's rectangle to the app's command (`command`), in physical pixels (the page's pixels times\n  `devicePixelRatio`, rounded) as `{ x, y, width, height }`, when it changes, again at each resize of the window\n  (maximized, the shell places its area again) and after a change of zoom; a send that fails is sent again at the\n  next change. When the button goes away a rectangle of zero size is sent, so the shell takes its area away;\n- it listens to the app's event (`event`), whose payload is `{ hover, pressed }`, and gives `maximizeState`.\n`useSnapLayouts` gives `maximizeRef` and `maximizeState`, the two props of `WindowControls` for it. The plain\nskeleton of a Tauri app has no such command: without one, an app does not use this.",
+     "types": [
+      {
+       "name": "CaptionRect",
+       "doc": "A rectangle in physical pixels.",
+       "fields": [
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "y",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "width",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "SnapLayoutsOptions",
+       "fields": [
+        {
+         "name": "command",
+         "type": "string",
+         "required": true,
+         "doc": "The app's command that takes the maximize button's rectangle (Imago's is `window_caption_maximize`)."
+        },
+        {
+         "name": "event",
+         "type": "string",
+         "required": true,
+         "doc": "The app's event with `{ hover, pressed }` of that button (Imago's is `caption-maximize`)."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed call goes: `snapLayouts` for the command, `listen` for the event."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake `invoke` and `listen` in a test)."
+        }
+       ]
+      },
+      {
+       "name": "SnapLayoutsWiring",
+       "doc": "The props of `WindowControls` for Snap Layouts.",
+       "fields": [
+        {
+         "name": "maximizeRef",
+         "type": "(button: HTMLButtonElement | null) => void",
+         "required": true
+        },
+        {
+         "name": "maximizeState",
+         "type": "\"hover\" | \"pressed\"",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useSnapLayouts"
+     ]
+    },
+    {
+     "file": "tauri/window-controls.ts",
+     "about": "The three buttons of a window of its own, wired to the Tauri window: what `useWindowControls` gives is the props of\nthe toolkit's `WindowControls`, so an app writes `<WindowControls {...useWindowControls({ onError })} />`.\nWhether the window is maximized is read at once and again at each change of its size; when several answers are on\ntheir way (a window resized fast) only the last one asked is shown. A refused or failed call goes to `onError`, never\ninto an unhandled rejection. The listening stops on unmount, also when Tauri answers after it.",
+     "types": [
+      {
+       "name": "WindowControlsOptions",
+       "fields": [
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed call goes. Without it a failure is dropped, never thrown."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given. Off, the buttons do nothing."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake window in a test)."
+        }
+       ]
+      },
+      {
+       "name": "WindowControlsWiring",
+       "doc": "The props of `WindowControls`, wired to the window.",
+       "fields": [
+        {
+         "name": "maximized",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onMinimize",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "onMaximizeToggle",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "onClose",
+         "type": "() => void",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useWindowControls"
+     ]
+    },
+    {
+     "file": "tauri/window-theme.ts",
+     "about": "The theme of the window, opt-in: the scheme the page draws (`light` or `dark`) told to the window, so that what the\nsystem draws around and behind the page (the frame on a computer that keeps one, a backdrop) matches it. It goes\nthrough the window's `setTheme`, or, when the app names a command of its own, to that command with\n`{ theme: 'light' | 'dark' }` (`args` gives other arguments). It is sent when the scheme changes, not at each draw;\na send that fails goes to `onError` and the next change tries again.",
+     "types": [
+      {
+       "name": "WindowThemeOptions",
+       "fields": [
+        {
+         "name": "command",
+         "type": "string",
+         "doc": "The app's command that takes the theme. Without it, the window's own `setTheme`."
+        },
+        {
+         "name": "args",
+         "type": "((scheme: \"light\" | \"dark\") => Record<string, unknown>)",
+         "doc": "The arguments of `command` for a scheme. Default `{ theme: scheme }`."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed send goes, as `setTheme`."
+        },
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake window or `invoke` in a test)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "useWindowTheme"
+     ]
+    },
+    {
+     "file": "tauri/zoom.ts",
+     "about": "The zoom of the page, as a program has it: Ctrl with + or = (in), - (out) and 0 (back to 100%), or Ctrl and the\nwheel, from 50% to 200% in steps of 10% (WCAG 1.4.4 asks for 200%). Tauri leaves the engine's own zoom keys off\n(`zoomHotkeysEnabled`), so the page does it and gives the level to the webview (`setZoom`). On a Mac, Command takes\nthe place of Ctrl for the keys.\nThe level is kept in the webview's `localStorage`, which is the app's on that machine, and set again at the next\nstart. A level the webview refuses goes back to the last one it took, and is not kept.\nA key or a wheel whose default a part of the page already took (a canvas that zooms itself) is left to that part.\n`createZoom` is the controller without React (the settings of an app share it with the keys); `useZoom` puts it on\nthe document for as long as a component is mounted and gives the level to show.",
+     "types": [
+      {
+       "name": "UseZoomOptions",
+       "doc": "The options of `useZoom`: those of `createZoom`, and whether it acts. The level comes back from the hook.",
+       "fields": [
+        {
+         "name": "enabled",
+         "type": "boolean",
+         "doc": "Default: in a window of its own (`readHost().ownWindow`), or when `api` is given."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed `setZoom` goes."
+        },
+        {
+         "name": "storageKey",
+         "type": "string",
+         "doc": "Where the level is kept. Default `sigrid.zoom`; an app gives its own to keep a level it already saved."
+        },
+        {
+         "name": "storage",
+         "type": "Store | null",
+         "doc": "Default: the page's `localStorage`. `null` keeps nothing."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake webview in a test)."
+        }
+       ]
+      },
+      {
+       "name": "ZoomController",
+       "doc": "One zoom for the page: the keys, the wheel and an app's own control share it.",
+       "fields": [
+        {
+         "name": "ready",
+         "type": "Promise<void>",
+         "required": true,
+         "doc": "Settles when the saved level was given to the webview (or refused, and the level is back at 100%)."
+        },
+        {
+         "name": "level",
+         "type": "() => number",
+         "required": true,
+         "doc": "The level shown now: 1 is 100%."
+        },
+        {
+         "name": "set",
+         "type": "(level: number) => Promise<boolean>",
+         "required": true,
+         "doc": "Shows `level` at once and resolves to whether the webview took it."
+        },
+        {
+         "name": "step",
+         "type": "(direction: 1 | -1 | 0) => Promise<boolean>",
+         "required": true,
+         "doc": "One step: 1 in, -1 out, 0 back to 100%."
+        },
+        {
+         "name": "attach",
+         "type": "(doc: Document) => () => void",
+         "required": true,
+         "doc": "Takes the zoom keys and Ctrl with the wheel on `doc`; returns the function that lets them go."
+        }
+       ]
+      },
+      {
+       "name": "ZoomKey",
+       "doc": "What `zoomKey` reads of a key.",
+       "fields": [
+        {
+         "name": "key",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "code",
+         "type": "string"
+        },
+        {
+         "name": "ctrlKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "metaKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "altKey",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "shiftKey",
+         "type": "boolean",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ZoomOptions",
+       "fields": [
+        {
+         "name": "storageKey",
+         "type": "string",
+         "doc": "Where the level is kept. Default `sigrid.zoom`; an app gives its own to keep a level it already saved."
+        },
+        {
+         "name": "storage",
+         "type": "Store | null",
+         "doc": "Default: the page's `localStorage`. `null` keeps nothing."
+        },
+        {
+         "name": "onError",
+         "type": "TauriErrorHandler",
+         "doc": "Where a refused or failed `setZoom` goes."
+        },
+        {
+         "name": "api",
+         "type": "Partial<TauriApi>",
+         "doc": "What to call instead of Tauri's API (a fake webview in a test)."
+        },
+        {
+         "name": "onChange",
+         "type": "((level: number) => void)",
+         "doc": "Called with the level at each change, also when a refused one goes back. Not for the first one."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "clampZoom",
+      "createZoom",
+      "stepZoom",
+      "useZoom",
+      "zoomKey"
+     ]
+    }
+   ]
   }
  ]
 }

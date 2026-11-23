@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { build } from 'esbuild'
-import { cpSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -32,7 +32,12 @@ await build({
   plugins: [syncExternalStore],
   // The main entry, and one for each part that rests on a library an app may not need (a table, a long list, a
   // list put in order by dragging, formatted text, a graph): what they share with the main entry is in common chunks.
-  entryPoints: ['index', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => `${root}src/${entry}.ts`),
+  // The Tauri entry's source is outside `src/` (the toolkit knows no shell): the entries are named, so each one is
+  // `dist/<name>.js` wherever its source is.
+  entryPoints: {
+    ...Object.fromEntries(['index', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => [entry, `${root}src/${entry}.ts`])),
+    tauri: `${root}tauri/index.ts`,
+  },
   // `splitting`: Motion (src/internal/motion-impl.tsx) stays in a separate chunk, loaded only with animations on.
   outdir: `${root}dist`,
   splitting: true,
@@ -42,7 +47,8 @@ await build({
   platform: 'browser',
   target: 'es2020',
   jsx: 'automatic',
-  external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client'],
+  // Tauri's API is the app's (an optional peer): the Tauri entry imports it with `import()`, which stays as it is.
+  external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client', '@tauri-apps/api', '@tauri-apps/api/*'],
   logLevel: 'warning',
 })
 
@@ -50,7 +56,11 @@ await build({
 await build({ entryPoints: [`${root}src/styles/graph.css`], outfile: `${root}dist/graph.css`, bundle: true, logLevel: 'warning' })
 
 run('typescript/bin/tsc', ['-p', 'tsconfig.json'])
+// The Tauri entry's declarations go to `dist/tauri/` (its own root, so they do not land on the toolkit's), and
+// `dist/tauri.d.ts` is the door to them, beside `dist/tauri.js`.
+run('typescript/bin/tsc', ['-p', 'tsconfig.tauri.json'])
+writeFileSync(`${root}dist/tauri.d.ts`, "export * from './tauri/index'\n")
 run('@tailwindcss/cli/dist/index.mjs', ['-i', 'src/styles/entry.css', '-o', 'dist/styles.css'])
 
 for (const f of readdirSync(`${root}src/styles/fonts`)) cpSync(`${root}src/styles/fonts/${f}`, `${root}dist/fonts/${f}`)
-console.log('@acaprino/sigrid: dist/index.js and its five entries (table, virtual, reorder, rich-text, graph), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')
+console.log('@acaprino/sigrid: dist/index.js and its six entries (table, virtual, reorder, rich-text, graph, tauri), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')

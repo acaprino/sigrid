@@ -24,6 +24,8 @@ const ENTRIES = [
   ['@acaprino/sigrid/reorder', 'src/reorder.ts'],
   ['@acaprino/sigrid/rich-text', 'src/rich-text.ts'],
   ['@acaprino/sigrid/graph', 'src/graph.ts'],
+  // Its source is outside `src/`: the toolkit knows no shell (test/no-shell.test.ts).
+  ['@acaprino/sigrid/tauri', 'tauri/index.ts'],
 ]
 
 const config = ts.readConfigFile(`${root}tsconfig.json`, ts.sys.readFile)
