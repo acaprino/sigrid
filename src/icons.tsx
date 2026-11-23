@@ -19,6 +19,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  CircleAlert,
   Clapperboard,
   Clock,
   Cloud,
@@ -93,8 +94,9 @@ import { cn } from './lib/utils'
 
 /**
  * What an icon can mean: the main views, the sidebar's groups, the settings sections, the entries of the menus
- * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort), and the rows of a tree of
- * files (`folder`, `folderOpen` for a folder shown open, `file`).
+ * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort), the rows of a tree of
+ * files (`folder`, `folderOpen` for a folder shown open, `file`), and the four tones of a `Note` (`info`, `check`,
+ * `alert` for a warning, `error`: the circle with «!» that marks an error in a notice too).
  */
 export const ICON_NAMES = [
   'all',
@@ -181,6 +183,7 @@ export const ICON_NAMES = [
   'stop',
   'video',
   'alert',
+  'error',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
@@ -275,6 +278,7 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   stop: SquareStop,
   video: Video,
   alert: TriangleAlert,
+  error: CircleAlert,
 }
 
 /**

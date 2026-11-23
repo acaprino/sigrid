@@ -101,6 +101,7 @@ import {
   DropdownMenuTrigger,
   DurationField,
   Empty,
+  Note,
   Icon,
   Input,
   Kbd,
@@ -2026,6 +2027,57 @@ function Empties() {
   )
 }
 
+function Notes() {
+  const [shown, setShown] = React.useState(false)
+  return (
+    <Section id="note" title="Note" note="A message that stays in the page until the app removes it: information, a success, a warning or an error. Each tone has its icon and its colour, and screen readers hear its word before the title; an error and a warning are announced when they appear, information and a success are not. A title, its text, a list and the buttons that answer it, outline or ghost (R3); no close button. A fill, flat in the page: neither a border nor a shadow (R4).">
+      <Row label="tones">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="info" title="Drawn from a sample">
+            The map shows the first 500 files. Open a folder to see the rest.
+          </Note>
+          <Note tone="success" title="The map is up to date" />
+          <Note tone="warning" title="Three links lead outside the project">
+            They are drawn as dashed lines and are not followed.
+          </Note>
+          <Note tone="error" title="Could not reach the server" actions={<Button variant="outline">Retry</Button>}>
+            The map was drawn before these files were read.
+          </Note>
+        </div>
+      </Row>
+      <Row label="list and actions">
+        <div className="w-full max-w-xl">
+          <Note
+            tone="error"
+            title="Two files were not read"
+            items={['src/app.ts: the file is too large', 'src/old/main.ts: the file was removed']}
+            actions={
+              <>
+                <Button variant="outline">Read them again</Button>
+                <Button variant="ghost">Open the log</Button>
+              </>
+            }
+          >
+            The rest of the map is complete.
+          </Note>
+        </div>
+      </Row>
+      <Row label="live">
+        <div className="flex w-full max-w-xl flex-col items-start gap-3">
+          <Button variant="outline" data-sample="note-toggle" onClick={() => setShown(!shown)}>
+            {shown ? 'Remove the warning' : 'Show a warning'}
+          </Button>
+          {shown ? (
+            <Note tone="warning" title="The map is out of date">
+              Files changed since it was drawn: a screen reader hears this as it appears.
+            </Note>
+          ) : null}
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 function Dates({ animated }: { animated: boolean }) {
   const [day, setDay] = React.useState<string | null>('2026-11-20')
   const [reminder, setReminder] = React.useState<string | null>('2026-11-21T09:30')
@@ -2558,6 +2610,7 @@ function App() {
       <Notices animated={animated} />
       <ProgressSection />
       <Empties />
+      <Notes />
       <Tables />
       <LongLists />
       <OverflowLists />

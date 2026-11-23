@@ -112,6 +112,17 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
     }
   })
 
+  test('a Note: the tone on its soft fill (icon and title), the ink on every fill (its text), the soft ink and the focus ring shown on them', () => {
+    for (const name of ['success', 'warning', 'destructive'] as const) expect(contrast(t[name]!, t[`${name}-soft`]!), `${name} on ${name}-soft`).toBeGreaterThanOrEqual(AA)
+    // Information has no status colour: the quiet fill (the ink at 6%), its icon in the soft ink.
+    const quiet = BACKGROUNDS.map((bg) => over(t['ink']!, t[bg]!, 0.06))
+    for (const fill of [t['success-soft']!, t['warning-soft']!, t['destructive-soft']!, ...quiet]) {
+      expect(contrast(t['ink']!, fill), 'ink on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ring']!, fill), 'ring on ' + fill).toBeGreaterThanOrEqual(3)
+    }
+    for (const fill of quiet) expect(contrast(t['ink-soft']!, fill), 'ink-soft on ' + fill).toBeGreaterThanOrEqual(3)
+  })
+
   test('accent as text (the “Now” label) reaches 4.5:1 on paper, paper-2 and white', () => {
     for (const bg of BACKGROUNDS) expect(contrast(t['accent']!, t[bg]!), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
   })

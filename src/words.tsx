@@ -148,6 +148,13 @@ export interface Words {
     readonly complete: string
     readonly error: string
   }
+  /** The tone of a `Note`, read by screen readers before its title («Error: Could not reach the server»). */
+  readonly note: {
+    readonly info: string
+    readonly success: string
+    readonly warning: string
+    readonly error: string
+  }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
     readonly skip: string
@@ -392,6 +399,12 @@ export const DEFAULT_WORDS: Words = {
     indeterminate: 'In progress',
     complete: 'Complete',
     error: 'Failed',
+  },
+  note: {
+    info: 'Information',
+    success: 'Success',
+    warning: 'Warning',
+    error: 'Error',
   },
   shell: {
     skip: 'Skip to the content',

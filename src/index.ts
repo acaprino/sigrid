@@ -41,6 +41,7 @@ export { ItemList, ItemRow, type ItemListProps, type ItemRowProps } from './comp
 export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type ClusterProps, type ColumnProps, type GridProps, type LayoutAttributes, type LayoutElement, type PageProps, type ScrollAreaProps, type SectionProps, type Space, type SplitProps, type TextProps } from './components/ui/layout'
 export { Kbd, Shortcut, type KbdProps, type KbdSize, type ShortcutProps } from './components/ui/kbd'
 export { NavItem, NavList, type NavItemProps, type NavListProps } from './components/ui/nav-list'
+export { Note, type NoteProps, type NoteTone } from './components/ui/note'
 export { OverflowList, type OverflowListProps } from './components/ui/overflow-list'
 export { Panel, type PanelProps } from './components/ui/panel'
 export { Popover, PopoverAnchor, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from './components/ui/popover'

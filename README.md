@@ -298,6 +298,29 @@ const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
 <Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
 ```
 
+## A message that stays in the page
+
+`Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
+information (`tone`: `error`, `warning`, `success`, `info`, the default), with a `title`, its text (the children), an
+optional list (`items`, one entry each) and the buttons that answer it (`actions`). It has no close button: it goes
+when its cause is gone. A notice that goes by itself is a toast (`Toasts`), a view with nothing in it is `Empty`.
+
+Each tone is said three ways, never by colour alone: its icon from Sigrid's set (`info`, `check`, `alert`, `error`), its
+colour from the theme engine's status tokens (the soft fill of `success`, `warning` or `destructive`; information has
+none and is never the accent, so it is the quiet fill, the ink at 6%), and a word that screen readers read before the
+title («Error: Could not reach the server», `useWords().note`). An error or a warning is announced when it appears
+(`role="alert"`); information and a success are not, and are met in the page's order. A note that turns into an error
+in place is not announced again: give the error a `key` of its own, so it is a new note. The form is Park UI's alert,
+flat in the page: a fill, with neither a border nor a shadow (R4). The actions are `outline` or `ghost`; a solid button
+only if it is the one primary action of its screen (R3).
+
+```tsx
+<Note tone="error" title="Could not reach the server" items={failed.map((file) => file.name)}
+  actions={<Button variant="outline" onClick={retry}>Retry</Button>}>
+  The map was drawn before these files were read.
+</Note>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -331,7 +354,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `Tree` (nested rows, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'

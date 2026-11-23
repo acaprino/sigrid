@@ -215,6 +215,17 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
   })
 
+  test('a Note: its text (the ink) reads on the soft fill of each tone and on the quiet fill over every background; its icon and the focus ring of its buttons show on them', () => {
+    // The icon and the title of a tone are its colour on its soft fill: asserted above (status) and below (red).
+    const quiet = BG.map((bg) => mix(t['ink']!, bg, 0.06))
+    for (const fill of [t['success-soft']!, t['warning-soft']!, t['destructive-soft']!, ...quiet]) {
+      expect(ratio(t['ink']!, fill), 'ink on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(ratio(t['ring']!, fill), 'ring on ' + fill).toBeGreaterThanOrEqual(3)
+    }
+    // Information has no status colour: its icon is the soft ink, on the quiet fill.
+    for (const fill of quiet) expect(ratio(t['ink-soft']!, fill), 'ink-soft on ' + fill).toBeGreaterThanOrEqual(3)
+  })
+
   test('red: the same for every theme of the scheme, and it holds on every background and with its text', () => {
     const fixed = tk.scheme === 'light' ? FIXED.light : FIXED.dark
     // A curated palette may move the red just enough to hold on its own surfaces.
