@@ -288,8 +288,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     group named by the app and called a graph (`aria-roledescription`, the word `graph.roleDescription`), whose things
     are buttons named by their name and second line, described by where their lines lead and come from («leads to
     Store, Mail · comes from Gateway», the words `graph.leadsTo` and `graph.comesFrom`), the chosen one
-    `aria-current`. With `editable` the plus of the chosen thing adds one after it (`graph.addAfter`). With a finger
-    the › and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
+    `aria-current`. With `editable` the plus of the chosen thing (the first of several) adds one after it
+    (`graph.addAfter`). With a finger the › and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
     the buttons do. Only what is in the view is drawn; the layout is done again at each change (about 30 ms for 200
     things in sight, 200 ms for a thousand). In the tree mode a larger graph starts with its branches closed
     (`defaultCollapsed`). In the graph mode every thing is always in sight, so the whole graph is laid out again
@@ -320,12 +320,38 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       arrowhead at `to`; a `link` has one unless `false`, a `child` line none unless `true`). What a kind of line
       means is told by its dash and its words, never by its colour alone. Screen readers hear a thing's `link` lines
       in its description («waits for, to Screens»); the lines themselves are not read twice.
+    - What the app marks on its things and lines. `selected` takes one id or several, for an app that draws one of
+      its things as several (an entity in each place it is): each has the selection tint and what is joined to any of
+      them stays. One of them is the choice, the first in the order of the things: it holds the Tab stop, it alone is
+      heard chosen (`aria-selected` in the tree, `aria-current` in the graph mode; the tree is not multiselectable,
+      since the user chooses one) and, with `editable`, it alone has the plus (one clear action); the others say in
+      their description that they are chosen with it («chosen with Ledger», the word `graph.chosenToo`). `onSelect`
+      still gets the one thing the user chooses. The ids are read by what they are, so a new list of the same ids at
+      every draw draws nothing again. A node with `external: true` says «external» after its name, 12px in the muted
+      ink (on the selection tint, as the line under the name is; the word `graph.external`), and in its name, never
+      with a dashed border (R4); in a narrow box the name keeps 64px and the word is cut first. In the graph mode a
+      node's `hiddenCount` (read above 0) is how many things the app keeps out of sight in it (a group it has not
+      opened): the count at its end, as a closed thing of the tree shows it, and in its name («Orders, hides 12», the
+      word `graph.hides`); the tree mode counts what a closed thing hides by itself. An edge with
+      `labelShown: 'chosen'` draws its words only while one of its two things is chosen or has the keyboard focus
+      (the arrows move it), or while the line is the path's (`always`, the default, draws them always); either way
+      they are heard in the description of its things.
+    - Two edges between the same two things. An edge with an `id` is always a line of its own (React Flow's id
+      too): two such edges are two lines, each with its words, and with `editable` taking one away takes that edge
+      alone. An edge without an `id` is named by its two ends, and a second one by a number after them, unless it is
+      an exact copy (the same ends, `kind`, `label`, `labelShown`, `style`, `tone` and `directed`, and no `points`):
+      copies are one line, said once, and taking that line away takes them all. Without the app's routes, two lines
+      or more between the same two things are drawn side by side, 20px apart (from three on, within 16px of the
+      middle of the sides, so closer), each bending at its own place, so the lines and their words do not lie on each
+      other; with the app's routes (`points`) each follows its own.
     - `steps`, a `Map` from a thing's id to its step numbers, numbers a path through the graph (the steps of a plan,
       the answer to a question): each thing on it has the selection tint, its numbers in small dots and in its name
-      («Copy, step 2»); the lines between two of them take the accent; what is neither on it nor joined to it is
-      dimmed (the field's finds come first, then the chosen thing and the path together). When the things on the path
-      change, what hides one of them opens, through `onCollapsedChange` when the app keeps `collapsed`; the user may
-      close it again.
+      («Copy, step 2»); of the lines between two of them, the first in the order of the edges is the path's (an app
+      that wants another one there gives it first): 2px, in the accent, or in its own `tone` when it has one (a
+      `warning` stays a warning); the others between the same two things stay as they are. What is neither on the
+      path nor joined to it is dimmed (the field's finds come first, then the chosen thing and the path together).
+      When the things on the path change, what hides one of them opens, through `onCollapsedChange` when the app
+      keeps `collapsed`; the user may close it again.
     - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
       with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
       whole graph down to 0.2, as it was before there was a floor). A graph too large for that starts at its top left. The edges of the
@@ -376,6 +402,11 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
     nodes={parts.map((part) => ({ ...part, ...layout.nodes[part.id] }))}
     edges={calls.map((call) => ({ ...call, points: layout.edges[call.id] }))} className="h-full" />
+  // One of the app's things drawn in several places, another's service, a group not opened, words on a choice, and
+  // two lines between the same two parts (each with its own id, drawn side by side).
+  <GraphCanvas aria-label="Map" model="graph" selected={entity ? drawnAs(entity) : null} onSelect={choose}
+    nodes={parts.map((part) => ({ id: part.id, label: part.name, external: part.outside, hiddenCount: part.closed ? part.count : undefined }))}
+    edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, label: call.kind, labelShown: call.flow ? 'always' : 'chosen' }))} className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

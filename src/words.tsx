@@ -208,6 +208,12 @@ export interface Words {
     readonly close: (item: string) => string
     /** What screen readers hear of a closed thing: its name and how many it hides. */
     readonly closed: (item: string, hidden: number) => string
+    /** What screen readers hear of a thing of the graph mode that holds others the app keeps out of sight (`hiddenCount` of a node): its name and how many («Orders, hides 12»). */
+    readonly hides: (item: string, count: number) => string
+    /** The word after the name of a thing outside what the graph is about (`external` of a node), 12px in the muted ink; also said in its name. */
+    readonly external: string
+    /** What screen readers hear in the description of a thing chosen with the choice, when the app marks several (`selected`): the name of the one that is the choice («chosen with Ledger»). */
+    readonly chosenToo: (item: string) => string
     /** The name of the button that hangs a new thing from one, in the tree mode. */
     readonly add: (item: string) => string
     /** The name of the button that adds a new thing after one, joined by a line from it, in the graph mode. */
@@ -408,6 +414,9 @@ export const DEFAULT_WORDS: Words = {
     open: (item) => `Open ${item}`,
     close: (item) => `Close ${item}`,
     closed: (item, hidden) => `${item}, closed, hides ${hidden}`,
+    hides: (item, count) => `${item}, hides ${count}`,
+    external: 'external',
+    chosenToo: (item) => `chosen with ${item}`,
     add: (item) => `Add under ${item}`,
     addAfter: (item) => `Add after ${item}`,
     leadsTo: (items) => `leads to ${items.join(', ')}`,

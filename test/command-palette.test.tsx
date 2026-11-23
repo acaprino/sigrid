@@ -72,6 +72,21 @@ test('the arrows move over the commands that can run, typing narrows them, and E
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
+test('with an IME, Enter that confirms a candidate runs nothing and keeps the palette open', async () => {
+  const ran: string[] = []
+  render(<App ran={ran} />)
+  fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
+  await flush()
+  const field = screen.getByRole('combobox')
+  fireEvent.keyDown(field, { key: 'Enter', isComposing: true })
+  await flush()
+  expect(ran).toEqual([])
+  expect(screen.getByRole('dialog')).toBeTruthy()
+  fireEvent.keyDown(field, { key: 'Enter' })
+  await flush()
+  expect(ran).toEqual(['find'])
+})
+
 test('a press runs a command, a disabled one does nothing, and no match says so', async () => {
   const ran: string[] = []
   render(<App ran={ran} />)

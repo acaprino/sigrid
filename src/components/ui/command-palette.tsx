@@ -129,6 +129,8 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
               setActive(0)
             }}
             onKeyDown={(event) => {
+              // With an IME, Enter confirms the candidate being composed: it must not run a command.
+              if (event.nativeEvent.isComposing) return
               if (event.key === "ArrowDown") move(1)
               else if (event.key === "ArrowUp") move(-1)
               else if (event.key === "Home" && usable.length > 0) setActive(usable[0]!)
