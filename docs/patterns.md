@@ -104,8 +104,9 @@ An app with a few views of the same weight (Xiox: Cleanup, Registry, Developers,
 
 ## The command palette
 
-Give the app a `CommandPalette` and open it with Ctrl+K (`useCommandKey`) and from a «Commands Ctrl K» button in the
-bar. Put in it every place the app can go to and every action that has no button in sight, each with its own key at
+Give the app a `CommandPalette` and open it with Ctrl+K and from a «Commands Ctrl K» button in the bar: declared in
+a `CommandsProvider` (`useCommand`), the commands are listed and their keys run with no list kept by hand, and the
+registry opens the palette itself (or `useCommandKey`, for a palette given its list). Put in it every place the app can go to and every action that has no button in sight, each with its own key at
 the end of its row: the palette is where a user learns the keys. Group the commands («Go to», «Look») once there are
 more than seven. A command that cannot run now stays in the list, dimmed, so the list does not jump.
 

@@ -169,11 +169,14 @@ useCommandKey(() => setOpen(true))
 
 An app can also declare each command once, near the state it acts on, and let the toolkit run its key and list it:
 `CommandsProvider` around the app holds a registry; `useCommand({ id, label, group, keys, when, run })` declares a
-command for as long as its component is mounted; a `CommandPalette` with no `commands` lists the declared ones that
-can be done now, and Ctrl+K (Cmd+K on a Mac) opens it. A key is a combination (`Escape`, `F6`, `Ctrl+F`); it does
-nothing while the person types in a field (unless it holds Ctrl or Alt or is a function key), inside an open dialog or
-menu, or in the places `ownKeysIn` names. `useCommands()` gives the list, with each key in the system's words
-(`formatKeys`), and `useCommandPalette()` the palette's open state for a button.
+command for as long as its component is mounted; a `CommandPalette` with no `commands` lists the declared ones in their
+order, by group, those that cannot be done now (`when: false`) dimmed, and Ctrl+K (Cmd+K on a Mac) opens it: that is
+the registry's own command, `PALETTE_COMMAND`, turned off with `palette={false}`. A key is written as
+`KeyboardEvent.key` names it after `Ctrl`, `Alt` and `Shift` (`Escape`, `F6`, `Ctrl+F`, `Shift+?`, `Ctrl++`). Where it
+belongs to what has the focus it is left there: a plain key in a field (but Escape and the function keys), Enter,
+Space and the arrows on a control, a key without Ctrl or Alt in an open dialog or menu, a plain key a widget handled,
+every key in the places `ownKeysIn` names. `useCommands()` gives the list, each key in the words of the system and of
+the app (`formatKeys`, `Words.keys`), and `useCommandPalette()` the palette's open state for a button.
 
 ```tsx
 <CommandsProvider>

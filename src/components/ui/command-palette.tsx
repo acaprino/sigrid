@@ -4,8 +4,8 @@
 // (R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with
 // Ctrl+K from a button of its title bar.
 // The commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its
-// registry (`CommandsProvider`, `useCommand`) that can be done now, grouped, and the registry opens it with Ctrl+K. A
-// command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
+// registry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it
+// with Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
 import * as React from "react"
 import { Search } from "lucide-react"
 import { cn } from "../../lib/utils"
@@ -30,11 +30,11 @@ export type Command = {
   onSelect: () => void
 }
 
-export type CommandPaletteProps = {
-  /** Open or closed. Absent: the registry's own state (`CommandsProvider`), which Ctrl+K opens. */
-  open?: boolean | undefined
-  onOpenChange?: ((open: boolean) => void) | undefined
-  /** What it lists. Absent: the commands declared in the registry (`useCommand`) that can be done now, by group. */
+/** Open and closed by the app, or both absent: then the registry's own state (`CommandsProvider`), which Ctrl+K opens. */
+export type CommandPaletteOpenness = { open: boolean; onOpenChange: (open: boolean) => void } | { open?: undefined; onOpenChange?: undefined }
+
+export type CommandPaletteProps = CommandPaletteOpenness & {
+  /** What it lists. Absent: the commands declared in the registry (`useCommand`), by group, those that cannot be done now dimmed. */
   commands?: readonly Command[] | undefined
   /** The name of the palette and the placeholder of its field. Absent: the toolkit's words («Type a command»). */
   label?: string | undefined
@@ -72,8 +72,8 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
       commandsProp ??
       grouped(
         declared
-          .filter((command) => command.id !== PALETTE_COMMAND && command.when !== false)
-          .map((command) => ({ id: command.id, label: command.label, group: command.group, shortcut: command.shortcut, icon: command.icon, keywords: command.keywords, onSelect: command.run })),
+          .filter((command) => command.id !== PALETTE_COMMAND)
+          .map((command) => ({ id: command.id, label: command.label, group: command.group, shortcut: command.shortcut, icon: command.icon, keywords: command.keywords, disabled: command.when === false, onSelect: command.run })),
       ),
     [commandsProp, declared],
   )
