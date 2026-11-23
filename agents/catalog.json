@@ -763,7 +763,7 @@
         {
          "name": "kind",
          "type": "\"error\"",
-         "doc": "`error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with `onDismiss`) or the caller removes it. A mark before the text says what it is, and screen readers hear «Error»."
+         "doc": "`error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with `onDismiss`) or the caller removes it. A mark before the text says what it is (Sigrid's `error` icon, the one look of a failure), and screen readers hear «Error». A failure the page shows until its cause is gone is a `Note` with `tone=\"error\"`, not a toast."
         }
        ]
       }
@@ -1812,11 +1812,11 @@
     },
     {
      "file": "src/components/ui/empty.tsx",
-     "about": "SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)\nFrom SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s\n(`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no\nillustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,\n`text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:\nempty states sit inside views that already have their own titles, and the title can be markup from the caller\n(the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.\nSpacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px\n(the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.",
+     "about": "SmoothUI (MIT) empty 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/empty.json)\nFrom SmoothUI we keep the structure (container, optional icon, title, sentence, action) and the `data-slot`s\n(`empty`, `empty-icon`, `empty-title`, `empty-description`, `empty-action`). Adapted: words only, no\nillustration by default (the icon stays optional and nobody passes it); `theme.css` tokens (`text-ink`,\n`text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:\nempty states sit inside views that already have their own titles, and the title can be markup from the caller\n(the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.\nOne need, one look: it says that there is nothing here. Something that failed (a view that could not load) is a\n`Note` with `tone=\"error\"`, with «Retry» when it can be tried again.\nSpacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px\n(the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.",
      "components": [
       {
        "name": "Empty",
-       "doc": "The empty state of a view or a list: a title, a sentence if needed and an action.",
+       "doc": "The empty state of a view or a list, only for «nothing here»: a title, a sentence if needed and an action. A failure is a `Note` with `tone=\"error\"`, never an empty state.",
        "props": [
         {
          "name": "title",
@@ -2450,6 +2450,54 @@
      ]
     },
     {
+     "file": "src/components/ui/note.tsx",
+     "about": "Park UI (MIT) alert 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts)\nA message that stays in the page until the app removes it: a failure, a warning, a success or a piece of\ninformation, with a title, its text, an optional list and the actions that answer it. It has no close button: it\ngoes when its cause is gone. One need, one look: a failure the page shows is a note with `tone=\"error\"` (with\n«Retry» as its action when it can be tried again), never an `Empty`, which is only for a view with nothing in it; a\npassing event (saved, moved, sent) is a toast (`Toasts`).\nEach tone is said three ways, never by colour alone (DESIGN.md \"Status\"): its icon, from Sigrid's one set (`info`,\n`check`, `alert` for a warning, `error` for a failure: the circle with an X that marks a failure everywhere, in a\ntoast, a progress and a step too), its colour, and a word read first by screen readers («Error: Could not reach the\nserver»: `useWords().common.error`, the word of an error toast, and `useWords().note` for the other three).\nAn error or a warning is announced when it appears (`role=\"alert\"`, read at once), unless the app says `announce`\nfalse: a warning that is a fact of the item shown (read only, out of date) would be read again at each selection.\nInformation and a success are not: they have no live role, so a screen reader meets them in the page's order. A\npolite `role=\"status\"` would not keep them quiet: some screen readers read a status as soon as it is put in the page,\nand again at each change of its text. The root is keyed on its tone: a note whose tone changes in place is drawn\nanew, so an information that becomes an error, or a warning that becomes an error, is announced as it appears.\nA long word (a path, a JSON value, an address) breaks where it must (`overflow-wrap: anywhere`, inherited by the\ntitle, the text and the list), so the note never grows wider than its place; a tool's output, with its line breaks,\ngoes in the text as a `<Text pre>`.\nForm: Park's `alert` recipe, its default `subtle` variant at its `md` size: a row with the icon at the start and the\ncontent beside it (12px apart, 16px of padding, l3 corners, 14px text), the title semibold over the text, 4px apart.\nThe fill is the tone's soft colour (the theme engine's `success-soft`, `warning-soft`, `destructive-soft`, as the\nerror box of `FormField`); information has no status colour and is never the accent (R2), so it is the quiet fill\n(the ink at 6%). A fill and no border or shadow: it lies in the page, it is not raised (R4). The icon and the title\ntake the tone's colour, which reads on its soft fill in every theme; the text and the list stay in the ink.\nNot taken from Park: its colour palettes (blue, orange, green, red: here the status tokens), the 20px icon (16px, R7),\nthe `solid`, `surface` and `outline` variants and the `lg` size (one form for every app). The actions are the\napp's buttons, `outline` (the ink) or `ghost` (the soft ink), both at 4.5:1 on the four fills in every theme: a note\nnever holds the solid action unless it is the one of its screen (R3).",
+     "components": [
+      {
+       "name": "Note",
+       "doc": "A message that stays in the page, in one of four tones, until the app removes it.",
+       "props": [
+        {
+         "name": "tone",
+         "type": "NoteTone",
+         "doc": "What kind of message it is: its icon, its colour and the word read before the title. `info` by default. An error or a warning is announced when it appears; a note whose tone changes is drawn anew, and announced if it is now one of them."
+        },
+        {
+         "name": "announce",
+         "type": "boolean",
+         "doc": "An error or a warning is announced when it appears (the default). `false` for one that is a fact of the item shown (a warning «Read only»), which would otherwise be read at each selection. Information and a success are never announced."
+        },
+        {
+         "name": "title",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "What happened, in a few words («Could not reach the server»), without the tone's word: screen readers read it before the title. A long word breaks to fit."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The text under the title: why, and what to do. A tool's output, with its line breaks, goes in a `<Text pre>`."
+        },
+        {
+         "name": "items",
+         "type": "readonly React.ReactNode[]",
+         "doc": "A list under the text (the files that failed, the steps to take), one entry each; an empty list shows nothing."
+        },
+        {
+         "name": "actions",
+         "type": "React.ReactNode",
+         "doc": "The buttons that answer it («Retry», «Open the settings»), `outline` or `ghost`: the solid one only if it is the screen's one primary action (R3)."
+        }
+       ],
+       "passesOn": true
+      }
+     ],
+     "also": [
+      "NoteProps",
+      "NoteTone"
+     ]
+    },
+    {
      "file": "src/components/ui/overflow-list.tsx",
      "about": "One line of items (the details under a title, a row of labels) that never grows: what does not fit is cut from the\nend, whole, and counted after the line («+2»). It never wraps to a second line and the first item always stays.\nOther libraries call it an overflow list; this one is CSS and one `ResizeObserver`:\n- the box is a flex row that wraps, one row tall, with `overflow: clip`: what does not fit wraps onto a row that is\n  not shown. `clip` and not `hidden`: the box is no scroll container, so focus can never scroll the line.\n- the items that sit below the first one are the cut ones. They are counted when the items are drawn, again when the\n  box changes size, and again when the fonts are ready (a font that comes late changes the widths, not the box).\n- a cut item is `inert` and invisible: no focus, no press, and screen readers skip it, as the eye does. So the cue is\n  for both: «+2» to the eye, «2 more» to a screen reader (`words.list.more`). What is cut must also be found where\n  the whole item is (its page, its details).\nThe caller gives the box its height in `className`: one row of its items (`h-5` for labels 20px tall), with the gap\nand the text. Each child is one item: one element (a bare text is not counted: put it in a `<span>`). A first item\nwider than the line is cut at the line's end: give it `min-w-0 truncate` for an ellipsis.\nIts boxes are spans, so it also sits inside a button or a row's line. Without layout (jsdom, a server) nothing is\ncut, and nothing moves.",
      "components": [
@@ -2589,7 +2637,7 @@
     },
     {
      "file": "src/components/ui/progress.tsx",
-     "about": "How far a task is: a bar (`Progress`), a ring (`ProgressRing`) or blocks (`ProgressSegments`), one API for the three.\nWritten by hand: Ark's Progress names the bar with its own value («45%») and gives no `aria-valuetext`, and there is no\nkeyboard to inherit; here the app names the bar, the toolkit says the value. The form is Park UI's progress recipe\n(102769c): a track 8px (`sm`) or 10px (`md`) tall with the corners of a control (l1), the range filling it from the\nstart. Not taken from it: the stripes, the gradient of its indeterminate state and its animation (no gradient, no\nloop but the skeletons: DESIGN.md), and the pill shape (round only for avatars, dots and switches, R7).\nThe ring and the blocks are ours; Park's circular recipe was not read.\nThe colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the\nsuccess colour and a failure the destructive one, each with a word (DESIGN.md \"Status\": a colour is never alone).\nNothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a\ngesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the\nswitch (DESIGN.md Colors).\nNot knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.\nFor screen readers: `role=\"progressbar\"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,\n«Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should\nannounce the end and the failure only, in a live region of its own, not every percent.",
+     "about": "How far a task is: a bar (`Progress`), a ring (`ProgressRing`) or blocks (`ProgressSegments`), one API for the three.\nWritten by hand: Ark's Progress names the bar with its own value («45%») and gives no `aria-valuetext`, and there is no\nkeyboard to inherit; here the app names the bar, the toolkit says the value. The form is Park UI's progress recipe\n(102769c): a track 8px (`sm`) or 10px (`md`) tall with the corners of a control (l1), the range filling it from the\nstart. Not taken from it: the stripes, the gradient of its indeterminate state and its animation (no gradient, no\nloop but the skeletons: DESIGN.md), and the pill shape (round only for avatars, dots and switches, R7).\nThe ring and the blocks are ours; Park's circular recipe was not read.\nThe colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the\nsuccess colour and a failure the destructive one, each with a word (DESIGN.md \"Status\": a colour is never alone).\nA failure also has the one look it has everywhere: Sigrid's `error` icon (the circle with an X), inside the ring and\nbefore the word of the bar and of the blocks.\nNothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a\ngesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the\nswitch (DESIGN.md Colors).\nNot knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.\nFor screen readers: `role=\"progressbar\"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,\n«Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should\nannounce the end and the failure only, in a live region of its own, not every percent.",
      "components": [
       {
        "name": "Progress",
@@ -2634,7 +2682,7 @@
         {
          "name": "status",
          "type": "\"error\"",
-         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so, after Sigrid's `error` icon (the one look of a failure)."
         },
         {
          "name": "className",
@@ -2685,7 +2733,7 @@
         {
          "name": "status",
          "type": "\"error\"",
-         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so, after Sigrid's `error` icon (the one look of a failure)."
         },
         {
          "name": "className",
@@ -2741,7 +2789,7 @@
         {
          "name": "status",
          "type": "\"error\"",
-         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so."
+         "doc": "`error`: the task failed. The range stays where it stopped, in red, and the text says so, after Sigrid's `error` icon (the one look of a failure)."
         },
         {
          "name": "className",
@@ -3260,7 +3308,7 @@
     },
     {
      "file": "src/components/ui/steps.tsx",
-     "about": "The steps of a task as a path (a signup, an import, a lesson): numbered dots joined by a line, that light up one by one\nas the user goes. It shows what is done, where the user is and what is left, and the next step by its name: people\nfinish when they know what remains. The accent is progress (R2): a step done is a check on the accent tint, the step\nthe user is on is the one solid dot, the steps to come are a quiet fill with their number, and the line is the accent\nas far as the steps done. Round, as a dot may be (R7). Nothing moves: the state is always on the screen, which\nis what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.\nFor screen readers it is an ordered list; the step the user is on has `aria-current=\"step\"`, and each step says whether it\nis done, current or not started (`words.steps`, in any language).",
+     "about": "The steps of a task as a path (a signup, an import, a lesson): numbered dots joined by a line, that light up one by one\nas the user goes. It shows what is done, where the user is and what is left, and the next step by its name: people\nfinish when they know what remains. The accent is progress (R2): a step done is a check on the accent tint, the step\nthe user is on is the one solid dot, the steps to come are a quiet fill with their number, and the line is the accent\nas far as the steps done. Round, as a dot may be (R7). Nothing moves: the state is always on the screen, which\nis what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.\nFor screen readers it is an ordered list; the step the user is on has `aria-current=\"step\"`, and each step says whether it\nis done, current or not started (`words.steps`, in any language).\nA step that failed has the one look of a failure: Sigrid's `error` icon (the circle with an X) in its dot, in red.",
      "components": [
       {
        "name": "Steps",
@@ -3317,7 +3365,7 @@
         {
          "name": "status",
          "type": "\"error\"",
-         "doc": "`error`: this step failed (a processing that stopped here). It is shown in red and says so in words; the line before it stays the accent."
+         "doc": "`error`: this step failed (a processing that stopped here). It is shown in red with Sigrid's `error` icon and says so in words; the line before it stays the accent."
         }
        ]
       }
@@ -4234,12 +4282,12 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -4460,7 +4508,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
          "required": true
         },
         {
@@ -6256,6 +6304,12 @@
          "doc": "What a `Progress` says about itself: its value, and what became of the task."
         },
         {
+         "name": "note",
+         "type": "{ readonly info: string; readonly success: string; readonly warning: string; }",
+         "required": true,
+         "doc": "The tone of a `Note`, read by screen readers before its title («Warning: The map is out of date»). An error says `common.error`."
+        },
+        {
          "name": "shell",
          "type": "{ readonly skip: string; }",
          "required": true
@@ -6382,6 +6436,11 @@
          "name": "progress",
          "type": "Partial<{ readonly value: (value: number, max: number) => string; readonly indeterminate: string; readonly complete: string; readonly error: string; }>",
          "doc": "What a `Progress` says about itself: its value, and what became of the task."
+        },
+        {
+         "name": "note",
+         "type": "Partial<{ readonly info: string; readonly success: string; readonly warning: string; }>",
+         "doc": "The tone of a `Note`, read by screen readers before its title («Warning: The map is out of date»). An error says `common.error`."
         },
         {
          "name": "shell",
@@ -7023,7 +7082,7 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" | \"account\" | \"a…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notifications\" | \"setting…",
          "doc": "One of Sigrid's icons before the name."
         },
         {
