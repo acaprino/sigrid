@@ -1299,7 +1299,7 @@
     },
     {
      "file": "src/components/ui/command-palette.tsx",
-     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. A command is found by its name and by its `keywords`; every\nword typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
+     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its\nregistry (`CommandsProvider`, `useCommand`) that can be done now, grouped, and the registry opens it with Ctrl+K. A\ncommand is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
      "components": [
       {
        "name": "CommandPalette",
@@ -1307,17 +1307,16 @@
         {
          "name": "open",
          "type": "boolean",
-         "required": true
+         "doc": "Open or closed. Absent: the registry's own state (`CommandsProvider`), which Ctrl+K opens."
         },
         {
          "name": "onOpenChange",
-         "type": "(open: boolean) => void",
-         "required": true
+         "type": "((open: boolean) => void)"
         },
         {
          "name": "commands",
          "type": "readonly Command[]",
-         "required": true
+         "doc": "What it lists. Absent: the commands declared in the registry (`useCommand`) that can be done now, by group."
         },
         {
          "name": "label",
@@ -1388,6 +1387,85 @@
       "CommandPaletteProps",
       "filterCommands",
       "useCommandKey"
+     ]
+    },
+    {
+     "file": "src/components/ui/commands.tsx",
+     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as a combination: «Escape», «F6», «Ctrl+F», «Ctrl+Shift+T». `Ctrl` is Cmd on a Mac, and the key is\n  shown in the system's words («Ctrl F», «Cmd F»).\n- A key does nothing while the person types in a field, unless it holds Ctrl or Alt or is a function key; it does\n  nothing inside an open surface (a dialog, a menu, a list of options), which keeps its own keys, and nothing in the\n  places named by `ownKeysIn` (a terminal, a code editor).\n- A command whose `when` is false neither runs nor shows in the palette.\n- A key another handler already refused (`preventDefault`, as `useDesktopGuard` refuses the browser's Ctrl+F) still\n  runs the app's command: the browser's use of the key is what is refused, not the app's.",
+     "components": [
+      {
+       "name": "CommandsProvider",
+       "doc": "The registry of an app's commands, around the whole app (outside `AppShell`): it runs their keys, holds the palette's open state for a `CommandPalette` with no list, and holds Ctrl+K itself.",
+       "props": [
+        {
+         "name": "ownKeysIn",
+         "type": "string",
+         "doc": "A selector for the places that keep their own keys (`'.xterm, .cm-editor'`): there no command's key runs."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "CommandDeclaration",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "Its name in the registry: one declaration for each, the latest mounted one wins."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it does, as the user would say it («Search in this view»): its name in the palette."
+        },
+        {
+         "name": "group",
+         "type": "string",
+         "doc": "The heading it sits under in the palette («Go to», «View»)."
+        },
+        {
+         "name": "keys",
+         "type": "string",
+         "doc": "Its key, a key or a combination with `+` («Escape», «F6», «Ctrl+F», «Ctrl+Shift+T»); `Ctrl` is Cmd on a Mac."
+        },
+        {
+         "name": "keywords",
+         "type": "string",
+         "doc": "Other words it is found by in the palette."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "A 16px drawing before its name in the palette."
+        },
+        {
+         "name": "when",
+         "type": "boolean",
+         "doc": "Whether it can be done now (default true): when false its key does nothing and the palette does not offer it."
+        },
+        {
+         "name": "run",
+         "type": "() => void",
+         "required": true,
+         "doc": "What it does."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CommandsProviderProps",
+      "formatKeys",
+      "PALETTE_COMMAND",
+      "useCommand",
+      "useCommandPalette",
+      "useCommands"
      ]
     },
     {
@@ -5781,7 +5859,7 @@
         },
         {
          "name": "palette",
-         "type": "{ readonly placeholder: string; readonly empty: string; }",
+         "type": "{ readonly placeholder: string; readonly empty: string; readonly command: string; }",
          "required": true
         },
         {
@@ -5893,7 +5971,7 @@
         },
         {
          "name": "palette",
-         "type": "Partial<{ readonly placeholder: string; readonly empty: string; }>"
+         "type": "Partial<{ readonly placeholder: string; readonly empty: string; readonly command: string; }>"
         },
         {
          "name": "steps",
