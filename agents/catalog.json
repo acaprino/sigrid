@@ -1858,7 +1858,8 @@
         },
         {
          "name": "pad",
-         "type": "Space"
+         "type": "Space",
+         "doc": "The space inside its edges. Absent: none."
         },
         {
          "name": "justify",
@@ -1872,7 +1873,8 @@
         },
         {
          "name": "as",
-         "type": "LayoutElement"
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
         },
         {
          "name": "children",
@@ -1902,7 +1904,8 @@
         },
         {
          "name": "as",
-         "type": "LayoutElement"
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
         },
         {
          "name": "children",
@@ -1927,7 +1930,8 @@
         },
         {
          "name": "as",
-         "type": "LayoutElement"
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
         },
         {
          "name": "children",
@@ -1964,7 +1968,8 @@
         },
         {
          "name": "pad",
-         "type": "Space"
+         "type": "Space",
+         "doc": "The space inside its edges. Absent: none."
         },
         {
          "name": "children",
@@ -1979,7 +1984,7 @@
        "props": [
         {
          "name": "title",
-         "type": "string | (string & React.ReactElement<unknown, string | React.JSXElementConstructor<any>>) | (string & Iterable<React.ReactNode>) | (string & React.ReactPortal) | (string & Promise<AwaitedReactNode>)",
+         "type": "React.ReactNode",
          "required": true,
          "doc": "The heading: the name of the section, and of its region for a screen reader."
         },
@@ -2025,11 +2030,13 @@
         },
         {
          "name": "pad",
-         "type": "Space"
+         "type": "Space",
+         "doc": "The space inside its edges. Absent: none."
         },
         {
          "name": "as",
-         "type": "LayoutElement"
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role=\"list\"`."
         },
         {
          "name": "children",

@@ -46,9 +46,9 @@ describe('piles and rows', () => {
 
   test('a grid takes as many columns as the width holds, each at least its minimum', () => {
     const { rerender } = render(<Grid>x</Grid>)
-    expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid', 'grid-cols-(--grid-min-md)', 'gap-3']))
+    expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid', 'grid-cols-(--grid-columns-md)', 'gap-3']))
     rerender(<Grid min="lg" gap="xl">x</Grid>)
-    expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid-cols-(--grid-min-lg)', 'gap-6']))
+    expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid-cols-(--grid-columns-lg)', 'gap-6']))
   })
 
   test('a spacer is room and nothing a screen reader meets', () => {
