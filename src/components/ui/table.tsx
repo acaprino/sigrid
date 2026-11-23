@@ -11,6 +11,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { ROW_HOVER } from "../../lib/rows"
 
 export type TableProps = React.ComponentProps<"table"> & {
   /** The classes of the box around the table, which scrolls: its height, where the rows are many. */
@@ -46,7 +47,8 @@ function TableRow({ className, current, ...props }: TableRowProps) {
       data-slot="table-row"
       aria-current={current ? "true" : undefined}
       className={cn(
-        "border-b border-line hover:bg-selected/60 hover:text-ink aria-[current=true]:bg-selected aria-[current=true]:font-semibold aria-[current=true]:text-selected-ink",
+        "border-b border-line aria-[current=true]:bg-selected aria-[current=true]:font-semibold aria-[current=true]:text-selected-ink",
+        ROW_HOVER,
         // The accent bar is drawn at the start of the row's first cell.
         "aria-[current=true]:[&>td:first-child]:before:absolute aria-[current=true]:[&>td:first-child]:before:top-1/2 aria-[current=true]:[&>td:first-child]:before:left-0 aria-[current=true]:[&>td:first-child]:before:h-4 aria-[current=true]:[&>td:first-child]:before:w-0.75 aria-[current=true]:[&>td:first-child]:before:-translate-y-1/2 aria-[current=true]:[&>td:first-child]:before:rounded-full aria-[current=true]:[&>td:first-child]:before:bg-primary aria-[current=true]:[&>td:first-child]:before:content-['']",
         FOCUS_RING_INSET,

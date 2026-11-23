@@ -31,7 +31,7 @@
 import * as React from "react"
 import { ChevronRight } from "lucide-react"
 import { TreeView as TreeViewPrimitive, createTreeCollection, useTreeViewNodeContext } from "@ark-ui/react/tree-view"
-import { cn } from "../../lib/utils"
+import { cn, isEmptyNode } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER } from "../../lib/rows"
 import { useMotion, type MotionImpl } from "../../internal/motion"
@@ -270,7 +270,7 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
   const didFail = node.lazy && !busy && failed.get(node.id) === source
   const open = state.isBranch && state.expanded
   const meta = source.meta
-  const hasMeta = meta !== undefined && meta !== null && meta !== false && meta !== ""
+  const hasMeta = !isEmptyNode(meta)
   const hasCount = source.count !== undefined && source.count !== 0
   const names = { "aria-labelledby": nameId, ...(node.lazy || hasMeta || hasCount ? { "aria-describedby": `${nameId}-detail` } : {}) }
   // The level sets the indent; Ark gives it to a leaf's row only.

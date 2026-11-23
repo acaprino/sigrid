@@ -7,7 +7,8 @@ import { Search, X } from "lucide-react"
 import { Input } from "./input"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING } from "../../lib/focus"
+import { Button, QUIET_ICON } from "./button"
+import { useMergedRef } from "../../lib/refs"
 
 export type SearchFieldProps = Omit<React.ComponentProps<"input">, "type" | "value" | "onChange" | "defaultValue"> & {
   /** The text searched for. */
@@ -20,14 +21,7 @@ export type SearchFieldProps = Omit<React.ComponentProps<"input">, "type" | "val
 function SearchField({ value, onValueChange, clearLabel, className, ref, disabled, ...props }: SearchFieldProps) {
   const words = useWords()
   const own = React.useRef<HTMLInputElement | null>(null)
-  const setRef = React.useCallback(
-    (el: HTMLInputElement | null) => {
-      own.current = el
-      if (typeof ref === "function") return ref(el)
-      if (ref) ref.current = el
-    },
-    [ref],
-  )
+  const setRef = useMergedRef(own, ref)
   return (
     <div data-slot="search-field" className={cn("relative flex w-full min-w-0 items-center", className)}>
       <Search aria-hidden="true" className="pointer-events-none absolute left-(--pad-sm) size-4 text-ink-mute" />
@@ -42,18 +36,19 @@ function SearchField({ value, onValueChange, clearLabel, className, ref, disable
         className="pr-(--control-md) pl-[calc(var(--pad-sm)_+_1.5rem)] [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value !== "" && !disabled ? (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-xs"
           data-slot="search-field-clear"
           aria-label={clearLabel ?? words.search.clear}
           onClick={() => {
             onValueChange("")
             own.current?.focus()
           }}
-          className={cn("absolute right-1 flex size-(--control-xs) items-center justify-center rounded-md text-ink-mute pointer-coarse:right-0 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink", FOCUS_RING)}
+          className={cn("absolute right-1 pointer-coarse:right-0", QUIET_ICON)}
         >
           <X aria-hidden="true" className="size-4" />
-        </button>
+        </Button>
       ) : null}
     </div>
   )

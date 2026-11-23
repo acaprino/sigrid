@@ -6,7 +6,6 @@
 // is what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.
 // For screen readers it is an ordered list; the step the user is on has `aria-current="step"`, and each step says whether it
 // is done, current or not started (`words.steps`, in any language).
-import * as React from "react"
 import { CheckIcon, XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"

@@ -14,6 +14,8 @@ import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { FOCUS_FIELD } from "../../lib/focus"
+import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from "../../lib/field"
+import { LIST_CARD, LIST_ROW } from "../../lib/rows"
 
 export type ComboboxOption = {
   value: string
@@ -119,11 +121,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           data-slot="combobox-input"
           aria-label={aria["aria-label"]}
           aria-describedby={aria["aria-describedby"]}
-          className={cn(
-            "h-(--control-md) w-full min-w-0 truncate rounded-md border border-line bg-transparent py-1 pr-(--control-md) pl-(--pad-sm) text-base pointer-coarse:min-h-11 md:text-sm placeholder:text-muted-foreground disabled:pointer-events-none disabled:opacity-50",
-            FOCUS_FIELD,
-            invalid ? "border-destructive" : "hover:border-input",
-          )}
+          // `Input`'s field (`lib/field.ts`), with room at its end for the chevron. Ark puts `aria-invalid` on the box.
+          className={cn(FIELD_SURFACE, FIELD_HEIGHT, "w-full min-w-0 truncate py-1 pr-(--control-md) pl-(--pad-sm)", FIELD_TEXT, FIELD_OFF, FOCUS_FIELD, FIELD_HOVER)}
         />
         <ComboboxPrimitive.Trigger
           data-slot="combobox-trigger"
@@ -142,7 +141,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           onKeyDown={(event) => {
             if (event.key === "Escape") event.stopPropagation()
           }}
-          className="flex max-h-80 flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-sm text-popover-foreground shadow-md outline-none"
+          className={LIST_CARD}
         >
           {shown.length === 0 ? (
             <ComboboxPrimitive.Empty data-slot="combobox-empty" className="flex min-h-(--row-height) items-center px-2 text-ink-mute">
@@ -154,7 +153,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               key={option.value}
               item={option}
               data-slot="combobox-item"
-              className="flex min-h-(--row-height) cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink"
+              className={cn(LIST_ROW, "justify-between")}
             >
               <span className="flex min-w-0 flex-col">
                 <ComboboxPrimitive.ItemText className="truncate">{option.label}</ComboboxPrimitive.ItemText>

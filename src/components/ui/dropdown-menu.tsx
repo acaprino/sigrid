@@ -15,8 +15,10 @@ import * as React from "react"
 import { Menu } from "@base-ui/react/menu"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { GROUP_LABEL } from "../../lib/rows"
+import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../../lib/rows"
 import { useEntrance } from "../../internal/motion"
+import { useMergedRef } from "../../lib/refs"
+import { renderWithOpenState } from "../../internal/overlay"
 import { usePortalContainer } from "../PortalContainer"
 
 /** The open state of the menu, for the button's `data-state`, and its immediate reading for the keyboard. */
@@ -86,6 +88,12 @@ function DropdownMenuTrigger({ asChild, children, onKeyDown, ...props }: Dropdow
   )
 }
 
+/**
+ * The card of a menu and of a submenu: the list's card (`LIST_CARD`) with l3 corners (Park's menu), at least 160px wide,
+ * and as tall as the room the window leaves on its side (`--available-height`, Base UI's): a longer menu scrolls.
+ */
+const CARD = cn(LIST_CARD, "max-h-(--available-height) min-w-40 origin-(--transform-origin) overflow-x-hidden rounded-lg outline-hidden")
+
 /** A short entrance of the card (a fade, a few pixels from the side of its button), only with `animated`. */
 function useEnter(animated: boolean | undefined) {
   return useEntrance<HTMLElement>(animated, (motion, el) => motion.enterPopup(el))
@@ -110,14 +118,7 @@ function DropdownMenuContent({
 }: DropdownMenuContentProps) {
   const container = usePortalContainer()
   const enter = useEnter(animated)
-  const refs = React.useCallback(
-    (el: HTMLDivElement | null) => {
-      enter(el)
-      if (typeof ref === "function") ref(el)
-      else if (ref) ref.current = el
-    },
-    [enter, ref]
-  )
+  const refs = useMergedRef<HTMLDivElement>(enter, ref)
   return (
     <Menu.Portal container={container}>
       <Menu.Positioner
@@ -131,14 +132,9 @@ function DropdownMenuContent({
       >
         <Menu.Popup
           data-slot="dropdown-menu-content"
-          // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a sheet,
-          // a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
-          render={(renderProps, state) => <div {...renderProps} data-state={state.open ? "open" : "closed"} />}
+          render={renderWithOpenState}
           ref={refs}
-          className={cn(
-            "flex max-h-(--available-height) min-w-40 origin-(--transform-origin) flex-col gap-0.5 overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md outline-hidden",
-            className
-          )}
+          className={cn(CARD, className)}
           {...props}
         />
       </Menu.Positioner>
@@ -150,8 +146,11 @@ function DropdownMenuGroup({ ...props }: Menu.Group.Props) {
   return <Menu.Group data-slot="dropdown-menu-group" {...props} />
 }
 
-const ITEM =
-  "relative flex min-h-(--row-height) cursor-default items-center gap-2 rounded-md px-2 py-(--row-pad) text-sm outline-hidden select-none data-highlighted:bg-selected/60 data-highlighted:text-ink focus-visible:bg-selected/60 focus-visible:text-ink data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+/** A row of the menu: the row of every list (`LIST_ROW`) with l2 corners, Park's menu item. */
+const ITEM = cn(
+  LIST_ROW,
+  "rounded-md outline-hidden focus-visible:bg-selected/60 focus-visible:text-ink data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+)
 
 type DropdownMenuItemProps = Menu.Item.Props & {
   inset?: boolean | undefined
@@ -260,7 +259,8 @@ function DropdownMenuSubTrigger({
       data-inset={inset}
       className={cn(
         ITEM,
-        "data-popup-open:bg-selected/60 data-popup-open:text-ink [&_svg:not([class*='text-'])]:text-muted-foreground",
+        ROW_POPUP_OPEN,
+        "[&_svg:not([class*='text-'])]:text-muted-foreground",
         className
       )}
       {...props}
@@ -282,11 +282,8 @@ function DropdownMenuSubContent({
       <Menu.Positioner data-slot="dropdown-menu-sub-positioner" className="z-50 outline-none" side="right" align="start" sideOffset={sideOffset}>
         <Menu.Popup
           data-slot="dropdown-menu-sub-content"
-          render={(renderProps, state) => <div {...renderProps} data-state={state.open ? "open" : "closed"} />}
-          className={cn(
-            "flex min-w-40 origin-(--transform-origin) flex-col gap-0.5 overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-md outline-hidden",
-            className
-          )}
+          render={renderWithOpenState}
+          className={cn(CARD, className)}
           {...props}
         />
       </Menu.Positioner>

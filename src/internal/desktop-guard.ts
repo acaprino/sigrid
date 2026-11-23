@@ -46,7 +46,8 @@ export function isBrowserKey({ key, ctrlKey, altKey, metaKey, shiftKey }: Keys, 
   return (shiftKey ? WITH_CTRL_SHIFT : WITH_CTRL).has(key.toLowerCase())
 }
 
-const within = (event: Event, selector: string): boolean => {
+/** Whether the event happened on an element that matches `selector`, or inside one. Also for the toolkit's own keys (`commands.tsx`). */
+export const within = (event: Event, selector: string): boolean => {
   const target = event.target as { closest?: (s: string) => unknown } | null
   return target !== null && typeof target.closest === 'function' && target.closest(selector) !== null
 }

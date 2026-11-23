@@ -145,13 +145,12 @@ test('invalid: aria-invalid and the destructive border, also while open; without
   const { rerender } = render(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} />)
   const trigger = () => screen.getByRole('combobox', { name: 'Status' })
   expect(trigger().getAttribute('aria-invalid')).toBeNull()
-  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-line', 'data-[popup-open]:border-ring']))
-  expect(trigger().className).not.toMatch(/destructive|opacity-50/)
+  // The border is the light divider at rest; the destructive one and the ink of the open state hang on `aria-invalid`,
+  // so the open state never paints the ink over the invalid border.
+  expect(trigger().className.split(' ')).toEqual(expect.arrayContaining(['border-line', 'aria-invalid:border-destructive', 'not-aria-invalid:data-[popup-open]:border-ring']))
+  expect(trigger().className).not.toMatch(/(^| )(border-destructive|data-\[popup-open\]:border-ring|opacity-50)( |$)/)
   rerender(<Select aria-label="Status" options={OPTS} value="doing" onValueChange={noop} invalid />)
   expect(trigger().getAttribute('aria-invalid')).toBe('true')
-  expect(trigger().className.split(' ')).toContain('border-destructive')
-  // The open state does not paint the ink over the invalid border.
-  expect(trigger().className).not.toContain('data-[popup-open]:border-ring')
   // Still usable: it opens and picks.
   fireEvent.click(trigger())
   await flush()

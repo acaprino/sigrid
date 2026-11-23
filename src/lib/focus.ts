@@ -7,14 +7,18 @@
 /** Keyboard focus on the control itself. */
 export const FOCUS_RING = 'outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
 
-/** Keyboard focus anywhere inside a composite field (the labels field): the ring goes around the whole field. */
-export const FOCUS_WITHIN_RING = 'outline-hidden focus-within:outline-solid focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring'
-
 /**
  * A scroll region that fills its sheet: an offset outside it would be cut by the sheet, so the ring sits 2px inside
  * the edge (the one approved exception to the 2px outside offset).
  */
 export const FOCUS_RING_INSET = 'outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring'
+
+/**
+ * Keyboard focus on a colour swatch, whose selection is already a ring 2px away from it (`SWATCH_CHOSEN`,
+ * `radio-group.tsx`): the outline goes 6px away, outside that ring, so a swatch chosen and in focus shows both and
+ * never one on top of the other (an approved exception to the 2px offset).
+ */
+export const FOCUS_RING_SWATCH = 'outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-6 focus-visible:outline-ring'
 
 /**
  * Keyboard focus on a field (a text box, a select, a date): the ring sits on the field's own border, 1px inside it
@@ -25,3 +29,9 @@ export const FOCUS_FIELD = 'outline-hidden focus-visible:outline-solid focus-vis
 
 /** The same for a field made of several parts (labels, formatted text): the ring is on the border of the whole field. */
 export const FOCUS_WITHIN_FIELD = 'outline-hidden focus-within:outline-solid focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-ring'
+
+/**
+ * The same for a field whose text box sits among parts of its own (`InputGroup`): the ring is on the border of the
+ * whole field while the keyboard focus is in the text, and not while it is on one of its buttons (which has its own).
+ */
+export const FOCUS_FIELD_HAS_INPUT = 'outline-hidden has-[input:focus-visible]:outline-solid has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-1 has-[input:focus-visible]:outline-ring'

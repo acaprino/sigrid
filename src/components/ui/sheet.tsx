@@ -12,9 +12,10 @@ import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
 import { XIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING } from "../../lib/focus"
+import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../../internal/motion"
-import { BACKDROP, TOASTS_ATTR, inTitleBar } from "../../internal/overlay"
+import { BACKDROP, inTitleBar, inToasts, openState } from "../../internal/overlay"
+import { useMergedRef } from "../../lib/refs"
 import { usePortalContainer } from "../PortalContainer"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
@@ -45,9 +46,6 @@ const POPUP_SIDE_CLASS: Record<SheetSide, string> = {
 const SideContext = React.createContext<(side: SheetSide) => void>(() => {})
 /** The root says whether the sheet is modal: a non-modal one has no backdrop and leaves the page under it usable. */
 const ModalContext = React.createContext(true)
-
-const inToasts = (target: EventTarget | null | undefined): boolean =>
-  target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
 
 /** Why a sheet asks to close: the Esc key, a press outside it, or anything else (a close button, the code). */
 export type SheetCloseReason = "escape" | "outside" | "other"
@@ -129,6 +127,7 @@ function SheetContent({
   showCloseButton = true,
   onCloseAutoFocus,
   animated,
+  ref,
   ...props
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
@@ -161,6 +160,8 @@ function SheetContent({
     },
     [side]
   )
+  // The caller's ref gets the sheet too, without taking the place of the entrance and the focus above.
+  const popupRef = useMergedRef(enter, ref)
   // On closing the sheet decides the focus, as Radix did: after one turn (the sheet is unmounted and the page is no
   // longer `aria-hidden`), first the caller's handler, then, if it did not decide, the element that had focus before
   // opening. Base UI calls this function even if one of its effects restarts with the sheet open: then nothing is done.
@@ -181,14 +182,13 @@ function SheetContent({
       {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
       <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>
         <SheetPrimitive.Popup
-          ref={enter}
+          ref={popupRef}
           data-slot="sheet-content"
           data-side={side}
           finalFocus={finalFocus}
-          // The sheet itself is the `Drawer.Content`: a single element, with the caller's classes.
-          // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a
-          // sheet, a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
-          render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={state.open ? "open" : "closed"} />}
+          // The sheet itself is the `Drawer.Content`: a single element, with the caller's classes, and `data-state` as
+          // every overlay of the toolkit (`openState`).
+          render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={openState(state)} />}
           className={cn(
             "pointer-events-auto relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
             POPUP_SIDE_CLASS[side],
@@ -198,8 +198,11 @@ function SheetContent({
         >
           {children}
           {showCloseButton && (
-            <SheetPrimitive.Close className={cn("absolute top-3 right-3 flex size-(--control-sm) items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none", FOCUS_RING)}>
-              <XIcon className="size-4" />
+            <SheetPrimitive.Close
+              render={<Button variant="ghost" size="icon-sm" />}
+              className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
+            >
+              <XIcon aria-hidden="true" className="size-4" />
               <span className="sr-only">{words.common.close}</span>
             </SheetPrimitive.Close>
           )}

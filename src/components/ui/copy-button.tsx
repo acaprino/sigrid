@@ -10,6 +10,7 @@ import { Tooltip } from "./tooltip"
 import { useInputGroup } from "./input-group"
 import { Icon } from "../../icons"
 import { useWords } from "../../words"
+import { SwapLabel } from "../../internal/swap-label"
 
 /** How long the button says «Copied» before it is the copy button again. */
 export const COPIED_MS = 2000
@@ -41,9 +42,6 @@ async function write(text: string): Promise<void> {
   field.remove()
   if (!done) throw new Error("copy refused")
 }
-
-/** One grid cell for the two texts, each from the start (beside the icon): the hidden one keeps its room, so the width never changes. */
-const LAYER = "col-start-1 row-start-1 inline-flex items-center justify-start"
 
 function CopyButton({ value, label, showLabel = false, onCopied, onCopyError, variant = "ghost", size, disabled, animated, ...props }: CopyButtonProps) {
   const words = useWords()
@@ -80,16 +78,8 @@ function CopyButton({ value, label, showLabel = false, onCopied, onCopyError, va
       onClick={copy}
     >
       <Icon name={copied ? "check" : "copy"} />
-      {showLabel ? (
-        <span data-slot="copy-button-label" className="grid">
-          <span className={copied ? `${LAYER} invisible` : LAYER} aria-hidden={copied || undefined}>
-            {name}
-          </span>
-          <span className={copied ? LAYER : `${LAYER} invisible`} aria-hidden={!copied || undefined}>
-            {words.copy.copied}
-          </span>
-        </span>
-      ) : null}
+      {/* The two words in one cell, each from the start (beside the icon): the width never changes. */}
+      {showLabel ? <SwapLabel slot="copy-button-label" first={name} second={words.copy.copied} showSecond={copied} align="start" /> : null}
     </Button>
   )
   return (

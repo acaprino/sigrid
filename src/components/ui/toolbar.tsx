@@ -34,7 +34,7 @@
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight, Search } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { cn, isEmptyNode } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { steadyLabel } from "../../internal/steady-label"
 import { buttonVariants } from "./button"
@@ -99,7 +99,7 @@ const NARROW_GONE = "@max-md/toolbar:hidden"
 
 function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
-  const iconOnly = children === undefined || children === null || children === false
+  const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
   const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
   const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)

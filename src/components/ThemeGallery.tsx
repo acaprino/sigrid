@@ -3,6 +3,7 @@ import type { ThemeDef } from '../theme-catalog'
 import type { ThemeScheme, ThemeTone } from '../theme-engine'
 import { themeVariables } from '../themes'
 import { FOCUS_RING } from '../lib/focus'
+import { cn } from '../lib/utils'
 import { radioArrows } from './LookSettings'
 
 export interface ThemeGalleryProps<T extends ThemeDef> {
@@ -37,7 +38,7 @@ export function ThemeGallery<T extends ThemeDef>({ themes, scheme, tone, label, 
         const checked = theme.id === selected
         return <button type="button" role="radio" key={theme.id} aria-checked={checked}
           tabIndex={checked || (!selectedPreset && !customSelected && index === 0) ? 0 : -1}
-          onClick={() => onTheme(theme)} className={TILE + ' ' + FOCUS_RING}>
+          onClick={() => onTheme(theme)} className={cn(TILE, FOCUS_RING)}>
           <span style={style} className="block">
             <span className="block bg-primary px-2.5 py-1.5 text-sm font-semibold text-primary-foreground">{theme.label}</span>
             <span aria-hidden="true" className="flex h-12 bg-paper">
@@ -53,7 +54,7 @@ export function ThemeGallery<T extends ThemeDef>({ themes, scheme, tone, label, 
         </button>
       })}
       {custom && <button type="button" role="radio" aria-checked={customSelected} tabIndex={customSelected || !cards.length ? 0 : -1}
-        onClick={custom.onChoose} className={TILE + ' ' + FOCUS_RING + ' flex flex-col justify-center gap-2 border-dashed bg-raised px-2.5 text-sm font-medium'}>
+        onClick={custom.onChoose} className={cn(TILE, FOCUS_RING, 'flex flex-col justify-center gap-2 border-dashed bg-raised px-2.5 text-sm font-medium')}>
         <span aria-hidden="true" className="flex"><i className="size-3 rounded-full bg-mark-5"/><i className="size-3 rounded-full bg-mark-8"/><i className="size-3 rounded-full bg-mark-11"/></span>
         {custom.label}
         {customSelected && <ChosenMark />}

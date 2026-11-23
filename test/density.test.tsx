@@ -133,19 +133,23 @@ describe('normal is what the toolkit is before any script runs', () => {
     // Select: the button 36px (32 when `sm`), 10px left and 8px right; an item at least 40px with 8px above and below.
     has('src/components/ui/select.tsx', 'flex w-full items-center justify-between', 'pr-(--pad-xs)', 'pl-(--pad-sm)')
     has('src/components/ui/select.tsx', 'size === "sm"', '"h-(--control-sm) w-auto"', '"h-(--control-md)"')
-    has('src/components/ui/select.tsx', 'relative flex min-h-', 'min-h-(--row-height)', 'py-(--row-pad)')
+    // The rows of every floating list (select, combo box, suggestions, menu) are one constant.
+    has('src/lib/rows.ts', 'export const LIST_ROW', 'min-h-(--row-height)', 'py-(--row-pad)')
+    has('src/components/ui/select.tsx', 'const ITEM_CLASS', 'LIST_ROW')
     has('src/components/ui/select.tsx', 'data-slot="select-group-label"', 'h-(--row-height)')
     // Menu: an item at least 40px with 8px above and below, a label 40px.
-    has('src/components/ui/dropdown-menu.tsx', '"relative flex min-h-', 'min-h-(--row-height)', 'py-(--row-pad)')
+    has('src/components/ui/dropdown-menu.tsx', 'LIST_ROW,', 'LIST_ROW')
     has('src/components/ui/dropdown-menu.tsx', 'text-ink-mute data-[inset]', 'h-(--row-height)')
     // Segment item: 36px, 12px of side padding.
     has('src/components/ui/toggle-group.tsx', '"inline-flex h-', 'h-(--control-md)', 'min-w-(--control-md)', 'px-(--pad-md)')
     // Date field: the surface of Input; the time field 32px.
-    has('src/internal/date-field.tsx', "'flex h-", 'h-(--control-md)', 'px-(--pad-sm)')
+    has('src/lib/field.ts', 'export const FIELD_HEIGHT', 'h-(--control-md)')
+    has('src/internal/date-field.tsx', 'const TRIGGER_CLASS', 'FIELD_HEIGHT', 'px-(--pad-sm)')
     has('src/internal/date-field.tsx', 'w-28', 'h-(--control-sm)')
     // The close button of a dialog and of a sheet: 32px.
-    has('src/components/ui/dialog.tsx', 'absolute top-3 right-3', 'size-(--control-sm)')
-    has('src/components/ui/sheet.tsx', 'absolute top-3 right-3', 'size-(--control-sm)')
+    has('src/components/ui/button.tsx', '"icon-sm":', 'size-(--control-sm)')
+    has('src/components/ui/dialog.tsx', 'render={<Button', 'size="icon-sm"')
+    has('src/components/ui/sheet.tsx', 'render={<Button', 'size="icon-sm"')
     // Calendar cells: 32px. Chips box: at least 36px, its padding what a 28px chip and the two borders leave (3px).
     has('src/components/ui/calendar.tsx', 'data-slot="calendar"', '[--cell-size:var(--control-sm)]')
     has('src/internal/chips.tsx', '<TagsInput.Control', 'min-h-(--control-md)', 'py-[calc((var(--control-md)_-_30px)/2)]')
@@ -265,7 +269,7 @@ describe('with a coarse pointer every control and row is at least 44px, whatever
   test('the rows of a menu and of a select take their least height from the token alone, so large reaches touch', () => {
     const line = (file: string, needle: string) => source(file).split('\n').find((l) => l.includes(needle)) ?? ''
     const fixed = ['pointer-coarse', 'min-h-11'].join(':')
-    for (const [file, needle] of [['src/components/ui/dropdown-menu.tsx', '"relative flex min-h-'], ['src/components/ui/select.tsx', 'relative flex min-h-']] as const) {
+    for (const [file, needle] of [['src/lib/rows.ts', 'export const LIST_ROW']] as const) {
       expect(line(file, needle), file).toContain('min-h-(--row-height)')
       expect(line(file, needle), file).not.toContain(fixed)
     }
