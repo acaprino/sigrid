@@ -116,7 +116,7 @@ export function applyKeptScheme(options: SchemeCommandsOptions): SchemeState {
  * hook is called, each with its icon, the one in use checked, and keeps the app's look on the document's root in the
  * scheme chosen. Give the theme, the tone and the own colours as the same objects at every render (a constant, or
  * `useMemo`): a new one puts the theme again. It says the choice and the scheme drawn, for a part that draws in the
- * scheme (a preview, or `useWindowTheme` of `@acaprino/sigrid/tauri`, which tells the window's frame).
+ * scheme (a preview, or the frame of the window the app runs in: README, «Light, dark and the system's look»).
  */
 export function useSchemeCommands(options: SchemeCommandsOptions): SchemeState {
   const { storageKey, theme, own, tone, palette } = options
