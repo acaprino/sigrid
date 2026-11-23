@@ -11,15 +11,15 @@
 //   the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable
 //   layers (a click on a notice is not "outside" an Ark popover).
 // - Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed
-//   ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; a
-//   fourth pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move
+//   ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; one
+//   more pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move
 //   up one place. Ark's own layouts are not used (`overlap` off): its places follow its own list, which still holds a
 //   notice while it leaves, so the others would wait for it to be gone before closing the gap.
 // - the region is `role="status"` with `aria-relevant="additions"` and a name in English; a notice is not a `status`
 //   with `tabIndex=0` of its own: no extra Tab stop per notice;
 // - the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts
 //   down (`duration` Infinity), and when it is left each one is rearmed from the start;
-// - Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a fourth notice or the caller.
+// - Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a notice past `COLUMN_MAX` or the caller.
 // Motion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with
 // prefers-reduced-motion, the same places are plain styles and nothing moves.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
@@ -240,7 +240,7 @@ function Notice({ id }: { id: string }) {
                 {left}
               </span>
             ) : null}
-            <Button variant="ghost" size="xs" aria-label={`Close the notice: ${item.text}`} className={cn('text-paper hover:bg-paper/15 hover:text-paper', ON_TOAST_FOCUS)} disabled={out} onClick={out ? undefined : () => column.close?.(id)}>
+            <Button variant="ghost" size="xs" aria-label={words.common.closeNotice(item.text)} className={cn('text-paper hover:bg-paper/15 hover:text-paper', ON_TOAST_FOCUS)} disabled={out} onClick={out ? undefined : () => column.close?.(id)}>
               <span aria-hidden="true">×</span>
             </Button>
           </>
