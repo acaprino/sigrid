@@ -195,11 +195,53 @@ a drawer.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
+- Four entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+  pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
+  - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
+    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`); one row can
+    be chosen (`current`, `onRowPress`, arrows among the rows); with `virtual` only the rows in sight are in the
+    page. For filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and
+    its parts, which are in the main entry.
+  - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
+    drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
+    items there are and where each one is.
+  - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
+    pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
+  - `./rich-text`: `RichTextField`, on TipTap: bold, italic, underline, two kinds of list, a quote, undo and redo,
+    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control.
+
+  ```tsx
+  import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
+  import { VirtualList } from '@acaprino/sigrid/virtual'
+  import { ReorderList } from '@acaprino/sigrid/reorder'
+  import { RichTextField } from '@acaprino/sigrid/rich-text'
+
+  const columns: DataColumn<File>[] = [
+    { id: 'name', header: 'Name', cell: (file) => file.name, sortValue: (file) => file.name },
+    { id: 'size', header: 'Size', cell: (file) => size(file.kb), sortValue: (file) => file.kb, align: 'end' },
+  ]
+  <DataTable aria-label="Files" columns={columns} rows={files} rowId={(file) => file.id} virtual className="h-96" />
+
+  <VirtualList aria-label="Messages" count={mail.length} className="h-full">
+    {(index) => <ItemRow title={mail[index].from} description={mail[index].subject} />}
+  </VirtualList>
+
+  <ReorderList aria-label="Columns" items={lanes} itemId={(lane) => lane.id} itemName={(lane) => lane.name} onReorder={setLanes}>
+    {(lane) => lane.name}
+  </ReorderList>
+
+  <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
+  ```
+
+  Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
+  sort by a text column in about 30 ms; a key in the rich text costs about 1.3 ms (the buttons are drawn again only
+  when one of them changes); nothing runs while nothing happens. With the processor four times slower the scroll
+  stays under 7 ms a frame.
 - Words: a component's content is the app's. The few words a component says by itself (the name of a close
   button, «Page 2 of 5», the announcement of a label added) are English placeholders in `DEFAULT_WORDS`. An app
   replaces them, all or some, once for the whole tree and in any language: `<WordsProvider words={{ common: {

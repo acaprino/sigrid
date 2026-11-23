@@ -106,6 +106,12 @@ count is a pill at the end of the row (R5).
 list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot for unread), the inspector shows the
 one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
 covers the end of the list and the list stays usable beside it.
+A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList` (`@acaprino/sigrid/virtual`): the
+same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
+invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps two or three columns, or is a list. A
+list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
+Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). The
+examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each
 choice is a row with its name at the start and its control at the end; a choice takes effect at once, with no Save

@@ -237,6 +237,35 @@ written by `scripts/icon-packs.mjs` from the Iconify API (https://iconify.design
   https://github.com/twitter/twemoji): the `twemoji` pack. Attribution: "Twemoji by Twitter, Inc and other
   contributors".
 
+## TanStack Table, TanStack Virtual, dnd-kit and TipTap
+
+Four more libraries carry behaviour, each under one part and each in its own entry of the package, so an app loads a
+library only if it uses the part (the owner's decision of 2026-11-23: a table, a long list, a list put in order and
+formatted text are what the apps of the suite need next, and none is worth writing again). They are npm dependencies
+pinned to the exact version, installed and unmodified, never copied into `src/`. As with Ark UI, the form is the
+toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
+
+- **TanStack Table**: `@tanstack/react-table` 9.3.1 (**MIT**, Copyright (c) 2016 Tanner Linsley), with
+  `@tanstack/table-core` and `@tanstack/react-store` that it depends on. The columns and the sorting of `DataTable`.
+- **TanStack Virtual**: `@tanstack/react-virtual` 3.14.26 (**MIT**, Copyright (c) 2021-present Tanner Linsley), with
+  `@tanstack/virtual-core`. Which rows are in the page, for `DataTable` with `virtual` and for `VirtualList`.
+- **dnd-kit**: `@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0 and `@dnd-kit/utilities` 3.2.2 (**MIT**, Copyright (c)
+  2021, Claudéric Demers), with `@dnd-kit/accessibility`. The dragging and the keyboard of `ReorderList`. The words
+  screen readers hear are the app's (`words.reorder`), not the library's.
+- **TipTap**: `@tiptap/react`, `@tiptap/starter-kit` and `@tiptap/pm` 3.33.0 (**MIT**, Copyright (c) 2025, Tiptap GmbH),
+  with `@tiptap/core`, the extensions of the starter kit and the ProseMirror packages (**MIT**, Marijn Haverbeke) under
+  them. The editing of `RichTextField`. The three packages are pinned to one version, which TipTap asks for.
+
+The test `test/provenance.test.ts` checks the pinned versions, that this list and the imports match, and that the main
+entry of the package imports none of them.
+
+| File | Library | Entry of the package |
+|---|---|---|
+| `src/components/DataTable.tsx` | `@tanstack/react-table`, `@tanstack/react-virtual` | `./table` |
+| `src/components/ui/virtual-list.tsx` | `@tanstack/react-virtual` | `./virtual` |
+| `src/components/ui/reorder-list.tsx` | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `./reorder` |
+| `src/components/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
+
 ## SmoothUI
 
 - Project: SmoothUI, https://smoothui.dev (repository https://github.com/educlopez/smoothui)
