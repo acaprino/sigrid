@@ -89,6 +89,8 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own
   with `WordsProvider`.
+- Light, dark and the system's look are chosen from the palette, the same in every app: `useSchemeCommands` inside
+  `CommandsProvider`, and `applyKeptScheme` in the entry file (`README.md`). No app draws a switch for the scheme.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a

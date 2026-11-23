@@ -207,6 +207,34 @@ hidden on a phone.
 </CommandsProvider>
 ```
 
+## Light, dark and the system's look
+
+In every app of the suite the person chooses light, dark or the system's look in the same place: three commands of
+the palette, in a group of their own («Look»), the one in use checked. No app draws a switch for it or writes these
+commands. The app makes two calls with one constant, its look and the key the choice is kept under: in its entry file,
+before React renders, `applyKeptScheme` puts the kept choice on the root, so the first paint is already in that scheme
+(no flash of the other one); inside its `CommandsProvider`, `useSchemeCommands` declares the three commands where it is
+called.
+
+```tsx
+// main.tsx, before createRoot(…).render(…)
+const LOOK = { theme: colorTheme({ id: 'tasks', label: 'Tasks', color: '#006398', spot: 'balanced' }), storageKey: 'tasks.scheme' }
+applyKeptScheme(LOOK)
+
+// in the app's component, inside <CommandsProvider>
+const { scheme } = useSchemeCommands(LOOK)
+```
+
+Choosing one puts the app's theme in that scheme on the document's root at once (`applyTheme`) and keeps the word
+(`light`, `dark` or `system`) under the key in `localStorage`: every page and every tab of the app that uses the same
+key follows it. The system's choice is the default and follows `prefers-color-scheme` while the page is open; a value
+kept that is not one of the three is the system's, and where the storage refuses (a private window) the choice holds
+until the page is closed. The hook says `{ choice, scheme }`, the scheme drawn now, for a part that draws in it. The
+look is what `applyTheme` takes but the scheme (`theme`, and the user's `tone`, `own` or `palette`), given as the same
+objects at every render (a constant, or `useMemo`). The words are `useWords().scheme`. Any command that chooses one of
+several says so with `checked` (`useCommand`, or a `Command` given to the palette): the one in use has a check in the
+ink at the end of its row, and the others keep its room.
+
 ## A tree of rows
 
 `Tree` is a list of nested rows on Ark UI's TreeView, for files and folders or any hierarchy: each node has an `id`, a

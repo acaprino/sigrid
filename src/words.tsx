@@ -102,6 +102,17 @@ export interface Words {
     /** The name of the list of the keys that work now, in the window's foot (`KeyHints`). */
     readonly keys: string
   }
+  /** The three commands that choose the look's scheme in the palette (`useSchemeCommands`). */
+  readonly scheme: {
+    /** The heading they sit under in the palette. */
+    readonly group: string
+    readonly light: string
+    readonly dark: string
+    /** The choice that follows the system's light or dark setting. */
+    readonly system: string
+    /** Other words the three are found by in the palette. */
+    readonly keywords: string
+  }
   /** The names of the keys that are held, where a key of a command is written out (`formatKeys`): Cmd and Option on a Mac. */
   readonly keys: {
     readonly ctrl: string
@@ -340,6 +351,13 @@ export const DEFAULT_WORDS: Words = {
     empty: 'No command found',
     command: 'Commands',
     keys: 'Keys',
+  },
+  scheme: {
+    group: 'Look',
+    light: 'Light',
+    dark: 'Dark',
+    system: 'Follow the system',
+    keywords: 'look theme scheme mode appearance',
   },
   keys: {
     ctrl: 'Ctrl',

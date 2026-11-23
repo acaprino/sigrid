@@ -25,6 +25,7 @@ export { CALENDAR_WORDS, Calendar, calendarWords, type CalendarProps } from './c
 export { Checkbox } from './components/ui/checkbox'
 export { CommandPalette, filterCommands, useCommandKey, type Command, type CommandPaletteOpenness, type CommandPaletteProps } from './components/ui/command-palette'
 export { CommandsProvider, KeyHints, PALETTE_COMMAND, formatKeys, useCommand, useCommandPalette, useCommands, type CommandDeclaration, type CommandsProviderProps, type KeyHint, type KeyHintsProps, type KeyNames } from './components/ui/commands'
+export { applyKeptScheme, useSchemeCommands, type SchemeChoice, type SchemeCommandsOptions, type SchemeState } from './components/ui/scheme-commands'
 export { Combobox, type ComboboxOption, type ComboboxProps } from './components/ui/combobox'
 export { Count, type CountProps } from './components/ui/count'
 export { Steps, type StepItem, type StepsProps } from './components/ui/steps'
