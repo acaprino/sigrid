@@ -24,6 +24,14 @@
 //   it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount
 //   into a layer that starts under the bar.
 // The keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.
+// Two forms, chosen with `frame`, with the same regions and steps:
+// - `line` (the default): one surface, the page, with a line between the regions;
+// - `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's
+//   ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is
+//   one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the
+//   large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a
+//   sidebar of its own colours (`data-sidebar="own"`, a dark or solid column) keeps its column on the lanes' surface.
+//   Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.
 // The `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.
 // Without a way to measure (a server, a test) the frame is the wide one.
 import * as React from "react"
@@ -89,6 +97,11 @@ export type AppShellProps = {
    * Leave it off for a page in a browser tab.
    */
   desktop?: boolean | undefined
+  /**
+   * `line` (the default): one surface with lines between the regions. `sheet`: the title bar and the sidebar on the
+   * window's ground, the work area one sheet with a corner, as in Xiox.
+   */
+  frame?: "line" | "sheet" | undefined
   /** The app's own steps, all or some, in place of the recommended ones (`APP_SHELL_STEPS`); 0 switches a step off. */
   steps?: Partial<AppShellSteps> | undefined
   /** The name of the content for screen readers, and where the skip link goes. */
@@ -100,7 +113,7 @@ export type AppShellProps = {
 
 const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 
-function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, desktop = false, steps, contentLabel, className, children }: AppShellProps) {
+function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const [layout, setLayout] = React.useState<AppShellLayout>(WIDE)
@@ -127,19 +140,26 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   const [overlays, setOverlays] = React.useState<HTMLDivElement | null>(null)
   // Until the layer is there (the first render), the overlays go where they would have gone without the frame.
   const outer = usePortalContainer() ?? null
+  const sheet = frame === "sheet"
+  // The sheet has its corner and its start edge only where a sidebar lies beside it.
+  const beside = Boolean(sidebar) && layout.sidebar !== "drawer"
   // Everything under the title bar, so the overlays of a window start there.
   const below = (
     <>
       {tabs ? (
-        <div data-slot="app-shell-tabs" className="flex min-h-(--control-md) shrink-0 items-stretch border-b border-line px-2 select-none">
+        <div data-slot="app-shell-tabs" className={cn("flex min-h-(--control-md) shrink-0 items-stretch px-2 select-none", !sheet && "border-b border-line")}>
           {tabs}
         </div>
       ) : null}
       <div data-slot="app-shell-body" className="flex min-h-0 flex-1">
         {sidebar}
-        <div data-slot="app-shell-work" className="flex min-w-0 flex-1 flex-col">
+        <div
+          data-slot="app-shell-work"
+          data-sheet={sheet ? (beside ? "beside" : "alone") : undefined}
+          className={cn("flex min-w-0 flex-1 flex-col", sheet && "overflow-hidden border-t border-line bg-paper", sheet && beside && "rounded-ss-lg border-s")}
+        >
           {status ? (
-            <div data-slot="app-shell-status" role="status" className={cn(STRIP, "min-h-(--control-sm) border-b border-line")}>
+            <div data-slot="app-shell-status" role="status" className={cn(STRIP, "min-h-(--control-sm)", !sheet && "border-b border-line")}>
               {status}
             </div>
           ) : null}
@@ -168,7 +188,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
       ) : null}
     </>
   )
-  const frame = (
+  const regions = (
     <>
       {titleBar}
       <div data-slot="app-shell-below" className="relative flex min-h-0 flex-1 flex-col">
@@ -179,12 +199,20 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   )
   return (
     <AppShellContext.Provider value={layout}>
-      <div ref={root} data-slot="app-shell" data-desktop={desktop ? "" : undefined} data-sidebar={layout.sidebar} data-inspector={layout.inspector} className={cn("relative flex h-full min-h-0 w-full flex-col bg-paper text-ink", className)}>
+      <div
+        ref={root}
+        data-slot="app-shell"
+        data-frame={frame}
+        data-desktop={desktop ? "" : undefined}
+        data-sidebar={layout.sidebar}
+        data-inspector={layout.inspector}
+        className={cn("relative flex h-full min-h-0 w-full flex-col text-ink", sheet ? "bg-sidebar-paper in-data-[sidebar=own]:bg-paper-2" : "bg-paper", className)}
+      >
         <a href={`#${id}`} data-slot="app-shell-skip" className={cn("sr-only top-2 left-2 z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-ink shadow-lg focus:not-sr-only focus:absolute", FOCUS_RING)}>
           {words.shell.skip}
         </a>
         {/* The provider is there from the first render, with or without its layer: the frame is never mounted twice. */}
-        {desktop ? <PortalContainerProvider container={overlays ?? outer}>{frame}</PortalContainerProvider> : frame}
+        {desktop ? <PortalContainerProvider container={overlays ?? outer}>{regions}</PortalContainerProvider> : regions}
       </div>
     </AppShellContext.Provider>
   )

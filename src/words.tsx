@@ -78,6 +78,8 @@ export interface Words {
   readonly list: {
     /** Read before the title of a row not read yet (`ItemRow`). */
     readonly unread: string
+    /** Read in place of «+2» after a line cut short (`OverflowList`): how many of its items are not shown. */
+    readonly more: (count: number) => string
   }
   readonly palette: {
     /** The name of the command palette and the placeholder of its field. */
@@ -282,6 +284,7 @@ export const DEFAULT_WORDS: Words = {
   },
   list: {
     unread: 'Unread',
+    more: (count) => `${count} more`,
   },
   palette: {
     placeholder: 'Type a command',

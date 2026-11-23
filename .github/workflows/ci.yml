@@ -32,3 +32,17 @@ jobs:
 
       - name: test
         run: npm test
+
+      # When a step fails, the catalogue's test among them (test/agents.test.ts), keep the agents' catalogue the source
+      # writes, so it can be committed: `npm run agents` compiles, and nothing is compiled on the owner's machine.
+      - name: write the agents' catalogue
+        if: failure()
+        run: npm run agents
+
+      - name: keep the agents' catalogue
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agents
+          path: agents
+          retention-days: 3

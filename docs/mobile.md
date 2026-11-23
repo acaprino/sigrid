@@ -124,6 +124,8 @@ Actions:
 Lists and rows:
 
 - A row is two lines at most: a title cut with an ellipsis, a line under it, one fact at the end.
+- The details under a title are one line. What does not fit is cut from the end, whole, and counted («+2»); it never
+  wraps onto a second line and never pushes out the first detail (`OverflowList`). The row's page shows them all.
 - A press on a row opens it. What else can be done to it is in its page, or in a menu at the end of the row. A swipe
   on a row is a shortcut for one of those, never the only way.
 - Nothing appears only under the pointer. A button that a wide window shows on hover is always drawn here, or lives in
@@ -140,10 +142,27 @@ What opens over the page:
 
 - A short task (add, rename, pick) is a `Sheet` from the foot: one field, a few quick choices, one solid button.
 - A `Dialog` is for a question that must be answered. A menu stays a menu.
+- Ask once, in a dialog. A sentence that only matters before the first use (what is sent, and where) is not a line
+  of the page. The first press asks it in a `Dialog` with the two answers, and the app remembers the answer: the
+  next presses act at once.
 - A hint (`Tooltip`) never opens under a finger: it holds no information that is nowhere else (it never did).
 
 Motion: as everywhere. Short, only on a gesture, a sheet enters from its own edge, nothing loops; all works with
 motion off or reduced.
+
+### Recommended: a screen that has to fit
+
+A screen where the user decides about one item at a time (sort, triage) does not scroll: the item, its fields and the
+two answers are in sight together, so nothing the decision needs is out of view.
+
+- The frame is as tall as the screen in sight (`h-dvh` or `min-h-dvh`, as in «The page» above), never `100vh`. While
+  the browser shows its address bar, `100vh` is taller than the screen, and a page that fits still scrolls.
+- Short fields (a day, a duration, a list) sit two to a row; a long one (the title, a note) keeps the whole width.
+  It is the one exception to the single column of «Forms».
+- Quick picks are one row that scrolls sideways, not rows that wrap: the next chip peeks at the edge, and that is the
+  sign there are more.
+- The two answers stay above the bar at the foot (`sticky bottom-0`), the solid one last (R3).
+- Measure it at 360x640 and at 411x741, with a coarse pointer: the page does not scroll, and both answers are in sight.
 
 ## Layouts
 
@@ -290,7 +309,12 @@ return <TaskRow task={task} swipe={phone ? { end: archive } : undefined} />
 ## Before a release
 
 - Open every screen at 320px, 390px and 430px wide, with a coarse pointer (the browser's device mode): no row of
-  controls scrolls sideways, no word is cut where it is the only name of a thing.
+  controls scrolls sideways (a row of quick picks does, on purpose), no word is cut where it is the only name of a
+  thing.
+- At 320px, on every screen, `document.documentElement.scrollWidth === innerWidth`. One thing too wide widens the
+  whole page: a long string that cannot wrap, `whitespace-nowrap` with `shrink-0` in a flex row, a grid track without
+  `minmax(0, 1fr)`. Chrome on Android then draws the `fixed` bars on the widened page, and the bottom bar is cut off.
+- A page that should fit is not `100vh` or `h-screen` tall: it is `dvh`.
 - Every screen has one solid action, and it can be reached with the thumb or is last in the bar.
 - Every action has a way that needs no hover, no key and no swipe.
 - Type in every field: the page does not zoom, and the keyboard is the right one.

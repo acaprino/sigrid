@@ -100,7 +100,8 @@ reads: `// design-check-ignore-next-line color-value: an invoice number, not a c
 
 In the repository of the toolkit: `npm run design:lint`, `npm run design:check`, `npm run typecheck`,
 `npm run showcase:typecheck`, `npm test`, `npm run build`. After a change to a component's props or comments run
-`npm run agents`, which writes `agents/` again (a test fails if it is behind). A component goes in the toolkit only
+`npm run agents`, which writes `agents/` again (a test fails if it is behind); where nothing may be compiled, take `agents/`
+from the artifact `agents` that a failed CI run keeps. A component goes in the toolkit only
 if it carries no concept of one app. A new source file starts with a comment that says what it is: the catalogue
 reads it. A dependency is
 pinned to an exact version and listed in `THIRD_PARTY.md`. Work goes to `develop`; a merge of `develop` into `main`
