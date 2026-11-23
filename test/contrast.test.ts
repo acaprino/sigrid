@@ -116,15 +116,17 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
     for (const bg of BACKGROUNDS) expect(contrast(t['accent']!, t[bg]!), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
   })
 
-  test('hover darkens the accent: it is one accent, not two', () => {
-    // Darker than the filled button it hovers (with the default tone, Vivid, the fill is livelier than the accent as text).
-    expect(luminance(t['accent-hover']!)).toBeLessThan(luminance(t['primary']!))
+  test('hover is a step of the accent that can be seen: it is one accent, not two', () => {
+    // Darker than the filled button it hovers (with the default tone, Vivid, the fill is livelier than the accent as
+    // text); a fill that is nearly black has no darker step to show, so its hover is lighter.
+    if (luminance(t['primary']!) < 0.02) expect(luminance(t['accent-hover']!)).toBeGreaterThan(luminance(t['primary']!) * 1.5)
+    else expect(luminance(t['accent-hover']!)).toBeLessThan(luminance(t['primary']!))
     // Same color, darker: the highest channel of the accent stays the highest on hover too.
     const dominant = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).reduce((best, v, i, all) => (v > all[best]! ? i : best), 0)
     expect(dominant(t['accent-hover']!)).toBe(dominant(t['accent']!))
   })
 
-  test('the primary button hover darkens with accent-hover, it does not lighten with an opacity mix', () => {
+  test('the primary button hover is the accent-hover token, never an opacity mix', () => {
     const button = readFileSync(`${root}src/components/ui/button.tsx`, 'utf8')
     expect(button).toContain('hover:bg-accent-hover')
     expect(button).not.toMatch(/hover:bg-accent\/\d+/)

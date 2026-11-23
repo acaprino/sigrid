@@ -71,6 +71,8 @@ export function over(fg: string, bg: string, alpha: number): string {
 
 /** A small margin above every threshold: rounded values and browsers must not fall below it. */
 const MARGIN = 0.03
+/** Under this lightness a fill is nearly black: its hover lightens, a darker step would not be seen. */
+const NEAR_BLACK = 0.3
 
 /**
  * Moves the lightness of `c` in direction `dir` (−1 darker, +1 lighter) until `ok` is true on its hex value.
@@ -364,7 +366,7 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
       ink: g(0.2, 1.5), inkSoft: g(0.36, 1.5), inkMute: g(0.5, 1.2),
       // The accent as text is step 11 of the palette; step 12 is the stronger text step, taken where 11 falls short.
       accent, accentStrong: mono ? ok(0.2, 0, 0) : ok(0.39, ac, ah), fill: plain ?? accent, onFill: plain ? labelOn(plain, ok(1, 0, 0)) : ok(1, 0, 0), accentSoft: ok(0.94, mono ? 0 : tint(strong ? 0.045 : 0.032), ah),
-      selected: mono ? ok(0.87, 0, 0) : ok(0.895, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
+      selected: mono ? ok(0.9, 0, 0) : ok(0.915, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
       // The solid sidebar is dark enough for the user's colors to hold 3:1 on it and on the light page at once.
       // The tone tints the sidebar too: Calm takes it toward gray, Vivid gives it the theme's colour (owner, 2026-11-20).
       sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4 * tone.surface, 0.018), t.hue) : belowPage(g(0.946, 1.7 * tone.surface)),
@@ -409,26 +411,30 @@ const at = (token: string, percent: number) => `color-mix(in srgb, var(--color-$
  * in dark) at Park's alpha steps (its gray a4 9%, a6 15%, a7 19%; in dark its black a8, ~47%). In light the ring is the
  * same drop color around the edge; in dark it is the ink inside the edge (a drop of light ink would be a glow). `float`
  * is what is lifted and dragged (Park's `xl`, with a second, closer drop).
+ * The finish is the toolkit's own (the owner, 2026-11-23): the edge is a crisp hairline (the ring at 15%) and the drop under
+ * it is wide and faint, with a blur of about three times its offset, so a raised surface reads as lifted off the page
+ * and not as resting on a smudge. The higher the surface, the wider the drop.
  */
 function elevationOf(scheme: ThemeScheme): Record<string, string> {
   if (scheme === 'light') {
     const soft = at('drop', 9)
+    const edge = at('drop', 15)
     return {
-      '--elevation-xs': `0 1px 2px ${at('drop', 15)}, 0 0 1px ${at('drop', 19)}`,
-      '--elevation-sm': `0 2px 4px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-md': `0 4px 8px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-lg': `0 8px 16px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-float': `0 16px 24px ${soft}, 0 4px 8px ${soft}, 0 0 1px ${at('drop', 15)}`,
+      '--elevation-xs': `0 1px 2px ${edge}, 0 0 1px ${at('drop', 19)}`,
+      '--elevation-sm': `0 2px 6px ${soft}, 0 0 1px ${edge}`,
+      '--elevation-md': `0 6px 16px ${soft}, 0 0 1px ${edge}`,
+      '--elevation-lg': `0 12px 32px ${at('drop', 12)}, 0 0 1px ${edge}`,
+      '--elevation-float': `0 24px 48px ${edge}, 0 4px 8px ${soft}, 0 0 1px ${edge}`,
     }
   }
   const drop = at('drop', 47)
   const ring = `inset 0 0 1px ${at('ink', 33)}`
   return {
     '--elevation-xs': `0 1px 1px ${drop}, ${ring}`,
-    '--elevation-sm': `0 2px 4px ${drop}, ${ring}`,
-    '--elevation-md': `0 4px 8px ${drop}, ${ring}`,
-    '--elevation-lg': `0 8px 16px ${drop}, ${ring}`,
-    '--elevation-float': `0 16px 24px ${at('drop', 55)}, ${ring}`,
+    '--elevation-sm': `0 2px 6px ${drop}, ${ring}`,
+    '--elevation-md': `0 6px 16px ${drop}, ${ring}`,
+    '--elevation-lg': `0 12px 32px ${drop}, ${ring}`,
+    '--elevation-float': `0 24px 48px ${at('drop', 55)}, ${ring}`,
   }
 }
 
@@ -655,9 +661,11 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const line = hex(take('line', s.line, (-dir) as -1 | 1, (h) => backgrounds.every((bg) => contrast(h, bg) < 3 - MARGIN)))
   const input = hex(take('input', s.input, dir, (h) => atLeast(backgrounds, 3)(h) && backgrounds.every((bg) => contrast(h, bg) > contrast(line, bg))))
 
-  // The solid button: the text holds on the fill at rest and on hover (which always darkens). With light text
+  // The solid button: the text holds on the fill at rest and on hover (which darkens, see `hoverOf`). With light text
   // the fill darkens, with dark text ("Ink" in dark) it lightens.
-  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L - 0.045 })
+  // A fill that is nearly black has no room to darken (a step down from it cannot be seen): it lightens instead,
+  // by a step that can (the owner, 2026-11-23: the solid button must answer the pointer in every theme).
+  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
   // The fill is also a mark to be seen without text (timeline bars, the calendar's "today"): on the backgrounds
   // it holds at 3:1 (WCAG 1.4.11). In dark the deep tone may fall below: it lightens toward the text, but only
   // as long as the text still holds at 4.5:1. If that is not enough, the text wins.

@@ -7,10 +7,10 @@
   --color-ink: #161616;
   --color-ink-soft: #3d3d3d;
   /* Muted text: at least 4.5:1 on paper, paper-2 and raised (test/contrast.test.ts). */
-  --color-ink-mute: #5b5b5b;
+  --color-ink-mute: #626262;
   --color-line: #dcdcdc;
   --color-accent: #1f1f1f;
-  --color-accent-hover: #151515;
+  --color-accent-hover: #303030;
   --color-accent-soft: #ebebeb;
   --color-raised: #fdfefe;
 
@@ -48,13 +48,17 @@
   --text-base--line-height: 1.5;
   /* Titles of what is larger than a dialog: a card or a panel (`lg`, 18px/28px), a section (`xl`, 20px/28px), a page
      (`2xl`, 24px/32px). The toolkit's own surfaces stop at 16px; these are for an app's pages, so that every app
-     takes its titles from one scale (the owner's decision of 2026-11-22). */
+     takes its titles from one scale (the owner's decision of 2026-11-22). A title is set a little tighter the larger
+     it is (the owner, 2026-11-23): at these sizes the system font's own spacing reads loose. */
   --text-lg: 1.125rem;
   --text-lg--line-height: calc(1.75 / 1.125);
+  --text-lg--letter-spacing: -0.01em;
   --text-xl: 1.25rem;
   --text-xl--line-height: calc(1.75 / 1.25);
+  --text-xl--letter-spacing: -0.015em;
   --text-2xl: 1.5rem;
   --text-2xl--line-height: calc(2 / 1.5);
+  --text-2xl--letter-spacing: -0.02em;
 
   /* The two font roles of DESIGN.md: the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
      monospace faces: DESIGN.md `code-sm`). */
@@ -78,7 +82,7 @@
   --color-secondary: #eeeeee;
   --color-secondary-foreground: #161616;
   --color-muted: #eeeeee;
-  --color-muted-foreground: #5b5b5b; /* placeholders and descriptions of the primitives: the same value as ink-mute */
+  --color-muted-foreground: #626262; /* placeholders and descriptions of the primitives: the same value as ink-mute */
   --color-destructive: #ad2a1e;
   --color-destructive-soft: #fef1ef;
   --color-border: #dcdcdc;
@@ -100,11 +104,11 @@
   --color-warning: #855000;
   --color-warning-soft: #fdf4e3;
   --color-highlight: #ffe38a;
-  --color-selected: #d4d4d4;
+  --color-selected: #dedede;
   --color-selected-ink: #161616;
   --color-sidebar-ink: #3d3d3d;
-  --color-sidebar-mute: #5b5b5b;
-  --color-sidebar-selected: #d4d4d4;
+  --color-sidebar-mute: #626262;
+  --color-sidebar-selected: #dedede;
   --color-sidebar-selected-ink: #161616;
   --color-mark-1: #605553;
   --color-mark-icon-1: #4d4240;
@@ -194,10 +198,10 @@
   :root,
   :host {
     --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
-    --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-    --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-    --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 9%, transparent);
-    --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 12%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
   }
 }
 
@@ -225,10 +229,10 @@
       /* In dark a drop of ink would be a glow: the drop is the engine's near-black `drop` and the ring is the ink inside
          the edge (Park's dark shadows: black a8 and an inset gray a8). */
       --elevation-xs: 0 1px 1px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
-      --elevation-sm: 0 2px 4px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
-      --elevation-md: 0 4px 8px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
-      --elevation-lg: 0 8px 16px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
-      --elevation-float: 0 16px 24px color-mix(in srgb, var(--color-drop) 55%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 47%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
+      --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 55%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
 
       --color-background: #1e1e1e;
       --color-foreground: #e4e4e4;

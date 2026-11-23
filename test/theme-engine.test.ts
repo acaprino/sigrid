@@ -156,11 +156,14 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     expect(t['muted-foreground']).toBe(t['ink-mute'])
   })
 
-  test('accent: as text on every background and on its soft background; the filled button holds at rest and on hover, which darkens', () => {
+  test('accent: as text on every background and on its soft background; the filled button holds at rest and on hover, which can be seen', () => {
     for (const bg of [...BG, t['accent-soft']!]) expect(ratio(t['accent']!, bg), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
     expect(ratio(t['primary-foreground']!, t['primary']!)).toBeGreaterThanOrEqual(AA)
     expect(ratio(t['primary-foreground']!, t['accent-hover']!)).toBeGreaterThanOrEqual(AA)
-    expect(lum(t['accent-hover']!)).toBeLessThan(lum(t['primary']!))
+    // Hover darkens the fill; a fill that is nearly black has no darker step to show, so it lightens instead. Either
+    // way the step can be seen: the two are never the same colour.
+    if (lum(t['primary']!) < 0.02) expect(lum(t['accent-hover']!)).toBeGreaterThan(lum(t['primary']!) * 1.5)
+    else expect(lum(t['accent-hover']!)).toBeLessThan(lum(t['primary']!))
   })
 
   test('the solid fill is visible even without a label (timeline bars, calendar “today”): 3:1 on every background (WCAG 1.4.11)', () => {

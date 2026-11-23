@@ -105,15 +105,15 @@ x-zsd:
     color-divider: "{colors.divider}"
   elevation:
     xs: "0 1px 2px #14171726, 0 0 1px #14171730"
-    sm: "0 2px 4px #14171717, 0 0 1px #14171717"
-    md: "0 4px 8px #14171717, 0 0 1px #14171717"
-    lg: "0 8px 16px #14171717, 0 0 1px #14171717"
-    float: "0 16px 24px #14171717, 0 4px 8px #14171717, 0 0 1px #14171726"
+    sm: "0 2px 6px #14171717, 0 0 1px #14171726"
+    md: "0 6px 16px #14171717, 0 0 1px #14171726"
+    lg: "0 12px 32px #1417171F, 0 0 1px #14171726"
+    float: "0 24px 48px #14171726, 0 4px 8px #14171717, 0 0 1px #14171726"
     xs-dark: "0 1px 1px #05060678, inset 0 0 1px #E3E5E554"
-    sm-dark: "0 2px 4px #05060678, inset 0 0 1px #E3E5E554"
-    md-dark: "0 4px 8px #05060678, inset 0 0 1px #E3E5E554"
-    lg-dark: "0 8px 16px #05060678, inset 0 0 1px #E3E5E554"
-    float-dark: "0 16px 24px #0506068C, inset 0 0 1px #E3E5E554"
+    sm-dark: "0 2px 6px #05060678, inset 0 0 1px #E3E5E554"
+    md-dark: "0 6px 16px #05060678, inset 0 0 1px #E3E5E554"
+    lg-dark: "0 12px 32px #05060678, inset 0 0 1px #E3E5E554"
+    float-dark: "0 24px 48px #0506068C, inset 0 0 1px #E3E5E554"
   motion:
     duration-press: 100ms
     duration-tooltip: 100ms
