@@ -1,6 +1,6 @@
 // Workspace: Laid out as Xiox, in the sheet frame: the views as tabs in the bar with a «Commands» button, a sidebar of categories, a status row, a list in a panel, the details, the actions and the keys at the foot.
 // A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is `src/App.tsx`
-// of the project the editor exports; `./host` is host.ts beside this file.
+// of the project the editor exports; where it runs and its window come from `@acaprino/sigrid/tauri`.
 // Workspace: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import {
@@ -9,10 +9,12 @@ import {
   ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs, useAppShell, useDesktopGuard, useMedia,
   WindowControls, type ToastItem,
 } from '@acaprino/sigrid'
-import { OWN_WINDOW, closeWindow, minimizeWindow, toggleMaximizeWindow } from './host'
+import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
 type Screen = 'cleanup' | 'registry' | 'settings'
 const SCREENS: Record<Screen, string> = { cleanup: 'Cleanup', registry: 'Registry', settings: 'Settings' }
+// Where the app runs: a Tauri window of its own on a computer, or a browser (or a phone, where the system draws the window).
+const HOST = readHost()
 
 /** The button that opens the sidebar: in the bar only where the frame has taken the sidebar out of the layout. */
 function MenuButton({ onOpen }: { onOpen: () => void }) {
@@ -38,8 +40,10 @@ export function App() {
   // Under this width the frame is laid out as on a phone: the sidebar is a drawer, the tabs are at the foot.
   const narrow = useMedia('(width < 620px)')
   // A window of its own on a computer: the app draws the window's bar, and takes the browser's own keys away.
-  const ownWindow = OWN_WINDOW && !narrow
+  const ownWindow = HOST.ownWindow && !narrow
   useDesktopGuard(ownWindow)
+  // The window's three buttons, wired to the Tauri window; in a browser they do nothing and are not drawn.
+  const windowControls = useWindowControls({ enabled: ownWindow })
   const go = (next: Screen) => {
     setScreen(next)
     setMenu(false)
@@ -239,8 +243,8 @@ export function App() {
         contentLabel={SCREENS[screen]}
         titleBar={
           <TitleBar
-            dragProps={ownWindow ? { 'data-tauri-drag-region': '' } : undefined}
-            windowControls={ownWindow ? <WindowControls onMinimize={minimizeWindow} onMaximizeToggle={toggleMaximizeWindow} onClose={closeWindow} /> : undefined}
+            dragProps={ownWindow ? DRAG_REGION : undefined}
+            windowControls={ownWindow ? <WindowControls {...windowControls} /> : undefined}
           >
             <Toolbar aria-label="Workspace">
               <MenuButton onOpen={() => setMenu(true)} />

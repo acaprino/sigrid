@@ -4,6 +4,7 @@
 // holes: the regions are printed from the same elements the run page draws, so the export is what was seen.
 // The frame printed by `frameSource` is the one render.tsx draws (`Frame`, `RunApp`): change the two together.
 import { DENSITIES } from '../../src/index'
+import { TAURI_PERMISSIONS } from '../../tauri/permissions'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
 import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, contentClass, planOf, type Plan } from './plan'
@@ -190,8 +191,8 @@ function frameSource(plan: Plan): El {
       'TitleBar',
       {
         size: s.barSize === 'compact' ? 'compact' : undefined,
-        dragProps: raw("ownWindow ? { 'data-tauri-drag-region': '' } : undefined"),
-        windowControls: raw('ownWindow ? <WindowControls onMinimize={minimizeWindow} onMaximizeToggle={toggleMaximizeWindow} onClose={closeWindow} /> : undefined'),
+        dragProps: raw('ownWindow ? DRAG_REGION : undefined'),
+        windowControls: raw('ownWindow ? <WindowControls {...windowControls} /> : undefined'),
       },
       h('Toolbar', { 'aria-label': plan.name }, plan.shared.bar),
     ),
@@ -258,7 +259,7 @@ export function appSource(app: AppModel): string {
     )
   }
   for (const state of plan.states) head.push(`  const [${state.name}, ${state.setter}] = useState${state.type ? `<${state.type}>` : ''}(${lit(state.initial)})`)
-  head.push("  // Under this width the frame is laid out as on a phone: the sidebar is a drawer, the tabs are at the foot.", "  const narrow = useMedia('(width < 620px)')", "  // A window of its own on a computer: the app draws the window's bar, and takes the browser's own keys away.", '  const ownWindow = OWN_WINDOW && !narrow', '  useDesktopGuard(ownWindow)')
+  head.push("  // Under this width the frame is laid out as on a phone: the sidebar is a drawer, the tabs are at the foot.", "  const narrow = useMedia('(width < 620px)')", "  // A window of its own on a computer: the app draws the window's bar, and takes the browser's own keys away.", '  const ownWindow = HOST.ownWindow && !narrow', '  useDesktopGuard(ownWindow)', "  // The window's three buttons, wired to the Tauri window; in a browser they do nothing and are not drawn.", '  const windowControls = useWindowControls({ enabled: ownWindow })')
   if (used('go')) head.push('  const go = (next: Screen) => {', '    setScreen(next)', ...(menu ? ['    setMenu(false)'] : []), '  }')
   if (used('toggleDetails')) head.push('  const toggleDetails = () => setDetails((open) => !open)')
   if (plan.uses.say) {
@@ -289,10 +290,12 @@ export function appSource(app: AppModel): string {
     `// ${plan.name.replace(/[\r\n\u2028\u2029]+/g, ' ')}: made with the Sigrid app editor. Every part is the toolkit's own; change anything.`,
     `import { ${react.join(', ')}, type ReactNode } from 'react'`,
     ...importLines(names, '@acaprino/sigrid'),
-    "import { OWN_WINDOW, closeWindow, minimizeWindow, toggleMaximizeWindow } from './host'",
+    "import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'",
     '',
     `type Screen = ${plan.screens.map((s) => lit(s.id)).join(' | ')}`,
     `const SCREENS: Record<Screen, string> = ${literal(Object.fromEntries(plan.screens.map((s) => [s.id, s.name])))}`,
+    '// Where the app runs: a Tauri window of its own on a computer, or a browser (or a phone, where the system draws the window).',
+    'const HOST = readHost()',
     ...helpers.flatMap((id) => ['', HELPERS[id]!.source]),
     '',
     'export function App() {',
@@ -306,17 +309,6 @@ export function appSource(app: AppModel): string {
 
 /* ———— The project around it ———— */
 
-const HOST = `// Where the app runs. A page in a Tauri window finds \`__TAURI_INTERNALS__\`; a page in a browser does not.
-export const NATIVE = '__TAURI_INTERNALS__' in window
-const MOBILE = /android|iphone|ipad|ipod/i.test(navigator.userAgent)
-/** A window of its own on a computer, with its decorations off: the app draws the window's bar and its three buttons. */
-export const OWN_WINDOW = NATIVE && !MOBILE
-
-const current = async () => (await import('@tauri-apps/api/window')).getCurrentWindow()
-export const minimizeWindow = () => void current().then((window) => window.minimize())
-export const toggleMaximizeWindow = () => void current().then((window) => window.toggleMaximize())
-export const closeWindow = () => void current().then((window) => window.close())
-`
 
 const CSS = `/* Tailwind, then the toolkit's fonts and theme; the toolkit's sources are read for the classes its parts use. */
 @import "tailwindcss";
@@ -431,25 +423,29 @@ npm run dev
 
 ## As a native app, in Tauri
 
-The page is the same. \`src/host.ts\` finds out where it runs: in a Tauri window on a computer the app draws the
-window's bar (its empty parts move the window, its last three buttons minimize, maximize and close it), opens what it
-opens under that bar, and takes the browser's own keys away. In a browser none of this happens.
+The page is the same. \`@acaprino/sigrid/tauri\` finds out where it runs (\`readHost\`): in a Tauri window on a
+computer the app draws the window's bar (its empty parts move the window, its last three buttons minimize, maximize
+and close it), opens what it opens under that bar, and takes the browser's own keys away. In a browser none of this
+happens, and nothing of Tauri is loaded.
 
-1. \`npm run tauri init\` writes \`src-tauri/\`. Answer: the web assets are in \`../dist\`, the dev server is at
-   \`http://localhost:5173\`, the dev command is \`npm run dev\`, the build command is \`npm run build\`.
-2. In \`src-tauri/tauri.conf.json\`, give the window no decorations, so the app's own bar is the only one:
+The native side (\`src-tauri/\`: the Rust program, its config, its capabilities) is not the toolkit's. Make it with
+the tauri-app-builder plugin of Claude Code (its \`tauri-starter\` skill adapts an existing web project), or with
+\`npm run tauri init\` (the web assets are in \`../dist\`, the dev server is at \`http://localhost:5173\`, the dev
+command is \`npm run dev\`, the build command is \`npm run build\`). Then:
+
+1. In \`src-tauri/tauri.conf.json\`, give the window no decorations, so the app's own bar is the only one:
 
    \`\`\`json
    "app": { "windows": [{ "title": ${JSON.stringify(app.name)}, "width": 1100, "height": 760, "minWidth": 360, "minHeight": 600, "decorations": false }] }
    \`\`\`
 
-3. In \`src-tauri/capabilities/default.json\`, let the page move the window and press its buttons:
+2. In \`src-tauri/capabilities/default.json\`, grant what the toolkit's window parts call (\`TAURI_PERMISSIONS.basics\`):
 
    \`\`\`json
-   "permissions": ["core:default", "core:window:allow-start-dragging", "core:window:allow-minimize", "core:window:allow-toggle-maximize", "core:window:allow-close"]
+   "permissions": ${JSON.stringify(['core:default', ...TAURI_PERMISSIONS.basics])}
    \`\`\`
 
-4. \`npm run tauri dev\`, and \`npm run tauri build\` for the installer.
+3. \`npm run tauri dev\`, and \`npm run tauri build\` for the installer.
 
 On a phone (\`npm run tauri android init\`, \`npm run tauri ios init\`) the system draws the window: the app shows no
 window buttons, and \`src/app.css\` keeps the room of the clock and of the home indicator free.
@@ -482,7 +478,6 @@ export function exportFiles(app: AppModel, toolkit: { version: string }): Export
   return [
     { path: 'src/App.tsx', text: appSource(app) },
     { path: 'src/main.tsx', text: mainSource(app) },
-    { path: 'src/host.ts', text: HOST },
     { path: 'src/app.css', text: CSS },
     { path: 'index.html', text: html(app.name) },
     { path: 'package.json', text: `${JSON.stringify(pkg, null, 2)}\n` },

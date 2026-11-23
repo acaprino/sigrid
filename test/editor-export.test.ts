@@ -61,7 +61,7 @@ function check(files: Record<string, string>): string[] {
     lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
     types: [],
     baseUrl: root,
-    paths: { '@acaprino/sigrid': ['src/index.ts'], '@tauri-apps/api/window': ['.export-check/tauri-window.d.ts'] },
+    paths: { '@acaprino/sigrid': ['src/index.ts'], '@acaprino/sigrid/tauri': ['tauri/index.ts'] },
   }
   const host = ts.createCompilerHost(options)
   const read = host.readFile.bind(host)
@@ -95,11 +95,9 @@ function bare(): AppModel {
   }
 }
 
-const TAURI = 'export declare function getCurrentWindow(): { minimize(): Promise<void>; toggleMaximize(): Promise<void>; close(): Promise<void> }\n'
-
 test('the source of every app the editor starts from, and of every component, type-checks against the toolkit', () => {
   const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
-  const files: Record<string, string> = { 'tauri-window.d.ts': TAURI }
+  const files: Record<string, string> = {}
   for (const [id, app] of Object.entries(apps)) {
     const made = exportFiles(app, { version: '0.0.0' })
     for (const file of made) if (/^src\/.*\.tsx?$/.test(file.path)) files[`${id}/${file.path}`] = file.text.replace("import './app.css'\n", '')

@@ -187,15 +187,11 @@ async function examples() {
     outExtension: { '.js': '.mjs' },
     logLevel: 'silent',
   })
-  const { apps, host } = await import(`${pathToFileURL(`${out}editor.mjs`).href}?${Date.now()}`)
-  return [
-    ...apps.map((app) => ({
-      path: `agents/examples/${app.id}.tsx`,
-      text: `// ${app.name}: ${app.about}\n// A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is \`src/App.tsx\`\n// of the project the editor exports; \`./host\` is host.ts beside this file.\n${app.source}`,
-    })),
-    // What the apps import as `./host`: where the app runs, and the window's buttons of a native build.
-    { path: 'agents/examples/host.ts', text: host },
-  ]
+  const { apps } = await import(`${pathToFileURL(`${out}editor.mjs`).href}?${Date.now()}`)
+  return apps.map((app) => ({
+    path: `agents/examples/${app.id}.tsx`,
+    text: `// ${app.name}: ${app.about}\n// A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is \`src/App.tsx\`\n// of the project the editor exports; where it runs and its window come from \`@acaprino/sigrid/tauri\`.\n${app.source}`,
+  }))
 }
 
 const files = [{ path: 'agents/catalog.json', text: `${JSON.stringify(catalog(), null, 1)}\n` }, ...(await examples())]
