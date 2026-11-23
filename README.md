@@ -19,7 +19,8 @@ It knows nothing of any app: no app's name, concepts or product components. The 
 window API of a desktop shell (its title bar is plain web, and a shell drives it from outside: see
 [Toolbar and title bar](#toolbar-and-title-bar)); what is Tauri's lives apart, in `tauri/`. An app builds its product
 components on top of it, usually in a package of its own that re-exports what the app needs from here.
-MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
+MIT licence (`LICENSE`). The third-party code it adapts (all MIT), and the libraries and fonts it rests on with
+their licences, are listed in `THIRD_PARTY.md`.
 
 ## Use it
 
@@ -91,13 +92,13 @@ Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.
 ## Density
 
 Density is data, like the themes (`src/density.ts`). The toolkit ships three presets, `DENSITIES`; `normal` is the
-default and equals the sizes the toolkit had before density existed.
+default, a 4px step under Park UI's md form (Park's md is `large` here).
 
 | | control heights (md/sm/xs) | side padding (md/sm/xs) | row height | row padding |
 |---|---|---|---|---|
-| `compact` | 36 / 32 / 28px | 12 / 10 / 8px | 32px | 4px |
-| `normal` | 40 / 36 / 32px | 14 / 12 / 10px | 40px | 8px |
-| `large` | 44 / 40 / 36px | 16 / 14 / 12px | 48px | 12px |
+| `compact` | 32 / 28 / 24px | 10 / 8 / 6px | 32px | 4px |
+| `normal` | 36 / 32 / 28px | 12 / 10 / 8px | 40px | 8px |
+| `large` | 40 / 36 / 32px | 14 / 12 / 10px | 48px | 12px |
 
 - `applyDensity(root, density)` takes a preset id or a `DensityDef` (an app's own, or a preset with some measures
   changed: `densityWith('compact', { row: { height: 28 } })`). It writes the measures on the element as `--density-*`
@@ -550,13 +551,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 - `docs/mobile.md`: the system on a phone. The idea (the same app in one column, one job on each screen, act at the
   foot, undo and do not ask), what the toolkit does by itself (44px with a finger, 16px fields, the drawer, the date
   card as a sheet…) with the measures at 390px, what an app adds (which navigation, the bar, actions, forms, sheets),
-  six layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
+  seven layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
   frame as wide as a phone under «Phone layouts», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: the design system shown with its own frame (`AppShell`), in five views as tabs in the bar. Philosophy,
   Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
-  examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
+  examples (the layout gallery and the phone layouts are in Practices); Components shows the components (all but a few, which `showcase/vite.config.mjs` names) in their variants, sizes and states
   (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows four
   whole apps of the suite made of these parts: a to-do list (Ethel) and a mail client (Qamille), each on a computer
   and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`), and a
@@ -613,7 +614,8 @@ comes with the package, at the version the app has installed, and most of it is 
   screen that fits (`Page fit`).
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
-- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
+- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`, `docs/design-laws.md`: the rules and the guides, inside the
+  package.
 - `sigrid-check`: the design check, as a command of the package. In an app, `npx --no sigrid-check` checks `./src`
   against `DESIGN.md` and exits with 1 when it finds something, so an agent can run it and correct itself. It finds
   values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,

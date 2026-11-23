@@ -341,11 +341,12 @@ A tool that one view lacks keeps its place, so the plus at the end of the bar ne
 
 ```tsx
 <ToolbarSpacer />
-<ToolbarButton label="Filter" icon={<Icon name="filter" />} absent={view === 'settings'} onClick={filter} />
+<ToolbarButton label="Labels" icon={<Icon name="labels" />} absent={view === 'settings'} onClick={showLabels} />
 <ToolbarButton label="New task" variant="default" icon={<Icon name="plus" />} onClick={add}>New task</ToolbarButton>
 ```
 
 The detail as a page: the same frame with the content swapped, the way back in the bar and the actions at the foot.
+The way back is its word alone: Sigrid's names (`ICON_NAMES`) have no drawing for «back» yet.
 
 ```tsx
 <AppShell
@@ -353,7 +354,7 @@ The detail as a page: the same frame with the content swapped, the way back in t
   titleBar={
     <TitleBar>
       <Toolbar aria-label="Task">
-        <ToolbarButton label="Back to Today" icon={<ChevronLeft aria-hidden="true" />} keepWord onClick={close}>
+        <ToolbarButton label="Back to Today" onClick={close}>
           Today
         </ToolbarButton>
       </Toolbar>
