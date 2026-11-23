@@ -10,7 +10,7 @@ import * as React from "react"
 import { Radio as RadioPrimitive } from "@base-ui/react/radio"
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
 import { cn } from "../../lib/utils"
-import { FOCUS_RING } from "../../lib/focus"
+import { FOCUS_RING, FOCUS_RING_SWATCH } from "../../lib/focus"
 
 type RadioGroupOwnProps = {
   children?: React.ReactNode
@@ -108,11 +108,18 @@ const ITEM_CLASSES = {
   // 24 px, 44 with touch; `ink` selection ring on `paper` (2 px, detached by 2 px) and the focus ring (accent text, R8)
   // at 6 px: the 2px offset of R8 is taken by the selection ring, so focus sits outside it (approved exception).
   swatch: cn(
-    "relative inline-flex size-6 shrink-0 rounded-full outline-hidden pointer-coarse:size-11",
-    "focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-6 focus-visible:outline-ring",
+    "relative inline-flex size-6 shrink-0 rounded-full pointer-coarse:size-11",
+    FOCUS_RING_SWATCH,
+    // `SWATCH_CHOSEN`, on the radio Base UI marks checked.
     "data-checked:ring-2 data-checked:ring-ink data-checked:ring-offset-2 data-checked:ring-offset-paper"
   ),
 } as const
+
+/**
+ * The selection of a colour swatch: a 2px ring in the ink, 2px away from the swatch on the page's paper. For a swatch
+ * that is not a `RadioGroupItem` (one among other kinds of choices), with `FOCUS_RING_SWATCH` for its focus.
+ */
+export const SWATCH_CHOSEN = "ring-2 ring-ink ring-offset-2 ring-offset-paper"
 
 /** The `<button>` attributes (ref, `aria-*`, `data-*`, `style`, handlers) go on the radio. */
 type RadioNativeProps = Omit<

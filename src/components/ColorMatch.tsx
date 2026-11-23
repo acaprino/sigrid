@@ -3,7 +3,9 @@ import { SPOT_KINDS, colorTheme, isSpotKind, spotSuggestions, type SpotKind } fr
 import { isAccentColor, type ThemeScheme, type ThemeTone } from '../theme-engine'
 import { themeVariables } from '../themes'
 import { FOCUS_RING } from '../lib/focus'
-import { radioArrows } from './LookSettings'
+import { cn } from '../lib/utils'
+import { RadioGroup, RadioGroupItem, SWATCH_CHOSEN } from './ui/radio-group'
+import { choiceBorder, radioArrows } from './LookSettings'
 
 export interface ColorMatchProps {
   /** The theme colours ready to pick, besides one of the user's own. */
@@ -28,13 +30,14 @@ export interface ColorMatchProps {
 
 /** The colours are the ones chosen: the engine's tone does not move them. */
 const AS_CHOSEN: ThemeTone = { intensity: 'theme', light: 'theme' }
-const DOT = 'size-6 shrink-0 rounded-full pointer-coarse:size-11'
-const CHOSEN = 'ring-2 ring-ink ring-offset-2 ring-offset-paper'
-
-/** A colour of the user's own: the system's colour field under a dot, dashed until a colour of theirs is chosen. */
+/**
+ * A colour of the user's own: the system's colour field under a dot, dashed until a colour of theirs is chosen. It is
+ * a swatch as `RadioGroupItem` draws one: 24px (44 with a finger), the ink ring when chosen and the focus 6px away,
+ * outside that ring (`FOCUS_RING_SWATCH`, here for the field inside it).
+ */
 function Own({ label, value, chosen, onPick }: { label: string; value: string; chosen: boolean; onPick: (color: string) => void }) {
   return <label title={label} {...(chosen ? { style: { backgroundColor: value } } : {})}
-    className={`relative grid place-items-center ${DOT} has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring ${chosen ? CHOSEN : 'border border-dashed border-input'}`}>
+    className={cn('relative grid size-6 shrink-0 place-items-center rounded-full pointer-coarse:size-11 has-focus-visible:outline-solid has-focus-visible:outline-2 has-focus-visible:outline-offset-6 has-focus-visible:outline-ring', chosen ? SWATCH_CHOSEN : 'border border-dashed border-input')}>
     <input type="color" aria-label={label} value={value} onChange={(e) => onPick(e.target.value)} className="absolute inset-0 size-full opacity-0" />
   </label>
 }
@@ -54,23 +57,22 @@ export function ColorMatch({ colors, color, spot, scheme, onColor, onSpot, text 
   return <div className="flex flex-col gap-4">
     <div className="flex flex-col gap-2">
       <p id={colorId} className="text-sm font-medium">{text.color}</p>
-      <div role="radiogroup" aria-labelledby={colorId} onKeyDown={radioArrows} className="flex flex-wrap items-center gap-2">
-        {colors.map((c, i) => <button key={c.color} type="button" role="radio" aria-checked={color === c.color} aria-label={c.label} title={c.label}
-          tabIndex={color === c.color || (ownColor && i === 0) ? 0 : -1} onClick={() => onColor(c.color)}
-          style={{ backgroundColor: c.color }} className={`${DOT} ${FOCUS_RING} ${color === c.color ? CHOSEN : ''}`} />)}
+      {/* The toolkit's radio group of swatches; the colour of the user's own is a field of its own beside them. */}
+      <RadioGroup aria-labelledby={colorId} orientation="horizontal" value={ownColor ? '' : color} onValueChange={onColor} className="flex flex-wrap items-center gap-2">
+        {colors.map((c) => <RadioGroupItem key={c.color} value={c.color} variant="swatch" aria-label={c.label} title={c.label} style={{ backgroundColor: c.color }} />)}
         <Own label={`${text.color}: ${text.own}`} value={color} chosen={ownColor} onPick={onColor} />
-      </div>
+      </RadioGroup>
     </div>
     <div className="flex flex-col gap-2">
       <p id={spotId} className="text-sm font-medium">{text.spot}</p>
       <div role="radiogroup" aria-labelledby={spotId} onKeyDown={radioArrows} className="flex flex-wrap items-center gap-2">
         {SPOT_KINDS.map((kind) => <button key={kind} type="button" role="radio" aria-checked={spot === kind} tabIndex={spot === kind ? 0 : -1} onClick={() => onSpot(kind)}
-          className={`flex items-center gap-2 rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === kind ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}>
+          className={cn('flex items-center gap-2 rounded-md border px-2 py-1 text-sm', FOCUS_RING, choiceBorder(spot === kind))}>
           <span aria-hidden="true" style={{ backgroundColor: proposals[kind] }} className="size-4 rounded-full" />
           {text.kinds[kind]}
         </button>)}
         <button type="button" role="radio" aria-checked={spot === null} tabIndex={spot === null ? 0 : -1} onClick={() => onSpot(null)}
-          className={`rounded-md border px-2 py-1 text-sm ${FOCUS_RING} ${spot === null ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}>
+          className={cn('rounded-md border px-2 py-1 text-sm', FOCUS_RING, choiceBorder(spot === null))}>
           {text.none}
         </button>
         <Own label={`${text.spot}: ${text.own}`} value={ownSpot ? (spot as string) : proposals.balanced} chosen={ownSpot} onPick={onSpot} />

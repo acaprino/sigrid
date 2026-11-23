@@ -2,7 +2,9 @@ import { createContext, memo, useContext, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { COLORS, COLOR_NAMES } from '../colors'
 import { densityOf, type DensityDef } from '../density'
-import { FOCUS_RING } from '../lib/focus'
+import { FOCUS_RING, FOCUS_RING_SWATCH } from '../lib/focus'
+import { cn } from '../lib/utils'
+import { SWATCH_CHOSEN } from './ui/radio-group'
 import { useMotion } from '../internal/motion'
 import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
 import type { ThemeDef } from '../theme-catalog'
@@ -30,7 +32,19 @@ function Check({ className }: { className: string }) {
   )
 }
 
-/** The arrow keys move focus and choose, as in a radio group; Tab enters the group on the chosen option. */
+/**
+ * The border of an option that is a card or a pill: the accent with a 1px ring when chosen, the light divider
+ * otherwise, one step darker under the pointer. The same in every choice of the look (and in `ColorMatch`).
+ */
+export function choiceBorder(chosen: boolean): string {
+  return chosen ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'
+}
+
+/**
+ * The arrow keys move focus and choose, as in a radio group; Tab enters the group on the chosen option. For a group
+ * whose options are not all of one kind (cards, a pill beside swatches), which the toolkit's `RadioGroup` cannot hold;
+ * a group of swatches alone is a `RadioGroup` (`Swatches`, the theme colour of `ColorMatch`).
+ */
 export function radioArrows(e: KeyboardEvent<HTMLDivElement>): void {
   const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
   if (step === 0) return
@@ -122,7 +136,7 @@ const ChoiceHighlightId = createContext<string | null>(null)
 export function ChoiceCards({ labelledBy, columns = 3, children }: { labelledBy: string; columns?: 2 | 3; children: ReactNode }) {
   const id = useId()
   return (
-    <div role="radiogroup" aria-labelledby={labelledBy} onKeyDown={radioArrows} className={`grid grid-cols-2 gap-2 ${columns === 3 ? 'sm:grid-cols-3' : ''}`}>
+    <div role="radiogroup" aria-labelledby={labelledBy} onKeyDown={radioArrows} className={cn('grid grid-cols-2 gap-2', columns === 3 && 'sm:grid-cols-3')}>
       <ChoiceHighlightId.Provider value={id}>{children}</ChoiceHighlightId.Provider>
     </div>
   )
@@ -139,7 +153,7 @@ export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: 
       aria-checked={choice}
       tabIndex={choice ? 0 : -1}
       onClick={onChoose}
-      className={`relative flex flex-col rounded-lg border bg-raised px-3 py-2 text-left pointer-coarse:min-h-11 ${FOCUS_RING} ${choice && !(motion && group) ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}
+      className={cn('relative flex flex-col rounded-lg border bg-raised px-3 py-2 text-left pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(choice && !(motion && group)))}
     >
       {choice && motion && group ? <motion.Highlight id={group} className="pointer-events-none absolute -inset-px rounded-[inherit] border border-primary ring-1 ring-primary" /> : null}
       {preview}
@@ -159,7 +173,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   const id = useId()
   return (
     <div className="flex items-center gap-3">
-      <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className={`size-(--control-md) shrink-0 rounded-lg border border-input bg-raised p-1 pointer-coarse:size-11 ${FOCUS_RING}`} />
+      <input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className={cn('size-(--control-md) shrink-0 rounded-lg border border-input bg-raised p-1 pointer-coarse:size-11', FOCUS_RING)} />
       <label htmlFor={id} className="text-sm">
         {label}
       </label>
@@ -192,7 +206,7 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
           aria-checked={!palette}
           tabIndex={palette ? -1 : 0}
           onClick={() => onPalette(null)}
-          className={`flex h-(--control-xs) items-center rounded-full border bg-raised px-3 text-xs pointer-coarse:min-h-11 ${FOCUS_RING} ${palette ? 'border-line hover:border-input' : 'border-primary ring-1 ring-primary'}`}
+          className={cn('flex h-(--control-xs) items-center rounded-full border bg-raised px-3 text-xs pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(!palette))}
         >
           {text.theme}
         </button>
@@ -207,7 +221,8 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
             tabIndex={palette?.seed === c ? 0 : -1}
             onClick={() => pick(c)}
             style={{ background: c }}
-            className={`size-(--control-xs) rounded-full border pointer-coarse:size-11 ${FOCUS_RING} ${palette?.seed === c ? 'border-ink ring-2 ring-ink ring-offset-2 ring-offset-paper' : 'border-line'}`}
+            // A swatch among other kinds of choice: the selection ring of every swatch, and the focus outside it.
+            className={cn('size-(--control-xs) rounded-full border pointer-coarse:size-11', FOCUS_RING_SWATCH, palette?.seed === c ? cn('border-ink', SWATCH_CHOSEN) : 'border-line')}
           />
         ))}
       </div>
@@ -314,7 +329,7 @@ export function ThemeCatalogChoice({ themes, chosen, scheme, tone, onTheme, text
               aria-checked={on}
               tabIndex={on || (chosen === null && t === themes[0]) ? 0 : -1}
               onClick={() => onTheme(t.id)}
-              className={`group flex flex-col overflow-hidden rounded-lg border bg-raised text-left ${FOCUS_RING} ${on ? 'border-primary ring-1 ring-primary' : 'border-line hover:border-input'}`}
+              className={cn('group flex flex-col overflow-hidden rounded-lg border bg-raised text-left', FOCUS_RING, choiceBorder(on))}
             >
               <span className="block h-16 w-full overflow-hidden border-b border-line">
                 <PaletteStrip pick={{ theme: t, scheme, tone }} />
@@ -349,7 +364,7 @@ function DensityPreview({ density }: { density: DensityDef }) {
       {['w-10', 'w-14', 'w-8'].map((width) => (
         <span key={width} className="flex shrink-0 items-center gap-1.5" style={{ height: d.row.height / 4 }}>
           <span className="size-2 shrink-0 rounded-full border border-input" />
-          <span className={`h-1 rounded-full bg-input ${width}`} />
+          <span className={cn('h-1 rounded-full bg-input', width)} />
         </span>
       ))}
     </span>
