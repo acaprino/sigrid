@@ -133,7 +133,7 @@ function DialogContent({
         // to screen readers, which Base UI does not announce by itself.
         aria-modal="true"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-lg bg-raised p-4 text-sm shadow-lg outline-none sm:max-w-lg md:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none sm:max-w-lg md:p-6",
           className
         )}
         {...props}
