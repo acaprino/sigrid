@@ -1868,6 +1868,77 @@
      ]
     },
     {
+     "file": "src/components/ui/input-group.tsx",
+     "about": "A one-line field with fixed parts inside it, before or after the text: words that are always there («https://»,\n«.com», a unit), an icon, or a small button that acts on what is written (copy it, show it, empty it). The whole is\none field: one border, one height and one focus ring, around the parts and the text together (R4: no border inside\na border). It takes the props of `Input` and has its look, so a `FormField` wires it as it wires an `Input`:\nthe `id`, the note and the invalid state go to the `<input>`. A press on a part that is not a button puts the\ncaret in the field, as a press on the field would.\nA button beside a field, with a border of its own («Subscribe» after an e-mail), is not this: it is an `Input` and\na `Button` in a `Cluster`.",
+     "components": [
+      {
+       "name": "InputGroup",
+       "props": [
+        {
+         "name": "start",
+         "type": "React.ReactNode",
+         "doc": "What stands before the text: an `InputGroupText`, an `InputGroupButton`, or a few of them."
+        },
+        {
+         "name": "end",
+         "type": "React.ReactNode",
+         "doc": "What stands after the text: the same parts."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "InputGroupButton",
+       "doc": "A small quiet button inside the field (copy, show, empty). Never the solid action of the screen (R3): it has no fill and no border. It is off when its field is.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the action. With an `icon` it is the accessible name and the hint; without one it is the word shown."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "The drawing, 16px (an `Icon`). With it the button shows the icon alone."
+        },
+        {
+         "name": "pressed",
+         "type": "boolean",
+         "doc": "A switch (show the password): on or off. Absent: a plain action."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "InputGroupText",
+       "doc": "Words or an icon that are part of the field and are not pressed. Muted, in the field's own text size.",
+       "props": [
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The words («https://», «kg»), or an `Icon` that says what the field holds."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "InputGroupButtonProps",
+      "InputGroupProps",
+      "InputGroupTextProps"
+     ]
+    },
+    {
      "file": "src/components/ui/input.tsx",
      "about": "SmoothUI (MIT) input 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/input.json)\nPark UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)",
      "components": [

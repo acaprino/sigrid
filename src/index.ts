@@ -34,6 +34,7 @@ export { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 export { Empty, type EmptyProps } from './components/ui/empty'
 export { FormField, type FormFieldProps } from './components/ui/form-field'
 export { Input } from './components/ui/input'
+export { InputGroup, InputGroupButton, InputGroupText, type InputGroupButtonProps, type InputGroupProps, type InputGroupTextProps } from './components/ui/input-group'
 export { ItemList, ItemRow, type ItemListProps, type ItemRowProps } from './components/ui/item-list'
 export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type ClusterProps, type ColumnProps, type GridProps, type LayoutAttributes, type LayoutElement, type PageProps, type ScrollAreaProps, type SectionProps, type Space, type SplitProps, type TextProps } from './components/ui/layout'
 export { Kbd, Shortcut, type KbdProps, type KbdSize, type ShortcutProps } from './components/ui/kbd'

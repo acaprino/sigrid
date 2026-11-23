@@ -37,6 +37,9 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  InputGroup,
+  InputGroupButton,
+  InputGroupText,
   ItemList,
   ItemRow,
   OverflowList,
@@ -1442,11 +1445,13 @@ const PEOPLE = [
 function Pickers() {
   const [zoom, setZoom] = React.useState(40)
   const [query, setQuery] = React.useState('invoice')
+  const [site, setSite] = React.useState('example.com')
+  const [shown, setShown] = React.useState(false)
   const [person, setPerson] = React.useState<string | null>('ada')
   const [labels, setLabels] = React.useState(['Home'])
   const [panel, setPanel] = React.useState(false)
   return (
-    <Section id="pickers" title="Slider, SearchField, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a choice from a list filtered while typing; a person as a neutral round tile.">
+    <Section id="pickers" title="Slider, SearchField, InputGroup, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a choice from a list filtered while typing; a person as a neutral round tile.">
       <Row label="slider">
         <div className="flex w-64 flex-col gap-2">
           <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
@@ -1459,6 +1464,20 @@ function Pickers() {
       <Row label="search">
         <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
         <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
+      <Row label="field with parts">
+        <FormField label="Site" className="w-64">
+          <InputGroup start={<InputGroupText>https://</InputGroupText>} end={<InputGroupButton label="Copy the address" icon={<Icon name="copy" />} />} value={site} onChange={(event) => setSite(event.target.value)} />
+        </FormField>
+        <FormField label="Password" className="w-64">
+          <InputGroup type={shown ? 'text' : 'password'} defaultValue="correct horse" end={<InputGroupButton label="Show" pressed={shown} onClick={() => setShown(!shown)} />} />
+        </FormField>
+        <FormField label="Weight" error="Write a number." className="w-64">
+          <InputGroup defaultValue="heavy" end={<InputGroupText>kg</InputGroupText>} />
+        </FormField>
+        <FormField label="Coupon" className="w-64">
+          <InputGroup disabled defaultValue="SPRING" end={<InputGroupButton label="Apply" />} />
+        </FormField>
       </Row>
       <Row label="combobox">
         <FormField label="Assignee" className="w-64">
