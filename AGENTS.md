@@ -10,6 +10,21 @@ wired by `@acaprino/sigrid/tauri`). ADHD first: calm neutral surfaces, one accen
 press, one clear action at a time, and shared controls that never move (R14). It runs in a browser and in a Tauri
 window, on a computer and on a phone.
 
+## One look for every app (the owner's rule)
+
+Every app of the suite that uses Sigrid looks and behaves the same: the same surfaces, shadows, spacing, type and
+motion, and the same component for the same need (a file tree is the same component in every app). What differs from
+one app to the next is the layout, which follows what the app does, its accent and its icon.
+
+- An app uses only Sigrid's components. It never makes a component of its own that draws: no stylesheet, no class,
+  no primitive, no copy or restyling of a part of Sigrid. Its own code composes Sigrid's components into its screens
+  and wires them to its data.
+- An app adapts to Sigrid, never the other way round. Sigrid changes only when a component or a primitive that a
+  function needs is really missing: then it is added to Sigrid, generic, and every app takes it from there.
+- Before asking for a new part, look in the catalogue for the one Sigrid already has for the need. A request is
+  weighed by the function that is missing, never by how the app looked before: a former look is no reason to change
+  Sigrid.
+
 ## Read before you write
 
 | To know | Read |
@@ -23,8 +38,8 @@ window, on a computer and on a phone.
 | How a component is made | `src/`, which comes with the package |
 
 Do not guess a prop or a component name: look it up in the catalogue. If the catalogue has no component for what you
-need, say so and build it in the app from the toolkit's parts and tokens; do not copy a component of the toolkit into
-the app, and do not add another component library for something the toolkit has.
+need, say so and stop: the part is added to Sigrid, generic, and is not built in the app (the first section). Do not
+copy a component of the toolkit into the app, and do not add another component library for something the toolkit has.
 
 ## How to build a screen
 
@@ -38,11 +53,12 @@ the app, and do not add another component library for something the toolkit has.
 2. Take every control from the toolkit. Import from `@acaprino/sigrid`; the table, the virtual list, the list put in
    order by hand, the rich text field and the graph canvas have entries of their own (`/table`, `/virtual`,
    `/reorder`, `/rich-text`, `/graph`; the graph also needs `@import "@acaprino/sigrid/graph.css"`).
-3. Use the tokens for everything else: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,
+3. Write no class of your own. The tokens are what the toolkit's parts are made of, and what a part added to the
+   toolkit uses: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,
    `border-line`, `bg-selected`, `bg-accent`, `text-accent`, the radii `rounded-sm|md|lg`, the shadows
-   `shadow-xs|sm|md|lg|float`, the sizes `h-(--control-md)`, `min-h-(--row-height)`, `px-(--pad-md)`. An app that
-   writes no class of its own lays out with `Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`,
-   `Page` and `Text` instead, and turns the rule `own-class` on (below).
+   `shadow-xs|sm|md|lg|float`, the sizes `h-(--control-md)`, `min-h-(--row-height)`, `px-(--pad-md)`. An app lays out
+   with `Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` and `Text`, and turns the rule
+   `own-class` on (below).
 4. Run the check (below) and fix what it finds. Then, if the project lets you run the app on this machine, look at
    the screen in a browser, wide and at 390px; if it does not, say that you did not.
 
@@ -65,8 +81,8 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   with it off.
 - Every navigation row, section heading and menu entry has an icon from `Icon` (the pack is the user's choice), and
   an empty slot where there is none (R6).
-- With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a control
-  made in the app uses `pointer-coarse:min-h-11`.
+- With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a part added
+  to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own
   with `WordsProvider`.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
@@ -116,7 +132,7 @@ reads: `// design-check-ignore-next-line color-value: an invoice number, not a c
 One rule is the app's to turn on: with `{ "rules": { "own-class": "error" } }` in `sigrid-check.config.json` the check
 also reports every class written by hand (`className=`, `class=`, a `…ClassName` prop, `classList.add(`,
 `setAttribute('class'`) and every stylesheet of the app, for an app that has no interface code of its own. It is off
-by default. A stylesheet the app must keep says so with `/* design-check-ignore own-class: <reason> */`.
+by default, and every app turns it on: no app has interface code of its own (the first section). A stylesheet the app must keep says so with `/* design-check-ignore own-class: <reason> */`.
 
 ## Work on the toolkit itself
 
@@ -124,7 +140,8 @@ In the repository of the toolkit: `npm run design:lint`, `npm run design:check`,
 `npm run showcase:typecheck`, `npm test`, `npm run build`. After a change to a component's props or comments run
 `npm run agents`, which writes `agents/` again (a test fails if it is behind); where nothing may be compiled, take `agents/`
 from the artifact `agents` that a failed CI run keeps. A component goes in the toolkit only
-if it carries no concept of one app. A new source file starts with a comment that says what it is: the catalogue
+if it carries no concept of one app, and only when a function needs it: never to bring back an app's former look
+(the first section). A new source file starts with a comment that says what it is: the catalogue
 reads it. A dependency is
 pinned to an exact version and listed in `THIRD_PARTY.md`. Work goes to `develop`; a merge of `develop` into `main`
 is a release, and the workflow sets the version.
