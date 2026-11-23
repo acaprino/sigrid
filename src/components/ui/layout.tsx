@@ -4,7 +4,8 @@
 // one passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's
 // rule of 2026-11-23: an app has no interface code of its own).
 // After Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,
-// `im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`), which the pages of Daodan were laid out with.
+// `im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view
+// of an app, which the toolkit does not carry (test/build.test.ts).
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
@@ -29,7 +30,7 @@ function own(props: LayoutAttributes): LayoutAttributes {
 const ALIGN = { stretch: "items-stretch", start: "items-start", center: "items-center", end: "items-end" } as const
 const JUSTIFY = { start: "justify-start", center: "justify-center", end: "justify-end", between: "justify-between" } as const
 
-export type StackProps = LayoutAttributes & {
+export type ColumnProps = LayoutAttributes & {
   /** The space between its parts (default `sm`). */
   gap?: Space | undefined
   /** The space inside its edges. Absent: none. */
@@ -41,10 +42,10 @@ export type StackProps = LayoutAttributes & {
 }
 
 /** A pile of parts, one under the other. */
-function Stack({ gap = "sm", pad, align = "stretch", as = "div", children, ...props }: StackProps) {
+function Column({ gap = "sm", pad, align = "stretch", as = "div", children, ...props }: ColumnProps) {
   const Tag = as
   return (
-    <Tag {...own(props)} data-slot="stack" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align])}>
+    <Tag {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align])}>
       {children}
     </Tag>
   )
@@ -210,4 +211,4 @@ function Text({ variant = "body", as = "span", pre = false, children, ...props }
   )
 }
 
-export { Cluster, Grid, Page, ScrollArea, Section, Spacer, Split, Stack, Text }
+export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text }

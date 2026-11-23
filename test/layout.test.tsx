@@ -1,9 +1,9 @@
-// The layout parts (`Stack`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`): a screen
+// The layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`): a screen
 // laid out with no class of the app's own. Every space is a step of the scale, and a class or a style passed in spite of
 // the types never reaches the page.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Cluster, Grid, Page, ScrollArea, Section, Spacer, Split, Stack, Text, type Space } from '../src'
+import { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src'
 
 const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)!
@@ -13,17 +13,17 @@ const SCALE: [Space, string][] = [['xs', 'gap-1'], ['sm', 'gap-2'], ['md', 'gap-
 describe('piles and rows', () => {
   test('a pile is a column with the gap of its step; its padding is a step too; it can be a list', () => {
     for (const [space, gap] of SCALE) {
-      const { unmount } = render(<Stack gap={space}>a</Stack>)
-      expect(classes(slot('stack'))).toEqual(expect.arrayContaining(['flex', 'flex-col', gap]))
+      const { unmount } = render(<Column gap={space}>a</Column>)
+      expect(classes(slot('column'))).toEqual(expect.arrayContaining(['flex', 'flex-col', gap]))
       unmount()
     }
     const { unmount } = render(
-      <Stack as="ul" pad="lg" align="start" aria-label="Facts">
+      <Column as="ul" pad="lg" align="start" aria-label="Facts">
         <li>one</li>
-      </Stack>,
+      </Column>,
     )
     const list = screen.getByRole('list', { name: 'Facts' })
-    expect(list.getAttribute('data-slot')).toBe('stack')
+    expect(list.getAttribute('data-slot')).toBe('column')
     expect(classes(list)).toEqual(expect.arrayContaining(['p-4', 'items-start', 'gap-2']))
     unmount()
   })
@@ -124,7 +124,7 @@ test('a class or a style passed in spite of the types never reaches the page: a 
   const sneaky = { className: palette, style: { color: 'red' } } as unknown as Record<string, never>
   render(
     <>
-      <Stack {...sneaky}>a</Stack>
+      <Column {...sneaky}>a</Column>
       <Cluster {...sneaky}>b</Cluster>
       <Split {...sneaky}>c</Split>
       <Grid {...sneaky}>d</Grid>
@@ -134,7 +134,7 @@ test('a class or a style passed in spite of the types never reaches the page: a 
       <Text {...sneaky}>h</Text>
     </>,
   )
-  for (const name of ['stack', 'cluster', 'split', 'grid', 'section', 'scroll-area', 'page', 'text']) {
+  for (const name of ['column', 'cluster', 'split', 'grid', 'section', 'scroll-area', 'page', 'text']) {
     const el = slot(name)
     expect(el.getAttribute('class') ?? '', name).not.toContain(palette)
     expect(el.getAttribute('style'), name).toBeNull()

@@ -1845,7 +1845,7 @@
     },
     {
      "file": "src/components/ui/layout.tsx",
-     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page, and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`), which the pages of Daodan were laid out with.",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page, and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).",
      "components": [
       {
        "name": "Cluster",
@@ -1869,6 +1869,36 @@
          "name": "align",
          "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
          "doc": "How they line up across the row (default `center`)."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "Column",
+       "doc": "A pile of parts, one under the other.",
+       "props": [
+        {
+         "name": "gap",
+         "type": "Space",
+         "doc": "The space between its parts (default `sm`)."
+        },
+        {
+         "name": "pad",
+         "type": "Space",
+         "doc": "The space inside its edges. Absent: none."
+        },
+        {
+         "name": "align",
+         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
         },
         {
          "name": "as",
@@ -2010,36 +2040,6 @@
        "passesOn": true
       },
       {
-       "name": "Stack",
-       "doc": "A pile of parts, one under the other.",
-       "props": [
-        {
-         "name": "gap",
-         "type": "Space",
-         "doc": "The space between its parts (default `sm`)."
-        },
-        {
-         "name": "pad",
-         "type": "Space",
-         "doc": "The space inside its edges. Absent: none."
-        },
-        {
-         "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
-         "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
-        },
-        {
-         "name": "as",
-         "type": "LayoutElement"
-        },
-        {
-         "name": "children",
-         "type": "React.ReactNode"
-        }
-       ],
-       "passesOn": true
-      },
-      {
        "name": "Text",
        "doc": "A line of text at the weight it carries: the text around it, muted, a caption or a kicker.",
        "props": [
@@ -2068,6 +2068,7 @@
      ],
      "also": [
       "ClusterProps",
+      "ColumnProps",
       "GridProps",
       "LayoutAttributes",
       "LayoutElement",
@@ -2076,7 +2077,6 @@
       "SectionProps",
       "Space",
       "SplitProps",
-      "StackProps",
       "TextProps"
      ]
     },
