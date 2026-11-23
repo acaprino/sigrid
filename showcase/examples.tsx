@@ -57,7 +57,7 @@ const HOST_ROWS: readonly (readonly [string, React.ReactNode, React.ReactNode])[
 ]
 
 const SAME = [
-  'The components, the theme, the density, the icon pack and the words: one tree of React for the four hosts.',
+  'The components, the theme, the density, the icons and the words: one tree of React for the four hosts.',
   'The layout: the frame measures itself, so a narrow window on a computer and a phone are laid out alike.',
   'The sizes of a finger: 44px with a coarse pointer, in a browser and in a native app.',
   "The keys of the app (Z to undo, R to reply, B for the Stack): they are the app's in every host that has a keyboard.",

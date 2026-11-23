@@ -49,6 +49,7 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/internal/chips.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
 | `src/internal/attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/internal/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/ui/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -72,6 +73,12 @@ Notes:
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
 - `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
+- `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
+  branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
+  ever and asks again on a second Enter), dropped when the app gives another node; the filter, which opens what leads to
+  a find and gives back what the person had opened; the failure of a load said in the row; the rows named by their name
+  alone; the branch's control made its `treeitem`, and its rows drawn only while it is open (not Ark's `Branch` and
+  `BranchContent`).
 
 ## Park UI
 
@@ -122,6 +129,7 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/internal/chips.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
 | `src/internal/attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
 
 Also following Park, without a recipe of their own: the shape and elevation in `src/theme-engine.ts` (its `radii` and
 `shadows` tokens) and `src/styles/theme.css` (its type scale and text styles; the tokens of the light navigation column
@@ -215,27 +223,15 @@ NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to t
 ```
 
 
-## Icon packs
+## Icons
 
-Two npm dependencies, installed and unmodified, never copied into `src/` (`src/icons.tsx` picks between them):
+Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Lucide, an npm dependency, installed and
+unmodified, never copied into `src/` (`src/icons.tsx` names each meaning's drawing).
 
-- `lucide-react` (ISC, Lucide contributors): the default pack.
-- `@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation", repository
-  https://github.com/microsoft/fluentui-system-icons): the optional `fluent` pack. Its repository's licence is plain
-  MIT, without the fonts-and-icons note of the Fluent UI repository.
+- `lucide-react` (ISC, Lucide contributors, https://lucide.dev).
 
-Four packs are not dependencies: their drawings, one per meaning and unmodified, are in `src/icon-packs.generated.ts`,
-written by `scripts/icon-packs.mjs` from the Iconify API (https://iconify.design):
-
-- Phosphor Icons, duotone weight (MIT, "Copyright (c) 2023 Phosphor Icons", https://github.com/phosphor-icons/core):
-  the `duotone` pack.
-- Solar Icons, bold duotone style (CC BY 4.0, by 480 Design, https://www.figma.com/community/file/1166831539721848736):
-  the `solar` pack. Attribution: "Solar Icons by 480 Design".
-- Fluent Emoji, flat style (MIT, "Copyright (c) Microsoft Corporation", https://github.com/microsoft/fluentui-emoji):
-  the `emoji` pack.
-- Twemoji (graphics CC BY 4.0, "Copyright 2019 Twitter, Inc and other contributors",
-  https://github.com/twitter/twemoji): the `twemoji` pack. Attribution: "Twemoji by Twitter, Inc and other
-  contributors".
+The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
+Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.
 
 ## TanStack Table, TanStack Virtual, dnd-kit and TipTap
 

@@ -2,7 +2,6 @@ import { createContext, memo, useContext, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { COLORS, COLOR_NAMES } from '../colors'
 import { densityOf, type DensityDef } from '../density'
-import { ICON_PACKS, Icon, type IconPack } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
 import { useMotion } from '../internal/motion'
 import { PALETTE_COMBOS, type PaletteCombo, type PalettePick } from '../palette'
@@ -12,8 +11,8 @@ import { themeVariables, type ThemePick, toneHasEffect } from '../themes'
 import { useWords } from '../words'
 
 // The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,
-// three tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app
-// passes its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.
+// three tones set how lively it is. Every choice is a card with a preview of what it does; the app passes its own words.
+// The icons are not a choice: Sigrid has one set, the same in every app (2026-11-23). The ready-made themes are the finer choice, for the app's «Advanced» fold.
 // The density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.
 
 /** A choice's name and, below it, what it is for. */
@@ -280,48 +279,6 @@ export function TonePresetChoice({ theme, scheme, palette, tone, onTone, text }:
             preview={
               <ChoicePreview kind={`tone-${k}`}>
                 <TonePreview pick={{ theme, scheme, palette, tone: presetTone(k) }} />
-              </ChoicePreview>
-            }
-          />
-        ))}
-      </ChoiceCards>
-    </ChoiceGroup>
-  )
-}
-
-export interface IconPackText {
-  readonly label: string
-  readonly hint: string
-  readonly packs: Readonly<Record<IconPack, ChoiceText>>
-}
-
-/** Five icons of a pack, in the accent: how the pack looks beside the rows of the app. */
-function IconsPreview({ pack }: { pack: IconPack }) {
-  return (
-    <span className="flex h-full items-center justify-center gap-3 text-accent">
-      {(['notifications', 'labels', 'date', 'data', 'settings'] as const).map((n) => (
-        <Icon key={n} name={n} pack={pack} className="size-4" />
-      ))}
-    </span>
-  )
-}
-
-/** The icon pack (R6): anchors for the eye beside the views, the groups and the settings. */
-export function IconPackChoice({ pack, onPack, text }: { pack: IconPack; onPack: (pack: IconPack) => void; text: IconPackText }) {
-  const id = useId()
-  return (
-    <ChoiceGroup id={id} label={text.label} hint={text.hint}>
-      <ChoiceCards labelledBy={id}>
-        {ICON_PACKS.map((p) => (
-          <ChoiceCard
-            key={p}
-            choice={pack === p}
-            name={text.packs[p].name}
-            note={text.packs[p].note}
-            onChoose={() => onPack(p)}
-            preview={
-              <ChoicePreview kind={`icons-${p}`}>
-                <IconsPreview pack={p} />
               </ChoicePreview>
             }
           />

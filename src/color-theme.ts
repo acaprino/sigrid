@@ -71,9 +71,18 @@ export function spotOf(pick: Pick<ColorThemePick, 'color' | 'spot'>): string | u
 }
 
 /**
- * The theme the engine builds a colour theme's tokens from: a pure white page and sheets, a sidebar a step darker in a
- * neutral gray, neutral ink; the colour is in the buttons and the selection, the spot in what asks for attention. In
- * dark a neutral anthracite, with the colour lifted to stay brilliant on it.
+ * The theme the engine builds a colour theme's tokens from: neutral grays in both schemes and in every tone (the theme
+ * has no chroma of its own, so no tone tints the sidebar; `hue` only turns the user's colours, as in every theme). The
+ * sidebar is the ground, a step below the page in both schemes (about 1.07:1 in light and 1.09:1 in dark with the tone as designed); the
+ * sheets are a step above the page: pure white in light, and only there, on a near-white page about as light as the
+ * catalog's, which does not glare; in dark the catalog's anthracite. The colour is in the buttons and the selection,
+ * the spot in what asks for attention; in dark it is lifted to stay brilliant.
+ *
+ * The lightness values are bound by what the engine derives from them (`startOf` and `tokensFor` in theme-engine.ts).
+ * In dark, with the tone as designed, the selection is the page plus 0.048 and the muted text must hold 4.5:1 on it:
+ * a page above 0.245 makes the engine move the muted text. In light the soft background of the accent is the page
+ * minus 0.035, and the picked colour must hold 4.5:1 on it to stay the accent as text: a darker page turns more picks
+ * to the darker step. A light sidebar below 0.964 turns the label of some mid-tone fills in the default tone.
  */
 export function colorTheme(pick: ColorThemePick): ThemeDef {
   const p = fromHex(pick.color)
@@ -81,12 +90,12 @@ export function colorTheme(pick: ColorThemePick): ThemeDef {
   const chroma = Math.max(p.C, 0.001)
   const spot = spotOf(pick)
   return {
-    id: pick.id, label: pick.label, hue: 80, chroma: 0.004, accent: [chroma, p.h], sidebar: 'tenue', palette: 'crisp',
+    id: pick.id, label: pick.label, hue: 80, chroma: 0, accent: [chroma, p.h], sidebar: 'tenue', palette: 'crisp',
     ...(spot ? { spot } : {}),
     surfaces: {
-      light: { paper: gray(1), sidebar: gray(0.965), raised: gray(1), line: gray(0.91), ink: gray(0.2), accent: pick.color, fill: pick.color },
+      light: { paper: gray(0.988), sidebar: gray(0.965), raised: gray(1), line: gray(0.9), ink: gray(0.2), accent: pick.color, fill: pick.color },
       dark: {
-        paper: gray(0.235), sidebar: gray(0.205), raised: gray(0.285), line: gray(0.33), ink: gray(0.92),
+        paper: gray(0.235), sidebar: gray(0.195), raised: gray(0.285), line: gray(0.33), ink: gray(0.92),
         accent: toHex({ L: 0.8, C: Math.min(p.C, 0.15), h: p.h }), fill: toHex({ L: 0.62, C: p.C, h: p.h }),
       },
     },

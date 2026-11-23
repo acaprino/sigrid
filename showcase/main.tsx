@@ -133,6 +133,7 @@ import {
   ToggleGroupItem,
   TonePresetChoice,
   Tooltip,
+  Tree,
   DENSITIES,
   DEFAULT_SHAPE,
   THEME_SHAPES,
@@ -163,6 +164,7 @@ import {
   type ThemeShape,
   type ThemeTone,
   type ToastItem,
+  type TreeNode,
 } from '../src/index'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
@@ -278,7 +280,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
   { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
-  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'reorder', 'graph'] },
+  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'tree', 'reorder', 'graph'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -1436,6 +1438,84 @@ function OverflowLists() {
   )
 }
 
+/** A project's files: two folders given whole, one whose rows load when it opens (and fail the first time). */
+const TREE_FILES: readonly TreeNode[] = [
+  {
+    id: 'src',
+    name: 'src',
+    icon: 'folder',
+    openIcon: 'folderOpen',
+    children: [
+      { id: 'src/components', name: 'components', icon: 'folder', openIcon: 'folderOpen', children: [
+        { id: 'src/components/button.tsx', name: 'button.tsx', icon: 'file', meta: '6 KB' },
+        { id: 'src/components/tree.tsx', name: 'tree.tsx', icon: 'file', meta: '14 KB' },
+      ] },
+      { id: 'src/index.ts', name: 'index.ts', icon: 'file', meta: '9 KB' },
+    ],
+  },
+  { id: 'docs', name: 'docs', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'docs/patterns.md', name: 'patterns.md', icon: 'file', meta: '21 KB' }] },
+  { id: 'remote', name: 'remote', icon: 'folder', openIcon: 'folderOpen', hasChildren: true },
+  { id: 'package.json', name: 'package.json', icon: 'file', meta: '3 KB' },
+  { id: 'README.md', name: 'README.md', icon: 'file', meta: '30 KB' },
+]
+
+/** An outline: no icons, and a count of what each part holds (R5). */
+const TREE_OUTLINE: readonly TreeNode[] = [
+  { id: 'intro', name: 'Introduction', children: [{ id: 'intro/why', name: 'Why a toolkit' }, { id: 'intro/how', name: 'How to read it' }] },
+  { id: 'rules', name: 'The rules', count: 14 },
+  { id: 'parts', name: 'The parts', count: 62 },
+]
+
+/** The rows of `remote`, after a second: the first try fails, so the row says so and the next opening tries again. */
+function remoteRows(): (node: TreeNode) => Promise<readonly TreeNode[]> {
+  let tries = 0
+  return () =>
+    new Promise((done, fail) => {
+      tries += 1
+      const first = tries === 1
+      setTimeout(() => (first ? fail(new Error('offline')) : done([
+        { id: 'remote/main', name: 'main', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'remote/main/build.log', name: 'build.log', icon: 'file', meta: '120 KB' }] },
+        { id: 'remote/release.yml', name: 'release.yml', icon: 'file', meta: '2 KB' },
+      ])), 1000)
+    })
+}
+
+/** The app's own filter: the whole path holds the text. The same function counts the finds. */
+const byPath = (node: TreeNode, text: string) => node.id.toLowerCase().includes(text.trim().toLowerCase())
+const treeNodes = (list: readonly TreeNode[]): TreeNode[] => list.flatMap((node) => [node, ...treeNodes(node.children ?? [])])
+
+function Trees({ animated }: { animated: boolean }) {
+  const [chosen, setChosen] = React.useState<string | null>('src/components/tree.tsx')
+  const [path, setPath] = React.useState('src/comp')
+  const load = React.useMemo(remoteRows, [])
+  const finds = path.trim() === '' ? null : treeNodes(TREE_FILES).filter((node) => byPath(node, path)).length
+  return (
+    <Section
+      id="tree"
+      title="Tree"
+      note="Nested rows on Ark UI's TreeView, for files and folders or any hierarchy: a name, one of Sigrid's icons (a folder that opens shows open), a short fact in tabular figures, a count. The rows of every list of things: the chosen one has the tint and the accent bar. One Tab stop; the arrows move, open and close, Home and End reach the ends, the first letters typed reach a name, Enter or a press chooses. A branch whose rows the app loads says «Loading», and if the load fails it says so and stays closed: opening it again tries again (here the first try fails). The field filters by name, opens what leads to a find, and gives back what the person had opened when it is cleared; an app can drive the filter and find by its own rule (here the path)."
+    >
+      <Row label="with a filter">
+        <div data-sample="tree" className="flex h-96 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Sample files" nodes={TREE_FILES} search selected={chosen} onSelect={setChosen} defaultExpanded={['src', 'src/components']} loadChildren={load} animated={animated} className="h-full" />
+        </div>
+      </Row>
+      <Row label="the app's filter, by path">
+        <div className="flex h-96 w-72 max-w-full flex-col gap-2 rounded-lg bg-raised p-2 shadow-sm">
+          <SearchField value={path} onValueChange={setPath} aria-label="Find a file by path" placeholder="Find a file by path" className="shrink-0" />
+          <p role="status" className="px-(--row-pad) text-xs text-ink-mute tabular-nums">{finds === null ? 'Every file' : `${finds} found`}</p>
+          <Tree aria-label="Sample files by path" nodes={TREE_FILES} query={path} match={byPath} loadChildren={load} animated={animated} className="min-h-0 flex-1" />
+        </div>
+      </Row>
+      <Row label="no icons">
+        <div className="w-60">
+          <Tree aria-label="Sample outline" nodes={TREE_OUTLINE} defaultExpanded={['intro']} animated={animated} />
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 const PEOPLE = [
   { value: 'ada', label: 'Ada Lovelace', detail: 'ada@example.com' },
   { value: 'alan', label: 'Alan Turing', detail: 'alan@example.com' },
@@ -2468,6 +2548,7 @@ function App() {
       <Tables />
       <LongLists />
       <OverflowLists />
+      <Trees animated={animated} />
       <Reorders animated={animated} />
       <Graphs />
       <Files />

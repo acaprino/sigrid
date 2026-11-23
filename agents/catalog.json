@@ -173,7 +173,7 @@
     },
     {
      "file": "src/components/LookSettings.tsx",
-     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app\npasses its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
+     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is. Every choice is a card with a preview of what it does; the app passes its own words.\nThe icons are not a choice: Sigrid has one set, the same in every app (2026-11-23). The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
      "components": [
       {
        "name": "BaseColorChoice",
@@ -317,27 +317,6 @@
         {
          "name": "text",
          "type": "DensityText",
-         "required": true
-        }
-       ]
-      },
-      {
-       "name": "IconPackChoice",
-       "doc": "The icon pack (R6): anchors for the eye beside the views, the groups and the settings.",
-       "props": [
-        {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
-         "required": true
-        },
-        {
-         "name": "onPack",
-         "type": "(pack: IconPack) => void",
-         "required": true
-        },
-        {
-         "name": "text",
-         "type": "IconPackText",
          "required": true
         }
        ]
@@ -543,26 +522,6 @@
        ]
       },
       {
-       "name": "IconPackText",
-       "fields": [
-        {
-         "name": "label",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "hint",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "packs",
-         "type": "Readonly<Record<\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\", ChoiceText>>",
-         "required": true
-        }
-       ]
-      },
-      {
        "name": "PaletteComboText",
        "fields": [
         {
@@ -577,7 +536,7 @@
         },
         {
          "name": "combos",
-         "type": "Readonly<Record<\"soft\" | \"clean\" | \"bold\", ChoiceText>>",
+         "type": "Readonly<Record<\"soft\" | \"bold\" | \"clean\", ChoiceText>>",
          "required": true
         }
        ]
@@ -1299,7 +1258,7 @@
     },
     {
      "file": "src/components/ui/command-palette.tsx",
-     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its\nregistry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it\nwith Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
+     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its\nregistry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it\nwith Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).\nA command that chooses one of several (`checked`: light, dark, the system's look) is an option checked or not: the one\nin use has a check at the end of its row, in the ink (R2), as the chosen option of a combo box; the others keep its\nroom, so a key after it does not move.",
      "components": [
       {
        "name": "CommandPalette",
@@ -1375,6 +1334,11 @@
          "type": "boolean"
         },
         {
+         "name": "checked",
+         "type": "boolean",
+         "doc": "For a command that chooses one of several: true for the one in use (a check at the end of its row, `aria-checked`), false for the others. Absent: not a choice."
+        },
+        {
          "name": "onSelect",
          "type": "() => void",
          "required": true
@@ -1404,7 +1368,7 @@
     },
     {
      "file": "src/components/ui/commands.tsx",
-     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.\n- `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,\n  hidden on a phone).",
+     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- A command that chooses one of several (light, dark or the system's look: `useSchemeCommands`) says whether it is the\n  one in use (`checked`): the palette marks it with a check in the ink, as a chosen option of a list.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.\n- `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,\n  hidden on a phone).",
      "components": [
       {
        "name": "CommandsProvider",
@@ -1484,6 +1448,11 @@
          "name": "when",
          "type": "boolean",
          "doc": "Whether it can be done now (default true): when false its key does nothing and the palette shows it dimmed."
+        },
+        {
+         "name": "checked",
+         "type": "boolean",
+         "doc": "For a command that chooses one of several (light, dark, the system's look): true for the one in use, which the palette marks with a check, false for the others. Absent: the command is not a choice."
         },
         {
          "name": "run",
@@ -2878,6 +2847,34 @@
      ]
     },
     {
+     "file": "src/components/ui/scheme-commands.tsx",
+     "about": "Light, dark and the system's look as three commands of the registry, the same in every app of the suite (owner,\n2026-11-23): the person chooses the scheme from the palette, and no app writes commands or theme code for it. The app\ncalls `useSchemeCommands` inside its `CommandsProvider` with its look (its theme, and the user's tone or own colours\nwhen it has them) and the key of the browser's storage the choice is kept under. The three commands sit in a group of\ntheir own («Look», `useWords().scheme`), the one in use checked; choosing one puts the theme in that scheme on the\ndocument's root at once (`applyTheme`) and keeps it. The pages and the tabs that keep the choice under the same key\nfollow it, and the system's choice, the default, follows `prefers-color-scheme` while the page is open. A value kept\nthat is not light, dark or the system's is the system's; where the storage refuses (a private window), the choice\nholds until the page is closed. `applyKeptScheme`, called in the app's entry before React renders, puts the kept\nchoice on the root before the first paint. After Imago's `mountApp`, whose palette had the same commands.",
+     "types": [
+      {
+       "name": "SchemeState",
+       "doc": "The choice, and the scheme drawn now (for the system's choice, the one the system says).",
+       "fields": [
+        {
+         "name": "choice",
+         "type": "SchemeChoice",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "applyKeptScheme",
+      "SchemeChoice",
+      "SchemeCommandsOptions",
+      "useSchemeCommands"
+     ]
+    },
+    {
      "file": "src/components/ui/search-field.tsx",
      "about": "A search box: the toolkit's `Input` as a `type=\"search\"` field, with the magnifier at the start (functional chrome,\n16px, muted) and, while there is text, a button at the end that empties the field and gives it the focus back. The\nbrowser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no\nlabel of its own: the caller names it (`aria-label`, or a `FormField` around it).",
      "components": [
@@ -4123,6 +4120,156 @@
      ]
     },
     {
+     "file": "src/components/ui/tree.tsx",
+     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, one of Sigrid's icons, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
+     "components": [
+      {
+       "name": "Tree",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the tree for screen readers («Files»)."
+        },
+        {
+         "name": "nodes",
+         "type": "readonly TreeNode[]",
+         "required": true,
+         "doc": "The first level of the tree. Children loaded for a node stay while the app gives the same node object: build the nodes once (a constant, state, `useMemo`), and give a new object for a node whose children must be read again (another project, a refresh)."
+        },
+        {
+         "name": "selected",
+         "type": "string | null",
+         "doc": "The chosen row, by its id, or null for none. With it the choice is the app's: pass the id `onSelect` gives."
+        },
+        {
+         "name": "defaultSelected",
+         "type": "string | null",
+         "doc": "The row chosen at first, when the choice is the tree's own."
+        },
+        {
+         "name": "onSelect",
+         "type": "((id: string, node: TreeNode) => void)",
+         "doc": "The person chose a row (a press, Enter or Space): its id, and the node."
+        },
+        {
+         "name": "expanded",
+         "type": "readonly string[]",
+         "doc": "The branches the person opened, by id. With it they are the app's: pass the list `onExpandedChange` gives. The branches the filter opens are not in it. A branch still to load stays closed until the person opens it."
+        },
+        {
+         "name": "defaultExpanded",
+         "type": "readonly string[]",
+         "doc": "The branches open at first, when they are the tree's own."
+        },
+        {
+         "name": "onExpandedChange",
+         "type": "((expanded: string[]) => void)",
+         "doc": "The person opened or closed a branch: the whole list of the branches they opened. A branch that loads joins it once its rows are here. Not called when the list did not change."
+        },
+        {
+         "name": "loadChildren",
+         "type": "((node: TreeNode, signal: AbortSignal) => Promise<readonly TreeNode[]>)",
+         "doc": "Loads the rows of a branch with `hasChildren`, when it is first opened. A promise that fails leaves the branch closed, saying so; opening it again tries again. The signal says the tree no longer waits (the node changed or left, the tree left the page)."
+        },
+        {
+         "name": "search",
+         "type": "boolean",
+         "doc": "A field above the rows that filters them (`query`)."
+        },
+        {
+         "name": "searchLabel",
+         "type": "string",
+         "doc": "The name and placeholder of that field. Absent: the toolkit's words («Filter by name»)."
+        },
+        {
+         "name": "query",
+         "type": "string",
+         "doc": "The text that filters the rows. With it the text is the app's: pass what `onQueryChange` gives. It filters with the tree's field (`search`) or without it, from a field of the app's (`ToolbarSearch`). Only spaces, or nothing: no filter."
+        },
+        {
+         "name": "defaultQuery",
+         "type": "string",
+         "doc": "The text the filter starts with, when it is the tree's own."
+        },
+        {
+         "name": "onQueryChange",
+         "type": "((query: string) => void)",
+         "doc": "The text of the filter changed: typed in the tree's field, or cleared."
+        },
+        {
+         "name": "match",
+         "type": "((node: TreeNode, query: string) => boolean)",
+         "doc": "Whether a node is found by the text, given as it is (`query`), only when it holds more than spaces. Absent: its name holds the text, whatever the case and the spaces at its ends. A node found shows with all it holds; a branch that leads to one shows with what it keeps, opened. Branches never loaded are not searched: to have them searched, give their children. An app counts the finds with the same function over its own nodes. A constant, or memoised: a new function filters again."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The chevron of a branch turns when it opens or closes, as the sidebar's groups (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "TreeNode",
+       "doc": "A thing of the tree: a row, and the rows it holds.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "Names the thing among all the others of the tree (a path, a key): the choice and the open branches are ids."
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "What the row says; the filter by default and the first letters typed look for it."
+        },
+        {
+         "name": "icon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
+        },
+        {
+         "name": "openIcon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
+        },
+        {
+         "name": "meta",
+         "type": "React.ReactNode",
+         "doc": "A short fact at the end of the row, in tabular figures: a size, a date."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "doc": "How many things the node holds or waits on (changed, unread): a `Count` at the end of the row, after `meta`. Zero shows nothing."
+        },
+        {
+         "name": "children",
+         "type": "readonly TreeNode[]",
+         "doc": "The rows it holds. With an array (even empty) the row is a branch, which opens and closes."
+        },
+        {
+         "name": "hasChildren",
+         "type": "boolean",
+         "doc": "It holds rows the app loads when the branch is opened (`loadChildren`), until then unknown. Read only without `children`; without `loadChildren` the branch holds nothing."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TreeProps"
+     ]
+    },
+    {
      "file": "src/density.ts",
      "about": "Density: how tall the controls are, how much side padding they have and how much room a list row takes. Like the\nthemes it is data: the toolkit ships three presets (`DENSITIES`) and an app may pass a definition of its own, or a\npreset with some measures changed (`densityWith`). `applyDensity` writes the measures on an element as CSS variables\n(`--density-*`) and the id as `data-density`; `styles/theme.css` turns them into the tokens the components use\n(`--control-md`, `--pad-md`, `--row-height`…), with `normal` as the value before any script runs and 44px as the\nfloor of every control and row with a coarse pointer.",
      "types": [
@@ -4304,99 +4451,29 @@
      ]
     },
     {
-     "file": "src/icon-packs.generated.ts",
-     "about": "Generated by scripts/icon-packs.mjs from the packs' own SVGs (licences in THIRD_PARTY.md). Do not edit by hand.",
-     "also": [
-      "IconArt"
-     ]
-    },
-    {
      "file": "src/icons.tsx",
-     "about": "The icon packs (R6 of the toolkit's rules, 2026-11-20): icons are visual anchors for the eye, and the user picks the\npack in Settings. A component asks for an icon by what it means (`settings`, `delete`), never by a pack's own name:\nthe pack in context draws it. Lucide is the default (line, the toolkit's stroke). Two packs take the colour of the\ntheme: Phosphor Duotone and Solar Duotone, drawn in the text colour with a lighter second tone. Three are in their\nown colours: Fluent Color, Fluent Emoji Flat and Twemoji, drawn emoji that look the same on every device (the\ndevice's own emoji font left the packs on 2026-11-21: the owner did not like it). The drawn packs are not npm\ndependencies: their drawings are in `icon-packs.generated.ts`, written by `scripts/icon-packs.mjs`. Functional\nchrome (chevrons, ×, the search magnifier) stays Lucide.",
+     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
      "components": [
       {
        "name": "Icon",
-       "doc": "An icon by its meaning, drawn by the pack in context (or by `pack`, for a preview of another pack). Decorative: the label next to it names the thing, so it is hidden from screen readers. A name nobody draws (from data, or an app's meaning with no provider above) is an empty slot of the same size, so the row keeps its alignment (R6).",
+       "doc": "An icon by its meaning, drawn from Sigrid's set. Decorative: the label next to it names the thing, so it is hidden from screen readers. A name Sigrid does not draw (from data) is an empty slot of the same size, so the row keeps its alignment (R6).",
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifica…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
          "required": true
-        },
-        {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\""
         },
         {
          "name": "className",
          "type": "string"
         }
        ]
-      },
-      {
-       "name": "IconPackProvider",
-       "doc": "The pack every `Icon` below draws from: the app passes the user's choice, and with `icons` the meanings of its own (a constant: the same object at every render). A provider without `icons` keeps the ones of the provider above.",
-       "props": [
-        {
-         "name": "pack",
-         "type": "\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\"",
-         "required": true
-        },
-        {
-         "name": "icons",
-         "type": "Readonly<Record<string, IconDrawing>>"
-        },
-        {
-         "name": "children",
-         "type": "ReactNode",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "IconDrawing",
-       "doc": "How an app draws a meaning of its own (a mail app's `inbox`, `reply`): the line drawing is required; a pack left out falls back to it. The drawn packs take a drawing each (its square view box and its SVG content, as `scripts/icon-packs.mjs` writes them). `emoji` may also be the glyph itself, fully qualified (with U+FE0F where the symbol is text by default): the device's font then draws it, in the Emoji pack and in Twemoji.",
-       "fields": [
-        {
-         "name": "lucide",
-         "type": "Glyph",
-         "required": true
-        },
-        {
-         "name": "fluent",
-         "type": "Glyph"
-        },
-        {
-         "name": "duotone",
-         "type": "Drawing"
-        },
-        {
-         "name": "solar",
-         "type": "Drawing"
-        },
-        {
-         "name": "emoji",
-         "type": "string | Drawing"
-        },
-        {
-         "name": "twemoji",
-         "type": "Drawing"
-        }
-       ]
       }
      ],
      "also": [
-      "DEFAULT_ICON_PACK",
       "ICON_NAMES",
-      "ICON_PACKS",
       "IconName",
-      "IconPack",
-      "IconSet",
-      "isIconName",
-      "isIconPack",
-      "useIconPack"
+      "isIconName"
      ]
     },
     {
@@ -5652,7 +5729,7 @@
         },
         {
          "name": "combo",
-         "type": "\"soft\" | \"clean\" | \"bold\"",
+         "type": "\"soft\" | \"bold\" | \"clean\"",
          "required": true
         }
        ]
@@ -6111,6 +6188,12 @@
          "required": true
         },
         {
+         "name": "tree",
+         "type": "{ readonly loading: string; readonly failed: string; readonly retry: string; readonly filter: string; }",
+         "required": true,
+         "doc": "What a `Tree` says by itself."
+        },
+        {
          "name": "list",
          "type": "{ readonly unread: string; readonly more: (count: number) => string; }",
          "required": true
@@ -6119,6 +6202,12 @@
          "name": "palette",
          "type": "{ readonly placeholder: string; readonly empty: string; readonly command: string; readonly keys: string; }",
          "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "{ readonly group: string; readonly light: string; readonly dark: string; readonly system: string; readonly keywords: string; }",
+         "required": true,
+         "doc": "The three commands that choose the look's scheme in the palette (`useSchemeCommands`)."
         },
         {
          "name": "keys",
@@ -6234,12 +6323,22 @@
          "type": "Partial<{ readonly copy: string; readonly copied: string; readonly failed: string; }>"
         },
         {
+         "name": "tree",
+         "type": "Partial<{ readonly loading: string; readonly failed: string; readonly retry: string; readonly filter: string; }>",
+         "doc": "What a `Tree` says by itself."
+        },
+        {
          "name": "list",
          "type": "Partial<{ readonly unread: string; readonly more: (count: number) => string; }>"
         },
         {
          "name": "palette",
          "type": "Partial<{ readonly placeholder: string; readonly empty: string; readonly command: string; readonly keys: string; }>"
+        },
+        {
+         "name": "scheme",
+         "type": "Partial<{ readonly group: string; readonly light: string; readonly dark: string; readonly system: string; readonly keywords: string; }>",
+         "doc": "The three commands that choose the look's scheme in the palette (`useSchemeCommands`)."
         },
         {
          "name": "keys",
@@ -6584,7 +6683,7 @@
    "files": [
     {
      "file": "src/components/RichTextField.tsx",
-     "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith the icons of the pack the user chose (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text and is not a step of the undo: Ctrl+Z never brings the other draft back. The\n  field's own changes never loop back, also when the app hands them back late (a store, a round trip): a value\n  the field itself gave a moment ago is not taken for a new one.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
+     "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith Sigrid's icons (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text and is not a step of the undo: Ctrl+Z never brings the other draft back. The\n  field's own changes never loop back, also when the app hands them back late (a store, a round trip): a value\n  the field itself gave a moment ago is not taken for a new one.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
      "components": [
       {
        "name": "RichTextField",
@@ -6670,7 +6769,7 @@
         },
         {
          "name": "model",
-         "type": "\"graph\" | \"tree\"",
+         "type": "\"tree\" | \"graph\"",
          "doc": "How the lines are read. `tree` (the default): a thing hangs from another, so a thing with others hanging from it opens and closes, and the keys and the roles are a tree's. `graph`: a line is a relation (a call, an import, data), every thing stays in sight with nothing that closes, the arrows follow the lines, and opening is the app's (`onOpen`)."
         },
         {
@@ -6896,8 +6995,8 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifications\" | \"settin…",
-         "doc": "An icon of the user's pack before the name."
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" | \"account\" | \"a…",
+         "doc": "One of Sigrid's icons before the name."
         },
         {
          "name": "color",

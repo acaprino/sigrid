@@ -1,7 +1,7 @@
 // A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is
 // TipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the
 // form is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`
-// with the icons of the pack the user chose (R6). It has its own entry of the package (`./rich-text`): TipTap is the
+// with Sigrid's icons (R6). It has its own entry of the package (`./rich-text`): TipTap is the
 // heaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.
 // - What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a
 //   paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written

@@ -200,7 +200,7 @@ export function RichTexts() {
       title="RichTextField"
       note={
         <>
-          A field for text with a little form, from the entry <Code>@acaprino/sigrid/rich-text</Code> (TipTap): bold, italic and underlined words, two kinds of list, a quote, and nothing the row of buttons does not offer. The buttons are the toolkit's own toolbar, with the icons of the pack chosen; one that is on has the selection tint. The value is HTML, the app's to keep.
+          A field for text with a little form, from the entry <Code>@acaprino/sigrid/rich-text</Code> (TipTap): bold, italic and underlined words, two kinds of list, a quote, and nothing the row of buttons does not offer. The buttons are the toolkit's own toolbar, with Sigrid's icons; one that is on has the selection tint. The value is HTML, the app's to keep.
         </>
       }
     >

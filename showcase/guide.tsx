@@ -131,7 +131,7 @@ function AccentDemo() {
 const PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: string }[] = [
   { icon: 'now', title: 'Show what matters first', refs: 'R2, R3', text: 'One solid primary action on each screen, and a solid red one only to delete. The other actions are outline or text buttons, so the eye has one place to land.' },
   { icon: 'tasks', title: 'Keep state in sight', refs: 'R1, R5', text: 'The chosen row has a tint, stronger text and a short accent bar. What is on shows in the accent. Counts are tabular numbers, so they do not jump.' },
-  { icon: 'tag', title: 'Draw anchors, not decoration', refs: 'R6', text: 'Every navigation item, section heading, menu entry and settings group has an icon from the pack the user chose. Sparkles, bolts and info icons as decoration are out.' },
+  { icon: 'tag', title: 'Draw anchors, not decoration', refs: 'R6', text: "Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set, the same in every app. Sparkles, bolts and info icons as decoration are out." },
   { icon: 'animations', title: 'Move calmly, only on a gesture', refs: 'Motion', text: 'Short tweens of 100 to 200 ms: entering decelerates, leaving accelerates. No springs, no loops except loading skeletons. The app switches motion on, and everything works with it off.' },
   { icon: 'settings', title: 'Offer few choices first', refs: 'R11, R13', text: 'Each settings section shows its essential choices and keeps the rest under an Advanced fold, closed by default. Calm, Balanced and Vivid move all the accents at once.' },
   { icon: 'check', title: 'Stay readable and reachable', refs: 'R8, R9, R12', text: 'Text keeps 4.5:1 and borders and rings 3:1 in every theme. The focus ring is 2px in the accent. With a finger every control is at least 44px. Z undoes the newest action.' },
@@ -294,7 +294,7 @@ const NEVER_DRAW = [
 ]
 const NEVER_ADD = [
   'Sparkles, bolts or info icons as decoration.',
-  'Emoji in the interface, except the Emoji icon pack when the user picks it.',
+  'Emoji in the interface.',
   'Looping animation, except loading skeletons.',
   'A colour value outside the theme engine.',
 ]
@@ -462,7 +462,7 @@ export function GuidelinesView() {
             Counts are tabular numbers, pills on a navigation row (accent on the chosen one). Key hints are plain 12px text, hidden at phone widths.
           </Rule>
           <Rule id="R6" title="Icons are anchors" see={<See view="components" id="nav-list">See NavList</See>}>
-            Every navigation item, section heading, menu entry and settings group has an icon from the icon pack the user chose in Settings. An empty slot keeps the alignment.
+            Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set (Lucide), the same in every app. An empty slot keeps the alignment.
           </Rule>
           <Rule id="R7" title="One scale" see={<See view="components" id="tokens">See the tokens</See>}>
             Radii 4, 6 and 10px, or a theme's sharp 2/4/6 or round 6/10/14. Round shapes only for avatars, dots and switches. A 4px spacing grid, heights 36, 32 and 28px at normal density, icons 16 or 14px, weights 400, 500 and 600, text sizes from the tokens.

@@ -26,7 +26,8 @@ installed, say so and stop: do not write from memory.
 
 The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) come first where they speak, but never for a look of
 its own: every app of the suite has Sigrid's look, and only its layout, accent and icon are its own (the first section
-of `AGENTS.md`).
+of `AGENTS.md`). The app's icon is its own mark; the icons of its interface are Sigrid's one set (Lucide, through
+`Icon`), the same in every app.
 
 ## 3. Write
 
@@ -36,6 +37,8 @@ of `AGENTS.md`).
   column, a notice, an option) are under `types` in the same file of the catalogue.
 - If the toolkit has no component for the job, say so and stop: it is added to Sigrid, generic, and is not built in
   the app. Do not add another component library for it, and do not copy a toolkit component into the app.
+- Draw every icon of the interface with `Icon` and one of Sigrid's names. If the name a function needs is not there,
+  say so: it is added to Sigrid's names, and the app neither draws it nor imports an icon library.
 
 ## 4. Check
 

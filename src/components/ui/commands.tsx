@@ -14,6 +14,8 @@
 //   `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses
 //   the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.
 // - A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.
+// - A command that chooses one of several (light, dark or the system's look: `useSchemeCommands`) says whether it is the
+//   one in use (`checked`): the palette marks it with a check in the ink, as a chosen option of a list.
 // - The registry is in the order the commands are declared in the tree; when two available commands share a key, the
 //   one declared last runs.
 // - `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,
@@ -39,6 +41,8 @@ export type CommandDeclaration = {
   icon?: React.ReactNode
   /** Whether it can be done now (default true): when false its key does nothing and the palette shows it dimmed. */
   when?: boolean | undefined
+  /** For a command that chooses one of several (light, dark, the system's look): true for the one in use, which the palette marks with a check, false for the others. Absent: the command is not a choice. */
+  checked?: boolean | undefined
   /** What it does; the one of the latest render runs. */
   run: () => void
 }
@@ -236,7 +240,7 @@ function useCommand(command: CommandDeclaration): void {
   // What the palette and the list of keys show changes with these: they are told.
   React.useEffect(() => {
     registry?.changed()
-  }, [registry, command.id, command.label, command.group, command.keys, command.keywords, command.when])
+  }, [registry, command.id, command.label, command.group, command.keys, command.keywords, command.when, command.checked])
 }
 
 const NONE: Registry = createRegistry()

@@ -153,7 +153,7 @@ const win = getCurrentWindow()
     <ToolbarSpacer />
     <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} />
     <ToolbarButton label="Archive" shortcut="E" icon={<Icon name="archive" />} onClick={archive} />
-    <ToolbarButton label="New message" variant="default" icon={<Icon name="add" />}>New</ToolbarButton>
+    <ToolbarButton label="New message" variant="default" icon={<Icon name="plus" />}>New</ToolbarButton>
   </Toolbar>
 </TitleBar>
 ```
@@ -207,6 +207,80 @@ hidden on a phone.
 </CommandsProvider>
 ```
 
+## Light, dark and the system's look
+
+In every app of the suite the person chooses light, dark or the system's look in the same place: three commands of
+the palette, in a group of their own («Look»), the one in use checked. No app draws a switch for it or writes these
+commands. The app makes two calls with one constant, its look and the key the choice is kept under: in its entry file,
+before React renders, `applyKeptScheme` puts the kept choice on the root, so the first paint is already in that scheme
+(no flash of the other one); inside its `CommandsProvider`, `useSchemeCommands` declares the three commands where it is
+called.
+
+```tsx
+// main.tsx, before createRoot(…).render(…)
+const LOOK = { theme: colorTheme({ id: 'tasks', label: 'Tasks', color: '#006398', spot: 'balanced' }), storageKey: 'tasks.scheme' }
+applyKeptScheme(LOOK)
+
+// in the app's component, inside <CommandsProvider>
+const { scheme } = useSchemeCommands(LOOK)
+```
+
+Choosing one puts the app's theme in that scheme on the document's root at once (`applyTheme`) and keeps the word
+(`light`, `dark` or `system`) under the key in `localStorage`: every page and every tab of the app that uses the same
+key follows it. The system's choice is the default and follows `prefers-color-scheme` while the page is open; a value
+kept that is not one of the three is the system's, and where the storage refuses (a private window) the choice holds
+until the page is closed. The hook says `{ choice, scheme }`, the scheme drawn now, for a part that draws in it. The
+look is what `applyTheme` takes but the scheme (`theme`, and the user's `tone`, `own` or `palette`), given as the same
+objects at every render (a constant, or `useMemo`). The words are `useWords().scheme`. Any command that chooses one of
+several says so with `checked` (`useCommand`, or a `Command` given to the palette): the one in use has a check in the
+ink at the end of its row, and the others keep its room.
+
+## A tree of rows
+
+`Tree` is a list of nested rows on Ark UI's TreeView, for files and folders or any hierarchy: each node has an `id`, a
+`name`, an `icon` (a meaning of Sigrid's icons, `folder` and `file` among them) and an `openIcon` for a branch while it is open (`folderOpen`), a short fact at the end (`meta`, in tabular
+figures) and a `count` after it (a `Count`, R5), and either `children` or `hasChildren`, whose rows `loadChildren` brings
+when the branch is first opened. The rows look like every list of things (`ItemRow`): under the pointer a share of the
+selection tint, the chosen row the whole tint and the short accent bar at its start. The rows are one Tab stop (the
+chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
+out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
+Space or a press choose (and open or close a branch). One row is chosen: `selected` and `onSelect` for the app's choice,
+or `defaultSelected`; the open branches likewise (`expanded`, `onExpandedChange`, called only when the list changes,
+`defaultExpanded`). The chevron is the sidebar's and turns only with `animated`. A closed branch's rows are not in the
+page.
+
+A branch that loads says «Loading» and takes no second opening; one whose load failed says «Not loaded» and stays
+closed, and opening it again tries again. Loaded children belong to the node object they were loaded for: build the
+nodes once (a constant, state, `useMemo`); when the app gives another object for an id (another project, a refresh) or
+none, its children are dropped and a load still under way is given up (its signal aborts), so one project's rows never
+show in another.
+
+With `search` a field above the rows filters them; the text can also be the app's (`query`, `onQueryChange`,
+`defaultQuery`), typed in that field or in one of the app's own (then without `search`). `match(node, query)` says what
+is found (by default the name holds the text, whatever the case): a node found shows with all it holds, a branch that
+leads to one shows opened, and an app counts the finds with the same function over its nodes. A branch never loaded is
+not searched: to have it searched, give its children. Nothing found says «No results», the word of every search. What
+the person opens or closes while filtering is theirs: clearing the filter gives back their own branches, with those
+changes.
+
+A screen reader hears a tree named by the app; the row that has the focus is the `treeitem` itself, branch or leaf,
+named by its name, with its level, whether it is open and whether it is chosen, and the fact, the count or the state of
+its load after it. It is not the graph: `GraphCanvas` draws things joined by lines.
+
+```tsx
+const FILES: TreeNode[] = [
+  { id: 'src', name: 'src', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'src/app.ts', name: 'app.ts', icon: 'file', meta: '4 KB' }] },
+  { id: 'remote', name: 'remote', icon: 'folder', openIcon: 'folderOpen', hasChildren: true },
+]
+
+<Tree aria-label="Files" nodes={FILES} search selected={file} onSelect={setFile} defaultExpanded={['src']}
+  loadChildren={(node, signal) => fetchFolder(node.id, signal)} className="h-full" />
+
+// The app's filter: the whole path, and the count of finds with the same function.
+const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
+<Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -240,7 +314,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `Tree` (nested rows, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -420,12 +494,20 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
-- Icons: `Icon` draws a meaning (`settings`, `delete`) with the pack the user chose (`IconPackProvider`). The toolkit
-  draws what apps have in common (`ICON_NAMES`: the views and settings, the menu entries, and the actions of a mail,
-  calendar or editing screen: `mail`, `reply`, `archive`, `bold`, `undo`, `attach`, `windowMinimize`…), in every pack; an
-  app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ invoice: { lucide: Receipt,
-  fluent: ReceiptColor, emoji: '\u{1F9FE}' } }}>`, then `<Icon name="invoice" />`. The line drawing is required; a pack left
-  out falls back to it; a name nobody draws is an empty slot of the same size.
+- Icons: Sigrid has one icon set of its own, Lucide, the same in every app (the owner, 2026-11-23); the user does not
+  choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
+  never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
+  and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
+  `bold`, `undo`, `attach`, `windowMinimize`…) and the rows of a tree of files (`folder`, `folderOpen`, `file`). An icon
+  a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
+  (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
+  not part of this: it stays the app's.
+- Upgrading from 4.x: the icon packs went in the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
+  `IconPackChoice` and `IconPackText` are gone: drop the choice of a pack from the app's settings and stop saving it (a
+  pack saved before is ignored). `IconPackProvider`, `useIconPack`, `IconSet`, `IconDrawing`, `IconArt` and `Icon`'s
+  `pack` prop are gone: remove the provider around the app (`Icon` draws Lucide without it), and ask for a meaning of
+  the app's own to be added to Sigrid's names (until then it is an empty slot). `Icon` no longer writes
+  `data-icon-pack`. No name is kept as an alias.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a
   match inside a text). Fixed for every theme, as the red is; the engine keeps their contrast on every theme.
 - `./theme.css` and `./fonts.css`: to `@import` in an app's own Tailwind CSS (with an `@source` on this package's
@@ -493,7 +575,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     for one that holds every component in every setting. The app can also be saved as data and opened again.
   - The inspector holds the component chosen, the screen, the app and the look: everything the toolkit lets an app
     configure (scheme, the theme's two colours, the tone of the accents, the corner shape, the font, the density and
-    each of its measures, the icon pack, motion). What is made is kept in the browser.
+    each of its measures, motion; the icons are Sigrid's one set, not a choice). What is made is kept in the browser.
   - Development only. The dragging, the selection, the outline and the history are Puck's (`@puckeditor/core`, MIT, a
     development dependency, pinned; with it come, for the showcase only, the packages it depends on, TipTap and one
     Radix popover among them: none of it is in the package). Everything it draws is the toolkit's, and the editor

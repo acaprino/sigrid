@@ -12,6 +12,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { ROW_CHOSEN, ROW_HOVER } from "../../lib/rows"
 import { useWords } from "../../words"
 
 export type ItemListProps = {
@@ -53,8 +54,9 @@ export type ItemRowProps = {
 
 const ROW = cn(
   "relative flex min-h-(--row-height) w-full cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start text-sm text-ink-soft pointer-coarse:min-h-11",
-  "hover:bg-selected/60 hover:text-ink aria-[current=true]:bg-selected aria-[current=true]:text-selected-ink",
-  "aria-[current=true]:before:absolute aria-[current=true]:before:top-1/2 aria-[current=true]:before:left-0 aria-[current=true]:before:h-4 aria-[current=true]:before:w-0.75 aria-[current=true]:before:-translate-y-1/2 aria-[current=true]:before:rounded-full aria-[current=true]:before:bg-primary aria-[current=true]:before:content-['']",
+  // The one look of a row of things, shared with `Tree` (`lib/rows.ts`).
+  ROW_HOVER,
+  ROW_CHOSEN,
   "disabled:pointer-events-none disabled:opacity-50",
   FOCUS_RING_INSET,
 )

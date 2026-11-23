@@ -12,15 +12,19 @@ window, on a computer and on a phone.
 
 ## One look for every app (the owner's rule)
 
-Every app of the suite that uses Sigrid looks and behaves the same: the same surfaces, shadows, spacing, type and
-motion, and the same component for the same need (a file tree is the same component in every app). What differs from
-one app to the next is the layout, which follows what the app does, its accent and its icon.
+Every app of the suite that uses Sigrid looks and behaves the same: the same surfaces, shadows, spacing, type, icons
+and motion, and the same component for the same need (a file tree is the same component in every app). What differs
+from one app to the next is the layout, which follows what the app does, its accent and its icon. An app's icon is its
+own mark (the picture of the app, its window and its brand); the icons of its interface are Sigrid's one set (Lucide,
+through `Icon`), the same in every app, and the user does not choose another.
 
 - An app uses only Sigrid's components. It never makes a component of its own that draws: no stylesheet, no class,
   no primitive, no copy or restyling of a part of Sigrid. Its own code composes Sigrid's components into its screens
   and wires them to its data.
 - An app adapts to Sigrid, never the other way round. Sigrid changes only when a component or a primitive that a
   function needs is really missing: then it is added to Sigrid, generic, and every app takes it from there.
+- The same holds for an icon: an icon a function needs that Sigrid's names lack is added to Sigrid's names
+  (`ICON_NAMES`), never drawn or imported by the app.
 - Before asking for a new part, look in the catalogue for the one Sigrid already has for the need. A request is
   weighed by the function that is missing, never by how the app looked before: a former look is no reason to change
   Sigrid.
@@ -79,12 +83,14 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - No gradient, no blur or glass, no emoji in the interface, no decorative icon, no animation that loops.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
   with it off.
-- Every navigation row, section heading and menu entry has an icon from `Icon` (the pack is the user's choice), and
-  an empty slot where there is none (R6).
+- Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
+  empty slot where there is none (R6).
 - With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a part added
   to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own
   with `WordsProvider`.
+- Light, dark and the system's look are chosen from the palette, the same in every app: `useSchemeCommands` inside
+  `CommandsProvider`, and `applyKeptScheme` in the entry file (`README.md`). No app draws a switch for the scheme.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
