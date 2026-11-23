@@ -121,6 +121,10 @@ actions with the main one first. It is the screen where the accent has the least
 - What the user needs to act never gives way: the solid action and the window's buttons stay at every width.
 - With a finger every control is at least 44px (the toolkit does it); leave the key hints out on a phone.
 
+A phone has a guide of its own, `docs/mobile.md`: the idea, what the toolkit does by itself, what an app adds, and six
+layouts (list, detail as a page, capture sheet, board with one lane, settings page, focus) with their code. The
+gallery shows them as one small app in a frame as wide as a phone: view Practices, section «Phone layouts».
+
 ## An app in a window of its own
 
 For an app that runs in its own window (Tauri, or any host without a browser around the page), three switches make
@@ -133,6 +137,9 @@ it behave as a program. They are Imago's techniques; on a page in a browser tab 
   fields, the mouse's back and forward buttons and the dragging of pictures and links do nothing. Name a terminal or
   an editor in `ownKeysIn` and it keeps its keys.
 - `TitleBar` with `dragProps` and `WindowControls`, as above.
+
+The gallery shows the same app with and without these switches: view Examples, where a to-do list and a mail client
+are drawn in a browser tab and in a Tauri window, on a computer and on a phone, with a table of what the host changes.
 
 What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the
