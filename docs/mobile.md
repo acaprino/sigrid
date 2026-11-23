@@ -31,6 +31,12 @@ change that. It makes it stricter, because there is room for one thing.
    carries Undo (R12). Only what cannot be undone asks first.
 6. **Nothing shrinks.** The text sizes are the ones of the wide window, a field is 16px so the page does not zoom, and
    every control and row is at least 44px at every density.
+7. **Controls stay where they are.** A control that is on every page, or in every state of a page, never changes place:
+   the bar at the foot and its plus, the tools of the bar at the head, a two-state switch (it stays where it is in both
+   states), the checkbox and the menu of a row. A tool that one view lacks leaves its place empty; it does not shift the
+   others. An eye that is easily pulled away learns where a control is once; a control that jumps when it is pressed
+   distracts and frustrates. The height a screen is laid out to is the host's, measured, never a guess (below,
+   «Heights and orientation»).
 
 ## Guidelines
 
@@ -41,9 +47,11 @@ change that. It makes it stricter, because there is room for one thing.
 | Narrow | `(width < 860px)` | `NARROW`, `useMedia(NARROW)`, the `md` breakpoint | The 16px fields, the place of the notices |
 | Coarse | `(pointer: coarse)` | `COARSE`, `useMedia(COARSE)`, the `pointer-coarse:` variant | The 44px sizes, on a tablet too |
 | Phone | both | `usePhone()`, `max-md:pointer-coarse:` | The hidden key hints, the date card as a sheet |
+| Short | `(height < 500px)` | `SHORT`, `useMedia(SHORT)`, the `short:` variant | A phone lying down, a window shrunk in height: the bottom bar is 44px, a view's word goes beside its icon |
 
 The frame is a fourth measure, and the one that lays the screen out: `AppShell` reads its own width, not the screen's
-(`useAppShell()`). A window half-snapped on a wide screen and a phone held upright are the same narrow frame.
+(`useAppShell()`). A window half-snapped on a wide screen and a phone held upright are the same narrow frame. Its
+height is what the person sees (`--app-height`), measured by the frame itself: see «Heights and orientation».
 
 ### The toolkit does it
 
@@ -58,9 +66,14 @@ The frame is a fourth measure, and the one that lays the screen out: `AppShell` 
 | Sheets | Close with a swipe in the direction of their side, as well as with Esc and a press outside | `Sheet` |
 | Date card | A sheet at the foot of the screen, 85% of its height at most, with room for the home indicator | `DateField`, `DateRangeField`, `DateTimeField` |
 | Dialog | As wide as the screen less 16px at each side | `Dialog` |
-| Notices | In the middle of the foot below 860px, above the room an app declares for its bottom bar | `Toasts`, `--bottom-bar-room` |
+| Notices | In the middle of the foot below 860px, above what the frame keeps there (its actions, its footer and its bottom bar: the frame writes that room to `--bottom-bar-room`; an app with a bar of its own sets it) | `Toasts`, `--bottom-bar-room` |
 | Steps | A row too narrow for its names keeps the current one and says «Step 2 of 4» | `Steps` |
 | Hover | Drawn only where the pointer can hover: a tap leaves no stuck hover | Tailwind's `hover:` |
+| Height | The frame is as tall as what the person sees: the browser's bars, the keyboard, a rotation are followed, never `100vh`; it is never taller than the box it is put in | `AppShell`, `useAppHeight`, `--app-height` |
+| Edges | Where the frame is the whole screen it keeps clear of the notch, the status bar and the gesture bar (`env(safe-area-inset-*)`, the foot with its maximum, which does not change while the page scrolls) | `AppShell` (`data-screen`), `--safe-area-max-inset-bottom` |
+| A short window | Under 500px of height the bottom bar is 44px and each view puts its word beside its icon | `AppShell`, `ToolbarTab`, `short:` |
+| One screen | A page that must fit is as tall as what is seen less the bars; its head and foot keep their height and its body gives way and scrolls, never the document, which does not bounce | `Page fit` |
+| Places | A segment, a tab or a view of the bar is as wide chosen as not, so the others never move; a tool a view lacks keeps its place, empty | `ToggleGroup`, `Tabs`, `ToolbarTabs`, `ToolbarButton absent`, `ToolbarSearch absent` |
 
 Measured on a phone 390px wide, at normal density (the showcase, in the browser's device mode):
 
@@ -79,11 +92,15 @@ The least width the layouts are made for is 320px (`DESIGN.md`, `x-zsd.layout.vi
 
 The page:
 
-- `<meta name="viewport" content="width=device-width, initial-scale=1">`. Do not switch the user's zoom off.
-- The frame is as tall as the screen that is left: `h-dvh`, not `h-screen`, so the browser's own bars do not cover
-  the foot.
-- Add `viewport-fit=cover` only if the app then keeps its bars clear of the rounded corners and the home indicator
-  itself (`env(safe-area-inset-*)`). The frame does not do it; only the date card does.
+- `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`. Do not switch the user's
+  zoom off.
+- `viewport-fit=cover` draws the page edge to edge: under the notch, the status bar and the gesture bar. The frame
+  keeps clear of them by itself; what the app draws outside the frame (a bar of its own, a `fixed` button) must do it
+  too (`--safe-area-inset-top|left|right`, and at the foot `--safe-area-max-inset-bottom`, never the live
+  `env(safe-area-inset-bottom)`). Without it the browser keeps those edges for itself and the insets are 0.
+- Put `AppShell` in the page as it is, or in a box that has a height: no `h-dvh`, `h-screen` or `100vh` around it. The
+  frame is as tall as what is seen, and never taller than its box. A box taller than the window (a preview of a whole
+  window in a page) leaves the frame shorter than the box: give it `className="h-full"` there.
 
 The frame:
 
@@ -96,8 +113,9 @@ The frame:
 - Leave `desktop` and `useDesktopGuard()` off: they are for a program in a window of its own.
 - Leave the `status` and `footer` strips out. With a finger each is 44px tall, and the notices (`Toasts`) say the last
   result better.
-- Tell the notices how tall the bottom bar is, or they cover it: set `--bottom-bar-room` on the root
-  (`BOTTOM_BAR_ROOM_VAR`).
+- Put the views at the foot in `AppShell`'s `bottomBar`: the frame then tells the notices how tall it is
+  (`--bottom-bar-room`). A bar of the app's own, outside the frame, sets `--bottom-bar-room` on the root itself
+  (`BOTTOM_BAR_ROOM_VAR`), with the foot's maximum inset in it.
 
 Navigation:
 
@@ -153,24 +171,97 @@ What opens over the page:
 Motion: as everywhere. Short, only on a gesture, a sheet enters from its own edge, nothing loops; all works with
 motion off or reduced.
 
+Places:
+
+- A control that is on every page, or in every state, keeps its place (point 7 of «The idea»). A two-state switch
+  stays where it is in both states: a `ToggleGroup`, whose words are as wide pressed as not, at the start of its row,
+  not centred on a row whose other parts come and go.
+- A tool that one view lacks keeps its place, empty: `ToolbarButton absent`, `ToolbarSearch absent`. Do not leave it
+  out, or the tools after it move.
+- What grows or changes length (a search that opens, the place's name in the brand, a count) sits next to a
+  `ToolbarSpacer`, so it takes the spacer's room and not a tool's place. The solid action is last in the bar on every
+  page, or at the foot on every page, never one and then the other.
+- Tabs keep their order on every page; a tab that does not apply is disabled, not taken away.
+
 ### Recommended: a screen that has to fit
 
 A screen where the user decides about one item at a time (sort, triage) does not scroll: the item, its fields and the
-two answers are in sight together, so nothing the decision needs is out of view.
+two answers are in sight together, so nothing the decision needs is out of view. It is `Page fit`.
 
-- The frame is as tall as the screen in sight (`h-dvh` or `min-h-dvh`, as in «The page» above), never `100vh`. While
-  the browser shows its address bar, `100vh` is taller than the screen, and a page that fits still scrolls.
+```tsx
+<AppShell contentLabel="Sort" bottomBar={tabs} actions={<><Button variant="outline" onClick={later}>Later</Button><Button onClick={accept}>Looks good</Button></>}>
+  <Page fit header={<ToggleGroup aria-label="Stage" value={stage} onValueChange={setStage}>…</ToggleGroup>}>
+    {/* The item: its title, its fields, a row of quick picks. */}
+  </Page>
+</AppShell>
+```
+
+- The page is as tall as what is seen less the bars: in an `AppShell` the frame has taken its bars away already; on a
+  page of its own it is `--fit-height` (`--app-height` less `--bottom-bar-room`), and it must then be the only block of
+  the page. Never `100vh`: while the browser shows its address bar, `100vh` is taller than the screen, and a page that
+  fits still scrolls.
+- The head (`header`: the switch, a count) and the foot (`footer`, or the frame's `actions`: the two answers, the solid
+  one last, R3) keep their height. The body is what gives way: with a large text, a small phone, the keyboard open or
+  a phone lying down it scrolls inside itself, and the document never does. The document does not bounce or pull to
+  refresh while the page is shown.
 - Short fields (a day, a duration, a list) sit two to a row; a long one (the title, a note) keeps the whole width.
   It is the one exception to the single column of «Forms».
 - Quick picks are one row that scrolls sideways, not rows that wrap: the next chip peeks at the edge, and that is the
   sign there are more.
-- The two answers stay above the bar at the foot (`sticky bottom-0`), the solid one last (R3).
-- Measure it at 360x640 and at 411x741, with a coarse pointer: the page does not scroll, and both answers are in sight.
+- Where it fails: a head and a foot taller than the screen together (160% text on a phone lying down) leave the body
+  no room, and then the frame's content scrolls (in an `AppShell`) or the document does (alone). Keep the head to one
+  line and the foot to one row of answers. A fit page outside a frame with something above it (a header of the app's
+  own) is taller than the screen: put that in `header`.
+- Measure it at 360x640 and at 411x741, lying down (741x411), with the text at 130% and 160% and with the keyboard
+  open: the document does not scroll (`document.documentElement.scrollHeight === innerHeight`), and both answers are
+  in sight.
+
+## Heights and orientation
+
+A height is the host's, never a guess. The page runs in a browser tab, a Custom Tab, an installed app, a web view or
+a window, and each of them takes a different part of the screen, which changes while the page is open: the bars
+slide, the keyboard opens, the phone turns. What the toolkit measures and what an app decides:
+
+| Measure | What it is | Where it misleads |
+|---|---|---|
+| `100vh` | The height with the browser's bars gone (the largest) | Taller than the screen while the address bar shows: a page that fits it scrolls |
+| `100dvh` | Follows the bars as they slide | Not the keyboard (by default it stays); not every host updates it. The toolkit's value before a script runs |
+| `visualViewport.height` | What the browser says it shows now: what the bars and the keyboard leave; times its `scale` it is in layout px | Nothing on a server. `useAppHeight` reads it and writes `--app-height` |
+| `env(safe-area-inset-*)` | The room the device keeps at an edge (notch, status bar, gesture bar), with `viewport-fit=cover` | At the foot it is live: from Chrome 135 on Android the gesture bar slides away while the page scrolls, and the inset with it. Never size anything with it |
+| `env(safe-area-max-inset-bottom)` | The most the foot's inset can be (Chrome 135 and later) | Only Chrome; the toolkit falls back to the live inset, then 0 (`--safe-area-max-inset-bottom`) |
+| `interactive-widget` | In the viewport meta: what the keyboard resizes. `resizes-visual` (the default from Chrome 108): only the visual viewport, so `dvh` and `fixed` bars stay and the keyboard covers the foot. `resizes-content`: the page itself | Not read by WebView; Safari does not read it either (not from the pages below) |
+| Text scale | Mobile browsers leave the system's text size out by default; `<meta name="text-scale" content="scale">` lets `rem` follow it | Everything in `rem` grows taller: a screen that fits must give way, not assume |
+
+By host. What is said of Chrome comes from four pages of developer.chrome.com, read on 2026-11-23 and to be read again
+when Chrome changes: <https://developer.chrome.com/docs/css-ui/edge-to-edge> (the gesture bar, the live and the
+maximum inset), <https://developer.chrome.com/blog/viewport-resize-behavior> (the keyboard, `interactive-widget`),
+<https://developer.chrome.com/blog/url-bar-resizing> (`100vh` and the address bar) and
+<https://developer.chrome.com/docs/modern-web-guidance/guides/accessibility/respect-os-text-scale> (text scale). The
+rows of the Custom Tab, the WebView's keyboard and iOS Safari are not from them: they are as these hosts are known,
+not measured here.
+
+| Host | Bars | Keyboard | Safe areas |
+|---|---|---|---|
+| Chrome tab, Android | The address bar slides away while the document scrolls; `100vh` is the height without it | Covers the foot (`resizes-visual`); `visualViewport` shrinks | With `viewport-fit=cover`, from 135 the page goes under the gesture bar, whose inset is live; the maximum is fixed |
+| Custom Tab, Android | The opening app's toolbar at the top | As a Chrome tab | As a Chrome tab |
+| Installed app (PWA), Android | No address bar: `100vh`, `100dvh` and what is seen agree, the keyboard apart | As a Chrome tab | As a Chrome tab |
+| WebView, Android | The host app sizes it; `interactive-widget` does nothing | What the host app asks of Android (resize or pan) | What the host app passes on |
+| Safari, iOS | The bars shrink while the document scrolls; `100vh` is the height with them small | Covers the page and may pan it (`visualViewport.offsetTop`) | Notch and home indicator; no maximum: the live inset, which does not slide |
+
+The toolkit does, with no code of the app's: the frame's height (`AppShell`, `useAppHeight`, `--app-height`); its
+edges where it is the whole screen; the room of its bottom bar (`--bottom-bar-room`); its thin bars on a short window
+(`short:`); a page that fits (`Page fit`, `--fit-height`); the notices above the bar; `ScrollArea bounded` at about
+half of what is seen.
+
+The app decides: the viewport meta (`viewport-fit=cover`, and `interactive-widget` if the keyboard should resize the
+page); whether to let the system's text size in (`text-scale`); the room of a bar of its own; and what a screen shows
+when the keyboard is open (the bottom bar stays above it, in the frame).
 
 ## Layouts
 
-Six screens of one small app. The gallery shows them as states of the same app, so a press on a row, the plus and a
-tab move between them.
+Seven screens of one small app. The gallery shows them as states of the same app, so a press on a row, the plus and a
+tab move between them. Beside the phone, the conditions to try the screen that fits in: a frame 480, 640 or 741px
+tall, the text at 100, 130 or 160%, the keyboard open, the phone lying down.
 
 **List.** The first screen: what there is to do, in one column (`ItemList`, `ItemRow`). The views are tabs at the
 foot; the one solid action (add) is last in the bar. Today is in the accent (R2). An empty list says so and names the
@@ -193,25 +284,24 @@ the end; it takes effect at once, with no Save button, unless it can fail. The r
 **Focus.** The screen a phone is best at: one thing, how many are left, the way out. No tabs and no menu. The actions
 are at the foot: skip, later, done. It is the screen where the accent has the least to compete with.
 
+**A screen that fits.** Sorting what came in, one item at a time (`Page fit`): at the head a two-state switch that
+stays where it is in both states and a line of progress, in the body the item in a card that gives way, at the foot
+the answers, the solid one last. The document never scrolls; the card does, when it must.
+
 A task in steps (`Steps`) is a column on a phone, with Back and Continue at the foot.
 
 ## Examples
 
 The frame of a phone app with a few views: tabs at the foot, the solid action last in the bar, the notices above the
-bottom bar.
+bottom bar. The frame takes its height and its edges by itself, and tells the notices how tall the bar is.
 
 ```tsx
-import { AppShell, BOTTOM_BAR_ROOM_VAR, Icon, TitleBar, Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '@acaprino/sigrid'
+import { AppShell, Icon, TitleBar, Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '@acaprino/sigrid'
 
 function Tasks() {
   const [view, setView] = useState('today')
-  // The notices sit above the bar at the foot: 48px and its line.
-  useLayoutEffect(() => {
-    const bar = document.querySelector<HTMLElement>('[data-slot="app-shell-bottom"]')
-    document.documentElement.style.setProperty(BOTTOM_BAR_ROOM_VAR, `${bar?.offsetHeight ?? 0}px`)
-  }, [])
   return (
-    <div className="h-dvh">
+    <>
       <AppShell
         contentLabel="Today"
         titleBar={
@@ -242,9 +332,17 @@ function Tasks() {
         </ItemList>
       </AppShell>
       <Toasts items={notices} durationMs={6000} onDismiss={dismiss} />
-    </div>
+    </>
   )
 }
+```
+
+A tool that one view lacks keeps its place, so the plus at the end of the bar never moves:
+
+```tsx
+<ToolbarSpacer />
+<ToolbarButton label="Filter" icon={<Icon name="filter" />} absent={view === 'settings'} onClick={filter} />
+<ToolbarButton label="New task" variant="default" icon={<Icon name="plus" />} onClick={add}>New task</ToolbarButton>
 ```
 
 The detail as a page: the same frame with the content swapped, the way back in the bar and the actions at the foot.
@@ -317,7 +415,12 @@ return <TaskRow task={task} swipe={phone ? { end: archive } : undefined} />
 - At 320px, on every screen, `document.documentElement.scrollWidth === innerWidth`. One thing too wide widens the
   whole page: a long string that cannot wrap, `whitespace-nowrap` with `shrink-0` in a flex row, a grid track without
   `minmax(0, 1fr)`. Chrome on Android then draws the `fixed` bars on the widened page, and the bottom bar is cut off.
-- A page that should fit is not `100vh` or `h-screen` tall: it is `dvh`.
+- Nothing is `100vh` or `h-screen` tall: the frame and `Page fit` take the height of what is seen.
+- Each screen that must fit, at 360x640 and 411x741, lying down, with the text at 130% and 160%, and with the
+  keyboard open: `document.documentElement.scrollHeight === innerHeight` (the document does not scroll), the answers
+  are in sight, and only the body scrolls.
+- Go from page to page and from state to state: the bar at the foot, the tools of the head and every switch stay
+  where they were.
 - Every screen has one solid action, and it can be reached with the thumb or is last in the bar.
 - Every action has a way that needs no hover, no key and no swipe.
 - Type in every field: the page does not zoom, and the keyboard is the right one.
@@ -328,9 +431,12 @@ return <TaskRow task={task} swipe={phone ? { end: archive } : undefined} />
 
 What a phone app still writes by itself, or has to know. Each is a decision for the toolkit, not a rule:
 
-- The frame keeps no room for the safe areas. With `viewport-fit=cover` the bottom bar sits under the home indicator
-  unless the app pads it.
-- `--bottom-bar-room` is the app's to set: the frame does not write the height of its own bottom bar.
+- With the keyboard open the frame is as tall as what is left above it, so its bottom bar stays in sight above the
+  keyboard; the frame does not hide it.
+- On iOS the keyboard may pan the page (`visualViewport.offsetTop`): the frame follows the height, not the pan.
+- `short:` follows the window's height, not the frame's: a frame in a short box of a tall window keeps its 48px bar.
+- The measures were checked in tests (jsdom) and, for the same rules in an app, in headless Chrome with touch
+  emulation; not on a real phone, a Custom Tab, Samsung Internet or iOS Safari.
 - The `status` and `footer` strips take the 44px floor of a control with a finger, though nothing in them is pressed.
 - There is no row that swipes and no pull to refresh: an app that wants them writes them.
 - `DESIGN.md` still lists the measures at phone widths as unresolved (`x-zsd.unresolved`), and does not name this

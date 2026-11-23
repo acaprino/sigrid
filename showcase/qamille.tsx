@@ -343,11 +343,10 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
           Snooze
         </Button>
       )}
-      {opened.folder === 'archive' ? null : (
-        <Button variant="outline" onClick={() => move(opened, 'archive', 'Archived')}>
-          Archive {key('E')}
-        </Button>
-      )}
+      {/* A message already archived keeps the button, unavailable: the actions are in the same places for every message. */}
+      <Button variant="outline" disabled={opened.folder === 'archive'} onClick={() => move(opened, 'archive', 'Archived')}>
+        Archive {key('E')}
+      </Button>
       {phone ? null : (
         <Button variant="outline" onClick={() => setDraft({ to: [opened.address], subject: `Fwd: ${opened.subject}`, body: '', reply: false })}>
           Forward
@@ -410,6 +409,8 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
     <Host device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`qamille.app/${folder}`} notices={toasts} onDismiss={dismiss}>
       <div className="h-full" onKeyDown={keys}>
         <AppShell
+          // A box of the page's own (the host's frame), maybe taller than the window: the frame fills the box.
+          className="h-full"
           desktop={!phone && host === 'native'}
           contentLabel={phone && opened ? opened.subject : folderLabel}
           titleBar={

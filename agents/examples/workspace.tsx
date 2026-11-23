@@ -2,12 +2,11 @@
 // A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is `src/App.tsx`
 // of the project the editor exports; where it runs and its window come from `@acaprino/sigrid/tauri`.
 // Workspace: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
-import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
-  AppShell, Badge, BOTTOM_BAR_ROOM_VAR, Button, Count, Empty, Icon, Inspector, ItemList, ItemRow, Kbd,
-  NavItem, Panel, Progress, Sidebar, SidebarGroup, Switch, TitleBar, Toasts, Toolbar, ToolbarBrand,
-  ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs, useAppShell, useDesktopGuard, useMedia,
-  WindowControls, type ToastItem,
+  AppShell, Badge, Button, Count, Empty, Icon, Inspector, ItemList, ItemRow, Kbd, NavItem, Panel, Progress,
+  Sidebar, SidebarGroup, Switch, TitleBar, Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer,
+  ToolbarTab, ToolbarTabs, useAppShell, useDesktopGuard, useMedia, WindowControls, type ToastItem,
 } from '@acaprino/sigrid'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
@@ -49,12 +48,6 @@ export function App() {
     setMenu(false)
   }
   const say = (text: string) => setNotices((list) => [...list, { id: crypto.randomUUID(), text }])
-  // The notices sit above what the app keeps at its foot.
-  useLayoutEffect(() => {
-    const kept = ['app-shell-bottom', 'app-shell-actions', 'app-shell-footer']
-    const room = kept.reduce((sum, slot) => sum + (document.querySelector<HTMLElement>(`[data-slot="${slot}"]`)?.offsetHeight ?? 0), 0)
-    document.documentElement.style.setProperty(BOTTOM_BAR_ROOM_VAR, `${room}px`)
-  }, [screen, narrow])
 
   const content: Record<Screen, ReactNode> = {
     cleanup: (

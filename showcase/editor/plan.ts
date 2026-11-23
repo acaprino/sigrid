@@ -11,10 +11,10 @@
 //   say(text)                 a notice at the foot of the window
 //   job, busy, runJob()       the app's job: how far it is (null when it does not run), whether it runs, the way to start it
 import { CATALOG, isKind, type BuildCtx } from './catalog'
-import { call, equals, h, name, not, text, type Child, type Expr, type StateDecl } from './ir'
+import { call, equals, h, name, not, text, type Child, type El, type Expr, type StateDecl } from './ir'
 import { SHARED, hasRegion, type AppModel, type Node, type Screen, type Settings, type SharedSlot } from './model'
 
-export type ScreenPlan = Pick<Screen, 'id' | 'name' | 'icon' | 'pad' | 'width' | 'detailsTitle'> & {
+export type ScreenPlan = Pick<Screen, 'id' | 'name' | 'icon' | 'pad' | 'width' | 'fit' | 'detailsTitle'> & {
   readonly content: readonly Child[]
   /** Null: this screen has no status row. */
   readonly status: readonly Child[] | null
@@ -110,6 +110,7 @@ export function planOf(app: AppModel): Plan {
       icon: s.icon,
       pad: s.pad,
       width: s.width,
+      fit: s.fit,
       detailsTitle: s.detailsTitle,
       content: build(s.content),
       status: s.statusOn ? build(s.statusItems) : null,
@@ -132,6 +133,14 @@ export const contentClass = (s: Pick<Screen, 'pad' | 'width'>): string => ['flex
 export const JOB_STEP = 5
 export const JOB_TICK_MS = 200
 
+/** The classes of the column inside the body of a screen that fits (`Page fit` keeps its own room and width). */
+export const FIT_CLASS = 'flex flex-col gap-4'
+
+/**
+ * What holds a screen's content: the column with its room and its width, or, for a screen that fits one screen, the
+ * toolkit's `Page fit` (as tall as the frame's content; its body gives way and scrolls inside itself).
+ */
+export const screenBody = (s: Pick<Screen, 'pad' | 'width' | 'fit'>, children: readonly Child[]): El => (s.fit ? h('Page', { fit: true }, children) : h('div', { className: contentClass(s) }, children))
 /** The classes of the column inside the inspector. */
 export const DETAILS_CLASS = 'flex flex-col gap-4'
 

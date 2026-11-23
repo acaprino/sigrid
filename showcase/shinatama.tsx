@@ -350,6 +350,8 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
     <Host device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="shinatama" notices={toasts} onDismiss={dismiss} className="h-190 w-full max-w-300">
       <div className="h-full">
         <AppShell
+          // A box of the page's own (the host's window), maybe taller than the window: the frame fills the box.
+          className="h-full"
           desktop
           frame="sheet"
           contentLabel={view}

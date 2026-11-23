@@ -21,6 +21,7 @@ import {
   Kbd,
   COARSE,
   NARROW,
+  SHORT,
   NavItem,
   NavList,
   SHAPE_RADII,
@@ -136,7 +137,7 @@ const PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: 
   { icon: 'check', title: 'Stay readable and reachable', refs: 'R8, R9, R12', text: 'Text keeps 4.5:1 and borders and rings 3:1 in every theme. The focus ring is 2px in the accent. With a finger every control is at least 44px. Z undoes the newest action.' },
 ]
 
-/** The idea on a phone (docs/mobile.md): the same six principles, with room for one thing. */
+/** The idea on a phone (docs/mobile.md): the six principles with room for one thing, and the controls that never move. */
 const PHONE_PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: string }[] = [
   { icon: 'column', title: 'The same app, in one column', refs: 'AppShell', text: 'Do not design a second app. The regions of the frame give way in a fixed order until one column is left: the inspector becomes a page, the sidebar a drawer, the words beside icons go. What the user learned on the wide window still holds.' },
   { icon: 'now', title: 'One screen, one job', refs: 'R2, R3', text: 'One list, or one thing to read, with one solid action. Whatever else can be done waits in a menu. An eye that is easily pulled away has one place to land.' },
@@ -144,6 +145,7 @@ const PHONE_PRINCIPLES: readonly { icon: IconName; title: string; refs: string; 
   { icon: 'tasks', title: 'State in sight, without a pointer', refs: 'R1, R5, R6', text: 'A finger has no hover, so nothing may live only under the pointer. The chosen row, the unread dot and the counts are always drawn. An icon nobody would guess keeps its word, since no hint will explain it.' },
   { icon: 'undo', title: 'Undo, do not ask', refs: 'R12', text: 'A finger slips. An action that can be taken back is done at once, and the notice that says so carries Undo. Only what cannot be undone asks first.' },
   { icon: 'check', title: 'Nothing shrinks', refs: 'R7', text: `The text sizes are the ones of the wide window, a field is 16px so the page does not zoom, and every control and row is at least ${TOUCH_TARGET}px at every density.` },
+  { icon: 'layout', title: 'Controls stay where they are', refs: 'absent, Page fit', text: 'From one page to the next, and between two states of one, the controls every page has never move: the bar at the foot, the tools of the bar, a two-state switch, which stays where it is in both states. A tool that a view lacks leaves its place empty. A control that jumps pulls the eye away.' },
 ]
 
 /** The four levels of the README: what Sigrid is, each with where to see it. */
@@ -328,7 +330,9 @@ const PHONE_FACTS: readonly (readonly [string, React.ReactNode])[] = [
   ['Toolbar', "Under 448px of its own width a button keeps its icon and drops its word, and a search field is its magnifier. Under 256px the app's name goes. The buttons never go."],
   ['Sheets', 'Close with a swipe in the direction of their side, as well as with Esc and a press outside.'],
   ['Date card', 'On a phone a sheet at the foot of the screen, with room for the home indicator.'],
-  ['Notices', <>In the middle of the foot below 860px, above the room an app declares for its bottom bar (<Code>--bottom-bar-room</Code>).</>],
+  ['Height', <>The frame is as tall as what is seen (<Code>--app-height</Code>, measured from <Code>visualViewport</Code>: the browser&apos;s bars, the keyboard, a rotation), never taller than its box. As the whole screen it keeps clear of the notch and the gesture bar by itself. Under 500px of height (<Code>{SHORT}</Code>, the <Code>short:</Code> variant) its bottom bar is 44px.</>],
+  ['Places', <>A segment, a tab and a view are as wide chosen as not, so a two-state switch stays where it is in both states and nothing beside it moves. A tool that a view lacks keeps its place, empty (<Code>absent</Code>).</>],
+  ['Notices', <>In the middle of the foot below 860px, above the bottom bar: the frame writes its bar&apos;s height to <Code>--bottom-bar-room</Code>; a bar of the app&apos;s own sets it.</>],
   ['Steps', 'A row too narrow for its names keeps the current one and says «Step 2 of 4».'],
   ['Hover', 'Drawn only where the pointer can hover: a tap leaves no stuck hover.'],
 ]
@@ -675,13 +679,15 @@ const NARROW_ADVICE = [
 /** What an app adds on a phone (docs/mobile.md): recommendations. */
 const PHONE_ADVICE = [
   <>Let the frame measure itself. Do not switch on <Code>usePhone()</Code> to lay a screen out: a narrow window with a mouse wants the same layout. Keep it for what belongs to a finger on a small screen, as a swipe on a row.</>,
-  <>Make the frame as tall as the screen that is left (<Code>h-dvh</Code>), and do not switch the user's zoom off.</>,
+  <>Let the frame take its height: AppShell is as tall as what is seen by itself. Add no <Code>h-dvh</Code>, <Code>h-screen</Code> or <Code>100vh</Code>, and do not switch the user&apos;s zoom off.</>,
+  <>A screen worked through one item at a time is one screen: <Code>Page fit</Code>. The body gives way and scrolls inside itself, the head and the answers stay in sight, the document never scrolls.</>,
+  <>Controls never change place between pages or states, above all on a phone: a two-state switch stays where it is in both states, and a tool that a view lacks keeps its place, empty (<Code>absent</Code>).</>,
   'One solid action on the screen (R3). On a list it is the add button, last in the bar; on a page about one thing it is at the foot, last, with the quieter ones before it.',
   "The bar at the head holds the app and the place, then at most three actions. The rest goes in one menu. The way back keeps its word: «‹ Today», not an arrow alone.",
   'A row is two lines at most. A press opens it; what else can be done to it is in its page or in a menu at its end. A swipe is a shortcut, never the only way.',
   'A short task (add, rename, pick) is a sheet from the foot: one field, a few quick choices, one solid button. A dialog is for a question that must be answered.',
   'What can be undone is done at once, with Undo in the notice. Z has no key on a phone: the button in the notice is the way back.',
-  <>Leave the status and footer strips out, and tell the notices how tall the bottom bar is (<Code>--bottom-bar-room</Code>), or they cover it.</>,
+  <>Leave the status and footer strips out. The frame tells the notices how tall its bottom bar is; a bar of the app&apos;s own sets <Code>--bottom-bar-room</Code>, or the notices cover it.</>,
   "A destructive action is never where the thumb rests: in the menu, last, after a separator.",
 ]
 
@@ -702,7 +708,7 @@ const AVOID = [
 /** The practices, with the layout gallery (`gallery`) where docs/patterns.md puts the four screens to start from. */
 export function PracticesView({ gallery, phones }: { gallery: React.ReactNode; phones: React.ReactNode }) {
   return (
-    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The four screens to start from are shown live, at the widths where the frame changes, and six more as one small app in a frame as wide as a phone.">
+    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The four screens to start from are shown live, at the widths where the frame changes, and seven more as one small app in a frame as wide as a phone.">
       <Section id="practices-frame" icon="layout" title="Start from the one frame" note="Use AppShell for the window of an app and fill in only the regions it needs. This showcase is built with it.">
         <Anatomy />
         <Table caption="The regions of the frame" head={['Region', 'Put there', 'Leave out when']} rows={REGIONS} />

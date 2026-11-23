@@ -191,8 +191,13 @@ function ScreenPanel({ app, screen, onScreen, onDuplicate, onDelete, onStart }: 
         <OnOff label="The app starts here" checked={app.start === screen.id} onChange={(on) => on && onStart()} />
       </Group>
       <Group label="Content">
-        <Choice label="As wide as" value={screen.width} options={[['full', 'Its place'], ['page', 'A page'], ['prose', 'A text']]} onChange={(width) => onScreen({ width })} />
-        <Choice label="Room around it" value={screen.pad} options={[['none', 'None'], ['sm', '8'], ['md', '16'], ['lg', '24']]} onChange={(pad) => onScreen({ pad })} />
+        <OnOff label="Fits one screen" about="As tall as the frame's content and no taller: the content gives way and scrolls inside itself, never the page. The page keeps its own room and width." checked={screen.fit} onChange={(fit) => onScreen({ fit })} />
+        {screen.fit ? null : (
+          <>
+            <Choice label="As wide as" value={screen.width} options={[['full', 'Its place'], ['page', 'A page'], ['prose', 'A text']]} onChange={(width) => onScreen({ width })} />
+            <Choice label="Room around it" value={screen.pad} options={[['none', 'None'], ['sm', '8'], ['md', '16'], ['lg', '24']]} onChange={(pad) => onScreen({ pad })} />
+          </>
+        )}
       </Group>
       <Group label="Regions of this screen">
         <OnOff label="Details" about="The inspector: what is selected, beside the content." checked={screen.details === 'on'} onChange={(on) => onScreen({ details: on ? 'on' : 'off' })} />

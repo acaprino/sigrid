@@ -6,7 +6,9 @@
 // - On a computer: the views, the areas and the labels are the sidebar; the task chosen is in the inspector, and what is
 //   changed there holds at once; the one solid action is «Complete» on the Now strip (in the Stack, «Add» or «Accept»).
 // - On a phone: the views are tabs at the foot with the plus between them, where the thumb is; a task is a page with
-//   its actions at the foot; adding is a sheet from the foot that goes to the Stack.
+//   its actions at the foot; adding is a sheet from the foot that goes to the Stack. Sort is one screen that does not
+//   scroll (`Page fit`): the card gives way, the answers stay at the foot, and the Dump/Sort switch is where it is in
+//   both stages.
 // - The Stack is put in order by hand (`ReorderList`, the toolkit's `./reorder` entry): Sort takes it from the top.
 // Keys, where there is a keyboard: B goes to the Stack, / searches, Z undoes the newest thing done.
 import * as React from 'react'
@@ -28,6 +30,7 @@ import {
   Kbd,
   NavItem,
   NavList,
+  Page,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -372,69 +375,91 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
       <p className="text-xs text-ink-mute">No decisions now: where and when comes later, in Sort.</p>
     </>
   )
-  const stackView = (
+  // The Dump/Sort switch is at the head in both stages, at the same place: a two-state switch stays where it is in
+  // both states (on a phone its two halves are equal, so neither grows when it is pressed).
+  const stageSwitch = (
+    <ToggleGroup aria-label="Stack" value={mode} onValueChange={setMode} animated={animated} className={phone ? 'w-full' : 'self-start'}>
+      <ToggleGroupItem value="dump" className={phone ? 'flex-1' : undefined}>
+        Dump
+      </ToggleGroupItem>
+      <ToggleGroupItem value="sort" className={phone ? 'flex-1' : undefined}>
+        Sort
+        <span className="text-2xs font-normal text-ink-mute tabular-nums">{stack.length}</span>
+      </ToggleGroupItem>
+    </ToggleGroup>
+  )
+  const dumpPart = (
+    <>
+      {capture}
+      <div className="flex gap-2">
+        <Button disabled={dump.trim() === ''} onClick={addDump}>
+          Add
+        </Button>
+        <Button variant="ghost" onClick={() => say('Dictation needs the microphone: not in this sketch')}>
+          <Icon name="mic" />
+          Dictate
+        </Button>
+      </div>
+      <h2 className="pt-2 text-2xs font-medium text-ink-mute">In the stack</h2>
+      {/* Sort takes the Stack from the top, so its order is the user's to set: by the handles, or Space and the arrows. */}
+      <ReorderList aria-label="In the stack" items={stack} itemId={(item) => item} itemName={(item) => item} onReorder={(next) => setStack(next)} animated={animated}>
+        {(item) => <span className="min-w-0 flex-1 py-1.5">{item}</span>}
+      </ReorderList>
+    </>
+  )
+  const sortAnswers = (
+    <div className="flex justify-end gap-2">
+      <Button variant="ghost" onClick={skip}>
+        Skip
+      </Button>
+      <Button onClick={accept} animated={animated}>
+        Accept
+      </Button>
+    </div>
+  )
+  const sortPart =
+    first === undefined ? (
+      <Empty className="py-10" title="The stack is empty" description="Everything has a place and a day." />
+    ) : (
+      <section aria-label="Sort" data-slot="sort-card" className="flex flex-col gap-4 rounded-lg bg-raised p-4 shadow-xs">
+        <p className="text-2xs font-medium text-ink-mute tabular-nums">1 of {stack.length}</p>
+        <p className="text-lg font-semibold text-ink">{first}</p>
+        <p className="flex items-center gap-2 text-sm text-ink-soft">
+          Goes to
+          {suggested ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-ink">
+              <Dot color={suggested.color} />
+              {suggested.area} › {suggested.name}
+            </span>
+          ) : (
+            <span className="font-medium text-ink">No project</span>
+          )}
+        </p>
+        <ToggleGroup aria-label="When" value={sortDay} onValueChange={setSortDay} animated={animated} className={phone ? 'w-full' : 'self-start'}>
+          {SORT_DAYS.map((d) => (
+            <ToggleGroupItem key={d.id} value={d.id} className={phone ? 'flex-1 px-2' : undefined}>
+              {d.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        {/* On a phone the answers are at the foot of the screen, not of the card. */}
+        {phone ? null : sortAnswers}
+      </section>
+    )
+  // On a phone both stages are a page with the switch at its head and the same margins, so the switch does not move;
+  // Sort is one screen (`Page fit`): the card gives way and scrolls inside itself, the answers stay at the foot.
+  const stackView = phone ? (
+    mode === 'sort' ? (
+      <Page fit header={stageSwitch} footer={first === undefined ? undefined : sortAnswers}>
+        {sortPart}
+      </Page>
+    ) : (
+      <Page header={stageSwitch}>{dumpPart}</Page>
+    )
+  ) : (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-      <ToggleGroup aria-label="Stack" value={mode} onValueChange={setMode} animated={animated} className={phone ? 'w-full' : 'self-start'}>
-        <ToggleGroupItem value="dump" className={phone ? 'flex-1' : undefined}>
-          Dump
-        </ToggleGroupItem>
-        <ToggleGroupItem value="sort" className={phone ? 'flex-1' : undefined}>
-          Sort
-          <span className="text-2xs font-normal text-ink-mute tabular-nums">{stack.length}</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
-      {mode === 'dump' ? (
-        <>
-          {capture}
-          <div className="flex gap-2">
-            <Button disabled={dump.trim() === ''} onClick={addDump}>
-              Add
-            </Button>
-            <Button variant="ghost" onClick={() => say('Dictation needs the microphone: not in this sketch')}>
-              <Icon name="mic" />
-              Dictate
-            </Button>
-          </div>
-          <h2 className="pt-2 text-2xs font-medium text-ink-mute">In the stack</h2>
-          {/* Sort takes the Stack from the top, so its order is the user's to set: by the handles, or Space and the arrows. */}
-          <ReorderList aria-label="In the stack" items={stack} itemId={(item) => item} itemName={(item) => item} onReorder={(next) => setStack(next)} animated={animated}>
-            {(item) => <span className="min-w-0 flex-1 py-1.5">{item}</span>}
-          </ReorderList>
-        </>
-      ) : first === undefined ? (
-        <Empty className="py-10" title="The stack is empty" description="Everything has a place and a day." />
-      ) : (
-        <section aria-label="Sort" data-slot="sort-card" className="flex flex-col gap-4 rounded-lg bg-raised p-4 shadow-xs">
-          <p className="text-2xs font-medium text-ink-mute tabular-nums">1 of {stack.length}</p>
-          <p className="text-lg font-semibold text-ink">{first}</p>
-          <p className="flex items-center gap-2 text-sm text-ink-soft">
-            Goes to
-            {suggested ? (
-              <span className="inline-flex items-center gap-1.5 font-medium text-ink">
-                <Dot color={suggested.color} />
-                {suggested.area} › {suggested.name}
-              </span>
-            ) : (
-              <span className="font-medium text-ink">No project</span>
-            )}
-          </p>
-          <ToggleGroup aria-label="When" value={sortDay} onValueChange={setSortDay} animated={animated} className={phone ? 'w-full' : 'self-start'}>
-            {SORT_DAYS.map((d) => (
-              <ToggleGroupItem key={d.id} value={d.id} className={phone ? 'flex-1 px-2' : undefined}>
-                {d.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={skip}>
-              Skip
-            </Button>
-            <Button onClick={accept} animated={animated}>
-              Accept
-            </Button>
-          </div>
-        </section>
-      )}
+      {stageSwitch}
+      {mode === 'dump' ? dumpPart : sortPart}
     </div>
   )
 
@@ -548,6 +573,8 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
     <Host device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`ethel.app/${view.replace(':', '/')}`} notices={toasts} onDismiss={dismiss}>
       <div className="h-full" onKeyDown={keys}>
         <AppShell
+          // A box of the page's own (the host's frame), maybe taller than the window: the frame fills the box.
+          className="h-full"
           desktop={!phone && host === 'native'}
           contentLabel={task && phone ? task.title : title}
           titleBar={

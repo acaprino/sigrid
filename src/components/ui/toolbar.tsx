@@ -24,6 +24,9 @@
 // query, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon
 // and a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.
 // What the user needs to act (the buttons) is never what gives way.
+// The tools keep their places from one page or state to the next (the owner's rule, above all on a phone): a tool that
+// a view lacks keeps its place, empty (`absent`), and a view's word is as wide chosen as not. What grows (a search that
+// opens, the place in the brand) sits next to a `ToolbarSpacer`, so it takes the spacer's room and not a tool's place.
 // Two sizes, chosen with a parameter: `md`, and `sm` for the dense bars of a classic desktop program (28px items, a
 // 20px mark). A toolbar in a compact `TitleBar` is `sm` by itself. Text buttons that open a `DropdownMenu` («File»,
 // «Edit», «View») make the menu bar of such a program out of the same parts.
@@ -33,6 +36,7 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight, Search } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
+import { steadyLabel } from "../../internal/steady-label"
 import { buttonVariants } from "./button"
 import { SearchField } from "./search-field"
 import { Tooltip } from "./tooltip"
@@ -79,6 +83,12 @@ export type ToolbarButtonProps = Omit<React.ComponentProps<"button">, "aria-labe
   keepWord?: boolean | undefined
   /** The hint fades in (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
+  /**
+   * The tool is not there in this view or this state: its place stays, empty and as wide as the tool, so the tools
+   * beside it do not move (a control never changes place between pages or states). It is out of the page for the
+   * keyboard and for screen readers.
+   */
+  absent?: boolean | undefined
 }
 
 // A switch that is on has the selection tint and its ink; a disabled item stays in the arrows' path, dimmed.
@@ -87,23 +97,14 @@ const ITEM = "aria-pressed:bg-selected aria-pressed:text-selected-ink data-disab
 /** Gone while the toolbar is under 448px wide. */
 const NARROW_GONE = "@max-md/toolbar:hidden"
 
-function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
+function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = children === undefined || children === null || children === false
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
   const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
-  const button = (
-    <ToolbarPrimitive.Button
-      data-slot="button"
-      data-toolbar-item="button"
-      data-variant={variant}
-      aria-label={label}
-      aria-pressed={pressed}
-      type={type}
-      {...props}
-      ref={ref as React.Ref<HTMLButtonElement>}
-      className={cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)}
-    >
+  const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)
+  const body = (
+    <>
       {icon}
       {iconOnly ? null : icon && !keepWord ? (
         <span data-slot="toolbar-button-word" className={cn("flex min-w-0 flex-1 items-center gap-2", NARROW_GONE)}>
@@ -116,6 +117,29 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
           {key}
         </>
       )}
+    </>
+  )
+  // The same box with the same content, unseen: not an item of the toolbar, so the arrows pass it by.
+  if (absent) {
+    return (
+      <span data-slot="toolbar-slot" aria-hidden="true" inert className={cn(look, "invisible")}>
+        {body}
+      </span>
+    )
+  }
+  const button = (
+    <ToolbarPrimitive.Button
+      data-slot="button"
+      data-toolbar-item="button"
+      data-variant={variant}
+      aria-label={label}
+      aria-pressed={pressed}
+      type={type}
+      {...props}
+      ref={ref as React.Ref<HTMLButtonElement>}
+      className={look}
+    >
+      {body}
     </ToolbarPrimitive.Button>
   )
   if (!iconOnly) return button
@@ -181,12 +205,14 @@ function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabPr
   const current = tabs?.value === value
   const look = cn(
     tabs?.edge === "top" ? "after:top-0" : "after:bottom-0",
-    tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
+    // Stacked, under 500px of height (a phone lying down) the word goes beside the icon: the bar stays 44px.
+    tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs short:flex-row short:gap-1.5 short:py-0" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
   )
   return (
     <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, look, className)}>
       {icon}
-      {children}
+      {/* As wide when it is the current view as when it is not: the views beside it never move. */}
+      {steadyLabel(children)}
     </ToolbarPrimitive.Button>
   )
 }
@@ -296,12 +322,14 @@ export type ToolbarSearchProps = {
   /** The placeholder, if it differs from the name. */
   placeholder?: string | undefined
   animated?: boolean | undefined
+  /** The search is not there in this view: its place stays, empty and as wide as it is closed, so the tools beside it do not move. */
+  absent?: boolean | undefined
   className?: string | undefined
 }
 
 const FIELD_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"])
 
-function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false, onOpenChange, closed = "icon", shortcut, placeholder, animated, className }: ToolbarSearchProps) {
+function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false, onOpenChange, closed = "icon", shortcut, placeholder, animated, absent = false, className }: ToolbarSearchProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const [own, setOwn] = React.useState(defaultOpen)
   const asked = open ?? own
@@ -328,12 +356,13 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
     }
     if (open) input.current?.focus()
   }, [open])
-  if (!shown && closed === "field") {
+  if ((absent || !shown) && closed === "field") {
     return (
       <ToolbarButton
         ref={button}
         data-toolbar-item="search"
         label={label}
+        absent={absent}
         variant="outline"
         aria-expanded={false}
         icon={<Search aria-hidden="true" className="text-ink-mute" />}
@@ -348,12 +377,13 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
       </ToolbarButton>
     )
   }
-  if (!shown) {
+  if (absent || !shown) {
     return (
       <ToolbarButton
         ref={button}
         data-toolbar-item="search"
         label={label}
+        absent={absent}
         shortcut={shortcut}
         animated={animated}
         aria-expanded={false}

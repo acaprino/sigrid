@@ -15,7 +15,7 @@ window, on a computer and on a phone.
 | To know | Read |
 |---|---|
 | Which component there is, its props and what each is for | `agents/catalog.json` (written from the source: file, what it is, components and their props, the object types those props are made of) |
-| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame) |
+| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
 | What changes on a phone, and what does not | `docs/mobile.md` |
@@ -70,6 +70,13 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own
   with `WordsProvider`.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
+- A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
+  both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
+  tool a view lacks keeps its place empty (`ToolbarButton absent`), it is not left out.
+- A height is the host's, never a guess: no `100vh`, `h-screen` or `h-dvh` around `AppShell` (it is as tall as what
+  is seen, and keeps clear of the notch and the gesture bar by itself); a screen that must fit is `Page fit`, whose
+  body gives way, never the document. Nothing is sized with the live `env(safe-area-inset-bottom)`: room at the foot
+  is `--safe-area-max-inset-bottom` (`docs/mobile.md`, «Heights and orientation»).
 
 ## Check your work
 

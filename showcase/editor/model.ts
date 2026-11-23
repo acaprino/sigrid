@@ -52,6 +52,11 @@ export type Screen = {
   pad: 'none' | 'sm' | 'md' | 'lg'
   width: 'full' | 'page' | 'prose'
   /**
+   * One screen and no more: the content is the toolkit's `Page fit`, as tall as the frame's content, and gives way and
+   * scrolls inside itself; the document never scrolls. The room and the width are then the page's own.
+   */
+  fit: boolean
+  /**
    * The row under the bar (in the sheet frame, the head of the sheet): the last result, a summary, the progress of a
    * job. Off: no row.
    */
@@ -78,7 +83,7 @@ export function make(kind: Kind, set: Record<string, unknown> = {}): Node {
 }
 
 export function screen(name: string, icon: IconName, set: Partial<Screen> = {}): Screen {
-  return { id: slug(name, 'screen'), name, icon, pad: 'md', width: 'page', statusOn: false, statusItems: [], details: 'off', detailsTitle: 'Details', actionsOn: false, content: [], detailsItems: [], actions: [], ...set }
+  return { id: slug(name, 'screen'), name, icon, pad: 'md', width: 'page', fit: false, statusOn: false, statusItems: [], details: 'off', detailsTitle: 'Details', actionsOn: false, content: [], detailsItems: [], actions: [], ...set }
 }
 
 /** A name no other screen has: «Screen», «Screen 2». */
@@ -350,6 +355,52 @@ function listDetails(): AppModel {
   }
 }
 
+function triage(): AppModel {
+  const quick = (label: string) => make('Button', { label, variant: 'outline', size: 'sm', action: 'say', said: `Set to ${label.toLowerCase()}` })
+  return {
+    version: 1,
+    name: 'Triage',
+    look: structuredClone(START_LOOK),
+    start: 'sort',
+    // The screens are tabs in a bar of their own where there is room, and at the foot on a phone.
+    settings: { ...SETTINGS, tabs: 'wide', bottom: 'narrow' },
+    shared: {
+      ...NO_SHARED(),
+      bar: [make('Brand'), make('Spacer'), make('BarButton', { label: 'Write', icon: 'plus', variant: 'outline', action: 'go:write' })],
+      tabs: [make('ViewTabs')],
+      bottom: [make('BottomTabs')],
+    },
+    screens: [
+      // One item at a time, on one screen: how many are left in the row under the bar, which never scrolls; in the
+      // body, which gives way, the two-state switch, the progress and the item in a card; the two answers at the foot
+      // (the actions), the solid one last. The row and the answers do not move from one item to the next.
+      screen('Sort', 'inbox', {
+        fit: true,
+        statusOn: true,
+        statusItems: [make('FootText', { text: '3 of 12 sorted' })],
+        actionsOn: true,
+        content: [
+          make('Segment', { label: 'Which items', options: [{ label: 'New' }, { label: 'Waiting' }] }),
+          make('Progress', { label: 'Sorted', shape: 'bar', value: 25 }),
+          make('Card', {
+            items: [
+              make('Field', { label: 'Title', placeholder: 'Call the plumber about the leak' }),
+              make('Choice', { label: 'Where it goes', options: [{ label: 'Home' }, { label: 'Work' }, { label: 'Someday' }] }),
+              make('Day', { label: 'When' }),
+              make('Row', { items: [quick('Today'), quick('Tomorrow'), quick('Next week')] }),
+            ],
+          }),
+        ],
+        actions: [make('Button', { label: 'Later', variant: 'outline', action: 'say', said: 'Moved to the end' }), make('Button', { label: 'Looks good', action: 'say', said: 'Sorted' })],
+      }),
+      screen('Write', 'rename', {
+        width: 'prose',
+        content: [make('Heading', { text: 'Write it all down', level: 'section' }), make('Field', { label: 'What is on your mind', kind: 'area', placeholder: 'One thing on each line', help: 'Each line is an item to sort.' })],
+      }),
+    ],
+  }
+}
+
 function blank(): AppModel {
   return { version: 1, name: 'My app', look: structuredClone(START_LOOK), start: 'home', settings: { ...SETTINGS }, shared: { ...NO_SHARED(), bar: [make('Brand'), make('Spacer')] }, screens: [screen('Home', 'all')] }
 }
@@ -364,6 +415,7 @@ export const STARTERS: readonly Starter[] = [
     about: 'Laid out as Xiox, in the sheet frame: the views as tabs in the bar with a «Commands» button, a sidebar of categories, a status row, a list in a panel, the details, the actions and the keys at the foot.',
     make: workspace,
   },
+  { id: 'triage', name: 'Triage', kind: 'app', about: 'Sorting what came in, one item at a time, on one screen whose page never scrolls: how many are left in the row under the bar, a two-state switch and the item in a body that gives way, the answers at the foot.', make: triage },
   { id: 'tabs', name: 'Tabs', kind: 'layout', about: 'No sidebar: three screens as tabs under the bar, at the foot on a phone.', make: tabsOnly },
   { id: 'tabs-details', name: 'Tabs and details', kind: 'layout', about: 'No sidebar: views as tabs under the bar, a list, and the details of the row chosen beside it.', make: tabsDetails },
   { id: 'list-details', name: 'List and details', kind: 'layout', about: 'No sidebar and no tabs: one list, the details of the row chosen beside it, the actions under it.', make: listDetails },
@@ -414,6 +466,8 @@ export function readApp(value: unknown): AppModel | null {
       icon: iconName(s['icon']),
       pad: oneOf(s['pad'], ['md', 'none', 'sm', 'lg'] as const),
       width: oneOf(s['width'], ['page', 'full', 'prose'] as const),
+      // An app saved before the option: its screens do not fit.
+      fit: flag(s['fit']),
       statusOn: flag(s['statusOn']) || (s['statusOn'] === undefined && said !== ''),
       statusItems: nodes(Array.isArray(s['statusItems']) ? s['statusItems'] : said ? [{ type: 'FootText', props: { text: said } }] : [], 'status', ids),
       details: s['details'] === 'on' ? 'on' : 'off',

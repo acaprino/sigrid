@@ -17,6 +17,7 @@ import { Toggle as TogglePrimitive } from "@base-ui/react/toggle"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
+import { steadyLabel } from "../../internal/steady-label"
 
 type Impl = NonNullable<ReturnType<typeof useMotion>>
 /** For the items: the pressed value and, with animations on, the Motion chunk and the id of this group's pill. */
@@ -81,7 +82,7 @@ function ToggleGroupItem({ className, children, highlightClassName, ...props }: 
     return (
       <TogglePrimitive data-slot="toggle-group-item" className={cn(ITEM, className, "relative isolate data-[pressed]:bg-transparent data-[pressed]:shadow-none data-[pressed]:hover:bg-transparent")} {...props}>
         {group.value === props.value ? <motion.Highlight id={group.id} className={cn("absolute inset-0 -z-10 rounded-[inherit] bg-raised shadow-xs", highlightClassName)} /> : null}
-        {children}
+        {steadyLabel(children)}
       </TogglePrimitive>
     )
   }
@@ -91,7 +92,8 @@ function ToggleGroupItem({ className, children, highlightClassName, ...props }: 
       className={cn(ITEM, className)}
       {...props}
     >
-      {children}
+      {/* As wide pressed as not: a two-state switch stays where it is in both states. */}
+      {steadyLabel(children)}
     </TogglePrimitive>
   )
 }

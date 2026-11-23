@@ -30,6 +30,12 @@ Recommended:
 - Let the frame measure itself. Its steps (inspector docked from 1000px, sidebar whole from 850px, a rail from 620px,
   a drawer under it) follow the window, so a window half-snapped on a wide screen is laid out as a narrow one. Pass
   `steps` only when a region of the app has another width.
+- Let it take its height too: it is as tall as what is seen (the browser's bars, the keyboard, a rotation:
+  `--app-height`), never taller than the box it is put in, and where it is the whole screen it keeps clear of the
+  notch and the gesture bar. No `h-dvh`, `h-screen` or `100vh` around it.
+- Keep every control that is on every page in one place: the tools of the bar, the bar at the foot, a switch. A tool
+  that a view lacks keeps its place, empty (`ToolbarButton absent`); what changes length sits next to a
+  `ToolbarSpacer`. A two-state switch stays where it is in both states.
 - Keep one solid action in the window (R3). Where there is an action bar it is there, last; otherwise it is in the
   toolbar, last before the window's buttons.
 - Show the button that opens the sidebar only where the sidebar is a drawer (`useAppShell().sidebar === 'drawer'`).
@@ -164,7 +170,9 @@ shadow and no border (R4), a data colour as a dot (R10), today in the accent. Th
 the bar. On a narrow window show one lane at a time, chosen from a `ToggleGroup`.
 
 **Focus.** For one thing at a time. No sidebar and no inspector: the thing, how many are left, the way out, and the
-actions with the main one first. It is the screen where the accent has the least to compete with.
+actions with the main one first. It is the screen where the accent has the least to compete with. A focus screen that
+must fit one screen with no scrolling (sort, triage) is a `Page fit`: the head (a switch, a count) and the foot (the
+answers) keep their height and the body between them gives way and scrolls inside itself, never the document.
 
 ## Narrow windows and phones
 
@@ -173,9 +181,14 @@ actions with the main one first. It is the screen where the accent has the least
 - What the user needs to act never gives way: the solid action and the window's buttons stay at every width.
 - With a finger every control is at least 44px (the toolkit does it); leave the key hints out on a phone.
 
-A phone has a guide of its own, `docs/mobile.md`: the idea, what the toolkit does by itself, what an app adds, and six
-layouts (list, detail as a page, capture sheet, board with one lane, settings page, focus) with their code. The
-gallery shows them as one small app in a frame as wide as a phone: view Practices, section «Phone layouts».
+- The height is the host's: the frame and `Page fit` take what is seen, a phone lying down (under 500px tall, `short:`)
+  keeps the bars thin. `docs/mobile.md`, «Heights and orientation», says what each host does.
+- Controls never change place between pages or states (above, «Start from the one frame»).
+
+A phone has a guide of its own, `docs/mobile.md`: the idea, what the toolkit does by itself, what an app adds, the
+heights of each host, and seven layouts (list, detail as a page, capture sheet, board with one lane, settings page,
+focus, a screen that fits) with their code. The gallery shows them as one small app in a frame as wide as a phone,
+with the conditions to try the screen that fits in: view Practices, section «Phone layouts».
 
 ## An app in a window of its own
 

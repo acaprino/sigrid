@@ -170,7 +170,8 @@ describe('sigrid-check', () => {
 
   test("the package's own example apps pass it", () => {
     const run = spawnSync(process.execPath, [`${root}bin/sigrid-check.mjs`, `${root}agents/examples`], { cwd: app, encoding: 'utf8' })
-    expect(run.stdout + run.stderr).toMatch(/3 files, 0 errors/)
+    // Four apps: a to-do list, a mail client, the sheet frame and a screen that fits.
+    expect(run.stdout + run.stderr).toMatch(/4 files, 0 errors/)
     expect(run.status).toBe(0)
   })
 

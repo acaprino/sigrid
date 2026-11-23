@@ -7,7 +7,7 @@ import { DENSITIES } from '../../src/index'
 import { TAURI_PERMISSIONS } from '../../tauri/permissions'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
-import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, contentClass, planOf, type Plan } from './plan'
+import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, contentClass, planOf, screenBody, type Plan } from './plan'
 
 export type ExportFile = { readonly path: string; readonly text: string }
 
@@ -218,7 +218,7 @@ function recordLines(id: string, type: string, entries: readonly (readonly [stri
 export function appSource(app: AppModel): string {
   const plan = planOf(app)
   const frame = frameSource(plan)
-  const content = plan.screens.map((s) => [s.id, h('div', { className: contentClass(s) }, s.content)] as const)
+  const content = plan.screens.map((s) => [s.id, screenBody(s, s.content)] as const)
   const inspectors = plan.screens.flatMap((s) => (s.details ? [[s.id, h('Inspector', { title: s.detailsTitle || 'Details', open: name('details'), onOpenChange: name('setDetails') }, h('div', { className: DETAILS_CLASS }, s.details))] as const] : []))
   const actions = plan.screens.flatMap((s) => (s.actions ? [[s.id, h('Fragment', null, s.actions)] as const] : []))
   // A row that holds one fragment (a Job) is that fragment, not one inside another.
@@ -262,17 +262,8 @@ export function appSource(app: AppModel): string {
   head.push("  // Under this width the frame is laid out as on a phone: the sidebar is a drawer, the tabs are at the foot.", "  const narrow = useMedia('(width < 620px)')", "  // A window of its own on a computer: the app draws the window's bar, and takes the browser's own keys away.", '  const ownWindow = HOST.ownWindow && !narrow', '  useDesktopGuard(ownWindow)', "  // The window's three buttons, wired to the Tauri window; in a browser they do nothing and are not drawn.", '  const windowControls = useWindowControls({ enabled: ownWindow })')
   if (used('go')) head.push('  const go = (next: Screen) => {', '    setScreen(next)', ...(menu ? ['    setMenu(false)'] : []), '  }')
   if (used('toggleDetails')) head.push('  const toggleDetails = () => setDetails((open) => !open)')
-  if (plan.uses.say) {
-    head.push(
-      '  const say = (text: string) => setNotices((list) => [...list, { id: crypto.randomUUID(), text }])',
-      '  // The notices sit above what the app keeps at its foot.',
-      '  useLayoutEffect(() => {',
-      "    const kept = ['app-shell-bottom', 'app-shell-actions', 'app-shell-footer']",
-      '    const room = kept.reduce((sum, slot) => sum + (document.querySelector<HTMLElement>(`[data-slot="${slot}"]`)?.offsetHeight ?? 0), 0)',
-      '    document.documentElement.style.setProperty(BOTTOM_BAR_ROOM_VAR, `${room}px`)',
-      '  }, [screen, narrow])',
-    )
-  }
+  // The notices sit above what the frame keeps at its foot: `AppShell` writes that room itself (`--bottom-bar-room`).
+  if (plan.uses.say) head.push('  const say = (text: string) => setNotices((list) => [...list, { id: crypto.randomUUID(), text }])')
 
   // Imports: the parts the elements name, what the helpers and the frame use, in the order of the alphabet.
   const tags = tagsIn([frame, ...content.map(([, el]) => el), ...statuses.map(([, el]) => el), ...inspectors.map(([, el]) => el), ...actions.map(([, el]) => el)], new Set<string>())
@@ -280,10 +271,10 @@ export function appSource(app: AppModel): string {
   const parts = new Set<string>(['useMedia', 'useDesktopGuard', 'WindowControls'])
   for (const tag of tags) if (/^[A-Z]/.test(tag) && tag !== 'Fragment' && !(tag in HELPERS)) parts.add(tag)
   for (const id of helpers) for (const part of HELPERS[id]!.uses) parts.add(part)
-  if (plan.uses.say) parts.add('Toasts').add('BOTTOM_BAR_ROOM_VAR')
+  if (plan.uses.say) parts.add('Toasts')
   const names = [...parts].sort((a, b) => a.localeCompare(b))
   if (plan.uses.say) names.push('type ToastItem')
-  const react = ['useState', ...(plan.uses.say ? ['useLayoutEffect'] : []), ...(plan.uses.job ? ['useEffect'] : [])].sort()
+  const react = ['useState', ...(plan.uses.job ? ['useEffect'] : [])].sort()
 
   return [
     // The name is on one line whatever it holds: a line break in it would end the comment and start code.
@@ -317,18 +308,12 @@ const CSS = `/* Tailwind, then the toolkit's fonts and theme; the toolkit's sour
 @source "../node_modules/@acaprino/sigrid/src";
 @source not "../node_modules/@acaprino/sigrid/src/internal/motion-impl.tsx";
 
+/* Nothing more: the frame (AppShell) is as tall as what is seen, in a browser what its bars and the keyboard leave,
+   and on a phone it keeps clear of the clock, the notch and the home indicator by itself (viewport-fit=cover in
+   index.html). No height and no padding here, or they would be counted twice. */
 html,
 body {
-  height: 100%;
   margin: 0;
-}
-
-/* As tall as the screen that is left: in a browser, what its bars leave. A native app on a phone reaches under the
-   clock and the home indicator (viewport-fit=cover in index.html): the app keeps that room free. */
-#root {
-  box-sizing: border-box;
-  height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 `
 

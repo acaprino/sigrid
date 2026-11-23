@@ -24,7 +24,7 @@ import {
 } from '../../src/index'
 import { isEl, isExpr, isJson, isSlot, isWhen, type Child, type Scope, type Val } from './ir'
 import type { AppModel, Settings } from './model'
-import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, contentClass, planOf, visible, type ScreenPlan } from './plan'
+import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, contentClass, planOf, screenBody, visible, type ScreenPlan } from './plan'
 
 /** Under this width of the frame the sidebar is a drawer: the app is laid out as on a phone. */
 export const NARROW_PX = Sigrid.APP_SHELL_STEPS.rail
@@ -125,6 +125,8 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, status,
   ) : undefined
   return (
     <AppShell
+      // A frame in a box of the editor's (the canvas, a host's window): it fills the box, whatever the window's height.
+      className="h-full"
       desktop={ownWindow}
       frame={settings.frame === 'sheet' ? 'sheet' : undefined}
       contentLabel={screen.name}
@@ -267,7 +269,7 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
         nav={region('nav', plan.settings.sidebar)}
         foot={region('foot', plan.settings.foot)}
         bottom={region('bottom', plan.settings.bottom)}
-        content={<div className={contentClass(screen)}>{drawAll(screen.content, scope)}</div>}
+        content={draw(screenBody(screen, screen.content), scope)}
         details={screen.details ? <div className={DETAILS_CLASS}>{drawAll(screen.details, scope)}</div> : null}
         actions={screen.actions ? <>{drawAll(screen.actions, scope)}</> : null}
         menu={menu}
