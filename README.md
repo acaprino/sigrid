@@ -299,7 +299,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       close it again.
     - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
       with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
-      whole graph down to 0.2, as before 4.1.0). A graph too large for that starts at its top left. The edges of the
+      whole graph down to 0.2, as it was before there was a floor). A graph too large for that starts at its top left. The edges of the
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.

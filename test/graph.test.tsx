@@ -240,6 +240,27 @@ describe('where the view goes', () => {
     }
   })
 
+  test('a deep tree too large for the floor opens on its root, which sits in the middle of the column, not on the empty top', () => {
+    const nodes: GraphNode[] = [{ id: 't0', label: 'Root' }]
+    const edges: GraphEdge[] = []
+    for (let i = 1; i < 121; i++) {
+      nodes.push({ id: `t${i}`, label: `Item ${i}` })
+      edges.push({ from: `t${Math.floor((i - 1) / 3)}`, to: `t${i}` })
+    }
+    const tree: Graph = { nodes, edges }
+    const all = boxesOf(tree, [])
+    const root = all.find((box) => box.id === 't0')!
+    const room = { ...ROOM, width: 896, height: 384 }
+    const view = viewFor(all, room, 0.8, 1, all, root)
+    const top = view.y + root.y * view.zoom
+    const left = view.x + root.x * view.zoom
+    expect(left >= 0 && top >= 0 && left + root.width * view.zoom <= 896 && top + root.height * view.zoom <= 384).toBe(true)
+    for (const box of all) expect(cut(box, view, 896, 384), box.id).toBe(false)
+    // Without a lead it starts at the top left, where the root is not.
+    const plain = viewFor(all, room, 0.8, 1, all)
+    expect(plain.y + root.y * plain.zoom).toBeGreaterThan(384)
+  })
+
   test('a graph that fits is centred, never larger than its own size', () => {
     const boxes = boxesOf(GRAPH, [])
     const view = viewFor(boxes, ROOM, 0.8, 1)

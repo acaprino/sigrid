@@ -313,10 +313,10 @@ export function openedFor(graph: Graph, closed: readonly string[], ids: Iterable
 type Box = { x: number; y: number; width: number; height: number }
 type Room = { width: number; height: number; top: number; right: number; bottom: number; left: number }
 
-/** One side of the view: where the aimed boxes start and end, the room, and the places where an edge cuts no box. */
-type Side = { start: number; end: number; inner: number; full: number; pad: number; clean: [number, number][] }
+/** One side of the view: where the aimed boxes start and end, the middle of the one to keep in sight, the room, and the places where an edge cuts no box. */
+type Side = { start: number; end: number; lead: number; inner: number; full: number; pad: number; clean: [number, number][] }
 
-function sideOf(aim: readonly Box[], all: readonly Box[], at: 'x' | 'y', size: 'width' | 'height', full: number, pad: number, padEnd: number): Side {
+function sideOf(aim: readonly Box[], all: readonly Box[], lead: Box | undefined, at: 'x' | 'y', size: 'width' | 'height', full: number, pad: number, padEnd: number): Side {
   // Between the boxes, once those that overlap are taken together: an edge there cuts none.
   const spans = all.map((b) => [b[at], b[at] + b[size]] as const).sort((p, q) => p[0] - q[0])
   const clean: [number, number][] = []
@@ -326,19 +326,23 @@ function sideOf(aim: readonly Box[], all: readonly Box[], at: 'x' | 'y', size: '
     reach = Math.max(reach, e)
   }
   clean.push([reach, Infinity])
-  return { start: Math.min(...aim.map((b) => b[at])), end: Math.max(...aim.map((b) => b[at] + b[size])), inner: full - pad - padEnd, full, pad, clean }
+  const start = Math.min(...aim.map((b) => b[at]))
+  return { start, end: Math.max(...aim.map((b) => b[at] + b[size])), lead: lead ? lead[at] + lead[size] / 2 : start, inner: full - pad - padEnd, full, pad, clean }
 }
 
 /**
- * The near edge of the view on one side at `zoom`, in the graph's px: the aimed boxes centred when they fit, else
- * from their start; moved as little as it takes for both edges of the canvas to fall where they cut no box, or null.
+ * The near edge of the view on one side at `zoom`, in the graph's px: the aimed boxes centred when they fit; else the
+ * lead in the middle, never past the start or the end of the boxes (with no lead, from their start). Moved as little
+ * as it takes for both edges of the canvas to fall where they cut no box, or null.
  */
 function edgeOf(side: Side, zoom: number): { want: number; clean: number | null } {
   const span = (side.end - side.start) * zoom
   const fits = span <= side.inner + 0.5
-  // Where the aimed boxes start on the screen, and how far that may move: within the room when they fit; when they do not, a little lower than the padding at most.
-  const wanted = fits ? side.pad + (side.inner - span) / 2 : side.pad
-  const [low, high] = fits ? [side.pad, side.pad + side.inner - span] : [side.pad, side.pad + side.inner / 4]
+  // Where the aimed boxes start on the screen, and how far that may move: within the room when they fit; when they do
+  // not, a quarter of the room either way, never so far that the view starts before them or ends after them.
+  const first = side.pad + side.inner - span
+  const wanted = fits ? side.pad + (side.inner - span) / 2 : Math.min(side.pad, Math.max(first, side.pad + side.inner / 2 - (side.lead - side.start) * zoom))
+  const [low, high] = fits ? [side.pad, side.pad + side.inner - span] : [Math.max(first, wanted - side.inner / 4), Math.min(side.pad + side.inner / 4, wanted + side.inner / 4)]
   const want = side.start - wanted / zoom
   const from = side.start - high / zoom
   const to = side.start - low / zoom
@@ -362,12 +366,13 @@ function edgeOf(side: Side, zoom: number): { want: number; clean: number | null 
 
 /**
  * Where the view goes to show the `aim` boxes in a canvas of `room` (its size and the padding to keep): as large as
- * fits, between `minZoom` and `maxZoom`, centred on each side where they fit; where they do not fit at `minZoom`, from
- * their top or left. The edges of the canvas then fall where they cut none of `all` (every box in sight): the view
+ * fits, between `minZoom` and `maxZoom`, centred on each side where they fit; where they do not fit at `minZoom`, on
+ * `lead` (the first thing to read: the root, the first step), never past their top or left. The edges of the canvas
+ * then fall where they cut none of `all` (every box in sight): the view
  * moves a little, or is a little smaller or larger (never under `minZoom`, never over 1.5), until they do.
  */
-export function viewFor(aim: readonly Box[], room: Room, minZoom: number, maxZoom: number, all: readonly Box[] = aim): { x: number; y: number; zoom: number } {
-  const sides = [sideOf(aim, all, 'x', 'width', room.width, room.left, room.right), sideOf(aim, all, 'y', 'height', room.height, room.top, room.bottom)] as const
+export function viewFor(aim: readonly Box[], room: Room, minZoom: number, maxZoom: number, all: readonly Box[] = aim, lead?: Box): { x: number; y: number; zoom: number } {
+  const sides = [sideOf(aim, all, lead, 'x', 'width', room.width, room.left, room.right), sideOf(aim, all, lead, 'y', 'height', room.height, room.top, room.bottom)] as const
   const base = Math.min(maxZoom, Math.max(minZoom, Math.min(...sides.map((side) => side.inner / Math.max(1, side.end - side.start)))))
   // The zoom as fitted first, then a step of 2% smaller or larger at a time, the smaller first.
   const tries = [base]
@@ -761,7 +766,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', selected = 
       if (all.length === 0 || now.size.width === 0 || now.size.height === 0) return next
       const room = aim === 'all' || aim === 'path' ? { ...now.size, ...PAD } : { ...now.size, top: Math.max(PAD.top, padding), right: padding, bottom: padding, left: padding }
       const floor = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, now.minFitZoom))
-      let fitted = viewFor(shown.length > 0 ? shown : all, room, floor, 1, all)
+      // The first thing to read: the first of the things aimed at, or the first thing in sight.
+      const leadId = ids.find((id) => at.has(id)) ?? now.sight.order.find((id) => at.has(id))
+      let fitted = viewFor(shown.length > 0 ? shown : all, room, floor, 1, all, leadId === undefined ? undefined : boxOf(leadId))
       // `keep` (the chosen thing, when the box changes size) stays in sight: if the fit leaves it out, the view goes to it.
       const kept = keep !== null && at.has(keep) ? boxOf(keep) : null
       if (kept) {
