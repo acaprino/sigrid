@@ -3,7 +3,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
+import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, DialogContent, DialogRoot, DialogTitle, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
 import { contrast } from '../src'
 import { inkOn } from '../src/components/ui/avatar'
 
@@ -262,6 +262,22 @@ describe('ChipsInput with suggestions', () => {
     fireEvent.keyDown(box, { key: 'Enter' })
     await settle()
     expect(spy).toHaveBeenLastCalledWith(['home', 'zebra'])
+  })
+})
+
+describe('a window taller than the page', () => {
+  test('it scrolls inside its own margins and is centred without a translation (a translated window would clip a `fixed` card in it)', () => {
+    render(
+      <DialogRoot open>
+        <DialogContent>
+          <DialogTitle>Long</DialogTitle>
+        </DialogContent>
+      </DialogRoot>,
+    )
+    const list = classes(document.querySelector('[data-slot="dialog-content"]')!)
+    expect(list).toContain('overflow-y-auto')
+    expect(list).toContain('max-h-[calc(100dvh-2rem)]')
+    expect(list.some((name) => name.includes('translate'))).toBe(false)
   })
 })
 
