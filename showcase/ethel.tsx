@@ -10,24 +10,34 @@
 //   scroll (`Page fit`): the card gives way, the answers stay at the foot, and the Dump/Sort switch is where it is in
 //   both stages.
 // - The Stack is put in order by hand (`ReorderList`, the toolkit's `./reorder` entry): Sort takes it from the top.
-// Keys, where there is a keyboard: B goes to the Stack, / searches, Z undoes the newest thing done.
+// Keys, where there is a keyboard: B goes to the Stack, / searches, Z undoes the newest thing done. Each is a command of
+// the registry (`useCommand`), declared once: it runs while the focus is in the app, and the foot lists it (`KeyHints`).
+// It writes no class but in the row of a task (`TaskRow`, below, says why): the layout is `Column`, `Cluster` and
+// `Card`, the words `Text` and `Heading`, a colour a `Dot`, an empty view `Empty fill`.
 import * as React from 'react'
-import { ChevronLeft, Plus } from 'lucide-react'
 import { ReorderList } from '../src/reorder'
 import {
   AppShell,
   Avatar,
   Button,
+  Card,
   Checkbox,
   ChipsInput,
+  Cluster,
+  Column,
+  CommandsProvider,
   Count,
   DateField,
+  Dot,
+  DrawerButton,
   Empty,
   FormField,
+  Heading,
   Icon,
   Input,
   Inspector,
-  Kbd,
+  ItemList,
+  KeyHints,
   NavItem,
   NavList,
   Page,
@@ -39,6 +49,9 @@ import {
   SheetTitle,
   Sidebar,
   SidebarGroup,
+  SidebarRow,
+  Spacer,
+  Text,
   Textarea,
   ToggleGroup,
   ToggleGroupItem,
@@ -52,10 +65,11 @@ import {
   cn,
   colorTheme,
   dayPicks,
+  useCommand,
   type IconName,
   type ToastItem,
 } from '../src/index'
-import { AppBar, Dot, Host, MenuButton, isAppKey, type AppProps } from './hosts'
+import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Ethel's own theme: its teal, with the spot colour the app starts with. */
 const THEME = colorTheme({ id: 'ethel', label: 'Ethel', color: '#00857a', spot: 'balanced' })
@@ -110,7 +124,11 @@ type SortDay = (typeof SORT_DAYS)[number]['id']
 
 type Notice = { id: string; text: string; undo?: () => void }
 
-/** A task in a list: the round box that completes it, then its name and, under it, what there is to know in small gray text. */
+/**
+ * A task in a list: the round box that completes it, then its name and, under it, what there is to know in small gray text.
+ * Drawn by hand, the one part of Ethel that is: the box is a control before the row's button, inside its tint, and the
+ * toolkit's row of a list (`ItemRow`) is itself a button, which cannot hold one.
+ */
 function TaskRow({ task, current, phone, onOpen, onComplete, animated }: { task: Task; current: boolean; phone: boolean; onOpen: () => void; onComplete: () => void; animated: boolean }) {
   const project = PROJECTS.find((p) => p.id === task.project)
   const done = task.subtasks.filter((s) => s.done).length
@@ -144,7 +162,16 @@ function TaskRow({ task, current, phone, onOpen, onComplete, animated }: { task:
   )
 }
 
-export function Ethel({ device, host, animated, density, look }: AppProps) {
+/** Ethel in its host, with the registry of its keys around it: they run while the focus is in the app. */
+export function Ethel(props: AppProps) {
+  return (
+    <CommandsProvider keysIn={appKeys('ethel')} palette={false}>
+      <EthelApp {...props} />
+    </CommandsProvider>
+  )
+}
+
+function EthelApp({ device, host, animated, density, look }: AppProps) {
   const phone = device === 'phone'
   const [view, setView] = React.useState('today')
   const [tasks, setTasks] = React.useState<readonly Task[]>(TASKS)
@@ -239,15 +266,10 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
     last.undo?.()
     dismiss(last.id)
   }
-  const keys = (event: React.KeyboardEvent) => {
-    if (!isAppKey(event)) return
-    const key = event.key.toLowerCase()
-    if (key === 'z') undo()
-    else if (key === 'b') go('stack')
-    else if (key === '/') setSearching(true)
-    else return
-    event.preventDefault()
-  }
+  // The keys of the app, each declared once: the registry runs them (never in a field) and the foot names them.
+  useCommand({ id: 'stack', label: 'Stack', keys: 'B', run: () => go('stack') })
+  useCommand({ id: 'search', label: 'Search', keys: '/', run: () => setSearching(true) })
+  useCommand({ id: 'undo', label: 'Undo', keys: 'Z', run: undo })
 
   const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, ...(n.undo ? { undo: { ...(phone ? {} : { hint: 'Z' }), onClick: () => { n.undo?.(); dismiss(n.id) } } } : {}) }))
 
@@ -276,12 +298,7 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
       open={menu}
       onOpenChange={setMenu}
       animated={animated}
-      footer={
-        <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-          <Avatar name="Giulia Conti" size="xs" decorative />
-          <span className="min-w-0 flex-1 truncate">Giulia</span>
-        </div>
-      }
+      footer={<SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>Giulia</SidebarRow>}
     >
       <SidebarGroup>
         {VIEWS.map((v) => nav(v.id, <Icon name={v.icon} />, v.label, v.id === 'stack' ? stack.length : v.id === 'today' ? dueNow.length : v.id === 'upcoming' ? later.length : undefined))}
@@ -292,19 +309,19 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
 
   const bar = phone && task ? (
     <>
-      <ToolbarButton label={`Back to ${title}`} icon={<ChevronLeft aria-hidden="true" />} keepWord onClick={() => setChosen(null)} animated={animated}>
+      <ToolbarButton label={`Back to ${title}`} icon={<Icon name="back" />} keepWord onClick={() => setChosen(null)} animated={animated}>
         {title}
       </ToolbarButton>
       <ToolbarSpacer />
     </>
   ) : (
     <>
-      {phone ? null : <MenuButton onOpen={() => setMenu(true)} animated={animated} />}
+      {phone ? null : <DrawerButton onOpen={() => setMenu(true)} animated={animated} />}
       <ToolbarBrand name="Ethel" page={title} />
       <ToolbarSpacer />
       <ToolbarSearch label="Search the tasks" shortcut="/" value={text} onValueChange={setText} open={searching} onOpenChange={setSearching} animated={animated} />
       {phone ? null : (
-        <ToolbarButton label="New task" variant="outline" icon={<Plus aria-hidden="true" />} onClick={() => (view === 'stack' || view === 'stickies' || view === 'pomodoro' ? go('today') : quickField.current?.focus())} animated={animated}>
+        <ToolbarButton label="New task" variant="outline" icon={<Icon name="plus" />} onClick={() => (view === 'stack' || view === 'stickies' || view === 'pomodoro' ? go('today') : quickField.current?.focus())} animated={animated}>
           New task
         </ToolbarButton>
       )}
@@ -312,22 +329,19 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
   )
 
   const list = (
-    <ul role="list" aria-label={title} className="flex flex-col gap-0.5">
+    <ItemList aria-label={title}>
       {inView.map((t) => (
         <TaskRow key={t.id} task={t} current={!phone && chosen === t.id} phone={phone} onOpen={() => setChosen(t.id)} onComplete={() => complete(t)} animated={animated} />
       ))}
-    </ul>
+    </ItemList>
   )
   const nowStrip = current ? (
-    <section aria-label="Now" data-slot="now-strip" className="flex flex-col gap-3 rounded-lg bg-raised p-4 shadow-xs">
-      <h2 className="flex items-center gap-2 text-2xs font-medium text-ink-mute">
-        <span aria-hidden="true" className="inline-flex [&_svg]:size-3.5">
-          <Icon name="now" />
-        </span>
+    <Card as="section" aria-label="Now">
+      <Heading size="label" level={2} icon={<Icon name="now" />}>
         Now
-      </h2>
-      <p className="text-base font-semibold text-ink">{current.title}</p>
-      <div className="flex flex-wrap gap-2">
+      </Heading>
+      <Heading size="small">{current.title}</Heading>
+      <Cluster>
         <Button onClick={() => complete(current)} animated={animated}>
           Complete
         </Button>
@@ -340,58 +354,51 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
         <Button variant="ghost" onClick={() => postpone(current)}>
           Postpone
         </Button>
-      </div>
-    </section>
+      </Cluster>
+    </Card>
   ) : null
   const tasksView = (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-      <p className="text-xs text-ink-mute tabular-nums">
+    <Column gap="lg" pad="lg" width="page">
+      <Text as="p" variant="note">
         {view === 'today' ? `${LONG.format(day(TODAY))} · ${dueNow.length} tasks${late > 0 ? ` · ${late} late` : ''}` : `${inView.length} tasks`}
-      </p>
-      <form
-        className="flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault()
-          addQuick()
-        }}
-      >
-        <Input ref={quickField} aria-label="Add a task" value={quick} onChange={(event) => setQuick(event.target.value)} placeholder="Add a task: tomorrow at 15 · p1 · #project · @home" enterKeyHint="done" autoComplete="off" />
+      </Text>
+      {/* Enter adds, as the button does. */}
+      <Cluster wrap={false}>
+        <Input ref={quickField} aria-label="Add a task" value={quick} onChange={(event) => setQuick(event.target.value)} onKeyDown={(event) => (event.key === 'Enter' ? addQuick() : undefined)} placeholder="Add a task: tomorrow at 15 · p1 · #project · @home" enterKeyHint="done" autoComplete="off" />
         {quick.trim() ? (
-          <Button type="submit" variant="outline">
+          <Button variant="outline" onClick={addQuick}>
             Add
           </Button>
         ) : null}
-      </form>
+      </Cluster>
       {view === 'today' ? nowStrip : null}
-      {inView.length > 0 ? list : <Empty className="py-10" title={text ? 'Nothing has that name' : 'Nothing here'} description={text ? 'Try fewer letters.' : view === 'today' ? 'Today is clear. The Stack keeps what is still to decide.' : 'Add a task in the field above.'} />}
-    </div>
+      {inView.length > 0 ? list : <Empty fill title={text ? 'Nothing has that name' : 'Nothing here'} description={text ? 'Try fewer letters.' : view === 'today' ? 'Today is clear. The Stack keeps what is still to decide.' : 'Add a task in the field above.'} />}
+    </Column>
   )
 
   const first = stack[0]
   const suggested = first === undefined ? undefined : PROJECTS.find((p) => p.id === SUGGESTED[STACK.indexOf(first)])
   const capture = (
     <>
-      <Textarea aria-label="Dump everything here" value={dump} onChange={(event) => setDump(event.target.value)} placeholder="Dump everything here, one item per line" className="min-h-24" />
-      <p className="text-xs text-ink-mute">No decisions now: where and when comes later, in Sort.</p>
+      <Textarea aria-label="Dump everything here" value={dump} onChange={(event) => setDump(event.target.value)} placeholder="Dump everything here, one item per line" />
+      <Text as="p" variant="note">No decisions now: where and when comes later, in Sort.</Text>
     </>
   )
   // The Dump/Sort switch is at the head in both stages, at the same place: a two-state switch stays where it is in
   // both states (on a phone its two halves are equal, so neither grows when it is pressed).
   const stageSwitch = (
-    <ToggleGroup aria-label="Stack" value={mode} onValueChange={setMode} animated={animated} className={phone ? 'w-full' : 'self-start'}>
-      <ToggleGroupItem value="dump" className={phone ? 'flex-1' : undefined}>
-        Dump
-      </ToggleGroupItem>
-      <ToggleGroupItem value="sort" className={phone ? 'flex-1' : undefined}>
+    <ToggleGroup aria-label="Stack" value={mode} onValueChange={setMode} animated={animated} fill={phone}>
+      <ToggleGroupItem value="dump">Dump</ToggleGroupItem>
+      <ToggleGroupItem value="sort">
         Sort
-        <span className="text-2xs font-normal text-ink-mute tabular-nums">{stack.length}</span>
+        <Count value={stack.length} label="in the stack" />
       </ToggleGroupItem>
     </ToggleGroup>
   )
   const dumpPart = (
     <>
       {capture}
-      <div className="flex gap-2">
+      <Cluster>
         <Button disabled={dump.trim() === ''} onClick={addDump}>
           Add
         </Button>
@@ -399,52 +406,54 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
           <Icon name="mic" />
           Dictate
         </Button>
-      </div>
-      <h2 className="pt-2 text-2xs font-medium text-ink-mute">In the stack</h2>
+      </Cluster>
+      <Heading size="label" level={2}>
+        In the stack
+      </Heading>
       {/* Sort takes the Stack from the top, so its order is the user's to set: by the handles, or Space and the arrows. */}
       <ReorderList aria-label="In the stack" items={stack} itemId={(item) => item} itemName={(item) => item} onReorder={(next) => setStack(next)} animated={animated}>
-        {(item) => <span className="min-w-0 flex-1 py-1.5">{item}</span>}
+        {(item) => <Text>{item}</Text>}
       </ReorderList>
     </>
   )
   const sortAnswers = (
-    <div className="flex justify-end gap-2">
+    <Cluster justify="end">
       <Button variant="ghost" onClick={skip}>
         Skip
       </Button>
       <Button onClick={accept} animated={animated}>
         Accept
       </Button>
-    </div>
+    </Cluster>
   )
   const sortPart =
     first === undefined ? (
-      <Empty className="py-10" title="The stack is empty" description="Everything has a place and a day." />
+      <Empty fill title="The stack is empty" description="Everything has a place and a day." />
     ) : (
-      <section aria-label="Sort" data-slot="sort-card" className="flex flex-col gap-4 rounded-lg bg-raised p-4 shadow-xs">
-        <p className="text-2xs font-medium text-ink-mute tabular-nums">1 of {stack.length}</p>
-        <p className="text-lg font-semibold text-ink">{first}</p>
-        <p className="flex items-center gap-2 text-sm text-ink-soft">
-          Goes to
-          {suggested ? (
-            <span className="inline-flex items-center gap-1.5 font-medium text-ink">
-              <Dot color={suggested.color} />
-              {suggested.area} › {suggested.name}
-            </span>
-          ) : (
-            <span className="font-medium text-ink">No project</span>
-          )}
-        </p>
-        <ToggleGroup aria-label="When" value={sortDay} onValueChange={setSortDay} animated={animated} className={phone ? 'w-full' : 'self-start'}>
+      <Card as="section" aria-label="Sort" gap="lg">
+        <Text as="p" variant="kicker">
+          1 of {stack.length}
+        </Text>
+        <Heading size="card" level={2}>
+          {first}
+        </Heading>
+        <Cluster>
+          <Text variant="soft">Goes to</Text>
+          <Cluster gap="xs" wrap={false}>
+            {suggested ? <Dot color={suggested.color} /> : null}
+            <Text variant="strong">{suggested ? `${suggested.area} › ${suggested.name}` : 'No project'}</Text>
+          </Cluster>
+        </Cluster>
+        <ToggleGroup aria-label="When" value={sortDay} onValueChange={setSortDay} animated={animated} fill={phone}>
           {SORT_DAYS.map((d) => (
-            <ToggleGroupItem key={d.id} value={d.id} className={phone ? 'flex-1 px-2' : undefined}>
+            <ToggleGroupItem key={d.id} value={d.id}>
               {d.label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
         {/* On a phone the answers are at the foot of the screen, not of the card. */}
         {phone ? null : sortAnswers}
-      </section>
+      </Card>
     )
   // On a phone both stages are a page with the switch at its head and the same margins, so the switch does not move;
   // Sort is one screen (`Page fit`): the card gives way and scrolls inside itself, the answers stay at the foot.
@@ -457,15 +466,15 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
       <Page header={stageSwitch}>{dumpPart}</Page>
     )
   ) : (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
+    <Column gap="lg" pad="lg" width="page">
       {stageSwitch}
       {mode === 'dump' ? dumpPart : sortPart}
-    </div>
+    </Column>
   )
 
   /** The task chosen: in the inspector on a computer, a page on a phone. What is changed holds at once: no Save. */
   const editor = task ? (
-    <div className="flex flex-col gap-4">
+    <Column gap="lg">
       <FormField label="Title">
         <Input value={task.title} onChange={(event) => edit(task.id, { title: event.target.value })} autoComplete="off" />
       </FormField>
@@ -475,31 +484,34 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
       <FormField label="Due date" help="The day only. For a time, set a reminder.">
         <DateField value={task.date} onChange={(date) => edit(task.id, { date })} picks={dayPicks()} animated={animated} />
       </FormField>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-ink">Priority</span>
-        <ToggleGroup aria-label="Priority" value={task.priority} onValueChange={(priority) => edit(task.id, { priority })} animated={animated} className={phone ? 'w-full' : 'self-start'}>
+      <Column gap="xs">
+        <Text variant="strong">Priority</Text>
+        <ToggleGroup aria-label="Priority" value={task.priority} onValueChange={(priority) => edit(task.id, { priority })} animated={animated} fill={phone}>
           {(['P1', 'P2', 'P3', 'None'] as const).map((p) => (
-            <ToggleGroupItem key={p} value={p} className={phone ? 'flex-1 px-2' : undefined}>
+            <ToggleGroupItem key={p} value={p}>
               {p}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-      </div>
+      </Column>
       <FormField label="Labels" id={`${id}-labels`}>
         <ChipsInput id={`${id}-labels`} value={task.labels} onChange={(labels) => edit(task.id, { labels })} suggestions={Object.keys(LABELS)} placeholder="Type, then Enter or comma" />
       </FormField>
       {task.subtasks.length > 0 ? (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-ink">Subtasks</span>
+        <Column gap="xs">
+          <Text variant="strong">Subtasks</Text>
           {task.subtasks.map((sub, i) => (
-            <label key={sub.title} className="flex min-h-(--control-xs) items-center gap-2 text-sm text-ink">
-              <Checkbox checked={sub.done} onCheckedChange={(checked) => edit(task.id, { subtasks: task.subtasks.map((s, at) => (at === i ? { ...s, done: checked === true } : s)) })} animated={animated} />
-              <span className={sub.done ? 'text-ink-mute' : undefined}>{sub.title}</span>
-            </label>
+            <Checkbox
+              key={sub.title}
+              label={<Text variant={sub.done ? 'muted' : 'body'}>{sub.title}</Text>}
+              checked={sub.done}
+              onCheckedChange={(checked) => edit(task.id, { subtasks: task.subtasks.map((s, at) => (at === i ? { ...s, done: checked === true } : s)) })}
+              animated={animated}
+            />
           ))}
-        </div>
+        </Column>
       ) : null}
-    </div>
+    </Column>
   ) : null
   const remove = (target: Task) => {
     setTasks((list) => list.filter((t) => t.id !== target.id))
@@ -508,25 +520,27 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
   }
 
   const projectsView = (
-    <div className="flex flex-col gap-4 p-4">
+    <Column gap="lg" pad="lg">
       {AREAS.map((area) => (
-        <section key={area.id} aria-label={area.name} className="flex flex-col gap-1 rounded-lg bg-paper-2 p-2">
-          <h2 className="px-2 pt-1 text-2xs font-medium text-ink-mute">{area.name}</h2>
+        <Card key={area.id} as="section" aria-label={area.name} variant="quiet" pad="sm" gap="xs">
+          <Heading size="label" level={2}>
+            {area.name}
+          </Heading>
           <NavList aria-label={`Projects of ${area.name}`}>{area.projects.map((p) => nav(`project:${p.id}`, <Dot color={area.color} />, p.name, open.filter((t) => t.project === p.id).length))}</NavList>
-        </section>
+        </Card>
       ))}
-    </div>
+    </Column>
   )
 
   const content =
     phone && task ? (
-      <div className="p-4">{editor}</div>
+      <Column pad="lg">{editor}</Column>
     ) : view === 'stack' ? (
       stackView
     ) : view === 'projects' ? (
       projectsView
     ) : view === 'stickies' || view === 'pomodoro' ? (
-      <Empty className="h-full p-6" title={title} description="The sketch stops here: the Stack, Today, Upcoming and the projects are the views drawn." />
+      <Empty fill title={title} description="The sketch stops here: the Stack, Today, Upcoming and the projects are the views drawn." />
     ) : (
       tasksView
     )
@@ -543,7 +557,7 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
         {tab('stack', 'inbox', 'Stack')}
         {tab('today', 'now', 'Today')}
       </ToolbarTabs>
-      <ToolbarButton label="Add to the Stack" variant="outline" icon={<Plus aria-hidden="true" />} onClick={() => setAdding(true)} animated={animated} className="mx-1 self-center" />
+      <ToolbarButton label="Add to the Stack" variant="outline" icon={<Icon name="plus" />} onClick={() => setAdding(true)} animated={animated} />
       <ToolbarTabs aria-label="More views" value={view.startsWith('project:') ? 'projects' : view} onValueChange={go} edge="top" layout="stacked">
         {tab('upcoming', 'date', 'Upcoming')}
         {tab('projects', 'structure', 'Projects')}
@@ -559,7 +573,7 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
           <SheetTitle>Add</SheetTitle>
           <SheetDescription>Goes to the Stack.</SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-2 px-4">{capture}</div>
+        <Column pad="lg">{capture}</Column>
         <SheetFooter>
           <Button disabled={dump.trim() === ''} onClick={addDump}>
             Add
@@ -570,75 +584,62 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
   )
 
   return (
-    <Host device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`ethel.app/${view.replace(':', '/')}`} notices={toasts} onDismiss={dismiss}>
-      <div className="h-full" onKeyDown={keys}>
-        <AppShell
-          // A box of the page's own (the host's frame), maybe taller than the window: the frame fills the box.
-          className="h-full"
-          desktop={!phone && host === 'native'}
-          contentLabel={task && phone ? task.title : title}
-          titleBar={
-            <AppBar device={device} host={host} label="Ethel" overlays={sheet}>
-              {bar}
-            </AppBar>
-          }
-          sidebar={sidebar}
-          inspector={
-            phone ? undefined : (
-              <Inspector
-                title="Task"
-                open={task !== null}
-                onOpenChange={(next) => (next ? undefined : setChosen(null))}
-                animated={animated}
-                footer={
-                  task ? (
-                    <Button variant="ghost" size="sm" onClick={() => remove(task)}>
-                      Delete
-                    </Button>
-                  ) : undefined
-                }
-              >
-                {editor}
-              </Inspector>
-            )
-          }
-          actions={
-            phone && task ? (
-              <>
-                <Button variant="ghost" onClick={() => remove(task)}>
-                  Delete
-                </Button>
-                <Button variant="outline" onClick={() => postpone(task)}>
-                  Postpone
-                </Button>
-                <Button onClick={() => complete(task)}>Complete</Button>
-              </>
-            ) : undefined
-          }
-          footer={
-            phone ? undefined : (
-              <>
-                <span>{host === 'native' ? 'Saved on this computer' : 'Saved'}</span>
-                <span className="tabular-nums">{stack.length} in the stack</span>
-                <span className="ms-auto inline-flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1">
-                    <Kbd>B</Kbd> stack
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Kbd>/</Kbd> search
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Kbd>Z</Kbd> undo
-                  </span>
-                </span>
-              </>
-            )
-          }
-          bottomBar={bottomBar}
-        >
-          {content}
-        </AppShell>
-      </div>
+    <Host app="ethel" device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`ethel.app/${view.replace(':', '/')}`} notices={toasts} onDismiss={dismiss}>
+      <AppShell
+        desktop={!phone && host === 'native'}
+        contentLabel={task && phone ? task.title : title}
+        titleBar={
+          <AppBar device={device} host={host} label="Ethel" overlays={sheet}>
+            {bar}
+          </AppBar>
+        }
+        sidebar={sidebar}
+        inspector={
+          phone ? undefined : (
+            <Inspector
+              title="Task"
+              open={task !== null}
+              onOpenChange={(next) => (next ? undefined : setChosen(null))}
+              animated={animated}
+              footer={
+                task ? (
+                  <Button variant="ghost" size="sm" onClick={() => remove(task)}>
+                    Delete
+                  </Button>
+                ) : undefined
+              }
+            >
+              {editor}
+            </Inspector>
+          )
+        }
+        actions={
+          phone && task ? (
+            <>
+              <Button variant="ghost" onClick={() => remove(task)}>
+                Delete
+              </Button>
+              <Button variant="outline" onClick={() => postpone(task)}>
+                Postpone
+              </Button>
+              <Button onClick={() => complete(task)}>Complete</Button>
+            </>
+          ) : undefined
+        }
+        footer={
+          phone ? undefined : (
+            <>
+              <Text>{host === 'native' ? 'Saved on this computer' : 'Saved'}</Text>
+              <Text>{stack.length} in the stack</Text>
+              <Spacer />
+              <KeyHints ids={['stack', 'search', 'undo']} />
+            </>
+          )
+        }
+        bottomBar={bottomBar}
+      >
+        {content}
+      </AppShell>
     </Host>
   )
 }
