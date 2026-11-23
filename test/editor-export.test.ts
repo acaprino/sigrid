@@ -20,7 +20,7 @@ function variants(kind: Kind): Node[] {
   for (const [field, spec] of Object.entries(CATALOG[kind].fields) as [string, FieldSpec][]) {
     if (spec.kind === 'choice' || spec.kind === 'select') for (const [value] of spec.options) out.push(make(kind, { [field]: value }))
     if (spec.kind === 'toggle') out.push(make(kind, { [field]: true }), make(kind, { [field]: false }))
-    if (spec.kind === 'action') for (const action of ['go:other', 'menu', 'details', 'show', 'say', 'none']) out.push(make(kind, { [field]: action, said: 'Done "now" & <here>' }))
+    if (spec.kind === 'action') for (const action of ['go:other', 'menu', 'details', 'show', 'say', 'job', 'none']) out.push(make(kind, { [field]: action, said: 'Done "now" & <here>' }))
     if (spec.kind === 'icon') out.push(make(kind, { [field]: 'none' }), make(kind, { [field]: 'archive' }))
   }
   return out
@@ -36,10 +36,10 @@ function everything(): AppModel {
     ...STARTERS[0]!.make(),
     name: 'Every "part" & more',
     start: 'all-of-it',
-    settings: { barSize: 'compact', sidebar: 'always', sidebarSearch: true, account: 'Anna Greco', tabs: 'wide', bottom: 'narrow', foot: 'always' },
+    settings: { frame: 'sheet', barSize: 'compact', sidebar: 'always', sidebarSearch: true, account: 'Anna Greco', tabs: 'wide', bottom: 'narrow', foot: 'always' },
     shared: { bar: show(group('bar')), tabs: group('tabs'), nav: group('sidebar'), foot: show(group('footer')), bottom: group('bottom') },
     screens: [
-      screen('All of it', 'all', { status: 'Archived «one»', details: 'on', actionsOn: true, content: show(content), detailsItems: content.slice(0, 12).map((node) => make(node.type as Kind, { ...node.props })), actions: show(into('actions')) }),
+      screen('All of it', 'all', { statusOn: true, statusItems: show(into('status')), details: 'on', actionsOn: true, content: show(content), detailsItems: content.slice(0, 12).map((node) => make(node.type as Kind, { ...node.props })), actions: show(into('actions')) }),
       screen('Other', 'archive', { pad: 'none', width: 'full', content: [make('Empty')] }),
     ],
   }
@@ -85,13 +85,13 @@ function check(files: Record<string, string>): string[] {
  */
 function bare(): AppModel {
   const nasty = 'A "b" \'c\' \\ {d} <e> ${f} */ &amp;\rg\u2028h'
-  const actions = ['details', 'show', 'menu', 'say', 'go:nowhere', 'none']
+  const actions = ['details', 'show', 'menu', 'say', 'job', 'go:nowhere', 'none']
   return {
     ...STARTERS.find((starter) => starter.id === 'blank')!.make(),
     name: `Line one\nexport const injected = 1 //\u2028export const again = 2 //`,
-    settings: { barSize: 'default', sidebar: 'off', sidebarSearch: false, account: nasty, tabs: 'off', bottom: 'off', foot: 'off' },
+    settings: { frame: 'line', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: nasty, tabs: 'off', bottom: 'off', foot: 'off' },
     shared: { bar: actions.map((action) => make('BarButton', { label: nasty, action, said: nasty })), tabs: [], nav: [], foot: [], bottom: [] },
-    screens: [screen('One', 'all', { status: nasty, content: [make('Heading', { text: nasty }), make('Text', { text: nasty }), make('Button', { label: nasty, action: 'details' }), make('Segment', { options: [{ label: 'A' }, { label: 'A' }, { label: 'A 2' }] })] })],
+    screens: [screen('One', 'all', { statusOn: true, statusItems: [make('FootText', { text: nasty })], content: [make('Heading', { text: nasty }), make('Text', { text: nasty }), make('Button', { label: nasty, action: 'details' }), make('Segment', { options: [{ label: 'A' }, { label: 'A' }, { label: 'A 2' }] })] })],
   }
 }
 

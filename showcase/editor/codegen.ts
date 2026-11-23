@@ -6,7 +6,7 @@
 import { DENSITIES } from '../../src/index'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
-import { DETAILS_CLASS, SCREEN_NAME, contentClass, planOf, type Plan } from './plan'
+import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, contentClass, planOf, type Plan } from './plan'
 
 export type ExportFile = { readonly path: string; readonly text: string }
 
@@ -184,6 +184,7 @@ function frameSource(plan: Plan): El {
   const account = s.account ? h('div', { className: 'flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink' }, h('Avatar', { name: s.account, size: 'xs', decorative: true }), h('span', { className: 'min-w-0 flex-1 truncate' }, s.account)) : undefined
   const props: Record<string, Val | When> = {
     desktop: name('ownWindow'),
+    frame: s.frame === 'sheet' ? 'sheet' : undefined,
     contentLabel: SCREEN_NAME,
     titleBar: h(
       'TitleBar',
@@ -195,7 +196,7 @@ function frameSource(plan: Plan): El {
       h('Toolbar', { 'aria-label': plan.name }, plan.shared.bar),
     ),
     tabs: region(s.tabs, h('Toolbar', { 'aria-label': 'Views' }, plan.shared.tabs)),
-    status: plan.screens.some((screen) => screen.status) ? raw('status[screen] ? <span>{status[screen]}</span> : undefined') : undefined,
+    status: plan.screens.some((screen) => screen.status) ? raw('status[screen]') : undefined,
     sidebar: region(s.sidebar, h('Sidebar', { 'aria-label': 'Places', open: name('menu'), onOpenChange: name('setMenu'), search: s.sidebarSearch ? true : undefined, footer: account }, plan.shared.nav)),
     inspector: plan.uses.details ? raw('inspector[screen]') : undefined,
     actions: plan.screens.some((screen) => screen.actions) ? raw('actions[screen]') : undefined,
@@ -219,13 +220,14 @@ export function appSource(app: AppModel): string {
   const content = plan.screens.map((s) => [s.id, h('div', { className: contentClass(s) }, s.content)] as const)
   const inspectors = plan.screens.flatMap((s) => (s.details ? [[s.id, h('Inspector', { title: s.detailsTitle || 'Details', open: name('details'), onOpenChange: name('setDetails') }, h('div', { className: DETAILS_CLASS }, s.details))] as const] : []))
   const actions = plan.screens.flatMap((s) => (s.actions ? [[s.id, h('Fragment', null, s.actions)] as const] : []))
-  const statuses = plan.screens.flatMap((s) => (s.status ? [[s.id, s.status] as const] : []))
+  // A row that holds one fragment (a Job) is that fragment, not one inside another.
+  const statuses = plan.screens.flatMap((s) => (s.status ? [[s.id, s.status.length === 1 && isEl(s.status[0]) && s.status[0].tag === 'Fragment' ? s.status[0] : h('Fragment', null, s.status)] as const] : []))
 
   const body: string[] = [
     ...recordLines('content', 'Record<Screen, ReactNode>', content),
     ...(inspectors.length ? recordLines('inspector', 'Partial<Record<Screen, ReactNode>>', inspectors) : []),
     ...(actions.length ? recordLines('actions', 'Partial<Record<Screen, ReactNode>>', actions) : []),
-    ...(statuses.length ? recordLines('status', 'Partial<Record<Screen, string>>', statuses) : []),
+    ...(statuses.length ? recordLines('status', 'Partial<Record<Screen, ReactNode>>', statuses) : []),
     '',
     '  return (',
     ...(plan.uses.say
@@ -242,6 +244,19 @@ export function appSource(app: AppModel): string {
   if (menu) head.push('  const [menu, setMenu] = useState(false)')
   if (plan.uses.details) head.push('  // The details start open only where they are docked beside the content: on a narrow frame they would cover it.', "  const [details, setDetails] = useState(() => window.matchMedia('(min-width: 1000px)').matches)")
   if (plan.uses.say) head.push('  const [notices, setNotices] = useState<ToastItem[]>([])')
+  if (plan.uses.job) {
+    head.push(
+      '  // The job of the app: how far it is, in percent, while it runs; null when it does not.',
+      '  const [job, setJob] = useState<number | null>(null)',
+      '  const busy = job !== null',
+      '  useEffect(() => {',
+      '    if (job === null) return',
+      `    const timer = setTimeout(() => setJob(job >= 100 ? null : Math.min(100, job + ${JOB_STEP})), ${JOB_TICK_MS})`,
+      '    return () => clearTimeout(timer)',
+      '  }, [job])',
+      ...(plan.uses.runJob ? ['  const runJob = () => setJob(0)'] : []),
+    )
+  }
   for (const state of plan.states) head.push(`  const [${state.name}, ${state.setter}] = useState${state.type ? `<${state.type}>` : ''}(${lit(state.initial)})`)
   head.push("  // Under this width the frame is laid out as on a phone: the sidebar is a drawer, the tabs are at the foot.", "  const narrow = useMedia('(width < 620px)')", "  // A window of its own on a computer: the app draws the window's bar, and takes the browser's own keys away.", '  const ownWindow = OWN_WINDOW && !narrow', '  useDesktopGuard(ownWindow)')
   if (used('go')) head.push('  const go = (next: Screen) => {', '    setScreen(next)', ...(menu ? ['    setMenu(false)'] : []), '  }')
@@ -259,7 +274,7 @@ export function appSource(app: AppModel): string {
   }
 
   // Imports: the parts the elements name, what the helpers and the frame use, in the order of the alphabet.
-  const tags = tagsIn([frame, ...content.map(([, el]) => el), ...inspectors.map(([, el]) => el), ...actions.map(([, el]) => el)], new Set<string>())
+  const tags = tagsIn([frame, ...content.map(([, el]) => el), ...statuses.map(([, el]) => el), ...inspectors.map(([, el]) => el), ...actions.map(([, el]) => el)], new Set<string>())
   const helpers = Object.keys(HELPERS).filter((id) => tags.has(id))
   const parts = new Set<string>(['useMedia', 'useDesktopGuard', 'WindowControls'])
   for (const tag of tags) if (/^[A-Z]/.test(tag) && tag !== 'Fragment' && !(tag in HELPERS)) parts.add(tag)
@@ -267,7 +282,7 @@ export function appSource(app: AppModel): string {
   if (plan.uses.say) parts.add('Toasts').add('BOTTOM_BAR_ROOM_VAR')
   const names = [...parts].sort((a, b) => a.localeCompare(b))
   if (plan.uses.say) names.push('type ToastItem')
-  const react = ['useState', ...(plan.uses.say ? ['useLayoutEffect'] : [])].sort()
+  const react = ['useState', ...(plan.uses.say ? ['useLayoutEffect'] : []), ...(plan.uses.job ? ['useEffect'] : [])].sort()
 
   return [
     // The name is on one line whatever it holds: a line break in it would end the comment and start code.

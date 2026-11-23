@@ -7,10 +7,10 @@
 // an exported app are both made by reading the source for them.
 import type { IconName } from '../../src/index'
 import { ICON_NAMES } from '../../src/index'
-import { call, equals, flag, h, handler, json, list, name, number, oneOf, slug, text, type Call, type Child, type El, type Expr } from './ir'
+import { call, equals, flag, h, handler, json, list, lit, name, not, number, oneOf, slug, text, type Call, type Child, type El, type Expr } from './ir'
 
 /** Where a component can be dropped. */
-export type Region = 'bar' | 'tabs' | 'bottom' | 'sidebar' | 'group' | 'content' | 'actions' | 'footer'
+export type Region = 'bar' | 'tabs' | 'bottom' | 'sidebar' | 'group' | 'content' | 'status' | 'actions' | 'footer'
 
 export type Option = readonly [value: string, label: string]
 
@@ -28,7 +28,7 @@ export type FieldSpec = Only &
   | { readonly kind: 'select'; readonly label: string; readonly options: readonly Option[] }
   | { readonly kind: 'toggle'; readonly label: string }
   | { readonly kind: 'icon'; readonly label: string }
-  /** What a press does: nothing, go to a screen, open the menu, show the details (or show and hide them), say something. */
+  /** What a press does: nothing, go to a screen, open the menu, show the details (or show and hide them), say something, run the job. */
   | { readonly kind: 'action'; readonly label: string }
   | { readonly kind: 'rows'; readonly label: string; readonly of: Readonly<Record<string, FieldSpec>>; readonly named: string; readonly fresh: Readonly<Record<string, unknown>> }
   /** A place for other components. */
@@ -42,6 +42,13 @@ export type BuildCtx = {
   readonly appName: string
   /** Some screen of the app has details: only then is there a `details` to read. */
   readonly details: boolean
+  /** The app has a job (a «Job» in the status row of a screen): only then are there `job`, `busy` and `runJob` to read. */
+  readonly job: boolean
+  /**
+   * True on a screen with no details, in an app where other screens have them. A control of the bar is on every screen
+   * (R14): one that shows the details is disabled there, not taken away. Undefined: every screen has them, or none.
+   */
+  readonly noDetails: Expr | undefined
   readonly screens: readonly { readonly id: string; readonly name: string; readonly icon: IconName }[]
   /** The name of the screen in sight, as an expression. */
   readonly screenName: Expr
@@ -80,6 +87,10 @@ export const ICON_OPTIONS: readonly Option[] = [[NO_ICON, 'No icon'], ...ICON_NA
 const icon = (value: unknown): El | undefined => (typeof value === 'string' && value !== NO_ICON && (ICON_NAMES as readonly string[]).includes(value) ? h('Icon', { name: value }) : undefined)
 
 const ACTION: FieldSpec = { kind: 'action', label: 'On press' }
+/** A button that runs the job cannot be pressed again while the job runs. */
+const waits = (p: Props, ctx: BuildCtx): Expr | undefined => (p['action'] === 'job' && ctx.job ? name('busy') : undefined)
+/** A button of a bar that shows the details, on a screen that has none, stays in its place disabled (R14). */
+const idle = (p: Props, ctx: BuildCtx): Expr | undefined => ((p['action'] === 'details' || p['action'] === 'show') && ctx.details ? ctx.noDetails : undefined)
 const SAID: FieldSpec = { kind: 'text', label: 'What the notice says', placeholder: 'Saved', only: (p) => p['action'] === 'say' }
 
 const GAPS = { none: 'gap-0', xs: 'gap-1', sm: 'gap-2', md: 'gap-3', lg: 'gap-4', xl: 'gap-6' } as const
@@ -162,7 +173,7 @@ export const CATALOG = {
       const word = flag(p['word']) || !drawn
       return h(
         'ToolbarButton',
-        { label, icon: drawn, shortcut: text(p['shortcut']) || undefined, variant: variant === 'ghost' ? undefined : variant, keepWord: flag(p['keepWord']) && word ? true : undefined, pressed: p['action'] === 'details' && ctx.details ? name('details') : undefined, onClick: handler(ctx.act(p['action'], p['said'])) },
+        { label, icon: drawn, shortcut: text(p['shortcut']) || undefined, variant: variant === 'ghost' ? undefined : variant, keepWord: flag(p['keepWord']) && word ? true : undefined, pressed: p['action'] === 'details' && ctx.details ? name('details') : undefined, disabled: waits(p, ctx) ?? idle(p, ctx), onClick: handler(ctx.act(p['action'], p['said'])) },
         word ? label : null,
       )
     },
@@ -230,7 +241,7 @@ export const CATALOG = {
     icon: 'minus',
     group: 'Bar',
     about: 'Takes the room that is left and pushes what follows to the end. In a title bar it moves the window.',
-    into: ['bar', 'tabs', 'actions', 'footer', 'content'],
+    into: ['bar', 'tabs', 'status', 'actions', 'footer', 'content'],
     fields: {},
     fresh: {},
     box: () => 'flex min-w-2 flex-1 self-stretch',
@@ -335,6 +346,21 @@ export const CATALOG = {
     fresh: { look: 'raised', pad: 'md', items: [] },
     build: (p, ctx) => ctx.box('items', 'section', { className: `flex flex-col gap-3 rounded-lg ${p['look'] === 'quiet' ? 'bg-paper-2' : 'bg-raised shadow-xs'} ${PADS[oneOf(p['pad'], ['md', 'sm', 'lg'] as const)]}` }),
   },
+  Panel: {
+    label: 'Panel',
+    icon: 'layout',
+    group: 'Layout',
+    about: 'A titled part of the content, as in Xiox: a heading with a quieter line beside it, and a body under it.',
+    into: ['content'],
+    fields: {
+      title: { kind: 'text', label: 'Title' },
+      subtitle: { kind: 'text', label: 'Line beside it', placeholder: '12 items · 3 selected' },
+      items: { kind: 'slot', label: 'Body', takes: 'content' },
+    },
+    fresh: { title: 'Items', subtitle: '', items: [] },
+    box: () => `${BOX} min-h-0 flex-1`,
+    build: (p, ctx) => h('Panel', { title: text(p['title'], 'Panel'), subtitle: text(p['subtitle']) || undefined, className: 'min-h-0 flex-1' }, ctx.box('items', 'div', { className: 'flex flex-col gap-3 px-4 pb-4' })),
+  },
   Divider: {
     label: 'Line',
     icon: 'minus',
@@ -405,7 +431,7 @@ export const CATALOG = {
     box: (p) => (flag(p['wide']) ? BOX : `${BOX} w-fit`),
     build: (p, ctx) => {
       const variant = oneOf(p['variant'], ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const)
-      return h('Button', { variant: variant === 'default' ? undefined : variant, size: p['size'] === 'sm' ? 'sm' : undefined, className: flag(p['wide']) ? 'w-full' : 'w-fit', onClick: handler(ctx.act(p['action'], p['said'])) }, icon(p['icon']), text(p['label'], 'Button'))
+      return h('Button', { variant: variant === 'default' ? undefined : variant, size: p['size'] === 'sm' ? 'sm' : undefined, className: flag(p['wide']) ? 'w-full' : 'w-fit', disabled: waits(p, ctx), onClick: handler(ctx.act(p['action'], p['said'])) }, icon(p['icon']), text(p['label'], 'Button'))
     },
   },
 
@@ -631,7 +657,7 @@ export const CATALOG = {
     icon: 'tag',
     group: 'Status',
     about: 'A short label. Never a count, never in the accent.',
-    into: ['content', 'bar'],
+    into: ['content', 'bar', 'status'],
     fields: { text: { kind: 'text', label: 'Text' }, look: { kind: 'choice', label: 'Look', options: [['secondary', 'Quiet'], ['default', 'Solid'], ['outline', 'Outline']] } },
     fresh: { text: 'Preview', look: 'secondary' },
     box: () => `${BOX} w-fit shrink-0`,
@@ -677,13 +703,13 @@ export const CATALOG = {
     },
   },
 
-  /* ——— The strip at the foot ——— */
+  /* ——— The status row and the strip at the foot ——— */
   FootText: {
-    label: 'Foot text',
+    label: 'Fact',
     icon: 'info',
     group: 'Status',
-    about: 'A fact in the strip at the foot: the state of the service, a count.',
-    into: ['footer'],
+    about: 'A fact in the status row or in the strip at the foot: the last result, the state of the service, a count.',
+    into: ['status', 'footer'],
     fields: { text: { kind: 'text', label: 'Text' } },
     fresh: { text: 'Connected' },
     box: () => 'flex shrink-0',
@@ -699,6 +725,38 @@ export const CATALOG = {
     fresh: { keys: 'Z', word: 'undo' },
     box: () => 'flex shrink-0',
     build: (p) => h('span', { className: 'inline-flex items-center gap-1' }, h('Kbd', null, text(p['keys'], 'Z')), text(p['word'])),
+  },
+  Job: {
+    label: 'Job',
+    icon: 'refresh',
+    group: 'Status',
+    about: 'A job of the whole window (an analysis, a scan), as Xiox shows it: its result, and while it runs its progress. A button set to «Run the job» starts it.',
+    into: ['status'],
+    fields: {
+      result: { kind: 'text', label: 'Result, when it is not running', placeholder: 'Analysis done' },
+      state: { kind: 'text', label: 'State while it runs', placeholder: 'Analyzing' },
+      label: { kind: 'text', label: 'The job', placeholder: 'Analyzing…' },
+      items: { kind: 'area', label: 'What it goes through, one on each line' },
+      preview: { kind: 'toggle', label: 'Show it running on the canvas' },
+    },
+    fresh: { result: 'Analysis done', state: 'Analyzing', label: 'Analyzing…', items: 'System\nBrowser\nApplications', preview: false },
+    box: () => 'flex min-w-0 items-center gap-3',
+    // While it runs: the state, the job, the bar, how far, the item it is on (docs/patterns.md, «Progress of a task»).
+    build: (p) => {
+      const label = text(p['label'], 'Working…')
+      const items = text(p['items']).split('\n').map((item) => item.trim()).filter(Boolean)
+      const busy = name('busy')
+      const running = h(
+        'Fragment',
+        null,
+        h('Badge', { variant: 'secondary', className: 'shrink-0' }, text(p['state'], 'Working')),
+        h('span', { className: 'shrink-0 text-ink-soft' }, label),
+        h('Progress', { 'aria-label': label, value: name('job'), size: 'sm', className: 'w-48 shrink-0' }),
+        h('span', { className: 'shrink-0 font-semibold text-ink tabular-nums' }, name('job'), '%'),
+        items.length > 0 ? h('span', { className: 'min-w-0 truncate' }, itemAt(items)) : null,
+      )
+      return h('Fragment', null, { $when: busy, then: running }, { $when: not(busy), then: h('span', { className: 'min-w-0 truncate text-ink-soft' }, text(p['result'], 'Done')) })
+    },
   },
 } as const satisfies Record<string, Def>
 
@@ -738,6 +796,15 @@ function tabs(p: Props, ctx: BuildCtx, placing: { edge?: 'top'; layout?: 'stacke
   const options = named(views)
   const view = ctx.state('view', options[0]?.value ?? '')
   return h('ToolbarTabs', { 'aria-label': 'Views', value: view.value, onValueChange: view.set, ...look }, options.map((option, at) => h('ToolbarTab', { value: option.value, icon: stacked ? icon(views[at]?.['icon']) : undefined }, option.label)))
+}
+
+/** The item a job is on: one of its items, by how far it is. */
+function itemAt(items: readonly string[]): Expr {
+  const n = items.length
+  return {
+    $expr: `[${items.map((item) => lit(item)).join(', ')}][Math.min(${n - 1}, Math.floor(((job ?? 0) * ${n}) / 100))]`,
+    run: (scope) => items[Math.min(n - 1, Math.floor((((scope['job'] as number | null) ?? 0) * n) / 100))],
+  }
 }
 
 /** The icon of a screen, from data that may hold any word. */
