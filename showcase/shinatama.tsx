@@ -37,9 +37,11 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
+  Tree,
   cn,
   colorTheme,
   type ToastItem,
+  type TreeNode,
 } from '../src/index'
 import { AppBar, Host, type AppProps } from './hosts'
 
@@ -122,18 +124,23 @@ const PROJECTS = ['billing-service', 'checkout-web', 'ledger-core', 'infra-terra
 
 const VIEWS = ['Workspace', 'Settings', 'Sessions', 'Overview', 'Files', 'Leftovers'] as const
 
-/** The file browser of the Workspace pane: a folder tree, one level open. */
-const TREE: readonly { name: string; depth: number; folder: boolean; open?: boolean; size?: string }[] = [
-  { name: '.claude', depth: 0, folder: true, open: true },
-  { name: 'agents', depth: 1, folder: true, open: true },
-  { name: 'billing-retries.md', depth: 2, folder: false, size: '6 KB' },
-  { name: 'settings.local.json', depth: 1, folder: false, size: '703 B' },
-  { name: '.github', depth: 0, folder: true },
-  { name: 'docs', depth: 0, folder: true },
-  { name: 'src', depth: 0, folder: true },
-  { name: 'test', depth: 0, folder: true },
-  { name: 'package.json', depth: 0, folder: false, size: '2 KB' },
-  { name: 'README.md', depth: 0, folder: false, size: '9 KB' },
+/** The file browser of the Workspace pane: a folder tree, `.claude/agents` open. */
+const FILES: readonly TreeNode[] = [
+  {
+    id: '.claude',
+    name: '.claude',
+    icon: 'newFolder',
+    children: [
+      { id: '.claude/agents', name: 'agents', icon: 'newFolder', children: [{ id: '.claude/agents/billing-retries.md', name: 'billing-retries.md', icon: 'attach', meta: '6 KB' }] },
+      { id: '.claude/settings.local.json', name: 'settings.local.json', icon: 'attach', meta: '703 B' },
+    ],
+  },
+  { id: '.github', name: '.github', icon: 'newFolder', children: [{ id: '.github/workflows', name: 'workflows', icon: 'newFolder', children: [{ id: '.github/workflows/ci.yml', name: 'ci.yml', icon: 'attach', meta: '1 KB' }] }] },
+  { id: 'docs', name: 'docs', icon: 'newFolder', children: [{ id: 'docs/billing.md', name: 'billing.md', icon: 'attach', meta: '4 KB' }] },
+  { id: 'src', name: 'src', icon: 'newFolder', children: [{ id: 'src/retry.ts', name: 'retry.ts', icon: 'attach', meta: '3 KB' }, { id: 'src/charge.ts', name: 'charge.ts', icon: 'attach', meta: '5 KB' }] },
+  { id: 'test', name: 'test', icon: 'newFolder', children: [{ id: 'test/checkout.spec.ts', name: 'checkout.spec.ts', icon: 'attach', meta: '2 KB' }] },
+  { id: 'package.json', name: 'package.json', icon: 'attach', meta: '2 KB' },
+  { id: 'README.md', name: 'README.md', icon: 'attach', meta: '9 KB' },
 ]
 
 const PLAN = `# Billing retries
@@ -151,9 +158,6 @@ const SAVED = [
   { id: 's3', name: 'OpenCode · ledger-core', note: '19 Nov · 7 turns' },
 ] as const
 
-/** How far in a row of the tree sits, by its depth: on the 4px grid. */
-const INDENT = ['ps-2', 'ps-6', 'ps-10'] as const
-
 /** The tabs of the Workspace pane: the file browser, then the agents' terminals. */
 const DOCK = [
   { id: 'files', label: 'Files' },
@@ -162,34 +166,30 @@ const DOCK = [
 ] as const
 
 /**
- * The file browser: the tree at the start, the file at the end, in four modes.
- * GAP: a file tree (rows that open and close, with their depth): Sigrid has a flat list only.
+ * The file browser: the tree at the start (Sigrid's `Tree`, with its filter), the file at the end, in four modes.
  * GAP: a code editor beside its preview: the source is plain text here.
  */
 function Files() {
   const [mode, setMode] = React.useState('split')
-  const [find, setFind] = React.useState('')
+  const [file, setFile] = React.useState<string | null>('.claude/agents/billing-retries.md')
   return (
     <div className="grid h-full min-h-0 grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
       <div className="flex min-h-0 flex-col gap-2 border-e border-line p-2">
         <Select size="sm" aria-label="Project" options={PROJECTS.map((p) => ({ value: p, label: p }))} value="billing-service" onValueChange={() => {}} className="w-48" />
-        <SearchField value={find} onValueChange={setFind} aria-label="Find a file by name" placeholder="Find a file by name" />
-        <ul role="list" className="flex min-h-0 flex-1 flex-col overflow-y-auto text-sm">
-          {TREE.filter((f) => f.name.toLowerCase().includes(find.toLowerCase())).map((f) => (
-            <li key={f.name}>
-              <button type="button" className={cn('flex min-h-(--control-sm) w-full items-center gap-2 rounded-md pe-2 text-start text-ink-soft hover:bg-ink/6 hover:text-ink', INDENT[f.depth], f.name === 'billing-retries.md' && 'bg-selected font-semibold text-selected-ink')}>
-                <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">{f.folder ? <Icon name={f.open ? 'chevronDown' : 'chevron'} /> : null}</span>
-                <Icon name={f.folder ? 'newFolder' : 'attach'} />
-                <span className="min-w-0 flex-1 truncate">{f.name}</span>
-                {f.size ? <span className="text-2xs text-ink-mute tabular-nums">{f.size}</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Tree
+          aria-label="Files of billing-service"
+          nodes={FILES}
+          search
+          searchLabel="Find a file by name"
+          selected={file}
+          onSelect={setFile}
+          defaultExpanded={['.claude', '.claude/agents']}
+          className="min-h-0 flex-1"
+        />
       </div>
       <div className="flex min-h-0 flex-col">
         <div className="flex items-center gap-2 border-b border-line p-2">
-          <span className="min-w-0 flex-1 truncate text-xs text-ink-mute">.claude / agents / billing-retries.md</span>
+          <span className="min-w-0 flex-1 truncate text-xs text-ink-mute">{(file ?? '').split('/').join(' / ')}</span>
           <ToggleGroup aria-label="Show the file as" value={mode} onValueChange={setMode}>
             <ToggleGroupItem value="source">Source</ToggleGroupItem>
             <ToggleGroupItem value="split">Split</ToggleGroupItem>

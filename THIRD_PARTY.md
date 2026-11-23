@@ -49,6 +49,7 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/internal/chips.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
 | `src/internal/attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/internal/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/ui/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -72,6 +73,9 @@ Notes:
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
 - `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
+- `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
+  branches, children loaded when a branch opens). Kept on top: the filter by name, which opens what leads to a find and
+  gives back what the person had opened; the failure of a load said in the row; the rows named by their name alone.
 
 ## Park UI
 
@@ -122,6 +126,7 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/internal/chips.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
 | `src/internal/attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
 
 Also following Park, without a recipe of their own: the shape and elevation in `src/theme-engine.ts` (its `radii` and
 `shadows` tokens) and `src/styles/theme.css` (its type scale and text styles; the tokens of the light navigation column

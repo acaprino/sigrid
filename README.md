@@ -207,6 +207,31 @@ hidden on a phone.
 </CommandsProvider>
 ```
 
+## A tree of rows
+
+`Tree` is a list of nested rows on Ark UI's TreeView, for files and folders or any hierarchy: each node has an `id`, a
+`name`, an `icon` (a meaning of the toolkit's icons or of the app's own, drawn in the user's pack), a short fact at the
+end (`meta`, in tabular figures) and either `children` or `hasChildren`, whose rows `loadChildren` brings when the
+branch is first opened. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right opens a
+branch and then goes in, Left closes it and then goes out, Home and End reach the ends, the first letters typed reach a
+name, `*` opens the branches beside the row, Enter, Space or a press choose (and open or close a branch). One row is
+chosen: `selected` and `onSelect` for the app's choice, or `defaultSelected`; the open branches likewise (`expanded`,
+`onExpandedChange`, `defaultExpanded`). A branch that loads says «Loading»; one whose load failed says «Not loaded» and
+stays closed, and opening it again tries again. With `search` a field above the rows filters them by name: what is
+found shows with the branches that lead to it opened, and clearing the field gives back what the person had opened. A
+screen reader hears a tree named by the app, each row by its name, with its level, whether it is open and whether it is
+chosen, and the fact or the state of its load after it. It is not the graph: `GraphCanvas` draws things joined by
+lines.
+
+```tsx
+<Tree aria-label="Files" search selected={file} onSelect={setFile} defaultExpanded={['src']}
+  nodes={[
+    { id: 'src', name: 'src', icon: 'newFolder', children: [{ id: 'src/app.ts', name: 'app.ts', icon: 'attach', meta: '4 KB' }] },
+    { id: 'remote', name: 'remote', icon: 'newFolder', hasChildren: true },
+  ]}
+  loadChildren={(node, signal) => fetchFolder(node.id, signal)} className="h-full" />
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -240,7 +265,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `Tree` (nested rows, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'

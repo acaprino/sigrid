@@ -56,6 +56,7 @@ export { TitleBar, TitleBarDragContext, TitleBarSizeContext, WindowControls, typ
 export { ToggleGroup, ToggleGroupItem, type ToggleGroupItemProps, type ToggleGroupProps } from './components/ui/toggle-group'
 export { Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTab, ToolbarTabs, ToolbarTitle, type ToolbarBrandProps, type ToolbarButtonProps, type ToolbarGroupProps, type ToolbarProps, type ToolbarSearchProps, type ToolbarTabProps, type ToolbarTabsProps } from './components/ui/toolbar'
 export { TOOLTIP_DELAY_MS, Tooltip, type TooltipProps } from './components/ui/tooltip'
+export { Tree, type TreeNode, type TreeProps } from './components/ui/tree'
 export { Collapsible, Field, PopoverPrimitive } from './components/ui/headless'
 export type InputProps = React.ComponentProps<typeof import('./components/ui/input').Input>
 export type TextareaProps = React.ComponentProps<typeof import('./components/ui/textarea').Textarea>

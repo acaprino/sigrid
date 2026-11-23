@@ -75,6 +75,19 @@ export interface Words {
   readonly search: {
     readonly clear: string
   }
+  /** What a `Tree` says by itself. */
+  readonly tree: {
+    /** Said at the end of a branch while its children load. */
+    readonly loading: string
+    /** Said at the end of a branch whose children could not be loaded. */
+    readonly failed: string
+    /** Read after `failed` by screen readers: how to try again (the branch loads again when it is opened again). */
+    readonly retry: string
+    /** The field that filters the tree by name: its name and its placeholder. */
+    readonly filter: string
+    /** Said when no name holds the text of the filter. */
+    readonly empty: string
+  }
   readonly list: {
     /** Read before the title of a row not read yet (`ItemRow`). */
     readonly unread: string
@@ -313,6 +326,13 @@ export const DEFAULT_WORDS: Words = {
   },
   search: {
     clear: 'Clear the search',
+  },
+  tree: {
+    loading: 'Loading',
+    failed: 'Not loaded',
+    retry: 'Open it to try again',
+    filter: 'Filter by name',
+    empty: 'No match',
   },
   list: {
     unread: 'Unread',
