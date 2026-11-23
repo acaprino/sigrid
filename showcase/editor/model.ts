@@ -151,7 +151,7 @@ function mail(): AppModel {
     { title: 'Maria Rossi', line: 'Q4 proposal: can you review by Thursday?', fact: '09:42', unread: true },
     { title: 'Luca Bianchi', line: 'Design review moved to 3 pm', fact: '08:15', unread: true },
     { title: 'Sofia', line: 'Dinner on Saturday?', fact: 'Sun', unread: false },
-    { title: 'Accounting', line: 'Invoice #2291 for October', fact: 'Fri', unread: false },
+    { title: 'Accounting', line: 'Invoice 2291 for October', fact: 'Fri', unread: false },
   ]
   return {
     version: 1,

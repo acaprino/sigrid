@@ -205,8 +205,13 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
     setQuick('')
   }
   const addDump = () => {
-    const lines = dump.split('\n').map((line) => line.trim()).filter(Boolean)
-    if (lines.length === 0) return
+    // An item of the Stack is its text: a line that is already there, or written twice, is added once.
+    const lines = [...new Set(dump.split('\n').map((line) => line.trim()).filter(Boolean))].filter((line) => !stack.includes(line))
+    if (lines.length === 0) {
+      setDump('')
+      setAdding(false)
+      return
+    }
     setStack((list) => [...lines, ...list])
     setDump('')
     setAdding(false)

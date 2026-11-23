@@ -30,19 +30,22 @@ keeps to itself: they come first where they speak.
 ## 3. Write
 
 - Start a screen from `AppShell` and its regions. Take controls from the toolkit, everything else from its tokens.
-- Never guess a prop: if the catalogue does not have it, it does not exist.
+- Never guess a prop: if the catalogue does not have it, it does not exist. The object types a prop takes (a
+  column, a notice, an option) are under `types` in the same file of the catalogue.
 - If the toolkit has no component for the job, say so, and build it in the app from the toolkit's parts. Do not add
   another component library for it, and do not copy a toolkit component into the app.
 
 ## 4. Check
 
-Run `npx sigrid-check` from the folder of the app (or `npx sigrid-check <folder>`), and fix every finding. Then, if
-the project lets you run it, look at the screen in a browser, wide and at 390px, and go through the rules of
-`AGENTS.md` that the check cannot see: one solid primary action, the accent only where it belongs, border or
-shadow and never both, icons on navigation rows, 44px for a finger.
+From the folder found in step 1's parent project (the one whose `package.json` has the dependency), run
+`npx --no sigrid-check` (or `npx --no sigrid-check <folder>`; the same as
+`node node_modules/@acaprino/sigrid/bin/sigrid-check.mjs`). `--no` matters: without it `npx` may fetch an unrelated
+package of that name from the registry. Fix every finding in the code, not by rewording what the user reads; a
+finding that is right as it is gets the ignore comment `AGENTS.md` describes, with its reason.
 
-Follow the project's own rule on what may be run on the machine (some projects build and test only in CI): the check
-reads files and builds nothing.
+The check reads files and builds nothing, and it sees only values written by hand. `AGENTS.md` lists what it does
+not see: go through that list by reading your code. Then, only if the project's own instructions allow running the
+app on this machine (some projects build and test only in CI), look at the screen in a browser, wide and at 390px.
 
 ## 5. Report
 

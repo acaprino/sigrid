@@ -1,6 +1,6 @@
 // Tasks: A to-do list: a sidebar on a computer, tabs at the foot on a phone, a list with its details, a board and a settings page.
 // A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is `src/App.tsx`
-// of the project the editor exports: `./host` is that project's file for the window of a native build.
+// of the project the editor exports; `./host` is host.ts beside this file.
 // Tasks: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useLayoutEffect, useState, type ReactNode } from 'react'
 import {

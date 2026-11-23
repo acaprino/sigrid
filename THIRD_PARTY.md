@@ -342,3 +342,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## zero-slop-design
+
+`tools/zero-slop-design/` is the tool that lints `DESIGN.md` and checks sources against it (`npm run design:lint`,
+`npm run design:check`). It comes with the package since `sigrid-check` runs it in an app. Its licence and the
+notices of what it bundles are in that folder: `LICENSE` and `THIRD_PARTY_NOTICES.md`.

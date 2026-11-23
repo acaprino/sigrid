@@ -1,5 +1,5 @@
 {
- "about": "The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.",
+ "about": "The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `types` are the object types those props are made of (a column, a notice, an option), with their fields. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.",
  "rules": "DESIGN.md",
  "entries": [
   {
@@ -8,9 +8,37 @@
     {
      "file": "src/color-theme.ts",
      "about": "A theme from two colours (owner, 2026-11-22: «due colori e poi un accento»): the theme colour sets the buttons, the\nselection, the links and the focus ring; the spot colour is the accent, the one loud colour, kept for the few things\nthat ask for attention now. The grays of the page are the third, quiet colour. The spot is not picked from the whole\nwheel: three colours that go with the theme colour are proposed, from quiet to loud, and the engine then moves each\none until its contrast thresholds hold.",
+     "types": [
+      {
+       "name": "ColorThemePick",
+       "doc": "What a colour theme is made from.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "required": true,
+         "doc": "The theme colour, `#rrggbb`."
+        },
+        {
+         "name": "spot",
+         "type": "string | null",
+         "doc": "The spot colour: one of the three proposals, or a colour of the user's own (`#rrggbb`). Absent: no spot."
+        }
+       ]
+      }
+     ],
      "also": [
       "colorTheme",
-      "ColorThemePick",
       "isSpotKind",
       "SPOT_KINDS",
       "SpotKind",
@@ -20,7 +48,7 @@
     },
     {
      "file": "src/colors.ts",
-     "about": "",
+     "about": "The eighteen free colors (for what the user colours: a folder, a group, a mark), in hue order (from red to pink). They are medium tints: the color is\nuser data, the same in both themes, so it holds up on both the light and the dark paper. An app that keeps the list\nelsewhere too (on its server) keeps the same hex values there. A color that is already saved never falls out of the list.",
      "also": [
       "COLOR_NAMES",
       "colorHue",
@@ -145,7 +173,7 @@
     },
     {
      "file": "src/components/LookSettings.tsx",
-     "about": "",
+     "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is, and the icon pack. Every choice is a card with a preview of what it does; the app\npasses its own words. The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
      "components": [
       {
        "name": "BaseColorChoice",
@@ -214,7 +242,7 @@
         },
         {
          "name": "columns",
-         "type": "2 | 3"
+         "type": "3 | 2"
         },
         {
          "name": "children",
@@ -242,7 +270,7 @@
         },
         {
          "name": "level",
-         "type": "3 | 4"
+         "type": "4 | 3"
         },
         {
          "name": "children",
@@ -450,15 +478,159 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "BaseColorText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "theme",
+         "type": "string",
+         "required": true,
+         "doc": "The first option: no palette, the theme's own colours."
+        },
+        {
+         "name": "picker",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ChoiceText",
+       "doc": "A choice's name and, below it, what it is for.",
+       "fields": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "note",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DensityText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "densities",
+         "type": "Readonly<Record<string, ChoiceText>>",
+         "required": true,
+         "doc": "Each density's name and note, by id. A density without words here shows its own label."
+        }
+       ]
+      },
+      {
+       "name": "IconPackText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "packs",
+         "type": "Readonly<Record<\"lucide\" | \"duotone\" | \"solar\" | \"fluent\" | \"emoji\" | \"twemoji\", ChoiceText>>",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "PaletteComboText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "combos",
+         "type": "Readonly<Record<\"soft\" | \"clean\" | \"bold\", ChoiceText>>",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ThemeCatalogText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "notes",
+         "type": "Readonly<Record<string, string>>",
+         "required": true,
+         "doc": "Below each theme's name, by id: what it is for."
+        }
+       ]
+      },
+      {
+       "name": "TonePresetText",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hint",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "presets",
+         "type": "Readonly<Record<\"calm\" | \"vivid\" | \"balanced\", ChoiceText>>",
+         "required": true
+        },
+        {
+         "name": "noEffect",
+         "type": "string",
+         "doc": "Said in place of the three cards when the tone changes nothing: the colours in use have no hue (a gray theme), so the cards would be three copies of one preview. Absent: the cards are shown all the same."
+        }
+       ]
+      }
+     ],
      "also": [
-      "BaseColorText",
-      "ChoiceText",
-      "DensityText",
-      "IconPackText",
-      "PaletteComboText",
-      "radioArrows",
-      "ThemeCatalogText",
-      "TonePresetText"
+      "radioArrows"
      ]
     },
     {
@@ -576,9 +748,68 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "ToastAction",
+       "doc": "An extra action on a notice (a quick choice after a gesture): `pressed` marks it as already chosen.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "ariaLabel",
+         "type": "string"
+        },
+        {
+         "name": "pressed",
+         "type": "boolean"
+        },
+        {
+         "name": "onClick",
+         "type": "() => void",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ToastItem",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "undo",
+         "type": "{ label?: string; hint?: string | undefined; onClick: () => void; }",
+         "doc": "«Undo». `hint` is the key that does the same thing right now (for example «Z»): it is shown next to the button."
+        },
+        {
+         "name": "actions",
+         "type": "{ label: string; items: ToastAction[]; }[]",
+         "doc": "Quick choices, on a second row: groups of buttons (each group has a name for screen readers)."
+        },
+        {
+         "name": "kind",
+         "type": "\"error\"",
+         "doc": "`error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with `onDismiss`) or the caller removes it. A mark before the text says what it is, and screen readers hear «Error»."
+        }
+       ]
+      }
+     ],
      "also": [
-      "ToastAction",
-      "ToastItem",
       "ToastsProps"
      ]
     },
@@ -657,11 +888,6 @@
        ]
       },
       {
-       "name": "AppShellContext",
-       "doc": "The frame around, for the parts that change with its width. Absent outside an `AppShell`.",
-       "passesOn": true
-      },
-      {
        "name": "Inspector",
        "doc": "The details or the form of what is selected, at the end of the frame. It is not modal: the rest of the window keeps working beside it. Docked it is a column with a line at its inner edge (R4); in a frame under 1000px it is a raised panel over the end of the content. Closed, the content takes its room.",
        "props": [
@@ -702,12 +928,50 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "AppShellLayout",
+       "fields": [
+        {
+         "name": "sidebar",
+         "type": "\"full\" | \"rail\" | \"drawer\"",
+         "required": true,
+         "doc": "`full`: the user's choice holds. `rail`: forced to its icons. `drawer`: out of the layout, opened over the page."
+        },
+        {
+         "name": "inspector",
+         "type": "\"drawer\" | \"docked\"",
+         "required": true,
+         "doc": "`docked` beside the content, or a `drawer` over its end."
+        }
+       ]
+      },
+      {
+       "name": "AppShellSteps",
+       "fields": [
+        {
+         "name": "inspector",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "sidebar",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "rail",
+         "type": "number",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
       "APP_SHELL_STEPS",
+      "AppShellContext",
       "appShellLayout",
-      "AppShellLayout",
       "AppShellProps",
-      "AppShellSteps",
       "InspectorProps",
       "useAppShell"
      ]
@@ -998,8 +1262,33 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "ComboboxOption",
+       "fields": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "detail",
+         "type": "string",
+         "doc": "A second line of muted text (a person's address under the name)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        }
+       ]
+      }
+     ],
      "also": [
-      "ComboboxOption",
       "ComboboxProps"
      ]
     },
@@ -1043,8 +1332,54 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "Command",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it does, as the user would say it («Go to Settings»)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "Its own key («Ctrl F»), shown at the end of the row. The app binds it."
+        },
+        {
+         "name": "group",
+         "type": "string",
+         "doc": "The heading it sits under («Go to», «Look»). Commands of one group follow each other."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "A 16px drawing before the name."
+        },
+        {
+         "name": "keywords",
+         "type": "string",
+         "doc": "Other words it is found by."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "onSelect",
+         "type": "() => void",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
-      "Command",
       "CommandPaletteProps",
       "filterCommands",
       "useCommandKey"
@@ -1540,7 +1875,7 @@
         },
         {
          "name": "href",
-         "type": "string"
+         "type": "undefined"
         }
        ],
        "passesOn": true
@@ -1841,7 +2176,7 @@
         },
         {
          "name": "orientation",
-         "type": "\"vertical\" | \"horizontal\"",
+         "type": "\"horizontal\" | \"vertical\"",
          "doc": "Layout only: the arrows work in both directions, as in a WAI-ARIA radio group."
         }
        ],
@@ -1998,9 +2333,47 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "SelectGroup",
+       "parameters": [
+        "O extends SelectOption = SelectOption"
+       ],
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "options",
+         "type": "O[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "SelectOption",
+       "doc": "An option: a value and its label. An app can add its own fields (`O extends SelectOption`) and draw them before the label with `renderMark` (a coloured shape, for example): the mark is the app's, the list is the toolkit's. `style` is put on the label in the list: a font shown in its own face, for example.",
+       "fields": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "style",
+         "type": "React.CSSProperties"
+        }
+       ]
+      }
+     ],
      "also": [
-      "SelectGroup",
-      "SelectOption",
       "SelectProps"
      ]
     },
@@ -2260,7 +2633,7 @@
         },
         {
          "name": "orientation",
-         "type": "\"vertical\" | \"horizontal\"",
+         "type": "\"horizontal\" | \"vertical\"",
          "doc": "`vertical` (the default): a column, with the descriptions beside the dots. `horizontal`: a row; it measures its own width, so it needs one of its own (`w-full`, or a width), and in a place too narrow for the names it keeps the current one and says «Step 2 of 4»."
         },
         {
@@ -2270,8 +2643,30 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "StepItem",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the step («Account», «Choose a plan»): short, as it is the next thing the user reads."
+        },
+        {
+         "name": "description",
+         "type": "string",
+         "doc": "A line under the name, for the step the user is on or the one next: what it asks."
+        },
+        {
+         "name": "status",
+         "type": "\"error\"",
+         "doc": "`error`: this step failed (a processing that stopped here). It is shown in red and says so in words; the line before it stays the accent."
+        }
+       ]
+      }
+     ],
      "also": [
-      "StepItem",
       "StepsProps"
      ]
     },
@@ -2570,7 +2965,7 @@
        "props": [
         {
          "name": "size",
-         "type": "\"default\" | \"compact\"",
+         "type": "\"compact\" | \"default\"",
          "doc": "`compact`: the thin caption of a classic desktop program, with small controls."
         },
         {
@@ -2588,16 +2983,6 @@
          "type": "React.ReactNode"
         }
        ],
-       "passesOn": true
-      },
-      {
-       "name": "TitleBarDragContext",
-       "doc": "The drag attributes of the bar around, for the parts inside it that move the window too.",
-       "passesOn": true
-      },
-      {
-       "name": "TitleBarSizeContext",
-       "doc": "The size of the bar around, which the toolbar inside it follows.",
        "passesOn": true
       },
       {
@@ -2640,8 +3025,10 @@
       }
      ],
      "also": [
+      "TitleBarDragContext",
       "TitleBarDragProps",
       "TitleBarProps",
+      "TitleBarSizeContext",
       "WindowControlsProps"
      ]
     },
@@ -3068,19 +3455,109 @@
     },
     {
      "file": "src/density.ts",
-     "about": "",
+     "about": "Density: how tall the controls are, how much side padding they have and how much room a list row takes. Like the\nthemes it is data: the toolkit ships three presets (`DENSITIES`) and an app may pass a definition of its own, or a\npreset with some measures changed (`densityWith`). `applyDensity` writes the measures on an element as CSS variables\n(`--density-*`) and the id as `data-density`; `styles/theme.css` turns them into the tokens the components use\n(`--control-md`, `--pad-md`, `--row-height`…), with `normal` as the value before any script runs and 44px as the\nfloor of every control and row with a coarse pointer.",
+     "types": [
+      {
+       "name": "Density",
+       "doc": "A density to apply: a preset by its id, or a definition.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "doc": "Goes on the element as `data-density`."
+        },
+        {
+         "name": "label",
+         "type": "string"
+        },
+        {
+         "name": "control",
+         "type": "{ readonly md: number; readonly sm: number; readonly xs: number; }",
+         "doc": "Control heights: `md` is the default control; `sm` and `xs` only inside a dense row."
+        },
+        {
+         "name": "pad",
+         "type": "{ readonly md: number; readonly sm: number; readonly xs: number; }",
+         "doc": "Side padding of a control: `md` buttons and segment items, `sm` fields and selects, `xs` the smallest button."
+        },
+        {
+         "name": "row",
+         "type": "{ readonly height: number; readonly pad: number; }",
+         "doc": "A row of a list or of a menu: its least height and its padding above and below."
+        }
+       ]
+      },
+      {
+       "name": "DensityDef",
+       "doc": "The measures of a density, in px.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "Goes on the element as `data-density`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "control",
+         "type": "{ readonly md: number; readonly sm: number; readonly xs: number; }",
+         "required": true,
+         "doc": "Control heights: `md` is the default control; `sm` and `xs` only inside a dense row."
+        },
+        {
+         "name": "pad",
+         "type": "{ readonly md: number; readonly sm: number; readonly xs: number; }",
+         "required": true,
+         "doc": "Side padding of a control: `md` buttons and segment items, `sm` fields and selects, `xs` the smallest button."
+        },
+        {
+         "name": "row",
+         "type": "{ readonly height: number; readonly pad: number; }",
+         "required": true,
+         "doc": "A row of a list or of a menu: its least height and its padding above and below."
+        }
+       ]
+      },
+      {
+       "name": "DensityOverride",
+       "doc": "Some measures of a density: the rest stays as the base has it.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "label",
+         "type": "string"
+        },
+        {
+         "name": "control",
+         "type": "Partial<{ readonly md: number; readonly sm: number; readonly xs: number; }>"
+        },
+        {
+         "name": "pad",
+         "type": "Partial<{ readonly md: number; readonly sm: number; readonly xs: number; }>"
+        },
+        {
+         "name": "row",
+         "type": "Partial<{ readonly height: number; readonly pad: number; }>"
+        }
+       ]
+      }
+     ],
      "also": [
       "applyDensity",
       "DEFAULT_DENSITY",
       "DENSITIES",
-      "Density",
       "DENSITY_LIMITS",
       "DENSITY_VARIABLES",
       "densityById",
-      "DensityDef",
       "DensityId",
       "densityOf",
-      "DensityOverride",
       "densityVariables",
       "densityWith",
       "isDensityId",
@@ -3090,10 +3567,67 @@
     {
      "file": "src/harmony.ts",
      "about": "A theme from two colours, and the accents that go with a base colour (owner, 2026-11-22: «due colori: la base, che\ndi suo è il bianco ma si può cambiare, portata sulle tonalità chiarissime, e un accento scelto con i principi della\ncolorimetria, suggerito in automatico»).\n- The base is the page. Whatever colour is chosen, only its hue stays: it is brought to a very light tone (an OKLCH\n  lightness of 0.985 and a chroma of 0.018 at most), so the page is a white with a breath of that colour and the text\n  keeps its contrast. No base, or a gray one, is the neutral white. In dark the same hue is a very dark tone.\n- The accent is what the eye is led by (R2). It is not picked from the whole wheel: from the base's hue the classical\n  harmonies give the hues that go with it, all on one wheel, OKLCH's, where equal turns are equal steps for the eye:\n  the split complement (150° to either side), the complement (180°), the triad (120°), the neighbours (30°) and the\n  base's own hue. Each is drawn at the lightness and saturation of a button, inside what a screen can show.\n- They are ranked. A split complement comes first: it is clearly another colour without the vibration of the exact\n  opposite. A hue that would read as the red of an error is moved out of its room and ranked lower, and one beside\n  the green of success or the amber of a warning loses a little: an accent must never be taken for a status. A hue\n  between yellow and lime loses more: yellow is itself only when it is light, and at the lightness a button needs\n  under its label it turns to olive.\nA white or gray base has no hue to start from: the proposals are then eight hues spread round the wheel, the blue\nfirst. The theme engine then moves every colour until its contrast thresholds hold, as for any theme.",
+     "types": [
+      {
+       "name": "AccentSuggestion",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "Stable for a base: `split+150`, `mono`, `spread-264`."
+        },
+        {
+         "name": "harmony",
+         "type": "\"mono\" | \"complement\" | \"analogous\" | \"split\" | \"triad\" | \"spread\"",
+         "required": true
+        },
+        {
+         "name": "turn",
+         "type": "number",
+         "required": true,
+         "doc": "How far round the wheel from the base's hue, in degrees. Zero for `mono` and for `spread`."
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "required": true,
+         "doc": "The accent, `#rrggbb`."
+        },
+        {
+         "name": "recommended",
+         "type": "boolean",
+         "required": true,
+         "doc": "The first of the list: what the toolkit would choose."
+        },
+        {
+         "name": "moved",
+         "type": "boolean",
+         "required": true,
+         "doc": "The hue fell in the red of errors and was moved out of it."
+        }
+       ]
+      },
+      {
+       "name": "DuoPick",
+       "doc": "What a theme of two colours is made from.",
+       "fields": [
+        {
+         "name": "base",
+         "type": "string | null",
+         "doc": "The base: the colour of the page, brought to a very light tone. Absent, null or a gray: the neutral white."
+        },
+        {
+         "name": "accent",
+         "type": "string",
+         "required": true,
+         "doc": "The accent, `#rrggbb`: one of `accentSuggestions(base)`, or a colour of the user's own."
+        }
+       ]
+      }
+     ],
      "also": [
-      "AccentSuggestion",
       "accentSuggestions",
-      "DuoPick",
       "duoTheme",
       "HARMONIES",
       "Harmony",
@@ -3117,7 +3651,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifica…",
          "required": true
         },
         {
@@ -3151,11 +3685,43 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "IconDrawing",
+       "doc": "How an app draws a meaning of its own (a mail app's `inbox`, `reply`): the line drawing is required; a pack left out falls back to it. The drawn packs take a drawing each (its square view box and its SVG content, as `scripts/icon-packs.mjs` writes them). `emoji` may also be the glyph itself, fully qualified (with U+FE0F where the symbol is text by default): the device's font then draws it, in the Emoji pack and in Twemoji.",
+       "fields": [
+        {
+         "name": "lucide",
+         "type": "Glyph",
+         "required": true
+        },
+        {
+         "name": "fluent",
+         "type": "Glyph"
+        },
+        {
+         "name": "duotone",
+         "type": "Drawing"
+        },
+        {
+         "name": "solar",
+         "type": "Drawing"
+        },
+        {
+         "name": "emoji",
+         "type": "string | Drawing"
+        },
+        {
+         "name": "twemoji",
+         "type": "Drawing"
+        }
+       ]
+      }
+     ],
      "also": [
       "DEFAULT_ICON_PACK",
       "ICON_NAMES",
       "ICON_PACKS",
-      "IconDrawing",
       "IconName",
       "IconPack",
       "IconSet",
@@ -3166,7 +3732,7 @@
     },
     {
      "file": "src/index.ts",
-     "about": "@acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for\nbehaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the\ngeneric fields and surfaces built on them. No app concepts: each app builds its product components on top of\nthis.",
+     "about": "@acaprino/sigrid: the shared design system. Theme engine and colours, tokens and fonts, primitives (Ark UI for\nbehaviour, Park UI recipes for form, Base UI under the basic controls and the surfaces that open), motion in a lazy chunk, and the\ngeneric fields and surfaces built on them. No app concepts: each app builds its product components on top of\nthis.\nTheme engine, catalog and colours: the single source of truth for colours.",
      "also": [
       "CheckboxProps",
       "InputProps",
@@ -3175,7 +3741,7 @@
     },
     {
      "file": "src/internal/attachment-viewer.tsx",
-     "about": "",
+     "about": "A page of the document: the measures reserve its place before the image arrives.",
      "components": [
       {
        "name": "AttachmentViewer",
@@ -3239,11 +3805,50 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "AttachmentViewerStatus",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"loading\""
+        },
+        {
+         "name": "label",
+         "type": "string"
+        },
+        {
+         "name": "message",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ViewerPage",
+       "doc": "A page of the document: the measures reserve its place before the image arrives.",
+       "fields": [
+        {
+         "name": "width",
+         "type": "number",
+         "required": true,
+         "doc": "Width and height of the page, in any unit (only the ratio matters)."
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "src",
+         "type": "string | null",
+         "doc": "The image of the page (a `blob:` or `data:` address). Absent: the page is not drawn yet."
+        }
+       ]
+      }
+     ],
      "also": [
       "AttachmentViewerProps",
-      "AttachmentViewerStatus",
-      "VIEWER_ZOOMS",
-      "ViewerPage"
+      "VIEWER_ZOOMS"
      ]
     },
     {
@@ -3252,7 +3857,21 @@
      "components": [
       {
        "name": "AttachmentMarks",
-       "doc": "Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero."
+       "doc": "Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero.",
+       "props": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]"
+        },
+        {
+         "name": "count",
+         "type": "number"
+        },
+        {
+         "name": "attachments",
+         "type": "AttachmentMarksInput"
+        }
+       ]
       },
       {
        "name": "AttachmentsSection",
@@ -3296,12 +3915,100 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "AttachmentMarksInput",
+       "doc": "The summary `{ kinds, count }`, or the attachments themselves (`AttachmentView[]`): the `kind` of each is enough.",
+       "fields": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]"
+        },
+        {
+         "name": "count",
+         "type": "number"
+        }
+       ]
+      },
+      {
+       "name": "AttachmentSummary",
+       "fields": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]",
+         "required": true
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "AttachmentView",
+       "parameters": [
+        "A = unknown"
+       ],
+       "doc": "An attachment in the details. `A` is the app's action type: the sheet does not read it, it hands it back to `onAction`. `open` null: no «Open». `href` is shown as text, never as a clickable link: it is opened only with `open`.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "kind",
+         "type": "AttachmentKind",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "detail",
+         "type": "string | null",
+         "required": true,
+         "doc": "A line under the title («2.4 MB», the sender of an email). Null: none."
+        },
+        {
+         "name": "href",
+         "type": "string | null",
+         "required": true
+        },
+        {
+         "name": "state",
+         "type": "AttachmentState",
+         "required": true
+        },
+        {
+         "name": "stateLabel",
+         "type": "string | null",
+         "doc": "The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»)."
+        },
+        {
+         "name": "thumbnail",
+         "type": "boolean",
+         "doc": "An image with its thumbnail ready: the row shows a 64px thumbnail in place of the type mark, taken from `the section's `thumbnails[id]``. Absent or false: the row as before."
+        },
+        {
+         "name": "open",
+         "type": "A | null",
+         "required": true
+        },
+        {
+         "name": "remove",
+         "type": "A",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
-      "AttachmentMarksInput",
       "AttachmentsSectionProps",
       "AttachmentState",
-      "AttachmentSummary",
-      "AttachmentView",
       "stateText",
       "summarize",
       "typedUrl"
@@ -3445,17 +4152,17 @@
        "doc": "A range of local days (a stay, a leave, a filter): a click chooses the first day, a second one the last and closes; the days between take the selection tint. The two clicks may come in either order, and on the same day for a range of one day. The caller hears of a range only when it has both ends.",
        "props": [
         {
-         "name": "disabled",
-         "type": "boolean",
-         "doc": "The field cannot be opened: half opacity, out of the Tab order."
-        },
-        {
          "name": "id",
          "type": "string"
         },
         {
          "name": "animated",
          "type": "boolean"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
         },
         {
          "name": "max",
@@ -3554,12 +4261,64 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "DatePick",
+       "doc": "A quick choice of a date field: its name and the day it sets, as `YYYY-MM-DD`.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DateRange",
+       "doc": "A range of local days, both ends included: `start` is never after `end`.",
+       "fields": [
+        {
+         "name": "start",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DateRangePick",
+       "doc": "A quick choice of a range field: its name and the two ends it sets, as `YYYY-MM-DD`.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "start",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "string",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
       "DateFieldProps",
-      "DatePick",
-      "DateRange",
       "DateRangeFieldProps",
-      "DateRangePick",
       "DateTimeFieldProps",
       "dayPicks",
       "rangePicks"
@@ -3568,8 +4327,19 @@
     {
      "file": "src/internal/desktop-guard.ts",
      "about": "What makes a page behave as the window of a program and not as a page in a browser. An app that runs in a window of\nits own (no address bar, no browser around it) calls `useDesktopGuard()` once; in a browser tab it does not.\n- The keys a browser engine keeps for itself do nothing: reload, print, find, history, the page's source, the\n  developer tools, back and forward (with Ctrl, or with Command on a Mac). They are refused in the capture phase and not stopped, so the app's own handler\n  for the same key (Ctrl+F for its search, Ctrl+S in its editor) still runs.\n- The engine's own menu on a right press is refused, except where it is useful: in a field (it offers editing) and\n  over selected text (Copy). An app's own context menu is not touched: it shows its own.\n- The back and forward buttons of a mouse do not navigate.\n- A picture or a link is not dragged out of the window, unless the app made it draggable.\n`ownKeysIn` names the places that run their own keys and menus (a terminal, a code editor): there nothing is refused.\nThe technique is the one Imago's windows use (its `guardDesktop`); this is the toolkit's own writing of it. The\nnative side of the same guard (navigation limited to the app's origin, new windows refused) is the app's host.",
+     "types": [
+      {
+       "name": "DesktopGuardOptions",
+       "fields": [
+        {
+         "name": "ownKeysIn",
+         "type": "string",
+         "doc": "A selector for the places that keep the engine's keys and menu: `'.xterm, .cm-editor'`."
+        }
+       ]
+      }
+     ],
      "also": [
-      "DesktopGuardOptions",
       "guardDesktop",
       "isBrowserKey",
       "useDesktopGuard"
@@ -3577,11 +4347,73 @@
     },
     {
      "file": "src/internal/drop.ts",
-     "about": "",
+     "about": "What a drag brings in, already read: files, a link or text. Only one, in this order of precedence: a drag with\nfiles and text (an email from Outlook: the file and its subject) is made of files. Several addresses together are\ntext, one per line. Whether a file is an email is decided by whoever receives it.",
+     "types": [
+      {
+       "name": "AttachPayload",
+       "doc": "What becomes an attachment: files or a link (text is not an attachment).",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"files\""
+        },
+        {
+         "name": "files",
+         "type": "File[]"
+        },
+        {
+         "name": "url",
+         "type": "string"
+        },
+        {
+         "name": "title",
+         "type": "string | null"
+        }
+       ]
+      },
+      {
+       "name": "DropPayload",
+       "doc": "What a drag brings in, already read: files, a link or text. Only one, in this order of precedence: a drag with files and text (an email from Outlook: the file and its subject) is made of files. Several addresses together are text, one per line. Whether a file is an email is decided by whoever receives it.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"files\""
+        },
+        {
+         "name": "files",
+         "type": "File[]"
+        },
+        {
+         "name": "url",
+         "type": "string"
+        },
+        {
+         "name": "title",
+         "type": "string | null"
+        },
+        {
+         "name": "text",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "DropTarget",
+       "fields": [
+        {
+         "name": "props",
+         "type": "{ onDragStart: (e: DragEvent) => void; onDragEnd: (e: DragEvent) => void; onDragOver: (e: DragEvent) => void; onDragLeave: (e: DragEvent) => void; onDrop: (e: DragEvent) => void; }",
+         "required": true
+        },
+        {
+         "name": "active",
+         "type": "boolean",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
-      "AttachPayload",
-      "DropPayload",
-      "DropTarget",
       "limitLabel",
       "MAX_FILE_BYTES",
       "overLimitNotice",
@@ -3611,9 +4443,25 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "DurationParts",
+       "fields": [
+        {
+         "name": "hours",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "minutes",
+         "type": "number",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
-      "DurationFieldProps",
-      "DurationParts"
+      "DurationFieldProps"
      ]
     },
     {
@@ -3698,15 +4546,32 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "FileDropRefusal",
+       "doc": "A file the zone did not take, and why. `file` is null for a dropped text or link, which is not a file.",
+       "fields": [
+        {
+         "name": "file",
+         "type": "File | null",
+         "required": true
+        },
+        {
+         "name": "reason",
+         "type": "FileDropReason",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
       "FileDropProps",
-      "FileDropReason",
-      "FileDropRefusal"
+      "FileDropReason"
      ]
     },
     {
      "file": "src/internal/kinds.ts",
-     "about": "",
+     "about": "Kind of an item of the stack.",
      "also": [
       "AttachmentKind",
       "ItemKind",
@@ -3716,14 +4581,14 @@
     },
     {
      "file": "src/internal/lines.ts",
-     "about": "",
+     "about": "The text of a capture input as lines: a non-empty line is a thing, spaces at the edges do not count.",
      "also": [
       "splitLines"
      ]
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
      "components": [
       {
        "name": "InlineMarkdown",
@@ -3761,7 +4626,7 @@
     },
     {
      "file": "src/internal/media.ts",
-     "about": "",
+     "about": "Below this point the sidebar is a drawer or, with the tabs, a page: the same `md` as `theme.css` (860px).",
      "also": [
       "COARSE",
       "NARROW",
@@ -3771,18 +4636,202 @@
     },
     {
      "file": "src/internal/motion.ts",
-     "about": "",
+     "about": "Optional animations: only in response to a gesture, under 250 ms, off by default. A component animates\nwhen MotionProvider or the control enables it and the system allows motion. Motion lives in a separate chunk\n(`motion-impl`), loaded the first time it is needed: with animations off it never even reaches the browser.",
+     "components": [
+      {
+       "name": "MotionProvider",
+       "doc": "Enable motion for a subtree, including its portals. Individual controls can override the preference. While at least one provider has motion on, the document root carries `data-motion`: with it (and only where the system allows motion) a control's fill, border and text ease to the state under the pointer instead of snapping (theme.css).",
+       "props": [
+        {
+         "name": "animated",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "ReactNode",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "MotionImpl",
+       "doc": "The Motion chunk's module: what `useMotion` returns when a component animates.",
+       "fields": [
+        {
+         "name": "NoticeCard",
+         "type": "({ y, enter, still, leaving, beyond, ...props }: Omit<HTMLMotionProps<\"div\">, \"initial\" | \"animate\" | \"exit\" | \"transition\"> & { y: number; enter: boolean; still?: boolean; leaving: NoticeLeaving; be…",
+         "required": true,
+         "doc": "A notice of the column: the same `<div>` as without animations, moved by Motion to its place (`y`). `enter` false for a notice that was already there at mount: it does not come in animated (INV-002). `still` while such a notice is being put in its place for the first time (its height and the others' are measured after it mounts): it is simply put there, it does not glide. `beyond` is the place above the last one, where a pushed-out notice goes."
+        },
+        {
+         "name": "Notices",
+         "type": "({ children }: { children: ReactNode; }) => React.JSX.Element",
+         "required": true,
+         "doc": "Motion's features for `NoticeCard`: the column is rendered by Ark's `Toaster`, so the provider goes around it."
+        },
+        {
+         "name": "Presence",
+         "type": "({ children, pop }: { children: ReactNode; pop?: boolean; }) => React.JSX.Element",
+         "required": true,
+         "doc": "The elements with an exit animation. `initial={false}`: what is already there at mount does not move (no animation on load). `reducedMotion=\"user\"`: a second defense besides `useMotion`."
+        },
+        {
+         "name": "ListItem",
+         "type": "({ ref, enter, className, children }: { ref?: React.Ref<HTMLLIElement>; enter: boolean; className?: string; children: (leaving: boolean) => ReactNode; }) => React.JSX.Element",
+         "required": true,
+         "doc": "An item of an animated list, direct child of `Presence pop` (it passes the `ref` on: `popLayout` measures it). `enter` false for what was already there or arrived with the first load: it does not come in animated (INV-002). While it leaves it is `inert` and `children` is told so."
+        },
+        {
+         "name": "Leaving",
+         "type": "({ children }: { children: (leaving: boolean) => ReactNode; }) => React.JSX.Element",
+         "required": true,
+         "doc": "Tells whether the child of `Presence` it sits in is leaving. A removed notice or item stays in the DOM for the duration of the exit (100-200 ms) with the handlers of the last render: whoever uses it must make the element inert (`inert`) and not let clicks through, otherwise a double click on «Cancel» or «Sort» would act twice."
+        },
+        {
+         "name": "popCheck",
+         "type": "(el: Element) => void",
+         "required": true,
+         "doc": "The mark of a Checkbox just checked: stamped once, growing from half its size as it fades in."
+        },
+        {
+         "name": "enterSheet",
+         "type": "(el: Element, side?: \"left\" | \"right\" | \"top\" | \"bottom\") => void",
+         "required": true,
+         "doc": "The panel enters from its own edge. Its swipe transform remains under the finger."
+        },
+        {
+         "name": "enterDialog",
+         "type": "(el: Element) => void",
+         "required": true
+        },
+        {
+         "name": "enterPopup",
+         "type": "(el: Element, anchor?: Element | null) => void",
+         "required": true,
+         "doc": "The card of a menu or popover opening: it fades in, coming a few pixels from the side of its button. `anchor` is that button, for a caller whose positioning library does not tell the side in time: the side is then measured."
+        },
+        {
+         "name": "landCard",
+         "type": "(el: Element) => void",
+         "required": true,
+         "doc": "The card just placed in a column of the board: it comes down a little into its place, only once."
+        },
+        {
+         "name": "pressable",
+         "type": "(el: HTMLElement, { hoverScale, tapScale }?: { hoverScale?: number; tapScale?: number; }) => () => void",
+         "required": true,
+         "doc": "Press feedback on the existing `<button>`: the scale of `tapScale` while pressed (`MOTION.press`), back when released (`MOTION.release`); the scale of `hoverScale` under the pointer, when an app asks for one. With the default hover nothing listens to the pointer and nothing is written on the element until it is pressed. Returns the cleanup, which also stops a movement still running. A disabled button does not move."
+        },
+        {
+         "name": "enterTooltip",
+         "type": "(el: Element, anchor?: Element | null) => void",
+         "required": true,
+         "doc": "A hint appearing: it fades in a few pixels from its button, quickly, so it never trails the pointer."
+        },
+        {
+         "name": "Highlight",
+         "type": "({ id, className }: { id: string; className?: string; }) => React.JSX.Element",
+         "required": true,
+         "doc": "The pill under the chosen item of a group. Rendered inside the chosen item only; when the choice changes Motion carries it from the old item to the new one (`layoutId`). On mount it is simply there."
+        },
+        {
+         "name": "Turn",
+         "type": "({ open, children }: { open: boolean; children: ReactNode; }) => React.JSX.Element",
+         "required": true,
+         "doc": "One arrow that turns a quarter when its group opens."
+        },
+        {
+         "name": "HoverHighlight",
+         "type": "({ container, selector, className }: { container: HTMLElement | null; selector: string; className?: string; }) => React.JSX.Element",
+         "required": true,
+         "doc": "One hover background for the whole container: it appears at once on the first row, glides with the mouse from row to row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size of the new row at once, and is carried there from where and how large it was seen (a translation from the container's corner, a scale from its own). So it also glides between rows of different heights, without animating a size. The rows are found by `selector` (delegation: no handler per row); `container` must be positioned. Mouse only: a finger has no hover. It never takes the pointer from the rows under it."
+        },
+        {
+         "name": "m",
+         "type": "(<Props, TagName extends keyof DOMMotionComponents | string = \"div\">(Component: TagName | string | React.ComponentType<Props>, { forwardMotionProps, type }?: MotionComponentOptions, preloadedFeatures…",
+         "required": true
+        },
+        {
+         "name": "FLUENT_DURATIONS",
+         "type": "{ readonly faster: 100; readonly fast: 150; readonly normal: 200; }",
+         "required": true,
+         "doc": "Fluent 2's duration tokens, in milliseconds (`@fluentui/tokens`, `durationFaster`, `durationFast`, `durationNormal`): the ones under 250 ms that the toolkit uses. The values are Fluent's, unchanged."
+        },
+        {
+         "name": "FLUENT_CURVES",
+         "type": "{ readonly decelerateMid: readonly [0, 0, 0, 1]; readonly accelerateMin: readonly [0.8, 0, 0.78, 1]; readonly easyEase: readonly [0.33, 0, 0.67, 1]; }",
+         "required": true,
+         "doc": "Fluent 2's curve tokens, as the control points of a cubic Bézier (`@fluentui/tokens`, `curveDecelerateMid`, `curveAccelerateMid`, `curveEasyEase`): the ones the toolkit uses. The values are Fluent's, unchanged. None leaves 0..1: nothing overshoots."
+        },
+        {
+         "name": "DURATION_MS",
+         "type": "{ readonly toast: 200; readonly mark: 100; readonly sheet: 200; readonly row: 200; readonly popup: 150; readonly land: 150; }",
+         "required": true,
+         "doc": "Durations in milliseconds of what enters or leaves once: all under 250 ms (test/animated.test.tsx). `toast` is how long a notice that leaves the column stays in the DOM (Ark's `removeDelay`): longer than its exit (`GESTURE_MS.leave`)."
+        },
+        {
+         "name": "GESTURE_MS",
+         "type": "{ readonly press: 100; readonly release: 150; readonly tooltip: 100; readonly follow: 100; readonly leave: 100; readonly turn: 150; readonly slide: 150; readonly enter: 200; readonly list: 200; }",
+         "required": true,
+         "doc": "Durations in milliseconds of the gestures below; with `DURATION_MS`, all under 250 ms (test/animated.test.tsx)."
+        },
+        {
+         "name": "MOTION",
+         "type": "{ readonly enter: { readonly duration: number; readonly ease: readonly [0, 0, 0, 1]; }; readonly list: { readonly duration: number; readonly ease: readonly [0.33, 0, 0.67, 1]; }; readonly leave: { re…",
+         "required": true,
+         "doc": "The transitions of the toolkit's motion, one per kind of movement: what enters decelerates, what leaves accelerates, what moves in place eases at both ends."
+        },
+        {
+         "name": "TRAVEL_PX",
+         "type": "{ readonly hint: 4; readonly card: 8; readonly row: 8; readonly notice: 24; readonly sheet: 32; }",
+         "required": true,
+         "doc": "How far a thing travels as it enters, in pixels on the 4px grid: the larger the surface, the longer the way, and always a small part of its own size (it settles into place, it does not cross the screen)."
+        },
+        {
+         "name": "NOTICES",
+         "type": "{ readonly enter: { readonly opacity: 0; readonly y: 24; }; readonly close: { readonly opacity: 0; readonly y: 8; }; readonly pushed: { readonly opacity: 0; readonly y: number; }; readonly entering: …",
+         "required": true,
+         "doc": "The column of notices (`Toasts`): where a notice starts when it arrives and where it goes when it leaves. - `enter`: it rises from just below the column, fading in (`MOTION.enter`); - `close`: closed by the user or by its time, it sinks a little from where it stands and fades (`y` is added); - `pushed`: pushed out from the top by a newer notice, it goes up one more place and a little further, fading (`y` is added to that place). Both leave with `MOTION.leave`; - `transition`: the ones that stay move up one place or close the gap a notice left (`MOTION.list`). A notice keeps its size all the way: its text stays sharp and the column keeps its edge."
+        },
+        {
+         "name": "LIST_ITEM",
+         "type": "{ readonly initial: { readonly opacity: 0; readonly y: number; }; readonly animate: { readonly opacity: 1; readonly y: 0; }; readonly exit: { readonly opacity: 0; readonly transition: { readonly dura…",
+         "required": true,
+         "doc": "An item of an animated list (an app's list of entries, the new one on top): it comes down a few pixels into its place and fades in (`MOTION.enter`), while the others make room (`layout`, with `MOTION.list`). Leaving, it only fades, in the short time (`MOTION.leave`): it stands still and is gone before the others have closed up over its place."
+        },
+        {
+         "name": "CARD_DURATION_MS",
+         "type": "150",
+         "required": true,
+         "doc": "Duration of the entrance of the card of a menu or popover, in milliseconds (under 250)."
+        },
+        {
+         "name": "ROW_EXIT",
+         "type": "{ readonly initial: false; readonly exit: { readonly opacity: 0; readonly height: 0; readonly paddingTop: 0; readonly paddingBottom: 0; readonly marginTop: 0; readonly marginBottom: 0; }; readonly tr…",
+         "required": true,
+         "doc": "A row (or a card) leaving the list, usually because it was completed: the row may have already dimmed on click (the app's row decides), here it fades and closes up in height, so the rows below rise without a jolt. No entrance: a new row appears still. The height is animated without `layout` (see above): the one motion outside transform and opacity. The row itself leaves (it fades accelerating, in the short time); the room it took closes up as a movement in place."
+        },
+        {
+         "name": "PRESS_SCALE",
+         "type": "{ readonly hover: 1; readonly tap: 0.96; }",
+         "required": true,
+         "doc": "A button goes down a little while pressed and comes back: 0.96 is about a pixel on each side of a 40px control, enough to be seen and too little to look like a bounce. Under the pointer it stays still by default (1), as desktop buttons do, in rows where many sit side by side. An app may ask for a hover scale."
+        }
+       ]
+      }
+     ],
      "also": [
       "loadMotion",
-      "MotionImpl",
-      "MotionProvider",
       "preloadMotion",
       "useMotion"
      ]
     },
     {
      "file": "src/internal/overlay.ts",
-     "about": "",
+     "about": "True for a press on the bar of a window (`TitleBar`). In a desktop frame the overlays open under the bar, so a\npress on it is outside them: but the user is moving or minimizing the window, not leaving the dialog.",
      "also": [
       "BACKDROP",
       "BOTTOM_BAR_ROOM_VAR",
@@ -3840,7 +4889,7 @@
     },
     {
      "file": "src/internal/thumbnail.tsx",
-     "about": "",
+     "about": "The only sources a thumbnail accepts: a JPEG or PNG image in base64, whole in the string. No `javascript:`,\n`data:text/html`, `data:image/svg+xml` (it can carry script), `http:` or `blob:`: the thumbnail comes from the app as\na data URL and no other value must ever reach `src`.",
      "components": [
       {
        "name": "NeedThumbnail",
@@ -3913,21 +4962,214 @@
     {
      "file": "src/palette.ts",
      "about": "Palettes from one base colour (owner, 2026-11-20: \"selezionando un colore di base deve in automatico creare una\npalette complementare + accento, e far scegliere solo tra 3 combinazioni\"). Material Color Utilities finds the hues\nthat go with the colour (its complement by temperature, its tertiary); the theme engine then builds the theme from\nthem, so every contrast threshold holds as for the catalogue's themes. Two mood colours set the theme, the accent\nmakes it the user's.",
+     "types": [
+      {
+       "name": "PalettePick",
+       "doc": "The user's palette: one base colour (`#rrggbb`) and how the rest follows from it.",
+       "fields": [
+        {
+         "name": "seed",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "combo",
+         "type": "\"soft\" | \"clean\" | \"bold\"",
+         "required": true
+        }
+       ]
+      }
+     ],
      "also": [
       "PALETTE_COMBOS",
       "PaletteCombo",
       "palettePick",
-      "PalettePick",
       "paletteTheme"
      ]
     },
     {
      "file": "src/theme-catalog.ts",
      "about": "The shape of a theme definition, and the fonts. The toolkit ships no themes: each app passes its own definitions\nand the engine (theme-engine.ts) derives every colour from them, guaranteeing the contrast\nthresholds. Four things make a theme: the tint of the grays (`hue`) and how strong it is (`chroma`), the accent\n(saturation and hue) and the sidebar: `tenue` (light, the tone of the app's ground), `scura` (a near-black, almost\nneutral column in both schemes) or `piena` (in the theme's colour, with the selected item solid). Optional: a strong\n`fill`, a `second` colour for the selection, or a curated palette's own `surfaces`.",
+     "types": [
+      {
+       "name": "FontDef",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "stack",
+         "type": "string",
+         "required": true,
+         "doc": "The `font-family` stack: the font, then Inter (always in the app) and the system fallback."
+        }
+       ]
+      },
+      {
+       "name": "Surfaces",
+       "fields": [
+        {
+         "name": "paper",
+         "type": "string",
+         "required": true,
+         "doc": "The page."
+        },
+        {
+         "name": "sidebar",
+         "type": "string",
+         "required": true,
+         "doc": "The sidebar and the lanes, a step away from the page."
+        },
+        {
+         "name": "raised",
+         "type": "string",
+         "required": true,
+         "doc": "The raised sheets (\"Now\", panels, menus)."
+        },
+        {
+         "name": "line",
+         "type": "string",
+         "required": true,
+         "doc": "The dividers."
+        },
+        {
+         "name": "ink",
+         "type": "string",
+         "required": true,
+         "doc": "The strongest text."
+        },
+        {
+         "name": "accent",
+         "type": "string",
+         "required": true,
+         "doc": "The accent as text."
+        },
+        {
+         "name": "fill",
+         "type": "string",
+         "required": true,
+         "doc": "The filled button, \"today\", the bars."
+        }
+       ]
+      },
+      {
+       "name": "ThemeDef",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "hue",
+         "type": "number",
+         "required": true,
+         "doc": "OKLCH hue of the grays (page, lines, ink)."
+        },
+        {
+         "name": "chroma",
+         "type": "number",
+         "required": true,
+         "doc": "OKLCH chroma of the grays: almost zero, just a tint."
+        },
+        {
+         "name": "accent",
+         "type": "readonly [number, number]",
+         "required": true,
+         "doc": "The accent: OKLCH saturation and hue. Zero saturation (\"Ink\"): the accent is the ink itself."
+        },
+        {
+         "name": "sidebar",
+         "type": "SidebarKind",
+         "required": true
+        },
+        {
+         "name": "palette",
+         "type": "PaletteProfile",
+         "required": true
+        },
+        {
+         "name": "shape",
+         "type": "ThemeShape",
+         "doc": "How round the corners are. Absent: `soft` (4/6/10px). A value that is not a shape counts as absent."
+        },
+        {
+         "name": "radii",
+         "type": "ThemeRadii",
+         "doc": "The corner radii in px, for an app whose corners are none of the three shapes (for example 4/6/8/12): `sm`, `md`, `lg` and `xl` go to `--radius-sm`, `-md`, `-lg` and `-xl`; `button` and `chip` default to `md`. Absent, or not whole numbers (0 to 64; `button` and `chip` to 9999, a pill): the radii of `shape`."
+        },
+        {
+         "name": "fill",
+         "type": "readonly [number, number]",
+         "doc": "A strong accent: the OKLCH lightness and chroma of the fill (the hue is the accent's). Without it the fill is the accent as text in light, and a deeper tone of it in dark. The engine still guarantees the label and the 3:1."
+        },
+        {
+         "name": "second",
+         "type": "readonly [number, number]",
+         "doc": "A second color (OKLCH chroma and hue) for the selected item, when it is not the accent's: the page and the selection are one calm color, the filled button another that stands out (\"teal to focus, orange to act\")."
+        },
+        {
+         "name": "spot",
+         "type": "string",
+         "doc": "The spot color (`#rrggbb`): a second, louder color for the few things that ask for attention now (what is due, what is running), never for structure. Without it the spot tokens are the theme's own fill and accent."
+        },
+        {
+         "name": "surfaces",
+         "type": "{ readonly light: Surfaces; readonly dark: Surfaces; }",
+         "doc": "A curated palette: the theme's own surfaces, ink and accents in each scheme, as `#rrggbb`, instead of the common lightness ladder. The engine still corrects text, accents and borders until they hold the contrast thresholds."
+        }
+       ]
+      },
+      {
+       "name": "ThemeRadii",
+       "doc": "The corner radii of a theme in px (`ThemeDef.radii`).",
+       "fields": [
+        {
+         "name": "sm",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "md",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "lg",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "xl",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "button",
+         "type": "number"
+        },
+        {
+         "name": "chip",
+         "type": "number"
+        }
+       ]
+      }
+     ],
      "also": [
       "DEFAULT_FONT",
       "DEFAULT_SHAPE",
-      "FontDef",
       "FontId",
       "FONTS",
       "isThemeRadii",
@@ -3935,16 +5177,123 @@
       "PaletteProfile",
       "SHAPE_RADII",
       "SidebarKind",
-      "Surfaces",
       "THEME_SHAPES",
-      "ThemeDef",
-      "ThemeRadii",
       "ThemeShape"
      ]
     },
     {
      "file": "src/theme-engine.ts",
-     "about": "",
+     "about": "The theme engine: a theme from the catalog (theme-catalog.ts), in light or in dark, gives the values of all the `--color-*`\ntokens and of the shape variables. The starting lightness values are those of the approved sketch\n(design/bozzetti/lista-attivita.html, `coloriDi`), the same for every theme: that is why every theme reads the same. The colors\nare computed in OKLCH, brought back to sRGB by reducing chroma, and the contrast is guaranteed in the computation, on the final\nhex values: a color below the threshold is darkened on light backgrounds and lightened on dark ones until\nit gets there. Fixed, never from the theme: the destructive red, the ink of the icons on the user's colors.\nThe solid button (`primary`) is the accent as a fill: in light it coincides with the accent as text, in dark it is a\nsolid and deeper tone of the accent with light text, while the accent as text (`accent`) stays light.\nA theme with a strong accent (`fill` in the catalog) has a fill of its own, vivid, in both schemes: its label is the\nlight or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.",
+     "types": [
+      {
+       "name": "Oklch",
+       "fields": [
+        {
+         "name": "L",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "C",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "h",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "OwnTheme",
+       "doc": "The user's own theme: an accent, and how everything else follows from it. Each choice is a rule the engine applies (\"match the page to my color\") or a color that forces the result (a `#rrggbb`).",
+       "fields": [
+        {
+         "name": "accent",
+         "type": "string",
+         "required": true,
+         "doc": "The accent: the filled button, \"today\", the bars; its hue goes to the accent as text."
+        },
+        {
+         "name": "background",
+         "type": "string",
+         "doc": "The page and the sidebar: a rule, or a color that becomes the page. Default: the theme's."
+        },
+        {
+         "name": "tint",
+         "type": "\"soft\" | \"medium\" | \"strong\"",
+         "doc": "The strength of a derived tint (`match`, `complement`). Default: medium."
+        },
+        {
+         "name": "second",
+         "type": "string",
+         "doc": "The selected item: a rule, or a color. Default: the accent's."
+        },
+        {
+         "name": "sidebar",
+         "type": "\"light\" | \"dark\" | \"theme\"",
+         "doc": "The sidebar. Default: the theme's."
+        }
+       ]
+      },
+      {
+       "name": "ThemeTokens",
+       "fields": [
+        {
+         "name": "theme",
+         "type": "string",
+         "required": true,
+         "doc": "The id of the theme definition."
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "colors",
+         "type": "Readonly<Record<string, string>>",
+         "required": true,
+         "doc": "The color tokens, without `--color-`, as `#rrggbb`."
+        },
+        {
+         "name": "shape",
+         "type": "Readonly<Record<string, string>>",
+         "required": true,
+         "doc": "The shape variables, with their full name (`--radius-md`)."
+        },
+        {
+         "name": "attributes",
+         "type": "Readonly<Record<string, string>>",
+         "required": true,
+         "doc": "The root attributes that state the shape choices that are not numbers (`data-sidebar`, …)."
+        },
+        {
+         "name": "corrected",
+         "type": "readonly string[]",
+         "required": true,
+         "doc": "The roles that the computation had to move to reach the contrast."
+        }
+       ]
+      },
+      {
+       "name": "ThemeTone",
+       "doc": "The tone of the colors, on any theme: the same hues, more or less saturated and lighter or darker. It applies to the accent, the filled button, the selected item and the eighteen free colors; the page and the text stay as they are.",
+       "fields": [
+        {
+         "name": "intensity",
+         "type": "\"soft\" | \"theme\" | \"faded\" | \"bright\" | \"vivid\"",
+         "doc": "Absent: `DEFAULT_TONE_INTENSITY`. `theme` is a choice of its own: as the theme was designed."
+        },
+        {
+         "name": "light",
+         "type": "\"theme\" | \"lighter\" | \"darker\"",
+         "doc": "Absent: `DEFAULT_TONE_LIGHT`. `theme` is a choice of its own: as the theme was designed."
+        }
+       ]
+      }
+     ],
      "also": [
       "contrast",
       "DEFAULT_TONE_INTENSITY",
@@ -3953,21 +5302,17 @@
       "FIXED",
       "isAccentColor",
       "luminance",
-      "Oklch",
       "over",
       "OWN_BACKGROUNDS",
       "OWN_SECONDS",
       "OWN_SIDEBARS",
       "OWN_TINTS",
       "ownTheme",
-      "OwnTheme",
       "presetTone",
       "STATUS",
       "ThemeScheme",
       "themeTokens",
-      "ThemeTokens",
       "themeTone",
-      "ThemeTone",
       "toHex",
       "tokensFor",
       "TONE_INTENSITIES",
@@ -3979,7 +5324,40 @@
     },
     {
      "file": "src/themes.ts",
-     "about": "",
+     "about": "The theme and the font on an element: how a choice (a theme definition in a scheme, with its own colours, a tone or a\npalette; a font) becomes CSS variables and attributes. Parametric: the app passes its own theme definitions. The\nblocks of `styles/theme.css` carry `BASE_THEME` for the first paint, before the script sets the\nchoice (`test/first-paint.test.ts` keeps them equal to the computation); an app paints its own default over them.",
+     "types": [
+      {
+       "name": "ThemePick",
+       "doc": "A theme in one of the two schemes: what is seen.",
+       "fields": [
+        {
+         "name": "theme",
+         "type": "ThemeDef",
+         "required": true
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true
+        },
+        {
+         "name": "own",
+         "type": "OwnTheme | null",
+         "doc": "The user's own theme on top of this one (an accent, and how the rest follows); absent or null, the theme as it is."
+        },
+        {
+         "name": "tone",
+         "type": "ThemeTone | null",
+         "doc": "The tone of the colors (more or less saturated, lighter or darker); absent or null, as the theme was designed."
+        },
+        {
+         "name": "palette",
+         "type": "PalettePick | null",
+         "doc": "The user's palette from one base colour: when present it replaces the theme and its own colours."
+        }
+       ]
+      }
+     ],
      "also": [
       "applyFont",
       "applyTheme",
@@ -3990,7 +5368,6 @@
       "isFontId",
       "THEME_ATTRIBUTES",
       "THEME_VARIABLES",
-      "ThemePick",
       "themeVariables",
       "toneHasEffect"
      ]
@@ -4016,13 +5393,219 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "Words",
+       "fields": [
+        {
+         "name": "common",
+         "type": "{ readonly close: string; readonly undo: string; readonly notices: string; readonly error: string; readonly keysTogether: (keys: readonly string[]) => string; readonly keysInSequence: (keys: readonly…",
+         "required": true
+        },
+        {
+         "name": "colors",
+         "type": "{ readonly group: string; readonly names: Readonly<Record<string, string>>; readonly numbered: (position: number) => string; }",
+         "required": true
+        },
+        {
+         "name": "date",
+         "type": "{ readonly noDate: string; readonly noDateTime: string; readonly noRange: string; readonly clear: string; readonly clearRange: string; readonly today: string; readonly tomorrow: string; readonly week…",
+         "required": true
+        },
+        {
+         "name": "duration",
+         "type": "{ readonly hours: string; readonly minutes: string; readonly none: string; readonly short: (hours: number, minutes: number) => string; }",
+         "required": true
+        },
+        {
+         "name": "sidebar",
+         "type": "{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; }",
+         "required": true
+        },
+        {
+         "name": "search",
+         "type": "{ readonly clear: string; }",
+         "required": true
+        },
+        {
+         "name": "list",
+         "type": "{ readonly unread: string; }",
+         "required": true
+        },
+        {
+         "name": "palette",
+         "type": "{ readonly placeholder: string; readonly empty: string; }",
+         "required": true
+        },
+        {
+         "name": "steps",
+         "type": "{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly summary: (position: number, total: number) => string; }",
+         "required": true,
+         "doc": "What a step of `Steps` is, read after its name."
+        },
+        {
+         "name": "progress",
+         "type": "{ readonly value: (value: number, max: number) => string; readonly indeterminate: string; readonly complete: string; readonly error: string; }",
+         "required": true,
+         "doc": "What a `Progress` says about itself: its value, and what became of the task."
+        },
+        {
+         "name": "shell",
+         "type": "{ readonly skip: string; }",
+         "required": true
+        },
+        {
+         "name": "window",
+         "type": "{ readonly minimize: string; readonly maximize: string; readonly restore: string; readonly close: string; }",
+         "required": true,
+         "doc": "The names of the buttons of a window (`WindowControls`)."
+        },
+        {
+         "name": "combobox",
+         "type": "{ readonly empty: string; readonly trigger: string; }",
+         "required": true
+        },
+        {
+         "name": "labels",
+         "type": "{ readonly remove: (label: string) => string; readonly added: (label: string) => string; readonly pasted: (count: number) => string; readonly removed: (label: string) => string; readonly selected: (l…",
+         "required": true
+        },
+        {
+         "name": "kinds",
+         "type": "{ readonly text: string; readonly file: string; readonly email: string; readonly link: string; }",
+         "required": true
+        },
+        {
+         "name": "attachments",
+         "type": "{ readonly heading: string; readonly count: (count: number) => string; readonly open: string; readonly openNamed: (title: string) => string; readonly remove: string; readonly removeNamed: (title: str…",
+         "required": true
+        },
+        {
+         "name": "viewer",
+         "type": "{ readonly zoom: string; readonly zoomOut: string; readonly zoomIn: string; readonly pages: string; readonly page: (page: number, total: number) => string; readonly openOriginal: string; }",
+         "required": true
+        },
+        {
+         "name": "table",
+         "type": "{ readonly sortBy: (column: string) => string; readonly empty: string; }",
+         "required": true
+        },
+        {
+         "name": "reorder",
+         "type": "{ readonly handle: (item: string) => string; readonly role: string; readonly instructions: string; readonly taken: (item: string, position: number, total: number) => string; readonly moved: (item: st…",
+         "required": true
+        },
+        {
+         "name": "richText",
+         "type": "{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; readonly und…",
+         "required": true
+        },
+        {
+         "name": "checklist",
+         "type": "{ readonly done: string; readonly todo: string; }",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WordsOverride",
+       "doc": "Some of the words, group by group: what is left out stays as it is.",
+       "fields": [
+        {
+         "name": "common",
+         "type": "Partial<{ readonly close: string; readonly undo: string; readonly notices: string; readonly error: string; readonly keysTogether: (keys: readonly string[]) => string; readonly keysInSequence: (keys: …"
+        },
+        {
+         "name": "colors",
+         "type": "Partial<{ readonly group: string; readonly names: Readonly<Record<string, string>>; readonly numbered: (position: number) => string; }>"
+        },
+        {
+         "name": "date",
+         "type": "Partial<{ readonly noDate: string; readonly noDateTime: string; readonly noRange: string; readonly clear: string; readonly clearRange: string; readonly today: string; readonly tomorrow: string; reado…"
+        },
+        {
+         "name": "duration",
+         "type": "Partial<{ readonly hours: string; readonly minutes: string; readonly none: string; readonly short: (hours: number, minutes: number) => string; }>"
+        },
+        {
+         "name": "sidebar",
+         "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; }>"
+        },
+        {
+         "name": "search",
+         "type": "Partial<{ readonly clear: string; }>"
+        },
+        {
+         "name": "list",
+         "type": "Partial<{ readonly unread: string; }>"
+        },
+        {
+         "name": "palette",
+         "type": "Partial<{ readonly placeholder: string; readonly empty: string; }>"
+        },
+        {
+         "name": "steps",
+         "type": "Partial<{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly summary: (position: number, total: number) => string; }>",
+         "doc": "What a step of `Steps` is, read after its name."
+        },
+        {
+         "name": "progress",
+         "type": "Partial<{ readonly value: (value: number, max: number) => string; readonly indeterminate: string; readonly complete: string; readonly error: string; }>",
+         "doc": "What a `Progress` says about itself: its value, and what became of the task."
+        },
+        {
+         "name": "shell",
+         "type": "Partial<{ readonly skip: string; }>"
+        },
+        {
+         "name": "window",
+         "type": "Partial<{ readonly minimize: string; readonly maximize: string; readonly restore: string; readonly close: string; }>",
+         "doc": "The names of the buttons of a window (`WindowControls`)."
+        },
+        {
+         "name": "combobox",
+         "type": "Partial<{ readonly empty: string; readonly trigger: string; }>"
+        },
+        {
+         "name": "labels",
+         "type": "Partial<{ readonly remove: (label: string) => string; readonly added: (label: string) => string; readonly pasted: (count: number) => string; readonly removed: (label: string) => string; readonly sele…"
+        },
+        {
+         "name": "kinds",
+         "type": "Partial<{ readonly text: string; readonly file: string; readonly email: string; readonly link: string; }>"
+        },
+        {
+         "name": "attachments",
+         "type": "Partial<{ readonly heading: string; readonly count: (count: number) => string; readonly open: string; readonly openNamed: (title: string) => string; readonly remove: string; readonly removeNamed: (ti…"
+        },
+        {
+         "name": "viewer",
+         "type": "Partial<{ readonly zoom: string; readonly zoomOut: string; readonly zoomIn: string; readonly pages: string; readonly page: (page: number, total: number) => string; readonly openOriginal: string; }>"
+        },
+        {
+         "name": "table",
+         "type": "Partial<{ readonly sortBy: (column: string) => string; readonly empty: string; }>"
+        },
+        {
+         "name": "reorder",
+         "type": "Partial<{ readonly handle: (item: string) => string; readonly role: string; readonly instructions: string; readonly taken: (item: string, position: number, total: number) => string; readonly moved: (…"
+        },
+        {
+         "name": "richText",
+         "type": "Partial<{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; read…"
+        },
+        {
+         "name": "checklist",
+         "type": "Partial<{ readonly done: string; readonly todo: string; }>"
+        }
+       ]
+      }
+     ],
      "also": [
       "CalendarSpan",
       "DEFAULT_WORDS",
       "useWords",
-      "withWords",
-      "Words",
-      "WordsOverride"
+      "withWords"
      ]
     }
    ],
@@ -4105,9 +5688,63 @@
        ]
       }
      ],
+     "types": [
+      {
+       "name": "DataColumn",
+       "parameters": [
+        "Row"
+       ],
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "header",
+         "type": "string",
+         "required": true,
+         "doc": "The heading of the column."
+        },
+        {
+         "name": "cell",
+         "type": "(row: Row) => React.ReactNode",
+         "required": true,
+         "doc": "What a cell of the column shows."
+        },
+        {
+         "name": "sortValue",
+         "type": "((row: Row) => string | number | Date | null | undefined)",
+         "doc": "The value the column sorts by: a text, a number, a date. Without it the column does not sort."
+        },
+        {
+         "name": "align",
+         "type": "TableCellAlign",
+         "doc": "`end`: a column of numbers, set at the end in tabular figures."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes for the heading and the cells of the column: its width (`w-24`), no wrapping."
+        }
+       ]
+      },
+      {
+       "name": "DataSort",
+       "doc": "The column the rows are sorted by, and the direction. Null: as they were given.",
+       "fields": [
+        {
+         "name": "column",
+         "type": "string"
+        },
+        {
+         "name": "descending",
+         "type": "boolean"
+        }
+       ]
+      }
+     ],
      "also": [
-      "DataColumn",
-      "DataSort",
       "DataTableProps",
       "nextSort"
      ]

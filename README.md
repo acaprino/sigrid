@@ -332,12 +332,15 @@ comes with the package, at the version the app has installed, and most of it is 
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
   `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor.
+  The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
-- `sigrid-check`: the design check, as a command of the package. In an app, `npx sigrid-check` checks `./src`
-  against `DESIGN.md` (colours and sizes written by hand, palette classes, fonts, gradients, blur, emoji) and exits
-  with 1 when it finds something, so an agent can run it and correct itself. An app keeps its own choices in a
-  `sigrid-check.config.json`. It reads files and builds nothing.
+- `sigrid-check`: the design check, as a command of the package. In an app, `npx --no sigrid-check` checks `./src`
+  against `DESIGN.md` and exits with 1 when it finds something, so an agent can run it and correct itself. It finds
+  values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
+  `backdrop-blur`, emoji, fonts in CSS); it does not see named classes off the scale, inline styles, or anything of
+  the layout: `AGENTS.md` lists what is left to read and to look at. An app keeps its own choices in a
+  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing.
 - A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
   check after:
 
@@ -356,7 +359,7 @@ comes with the package, at the version the app has installed, and most of it is 
   ```
 
 Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does the same: «For any interface work read
-`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx sigrid-check` after».
+`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx --no sigrid-check` after».
 
 ## Use a release
 
