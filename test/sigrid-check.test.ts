@@ -56,7 +56,41 @@ test('with a reason a line is excepted, above it or on it; without one it is not
   write('src/B.tsx', `// design-check-ignore-next-line own-class\n${classed}`)
   const run = check()
   expect(run.status).toBe(1)
-  expect(run.stdout).toMatch(/exception-reason|own-class/)
+  // Both: the exception without its reason, and the class it did not except.
+  expect(run.stdout).toMatch(/exception-reason/)
+  expect(run.stdout).toMatch(/B\.tsx:2:\d+ error own-class/)
+})
+
+test('a class given by a prop, an object or setAttribute is found; a comparison, a data attribute and the words of an exception are not', () => {
+  on()
+  write(
+    'src/D.tsx',
+    [
+      'export const D = () => <Empty title="t" titleClassName="x" />',
+      "export const props = { className: 'x' }",
+      "export const set = (el: Element) => el.setAttribute('class', 'x')",
+      "export const same = (el: Element) => el.className === 'x'",
+      'export const E = () => <div data-class="x">E</div>',
+      '// design-check-ignore-next-line own-class: the widget sets className= on its own root',
+      'export const F = () => <Widget className="w" />',
+      '',
+    ].join('\n'),
+  )
+  const run = check()
+  expect(run.stdout).toMatch(/D\.tsx:1:\d+ error own-class "titleClassName="/)
+  expect(run.stdout).toMatch(/D\.tsx:2:\d+ error own-class "className:"/)
+  expect(run.stdout).toMatch(/D\.tsx:3:\d+ error own-class/)
+  expect(run.stdout).not.toMatch(/D\.tsx:[4-7]:/)
+  expect(run.stdout).toMatch(/3 errors/)
+})
+
+test('every stylesheet is found, a .scss too; one that says why it stays is passed over', () => {
+  on()
+  write('src/a.scss', '.a { gap: var(--spacing); }\n')
+  write('src/entry.css', '/* design-check-ignore own-class: the entry of the fonts, kept by the host */\n@import "x.css";\n')
+  const run = check()
+  expect(run.stdout).toMatch(/a\.scss:1:1 error own-class/)
+  expect(run.stdout).not.toMatch(/entry\.css/)
 })
 
 test('as a warning it still fails the run, and the JSON report counts it', () => {

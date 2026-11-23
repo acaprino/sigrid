@@ -99,8 +99,9 @@ reads: `// design-check-ignore-next-line color-value: an invoice number, not a c
 `sigrid-check.config.json` in the same folder; its `rules` are laid over the toolkit's.
 
 One rule is the app's to turn on: with `{ "rules": { "own-class": "error" } }` in `sigrid-check.config.json` the check
-also reports every class written by hand (`className=`, `class=`, `classList.add(`) and every stylesheet of the app,
-for an app that has no interface code of its own. It is off by default.
+also reports every class written by hand (`className=`, `class=`, a `…ClassName` prop, `classList.add(`,
+`setAttribute('class'`) and every stylesheet of the app, for an app that has no interface code of its own. It is off
+by default. A stylesheet the app must keep says so with `/* design-check-ignore own-class: <reason> */`.
 
 ## Work on the toolkit itself
 

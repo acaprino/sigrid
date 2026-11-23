@@ -13,8 +13,8 @@
 // toolkit's `design-check.config.json`: `root` (the folder checked, when none is named), `ignore`, `extensions`,
 // `known`, and `rules`, which are laid over the toolkit's own, so a file that names no rule changes none.
 // One rule is the app's to turn on: `own-class` ("rules": { "own-class": "error" }), for an app that writes no interface
-// code of its own and lays out with the toolkit's parts (`Column`, `Cluster`, `Split`, `Grid`, `Section`...). It finds a
-// class written by hand (`className=`, `class=`, `classList.add(`) and a stylesheet of the app's own. It is off by
+// code of its own and lays out with the toolkit's layout parts. It finds a class written by hand (`className=`, `class=`,
+// a `…ClassName` prop, `classList.add(`, `setAttribute('class'`) and a stylesheet of the app's own. It is off by
 // default: the owner's decision of 2026-11-23, until the toolkit has every part such an app needs.
 // A line that is right as it is says so above it: `// design-check-ignore-next-line color-value: the brand's own red`.
 // Exit code: 0 clean, 1 findings, 2 a wrong argument, or a folder or a file that is not there.
@@ -72,18 +72,23 @@ let run
 try {
   const file = join(made, 'config.json')
   writeFileSync(file, JSON.stringify(config))
-  run = spawnSync(process.execPath, [`${home}tools/zero-slop-design/zsd.mjs`, 'check-code', `${home}DESIGN.md`, '--config', file, '--strict', '--json'], { encoding: 'utf8' })
+  // The report lists every finding, the known ones too: room for a large one (the default is 1 MiB).
+  run = spawnSync(process.execPath, [`${home}tools/zero-slop-design/zsd.mjs`, 'check-code', `${home}DESIGN.md`, '--config', file, '--strict', '--json'], { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 })
 } finally {
   rmSync(made, { recursive: true, force: true })
 }
+if (run.error) stop(`zero-slop-design did not run: ${run.error.message}`)
 if (run.stderr) process.stderr.write(run.stderr)
-let report
+let report = null
 try {
   report = JSON.parse(run.stdout)
 } catch {
+  report = null
+}
+if (!report || !Array.isArray(report.findings)) {
   // Not a report (a file it could not read, a design it could not parse): what it said is the answer.
   process.stdout.write(run.stdout ?? '')
-  process.exit(run.status ?? 2)
+  process.exit(run.status || 2)
 }
 
 if (ownClass !== 'off') {
@@ -102,18 +107,23 @@ else {
   for (const item of report.fixedKnown) process.stdout.write(`note: known defect no longer found: ${item.key}\n`)
   process.stdout.write(`Not checked: ${report.coverage.notChecked.join('; ')}\n`)
 }
-process.exit(report.errors > 0 || report.warnings > 0 ? 1 : 0)
+// Not `process.exit`: a long report written to a pipe is let out whole before the command ends.
+process.exitCode = report.errors > 0 || report.warnings > 0 ? 1 : 0
 
 /**
- * The classes and stylesheets an app wrote: every `className=`, `class=` and `classList.add|toggle|replace(` in its
- * sources, and every stylesheet among them. The files are the ones zero-slop-design reads (the same extensions, the
- * same folders left out, the same `ignore`); a line excepted with `design-check-ignore(-next-line) own-class: <reason>`
- * is passed over (an exception with no reason is reported by zero-slop-design as `exception-reason`).
+ * The classes and stylesheets an app wrote: a class given to an element or a component (`className=`, `class=`,
+ * `titleClassName=`, `className:` in an object, `classList.add|toggle|replace(`, `setAttribute('class'`) in its sources,
+ * and every stylesheet (`.css`, `.scss`, `.sass`, `.less`). The folders left out and the `ignore` globs are
+ * zero-slop-design's (a copy of its walk: keep them in step when the tool is copied again). A line excepted with
+ * `design-check-ignore(-next-line) own-class: <reason>` is passed over, and a stylesheet that holds that comment is too
+ * (an exception with no reason is reported by zero-slop-design as `exception-reason`). The `known` list does not hold
+ * this rule's findings.
  */
 function ownClassFindings(folder, settings, severity) {
   const skip = new Set(['node_modules', '.git', '.next', '.nuxt', '.svelte-kit', '.turbo', '.vercel', 'dist', 'build', 'out', 'coverage', 'vendor', ...(settings.ignoreDirectories ?? [])])
   const ignored = (settings.ignore ?? []).map((glob) => new RegExp(`^${glob.split('**').map((part) => part.split('*').map((piece) => piece.replace(/[.+^${}()|[\]\\?]/g, '\\$&')).join('[^/]*')).join('.*')}$`))
-  const extensions = new Set(settings.extensions)
+  const STYLESHEET = new Set(['.css', '.scss', '.sass', '.less'])
+  const extensions = new Set([...settings.extensions, ...STYLESHEET])
   const files = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -126,22 +136,26 @@ function ownClassFindings(folder, settings, severity) {
     }
   }
   walk(folder)
-  const STYLESHEET = new Set(['.css', '.scss', '.sass', '.less'])
-  const CLASS = /\bclass(?:Name)?\s*=|\bclassList\.(?:add|toggle|replace)\s*\(/g
+  // A class given by an attribute, a prop (`titleClassName`), an object key or a default (not `===`, not `data-class`),
+  // by the class list, or by `setAttribute`.
+  const CLASS = /(?<![\w$-])(?:class|className|[a-z]\w*ClassName)\s*(?:=(?!=)|\+=|:(?!:))|\bclassList\.(?:add|toggle|replace)\s*\(|\bsetAttribute\(\s*['"]class['"]/g
   const EXCEPTION = new RegExp(`design-check-ignore(-next-line)?\\s+${OWN_CLASS}\\s*:\\s*\\S`)
-  const message = (what) => `${what}: an app that turned ${OWN_CLASS} on lays out with the toolkit's parts (Column, Cluster, Split, Grid, Section, Text) and writes no class or stylesheet of its own.`
+  const message = (what) => `${what}: an app that turned ${OWN_CLASS} on lays out with the toolkit's layout parts and writes no class or stylesheet of its own.`
   const out = []
   for (const file of files.sort()) {
+    const text = readFileSync(join(folder, file), 'utf8')
     if (STYLESHEET.has(extname(file))) {
-      out.push({ rule: OWN_CLASS, file, line: 1, column: 1, text: file, severity, message: message('A stylesheet of the app') })
+      if (!EXCEPTION.test(text)) out.push({ rule: OWN_CLASS, file, line: 1, column: 1, text: file, severity, message: message('A stylesheet of the app') })
       continue
     }
-    const lines = readFileSync(join(folder, file), 'utf8').split(/\r?\n/)
+    const lines = text.split(/\r?\n/)
     lines.forEach((line, index) => {
       const above = index > 0 ? lines[index - 1].match(EXCEPTION) : null
       const here = line.match(EXCEPTION)
       if ((above && above[1]) || (here && !here[1])) return
-      for (const m of line.matchAll(CLASS)) out.push({ rule: OWN_CLASS, file, line: index + 1, column: m.index + 1, text: m[0], severity, message: message('A class written by the app') })
+      // The words of an exception (its reason may name a class) are not code.
+      const code = line.replace(/design-check-ignore.*$/, '')
+      for (const m of code.matchAll(CLASS)) out.push({ rule: OWN_CLASS, file, line: index + 1, column: m.index + 1, text: m[0].trim(), severity, message: message('A class written by the app') })
     })
   }
   return out
