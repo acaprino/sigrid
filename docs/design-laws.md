@@ -59,7 +59,7 @@ people use. A later step never rescues an earlier one: a polished screen nobody 
 | 3 | Paradox of the active user: nobody reads the manual | `Empty` says what to do first and offers it; `FormField`'s `help` sits by its control; `Tooltip` names an icon | No tour before the first action |
 | 3 | Parkinson: a task fills the time it is given | `Input` passes `autocomplete` to the field | Sets `autocomplete` on every field the system can fill; says how long a long task takes |
 | 4 | Proximity | `FormField` (6px from a label to its control), `SidebarGroup` (2px between rows, 12px before a group), `Section`, the `gap` steps of `Column` and `Cluster` | Leaves between two groups at least twice the gap inside one |
-| 4 | Common region | `Panel`, the sheet, `ToolbarGroup`, a card | One region, one group. Never a region in a region in a region |
+| 4 | Common region | `Panel`, the sheet, `ToolbarGroup`, `Inspector` | One region, one group. Never a region in a region in a region |
 | 4 | Uniform connectedness | `Steps` joins its dots with a line filled up to the current one | Draws no line between unrelated things |
 | 4 | Similarity | One look per role: the `Button` variants, `link` underlined at rest like a link in a text, `destructive` for a delete only | Uses one variant for one role on a screen: `outline` for the second action, `ghost` for the third |
 | 5 | Von Restorff: the odd one is seen | One solid button per view (R3); the accent kept for it and for where the person is (R2) | Has exactly one solid action per view, a dialog over it included |
@@ -67,7 +67,7 @@ people use. A later step never rescues an earlier one: a polished screen nobody 
 | 6 | Goal gradient | `Steps`, `Progress`, `ProgressSegments`, `ProgressRing` | Shows how far along and what is left on every step; counts work already done |
 | 6 | Zeigarnik: the unfinished stays in mind | `Steps` keeps done, current and to come apart; `OverflowList` says «+2» | Saves as people go; opens where they stopped; takes a finished list away |
 | 6 | Peak-end | `Empty` as the end of a task: what happened, what is next, one action. `Toasts` with Undo for one action that can be taken back | Ends a task of several steps on its result, never on a notice alone. Fixes the worst moment first |
-| 7 | Aesthetic-usability | Every control has its hover, focus, pressed, disabled and busy states; no browser default reaches the screen | Judges steps 2 to 6 before the looks |
+| 7 | Aesthetic-usability | Every control has its hover, focus, pressed and disabled states, and a button its busy one (`loading`); no browser default reaches the screen | Judges steps 2 to 6 before the looks |
 
 ## Where the toolkit chooses otherwise
 
