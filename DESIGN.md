@@ -31,7 +31,7 @@ x-zsd:
       - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
       - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
       - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
-      - "Owner rules of 2026-11-20 (R1 to R10 in the body)."
+      - "Owner rules since 2026-11-20 (R1 to R14 below)."
       - "Owner revision of 2026-11-20, later the same day: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
       - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
