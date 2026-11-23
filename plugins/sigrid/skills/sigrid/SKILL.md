@@ -24,16 +24,18 @@ installed, say so and stop: do not write from memory.
 3. For a new screen, `docs/patterns.md` and one of `agents/examples/*.tsx`; for a phone, `docs/mobile.md`.
 4. `DESIGN.md` when a rule is in doubt (R1 to R14, tokens, each component's form).
 
-The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) say where its product components live and what it
-keeps to itself: they come first where they speak.
+The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) come first where they speak, but never for a look of
+its own: every app of the suite has Sigrid's look, and only its layout, accent and icon are its own (the first section
+of `AGENTS.md`).
 
 ## 3. Write
 
-- Start a screen from `AppShell` and its regions. Take controls from the toolkit, everything else from its tokens.
+- Start a screen from `AppShell` and its regions. Take every part from the toolkit, lay out with its layout
+  components, and write no class or stylesheet of your own.
 - Never guess a prop: if the catalogue does not have it, it does not exist. The object types a prop takes (a
   column, a notice, an option) are under `types` in the same file of the catalogue.
-- If the toolkit has no component for the job, say so, and build it in the app from the toolkit's parts. Do not add
-  another component library for it, and do not copy a toolkit component into the app.
+- If the toolkit has no component for the job, say so and stop: it is added to Sigrid, generic, and is not built in
+  the app. Do not add another component library for it, and do not copy a toolkit component into the app.
 
 ## 4. Check
 

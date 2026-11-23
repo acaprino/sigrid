@@ -72,6 +72,8 @@ test('shrunk to a rail a row shows its icon alone and keeps its name; headings, 
   render(<App />)
   const toggle = screen.getByRole('button', { name: 'Collapse the sidebar' })
   expect(toggle.getAttribute('aria-expanded')).toBe('true')
+  // An icon with a hint: no line of text in the column.
+  expect(toggle.textContent).toBe('')
   fireEvent.click(toggle)
   expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(true)
   // Still named, for screen readers; the count at the end is not shown.
