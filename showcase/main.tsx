@@ -39,6 +39,7 @@ import {
   SearchField,
   ItemList,
   ItemRow,
+  OverflowList,
   AppShell,
   CommandPalette,
   useCommandKey,
@@ -273,7 +274,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
   { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
-  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'reorder', 'graph'] },
+  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'reorder', 'graph'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -1394,6 +1395,43 @@ function Navigation() {
   )
 }
 
+/** The labels of a task, after its day and its repeat. */
+const TASK_LABELS = ['Kitchen', 'Calls', 'Errands', 'Waiting', 'Someday']
+
+function OverflowLists() {
+  const details = (
+    <OverflowList className="h-5 gap-x-2 text-xs text-ink-mute">
+      <span className="min-w-0 truncate text-accent">Today 09:00</span>
+      <span>Every Monday</span>
+      {TASK_LABELS.map((label) => (
+        <Badge key={label} variant="secondary">
+          {label}
+        </Badge>
+      ))}
+    </OverflowList>
+  )
+  const frame = (width: string, sample: string) => (
+    <div data-sample={sample} className={cn('max-w-full rounded-md border border-line p-2', width)}>
+      {details}
+    </div>
+  )
+  return (
+    <Section
+      id="overflow-list"
+      title="OverflowList"
+      note="One line of details that never grows: what does not fit is cut from the end, whole, and counted after the line. The first item always stays. A cut item takes no focus and is not read; the count is read («4 more»). The same items in three frames: drag the corner of the last one and the count follows the width."
+    >
+      <Row label="narrow">{frame('w-48', 'overflow-narrow')}</Row>
+      <Row label="wide">{frame('w-96', 'overflow-wide')}</Row>
+      <Row label="any width">
+        <div data-sample="overflow-resize" className="w-72 max-w-full min-w-24 resize-x overflow-hidden rounded-md border border-line p-2">
+          {details}
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 const PEOPLE = [
   { value: 'ada', label: 'Ada Lovelace', detail: 'ada@example.com' },
   { value: 'alan', label: 'Alan Turing', detail: 'alan@example.com' },
@@ -2404,6 +2442,7 @@ function App() {
       <Empties />
       <Tables />
       <LongLists />
+      <OverflowLists />
       <Reorders animated={animated} />
       <Graphs />
       <Files />

@@ -36,6 +36,7 @@ export { ItemList, ItemRow, type ItemListProps, type ItemRowProps } from './comp
 export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type ClusterProps, type ColumnProps, type GridProps, type LayoutAttributes, type LayoutElement, type PageProps, type ScrollAreaProps, type SectionProps, type Space, type SplitProps, type TextProps } from './components/ui/layout'
 export { Kbd, Shortcut, type KbdProps, type KbdSize, type ShortcutProps } from './components/ui/kbd'
 export { NavItem, NavList, type NavItemProps, type NavListProps } from './components/ui/nav-list'
+export { OverflowList, type OverflowListProps } from './components/ui/overflow-list'
 export { Popover, PopoverAnchor, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from './components/ui/popover'
 export { RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RadioGroupProps } from './components/ui/radio-group'
 export { SearchField, type SearchFieldProps } from './components/ui/search-field'

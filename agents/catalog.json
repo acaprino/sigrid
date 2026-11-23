@@ -2157,6 +2157,35 @@
      ]
     },
     {
+     "file": "src/components/ui/overflow-list.tsx",
+     "about": "One line of items (the details under a title, a row of labels) that never grows: what does not fit is cut from the\nend, whole, and counted after the line («+2»). It never wraps to a second line and the first item always stays.\nOther libraries call it an overflow list; this one is CSS and one `ResizeObserver`:\n- the box is a flex row that wraps, one row tall, with `overflow: clip`: what does not fit wraps onto a row that is\n  not shown. `clip` and not `hidden`: the box is no scroll container, so focus can never scroll the line.\n- the items that sit below the first one are the cut ones. They are counted when the items are drawn, again when the\n  box changes size, and again when the fonts are ready (a font that comes late changes the widths, not the box).\n- a cut item is `inert` and invisible: no focus, no press, and screen readers skip it, as the eye does. So the cue is\n  for both: «+2» to the eye, «2 more» to a screen reader (`words.list.more`). What is cut must also be found where\n  the whole item is (its page, its details).\nThe caller gives the box its height in `className`: one row of its items (`h-5` for labels 20px tall), with the gap\nand the text. Each child is one item: one element (a bare text is not counted: put it in a `<span>`). A first item\nwider than the line is cut at the line's end: give it `min-w-0 truncate` for an ellipsis.\nIts boxes are spans, so it also sits inside a button or a row's line. Without layout (jsdom, a server) nothing is\ncut, and nothing moves.",
+     "components": [
+      {
+       "name": "OverflowList",
+       "props": [
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The items, in their order: one element each. What does not fit is cut from the end."
+        },
+        {
+         "name": "className",
+         "type": "string",
+         "doc": "Classes of the box that holds the items: its height (one row of the items, `h-5`), the gap, the text."
+        },
+        {
+         "name": "cue",
+         "type": "((hidden: number) => React.ReactNode)",
+         "doc": "What stands after the line when items are cut, from how many they are. Default: «+2», read «2 more»."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "OverflowListProps"
+     ]
+    },
+    {
      "file": "src/components/ui/popover.tsx",
      "about": "SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/popover.json)\nPark UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)\nFrom Park's `popover` recipe comes the form: l3 corners, the lg elevation in place of a border, 16px of padding, 320px\nwide (Park's `xs`), the title 16px medium.\nFrom SmoothUI we keep the primitive (Base UI's `Popover`: Root, Trigger, Portal, Positioner, Popup), the structure of\n`PopoverContent` (Portal + Positioner + Popup) and the classes of the card. The parts stay as before\n(`Popover`, `PopoverTrigger` with `asChild`, `PopoverContent` with `align`/`side`/`sideOffset`, `PopoverAnchor`,\n`PopoverHeader`/`Title`/`Description`), not SmoothUI's `trigger`/`children` API, so whoever uses them does not change.\nRemoved: the spring and the automatic animation: with `animated` true (off by default, never with prefers-reduced-motion)\nthe card enters with a short fade. As before: non-modal, Esc or a click outside close it and focus returns to the\nbutton; the button carries `data-state=\"open\"|\"closed\"`.",
      "components": [
@@ -5680,7 +5709,7 @@
         },
         {
          "name": "list",
-         "type": "{ readonly unread: string; }",
+         "type": "{ readonly unread: string; readonly more: (count: number) => string; }",
          "required": true
         },
         {
@@ -5793,7 +5822,7 @@
         },
         {
          "name": "list",
-         "type": "Partial<{ readonly unread: string; }>"
+         "type": "Partial<{ readonly unread: string; readonly more: (count: number) => string; }>"
         },
         {
          "name": "palette",
