@@ -151,6 +151,11 @@ count is a pill at the end of the row (R5).
 list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot for unread), the inspector shows the
 one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
 covers the end of the list and the list stays usable beside it.
+Where the thing chosen is the work itself and not its details (a message to read, a file to edit), it needs the
+width the inspector does not have: the content is two panes, `ContentSplit`, the list a column of a fixed width and
+the thing chosen in the room that is left. The split measures itself as the frame does and, where the two do not fit,
+shows one at a time (`show`); the app then puts its way back to the list in the bar. The inspector stays for the
+details. A thing one both ticks and opens (a task) keeps its box beside the row's button: `ItemRow control`.
 A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList` (`@acaprino/sigrid/virtual`): the
 same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
 invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps two or three columns, or is a list. A
