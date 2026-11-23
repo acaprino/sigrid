@@ -577,7 +577,7 @@
         },
         {
          "name": "combos",
-         "type": "Readonly<Record<\"soft\" | \"clean\" | \"bold\", ChoiceText>>",
+         "type": "Readonly<Record<\"soft\" | \"bold\" | \"clean\", ChoiceText>>",
          "required": true
         }
        ]
@@ -3987,6 +3987,156 @@
      ]
     },
     {
+     "file": "src/components/ui/tree.tsx",
+     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, an icon of the user's pack, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
+     "components": [
+      {
+       "name": "Tree",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the tree for screen readers («Files»)."
+        },
+        {
+         "name": "nodes",
+         "type": "readonly TreeNode[]",
+         "required": true,
+         "doc": "The first level of the tree. Children loaded for a node stay while the app gives the same node object: build the nodes once (a constant, state, `useMemo`), and give a new object for a node whose children must be read again (another project, a refresh)."
+        },
+        {
+         "name": "selected",
+         "type": "string | null",
+         "doc": "The chosen row, by its id, or null for none. With it the choice is the app's: pass the id `onSelect` gives."
+        },
+        {
+         "name": "defaultSelected",
+         "type": "string | null",
+         "doc": "The row chosen at first, when the choice is the tree's own."
+        },
+        {
+         "name": "onSelect",
+         "type": "((id: string, node: TreeNode) => void)",
+         "doc": "The person chose a row (a press, Enter or Space): its id, and the node."
+        },
+        {
+         "name": "expanded",
+         "type": "readonly string[]",
+         "doc": "The branches the person opened, by id. With it they are the app's: pass the list `onExpandedChange` gives. The branches the filter opens are not in it. A branch still to load stays closed until the person opens it."
+        },
+        {
+         "name": "defaultExpanded",
+         "type": "readonly string[]",
+         "doc": "The branches open at first, when they are the tree's own."
+        },
+        {
+         "name": "onExpandedChange",
+         "type": "((expanded: string[]) => void)",
+         "doc": "The person opened or closed a branch: the whole list of the branches they opened. A branch that loads joins it once its rows are here. Not called when the list did not change."
+        },
+        {
+         "name": "loadChildren",
+         "type": "((node: TreeNode, signal: AbortSignal) => Promise<readonly TreeNode[]>)",
+         "doc": "Loads the rows of a branch with `hasChildren`, when it is first opened. A promise that fails leaves the branch closed, saying so; opening it again tries again. The signal says the tree no longer waits (the node changed or left, the tree left the page)."
+        },
+        {
+         "name": "search",
+         "type": "boolean",
+         "doc": "A field above the rows that filters them (`query`)."
+        },
+        {
+         "name": "searchLabel",
+         "type": "string",
+         "doc": "The name and placeholder of that field. Absent: the toolkit's words («Filter by name»)."
+        },
+        {
+         "name": "query",
+         "type": "string",
+         "doc": "The text that filters the rows. With it the text is the app's: pass what `onQueryChange` gives. It filters with the tree's field (`search`) or without it, from a field of the app's (`ToolbarSearch`). Only spaces, or nothing: no filter."
+        },
+        {
+         "name": "defaultQuery",
+         "type": "string",
+         "doc": "The text the filter starts with, when it is the tree's own."
+        },
+        {
+         "name": "onQueryChange",
+         "type": "((query: string) => void)",
+         "doc": "The text of the filter changed: typed in the tree's field, or cleared."
+        },
+        {
+         "name": "match",
+         "type": "((node: TreeNode, query: string) => boolean)",
+         "doc": "Whether a node is found by the text, given as it is (`query`), only when it holds more than spaces. Absent: its name holds the text, whatever the case and the spaces at its ends. A node found shows with all it holds; a branch that leads to one shows with what it keeps, opened. Branches never loaded are not searched: to have them searched, give their children. An app counts the finds with the same function over its own nodes. A constant, or memoised: a new function filters again."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The chevron of a branch turns when it opens or closes, as the sidebar's groups (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "TreeNode",
+       "doc": "A thing of the tree: a row, and the rows it holds.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "Names the thing among all the others of the tree (a path, a key): the choice and the open branches are ids."
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "What the row says; the filter by default and the first letters typed look for it."
+        },
+        {
+         "name": "icon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "doc": "A meaning of the toolkit's icons (`folder`, `file`…) or of the app's own (`IconPackProvider`'s `icons`), drawn in the user's pack. In a tree where some rows have one, a row without keeps an empty slot (R6)."
+        },
+        {
+         "name": "openIcon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
+         "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
+        },
+        {
+         "name": "meta",
+         "type": "React.ReactNode",
+         "doc": "A short fact at the end of the row, in tabular figures: a size, a date."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "doc": "How many things the node holds or waits on (changed, unread): a `Count` at the end of the row, after `meta`. Zero shows nothing."
+        },
+        {
+         "name": "children",
+         "type": "readonly TreeNode[]",
+         "doc": "The rows it holds. With an array (even empty) the row is a branch, which opens and closes."
+        },
+        {
+         "name": "hasChildren",
+         "type": "boolean",
+         "doc": "It holds rows the app loads when the branch is opened (`loadChildren`), until then unknown. Read only without `children`; without `loadChildren` the branch holds nothing."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TreeProps"
+     ]
+    },
+    {
      "file": "src/density.ts",
      "about": "Density: how tall the controls are, how much side padding they have and how much room a list row takes. Like the\nthemes it is data: the toolkit ships three presets (`DENSITIES`) and an app may pass a definition of its own, or a\npreset with some measures changed (`densityWith`). `applyDensity` writes the measures on an element as CSS variables\n(`--density-*`) and the id as `data-density`; `styles/theme.css` turns them into the tokens the components use\n(`--control-md`, `--pad-md`, `--row-height`…), with `normal` as the value before any script runs and 44px as the\nfloor of every control and row with a coarse pointer.",
      "types": [
@@ -4184,7 +4334,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifica…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" …",
          "required": true
         },
         {
@@ -5516,7 +5666,7 @@
         },
         {
          "name": "combo",
-         "type": "\"soft\" | \"clean\" | \"bold\"",
+         "type": "\"soft\" | \"bold\" | \"clean\"",
          "required": true
         }
        ]
@@ -5970,6 +6120,12 @@
          "required": true
         },
         {
+         "name": "tree",
+         "type": "{ readonly loading: string; readonly failed: string; readonly retry: string; readonly filter: string; }",
+         "required": true,
+         "doc": "What a `Tree` says by itself."
+        },
+        {
          "name": "list",
          "type": "{ readonly unread: string; readonly more: (count: number) => string; }",
          "required": true
@@ -6087,6 +6243,11 @@
         {
          "name": "search",
          "type": "Partial<{ readonly clear: string; }>"
+        },
+        {
+         "name": "tree",
+         "type": "Partial<{ readonly loading: string; readonly failed: string; readonly retry: string; readonly filter: string; }>",
+         "doc": "What a `Tree` says by itself."
         },
         {
          "name": "list",
@@ -6525,7 +6686,7 @@
         },
         {
          "name": "model",
-         "type": "\"graph\" | \"tree\"",
+         "type": "\"tree\" | \"graph\"",
          "doc": "How the lines are read. `tree` (the default): a thing hangs from another, so a thing with others hanging from it opens and closes, and the keys and the roles are a tree's. `graph`: a line is a relation (a call, an import, data), every thing stays in sight with nothing that closes, the arrows follow the lines, and opening is the app's (`onOpen`)."
         },
         {
@@ -6751,7 +6912,7 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"bold\" | \"layout\" | \"tag\" | \"more\" | \"notifications\" | \"settin…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"copy\" | \"move\" | \"all\" | \"download\" | \"tag\" | \"more\" | \"notifications\" | \"settings\" | \"account\" | \"a…",
          "doc": "An icon of the user's pack before the name."
         },
         {
