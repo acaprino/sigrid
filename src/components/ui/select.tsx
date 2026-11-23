@@ -21,7 +21,7 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { Check, ChevronDown } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { GROUP_LABEL } from "../../lib/rows"
-import { FOCUS_RING } from "../../lib/focus"
+import { FOCUS_FIELD } from "../../lib/focus"
 import { usePortalContainer } from "../PortalContainer"
 import { useEntrance } from "../../internal/motion"
 
@@ -102,7 +102,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
           "flex w-full items-center justify-between gap-2 rounded-md border border-line bg-transparent pr-(--pad-xs) pl-(--pad-sm) text-left text-sm pointer-coarse:min-h-11",
           invalid ? "border-destructive" : "hover:border-input data-[popup-open]:border-ring",
           disabled && "pointer-events-none cursor-not-allowed opacity-50",
-          FOCUS_RING,
+          FOCUS_FIELD,
           size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
           className,
         )}

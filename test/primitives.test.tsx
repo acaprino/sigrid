@@ -18,6 +18,21 @@ test('Button outline has the light divider border, and its focus ring is the off
   expect(c.some((x) => x.includes('-outline-offset-1'))).toBe(false)
 })
 
+test('a field has its focus ring on its own border, one line and not two; a button keeps it 2px away', () => {
+  render(
+    <>
+      <Input aria-label="Name" />
+      <Textarea aria-label="Notes" />
+    </>,
+  )
+  for (const name of ['Name', 'Notes']) {
+    const c = screen.getByRole('textbox', { name }).className.split(' ')
+    expect(c, name).toContain('focus-visible:-outline-offset-1')
+    expect(c, name).toContain('focus-visible:outline-2')
+    expect(c, name).not.toContain('focus-visible:outline-offset-2')
+  }
+})
+
 test('Button destructive is a solid red fill with the text colour paired with it', () => {
   render(<Button variant="destructive">Delete</Button>)
   expect(screen.getByRole('button').className.split(' ')).toEqual(expect.arrayContaining([
