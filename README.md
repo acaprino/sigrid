@@ -296,7 +296,9 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     `width` and `height` (by default 208 wide and 44 tall, 56 with a second line); a line may carry its route,
     `points`, from its start to its end (a layout's start point, bends and end point; `null` is no route). In both
     modes the things are drawn there at that size, a line with two points or more follows its route in straight
-    pieces, the others go from side to side, and the canvas lays nothing out. All or nothing: the places are read
+    pieces, the others go from side to side, and the canvas lays nothing out; `direction` still says which way the
+    arrows follow the lines and which sides a line without a route leaves and reaches, so pass the direction the app
+    laid out in. All or nothing: the places are read
     only when every thing has an `x` and a `y`; when one has none (a thing just added with the plus) dagre places them
     all, at the sizes given, and no line follows a route, until the app places it. `layoutKey` names the layout the
     places come from (as the app tells one from another: the direction, the things and the lines it laid out): when
