@@ -3,17 +3,20 @@
 // Reply R and Archive E, the undo of what was just done, the web build that is a preview where sending is off), the
 // mail is made up, and the frame is the toolkit's `AppShell` (the real app has a frame of its own).
 // - On a computer: accounts, folders and labels are the sidebar (the dark column, as in Qamille); the messages are a
-//   column of the content and the one chosen is read beside it; its actions are under it, «Reply» the solid one;
+//   column of the content and the one chosen is read beside it (`ContentSplit`: the message is the work, so it is in
+//   the content and not in the inspector, which is for details); its actions are under it, «Reply» the solid one;
 //   writing is a panel at the end that leaves the mail readable.
-// - On a phone: the folders are too many for tabs, so they are the drawer; the list is the screen, a message is a
-//   page with its actions at the foot, and writing is a sheet. (Qamille has no phone build: this is how it would be.)
+// - On a phone, or wherever the two panes do not fit: the folders are too many for tabs, so they are the drawer; the
+//   list is the screen, a message is a page with its actions at the foot and the way back in the bar, and writing is a
+//   sheet. (Qamille has no phone build: this is how it would be.)
 // - The Archive holds five thousand messages: a folder is a `VirtualList` (the toolkit's `./virtual` entry), so only
 //   the rows in sight are in the page. A message is written in a `RichTextField` (the `./rich-text` entry).
 // Keys, where there is a keyboard: N writes, R replies, E archives, Z undoes, Ctrl K searches. Each is a command of the
 // registry (`useCommand`), declared once: it runs while the focus is in the app, and the foot lists only the one no
 // button in sight shows (`KeyHints`).
-// It writes no class but where the toolkit has no part (said where they are): the layout is `Column`, `Cluster`,
-// `Split` and `Card`, the words `Text` and `Heading`, a colour a `Dot`, an empty view `Empty fill`.
+// It writes no class: the layout is `ContentSplit`, `Column`, `Cluster`, `Split` and `Card`, the words `Text` and
+// `Heading`, a colour a `Dot`, an empty view `Empty fill`, the long list `VirtualList fill`, the composer's width
+// `SheetContent width`.
 import * as React from 'react'
 import { RichTextField } from '../src/rich-text'
 import { VirtualList } from '../src/virtual'
@@ -27,6 +30,7 @@ import {
   Cluster,
   Column,
   CommandsProvider,
+  ContentSplit,
   Count,
   Dot,
   DrawerButton,
@@ -61,7 +65,6 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
-  cn,
   colorTheme,
   useCommand,
   type IconName,
@@ -138,6 +141,8 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
   const [essentials, setEssentials] = React.useState<readonly string[]>([])
   const [draft, setDraft] = React.useState<Draft | null>(null)
   const [menu, setMenu] = React.useState(false)
+  // One pane at a time (the split says when): the list, or the message with the way back to it in the bar.
+  const [one, setOne] = React.useState(phone)
   const [text, setText] = React.useState('')
   const [searching, setSearching] = React.useState(false)
   const [notices, setNotices] = React.useState<readonly Notice[]>([])
@@ -224,7 +229,7 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
   )
 
   const compose = () => setDraft({ to: [], subject: '', body: '', reply: false })
-  const bar = phone && opened ? (
+  const bar = one && opened ? (
     <>
       <ToolbarButton label={`Back to ${folderLabel}`} icon={<Icon name="back" />} keepWord onClick={() => setOpenId(null)} animated={animated}>
         {folderLabel}
@@ -258,7 +263,7 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
       }
       meta={m.date}
       unread={m.unread}
-      current={!phone && m.id === openId}
+      current={!one && m.id === openId}
       end={m.file ? <Text variant="muted" aria-label="With an attachment"><Icon name="attach" /></Text> : undefined}
       onClick={() => read(m.id)}
     />
@@ -284,9 +289,8 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
         })}
       </Column>
     ) : (
-      // A folder can hold years of mail: only the rows in sight are drawn. Its box is the one class here: the toolkit's
-      // `VirtualList` takes the height and the room of the box that scrolls as a class.
-      <VirtualList key={`${folder} ${word}`} aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} className="h-full p-2">
+      // A folder can hold years of mail: only the rows in sight are drawn, in a box as tall as the column.
+      <VirtualList key={`${folder} ${word}`} aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} fill pad="sm">
         {(index) => {
           const m = shown[index]
           return m ? row(m) : null
@@ -391,7 +395,7 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
     </>
   ) : undefined
 
-  const tabs = folder === 'inbox' && !(phone && opened) ? (
+  const tabs = folder === 'inbox' && !(one && opened) ? (
     <Toolbar aria-label="Views of the inbox">
       <ToolbarTabs aria-label="Show" value={filter} onValueChange={setFilter}>
         <ToolbarTab value="smart">Smart</ToolbarTab>
@@ -405,8 +409,8 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
   // Writing: a panel at the end on a computer, which leaves the mail readable; a sheet from the foot on a phone.
   const composer = (
     <Sheet open={draft !== null} onOpenChange={(next) => (next ? undefined : setDraft(null))} modal={phone} disablePointerDismissal={!phone}>
-      {/* On a computer the panel is as wide as a message is written (the toolkit's sheet takes its width as a class). */}
-      <SheetContent side={phone ? 'bottom' : 'right'} animated={animated} className={cn(!phone && 'sm:max-w-md')}>
+      {/* On a computer the panel is as wide as a message is written; from the foot of a phone it is the whole width. */}
+      <SheetContent side={phone ? 'bottom' : 'right'} width="md" animated={animated}>
         <SheetHeader>
           <SheetTitle>{draft?.reply ? 'Reply' : 'New message'}</SheetTitle>
           <SheetDescription>From Alex, {ACCOUNTS[0].address}</SheetDescription>
@@ -450,7 +454,7 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
     <Host app="qamille" device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`qamille.app/${folder}`} notices={toasts} onDismiss={dismiss}>
       <AppShell
         desktop={!phone && host === 'native'}
-        contentLabel={phone && opened ? opened.subject : folderLabel}
+        contentLabel={one && opened ? opened.subject : folderLabel}
         titleBar={
           <AppBar device={device} host={host} label="Qamille" overlays={composer}>
             {bar}
@@ -471,25 +475,12 @@ function QamilleApp({ device, host, animated, density, look }: AppProps) {
           )
         }
       >
-        {phone ? (
-          // The list stays in the page under the message, so the way back finds it where it was left; its box gives
-          // the list its height (the toolkit's `VirtualList` takes it from the box it is in).
-          <>
-            <div hidden={opened !== null} className="h-full">
-              {list}
-            </div>
-            {opened ? reader : null}
-          </>
-        ) : (
-          // Two panes in the content: a column of messages of a fixed width beside the reader, each scrolling by
-          // itself. The toolkit's frame has an inspector for details, not a reading pane: these boxes are the app's.
-          <div className="flex h-full min-h-0">
-            <div data-slot="mail-column" className="w-90 shrink-0 overflow-y-auto border-e border-line">
-              {list}
-            </div>
-            <div className="min-w-0 flex-1 overflow-y-auto">{reader}</div>
-          </div>
-        )}
+        {/* Two panes in the content: the column of messages beside the message read, each scrolling by itself. Where
+            the two do not fit (a phone, a narrow window) one is on screen: the message once one is open, else the list,
+            which stays in the page under the message, so the way back finds it where it was left. */}
+        <ContentSplit aside={list} asideLabel="Messages" width="lg" show={opened ? 'main' : 'aside'} onPanesChange={(panes) => setOne(panes === 1)}>
+          {reader}
+        </ContentSplit>
       </AppShell>
     </Host>
   )

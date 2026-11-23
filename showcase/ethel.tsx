@@ -12,8 +12,8 @@
 // - The Stack is put in order by hand (`ReorderList`, the toolkit's `./reorder` entry): Sort takes it from the top.
 // Keys, where there is a keyboard: B goes to the Stack, / searches, Z undoes the newest thing done. Each is a command of
 // the registry (`useCommand`), declared once: it runs while the focus is in the app, and the foot lists it (`KeyHints`).
-// It writes no class but in the row of a task (`TaskRow`, below, says why): the layout is `Column`, `Cluster` and
-// `Card`, the words `Text` and `Heading`, a colour a `Dot`, an empty view `Empty fill`.
+// It writes no class: the layout is `Column`, `Cluster` and `Card`, the words `Text` and `Heading`, a colour a `Dot`, an
+// empty view `Empty fill`, and a task is a row of the toolkit's list with its box beside it (`ItemRow control`).
 import * as React from 'react'
 import { ReorderList } from '../src/reorder'
 import {
@@ -37,6 +37,7 @@ import {
   Input,
   Inspector,
   ItemList,
+  ItemRow,
   KeyHints,
   NavItem,
   NavList,
@@ -62,11 +63,11 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
-  cn,
   colorTheme,
   dayPicks,
   useCommand,
   type IconName,
+  type ItemFact,
   type ToastItem,
 } from '../src/index'
 import { AppBar, Host, appKeys, type AppProps } from './hosts'
@@ -125,40 +126,29 @@ type SortDay = (typeof SORT_DAYS)[number]['id']
 type Notice = { id: string; text: string; undo?: () => void }
 
 /**
- * A task in a list: the round box that completes it, then its name and, under it, what there is to know in small gray text.
- * Drawn by hand, the one part of Ethel that is: the box is a control before the row's button, inside its tint, and the
- * toolkit's row of a list (`ItemRow`) is itself a button, which cannot hold one.
+ * A task in a list: the box that completes it, then the row that opens it, with its name and, under it, what there is
+ * to know in small gray text. The box is the row's control (`ItemRow control`): a tab stop of its own, and a press on
+ * it completes the task without opening it.
  */
 function TaskRow({ task, current, phone, onOpen, onComplete, animated }: { task: Task; current: boolean; phone: boolean; onOpen: () => void; onComplete: () => void; animated: boolean }) {
   const project = PROJECTS.find((p) => p.id === task.project)
   const done = task.subtasks.filter((s) => s.done).length
+  const facts: ItemFact[] = task.labels.map((label) => ({ text: label, color: LABELS[label] ?? '#6b7a8f' }))
+  if (project) facts.push({ text: project.name })
+  // Only «today» is in the accent (R2). A day gone by is said in the same gray: red is kept for danger.
+  if (task.date) facts.push({ text: when(task.date), tone: task.date === TODAY ? 'accent' : undefined })
+  if (task.subtasks.length > 0) facts.push({ text: `${done}/${task.subtasks.length}`, numeric: true })
+  if (task.duration) facts.push({ text: task.duration })
+  if (task.priority !== 'None') facts.push({ text: task.priority, tone: 'strong' })
   return (
-    <li
-      data-slot="task-row"
-      className={cn(
-        'relative flex min-h-(--row-height) items-center gap-3 rounded-md ps-3 pe-2 text-sm text-ink-soft hover:bg-selected/60',
-        current && "bg-selected text-selected-ink before:absolute before:top-1/2 before:left-0 before:h-4 before:w-0.75 before:-translate-y-1/2 before:rounded-full before:bg-primary before:content-['']",
-      )}
-    >
-      <Checkbox aria-label={`Complete «${task.title}»`} checked={false} onCheckedChange={onComplete} animated={animated} />
-      <button type="button" aria-current={current ? 'true' : undefined} onClick={onOpen} className="flex min-w-0 flex-1 cursor-default flex-col rounded-md py-1.5 text-start outline-hidden focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid">
-        <span className={cn(phone ? 'line-clamp-2' : 'truncate', current ? 'font-semibold' : 'text-ink')}>{task.title}</span>
-        <span className={cn('flex min-w-0 flex-wrap items-center gap-x-2 text-xs', current ? 'opacity-80' : 'text-ink-mute')}>
-          {task.labels.map((label) => (
-            <span key={label} className="inline-flex items-center gap-1">
-              <Dot color={LABELS[label] ?? '#6b7a8f'} />
-              {label}
-            </span>
-          ))}
-          {project ? <span className="truncate">{project.name}</span> : null}
-          {/* Only «today» is in the accent (R2). A day gone by is said in the same gray: red is kept for danger. */}
-          {task.date ? <span className={task.date === TODAY && !current ? 'font-semibold text-accent' : undefined}>{when(task.date)}</span> : null}
-          {task.subtasks.length > 0 ? <span className="tabular-nums">{done}/{task.subtasks.length}</span> : null}
-          {task.duration ? <span>{task.duration}</span> : null}
-          {task.priority !== 'None' ? <span className="font-medium">{task.priority}</span> : null}
-        </span>
-      </button>
-    </li>
+    <ItemRow
+      title={task.title}
+      wrapTitle={phone}
+      facts={facts}
+      current={current}
+      onClick={onOpen}
+      control={<Checkbox aria-label={`Complete «${task.title}»`} checked={false} onCheckedChange={onComplete} animated={animated} />}
+    />
   )
 }
 

@@ -183,6 +183,8 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
+import { ContentSplit, type SheetWidth } from '../src/index'
+import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -287,7 +289,7 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition'] },
+  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition', 'composition-panes'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
@@ -2148,6 +2150,104 @@ function Composition({ animated }: { animated: boolean }) {
   )
 }
 
+/** The tasks of the sample of a row with a control. */
+const PANE_TASKS = [
+  { id: 'terms', title: 'Read the terms of the new contract', facts: [{ text: '@home', color: COLORS[3] }, { text: 'Electricity contract' }, { text: 'Today', tone: 'accent' as const }, { text: '1/3', numeric: true }, { text: 'P1', tone: 'strong' as const }] },
+  { id: 'quote', title: 'Ask the carpenter for a quote', facts: [{ text: 'Kitchen renovation' }, { text: 'Today', tone: 'accent' as const }] },
+  { id: 'pass', title: 'Renew the transit pass', facts: [{ text: 'Fri 20 Nov' }, { text: 'P2', tone: 'strong' as const }] },
+]
+
+/**
+ * The parts that let the example apps go to no class at all: a row of a list with one control beside its button
+ * (`ItemRow control`, with its `facts`), two panes in the content (`ContentSplit`), a long list as tall as its region
+ * (`VirtualList fill`) and a sheet of a named width (`SheetContent width`). Each sample is written as an app writes it;
+ * the boxes around them are the gallery's, to give a pane a height and a width.
+ */
+function CompositionPanes({ animated }: { animated: boolean }) {
+  const [chosen, setChosen] = React.useState<string | null>('terms')
+  const [ticked, setTicked] = React.useState<readonly string[]>([])
+  const [show, setShow] = React.useState<'aside' | 'main'>('main')
+  const [panes, setPanes] = React.useState<1 | 2>(2)
+  const [width, setWidth] = React.useState<SheetWidth | null>(null)
+  const task = PANE_TASKS.find((t) => t.id === chosen)
+  const rows = (
+    <ItemList aria-label="Today">
+      {PANE_TASKS.map((t) => (
+        <ItemRow
+          key={t.id}
+          title={t.title}
+          facts={t.facts}
+          current={chosen === t.id && panes === 2}
+          onClick={() => {
+            setChosen(t.id)
+            setShow('main')
+          }}
+          control={<Checkbox aria-label={`Complete «${t.title}»`} checked={ticked.includes(t.id)} onCheckedChange={(on) => setTicked((list) => (on === true ? [...list, t.id] : list.filter((id) => id !== t.id)))} animated={animated} />}
+        />
+      ))}
+    </ItemList>
+  )
+  return (
+    <Section
+      id="composition-panes"
+      title="ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width"
+      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A long list as tall as its region, and a sheet at the side of a named width."
+    >
+      <Row label="a row with a control">
+        <div data-sample="item-row-control" className="w-full max-w-md">
+          {rows}
+        </div>
+      </Row>
+      <Row label="two panes">
+        <div data-sample="content-split" className="h-72 w-full max-w-3xl overflow-hidden rounded-lg border border-line">
+          <ContentSplit aside={<Column pad="sm">{rows}</Column>} asideLabel="Tasks" show={show} onPanesChange={setPanes}>
+            <Column gap="md" pad="lg">
+              {panes === 1 ? (
+                <Cluster>
+                  <Button variant="ghost" size="sm" onClick={() => setShow('aside')}>
+                    <Icon name="back" />
+                    Today
+                  </Button>
+                </Cluster>
+              ) : null}
+              <Heading size="card" level={3}>
+                {task?.title ?? 'Nothing chosen'}
+              </Heading>
+              <Text as="p" variant="soft">
+                The thing chosen, read or worked on in the room the column leaves.
+              </Text>
+            </Column>
+          </ContentSplit>
+        </div>
+      </Row>
+      <Row label="a long list that fills">
+        <div data-sample="virtual-fill" className="h-64 w-full max-w-md rounded-lg border border-line">
+          <VirtualList aria-label="Archive" count={5000} estimateSize={50} fill pad="sm">
+            {(index) => <ItemRow title={`Message ${index + 1}`} description="Put away" meta={`${(index % 28) + 1} Oct`} />}
+          </VirtualList>
+        </div>
+      </Row>
+      <Row label="sheet width">
+        <Cluster>
+          {(['sm', 'md', 'lg'] as const).map((w) => (
+            <Button key={w} variant="outline" onClick={() => setWidth(w)}>
+              Open {w}
+            </Button>
+          ))}
+        </Cluster>
+        <Sheet open={width !== null} onOpenChange={(open) => (open ? undefined : setWidth(null))}>
+          <SheetContent side="right" width={width ?? 'sm'} animated={animated}>
+            <SheetHeader>
+              <SheetTitle>A sheet, {width ?? 'sm'}</SheetTitle>
+              <SheetDescription>sm 384px, md 448px, lg 512px; under the sm width of the window, three quarters of it.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      </Row>
+    </Section>
+  )
+}
+
 function Empties() {
   return (
     <Section id="empty" title="Empty" note="A title alone; a title, a sentence and an action; with the optional icon.">
@@ -2674,6 +2774,7 @@ function App() {
       </Section>
       <LayoutParts />
       <Composition animated={animated} />
+      <CompositionPanes animated={animated} />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />

@@ -22,6 +22,7 @@ import {
   Cluster,
   Column,
   CommandsProvider,
+  ContentSplit,
   Count,
   Dot,
   Empty,
@@ -179,28 +180,31 @@ const DOCK = [
 ] as const
 
 /**
- * The file browser: the tree at the start (Sigrid's `Tree`, with its filter), the file at the end, in four modes.
- * GAP: a code editor beside its preview: the source is plain text here.
+ * The file browser: the tree in a column at the start (Sigrid's `Tree`, with its filter, in a `ContentSplit`), the file
+ * in the room that is left, in three modes.
+ * GAP: a code editor beside its preview: the source is plain text here, and the strip over the file and the two halves
+ * are the app's boxes.
  */
 function Files() {
   const [mode, setMode] = React.useState('split')
   const [file, setFile] = React.useState<string | null>('.claude/agents/billing-retries.md')
+  const tree = (
+    <Column gap="sm" pad="sm">
+      <Select size="sm" aria-label="Project" options={PROJECTS.map((p) => ({ value: p, label: p }))} value="billing-service" onValueChange={() => {}} />
+      <Tree
+        aria-label="Files of billing-service"
+        nodes={FILES}
+        search
+        searchLabel="Find a file by name"
+        selected={file}
+        onSelect={setFile}
+        defaultExpanded={['.claude', '.claude/agents']}
+      />
+    </Column>
+  )
   return (
-    <div className="grid h-full min-h-0 grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <div className="flex min-h-0 flex-col gap-2 border-e border-line p-2">
-        <Select size="sm" aria-label="Project" options={PROJECTS.map((p) => ({ value: p, label: p }))} value="billing-service" onValueChange={() => {}} className="w-48" />
-        <Tree
-          aria-label="Files of billing-service"
-          nodes={FILES}
-          search
-          searchLabel="Find a file by name"
-          selected={file}
-          onSelect={setFile}
-          defaultExpanded={['.claude', '.claude/agents']}
-          className="min-h-0 flex-1"
-        />
-      </div>
-      <div className="flex min-h-0 flex-col">
+    <ContentSplit aside={tree} asideLabel="Files" width="sm">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-center gap-2 border-b border-line p-2">
           <span className="min-w-0 flex-1 truncate text-xs text-ink-mute">{(file ?? '').split('/').join(' / ')}</span>
           <ToggleGroup aria-label="Show the file as" value={mode} onValueChange={setMode}>
@@ -215,7 +219,7 @@ function Files() {
           {mode !== 'source' ? <div className="min-h-0 overflow-auto p-3 text-sm text-ink"><MarkdownBlocks text={PLAN} /></div> : null}
         </div>
       </div>
-    </div>
+    </ContentSplit>
   )
 }
 

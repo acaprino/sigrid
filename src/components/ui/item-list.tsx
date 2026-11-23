@@ -7,13 +7,19 @@
 // - a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the
 //   accent's places); the dot's slot stays when empty, so the titles line up;
 // - a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.
-// A row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button.
+// The second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,
+// the day, a count of steps), which wrap rather than cut.
+// A row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one
+// both ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or
+// the end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are
+// two tab stops with their own names; a press on the control is the control's and never opens the row.
 // The rows of a navigation are `NavItem`: those are places, these are things.
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER } from "../../lib/rows"
 import { useWords } from "../../words"
+import { Dot } from "./dot"
 
 export type ItemListProps = {
   /** Name of the list for screen readers («Messages»). */
@@ -30,17 +36,43 @@ function ItemList({ className, children, ...props }: ItemListProps) {
   )
 }
 
+/** A short fact of a row, in the line under its title. */
+export type ItemFact = {
+  /** The words of the fact («@home», «Kitchen renovation», «1/3»). */
+  text: React.ReactNode
+  /** A colour the person gave to it (a label's, a project's), one of the palette's: an 8px dot before the words (R10). */
+  color?: string | undefined
+  /**
+   * `strong`: the medium weight, for the fact that matters most (a priority). `accent`: semibold in the accent, for one
+   * of the accent's places only (today, R2); on the chosen row it is the row's own ink, as every fact there.
+   */
+  tone?: "strong" | "accent" | undefined
+  /** Tabular figures: a count, a time. */
+  numeric?: boolean | undefined
+}
+
 export type ItemRowProps = {
   /** What the thing is: one line, cut with an ellipsis. */
   title: React.ReactNode
+  /** The title takes up to two lines before it is cut: a list on a narrow screen, where a long name would lose its end. */
+  wrapTitle?: boolean | undefined
   /** A second line under the title: who, where, the first words. */
   description?: React.ReactNode
+  /** Short facts under the title (and under `description`), 8px apart, wrapping to a new line rather than cut. */
+  facts?: readonly ItemFact[] | undefined
   /** Before the title: an avatar, an icon. Not a control: the row is itself a button or a link. */
   leading?: React.ReactNode
   /** A short fact at the end of the row, in tabular figures: a date, a size. */
   meta?: React.ReactNode
   /** After the fact: a `Count`, a label. Not a control: the row is itself a button or a link. */
   end?: React.ReactNode
+  /**
+   * One control beside the row's button (a `Checkbox` with its own `aria-label`, «Complete «Pay the rent»»): the list
+   * item holds the two side by side, inside the row's tint. Two tab stops; a press on the control does not open the row.
+   */
+  control?: React.ReactNode
+  /** Where the control is: at the `start` of the row (the default: a box to tick) or at its `end`. */
+  controlSide?: "start" | "end" | undefined
   /** This row is the one shown in the detail. */
   current?: boolean | undefined
   /** Not read yet: a dot in the accent and a stronger title. Absent: the list has no such state and keeps no slot for it. */
@@ -61,8 +93,25 @@ const ROW = cn(
   FOCUS_RING_INSET,
 )
 
-function ItemRow({ title, description, leading, meta, end, current = false, unread, href, onClick, disabled, className }: ItemRowProps) {
+// A row with a control: the list item is the row. It has the row's height and hover, and the chosen look of
+// `ROW_CHOSEN` (the tint, its ink, the accent bar at its start), said here by `data-current`: what is current is the
+// button inside, which says it with `aria-current`. The button takes the rest of the width with its own focus ring; the
+// 12px between the control and the words are the button's, so a press there opens the row.
+const ROW_BOX = cn(
+  "relative flex min-h-(--row-height) w-full cursor-default items-stretch rounded-md text-sm text-ink-soft pointer-coarse:min-h-11",
+  ROW_HOVER,
+  "data-current:bg-selected data-current:text-selected-ink data-current:before:absolute data-current:before:top-1/2 data-current:before:left-0 data-current:before:h-4 data-current:before:w-0.75 data-current:before:-translate-y-1/2 data-current:before:rounded-full data-current:before:bg-primary data-current:before:content-['']",
+)
+const ROW_BUTTON = cn(
+  "flex min-w-0 flex-1 cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start",
+  "disabled:pointer-events-none disabled:opacity-50",
+  FOCUS_RING_INSET,
+)
+
+function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, end, control, controlSide = "start", current = false, unread, href, onClick, disabled, className }: ItemRowProps) {
   const words = useWords()
+  // On the chosen row the muted ink would not keep its contrast on the tint: the row's own ink, a step quieter.
+  const quiet = current ? "opacity-80" : "text-ink-mute"
   const body = (
     <>
       {unread === undefined ? null : (
@@ -77,24 +126,71 @@ function ItemRow({ title, description, leading, meta, end, current = false, unre
       )}
       {leading ? <span data-slot="item-row-leading" className="flex shrink-0 items-center [&_svg:not([class*='size-'])]:size-4">{leading}</span> : null}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span data-slot="item-row-title" className={cn("truncate", (unread || current) && "font-semibold", unread && !current && "text-ink")}>
+        <span data-slot="item-row-title" className={cn(wrapTitle ? "line-clamp-2" : "truncate", (unread || current) && "font-semibold", unread && !current && "text-ink")}>
           {title}
         </span>
         {description ? (
-          <span data-slot="item-row-description" className={cn("truncate text-xs", current ? "opacity-80" : "text-ink-mute")}>
+          <span data-slot="item-row-description" className={cn("truncate text-xs", quiet)}>
             {description}
+          </span>
+        ) : null}
+        {facts && facts.length > 0 ? (
+          <span data-slot="item-row-facts" className={cn("flex min-w-0 flex-wrap items-center gap-x-2 text-xs", quiet)}>
+            {facts.map((fact, at) => (
+              <span
+                // The facts are a row's own, in their order: their place is what tells them apart.
+                key={at}
+                data-slot="item-row-fact"
+                className={cn(
+                  "inline-flex min-w-0 items-center gap-1",
+                  fact.numeric && "tabular-nums",
+                  fact.tone === "strong" && "font-medium",
+                  fact.tone === "accent" && !current && "font-semibold text-accent",
+                )}
+              >
+                {fact.color ? <Dot color={fact.color} /> : null}
+                <span className="truncate">{fact.text}</span>
+              </span>
+            ))}
           </span>
         ) : null}
       </span>
       {meta ? (
-        <span data-slot="item-row-meta" className={cn("shrink-0 text-2xs tabular-nums", current ? "opacity-80" : "text-ink-mute")}>
+        <span data-slot="item-row-meta" className={cn("shrink-0 text-2xs tabular-nums", quiet)}>
           {meta}
         </span>
       ) : null}
       {end}
     </>
   )
-  const shared = { "data-slot": "item-row", "aria-current": current ? ("true" as const) : undefined, className: cn(ROW, className) }
+  const currentAttr = current ? ("true" as const) : undefined
+  if (control !== undefined && control !== null && control !== false) {
+    const start = controlSide === "start"
+    const pressable =
+      href !== undefined && !disabled ? (
+        <a data-slot="item-row-button" aria-current={currentAttr} href={href} onClick={onClick} className={ROW_BUTTON}>
+          {body}
+        </a>
+      ) : (
+        <button data-slot="item-row-button" type="button" aria-current={currentAttr} disabled={disabled} onClick={onClick} className={ROW_BUTTON}>
+          {body}
+        </button>
+      )
+    // The control keeps the row's 12px from its edge.
+    const held = (
+      <span data-slot="item-row-control" className={cn("flex shrink-0 items-center", start ? "ps-3" : "pe-3")}>
+        {control}
+      </span>
+    )
+    return (
+      <li data-slot="item-row" data-control={controlSide} data-current={current ? "" : undefined} className={cn(ROW_BOX, className)}>
+        {start ? held : null}
+        {pressable}
+        {start ? null : held}
+      </li>
+    )
+  }
+  const shared = { "data-slot": "item-row", "aria-current": currentAttr, className: cn(ROW, className) }
   return (
     <li>
       {href !== undefined && !disabled ? (

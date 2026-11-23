@@ -36,11 +36,21 @@ const VIEWPORT_SIDE_CLASS: Record<SheetSide, string> = {
 // it is not an animation, and at rest it is 0.
 const POPUP_SIDE_CLASS: Record<SheetSide, string> = {
 // No border on the inner edge: the sheet is a raised surface and its lg shadow already draws the edge (R4).
-  right: "h-full w-3/4 sm:max-w-sm [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
-  left: "h-full w-3/4 sm:max-w-sm [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
+  right: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
+  left: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
   top: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
   bottom: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
 }
+
+/**
+ * The widest a sheet at the side grows, from the `sm` width of the window up (under it, three quarters of the window):
+ * `sm` 384px, a form of a few fields (the default); `md` 448px, a message being written beside the mail; `lg` 512px,
+ * the width of a dialog. Steps of the scale, named with the toolkit's words for a size. A sheet at the top or the foot
+ * is as wide as the window, whatever its width.
+ */
+export type SheetWidth = "sm" | "md" | "lg"
+// Whole class names, so that Tailwind finds them in this file.
+const SIDE_WIDTH_CLASS: Record<SheetWidth, string> = { sm: "sm:max-w-sm", md: "sm:max-w-md", lg: "sm:max-w-lg" }
 
 /** `SheetContent` declares the side, the root needs the drag direction: it passes through here. */
 const SideContext = React.createContext<(side: SheetSide) => void>(() => {})
@@ -110,6 +120,8 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
 type SheetContentProps = Omit<React.ComponentProps<typeof SheetPrimitive.Popup>, "className" | "finalFocus"> & {
   className?: string | undefined
   side?: SheetSide | undefined
+  /** At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot. */
+  width?: SheetWidth | undefined
   showCloseButton?: boolean | undefined
   /**
    * On closing, before the focus moves (like Radix's `onCloseAutoFocus`): `event.preventDefault()` says that
@@ -124,6 +136,7 @@ function SheetContent({
   className,
   children,
   side = "right",
+  width = "sm",
   showCloseButton = true,
   onCloseAutoFocus,
   animated,
@@ -192,6 +205,7 @@ function SheetContent({
           className={cn(
             "pointer-events-auto relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
             POPUP_SIDE_CLASS[side],
+            (side === "left" || side === "right") && SIDE_WIDTH_CLASS[width],
             className
           )}
           {...props}
