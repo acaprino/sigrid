@@ -176,22 +176,50 @@ describe('build output', () => {
       expect(statSync(file).size).toBeGreaterThan(100_000)
     })
 
-    test('index.js reaches that chunk only through a dynamic import(), never a static import', () => {
-      const js = readFileSync(`${dist}index.js`, 'utf8')
+    /** An entry and every chunk it imports statically, however far: what a page loads when it imports the entry. */
+    const loaded = (entry: string): Map<string, string> => {
+      const seen = new Map<string, string>()
+      const visit = (file: string) => {
+        if (seen.has(file)) return
+        const js = readFileSync(`${dist}${file}`, 'utf8')
+        seen.set(file, js)
+        for (const m of js.matchAll(/(?:from|import)\s*["'](\.\.?\/[^"']+\.js)["']/g)) visit(file.startsWith('chunks/') ? `chunks/${m[1]!.replace(/^\.\//, '')}` : m[1]!.replace(/^\.\//, ''))
+      }
+      visit(entry)
+      return seen
+    }
+    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js']
+
+    // Since the package has more than one entry, the code that asks for Motion can sit in a chunk the entries share.
+    test('what index.js loads reaches that chunk only through one dynamic import(), never a static import', () => {
       const name = escape(chunks()[0]!)
-      expect(js).toMatch(new RegExp(`import\\(\\s*["']\\./chunks/${name}["']\\s*\\)`))
-      expect(js.match(new RegExp(name, 'g'))).toHaveLength(1)
+      const all = [...loaded('index.js').values()].join('\n')
+      expect(all.match(new RegExp(`import\\(\\s*["']\\.(?:/chunks)?/${name}["']\\s*\\)`, 'g'))).toHaveLength(1)
       // A static import has the form `from "./chunks/…"` or `import "./chunks/…"`.
-      expect(js).not.toMatch(new RegExp(`(?:from|import)\\s*["']\\./chunks/${name}`))
+      expect(all).not.toMatch(new RegExp(`(?:from|import)\\s*["']\\.(?:/chunks)?/${name}`))
     })
 
-    test('neither index.js nor the chunks it imports statically contain Motion', () => {
+    test('no entry, nor the chunks it imports statically, contains Motion', () => {
       const motion = /AnimatePresence|LazyMotion|MotionConfig/
-      const js = readFileSync(`${dist}index.js`, 'utf8')
-      expect(js).not.toMatch(motion)
-      const statics = [...js.matchAll(/(?:from|import)\s*["']\.\/chunks\/([^"']+)["']/g)].map((m) => m[1]!)
-      expect(statics.length, 'index.js imports at least the shared chunk').toBeGreaterThan(0)
-      for (const f of statics) expect(readFileSync(`${dist}chunks/${f}`, 'utf8'), f).not.toMatch(motion)
+      for (const entry of ENTRIES) {
+        const files = loaded(entry)
+        if (entry === 'index.js') expect(files.size, 'index.js imports at least the shared chunk').toBeGreaterThan(1)
+        for (const [file, js] of files) expect(js, `${entry} → ${file}`).not.toMatch(motion)
+      }
+    })
+
+    // The libraries of the other entries are for the apps that import those entries: the main one loads none of them.
+    test('index.js loads none of the libraries of the other entries', () => {
+      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*)\//)
+    })
+
+    test('each of the other entries holds its own library, and the table and the lists do not load the text editor', () => {
+      const has = (entry: string, library: RegExp) => [...loaded(entry).values()].some((js) => library.test(js))
+      expect(has('table.js', /node_modules\/@tanstack\/(?:react-)?table/)).toBe(true)
+      expect(has('virtual.js', /node_modules\/@tanstack\/(?:react-)?virtual/)).toBe(true)
+      expect(has('reorder.js', /node_modules\/@dnd-kit\//)).toBe(true)
+      expect(has('rich-text.js', /node_modules\/@tiptap\//)).toBe(true)
+      for (const entry of ['table.js', 'virtual.js', 'reorder.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
     })
   })
 

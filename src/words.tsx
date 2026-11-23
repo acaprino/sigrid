@@ -173,6 +173,37 @@ export interface Words {
     readonly page: (page: number, total: number) => string
     readonly openOriginal: string
   }
+  readonly table: {
+    /** The name of the button in a column's heading that sorts by it («Sort by Size»). */
+    readonly sortBy: (column: string) => string
+    /** What a table says when it has no rows. */
+    readonly empty: string
+  }
+  readonly reorder: {
+    /** The name of the handle that moves an item («Move Inbox»). */
+    readonly handle: (item: string) => string
+    /** What kind of thing a handle is, said after its name by screen readers. */
+    readonly role: string
+    /** How the handle is used with the keyboard: read once, when it takes the focus. */
+    readonly instructions: string
+    /** What screen readers hear while an item is moved: taken, over another place, put down, put back. */
+    readonly taken: (item: string, position: number, total: number) => string
+    readonly moved: (item: string, position: number, total: number) => string
+    readonly put: (item: string, position: number, total: number) => string
+    readonly back: (item: string) => string
+  }
+  readonly richText: {
+    /** The name of the row of buttons above the text. */
+    readonly toolbar: string
+    readonly bold: string
+    readonly italic: string
+    readonly underline: string
+    readonly bulletList: string
+    readonly orderedList: string
+    readonly quote: string
+    readonly undo: string
+    readonly redo: string
+  }
   readonly checklist: {
     /** Read before an item of a checklist, with its colon and space. */
     readonly done: string
@@ -304,6 +335,30 @@ export const DEFAULT_WORDS: Words = {
     pages: 'Pages of the document',
     page: (page, total) => `Page ${page} of ${total}`,
     openOriginal: 'Open the original',
+  },
+  table: {
+    sortBy: (column) => `Sort by ${column}`,
+    empty: 'Nothing to show',
+  },
+  reorder: {
+    handle: (item) => `Move ${item}`,
+    role: 'handle to move',
+    instructions: 'Press Space to take it, the arrows to move it, Space to put it down, Escape to put it back.',
+    taken: (item, position, total) => `${item} taken, at ${position} of ${total}`,
+    moved: (item, position, total) => `${item} at ${position} of ${total}`,
+    put: (item, position, total) => `${item} put down at ${position} of ${total}`,
+    back: (item) => `${item} put back`,
+  },
+  richText: {
+    toolbar: 'Text format',
+    bold: 'Bold',
+    italic: 'Italic',
+    underline: 'Underline',
+    bulletList: 'Bulleted list',
+    orderedList: 'Numbered list',
+    quote: 'Quote',
+    undo: 'Undo',
+    redo: 'Redo',
   },
   checklist: { done: 'Done: ', todo: 'To do: ' },
 }

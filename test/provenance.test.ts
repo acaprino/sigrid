@@ -254,6 +254,64 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
 
 })
 
+// The four libraries under a table, a long list, a list put in order and formatted text (2026-11-23): pinned, listed, and
+// each behind its own entry of the package, so the main entry stays what it was.
+describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, each in its own entry', () => {
+  const PINNED: Record<string, string> = {
+    '@tanstack/react-table': '9.3.1',
+    '@tanstack/react-virtual': '3.14.26',
+    '@dnd-kit/core': '6.3.1',
+    '@dnd-kit/sortable': '10.0.0',
+    '@dnd-kit/utilities': '3.2.2',
+    '@tiptap/react': '3.33.0',
+    '@tiptap/starter-kit': '3.33.0',
+    '@tiptap/pm': '3.33.0',
+  }
+  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap)\//
+  const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
+  const imports = (file: string) => [...new Set([...readFileSync(file, 'utf8').matchAll(/from ['"]([^'"]+)['"]/g)].map((m) => m[1]!).filter((spec) => LIBRARY.test(spec)))].sort()
+
+  test('each is pinned to an exact version, installed at that version, MIT, and named with it in THIRD_PARTY.md', () => {
+    expect(Object.fromEntries(Object.entries(pkg.dependencies ?? {}).filter(([name]) => LIBRARY.test(name)))).toEqual(PINNED)
+    for (const section of ['devDependencies', 'peerDependencies', 'optionalDependencies'] as const) expect(Object.keys(pkg[section] ?? {}).filter((name) => LIBRARY.test(name)), section).toEqual([])
+    for (const [name, version] of Object.entries(PINNED)) {
+      const installed = JSON.parse(readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8')) as { version: string; license: string }
+      expect(installed.version, name).toBe(version)
+      expect(installed.license, name).toBe('MIT')
+      expect(text, name).toContain(`\`${name}\``)
+      expect(text, `${name} ${version}`).toContain(version)
+    }
+  })
+
+  test('THIRD_PARTY.md says which files rest on them, and they are exactly the ones that import them', () => {
+    const start = text.indexOf('\n## TanStack Table, TanStack Virtual, dnd-kit and TipTap\n')
+    expect(start).toBeGreaterThan(-1)
+    const section = text.slice(start, text.indexOf('\n## ', start + 1))
+    const rows = new Map([...section.matchAll(/^\| `(src\/[^`]+)` \| ([^|]+) \| `(\.\/[a-z-]+)` \|$/gm)].map((m) => [m[1]!, { libraries: [...m[2]!.matchAll(/`([^`]+)`/g)].map((l) => l[1]!).sort(), entry: m[3]! }]))
+    const importing = codeFiles.filter((f) => imports(f).length > 0)
+    expect(importing.map(rel).sort()).toEqual([...rows.keys()].sort())
+    for (const file of importing) expect(imports(file), rel(file)).toEqual(rows.get(rel(file))!.libraries)
+    // Each entry the table names is an entry of the package, built and typed.
+    const exported = pkg['exports'] as unknown as Record<string, { types?: string; import?: string }>
+    for (const { entry } of rows.values()) expect(exported[entry], entry).toEqual({ types: `./dist/${entry.slice(2)}.d.ts`, import: `./dist/${entry.slice(2)}.js` })
+  })
+
+  test('the main entry of the package reaches none of them: an app that uses no such part loads no such library', () => {
+    const seen = new Set<string>()
+    const reach = (file: string) => {
+      if (seen.has(file)) return
+      seen.add(file)
+      for (const m of readFileSync(file, 'utf8').matchAll(/(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g)) {
+        const base = resolve(dirname(file), m[1]!)
+        const found = [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts')].find((candidate) => existsSync(candidate) && statSync(candidate).isFile())
+        if (found) reach(found)
+      }
+    }
+    reach(join(root, 'src/index.ts'))
+    expect([...seen].filter((file) => imports(file).length > 0).map(rel)).toEqual([])
+  })
+})
+
 describe('INV-008: no decorative component, no infinite motion, no springs', () => {
   const DECORATIVE = /orb|shimmer|loader|glow|tilt|text-effect|cursor|marquee|aurora|matrix|scramble|particles|magnetic|dock/i
 

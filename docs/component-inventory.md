@@ -395,6 +395,24 @@ Also added: an app's own icon meanings (`IconPackProvider`'s `icons`) and the st
 `highlight` (`theme-engine.ts` `STATUS`). `Select` takes `aria-describedby` and `aria-invalid`, so it sits in a
 `FormField`.
 
+## Added on 2026-11-23: parts that rest on a library of their own
+
+Four parts whose behaviour is hard to get right by hand and already exists, well kept, under the MIT licence. Each is
+in its own entry of the package, so an app that does not use it does not load its library; the versions are pinned
+(`THIRD_PARTY.md`, `test/provenance.test.ts`). The form, the words (`src/words.tsx`) and the rules are the toolkit's.
+
+| Component | Entry | Behaviour | Form | Rules |
+|---|---|---|---|---|
+| `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | `.` | The browser's own table; `current` on a row is `aria-current` | 12px medium headings in muted ink, 14px cells, one line between rows, the density's row height; `align="end"` sets numbers at the end in tabular figures; `sticky` keeps the headings in sight | R1: the chosen row has the selection tint, stronger text and the short accent bar on its first cell. R4: lines, no shadow |
+| `DataTable` | `./table` | TanStack Table (sorting) and TanStack Virtual (rows in sight). A heading with a `sortValue` is a button: up, down, as given; `aria-sort` says which. Rows without a value stay last. With `onRowPress` the rows are one Tab stop, the arrows, Home and End move among them, Enter and Space press. With `virtual`: spacer rows, `aria-rowcount`, `aria-rowindex` | The `Table` parts; an arrow of 14px beside the heading sorted by, whose room is kept when hidden | Texts sort by the user's language, with the numbers inside them as numbers. No rows: the app's sentence, or the toolkit's word |
+| `VirtualList` | `./virtual` | TanStack Virtual. Draws the rows in sight and a few beyond; measures one row and takes the rest to be as tall; the room of the others is padding. `aria-setsize` and `aria-posinset` on every row | The rows are the app's (`ItemRow`): the same gap as `ItemList` | The box needs a height |
+| `ReorderList`, `moveItem` | `./reorder` | dnd-kit. The handle alone drags (pointer after 4px, a finger, Space and the arrows); Escape puts the row back; each step is announced in the app's words; `onReorder` gives the new order | A 28px handle (44px with a finger) of six dots in muted ink; the row taken is on the raised surface with the `float` elevation | R4: the row taken has a shadow and no border. Motion: the others slide in 200ms only with `animated`, never with reduced motion |
+| `RichTextField` | `./rich-text` | TipTap on ProseMirror, with the starter kit cut down to what the buttons offer: bold, italic, underline, two lists, a quote, undo, redo. Headings, code, links, rules and strike are off, so a paste brings them in as plain text. The value is HTML. In a `FormField` it takes its name from the label, which also gives it the focus | The border and focus ring of a field; the toolkit's `Toolbar` (small) above the text, with the user's icon pack; 16px text below 860px, 14px above | R6: icons of the pack. A button that is on has the selection tint. Disabled: no buttons, half opacity |
+
+Cost, measured on the production build of the showcase: a table of ten thousand rows scrolls with about 1.3 ms of
+script a frame and sorts by a text column in about 30 ms; a key in the rich text costs about 1.3 ms; nothing runs
+while nothing happens. With the processor four times slower the scroll stays under 7 ms a frame.
+
 ## Off-scale values (with locations, before the polish pass)
 
 | Value | Where |

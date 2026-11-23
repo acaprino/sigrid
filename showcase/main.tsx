@@ -162,6 +162,7 @@ import {
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
+import { LongLists, RichTexts, Reorders, Tables } from './data'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -267,9 +268,10 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
-  { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields'] },
+  { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
   { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
+  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'reorder'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -2385,6 +2387,7 @@ function App() {
       <Switches animated={animated} />
       <Dates animated={animated} />
       <OtherFields />
+      <RichTexts />
       <TabSets animated={animated} />
       <StepsSection />
       <Navigation />
@@ -2396,6 +2399,9 @@ function App() {
       <Notices animated={animated} />
       <ProgressSection />
       <Empties />
+      <Tables />
+      <LongLists />
+      <Reorders animated={animated} />
       <Files />
       <Content />
       <HoverRows animated={animated} />
@@ -2417,9 +2423,9 @@ function App() {
                   <ToolbarBrand name="Sigrid" />
                   {narrow ? null : views()}
                   <ToolbarSpacer />
-                  {/* The layout editor is its own page (builder.html), not a view of this one: it opens beside it. */}
-                  <ToolbarButton label="Layout editor" icon={<Icon name="layout" />} onClick={() => window.open('builder.html', '_blank', 'noopener')}>
-                    Layout editor
+                  {/* The app editor is its own page (builder.html), not a view of this one: it opens beside it. */}
+                  <ToolbarButton label="App editor" icon={<Icon name="layout" />} onClick={() => window.open('builder.html', '_blank', 'noopener')}>
+                    App editor
                   </ToolbarButton>
                   <ToolbarButton label="Dark mode" icon={<Icon name="moon" />} pressed={scheme === 'dark'} onClick={() => setScheme(scheme === 'dark' ? 'light' : 'dark')} animated={animated} />
                   <ToolbarButton label="Look" icon={<Icon name="appearance" />} pressed={look} onClick={() => setLook(!look)} animated={animated}>

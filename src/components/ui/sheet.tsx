@@ -68,6 +68,12 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
       <SheetPrimitive.Root
         swipeDirection={SIDE_TO_SWIPE[side]}
         onOpenChange={(open, details) => {
+          // A sheet beside the page stays when the focus goes to the page: Tab past its last control, or a click that
+          // gives focus elsewhere, is not a way to dismiss it (a form in it would be lost). Esc and a click outside are.
+          if (!open && details.reason === "focus-out" && props.modal === false) {
+            details.cancel()
+            return
+          }
           const outside = details.reason === "outside-press" || details.reason === "focus-out"
           // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.
           if (!open && outside && (inToasts(details.event?.target) || inTitleBar(details.event?.target))) {

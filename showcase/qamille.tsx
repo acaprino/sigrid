@@ -7,9 +7,13 @@
 //   writing is a panel at the end that leaves the mail readable.
 // - On a phone: the folders are too many for tabs, so they are the drawer; the list is the screen, a message is a
 //   page with its actions at the foot, and writing is a sheet. (Qamille has no phone build: this is how it would be.)
+// - The Archive holds five thousand messages: a folder is a `VirtualList` (the toolkit's `./virtual` entry), so only
+//   the rows in sight are in the page. A message is written in a `RichTextField` (the `./rich-text` entry).
 // Keys, where there is a keyboard: N writes, R replies, E archives, Z undoes, Ctrl K searches.
 import * as React from 'react'
 import { ChevronLeft, Plus } from 'lucide-react'
+import { RichTextField } from '../src/rich-text'
+import { VirtualList } from '../src/virtual'
 import {
   AppShell,
   Avatar,
@@ -34,7 +38,6 @@ import {
   SheetTitle,
   Sidebar,
   SidebarGroup,
-  Textarea,
   Toolbar,
   ToolbarBrand,
   ToolbarButton,
@@ -88,13 +91,20 @@ const MAIL: readonly Mail[] = [
 ]
 const PEOPLE: Readonly<Record<string, string>> = Object.fromEntries(MAIL.map((m) => [m.address, m.from]))
 
+/** Years of mail put away: made from the mail above, the same at every load, so the Archive is as long as a real one. */
+const MONTHS = ['Oct', 'Sep', 'Aug', 'Jul', 'Jun', 'May', 'Apr', 'Mar', 'Feb', 'Jan', 'Dec', 'Nov']
+const ARCHIVE: readonly Mail[] = Array.from({ length: 5000 }, (_, i): Mail => {
+  const { file: _file, label: _label, ...old } = MAIL[(i * 3 + 1) % MAIL.length]!
+  return { ...old, id: `old-${i}`, date: `${28 - (i % 28)} ${MONTHS[Math.floor(i / 28) % 12]}`, unread: false, section: 'seen', folder: 'archive' }
+})
+
 type Notice = { id: string; text: string; undo?: () => void }
 type Draft = { to: string[]; subject: string; body: string; reply: boolean }
 
 export function Qamille({ device, host, animated, density, look }: AppProps) {
   const phone = device === 'phone'
   const preview = host === 'web'
-  const [mail, setMail] = React.useState<readonly Mail[]>(MAIL)
+  const [mail, setMail] = React.useState<readonly Mail[]>(() => [...MAIL, ...ARCHIVE])
   const [account, setAccount] = React.useState<'all' | 'work' | 'personal'>('all')
   const [folder, setFolder] = React.useState('inbox')
   const [filter, setFilter] = React.useState('smart')
@@ -252,9 +262,13 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
         })}
       </div>
     ) : (
-      <ItemList aria-label={folderLabel} className="p-2">
-        {shown.map(row)}
-      </ItemList>
+      // A folder can hold years of mail: only the rows in sight are drawn.
+      <VirtualList aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} className="h-full p-2">
+        {(index) => {
+          const m = shown[index]
+          return m ? row(m) : null
+        }}
+      </VirtualList>
     )
 
   const reader = opened ? (
@@ -370,7 +384,7 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
               <Input value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} placeholder="Add a subject" autoComplete="off" />
             </FormField>
             <FormField label="Message" help={preview ? 'This is the preview: sending is off.' : undefined}>
-              <Textarea value={draft.body} onChange={(event) => setDraft({ ...draft, body: event.target.value })} className="min-h-32" />
+              <RichTextField value={draft.body} onChange={(body) => setDraft((now) => (now ? { ...now, body } : now))} />
             </FormField>
           </div>
         ) : null}

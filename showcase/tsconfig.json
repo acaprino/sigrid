@@ -5,7 +5,13 @@
     "emitDeclarationOnly": false,
     "declaration": false,
     "rootDir": "..",
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ],
+    "resolveJsonModule": true
   },
-  "include": ["./", "../src"]
+  "include": [
+    "./",
+    "../src"
+  ]
 }

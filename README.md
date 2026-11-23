@@ -61,7 +61,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
    OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
    recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
-   The layout builder's «Look» panel has it: choosing a base suggests its accents.
+   The app editor's «Look» panel has it: choosing a base suggests its accents.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
@@ -195,11 +195,53 @@ a drawer.
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette`, `ItemList`/`ItemRow`, `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
+- Four entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+  pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
+  - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
+    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`); one row can
+    be chosen (`current`, `onRowPress`, arrows among the rows); with `virtual` only the rows in sight are in the
+    page. For filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and
+    its parts, which are in the main entry.
+  - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
+    drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
+    items there are and where each one is.
+  - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
+    pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
+  - `./rich-text`: `RichTextField`, on TipTap: bold, italic, underline, two kinds of list, a quote, undo and redo,
+    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control.
+
+  ```tsx
+  import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
+  import { VirtualList } from '@acaprino/sigrid/virtual'
+  import { ReorderList } from '@acaprino/sigrid/reorder'
+  import { RichTextField } from '@acaprino/sigrid/rich-text'
+
+  const columns: DataColumn<File>[] = [
+    { id: 'name', header: 'Name', cell: (file) => file.name, sortValue: (file) => file.name },
+    { id: 'size', header: 'Size', cell: (file) => size(file.kb), sortValue: (file) => file.kb, align: 'end' },
+  ]
+  <DataTable aria-label="Files" columns={columns} rows={files} rowId={(file) => file.id} virtual className="h-96" />
+
+  <VirtualList aria-label="Messages" count={mail.length} className="h-full">
+    {(index) => <ItemRow title={mail[index].from} description={mail[index].subject} />}
+  </VirtualList>
+
+  <ReorderList aria-label="Columns" items={lanes} itemId={(lane) => lane.id} itemName={(lane) => lane.name} onReorder={setLanes}>
+    {(lane) => lane.name}
+  </ReorderList>
+
+  <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
+  ```
+
+  Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
+  sort by a text column in about 30 ms; a key in the rich text costs about 1.3 ms (the buttons are drawn again only
+  when one of them changes); nothing runs while nothing happens. With the processor four times slower the scroll
+  stays under 7 ms a frame.
 - Words: a component's content is the app's. The few words a component says by itself (the name of a close
   button, «Page 2 of 5», the announcement of a label added) are English placeholders in `DEFAULT_WORDS`. An app
   replaces them, all or some, once for the whole tree and in any language: `<WordsProvider words={{ common: {
@@ -251,20 +293,70 @@ a drawer.
   or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;
   «Look» in the bar has a switch for it too, with the shape and the animations), opens what opens on a gesture and
   turns motion on. An address that opens something, or ends in `#<section>`, starts in the view that holds it.
-- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): a layout builder. A canvas of panels that
-  are dragged by their tab onto one another to join, or onto an edge to split, and resized by the line between them;
-  the toolkit's components are dragged from a list into a panel and up and down inside it, or set beside the one before it on the same row. The inspector holds the
-  look, everything the toolkit lets an app configure: scheme, the theme's two colours, the tone of the accents, the
-  corner shape, the font, the density and each of its measures (control heights, paddings, rows), the icon pack and
-  motion. A choice that would change nothing is not offered: on colours with no hue (the gray baseline) the tone is
-  replaced by a sentence that says why (`toneHasEffect`). What is built, look included, is kept in the browser and copied as data. Development only: the panels are `dockview-react` (MIT, a development dependency,
-  pinned), drawn with the toolkit's tokens.
+- `showcase/builder.html` (the same `npm run showcase`, at `/builder.html`): the app editor. A whole app is made by
+  dragging the toolkit's parts into the regions of the one frame (`AppShell`): the bar at the head, the tabs under it,
+  the sidebar, the content, the details, the actions, the strip and the bar at the foot. A region takes only what
+  belongs there (a toolbar holds actions, a sidebar holds places), as `docs/patterns.md` says. An app has screens: the
+  bar, the sidebar, the tabs and the foot are shared, the content, the details and the actions are each screen's own,
+  and a button, a row or a tab can go to a screen, open the drawer, show the details or show a notice.
+  - One layout serves a computer and a phone: a region, and any component, is there always or only where the frame is
+    narrow (under 620px) or wide. The canvas shows the app at the width of a phone, a tablet, a laptop or the room there
+    is, in a browser tab or as a native window in Tauri; for a phone it is drawn with the 44px sizes of a finger.
+  - «Run» is the app running by itself (`/run.html`, which also opens in a tab of its own, or on a phone): its
+    state, its navigation and its notices work, from the same description the export prints.
+  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`), in a project
+    that runs in a browser as it is (Vite, Tailwind, the entry file with the look) and as a native app in Tauri after
+    the steps of its README (the window's bar and buttons, the browser's keys taken away, the safe areas of a phone).
+    `test/editor-export.test.ts` type-checks that source against the toolkit, for the apps the editor starts from and
+    for one that holds every component in every setting. The app can also be saved as data and opened again.
+  - The inspector holds the component chosen, the screen, the app and the look: everything the toolkit lets an app
+    configure (scheme, the theme's two colours, the tone of the accents, the corner shape, the font, the density and
+    each of its measures, the icon pack, motion). What is made is kept in the browser.
+  - Development only. The dragging, the selection, the outline and the history are Puck's (`@puckeditor/core`, MIT, a
+    development dependency, pinned; with it come, for the showcase only, the packages it depends on, TipTap and one
+    Radix popover among them: none of it is in the package). Everything it draws is the toolkit's, and the editor
+    is itself an app in the one frame. Its pieces are in `showcase/editor/`.
 - Checks: `npm run design:lint` (DESIGN.md is valid) and `npm run design:check` (the code uses no colour, palette
   class, arbitrary size, font or effect that DESIGN.md does not permit; config `design-check.config.json`, accepted
   findings in `design-check.known.json`) use the copy of the tool in `tools/zero-slop-design/` (v0.2.1, MIT); the
   scale classes they do not read (text sizes, radii, shadows, weights, icons, border with shadow, boxed key hints,
   loops and effects) are checked against DESIGN.md by `test/design-rules.test.ts`. CI runs both (`.github/workflows/ci.yml`,
   job `toolkit`). An exception needs a `design-check-ignore-next-line <rule>: <cause>` comment.
+
+## For coding agents
+
+The package is ready for a coding agent (Claude Code and others) that builds an app with it. What the agent needs
+comes with the package, at the version the app has installed, and most of it is written from the code:
+
+- `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
+  `llms.txt` is the index of what to read.
+- `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
+  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor.
+  `npm run agents` writes both from the source; a test fails when they fall behind it.
+- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
+- `sigrid-check`: the design check, as a command of the package. In an app, `npx sigrid-check` checks `./src`
+  against `DESIGN.md` (colours and sizes written by hand, palette classes, fonts, gradients, blur, emoji) and exits
+  with 1 when it finds something, so an agent can run it and correct itself. An app keeps its own choices in a
+  `sigrid-check.config.json`. It reads files and builds nothing.
+- A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
+  check after:
+
+  ```text
+  /plugin marketplace add acaprino/sigrid
+  /plugin install sigrid@sigrid
+  ```
+
+  Or, for everyone who works on an app, in the app's `.claude/settings.json`:
+
+  ```json
+  {
+    "extraKnownMarketplaces": { "sigrid": { "source": { "source": "github", "repo": "acaprino/sigrid" } } },
+    "enabledPlugins": { "sigrid@sigrid": true }
+  }
+  ```
+
+Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does the same: «For any interface work read
+`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx sigrid-check` after».
 
 ## Use a release
 

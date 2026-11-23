@@ -1,0 +1,25 @@
+# Sigrid UI
+
+> @acaprino/sigrid: a React design system for apps that run in a browser and in a Tauri window, on a computer and on a phone. ADHD first: calm surfaces, one accent, one clear action at a time. Behaviour from Ark UI and Base UI, form from Park UI recipes, every colour from a theme engine.
+
+The paths are relative to the root of the package (in an app: node_modules/@acaprino/sigrid/).
+
+## For agents
+
+- [AGENTS.md](AGENTS.md): how to build a screen with the toolkit, the rules broken most often, the check to run
+- [agents/catalog.json](agents/catalog.json): every component of every entry, with its props and their comments, written from the source
+- [agents/examples/tasks.tsx](agents/examples/tasks.tsx): a to-do app in the toolkit's frame
+- [agents/examples/mail.tsx](agents/examples/mail.tsx): a mail client in the toolkit's frame
+
+## Rules and guides
+
+- [DESIGN.md](DESIGN.md): the rules R1 to R13, the tokens, each component's form
+- [docs/patterns.md](docs/patterns.md): the frame of an app, its regions, four screens to start from
+- [docs/mobile.md](docs/mobile.md): what the toolkit does on a phone and what an app adds
+- [README.md](README.md): setup, themes, density, words, icons, the entries of the package
+
+## Optional
+
+- [docs/component-inventory.md](docs/component-inventory.md): each component against Ark UI, Park UI and the rules, with the decisions taken
+- [docs/tokens.css](docs/tokens.css): the tokens as CSS variables
+- [THIRD_PARTY.md](THIRD_PARTY.md): the libraries the toolkit rests on, their versions and licences

@@ -7,9 +7,11 @@
 //   changed there holds at once; the one solid action is «Complete» on the Now strip (in the Stack, «Add» or «Accept»).
 // - On a phone: the views are tabs at the foot with the plus between them, where the thumb is; a task is a page with
 //   its actions at the foot; adding is a sheet from the foot that goes to the Stack.
+// - The Stack is put in order by hand (`ReorderList`, the toolkit's `./reorder` entry): Sort takes it from the top.
 // Keys, where there is a keyboard: B goes to the Stack, / searches, Z undoes the newest thing done.
 import * as React from 'react'
 import { ChevronLeft, Plus } from 'lucide-react'
+import { ReorderList } from '../src/reorder'
 import {
   AppShell,
   Avatar,
@@ -389,13 +391,10 @@ export function Ethel({ device, host, animated, density, look }: AppProps) {
             </Button>
           </div>
           <h2 className="pt-2 text-2xs font-medium text-ink-mute">In the stack</h2>
-          <ul role="list" className="flex flex-col divide-y divide-line text-sm text-ink">
-            {stack.map((item) => (
-              <li key={item} className="flex min-h-(--row-height) items-center py-1.5">
-                {item}
-              </li>
-            ))}
-          </ul>
+          {/* Sort takes the Stack from the top, so its order is the user's to set: by the handles, or Space and the arrows. */}
+          <ReorderList aria-label="In the stack" items={stack} itemId={(item) => item} itemName={(item) => item} onReorder={(next) => setStack(next)} animated={animated}>
+            {(item) => <span className="min-w-0 flex-1 py-1.5">{item}</span>}
+          </ReorderList>
         </>
       ) : first === undefined ? (
         <Empty className="py-10" title="The stack is empty" description="Everything has a place and a day." />

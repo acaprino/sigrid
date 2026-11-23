@@ -30,7 +30,9 @@ const syncExternalStore = {
 
 await build({
   plugins: [syncExternalStore],
-  entryPoints: [`${root}src/index.ts`],
+  // The main entry, and one for each part that rests on a library an app may not need (a table, a long list, a
+  // list put in order by dragging, formatted text): what they share with the main entry is in common chunks.
+  entryPoints: ['index', 'table', 'virtual', 'reorder', 'rich-text'].map((entry) => `${root}src/${entry}.ts`),
   // `splitting`: Motion (src/internal/motion-impl.tsx) stays in a separate chunk, loaded only with animations on.
   outdir: `${root}dist`,
   splitting: true,
@@ -48,4 +50,4 @@ run('typescript/bin/tsc', ['-p', 'tsconfig.json'])
 run('@tailwindcss/cli/dist/index.mjs', ['-i', 'src/styles/entry.css', '-o', 'dist/styles.css'])
 
 for (const f of readdirSync(`${root}src/styles/fonts`)) cpSync(`${root}src/styles/fonts/${f}`, `${root}dist/fonts/${f}`)
-console.log('@acaprino/sigrid: dist/index.js, dist/index.d.ts, dist/styles.css, dist/fonts/')
+console.log('@acaprino/sigrid: dist/index.js and its four entries (table, virtual, reorder, rich-text), their .d.ts, dist/styles.css, dist/fonts/')
