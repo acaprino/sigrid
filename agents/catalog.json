@@ -815,7 +815,7 @@
     },
     {
      "file": "src/components/ui/app-shell.tsx",
-     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nTwo forms, chosen with `frame`, with the same regions and steps:\n- `line` (the default): one surface, the page, with a line between the regions;\n- `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's\n  ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is\n  one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the\n  large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a\n  sidebar of its own colours (`data-sidebar=\"own\"`, a dark or solid column) keeps its column on the lanes' surface.\n  Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nWithout a way to measure (a server, a test) the frame is the wide one.",
+     "about": "The frame of an app: one layout with seven regions, after Imago's `im-shell`, so every app of the suite is laid out\nalike and an app fills in only the regions it needs.\n\n  ┌ title bar: app · views · toolbar · window buttons ───────┐\n  ├ tabs: the views, when they are not in the bar ───────────┤\n  ├ status: the last result · a summary ────────────────────┤\n  │ sidebar │ content                    │ inspector         │\n  │         ├ actions: the primary one at the end ───────────┤\n  ├─────────┴ footer: service · counts · keys ───────────────┤\n  └ bottom bar: the views, when they are at the foot ────────┘\n\nThe frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the\nnarrow window it is. Three steps, Imago's:\n- 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the\n  content as a panel with no backdrop (the page beside it keeps working);\n- 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever\n  the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.\nThe steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own\n(`steps`), and a step set to 0 never happens (`steps={{ rail: 0, sidebar: 0 }}` keeps the sidebar whole at any width).\nWith `desktop` the frame is the window of a program and not a page (what Imago's windows do):\n- its chrome is not selectable and keeps the arrow cursor, as in any program; the content, the body of the\n  inspector, every field and whatever carries `data-selectable` stay selectable (theme.css);\n- what opens over the window (dialogs, sheets, menus, the command palette) opens under the title bar and not over\n  it, so the window can still be moved, minimized and closed while a dialog is open: the overlays of the frame mount\n  into a layer that starts under the bar.\nThe keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.\nTwo forms, chosen with `frame`, with the same regions and steps:\n- `line` (the default): one surface, the page, with a line between the regions;\n- `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's\n  ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is\n  one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the\n  large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a\n  sidebar of its own colours (`data-sidebar=\"own\"`, a dark or solid column) keeps its column on the lanes' surface.\n  Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.\nThe `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.\nF6 moves the focus to the next region (title bar, sidebar, content, inspector) and Shift+F6 to the one before, round\nagain, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the app to write\n(after Imago's `regions`). In a region the focus goes to the place the user is in (`aria-current`), else to the first\nthing that takes it; the content takes it itself when it holds nothing that does.\nWithout a way to measure (a server, a test) the frame is the wide one.",
      "components": [
       {
        "name": "AppShell",
@@ -1404,7 +1404,7 @@
     },
     {
      "file": "src/components/ui/commands.tsx",
-     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.",
+     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.\n- `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,\n  hidden on a phone).",
      "components": [
       {
        "name": "CommandsProvider",
@@ -1423,6 +1423,23 @@
         {
          "name": "children",
          "type": "React.ReactNode"
+        }
+       ]
+      },
+      {
+       "name": "KeyHints",
+       "doc": "The keys that work now, for the window's foot (`AppShell`'s `footer`): each named command that has a key and can be done now, its key as plain text and its name («Ctrl K Commands»). A command that cannot be done now leaves the list and comes back with it. Hidden on a phone, where there is no keyboard to press them on.",
+       "props": [
+        {
+         "name": "ids",
+         "type": "readonly string[]",
+         "required": true,
+         "doc": "The commands it names, by id, in this order; of those, the ones with a key that can be done now are shown. `PALETTE_COMMAND` names Ctrl+K."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "Its name for screen readers. Absent: the toolkit's words («Keys»)."
         }
        ]
       }
@@ -1511,6 +1528,7 @@
      "also": [
       "CommandsProviderProps",
       "formatKeys",
+      "KeyHintsProps",
       "PALETTE_COMMAND",
       "useCommand",
       "useCommandPalette",
@@ -5908,7 +5926,7 @@
         },
         {
          "name": "palette",
-         "type": "{ readonly placeholder: string; readonly empty: string; readonly command: string; }",
+         "type": "{ readonly placeholder: string; readonly empty: string; readonly command: string; readonly keys: string; }",
          "required": true
         },
         {
@@ -6026,7 +6044,7 @@
         },
         {
          "name": "palette",
-         "type": "Partial<{ readonly placeholder: string; readonly empty: string; readonly command: string; }>"
+         "type": "Partial<{ readonly placeholder: string; readonly empty: string; readonly command: string; readonly keys: string; }>"
         },
         {
          "name": "keys",
