@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { Count, FormField, Icon, Input, NavItem, NavList, Select, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from '../src'
+import { NavContext } from '../src/components/ui/nav-list'
 
 const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 // Careful: Tailwind also scans `test/`. Class names with a variant are composed, not written whole.
@@ -383,6 +384,35 @@ describe('NavList and NavItem (R1, R6)', () => {
     expect(c).toContain('text-sidebar-ink')
     expect(c).toContain('aria-[current=page]:bg-sidebar-selected')
     expect(c).not.toContain('aria-[current=page]:bg-selected')
+  })
+
+  test('a row with a second line and controls of its own: the controls are beside the row, not in it; the rail shows neither', () => {
+    const open = vi.fn()
+    const add = vi.fn()
+    const threads = (
+      <NavList aria-label="Threads" tone="sidebar">
+        <NavItem current description="4 sessions · 4 running" onClick={open} actions={<button type="button" onClick={add}>New session</button>}>
+          PowerShell
+        </NavItem>
+        <NavItem description="1 session">Tax rounding bug</NavItem>
+      </NavList>
+    )
+    const { rerender } = render(threads)
+    const row = screen.getByRole('button', { name: /PowerShell/ })
+    expect(row.textContent).toBe('PowerShell4 sessions · 4 running')
+    // The second line keeps the regular weight under the chosen row's semibold, and the muted ink on the others.
+    expect(classes(row.querySelector('[data-slot="nav-item-description"]')!)).toEqual(expect.arrayContaining(['font-normal', 'opacity-80']))
+    expect(classes(screen.getByRole('button', { name: /Tax rounding bug/ }).querySelector('[data-slot="nav-item-description"]')!)).toContain('text-sidebar-mute')
+    const action = screen.getByRole('button', { name: 'New session' })
+    expect(row.contains(action)).toBe(false)
+    expect(action.closest('[data-slot="nav-item-row"]')).toBe(row.closest('[data-slot="nav-item-row"]'))
+    fireEvent.click(action)
+    expect(add).toHaveBeenCalledTimes(1)
+    expect(open).not.toHaveBeenCalled()
+    rerender(<NavContext.Provider value={{ rail: true, query: '' }}>{threads}</NavContext.Provider>)
+    expect(screen.queryByRole('button', { name: 'New session' })).toBeNull()
+    expect(document.querySelector('[data-slot="nav-item-description"]')).toBeNull()
+    expect(screen.getByRole('button', { name: 'PowerShell' }).querySelector('[data-slot="nav-item-label"]')!.className).toBe('sr-only')
   })
 })
 
