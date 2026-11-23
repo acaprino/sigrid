@@ -1,3 +1,4 @@
+// @vitest-environment node
 // `sigrid-check`'s own rule, `own-class`: off by default; turned on by an app that writes no interface code of its own,
 // it reports every class written by hand and every stylesheet of the app, with its place, and passes over a line
 // excepted with its reason. The rules of zero-slop-design keep working beside it (test/agents.test.ts).
