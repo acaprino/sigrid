@@ -15,6 +15,7 @@ import {
   Kbd,
   NavItem,
   Panel,
+  Progress,
   SearchField,
   Sidebar,
   SidebarGroup,
@@ -70,8 +71,18 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
   const [filter, setFilter] = React.useState('all')
   const [search, setSearch] = React.useState('')
   const [chosen, setChosen] = React.useState('chrome')
-  const [details, setDetails] = React.useState(true)
+  // Closed at the start, as in Xiox: on a frame under 1000px the details are a panel over the list.
+  const [details, setDetails] = React.useState(false)
   const [ticked, setTicked] = React.useState(() => new Set(ITEMS.filter((i) => i.on).map((i) => i.id)))
+  // An analysis under way: how far it is, in percent. While it runs the status row is its progress and the list is frozen.
+  const [job, setJob] = React.useState<number | null>(null)
+  React.useEffect(() => {
+    if (job === null) return
+    const timer = setTimeout(() => setJob(job >= 100 ? null : Math.min(100, job + 4)), 250)
+    return () => clearTimeout(timer)
+  }, [job])
+  const busy = job !== null
+  const working = busy ? ITEMS[Math.min(ITEMS.length - 1, Math.floor((job / 100) * ITEMS.length))]!.name : ''
   const toggle = (id: string) =>
     setTicked((now) => {
       const next = new Set(now)
@@ -119,11 +130,23 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
           titleBar={<AppBar device="desktop" host="native" label="Xiox">{bar}</AppBar>}
           sidebar={sidebar}
           status={
-            <>
-              <Badge variant="secondary">Analysis done</Badge>
-              <span className="text-ink-soft">13.48 GB to delete · 46,999 files</span>
-              <span className="ms-auto">administrator · RAM 32 GB</span>
-            </>
+            busy ? (
+              // While a job runs the row is its progress: the state, the job, the bar, how far, and the item it is on.
+              <>
+                <Badge variant="secondary">Analyzing</Badge>
+                <span className="text-ink-soft">Analyzing…</span>
+                <Progress aria-label="Analysis" value={job} size="sm" className="w-48 shrink-0" />
+                <span className="font-semibold text-ink tabular-nums">{job}%</span>
+                <span className="min-w-0 truncate">Analyzing – {working}</span>
+                <span className="ms-auto shrink-0">administrator · RAM 32 GB</span>
+              </>
+            ) : (
+              <>
+                <Badge variant="secondary">Analysis done</Badge>
+                <span className="text-ink-soft">13.48 GB to delete · 46,999 files</span>
+                <span className="ms-auto">administrator · RAM 32 GB</span>
+              </>
+            )
           }
           inspector={
             <Inspector title="Item" open={details} onOpenChange={setDetails} animated={animated} footer={<><Button variant="ghost" size="sm">Skip</Button><Button variant="outline" size="sm" disabled={Boolean(item.blocked)}>Clean</Button></>}>
@@ -147,8 +170,8 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
           }
           actions={
             <>
-              <Button variant="outline" size="sm"><Icon name="refresh" />Analyze <Kbd>A</Kbd></Button>
-              <Button size="sm">Clean {ticked.size} items <Kbd>↵</Kbd></Button>
+              <Button variant="outline" size="sm" disabled={busy} onClick={() => setJob(0)}><Icon name="refresh" />Analyze <Kbd>A</Kbd></Button>
+              <Button size="sm" disabled={busy}>Clean {ticked.size} items <Kbd>↵</Kbd></Button>
             </>
           }
           footer={
@@ -166,11 +189,16 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
             title={section}
             subtitle={`${ITEMS.length} items · ${ticked.size} selected`}
             actions={
-              <ToggleGroup aria-label="Show" value={filter} onValueChange={setFilter} animated={animated}>
-                <ToggleGroupItem value="all">All</ToggleGroupItem>
-                <ToggleGroupItem value="selected">Selected</ToggleGroupItem>
-                <ToggleGroupItem value="caution">Caution</ToggleGroupItem>
-              </ToggleGroup>
+              <>
+                <ToggleGroup aria-label="Show" value={filter} onValueChange={setFilter} animated={animated}>
+                  <ToggleGroupItem value="all">All</ToggleGroupItem>
+                  <ToggleGroupItem value="selected">Selected</ToggleGroupItem>
+                  <ToggleGroupItem value="caution">Caution</ToggleGroupItem>
+                </ToggleGroup>
+                <Button variant={details ? 'secondary' : 'ghost'} size="sm" aria-pressed={details} onClick={() => setDetails(!details)}>
+                  Details
+                </Button>
+              </>
             }
             tools={<SearchField value={search} onValueChange={setSearch} aria-label="Search this view" placeholder="Search this view" className="flex-1" />}
           >
@@ -188,7 +216,7 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
                 {shown.map((i) => (
                   <TableRow key={i.id} current={chosen === i.id} onClick={() => { setChosen(i.id); setDetails(true) }}>
                     <TableCell>
-                      <Checkbox aria-label={`Clean «${i.name}»`} checked={ticked.has(i.id)} disabled={Boolean(i.blocked)} onCheckedChange={() => toggle(i.id)} />
+                      <Checkbox aria-label={`Clean «${i.name}»`} checked={ticked.has(i.id)} disabled={busy || Boolean(i.blocked)} onCheckedChange={() => toggle(i.id)} />
                     </TableCell>
                     <TableCell>
                       <span className="block font-medium text-ink">{i.name}</span>

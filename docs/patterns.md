@@ -186,6 +186,11 @@ web view is lost. Imago's `imago-shell` crate does these for Tauri on Windows.
 - One thing with a size (a file, an export): `Progress` under its name, with the speed or the size beside the name; at
   the end the text says «Complete» and the size takes the speed's place. A failure keeps the range where it stopped
   (`status="error"`), and Retry is the one solid action.
+- A job of the whole window (an analysis, a scan, a cleaning), as Xiox does it: the frame's `status` row is its
+  progress while it runs, and appears there by itself, under the tabs. In order: the state as a word («Analyzing»),
+  the job, a `Progress` of a fixed width, how far as text («36%»), and the item it is on; what the row says at its end
+  stays. The list is frozen meanwhile: what the job works on cannot change. At the end the row says the result
+  («Analysis done · 13.48 GB to delete»).
 - A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
 - Where it is not known how far it is, `value={null}`: a track and the word «In progress». Nothing loops.
 - Do not make screen readers read every percent: say the end and the failure in a live region of the app (`Toasts`).
