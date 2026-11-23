@@ -57,6 +57,12 @@
   stroke: var(--color-destructive);
 }
 
+/* The line of the path between two of its things (`steps`): as thick as the accent, also when it keeps a tone of its
+   own (a warning stays a warning on the path). */
+.react-flow__edge.sigrid-graph-path .react-flow__edge-path {
+  stroke-width: 2;
+}
+
 /* With a path, a line to a dimmed thing is dimmed as the thing is. */
 .react-flow__edge.sigrid-graph-dim {
   opacity: 0.4;

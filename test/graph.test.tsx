@@ -170,14 +170,18 @@ describe('lines that do not hang', () => {
     expect(linesOf(LINKED.edges, closed, { direction: 'right', chosen: null, marked: null, dimmed: null, editable: false }).lines.map((it) => it.id)).not.toContain('a1→b1#link')
   })
 
-  test('a line between two things of the path takes the accent, keeping its dash; with a path, a line to a dimmed thing is dimmed', () => {
+  test('a line between two things of the path is the path’s, thicker, keeping its dash and its own tone, or taking the accent without one; with a path, a line to a dimmed thing is dimmed', () => {
     const at = layoutGraph(LINKED, visibleGraph(LINKED, []).order, 'right')
     const { lines } = linesOf(LINKED.edges, at, { direction: 'right', chosen: 'b', marked: new Set(['a1', 'b1']), dimmed: new Set(['a2', 'root']), editable: false })
     const line = (id: string) => lines.find((it) => it.id === id)!
-    expect(line('a1→b1#link').className).toBe('sigrid-graph-dashed sigrid-graph-accent')
-    expect(line('a1→b1#link').markerEnd).toMatchObject({ color: 'var(--color-accent)' })
+    // A warning stays a warning on the path, its arrowhead too.
+    expect(line('a1→b1#link').className).toBe('sigrid-graph-dashed sigrid-graph-warning sigrid-graph-path')
+    expect(line('a1→b1#link').markerEnd).toMatchObject({ color: 'var(--color-warning)' })
     expect(line('a2→a1#link').className).toContain('sigrid-graph-dim')
     expect(line('b→b1').className).toBe('sigrid-graph-near')
+    // A line without a tone of its own takes the accent.
+    const plain = linesOf(GRAPH.edges, at, { direction: 'right', chosen: null, marked: new Set(['a', 'a1']), dimmed: null, editable: false }).lines.find((it) => it.id === 'a→a1')!
+    expect(plain.className).toBe('sigrid-graph-accent sigrid-graph-path')
   })
 })
 

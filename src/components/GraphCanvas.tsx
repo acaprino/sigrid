@@ -15,11 +15,13 @@
 // - After a new layout of the app's (a new `layoutKey`) the view is fitted to the whole graph again; a draw on the
 //   same key (another choice, new flags, the same places) keeps the view where the user moved it.
 // - A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a
-//   line under it, and on a thing outside what the graph is about (`external`) the word «external» in the muted ink,
-//   never a dashed border. The chosen one has the selection tint (R1), or each of the several the app marks when it
-//   draws one of its things in several places; what is joined to them stays as it is and the rest is dimmed, so the
-//   eye finds the neighbourhood. The app shows the details of the chosen thing where it likes (the `Inspector` of the
-//   frame).
+//   line under it, and on a thing outside what the graph is about (`external`) the word «external», 12px in the muted
+//   ink, never a dashed border; the name keeps some room and the word gives way first. The chosen one has the selection
+//   tint (R1), or each of the several the app marks when it draws one of its things in several places; what is joined
+//   to them stays as it is and the rest is dimmed, so the eye finds the neighbourhood. Of the several, one is the
+//   choice: the first in the order of the things, which holds the Tab stop and is the one screen readers hear chosen;
+//   the others say in their description that they are chosen with it. The app shows the details of the chosen thing
+//   where it likes (the `Inspector` of the frame).
 // - Two ways to read the lines (`model`). In the tree mode, the default, a line says that a thing hangs from another:
 //   - A thing with others hanging from it has an arrow: closed, it says how many it hides, and the graph is laid out
 //     again without them. What can be reached another way stays in sight.
@@ -32,7 +34,7 @@
 //     showing what it holds), and only for the things it says it opens: a thing with an `openLabel` («Open Orders»)
 //     has a › button of that name, and a double press on it or its › calls `onOpen` with its id. Without `onOpen`,
 //     or on a thing without `openLabel`, there is no › and nothing opens. A thing that holds others the app keeps out
-//     of sight (a group it has not opened) says how many (`hidden`), at its end as a closed thing of the tree does,
+//     of sight (a group it has not opened) says how many (`hiddenCount`), at its end as a closed thing of the tree does,
 //     and in its name.
 //   - The things are one Tab stop, and the › of the one that has it is the next. Along the ranks the arrows follow the
 //     lines: with `direction="right"` Right goes to what the thing's first line leads to and Left back to what its
@@ -49,12 +51,18 @@
 //   theme (`accent`, `warning`, `destructive`) and an arrowhead (a `link` has one unless it goes both ways): what a
 //   kind of line means is said by its dash and its words, never by its colour alone. Screen readers hear a thing's
 //   `link` lines in its description, with their words and the thing at the other end; the lines are not read twice.
-//   The words may be drawn only while one of the two things is chosen (`labelShown: 'chosen'`), and are heard always.
-//   Every edge is a line of its own: two between the same two things are two lines (named by the app's `id`, or
-//   numbered), each with its words; without the app's routes they lie one on the other.
+//   The words may be drawn only while one of the two things is chosen or has the focus, or while the line is the
+//   path's (`labelShown: 'chosen'`), and are heard always.
+//   An edge with an `id` is a line of its own: two between the same two things are two lines, each with its words. An
+//   edge without one is one line with its exact copies (the same ends, kind, words, dash, tone and arrowhead, and no
+//   route), and taking that line away takes them all; edges without ids that differ in any of those are lines of
+//   their own, numbered after their ends. Without the app's routes, two lines or more between the same two things are
+//   drawn side by side (a line type of the canvas's, `apart`), so the lines and their words do not lie on each
+//   other; with the routes each follows its own.
 // - With `steps` the app numbers a path through the graph (the steps of a plan, the answer to a question): each
-//   thing on it has the selection tint and its numbers in small dots and in its name, the lines between two of them
-//   take the accent, what is neither on the path nor joined to it is dimmed, and what hides a thing of the path opens.
+//   thing on it has the selection tint and its numbers in small dots and in its name, one line between two of them
+//   (the first in the order of the edges) is the path's, in the accent or in a tone of its own and thicker, what is
+//   neither on the path nor joined to it is dimmed, and what hides a thing of the path opens.
 // - The view is fitted at the first paint (on the path, when there is one), again whenever the box changes size, and
 //   with the button or the key: never smaller than a name can be read (`minFitZoom`, about 11px names). A graph too
 //   large for that starts at its top left, and the edges of the view fall between things wherever the layout leaves
@@ -63,9 +71,9 @@
 // - With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,
 //   opening what hides it.
 // - With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the
-//   chosen thing to hang a new one from it (in the graph mode, to add one after it). Every change is asked of the app
-//   with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here but what is open and where the
-//   view is.
+//   chosen thing (the first of several, alone) to hang a new one from it (in the graph mode, to add one after it).
+//   Every change is asked of the app with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here
+//   but what is open and where the view is.
 // The cost is the layout, done again when the graph changes or a thing opens or closes: about 30ms for 200 things in
 // sight, 200ms for a thousand, most of a second for three thousand (measured). In the tree mode a larger graph starts
 // with its branches closed (`defaultCollapsed`); in the graph mode every thing is in sight, so the whole graph is laid
@@ -76,7 +84,7 @@
 // not pay for it.
 import * as React from 'react'
 import dagre from '@dagrejs/dagre'
-import { Background, BackgroundVariant, BaseEdge, Handle, MarkerType, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type EdgeProps, type Node, type NodeProps } from '@xyflow/react'
+import { Background, BackgroundVariant, BaseEdge, getSmoothStepPath, Handle, MarkerType, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type EdgeProps, type Node, type NodeProps } from '@xyflow/react'
 import { Maximize } from 'lucide-react'
 import { Icon, type IconName } from '../icons'
 import { markHueAttrs } from '../colors'
@@ -105,8 +113,9 @@ export type GraphNode = {
    */
   openLabel?: string | undefined
   /**
-   * The thing is outside what the graph is about (another's service, a library): the word «external» after its name
-   * in the muted ink (`graph.external`), also in its name for screen readers. Never a dashed border (R4).
+   * The thing is outside what the graph is about (another's service, a library): the word «external» after its name,
+   * 12px in the muted ink (`graph.external`), also in its name for screen readers. Never a dashed border (R4). In a
+   * narrow box the name keeps some room and the word is cut first.
    */
   external?: boolean | undefined
   /**
@@ -114,7 +123,7 @@ export type GraphNode = {
    * count at its end, as a closed thing of the tree mode shows it, and in its name («Orders, hides 12», the word
    * `graph.hides`). Read when above 0. The tree mode counts what a closed thing hides by itself and does not read it.
    */
-  hidden?: number | undefined
+  hiddenCount?: number | undefined
   /**
    * Where the app placed the thing, when it lays the graph out itself (a layout engine of its own, by hand): the top
    * left corner of its box, in px. Read only when every thing has an `x` and a `y`; otherwise the canvas places them
@@ -132,9 +141,11 @@ export type GraphEdge = {
   from: string
   to: string
   /**
-   * The app's name for the line, also React Flow's. Every edge is a line of its own, so two between the same two
-   * things (a call, and data that flows the same way) are two lines, each with its words; without an `id` the line is
-   * named by its two ends, and a second one with the same ends by a number after them.
+   * The app's name for the line, also React Flow's. An edge with an `id` is always a line of its own, so two between
+   * the same two things (a call, and data that flows the same way) are two lines, each with its words. Without one
+   * the line is named by its two ends, and a second one with the same ends by a number after them; an exact copy of
+   * an edge without an `id` (the same ends, `kind`, `label`, `labelShown`, `style`, `tone` and `directed`, and no
+   * `points`) is the same line, and taking that line away takes every copy.
    */
   id?: string | undefined
   /**
@@ -145,11 +156,15 @@ export type GraphEdge = {
   kind?: 'child' | 'link' | undefined
   /** Words on the line, in its middle. Screen readers hear them too, in the description of the two things. */
   label?: string | undefined
-  /** When the words are drawn: `always` (the default), or `chosen`, only while one of the two things is chosen. Screen readers hear them in both cases. */
+  /**
+   * When the words are drawn: `always` (the default), or `chosen`, only while one of the two things is chosen or has
+   * the keyboard focus, or while the line is the one of the path (`steps`) between its two things. Screen readers
+   * hear them in both cases.
+   */
   labelShown?: 'always' | 'chosen' | undefined
   /** The dash of the line. What a kind of line means is said by its dash and its words, never by its colour alone. Default `solid`. */
   style?: 'solid' | 'dashed' | 'dotted' | undefined
-  /** The colour of the line, among the theme's (each keeps 3:1 on the canvas): `accent` is also thicker. Default the muted ink. */
+  /** The colour of the line, among the theme's (each keeps 3:1 on the canvas): `accent` is also thicker. Default the muted ink. Kept on the path (`steps`), which takes the accent only on a line without a tone of its own. */
   tone?: 'default' | 'accent' | 'warning' | 'destructive' | undefined
   /** An arrowhead at `to`. Default: a `link` has one, a `child` has none (its rank says which way it goes). `false` for a relation that goes both ways. */
   directed?: boolean | undefined
@@ -198,8 +213,11 @@ export type GraphCanvasProps = {
   layoutKey?: string | undefined
   /**
    * The id of the thing chosen: the one whose details the app shows. Or several ids, when the app draws one of its
-   * things as several (an entity in each place it is): each has the selection tint and is chosen for screen readers,
-   * and the first of them in the order of the things holds the Tab stop. The user still chooses one (`onSelect`).
+   * things as several (an entity in each place it is): each has the selection tint and what is joined to it stays.
+   * One of them is the choice: the first in the order of the things, which holds the Tab stop, is the one screen
+   * readers hear chosen (`aria-selected` in the tree, `aria-current` in the graph mode) and, with `editable`, has the
+   * plus; the others say in their description that they are chosen with it (`graph.chosenToo`). The user still
+   * chooses one (`onSelect`).
    */
   selected?: string | readonly string[] | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
@@ -207,9 +225,10 @@ export type GraphCanvasProps = {
   onOpen?: ((id: string) => void) | undefined
   /**
    * A path the app numbers through the graph: the id of each thing on it and its step numbers (a thing may be several
-   * steps). Each has the selection tint and its numbers, the lines between two of them take the accent, what is neither
-   * on it nor joined to it is dimmed. When the things on it change, what hides one of them opens (through
-   * `onCollapsedChange` when the app keeps what is closed); the first view is on them.
+   * steps). Each has the selection tint and its numbers; of the lines between two of them, the first in the order of
+   * the edges is the path's (the accent, or the line's own `tone`, thicker), so an app that wants another one there
+   * gives it first; what is neither on it nor joined to it is dimmed. When the things on it change, what hides one of
+   * them opens (through `onCollapsedChange` when the app keeps what is closed); the first view is on them.
    */
   steps?: ReadonlyMap<string, readonly number[]> | undefined
   /** In the tree mode, the ids of the things that are closed, when the app keeps them; otherwise the canvas keeps its own, from `defaultCollapsed`. */
@@ -262,6 +281,20 @@ function placesOf(nodes: readonly GraphNode[]): Map<string, { x: number; y: numb
 // Only `link` is a link: an edge that carries a `kind` field of the app's own (an object with more fields is still a
 // `GraphEdge`) hangs, as every edge did before there were kinds.
 const isChild = (edge: GraphEdge) => edge.kind !== 'link'
+/** One id or several, as a set: what the app passes as `selected`, and the chosen things `linesOf` is handed. */
+function idSet(ids: string | Iterable<string> | null | undefined): ReadonlySet<string> {
+  return new Set<string>(ids == null ? [] : typeof ids === 'string' ? [ids] : ids)
+}
+/**
+ * What makes an edge without an `id` the same line as its exact copies: its ends, its kind, its words and when they are
+ * drawn, its dash, its tone and its arrowhead, as they are read. Null for an edge that is always a line of its own:
+ * one with an `id` (an empty one names nothing), or with a route of its own (`points`).
+ */
+function copyOf(edge: GraphEdge): string | null {
+  if (edge.id || (edge.points && edge.points.length > 0)) return null
+  const child = isChild(edge)
+  return JSON.stringify([edge.from, edge.to, child, edge.label || '', edge.labelShown === 'chosen', edge.style ?? 'solid', edge.tone ?? 'default', edge.directed ?? !child])
+}
 /** The zoom the user can reach with the buttons and the wheel, and the default floor of a fit: names of 14px stay about 11px. */
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 1.5
@@ -490,16 +523,32 @@ export function viewFor(aim: readonly Box[], room: Room, minZoom: number, maxZoo
 
 /** The colour of a line and of its arrowhead (the arrowheads are drawn apart from the lines, so they take it by name). */
 const STROKE = { default: 'var(--color-ink-mute)', accent: 'var(--color-accent)', warning: 'var(--color-warning)', destructive: 'var(--color-destructive)' } as const
+/** The words on a line, on the canvas's own ground so the line stops around them. */
+const wordsOn = (label: string) => ({ label, labelShowBg: true, labelBgPadding: [4, 2] as [number, number], labelBgBorderRadius: 4 })
+/**
+ * Two lines or more between the same two things, without the app's routes, are drawn side by side (`Apart`): 20px
+ * apart, about the height of their words, so the words of two lines do not lie on each other; never further than 16px
+ * from the middle of the side they leave, so their ends stay on a thing 44px tall. From three lines on they share that
+ * room, closer, and their words may touch.
+ */
+const APART = 20
+const SPREAD = 16
+/** How far a line goes straight out of a side before it bends: React Flow's own (`offset` of its smoothstep path). */
+const STUB = 20
 
 /**
- * The lines React Flow draws for the edges whose two ends are in sight, and the edge each one is. Every edge is a line
- * of its own: one with an `id` is named by it; one without by its two ends, `child` lines plainly and a `link` with
- * `#link` after them (the names they always had), so the two kinds between the same things are two lines; a second
- * edge of a name already taken has a number after it (`#2`), so two edges with the same ends stay two. A line between
- * two things of the path takes the accent; with a path, a line to a dimmed thing is dimmed too. With `routes` (the
- * app placed the things) a line with `points` follows them. `chosen` is the chosen thing, or the several the app
- * marks: their lines are told from the others, and the words of a line drawn only on a choice (`labelShown:
- * 'chosen'`) are drawn while one of its two things is among them.
+ * The lines React Flow draws for the edges whose two ends are in sight, and the edge each one is (the first of its
+ * copies). An edge with an `id` is a line of its own, named by it. One without is named by its two ends, `child` lines
+ * plainly and a `link` with `#link` after them (the names they always had), so the two kinds between the same things
+ * are two lines; a second edge of a name already taken has a number after it (`#2`), so two edges with the same ends
+ * stay two, unless it is an exact copy of an edge without an `id` (`copyOf`): that is the same line, drawn once. Two
+ * lines or more between the same two things, from the same side to the same side and without a route, are drawn side
+ * by side: the line type `apart`, each `data.offset` px across its sides from the middle. Of the lines between two
+ * things of the path (`marked`) the first is the path's: the accent, or the line's own tone, and thicker; with a path,
+ * a line to a dimmed thing is dimmed too. With `routes` (the app placed the things) a line with `points` follows them.
+ * `chosen` is the chosen thing, or the several the app marks: their lines are told from the others, and the words of
+ * a line drawn only on a choice (`labelShown: 'chosen'`) are drawn while one of its two things is among them, or while
+ * it is the path's (the canvas draws them too while one of its two things has the focus).
  */
 export function linesOf(
   edges: readonly GraphEdge[],
@@ -508,28 +557,44 @@ export function linesOf(
 ): { lines: Edge[]; edgeOf: Map<string, GraphEdge> } {
   const lines: Edge[] = []
   const edgeOf = new Map<string, GraphEdge>()
-  const isChosen = (id: string) => (typeof chosen === 'string' ? id === chosen : (chosen?.has(id) ?? false))
+  const picked = idSet(chosen)
+  // The copies drawn already, the two things of the path whose line is drawn already, and the lines without a route
+  // by their two ends and the side they reach.
+  const copies = new Set<string>()
+  const stepped = new Set<string>()
+  const beside = new Map<string, Edge[]>()
   for (const edge of edges) {
     const from = places.get(edge.from)
     const to = places.get(edge.to)
     if (!from || !to || edge.from === edge.to) continue
+    // An exact copy of an edge without an `id` is the line drawn for the first of them.
+    const copy = copyOf(edge)
+    if (copy !== null) {
+      if (copies.has(copy)) continue
+      copies.add(copy)
+    }
     const child = isChild(edge)
     // An empty `id` names nothing: the line is named by its ends.
     const name = edge.id || (child ? `${edge.from}→${edge.to}` : `${edge.from}→${edge.to}#link`)
     let id = name
     for (let n = 2; edgeOf.has(id); n += 1) id = `${name}#${n}`
     edgeOf.set(id, edge)
-    const near = isChosen(edge.from) || isChosen(edge.to)
-    // The words of a line drawn only on a choice wait for one of its ends to be chosen; they are heard either way.
-    const words = edge.label && (edge.labelShown !== 'chosen' || near) ? edge.label : undefined
-    const onPath = marked !== null && marked.has(edge.from) && marked.has(edge.to)
-    const tone = onPath ? 'accent' : (edge.tone ?? 'default')
+    const near = picked.has(edge.from) || picked.has(edge.to)
+    // Of the lines between two things of the path, the first is the path's: one line for each two of them.
+    const pair = edge.from < edge.to ? `${edge.from}\n${edge.to}` : `${edge.to}\n${edge.from}`
+    const onPath = marked !== null && marked.has(edge.from) && marked.has(edge.to) && !stepped.has(pair)
+    if (onPath) stepped.add(pair)
+    // The words of a line drawn only on a choice wait for one of its ends to be chosen, or for the path; they are heard either way.
+    const words = edge.label && (edge.labelShown !== 'chosen' || near || onPath) ? edge.label : undefined
+    // The path takes the accent, but a tone of the line's own stays (a warning stays a warning): its thickness says the path.
+    const own = edge.tone ?? 'default'
+    const tone = onPath && own === 'default' ? 'accent' : own
     const style = edge.style ?? 'solid'
     // A `link` to a thing no further along (a sibling, a thing before it) arrives on the far side: the line goes round, not across the boxes.
     // Along the app's route only with the app's places (`routes`): a route of its layout would cross dagre's.
     const route = routes && edge.points && edge.points.length > 1 ? edge.points : null
     const back = !route && !child && (direction === 'right' ? to.x <= from.x : to.y <= from.y)
-    lines.push({
+    const line: Edge = {
       id,
       source: edge.from,
       target: edge.to,
@@ -543,12 +608,28 @@ export function linesOf(
         near && 'sigrid-graph-near',
         style !== 'solid' && `sigrid-graph-${style}`,
         tone !== 'default' && `sigrid-graph-${tone}`,
+        onPath && 'sigrid-graph-path',
         !onPath && dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)) && 'sigrid-graph-dim',
       ) || undefined,
       ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: STROKE[tone], width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
-      ...(words ? { label: words, labelShowBg: true, labelBgPadding: [4, 2] as [number, number], labelBgBorderRadius: 4 } : {}),
+      ...(words ? wordsOn(words) : {}),
       // What a `link` or a line with words says is in the description of its two things: the line is not read again.
       ...(!child || edge.label ? { domAttributes: { 'aria-hidden': true } } : {}),
+    }
+    lines.push(line)
+    if (route) continue
+    const key = `${edge.from}\n${edge.to}\n${back ? 'side' : ''}`
+    const group = beside.get(key)
+    if (group) group.push(line)
+    else beside.set(key, [line])
+  }
+  // Side by side, about the middle of their sides: -10 and 10 for two lines, -16, 0 and 16 for three.
+  for (const group of beside.values()) {
+    if (group.length < 2) continue
+    const gap = Math.min(APART, (2 * SPREAD) / (group.length - 1))
+    group.forEach((line, at) => {
+      line.type = 'apart'
+      line.data = { offset: (at - (group.length - 1) / 2) * gap }
     })
   }
   return { lines, edgeOf }
@@ -561,10 +642,13 @@ type Drawn = {
   children: number
   hidden: number
   open: boolean
+  /** Among the things chosen: the selection tint. */
   chosen: boolean
+  /** The choice itself, the first of the things chosen: the one screen readers hear chosen, and the one with the plus. */
+  primary: boolean
   /** Its numbers on the path the app marks. */
   steps: readonly number[] | undefined
-  /** What screen readers hear after its name: the `link` lines it has. */
+  /** What screen readers hear after its name: that it is chosen with the choice (when it is one of several), the `link` lines it has. */
   about: string
   aboutId: string
   dim: boolean
@@ -597,8 +681,7 @@ function nameOf(node: GraphNode, steps: readonly number[] | undefined, words: Wo
 }
 
 /** What a thing shows: its icon or the dot of its colour, its name and the line under it, and «external» on an external one. */
-function Face({ node, tinted }: { node: GraphNode; tinted: boolean }) {
-  const words = useWords().graph
+function Face({ node, tinted, words }: { node: GraphNode; tinted: boolean; words: Words['graph'] }) {
   return (
     <>
       {node.icon ? (
@@ -608,13 +691,14 @@ function Face({ node, tinted }: { node: GraphNode; tinted: boolean }) {
       ) : node.color ? (
         <span {...markHueAttrs(node.color)} data-mark-dot="" aria-hidden="true" className="size-2 shrink-0 rounded-full bg-(--mark-dot)" />
       ) : null}
-      <span className="flex min-w-0 flex-1 flex-col">
+      {/* Beside «external» the name keeps 64px: in a narrow box the word is cut first. */}
+      <span className={cn('flex flex-1 flex-col', node.external ? 'min-w-16' : 'min-w-0')}>
         <span className="truncate">{node.label}</span>
         {node.detail ? <span className={cn('truncate text-xs font-normal', tinted ? 'opacity-80' : 'text-ink-mute')}>{node.detail}</span> : null}
       </span>
-      {/* Said in words, in the muted ink as the line under the name (on the tint, as that line is): never a dashed border (R4). Read in the thing's name. */}
+      {/* Said in words, 12px in the muted ink (on the tint, as the line under the name is): never a dashed border (R4). Read in the thing's name. */}
       {node.external ? (
-        <span aria-hidden="true" data-slot="graph-external" className={cn('shrink-0 text-xs font-normal', tinted ? 'opacity-80' : 'text-ink-mute')}>
+        <span aria-hidden="true" data-slot="graph-external" className={cn('min-w-0 truncate text-2xs font-normal', tinted ? 'opacity-80' : 'text-ink-mute')}>
           {words.external}
         </span>
       ) : null}
@@ -655,7 +739,8 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
       data-thing={node.id}
       tabIndex={data.stop ? 0 : -1}
       aria-level={data.level}
-      aria-selected={data.chosen}
+      // One thing is the choice, also when the app marks several: the others say so in their description.
+      aria-selected={data.primary}
       aria-expanded={has ? data.open : undefined}
       aria-label={has && !data.open ? words.closed(name, data.hidden) : name}
       aria-describedby={data.about ? data.aboutId : undefined}
@@ -671,14 +756,15 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
     >
       {/* Where a line arrives and where it leaves: in sight only where the user may draw one. */}
       <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
-      <Face node={node} tinted={tinted} />
+      <Face node={node} tinted={tinted} words={words} />
       {steps ? <StepDots steps={steps} /> : null}
       {data.about ? (
         <span id={data.aboutId} hidden>
           {data.about}
         </span>
       ) : null}
-      {editable && data.chosen ? (
+      {/* One clear action: the plus on the choice alone, not on each of the several chosen. */}
+      {editable && data.primary ? (
         <button type="button" tabIndex={-1} data-slot="graph-add" aria-label={words.add(node.label)} onClick={(event) => { event.stopPropagation(); data.onAdd(node.id) }} className={cn(ON_THING, FOCUS_RING)}>
           <Icon name="plus" />
         </button>
@@ -719,12 +805,13 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   const described = React.useId()
   const { node, direction, editable, steps } = data
   const tinted = data.chosen || steps !== undefined
-  const add = editable && data.chosen
+  // One clear action: the plus on the choice alone, not on each of the several chosen.
+  const add = editable && data.primary
   // Only a thing the app says it opens has a ›, under the app's name for the action, and opens on a double press.
   const openLabel = data.opens && node.openLabel ? node.openLabel : undefined
   const ends = (add ? 1 : 0) + (openLabel ? 1 : 0)
   // How many the app keeps out of sight inside it: shown and said only above 0.
-  const hides = finite(node.hidden) && node.hidden > 0 ? node.hidden : 0
+  const hides = finite(node.hiddenCount) && node.hiddenCount > 0 ? node.hiddenCount : 0
   // Its name, its steps, «external» and how many it hides, then its second line; its relations describe it.
   const named = nameOf(node, steps, words)
   const name = hides > 0 ? words.hides(named, hides) : named
@@ -741,8 +828,9 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
         // Its name (with its steps on the path, «external», how many it hides) and its second line, as the eye reads them.
         aria-label={node.detail ? `${name}, ${node.detail}` : name}
         // The chosen thing is the one the app shows: a choice, not a toggle that is pressed. When the app marks several
-        // (one of its things drawn in several places), each of them is that one thing, so each is current.
-        aria-current={data.chosen ? 'true' : undefined}
+        // (one of its things drawn in several places), the first is current and the others say in their description
+        // that they are chosen with it: one choice is heard, as the user makes one.
+        aria-current={data.primary ? 'true' : undefined}
         aria-describedby={[relations ? described : '', data.about ? data.aboutId : ''].filter(Boolean).join(' ') || undefined}
         onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
         onDoubleClick={openLabel ? () => data.onOpen(node.id) : undefined}
@@ -755,7 +843,7 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
           FOCUS_RING,
         )}
       >
-        <Face node={node} tinted={tinted} />
+        <Face node={node} tinted={tinted} words={words} />
         {steps ? <StepDots steps={steps} /> : null}
         {/* The count of a closed thing of the tree mode, at the same place: read in the name. */}
         <Count value={hides} />
@@ -858,9 +946,58 @@ const Route = React.memo(function Route({ id, data, style, markerStart, markerEn
   )
 })
 
+/**
+ * A line beside the others between the same two things, when the app gave no route (`linesOf`): React Flow's own
+ * smoothstep path (`getSmoothStepPath`), with its two ends moved `data.offset` px across the sides they leave and
+ * reach and its bend moved as far, the inner line of a turn bending first, so the lines run side by side, never across
+ * each other, and their words sit apart. A line that goes round to the far side of a thing (both ends on the same
+ * side) has its ends moved opposite ways and goes further out the further out it is, so the lines nest. What React Flow
+ * hands a line besides is drawn by its `BaseEdge`, as on the other lines. It reads nothing of React Flow's state.
+ */
+const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style, markerStart, markerEnd, label, labelStyle, labelShowBg, labelBgStyle, labelBgPadding, labelBgBorderRadius, interactionWidth }: EdgeProps<Edge<{ offset: number }, 'apart'>>) {
+  const offset = data?.offset ?? 0
+  // The start and the end of a thing (`direction="right"`) are moved up or down, its head and its foot along.
+  const across = sourcePosition === Position.Left || sourcePosition === Position.Right
+  const round = sourcePosition === targetPosition
+  const end = round ? -offset : offset
+  const [x0, y0, x1, y1] = across ? [sourceX, sourceY + offset, targetX, targetY + end] : [sourceX + offset, sourceY, targetX + end, targetY]
+  // Which way the line turns on its way: the line on the inside of the turn bends first.
+  const turn = Math.sign(across ? y1 - y0 : x1 - x0)
+  // The bend, kept between the straight pieces out of the two sides, so a line never goes back on itself in a narrow gap.
+  const out = (position: Position) => (position === Position.Right || position === Position.Bottom ? STUB : -STUB)
+  const [g0, g1] = across ? [x0 + out(sourcePosition), x1 + out(targetPosition)] : [y0 + out(sourcePosition), y1 + out(targetPosition)]
+  const bend = Math.min(Math.max(g0, g1), Math.max(Math.min(g0, g1), (g0 + g1) / 2 - offset * turn))
+  const [path, labelX, labelY] = getSmoothStepPath({
+    sourceX: x0,
+    sourceY: y0,
+    sourcePosition,
+    targetX: x1,
+    targetY: y1,
+    targetPosition,
+    ...(round ? { offset: STUB + SPREAD - offset * turn } : across ? { centerX: bend } : { centerY: bend }),
+  })
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={style}
+      markerStart={markerStart}
+      markerEnd={markerEnd}
+      label={label}
+      labelX={labelX}
+      labelY={labelY}
+      labelStyle={labelStyle}
+      labelShowBg={labelShowBg}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+      interactionWidth={interactionWidth}
+    />
+  )
+})
 
 const NODE_TYPES = { thing: Thing, point: Point }
-const EDGE_TYPES = { route: Route }
+const EDGE_TYPES = { route: Route, apart: Apart }
 /** Room around what is fitted, and at the head for the field and the buttons. */
 const PAD = { top: 64, right: 24, bottom: 24, left: 24 }
 /** Nothing closed: the graph mode's, the same list at every draw. */
@@ -917,13 +1054,17 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const word = query.trim().toLowerCase()
   const found = React.useMemo(() => (word ? new Set(nodes.filter((node) => `${node.label} ${node.detail ?? ''}`.toLowerCase().includes(word)).map((node) => node.id)) : null), [nodes, word])
   const [focused, setFocused] = React.useState<string | null>(null)
+  // The thing that has the keyboard focus now (its surface or a button on it), or null once the focus is out of the
+  // things: the words of its lines drawn only on a choice show while it has it. `focused` is where the Tab stop stays.
+  const [held, setHeld] = React.useState<string | null>(null)
   // The chosen things in sight, one or the several the app marks, and the first of them in the order of the things:
-  // it holds the Tab stop until the user moves it, and stays in sight when the box changes size. Read by their ids, so
-  // an app that hands a new list of the same ids at every draw does not have every thing drawn again.
-  const selectedKey = selected == null ? '' : typeof selected === 'string' ? selected : selected.join('\n')
+  // the choice itself, which screen readers hear chosen and which has the plus; it holds the Tab stop until the user
+  // moves it, and stays in sight when the box changes size. Read by their ids, so an app that hands a new list of the
+  // same ids at every draw does not have every thing drawn again.
+  const selectedIds = idSet(selected)
+  const selectedKey = [...selectedIds].join('\n')
   const choice = React.useMemo(() => {
-    const ids = new Set<string>(selected == null ? [] : typeof selected === 'string' ? [selected] : selected)
-    const inSight = sight.order.filter((id) => ids.has(id))
+    const inSight = sight.order.filter((id) => selectedIds.has(id))
     return { ids: new Set(inSight), first: inSight[0] ?? null }
     // `selected` is read through its key: the same ids are the same choice.
   }, [selectedKey, sight])
@@ -1078,8 +1219,15 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const about = React.useMemo(() => {
     const said = new Map<string, string[]>()
     const say = (id: string, text: string) => said.set(id, [...(said.get(id) ?? []), text])
+    // The exact copies of an edge without an `id` are one line: said once.
+    const copies = new Set<string>()
     for (const edge of edges) {
       if ((isChild(edge) && !edge.label) || edge.from === edge.to || !byId.has(edge.from) || !byId.has(edge.to)) continue
+      const copy = copyOf(edge)
+      if (copy !== null) {
+        if (copies.has(copy)) continue
+        copies.add(copy)
+      }
       const both = edge.directed === false
       say(edge.from, words.line(byId.get(edge.to)!.label, both ? 'with' : 'to', edge.label))
       say(edge.to, words.line(byId.get(edge.from)!.label, both ? 'with' : 'from', edge.label))
@@ -1137,6 +1285,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
 
   // Every thing as it is drawn but for the Tab stop, which moves at every arrow: it is set on its own thing below, so
   // the others keep the same data, and React Flow does not draw them again.
+  const primary = choice.first
   const still = React.useMemo<Node<Drawn>[]>(
     () =>
       sight.order.flatMap((id, index) => {
@@ -1145,6 +1294,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         if (!node || !at) return []
         const numbers = marked?.get(id)
         const related = relations.get(id)
+        // One of several chosen, not the choice itself: it says it is chosen with it, before its lines.
+        const too = primary !== null && id !== primary && chosen.has(id) ? words.chosenToo(byId.get(primary)?.label ?? primary) : ''
         return [
           {
             id,
@@ -1155,17 +1306,31 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
             draggable: false,
             selectable: false,
             focusable: false,
-            data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: chosen.has(id), steps: numbers && numbers.length > 0 ? numbers : undefined, about: (about.get(id) ?? []).join('. '), aboutId: `${uid}-about-${index}`, dim: dimmed?.has(id) ?? false, stop: false, editable, direction, opens, leadsTo: related?.leadsTo ?? NO_NAMES, comesFrom: related?.comesFrom ?? NO_NAMES, onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onFocus: handlers.focus },
+            data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: chosen.has(id), primary: id === primary, steps: numbers && numbers.length > 0 ? numbers : undefined, about: [too, ...(about.get(id) ?? [])].filter(Boolean).join('. '), aboutId: `${uid}-about-${index}`, dim: dimmed?.has(id) ?? false, stop: false, editable, direction, opens, leadsTo: related?.leadsTo ?? NO_NAMES, comesFrom: related?.comesFrom ?? NO_NAMES, onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onFocus: handlers.focus },
           },
         ]
       }),
-    [sight, byId, places, marked, about, uid, dimmed, below, closed, chosen, editable, direction, tree, opens, relations, handlers],
+    [sight, byId, places, marked, about, uid, dimmed, below, closed, chosen, primary, words, editable, direction, tree, opens, relations, handlers],
   )
   const drawn = React.useMemo<Node<Drawn>[]>(() => still.map((it) => (it.id === stop ? { ...it, data: { ...it.data, stop: true } } : it)), [still, stop])
-  const { lines, edgeOf } = React.useMemo(
+  const { lines: placed, edgeOf } = React.useMemo(
     () => linesOf(edges, places, { direction, chosen: chosen.size > 0 ? chosen : null, marked: path.length > 0 ? new Set(path) : null, dimmed: path.length > 0 && !found ? dimmed : null, editable, routes: given !== null }),
     [edges, places, direction, chosen, path, found, dimmed, editable, given],
   )
+  // The words that wait for a choice show too while one of the line's two things has the focus: only those lines are
+  // handed over anew as the focus moves, so the others are not drawn again at every arrow.
+  const lines = React.useMemo(() => {
+    if (held === null) return placed
+    let changed = false
+    const next = placed.map((line) => {
+      // A line without its words drawn, whose edge has some: they wait for a choice.
+      const waiting = line.label === undefined && (line.source === held || line.target === held) ? edgeOf.get(line.id)?.label : undefined
+      if (!waiting) return line
+      changed = true
+      return { ...line, ...wordsOn(waiting) }
+    })
+    return changed ? next : placed
+  }, [placed, edgeOf, held])
   // The library keeps what it measures and what the user picks on the nodes it is given: they are handed over whole
   // at every change of the graph, and its own changes are laid over them.
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<Drawn>>(drawn)
@@ -1222,15 +1387,30 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     // `application` (the library sets the role after the props it is given, so a `role` passed to it does nothing);
     // a screen reader inside it hands the keys to the canvas.
     // - In the tree mode, a tree of items. The library's application sits between the tree and its items: a known
-    //   limit, since that box is the library's to draw. With several things chosen the tree says it holds more than
-    //   one (`aria-multiselectable`), while the user still chooses one at a time.
+    //   limit, since that box is the library's to draw. One item is selected, also with several things chosen (the
+    //   first of them; the others say in their description that they are chosen with it): the user chooses one, so
+    //   the tree is not multiselectable.
     // - In the graph mode the lines are not «hangs from», so it is not a tree, and not a second application around the
     //   library's: a group, which `aria-roledescription` calls a graph (the word `graph.roleDescription`).
     // - Each thing is a button: its name and second line name it, where its lines lead and come from describe it, and
-    //   the chosen one is `aria-current` (a choice, not a toggle; each of the several the app marks). One Tab stop as
-    //   in the tree. Not a listbox: an option cannot hold the › that opens it, and inside a listbox the app's commands
-    //   give up their keys (`commands.tsx`).
-    <div ref={box} role={tree ? 'tree' : 'group'} aria-roledescription={tree ? undefined : words.roleDescription} aria-multiselectable={tree && chosen.size > 1 ? true : undefined} {...props} data-slot="graph" onKeyDown={onKeyDown} className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', className)}>
+    //   the chosen one is `aria-current` (a choice, not a toggle; the first of the several the app marks). One Tab stop
+    //   as in the tree. Not a listbox: an option cannot hold the › that opens it, and inside a listbox the app's
+    //   commands give up their keys (`commands.tsx`).
+    // The focus is followed here, where it moves from thing to thing: the words of a line drawn on a choice show while
+    // one of its things has it.
+    <div
+      ref={box}
+      role={tree ? 'tree' : 'group'}
+      aria-roledescription={tree ? undefined : words.roleDescription}
+      {...props}
+      data-slot="graph"
+      onKeyDown={onKeyDown}
+      onFocus={(event) => setHeld(event.target instanceof Element ? (event.target.closest<HTMLElement>('[data-thing]')?.dataset.thing ?? null) : null)}
+      onBlur={(event) => {
+        if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(null)
+      }}
+      className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', className)}
+    >
       <ReactFlow
         // Not shown until the first view is fitted to the measured box; an empty graph has nothing to fit.
         className={cn(!shown && !empty && size.width > 0 && size.height > 0 && 'invisible')}
@@ -1246,11 +1426,14 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         onDelete={
           editable
             ? ({ edges: gone }) => {
-                // Each line is one edge, so of two edges between the same things only the one picked goes.
-                const removed = gone.flatMap((it) => {
+                // The edge of each line picked, and every exact copy of an edge without an `id` (one line, drawn once);
+                // of two edges between the same things that differ, only the one picked goes.
+                const picked = gone.flatMap((it) => {
                   const edge = edgeOf.get(it.id)
                   return edge ? [edge] : []
                 })
+                const copies = new Set(picked.map(copyOf).filter((key): key is string => key !== null))
+                const removed = edges.filter((edge) => picked.includes(edge) || copies.has(copyOf(edge) ?? ''))
                 if (removed.length > 0) onChange?.({ nodes, edges: edges.filter((edge) => !removed.includes(edge)) }, { kind: 'remove', nodes: [], edges: removed })
               }
             : undefined
