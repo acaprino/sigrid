@@ -3,7 +3,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
+import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, DialogContent, DialogRoot, DialogTitle, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
 import { contrast } from '../src'
 import { inkOn } from '../src/components/ui/avatar'
 
@@ -265,6 +265,22 @@ describe('ChipsInput with suggestions', () => {
   })
 })
 
+describe('a window taller than the page', () => {
+  test('it scrolls inside its own margins and is centred without a translation (a translated window would clip a `fixed` card in it)', () => {
+    render(
+      <DialogRoot open>
+        <DialogContent>
+          <DialogTitle>Long</DialogTitle>
+        </DialogContent>
+      </DialogRoot>,
+    )
+    const list = classes(document.querySelector('[data-slot="dialog-content"]')!)
+    expect(list).toContain('overflow-y-auto')
+    expect(list).toContain('max-h-[calc(100dvh-2rem)]')
+    expect(list.some((name) => name.includes('translate'))).toBe(false)
+  })
+})
+
 describe('a sheet beside the page', () => {
   test('`modal={false}`: no backdrop, and only the sheet takes the pointer', () => {
     render(
@@ -298,6 +314,35 @@ describe('a sheet beside the page', () => {
     await settle()
     expect(onOpenChange).not.toHaveBeenCalled()
     expect(document.querySelector('[data-slot="sheet-content"]')).not.toBeNull()
+  })
+
+  test('it says why it closes: Esc, or a press outside it', async () => {
+    const onOpenChange = vi.fn()
+    render(
+      <>
+        <Sheet open modal={false} onOpenChange={onOpenChange}>
+          <SheetContent>
+            <SheetTitle>Details</SheetTitle>
+            <button type="button">Inside</button>
+          </SheetContent>
+        </Sheet>
+        <button type="button">Outside</button>
+      </>,
+    )
+    act(() => screen.getByRole('button', { name: 'Inside' }).focus())
+    await settle()
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Inside' }), { key: 'Escape' })
+    await settle()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape')
+    onOpenChange.mockClear()
+    const outside = screen.getByRole('button', { name: 'Outside' })
+    fireEvent.pointerDown(outside)
+    fireEvent.mouseDown(outside)
+    fireEvent.pointerUp(outside)
+    fireEvent.mouseUp(outside)
+    fireEvent.click(outside)
+    await settle()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside')
   })
 
   test('modal, as before: the backdrop is there and the viewport takes the pointer', () => {
