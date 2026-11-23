@@ -1299,24 +1299,23 @@
     },
     {
      "file": "src/components/ui/command-palette.tsx",
-     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its\nregistry (`CommandsProvider`, `useCommand`) that can be done now, grouped, and the registry opens it with Ctrl+K. A\ncommand is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
+     "about": "The command palette: quick access to everything an app can do, from the keyboard. A dialog near the top of the\nwindow with one field and the list of commands under it; typing narrows the list, the arrows move, Enter runs the\ncommand and closes the palette, Esc closes it. Each command shows its own key at the end of its row, as plain text\n(R5), so the palette also teaches the keys. After Imago's `openPalette`, which every app of the suite opens with\nCtrl+K from a button of its title bar.\nThe commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its\nregistry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it\nwith Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).",
      "components": [
       {
        "name": "CommandPalette",
        "props": [
         {
          "name": "open",
-         "type": "boolean",
-         "doc": "Open or closed. Absent: the registry's own state (`CommandsProvider`), which Ctrl+K opens."
+         "type": "boolean"
         },
         {
          "name": "onOpenChange",
-         "type": "((open: boolean) => void)"
+         "type": "(open: boolean) => void"
         },
         {
          "name": "commands",
          "type": "readonly Command[]",
-         "doc": "What it lists. Absent: the commands declared in the registry (`useCommand`) that can be done now, by group."
+         "doc": "What it lists. Absent: the commands declared in the registry (`useCommand`), by group, those that cannot be done now dimmed."
         },
         {
          "name": "label",
@@ -1381,6 +1380,20 @@
          "required": true
         }
        ]
+      },
+      {
+       "name": "CommandPaletteOpenness",
+       "doc": "Open and closed by the app, or both absent: then the registry's own state (`CommandsProvider`), which Ctrl+K opens.",
+       "fields": [
+        {
+         "name": "open",
+         "type": "boolean"
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void"
+        }
+       ]
       }
      ],
      "also": [
@@ -1391,7 +1404,7 @@
     },
     {
      "file": "src/components/ui/commands.tsx",
-     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as a combination: «Escape», «F6», «Ctrl+F», «Ctrl+Shift+T». `Ctrl` is Cmd on a Mac, and the key is\n  shown in the system's words («Ctrl F», «Cmd F»).\n- A key does nothing while the person types in a field, unless it holds Ctrl or Alt or is a function key; it does\n  nothing inside an open surface (a dialog, a menu, a list of options), which keeps its own keys, and nothing in the\n  places named by `ownKeysIn` (a terminal, a code editor).\n- A command whose `when` is false neither runs nor shows in the palette.\n- A key another handler already refused (`preventDefault`, as `useDesktopGuard` refuses the browser's Ctrl+F) still\n  runs the app's command: the browser's use of the key is what is refused, not the app's.",
+     "about": "The commands of an app in one registry: an app declares each command once, near the state it acts on (`useCommand`),\nwith its name, its group, its key and whether it can be done now; the key runs it from anywhere in the window, the\npalette lists it (`CommandPalette` with no list), and Ctrl+K (Cmd+K on a Mac) opens the palette in every app. After\nImago's command registry (`createRegistry`, `mountApp`), which every app of the suite declares its commands in.\n- A key is written as `KeyboardEvent.key` names it, after `Ctrl`, `Alt` and `Shift`: «Escape», «F6», «Ctrl+F»,\n  «Ctrl+Shift+T», «Shift+?», «Ctrl++». `Ctrl` is Cmd on a Mac (Control stays the system's there), and the key is shown\n  in the words of the system and the app's language («Ctrl F», «Cmd F», «Strg F»). A letter or a digit is also found\n  by its place on the keyboard when the layout writes another sign there (Cyrillic, Option on a Mac); a digit or a\n  sign is found whatever Shift it took (AZERTY), and a sign typed with AltGr is not read as Ctrl+Alt.\n- Where a key belongs to what has the focus, it is left there: in a field, a plain key (but Escape and the function\n  keys) and Ctrl or Alt with a key that moves the caret; on a control, Enter, Space and the keys that move inside it;\n  in an open surface (a dialog, a menu, a list of options), a key with neither Ctrl nor Alt; a plain key a widget\n  already handled (`preventDefault`, or not let through with `stopPropagation`); and every key in the places\n  `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses\n  the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.\n- A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.\n- The registry is in the order the commands are declared in the tree; when two available commands share a key, the\n  one declared last runs.",
      "components": [
       {
        "name": "CommandsProvider",
@@ -1401,6 +1414,11 @@
          "name": "ownKeysIn",
          "type": "string",
          "doc": "A selector for the places that keep their own keys (`'.xterm, .cm-editor'`): there no command's key runs."
+        },
+        {
+         "name": "palette",
+         "type": "boolean",
+         "doc": "Whether Ctrl+K opens the registry's palette (default true). False leaves Ctrl+K to an app that opens its palette itself."
         },
         {
          "name": "children",
@@ -1417,7 +1435,7 @@
          "name": "id",
          "type": "string",
          "required": true,
-         "doc": "Its name in the registry: one declaration for each, the latest mounted one wins."
+         "doc": "Its name in the registry: one for each id, the one declared last stands for it."
         },
         {
          "name": "label",
@@ -1433,7 +1451,7 @@
         {
          "name": "keys",
          "type": "string",
-         "doc": "Its key, a key or a combination with `+` («Escape», «F6», «Ctrl+F», «Ctrl+Shift+T»); `Ctrl` is Cmd on a Mac."
+         "doc": "Its key, as `KeyboardEvent.key` names it, after `Ctrl`, `Alt`, `Shift` («Escape», «F6», «Ctrl+F», «Shift+?»); `Ctrl` is Cmd on a Mac."
         },
         {
          "name": "keywords",
@@ -1448,13 +1466,44 @@
         {
          "name": "when",
          "type": "boolean",
-         "doc": "Whether it can be done now (default true): when false its key does nothing and the palette does not offer it."
+         "doc": "Whether it can be done now (default true): when false its key does nothing and the palette shows it dimmed."
         },
         {
          "name": "run",
          "type": "() => void",
          "required": true,
-         "doc": "What it does."
+         "doc": "What it does; the one of the latest render runs."
+        }
+       ]
+      },
+      {
+       "name": "KeyNames",
+       "doc": "The words for the keys that are held: `Ctrl`, and `Cmd` on a Mac, `Alt` and `Option`, `Shift`.",
+       "fields": [
+        {
+         "name": "ctrl",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "cmd",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "alt",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "option",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "shift",
+         "type": "string",
+         "required": true
         }
        ]
       }
@@ -5863,6 +5912,12 @@
          "required": true
         },
         {
+         "name": "keys",
+         "type": "{ readonly ctrl: string; readonly cmd: string; readonly alt: string; readonly option: string; readonly shift: string; }",
+         "required": true,
+         "doc": "The names of the keys that are held, where a key of a command is written out (`formatKeys`): Cmd and Option on a Mac."
+        },
+        {
          "name": "steps",
          "type": "{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly summary: (position: number, total: number) => string; }",
          "required": true,
@@ -5972,6 +6027,11 @@
         {
          "name": "palette",
          "type": "Partial<{ readonly placeholder: string; readonly empty: string; readonly command: string; }>"
+        },
+        {
+         "name": "keys",
+         "type": "Partial<{ readonly ctrl: string; readonly cmd: string; readonly alt: string; readonly option: string; readonly shift: string; }>",
+         "doc": "The names of the keys that are held, where a key of a command is written out (`formatKeys`): Cmd and Option on a Mac."
         },
         {
          "name": "steps",
