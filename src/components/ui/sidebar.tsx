@@ -76,11 +76,25 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
   }, [query, children])
   const context = React.useMemo(() => ({ rail, query, animated }), [rail, query, animated])
   const rows = React.useMemo(() => ({ rail, query }), [rail, query])
+  // One icon at the foot, at its end on the column and in the middle of the rail: the name is a hint and the button's name, not
+  // a line of text that takes a row of the sidebar.
   const toggle = onCollapsedChange && !narrow && !forced ? (
-    <button type="button" data-slot="sidebar-collapse" aria-label={rail ? words.sidebar.expand : words.sidebar.collapse} aria-expanded={!rail} onClick={() => onCollapsedChange(!collapsed)} className={cn(CONTROL, "text-xs font-medium tracking-normal normal-case", rail && "justify-center px-0")}>
-      {rail ? <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" /> : <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />}
-      {rail ? null : <span aria-hidden="true">{words.sidebar.collapse}</span>}
-    </button>
+    <Tooltip label={rail ? words.sidebar.expand : words.sidebar.collapse} side="right">
+      <button
+        type="button"
+        data-slot="sidebar-collapse"
+        aria-label={rail ? words.sidebar.expand : words.sidebar.collapse}
+        aria-expanded={!rail}
+        onClick={() => onCollapsedChange(!collapsed)}
+        className={cn(
+          "flex size-(--control-xs) shrink-0 items-center justify-center rounded-md text-sidebar-mute pointer-coarse:size-11 hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink",
+          FOCUS_RING_INSET,
+          rail ? "self-center" : "self-end",
+        )}
+      >
+        {rail ? <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" /> : <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />}
+      </button>
+    </Tooltip>
   ) : null
   const body = (
     <div
@@ -113,13 +127,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
         ) : null}
       </nav>
       {footer && !rail ? <div data-slot="sidebar-footer" className="shrink-0">{footer}</div> : null}
-      {toggle && rail ? (
-        <Tooltip label={words.sidebar.expand} side="right">
-          {toggle}
-        </Tooltip>
-      ) : (
-        toggle
-      )}
+      {toggle}
     </div>
   )
   if (narrow) {
