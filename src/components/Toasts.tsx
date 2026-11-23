@@ -7,7 +7,7 @@
 // action in semibold) and the keys as outline keys, not its colors. Everything it does rests on Ark UI's Toast (`@ark-ui/react/toast`): a
 // toaster store, the `Toaster` region and one toast machine per notice (its time, its leaving). What Ark gives and what
 // stays ours:
-// - Ark: the region (F6 moves focus to it), the life of a notice (its timer, the "dismissing" phase that keeps it in
+// - Ark: the region (Alt+T moves focus to it, Ark's own key; in an `AppShell` F6 reaches it in the round of the frame), the life of a notice (its timer, the "dismissing" phase that keeps it in
 //   the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable
 //   layers (a click on a notice is not "outside" an Ark popover).
 // - Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed
@@ -301,7 +301,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   const words = useWords()
   // Ark's toaster store, one per column. `pause` and `resume` are the region's (pointer or focus inside): Ark would resume
   // each notice with the time it had left, here the time starts over and is driven by `paused` below.
-  const [store] = useState(() => ({ ...createToaster({ placement: 'bottom-end', overlap: false, max: Number.MAX_SAFE_INTEGER, gap: GAP, hotkey: ['F6'], pauseOnPageIdle: false, removeDelay: 0 }), pause() {}, resume() {} }))
+  const [store] = useState(() => ({ ...createToaster({ placement: 'bottom-end', overlap: false, max: Number.MAX_SAFE_INTEGER, gap: GAP, hotkey: ['altKey', 'KeyT'], pauseOnPageIdle: false, removeDelay: 0 }), pause() {}, resume() {} }))
   // The latest `onDismiss`, without making it a dependency: a caller that passes a new one on every render
   // must not make the timer restart.
   const dismiss = useRef(onDismiss)
@@ -483,7 +483,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
       onPointerLeave={() => setHover(false)}
       onFocus={(e) => {
         // Focus on a control of a notice holds the time. Focus on the region itself does not: a click on the text of a
-        // notice lands there (the region can take focus, for F6), and the column would stay held after the pointer left.
+        // notice lands there (the region can take focus, for Alt+T and F6), and the column would stay held after the pointer left.
         if (e.target !== e.currentTarget) setFocus(true)
         // Ark remembers what had focus before the region, to give focus back to it when the region is left. It takes
         // for it whatever focus came from, a button of another notice included, and then pulls focus back into the
