@@ -15,7 +15,7 @@ export type KbdProps = React.ComponentProps<"kbd"> & { size?: KbdSize | undefine
 const HINT_TEXT = "text-2xs leading-none font-medium text-ink-mute [[data-slot=button]_&]:text-current"
 
 /** Hidden on a phone: narrow (below `md`, 860px) and with a coarse pointer, as `usePhone`. */
-const ON_PHONE_HIDDEN = "max-md:pointer-coarse:hidden"
+export const ON_PHONE_HIDDEN = "max-md:pointer-coarse:hidden"
 
 /** One key or a combination written as text ("Ctrl+Enter", "Z", "Esc"). */
 function Kbd({ size = "sm", className, ...props }: KbdProps) {

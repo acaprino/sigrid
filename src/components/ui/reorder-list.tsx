@@ -62,7 +62,7 @@ function ReorderRow({ id, name, moving, children }: { id: string; name: string; 
         {...attributes}
         {...listeners}
         aria-label={words.reorder.handle(name)}
-        className={cn("flex size-(--control-xs) shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-ink-mute pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink", FOCUS_RING)}
+        className={cn("flex size-(--control-xs) shrink-0 touch-none items-center justify-center rounded-md text-ink-mute pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink", FOCUS_RING)}
       >
         <GripVertical aria-hidden="true" className="size-4" />
       </button>

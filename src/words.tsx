@@ -86,6 +86,18 @@ export interface Words {
     readonly placeholder: string
     /** Said when no command holds the text. */
     readonly empty: string
+    /** The name of the command that opens the palette (Ctrl+K), in a list of keys (`CommandsProvider`). */
+    readonly command: string
+    /** The name of the list of the keys that work now, in the window's foot (`KeyHints`). */
+    readonly keys: string
+  }
+  /** The names of the keys that are held, where a key of a command is written out (`formatKeys`): Cmd and Option on a Mac. */
+  readonly keys: {
+    readonly ctrl: string
+    readonly cmd: string
+    readonly alt: string
+    readonly option: string
+    readonly shift: string
   }
   /** What a step of `Steps` is, read after its name. */
   readonly steps: {
@@ -289,6 +301,15 @@ export const DEFAULT_WORDS: Words = {
   palette: {
     placeholder: 'Type a command',
     empty: 'No command found',
+    command: 'Commands',
+    keys: 'Keys',
+  },
+  keys: {
+    ctrl: 'Ctrl',
+    cmd: 'Cmd',
+    alt: 'Alt',
+    option: 'Option',
+    shift: 'Shift',
   },
   steps: {
     done: 'done',

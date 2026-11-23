@@ -25,7 +25,8 @@ const WITH_ALT = new Set(['ArrowLeft', 'ArrowRight', 'Home'])
 const WITH_CTRL = new Set(['r', 'p', 'u', 'f', 'g', 's', 'h', 'j', 'd', 'o', 'n'])
 // Hard reload, find previous, and the three ways into the developer tools.
 const WITH_CTRL_SHIFT = new Set(['r', 'g', 'i', 'j', 'c'])
-const FIELDS = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]'
+/** The places where a person types: what they press there is theirs (the registry of commands reads it too). */
+export const FIELDS = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]'
 
 /**
  * True for a key combination a browser engine acts on by itself. On a Mac (`mac`) the same letters go with the Command
