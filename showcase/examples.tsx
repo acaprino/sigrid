@@ -1,5 +1,5 @@
-// The Examples view of the showcase: two apps of the suite as they would be made with the toolkit, each in its four
-// hosts (a computer or a phone, a browser tab or a native app in Tauri). They are sketches with made-up content, close
+// The Examples view of the showcase: three apps of the suite as they would be made with the toolkit, two of them in each of
+// their four hosts (a computer or a phone, a browser tab or a native app in Tauri). They are sketches with made-up content, close
 // to the real apps and not copies of them: what they show is which parts make a whole app (`AppShell` and its regions,
 // the bar, the lists, what opens), and what changes with the host and what does not. The apps are in ethel.tsx and
 // qamille.tsx, the hosts in hosts.tsx; nothing here is part of the package, and the toolkit itself still knows no app.
@@ -10,6 +10,7 @@ import { Ethel } from './ethel'
 import { HOSTS, type AppProps, type Device, type HostKind, type Look } from './hosts'
 import { Code, Page, Section } from './parts'
 import { Qamille } from './qamille'
+import { Shinatama } from './shinatama'
 
 const params = new URLSearchParams(location.search)
 const initialDevice: Device = params.get('device') === 'phone' ? 'phone' : 'desktop'
@@ -65,7 +66,7 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
   return (
     <Page
       title="Examples"
-      lead="Two apps of the suite as they would be made with the toolkit: Ethel, a to-do list, and Qamille, a mail client. Each on a computer and on a phone, in a browser tab and as a native app in Tauri. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
+      lead="Three apps of the suite as they would be made with the toolkit: Ethel, a to-do list, Qamille, a mail client, and Shinatama, a workspace for terminal agents. Ethel and Qamille on a computer and on a phone, in a browser tab and as a native app in Tauri; Shinatama only as a native app on a computer. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
     >
       <Section id="examples-ethel" icon="tasks" title="Ethel, a to-do list" note="One list to get through, one task at a time. On a computer the lists are the sidebar and the task chosen is in the inspector; on a phone the views are tabs at the foot, a task is a page, and adding is a sheet from the foot.">
         <Example name="Ethel" animated={animated} density={density} look={look} app={Ethel} caveat={{ phone: 'Ethel today is a Windows program and an installable web app: the phone in Tauri is drawn as it would be.' }} />
@@ -73,7 +74,12 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
       <Section id="examples-qamille" icon="mail" title="Qamille, a mail client" note="Mail to read and to answer. On a computer the folders are the sidebar, the messages a column, and the one chosen is read beside it; on a phone the list is the screen, a message is a page, and writing is a sheet.">
         <Example name="Qamille" animated={animated} density={density} look={look} app={Qamille} caveat={{ phone: 'Qamille today is a Windows program with a preview on the web: the phone is drawn as it would be.' }} />
       </Section>
-      <Section id="examples-hosts" icon="layout" title="Web and native: what changes" note="The app is the same page in the four hosts. What changes is around it, and it is a few switches; the toolkit imports no shell, so the host is passed in from outside.">
+      <Section id="examples-shinatama" icon="threads" title="Shinatama, a workspace for terminal agents" note="A trial: what a desktop app with no UI code of its own needs from the toolkit. The bar, the sidebar, the inspector, the notice and the counts are the toolkit's; the terminal panes and their tiling are not in it. The places where the toolkit falls short are marked GAP in showcase/shinatama.tsx. The Projects button opens the inspector.">
+        <div className="max-w-full overflow-x-auto p-1 pb-6">
+          <Shinatama animated={animated} density={density} look={look} />
+        </div>
+      </Section>
+      <Section id="examples-hosts"icon="layout" title="Web and native: what changes" note="The app is the same page in the four hosts. What changes is around it, and it is a few switches; the toolkit imports no shell, so the host is passed in from outside.">
         <div className="overflow-x-auto">
           <table className="w-full max-w-4xl text-sm">
             <caption className="sr-only">What the host changes</caption>
