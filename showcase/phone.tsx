@@ -17,11 +17,12 @@
 //   the showcase is opened on a phone, or in the browser's device mode.
 // The overlays of the frame (the capture sheet, the drawer) mount into a layer of the frame, so they open inside it.
 import * as React from 'react'
-import { ChevronLeft, ChevronRight, PanelLeft, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import {
   AppShell,
   Button,
   Count,
+  DrawerButton,
   Empty,
   FormField,
   Icon,
@@ -268,7 +269,7 @@ export function PhoneLayouts({ animated, density }: { animated: boolean; density
     </>
   ) : (
     <>
-      {nav === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={() => setMenu(true)} animated={animated} /> : null}
+      {nav === 'drawer' ? <DrawerButton onOpen={() => setMenu(true)} animated={animated} /> : null}
       <ToolbarBrand name="Tasks" page={fit ? 'Sort' : viewLabel} />
       <ToolbarSpacer />
       {/* Settings has nothing to add: the button's place stays, empty, so the bar is the same on every view. On the

@@ -51,7 +51,17 @@ import {
   ToolbarTab,
   ToolbarTabs,
   Inspector,
-  useAppShell,
+  DrawerButton,
+  Card as SampleCard,
+  Cluster,
+  Column,
+  DescriptionList,
+  Dot,
+  Heading,
+  Separator,
+  SettingRow,
+  SidebarRow,
+  Text,
   TitleBar,
   Toolbar,
   ToolbarBrand,
@@ -277,7 +287,7 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Layout', icon: 'layout', ids: ['layout'] },
+  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
@@ -1002,11 +1012,6 @@ function Toolbars({ animated }: { animated: boolean }) {
   )
 }
 
-/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
-function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} /> : null
-}
-
 /** What each example recommends, in one sentence: the same words as docs/patterns.md. */
 const PATTERNS = {
   'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the views are a row of tabs directly under the bar; Commands (Ctrl K) opens the palette.' },
@@ -1084,7 +1089,7 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
   const bar = (title: string, items: React.ReactNode) => (
     <TitleBar size={barStyle === 'regular' ? 'default' : 'compact'} windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
       <Toolbar aria-label={title}>
-        {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
+        {pattern === 'focus' ? null : <DrawerButton onOpen={() => setMenu(true)} />}
         {items}
       </Toolbar>
       {/* Inside the frame, so it opens under the title bar as every overlay of a desktop window. */}
@@ -2031,6 +2036,118 @@ function Keys() {
   )
 }
 
+/**
+ * The parts an app composes a screen of with no class of its own, beside the layout parts: a card, a heading, a dot, a
+ * line, the facts of one thing, a choice of a settings page, a row of the sidebar's head or foot, the button that opens
+ * the sidebar's drawer; and the props that spare a class (`Empty fill`, `ToggleGroup fill`, `Progress inline`,
+ * `Checkbox label`). Each sample is written as an app writes it.
+ */
+function Composition({ animated }: { animated: boolean }) {
+  const [when, setWhen] = React.useState('today')
+  const [reminders, setReminders] = React.useState(true)
+  return (
+    <Section
+      id="composition"
+      title="Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton"
+      note="The parts the example apps needed to write no class: a group on a surface of its own (raised, or the quiet fill; never a border, and not for every group), the title of a page, a section, a card or a group, a colour or a state as an 8px dot beside its word, a hairline between groups, the facts of one thing, a choice of a settings page, a row of the sidebar's head or foot, the button that opens the sidebar where it is a drawer. Under them, the props that spare a class: an empty view that fills its region, a segment control that fills its place, a bar in a line of words, a check box with its words."
+    >
+      <Row label="card and heading">
+        <SampleCard as="section" aria-label="Now">
+          <Heading size="label" level={3} icon={<Icon name="now" />}>
+            Now
+          </Heading>
+          <Heading size="small" level={4}>
+            Read the terms of the new contract
+          </Heading>
+          <Cluster>
+            <Button>Complete</Button>
+            <Button variant="ghost">Postpone</Button>
+          </Cluster>
+        </SampleCard>
+        <SampleCard variant="quiet" pad="sm" gap="sm">
+          <Heading size="label" level={3}>
+            Home
+          </Heading>
+          <SampleCard pad="sm">Kitchen renovation</SampleCard>
+          <SampleCard pad="sm">Electricity contract</SampleCard>
+        </SampleCard>
+        <Column gap="xs">
+          <Heading size="page" level={3}>
+            Page
+          </Heading>
+          <Heading size="section" level={3}>
+            Section
+          </Heading>
+          <Heading size="card" level={3}>
+            Card
+          </Heading>
+          <Heading size="small" level={3}>
+            Small
+          </Heading>
+        </Column>
+      </Row>
+      <Row label="dot, line and facts">
+        <Column gap="sm">
+          <Cluster gap="xs">
+            <Dot color={COLORS[3]} />
+            <Text>A colour the person chose</Text>
+          </Cluster>
+          <Cluster gap="xs">
+            <Dot tone="success" />
+            <Text>Resources: available</Text>
+          </Cluster>
+          <Cluster gap="xs">
+            <Dot tone="warning" />
+            <Text>Waiting for an answer</Text>
+          </Cluster>
+          <Separator />
+          <DescriptionList
+            aria-label="Item"
+            items={[
+              { name: 'Level', value: 'Recommended' },
+              { name: 'Mode', value: 'Permanently' },
+              { name: 'Path', value: '%LOCALAPPDATA%\\npm-cache', code: true },
+            ]}
+          />
+        </Column>
+      </Row>
+      <Row label="settings and sidebar">
+        <Column width="prose">
+          <SettingRow label="Scheme" control={<ToggleGroup aria-label="Scheme" value={when} onValueChange={setWhen} animated={animated}><ToggleGroupItem value="today">Light</ToggleGroupItem><ToggleGroupItem value="dark">Dark</ToggleGroupItem></ToggleGroup>} />
+          <SettingRow label="Reminders" description="A notice at 9:00 for what is due" control={<Switch aria-label="Reminders" checked={reminders} onCheckedChange={setReminders} animated={animated} />} />
+          <SettingRow label="Advanced" onClick={() => {}} />
+        </Column>
+        <Column gap="xs">
+          <SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>Giulia Conti</SidebarRow>
+          <SidebarRow end={<Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>}>Threads</SidebarRow>
+          <Toolbar aria-label="Bar of a narrow frame">
+            <AppShellContext.Provider value={{ sidebar: 'drawer', inspector: 'drawer' }}>
+              <DrawerButton onOpen={() => {}} animated={animated} />
+            </AppShellContext.Provider>
+            <ToolbarBrand name="Tasks" page="Today" />
+          </Toolbar>
+        </Column>
+      </Row>
+      <Row label="the props">
+        <Column gap="md">
+          <ToggleGroup aria-label="When" value={when} onValueChange={setWhen} fill animated={animated}>
+            <ToggleGroupItem value="today">Today</ToggleGroupItem>
+            <ToggleGroupItem value="tomorrow">Tomorrow</ToggleGroupItem>
+            <ToggleGroupItem value="week">In a week</ToggleGroupItem>
+          </ToggleGroup>
+          <Cluster wrap={false}>
+            <Badge variant="secondary">Analyzing</Badge>
+            <Progress aria-label="Analysis" value={36} size="sm" inline />
+            <Text>36%</Text>
+          </Cluster>
+          <Checkbox label="Print the contract" defaultChecked animated={animated} />
+          <Empty fill title="Nothing here" description="An empty view, as tall as its region." />
+        </Column>
+      </Row>
+    </Section>
+  )
+}
+
 function Empties() {
   return (
     <Section id="empty" title="Empty" note="A title alone; a title, a sentence and an action; with the optional icon.">
@@ -2556,6 +2673,7 @@ function App() {
         </Row>
       </Section>
       <LayoutParts />
+      <Composition animated={animated} />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
@@ -2604,7 +2722,7 @@ function App() {
             titleBar={
               <TitleBar>
                 <Toolbar aria-label="Showcase">
-                  <ShellMenuButton onOpen={() => setMenu(true)} />
+                  <DrawerButton onOpen={() => setMenu(true)} />
                   <ToolbarBrand name="Sigrid" />
                   {narrow ? null : views()}
                   <ToolbarSpacer />
