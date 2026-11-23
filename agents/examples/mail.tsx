@@ -1,6 +1,6 @@
 // Mail: A mail client: folders in a sidebar that is a drawer on a phone, a list, the message beside it, its actions under it.
 // A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is `src/App.tsx`
-// of the project the editor exports: `./host` is that project's file for the window of a native build.
+// of the project the editor exports; `./host` is host.ts beside this file.
 // Mail: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useLayoutEffect, useState, type ReactNode } from 'react'
 import {
@@ -84,7 +84,7 @@ export function App() {
           />
           <ItemRow
             title="Accounting"
-            description="Invoice #2291 for October"
+            description="Invoice 2291 for October"
             meta="Fri"
             unread={false}
             current={row === 3}

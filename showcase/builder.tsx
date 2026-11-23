@@ -468,8 +468,14 @@ function Editor() {
 
   const screensKey = app.screens.map((s) => `${s.id}:${s.name}`).join('|')
   const config = React.useMemo(() => configOf(app.screens), [screensKey])
-  const data = React.useMemo(() => toData(latest.current.app, latest.current.screen), [epoch])
-  const onChange = React.useCallback((next: Data) => setApp((now) => fromData(now, latest.current.screen.id, next)), [])
+  // The screen the canvas was made with. While the app runs in the frame the user goes to other screens, and the
+  // canvas, still mounted, still holds this one: what it changes belongs here, not to the screen in sight.
+  const drawn = React.useRef(latest.current.screen.id)
+  const data = React.useMemo(() => {
+    drawn.current = latest.current.screen.id
+    return toData(latest.current.app, latest.current.screen)
+  }, [epoch])
+  const onChange = React.useCallback((next: Data) => setApp((now) => fromData(now, drawn.current, next)), [])
   const onChosen = React.useCallback((id: string | null) => {
     if (id) {
       setPanel('part')

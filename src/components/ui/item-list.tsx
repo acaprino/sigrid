@@ -1,13 +1,14 @@
 // A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each
-// row has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon, a
-// checkbox), a short fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a button).
+// row has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a
+// short fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).
 // It speaks the one language of every list of the toolkit:
 // - the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under
 //   the pointer a row takes a share of that tint;
 // - a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the
 //   accent's places); the dot's slot stays when empty, so the titles line up;
 // - a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.
-// A row is a button, or a link with `href`. The rows of a navigation are `NavItem`: those are places, these are things.
+// A row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button.
+// The rows of a navigation are `NavItem`: those are places, these are things.
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
@@ -33,11 +34,11 @@ export type ItemRowProps = {
   title: React.ReactNode
   /** A second line under the title: who, where, the first words. */
   description?: React.ReactNode
-  /** Before the title: an avatar, an icon, a checkbox. */
+  /** Before the title: an avatar, an icon. Not a control: the row is itself a button or a link. */
   leading?: React.ReactNode
   /** A short fact at the end of the row, in tabular figures: a date, a size. */
   meta?: React.ReactNode
-  /** After the fact: a `Count`, a label, a button. */
+  /** After the fact: a `Count`, a label. Not a control: the row is itself a button or a link. */
   end?: React.ReactNode
   /** This row is the one shown in the detail. */
   current?: boolean | undefined

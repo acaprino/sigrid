@@ -188,7 +188,7 @@ describe('build output', () => {
       visit(entry)
       return seen
     }
-    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js']
+    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js']
 
     // Since the package has more than one entry, the code that asks for Motion can sit in a chunk the entries share.
     test('what index.js loads reaches that chunk only through one dynamic import(), never a static import', () => {
@@ -210,7 +210,7 @@ describe('build output', () => {
 
     // The libraries of the other entries are for the apps that import those entries: the main one loads none of them.
     test('index.js loads none of the libraries of the other entries', () => {
-      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*)\//)
+      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*|@xyflow|@dagrejs)\//)
     })
 
     test('each of the other entries holds its own library, and the table and the lists do not load the text editor', () => {
@@ -219,7 +219,9 @@ describe('build output', () => {
       expect(has('virtual.js', /node_modules\/@tanstack\/(?:react-)?virtual/)).toBe(true)
       expect(has('reorder.js', /node_modules\/@dnd-kit\//)).toBe(true)
       expect(has('rich-text.js', /node_modules\/@tiptap\//)).toBe(true)
-      for (const entry of ['table.js', 'virtual.js', 'reorder.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
+      expect(has('graph.js', /node_modules\/@xyflow\//)).toBe(true)
+      expect(has('graph.js', /node_modules\/@dagrejs\//)).toBe(true)
+      for (const entry of ['table.js', 'virtual.js', 'reorder.js', 'graph.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
     })
   })
 

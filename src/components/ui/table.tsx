@@ -71,7 +71,13 @@ function TableHead({ className, align = "start", sticky, scope = "col", ...props
     <th
       data-slot="table-head"
       scope={scope}
-      className={cn("h-(--row-height) border-b border-line px-3 text-2xs font-medium whitespace-nowrap text-ink-mute", align === "end" ? "text-end" : "text-start", sticky && "sticky top-0 z-10 bg-paper", className)}
+      className={cn(
+        "h-(--row-height) border-b border-line px-3 text-2xs font-medium whitespace-nowrap text-ink-mute",
+        align === "end" ? "text-end" : "text-start",
+        // The line of a heading that stays in sight is its own: the table's collapsed border scrolls away with the rows.
+        sticky && "sticky top-0 z-10 bg-paper after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-line after:content-['']",
+        className,
+      )}
       {...props}
     />
   )

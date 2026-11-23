@@ -162,7 +162,7 @@ import {
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
-import { LongLists, RichTexts, Reorders, Tables } from './data'
+import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -271,7 +271,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
   { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
-  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'reorder'] },
+  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'reorder', 'graph'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -2402,6 +2402,7 @@ function App() {
       <Tables />
       <LongLists />
       <Reorders animated={animated} />
+      <Graphs />
       <Files />
       <Content />
       <HoverRows animated={animated} />

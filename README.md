@@ -200,20 +200,39 @@ a drawer.
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
-- Four entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+- Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
-    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`); one row can
-    be chosen (`current`, `onRowPress`, arrows among the rows); with `virtual` only the rows in sight are in the
-    page. For filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and
-    its parts, which are in the main entry.
+    value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
+    be chosen (`current`, `onRowPress`): the rows are one Tab stop, which follows the focus; the arrows, Home and End
+    move among them; a press on a control inside a cell (a button, a link, a field) is that control's, not the
+    row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
+    Make `columns` once (outside the component, or with `useMemo`): a new array at every paint sorts again. For
+    filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and its parts,
+    which are in the main entry.
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
-    items there are and where each one is.
+    items there are and where each one is. Each place gives one row, never none.
   - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
     pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
+    While a row is taken Escape is the list's, so a dialog or a sheet around it stays open.
   - `./rich-text`: `RichTextField`, on TipTap: bold, italic, underline, two kinds of list, a quote, undo and redo,
-    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control.
+    with the toolkit's `Toolbar` above the text. The value is HTML; it sits in a `FormField` as any control. A value
+    that comes from outside (another draft) takes the place of the text and is not a step of the undo; a value of
+    its own that the app hands back late (a store, a round trip to a native side) is known as its own, so the app
+    may keep the value wherever it likes.
+
+  - `./graph` (with the stylesheet `./graph.css`): `GraphCanvas`, on React Flow for the canvas and dagre for the
+    places. A graph of things and what joins them, laid out by itself in ranks (`direction="right"` or `"down"`), to
+    move over (pan, zoom, fit, a small map with `minimap`, a field that finds a thing with `search`), to examine (the
+    chosen thing has the selection tint, what is joined to it stays and the rest is dimmed; the app shows its details
+    where it likes), to open and close (a thing with others hanging from it has an arrow, and closed it says how
+    many it hides) and, with `editable`, to draw: the plus hangs a new thing, a drag between two handles joins them,
+    Delete takes one away, each asked of the app with `onChange`. The keyboard is the one of a tree and the things
+    are one Tab stop; a screen reader hears a tree. Only what is in the view is drawn; the layout is done again at
+    each change (about 30 ms for 200 things in sight, 200 ms for a thousand), so a larger graph starts with its
+    branches closed (`defaultCollapsed`). `visibleGraph` and
+    `layoutGraph` are exported for an app that draws the same graph another way (a list, a print).
 
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
@@ -236,6 +255,11 @@ a drawer.
   </ReorderList>
 
   <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
+
+  // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
+  import { GraphCanvas } from '@acaprino/sigrid/graph'
+  <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
+    selected={chosen} onSelect={setChosen} search minimap className="h-full" />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
@@ -284,10 +308,12 @@ a drawer.
 - `showcase/`: the design system shown with its own frame (`AppShell`), in five views as tabs in the bar. Philosophy,
   Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
   examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
-  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows two
-  whole apps of the suite made of these parts, a to-do list (Ethel) and a mail client (Qamille), each on a computer
-  and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`): sketches
-  with made-up content and each app's own theme, with what the host changes and what it does not. `npm run showcase`
+  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows three
+  whole apps of the suite made of these parts: a to-do list (Ethel) and a mail client (Qamille), each on a computer
+  and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`), and a
+  desktop workspace for terminal agents (Shinatama), as a native app on a computer only, whose missing parts are marked
+  `GAP:` in `showcase/shinatama.tsx`: sketches with made-up content and each app's own theme, with what the host
+  changes and what it does not. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
   or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;
@@ -331,13 +357,17 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor.
+  `agents/examples/`: two whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  with the `host.ts` they import; they pass `sigrid-check`.
+  The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
-- `sigrid-check`: the design check, as a command of the package. In an app, `npx sigrid-check` checks `./src`
-  against `DESIGN.md` (colours and sizes written by hand, palette classes, fonts, gradients, blur, emoji) and exits
-  with 1 when it finds something, so an agent can run it and correct itself. An app keeps its own choices in a
-  `sigrid-check.config.json`. It reads files and builds nothing.
+- `sigrid-check`: the design check, as a command of the package. In an app, `npx --no sigrid-check` checks `./src`
+  against `DESIGN.md` and exits with 1 when it finds something, so an agent can run it and correct itself. It finds
+  values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
+  `backdrop-blur`, emoji, fonts in CSS); it does not see named classes off the scale, inline styles, or anything of
+  the layout: `AGENTS.md` lists what is left to read and to look at. An app keeps its own choices in a
+  `sigrid-check.config.json`, whose `rules` are laid over the toolkit's. It reads files and builds nothing.
 - A Claude Code plugin with one skill, `sigrid`, which sends the agent to those files before it writes and to the
   check after:
 
@@ -356,7 +386,7 @@ comes with the package, at the version the app has installed, and most of it is 
   ```
 
 Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does the same: «For any interface work read
-`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx sigrid-check` after».
+`node_modules/@acaprino/sigrid/AGENTS.md` first, and run `npx --no sigrid-check` after».
 
 ## Use a release
 

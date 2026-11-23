@@ -266,8 +266,11 @@ describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, 
     '@tiptap/react': '3.33.0',
     '@tiptap/starter-kit': '3.33.0',
     '@tiptap/pm': '3.33.0',
+    // The canvas of a graph and the places of its things (2026-11-23, later the same day).
+    '@xyflow/react': '13.0.2',
+    '@dagrejs/dagre': '3.1.3',
   }
-  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap)\//
+  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap|xyflow|dagrejs)\//
   const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
   const imports = (file: string) => [...new Set([...readFileSync(file, 'utf8').matchAll(/from ['"]([^'"]+)['"]/g)].map((m) => m[1]!).filter((spec) => LIBRARY.test(spec)))].sort()
 

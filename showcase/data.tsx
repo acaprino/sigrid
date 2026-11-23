@@ -3,11 +3,13 @@
 // (`./virtual`), a list put in order by its handles (`./reorder`) and a field for text with a little form
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
-import { Avatar, Badge, FormField, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
+import { Avatar, Badge, FormField, Input, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
 import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
 import { RichTextField } from '../src/rich-text'
+import { GraphCanvas, type GraphEdge, type GraphNode } from '../src/graph'
+import '../src/styles/graph.css'
 import { Code, Row, Section } from './parts'
 
 type FileRow = { id: string; name: string; kind: string; size: number | null; changed: Date }
@@ -224,6 +226,76 @@ export function RichTexts() {
       <Row label="disabled">
         <div className="w-full max-w-xl">
           <RichTextField aria-label="Sent message" value="<p>Sent on Monday. <em>It cannot be changed.</em></p>" onChange={() => {}} disabled />
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+const PLAN: GraphNode[] = [
+  { id: 'launch', label: 'Launch the new site', detail: 'Due 12 December', icon: 'now' },
+  { id: 'content', label: 'Content', detail: '3 of 5 done', color: '#297abc' },
+  { id: 'design', label: 'Design', detail: '2 of 4 done', color: '#a35fd0' },
+  { id: 'build', label: 'Build', detail: 'Waits for design', color: '#2f9e6e' },
+  { id: 'copy', label: 'Write the home page' },
+  { id: 'photos', label: 'Choose the photos' },
+  { id: 'legal', label: 'Check the legal notes', detail: 'Marco' },
+  { id: 'tokens', label: 'Colours and type' },
+  { id: 'screens', label: 'Draw the five screens' },
+  { id: 'review', label: 'Review with the client', detail: 'Thursday' },
+  { id: 'pages', label: 'Build the pages' },
+  { id: 'forms', label: 'Contact form' },
+  { id: 'host', label: 'Hosting and domain' },
+  { id: 'test', label: 'Test on phones' },
+]
+const JOINS: GraphEdge[] = [
+  { from: 'launch', to: 'content' }, { from: 'launch', to: 'design' }, { from: 'launch', to: 'build' },
+  { from: 'content', to: 'copy' }, { from: 'content', to: 'photos' }, { from: 'content', to: 'legal' },
+  { from: 'design', to: 'tokens' }, { from: 'design', to: 'screens' }, { from: 'design', to: 'review' },
+  { from: 'build', to: 'pages' }, { from: 'build', to: 'forms' }, { from: 'build', to: 'host' }, { from: 'build', to: 'test' },
+  // A thing that hangs from two: the pages wait for the screens too.
+  { from: 'screens', to: 'pages' },
+]
+
+/** A wide graph, the same at every load, to see what a thousand things cost. */
+const WIDE: GraphNode[] = Array.from({ length: 1000 }, (_, i) => ({ id: `n${i}`, label: `Item ${i + 1}` }))
+const WIDE_JOINS: GraphEdge[] = WIDE.slice(1).map((node, i) => ({ from: `n${Math.floor(i / 4)}`, to: node.id }))
+
+export function Graphs() {
+  const [graph, setGraph] = React.useState({ nodes: PLAN, edges: JOINS })
+  const [selected, setSelected] = React.useState<string | null>('design')
+  const [picked, setPicked] = React.useState<string | null>(null)
+  const chosen = graph.nodes.find((node) => node.id === selected)
+  return (
+    <Section
+      id="graph"
+      title="GraphCanvas"
+      note={
+        <>
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away.
+        </>
+      }
+    >
+      <Row label="explore and draw">
+        <div data-sample="graph" className="flex w-full max-w-4xl flex-col gap-3">
+          <GraphCanvas aria-label="Plan of the launch" nodes={graph.nodes} edges={graph.edges} selected={selected} onSelect={setSelected} defaultCollapsed={['content']} search minimap editable onChange={(next) => setGraph({ nodes: [...next.nodes], edges: [...next.edges] })} className="h-112" />
+          {chosen ? (
+            <FormField label="Name of the chosen thing" help="The details of what is chosen are the app's to show: here, a field that renames it.">
+              <Input value={chosen.label} onChange={(event) => setGraph((now) => ({ ...now, nodes: now.nodes.map((node) => (node.id === chosen.id ? { ...node, label: event.target.value } : node)) }))} autoComplete="off" />
+            </FormField>
+          ) : (
+            <p className="text-xs text-ink-mute">Nothing is chosen. Press a thing, or Tab into the canvas and press Enter.</p>
+          )}
+        </div>
+      </Row>
+      <Row label="downwards, read only">
+        <div data-sample="graph-down" className="w-full max-w-4xl">
+          <GraphCanvas aria-label="Plan, from the head" nodes={PLAN} edges={JOINS} direction="down" defaultCollapsed={['content', 'build']} className="h-80" />
+        </div>
+      </Row>
+      <Row label="1,000 things">
+        <div data-sample="graph-wide" className="w-full max-w-4xl">
+          <GraphCanvas aria-label="A thousand items" nodes={WIDE} edges={WIDE_JOINS} selected={picked} onSelect={setPicked} search minimap className="h-96" />
         </div>
       </Row>
     </Section>

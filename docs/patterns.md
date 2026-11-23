@@ -110,7 +110,9 @@ A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList`
 same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
 invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps two or three columns, or is a list. A
 list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
-Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). The
+Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). Things
+that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
+(`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector. The
 examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each

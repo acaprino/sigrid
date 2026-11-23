@@ -96,6 +96,63 @@ test('a value from outside takes the place of the text, without a change being t
   expect(changed).not.toHaveBeenCalled()
 })
 
+test('a value from outside is not a step of the undo: Ctrl+Z does not bring the draft before it back', async () => {
+  const changed = vi.fn()
+  function Draft() {
+    const [value, setValue] = React.useState('<p>Draft A</p>')
+    return (
+      <>
+        <button type="button" onClick={() => setValue('<p>Draft B</p>')}>
+          Open B
+        </button>
+        <RichTextField
+          aria-label="Notes"
+          value={value}
+          onChange={(html) => {
+            changed(html)
+            setValue(html)
+          }}
+        />
+      </>
+    )
+  }
+  render(<Draft />)
+  const box = await screen.findByRole('textbox', { name: 'Notes' })
+  fireEvent.click(screen.getByRole('button', { name: 'Open B' }))
+  await waitFor(() => expect(box.textContent).toBe('Draft B'))
+  // Nothing to take back: the button is off, and the key does nothing.
+  expect(screen.getByRole('button', { name: 'Undo' }).getAttribute('aria-disabled')).toBe('true')
+  fireEvent.keyDown(box, { key: 'z', code: 'KeyZ', ctrlKey: true })
+  expect(box.textContent).toBe('Draft B')
+  expect(changed).not.toHaveBeenCalled()
+})
+
+test('a value of its own that the app hands back late does not take the place of what was written since', async () => {
+  // An app that keeps the value somewhere slow: what the field gave comes back as `value` only later.
+  let hand: (html: string) => void = () => {}
+  const given: string[] = []
+  function Slow() {
+    const [value, setValue] = React.useState('<p>One</p>')
+    hand = setValue
+    return <RichTextField aria-label="Notes" value={value} onChange={(html) => given.push(html)} />
+  }
+  render(<Slow />)
+  const box = await screen.findByRole('textbox', { name: 'Notes' })
+  selectAll(box)
+  fireEvent.click(screen.getByRole('button', { name: 'Bold' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Italic' }))
+  await waitFor(() => expect(given).toHaveLength(2))
+  expect(given[1]).toBe('<p><strong><em>One</em></strong></p>')
+  // The first of the two comes back after the second was written: the text stays as it is.
+  act(() => hand(given[0]!))
+  expect(box.innerHTML).toContain('<em>One</em>')
+  act(() => hand(given[1]!))
+  expect(box.innerHTML).toContain('<em>One</em>')
+  // A value that is not one of its own is from outside, and takes the place of the text.
+  act(() => hand('<p>Two</p>'))
+  await waitFor(() => expect(box.textContent).toBe('Two'))
+})
+
 test('in a FormField it is named by the label and described by the helper', async () => {
   render(
     <FormField label="Notes" help="Only you see them." required>

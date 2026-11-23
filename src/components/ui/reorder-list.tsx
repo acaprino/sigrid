@@ -3,7 +3,8 @@
 // is the toolkit's. It has its own entry of the package (`./reorder`), so an app with no such list does not load it.
 // - The handle is the only thing that drags: the rest of the row keeps its presses, its fields and its text.
 //   With the keyboard: Space takes the row, the arrows move it, Space puts it down, Escape puts it back. Screen
-//   readers hear where it is at each step, in the app's words (`words.reorder`).
+//   readers hear where it is at each step, in the app's words (`words.reorder`). While a row is taken, Escape is
+//   the list's: a dialog or a sheet the list is in stays open.
 // - The row taken is raised on the sheet colour with the `float` elevation and no border (R4), and follows the pointer
 //   up and down only. The others make room for it: at once, or sliding in 200ms where the app has motion on
 //   (`animated`, or `MotionProvider`), never with reduced motion.
@@ -87,7 +88,11 @@ function ReorderList<Item>({ items, itemId, itemName, onReorder, children, anima
     onDragEnd: ({ active, over }) => (over ? words.reorder.put(name(active.id), at(over.id) + 1, ids.length) : words.reorder.back(name(active.id))),
     onDragCancel: ({ active }) => words.reorder.back(name(active.id)),
   }
+  // A row is taken: until it is put down or put back, Escape means «put it back» and nothing else.
+  const taken = React.useRef(false)
+  const id = React.useId()
   const end = ({ active, over }: DragEndEvent) => {
+    taken.current = false
     if (!over || active.id === over.id) return
     const from = at(active.id)
     const to = at(over.id)
@@ -95,9 +100,18 @@ function ReorderList<Item>({ items, itemId, itemName, onReorder, children, anima
     onReorder(moveItem(items, from, to), { from, to })
   }
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={end} accessibility={{ announcements, screenReaderInstructions: { draggable: words.reorder.instructions } }}>
+    <DndContext id={id} sensors={sensors} collisionDetection={closestCenter} onDragStart={() => { taken.current = true }} onDragCancel={() => { taken.current = false }} onDragEnd={end} accessibility={{ announcements, screenReaderInstructions: { draggable: words.reorder.instructions } }}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <ul role="list" data-slot="reorder-list" {...props} className={cn("flex flex-col gap-0.5", className)}>
+        <ul
+          role="list"
+          data-slot="reorder-list"
+          {...props}
+          // The key still reaches the library, which listens on the document; what the list is in does not hear it.
+          onKeyDown={(event) => {
+            if (taken.current && event.key === "Escape") event.stopPropagation()
+          }}
+          className={cn("flex flex-col gap-0.5", className)}
+        >
           {items.map((item) => {
             const id = itemId(item)
             return (

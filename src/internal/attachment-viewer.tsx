@@ -129,7 +129,7 @@ export function AttachmentViewer({ open, onOpenChange, title, status, pages = []
   )
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={(next) => onOpenChange(next)}>
       <SheetContent side="right" showCloseButton animated={animated} className="w-full gap-0 overflow-hidden bg-raised p-0 sm:max-w-3xl lg:max-w-4xl">
         {content}
       </SheetContent>

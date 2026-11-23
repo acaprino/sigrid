@@ -1,0 +1,52 @@
+/* The stylesheet of the graph canvas (`GraphCanvas`, the `./graph` entry): what React Flow needs to lay its canvas
+   out (its `base.css`, which has no look of its own), and its colours taken from the toolkit's tokens, so the canvas
+   follows the theme and the scheme as everything else does. An app imports it once, after `theme.css`:
+   `@import "@acaprino/sigrid/graph.css";`. */
+@import "@xyflow/react/dist/base.css";
+
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-background-pattern-color: var(--color-line);
+  --xy-edge-stroke: var(--color-ink-mute);
+  --xy-edge-stroke-selected: var(--color-ink);
+  --xy-edge-stroke-width: 1;
+  --xy-connectionline-stroke: var(--color-accent);
+  --xy-connectionline-stroke-width: 2;
+  --xy-handle-background-color: var(--color-ink-mute);
+  --xy-handle-border-color: transparent;
+  --xy-node-color: var(--color-ink);
+  --xy-node-border: 0;
+  --xy-node-border-selected: 0;
+  --xy-node-background-color: transparent;
+  --xy-node-boxshadow-hover: none;
+  --xy-node-boxshadow-selected: none;
+  --xy-selection-background-color: var(--color-selected);
+  --xy-selection-border: 0;
+  --xy-minimap-background-color: var(--color-raised);
+  --xy-minimap-mask-background-color: var(--color-paper-2);
+  --xy-minimap-node-background-color: var(--color-line);
+  --xy-attribution-background-color: transparent;
+}
+
+/* The lines of the chosen thing: the ink, a little thicker, over the others. */
+.react-flow__edge.sigrid-graph-near .react-flow__edge-path {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+}
+
+/* The small map is a raised surface: a shadow, no border (R4). */
+.react-flow__minimap {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* The library's name at the foot: plain 12px text in the muted ink, as a key hint is (R5). */
+.react-flow__attribution {
+  font-size: var(--text-xs);
+  color: var(--color-ink-mute);
+}
+.react-flow__attribution a {
+  color: inherit;
+  text-decoration: none;
+}

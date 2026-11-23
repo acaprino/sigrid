@@ -40,8 +40,11 @@ export function h(tag: string, props?: Record<string, Val> | null, ...children: 
 
 export const json = (value: unknown): Json => ({ $json: value })
 
-/** A literal as source: a string in single quotes where that needs no escape, a number, true, null. */
-export const lit = (value: unknown): string => (typeof value === 'string' && /^[^'\\\n\r\u2028\u2029]*$/.test(value) ? `'${value}'` : JSON.stringify(value))
+/**
+ * A literal as source: a string in single quotes where that needs no escape, a number, true, null. JSON leaves the
+ * two Unicode line separators as they are: written out, they would break a line in the middle of a string.
+ */
+export const lit = (value: unknown): string => (typeof value === 'string' && /^[^'\\\n\r\u2028\u2029]*$/.test(value) ? `'${value}'` : JSON.stringify(value).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
 
 /** A name in scope: a value in state, or its setter. */
 export const name = (id: string): Expr => ({ $expr: id, run: (scope) => scope[id] })

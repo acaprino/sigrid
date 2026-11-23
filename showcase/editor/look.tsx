@@ -35,6 +35,9 @@ import {
   type ThemeScheme,
   type ThemeShape,
   type TonePreset,
+  isFontId,
+  densityOf,
+  isIconPack,
 } from '../../src/index'
 
 export type Look = {
@@ -59,6 +62,33 @@ const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
 // The canvas starts in colour: on the gray baseline the accent, the tone and the selection would all read as gray.
 export const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, icons: 'lucide', animated: false }
 const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
+
+const HEX = /^#[0-9a-f]{6}$/i
+/**
+ * A look from data of any origin (a file someone made, what the browser kept), made whole: a value that is missing
+ * or not one the toolkit knows takes its starting value. A look that the theme engine cannot take would leave the
+ * editor and the run page blank, and it would stay so, because the document is kept in the browser.
+ */
+export function readLook(value: unknown): Look {
+  const start = structuredClone(START_LOOK)
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return start
+  const given = value as Record<string, unknown>
+  const among = <T extends string>(it: unknown, all: readonly T[], otherwise: T): T => (typeof it === 'string' && (all as readonly string[]).includes(it) ? (it as T) : otherwise)
+  return {
+    scheme: among(given['scheme'], ['light', 'dark'] as const, start.scheme),
+    colors: among(given['colors'], ['own', 'base'] as const, start.colors),
+    page: typeof given['page'] === 'string' && HEX.test(given['page']) ? given['page'] : null,
+    accent: typeof given['accent'] === 'string' && HEX.test(given['accent']) ? given['accent'] : start.accent,
+    accentAuto: typeof given['accentAuto'] === 'boolean' ? given['accentAuto'] : start.accentAuto,
+    tone: among(given['tone'], TONE_PRESETS, start.tone),
+    shape: among(given['shape'], THEME_SHAPES, start.shape),
+    font: isFontId(given['font']) ? given['font'] : start.font,
+    // Every measure a whole number inside the toolkit's limits; anything else is the normal density.
+    density: densityOf(given['density']),
+    icons: isIconPack(given['icons']) ? given['icons'] : start.icons,
+    animated: given['animated'] === true,
+  }
+}
 
 /** The two colours as the engine takes them, on top of the baseline; nothing for the baseline itself. */
 export const ownOf = (look: Look) => (look.colors === 'own' ? duoTheme({ base: look.page, accent: look.accent }) : null)

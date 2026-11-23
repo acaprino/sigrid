@@ -41,7 +41,8 @@ test('the words of a list put in order by hand are the app\'s', () => {
   expect(document.getElementById(handle.getAttribute('aria-describedby')!)!.textContent).toBe('Spazio per prendere, frecce per spostare.')
 })
 
-test('a press on a handle is not a drag: the order is asked for only when a row is put down elsewhere', () => {
+// A drag itself needs a layout: it is driven in a browser. Here, only that a press alone asks for nothing.
+test('a press on a handle asks for no new order', () => {
   const reordered = vi.fn()
   render(
     <ReorderList aria-label="Lanes" items={COLUMNS} itemId={(lane) => lane.id} itemName={(lane) => lane.name} onReorder={reordered}>

@@ -2,16 +2,18 @@
 // - `agents/catalog.json`: every source file of each entry of the package, what its head comment says, the components
 //   it exports and, for each, the props the toolkit itself declares, with their comments. The props a component only
 //   passes on (those of a `<button>`, of an Ark or Base UI part) are not listed: `passesOn` says there are some.
+//   The object types a prop is made of (a column of the table, a notice, an option) are listed too, with their fields.
 // - `agents/examples/*.tsx`: whole apps in the frame of the toolkit (`AppShell`), written by the code export of the
 //   showcase's app editor from the apps it starts with. The same export is type-checked in test/editor-export.test.ts.
-// `node scripts/agents.mjs` writes them; with `--check` it writes nothing and fails if a file is not what it would
-// write (test/agents.test.ts runs it so). Run it after a change to a component's props or comments.
+// `node scripts/agents.mjs` writes them; with `--check` it leaves `agents/` as it is and fails if a file is not what
+// it would write (test/agents.test.ts runs it so). Run it after a change to a component's props or comments.
 import { build } from 'esbuild'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
+// With `/` on every system: the compiler names files so, and the paths written in the catalogue are the same everywhere.
+const root = fileURLToPath(new URL('../', import.meta.url)).replace(/\\/g, '/')
 const check = process.argv.includes('--check')
 
 /** The entries of the package, as an app imports them, and the file each one starts from. */
@@ -21,6 +23,7 @@ const ENTRIES = [
   ['@acaprino/sigrid/virtual', 'src/virtual.ts'],
   ['@acaprino/sigrid/reorder', 'src/reorder.ts'],
   ['@acaprino/sigrid/rich-text', 'src/rich-text.ts'],
+  ['@acaprino/sigrid/graph', 'src/graph.ts'],
 ]
 
 const config = ts.readConfigFile(`${root}tsconfig.json`, ts.sys.readFile)
@@ -32,46 +35,92 @@ const own = (file) => file.startsWith(root) && !file.includes('/node_modules/')
 const short = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
 const say = (parts) => ts.displayPartsToString(parts).replace(/\s+/g, ' ').trim()
 
-/** The comment at the head of a file, as one text: what the file is, in the words of who wrote it. */
+/**
+ * The comment at the head of a file, as one text: what the file is, in the words of who wrote it. It is the first
+ * comment of the file, `//` lines or a block, before the imports or right after them.
+ */
 function headComment(source) {
-  const lines = []
-  for (const line of source.text.split('\n')) {
-    if (line.startsWith('//')) lines.push(line.replace(/^\/\/ ?/, ''))
-    else if (line.trim() === '' && lines.length === 0) continue
-    else break
+  const text = source.text.replace(/\r\n/g, '\n')
+  const first = source.statements.find((statement) => !ts.isImportDeclaration(statement))
+  for (const at of [0, first ? first.getFullStart() : -1]) {
+    if (at < 0) continue
+    const ranges = ts.getLeadingCommentRanges(text, at) ?? []
+    // Lines of `//` that follow one another are one comment; a block is one by itself.
+    const lines = []
+    for (const range of ranges) {
+      const piece = text.slice(range.pos, range.end)
+      if (range.kind === ts.SyntaxKind.SingleLineCommentTrivia) lines.push(piece.replace(/^\/\/ ?/, ''))
+      else if (lines.length === 0) return piece.replace(/^\/\*+\s?|\s*\*+\/$/g, '').split('\n').map((line) => line.replace(/^\s*\* ?/, '')).join('\n').trim()
+      else break
+    }
+    // A comment right above a declaration is that declaration's, not the file's, unless it is the only one there is.
+    if (lines.length > 0) return lines.join('\n').trim()
   }
-  return lines.join('\n').trim()
+  return ''
 }
 
-/** A component is a value with a capital and then a small letter (not a CONSTANT) that can be called with props, or is an object React draws. */
+const typeText = (type, at) => short(checker.typeToString(type, at, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope).replace(/ \| undefined$/, ''), 200)
+
+/** The fields of an object type that the toolkit declares, with their comments; and whether it has others, from a library or the browser. */
+function fieldsOf(type, at) {
+  // Each side of a union has its own fields (`AttachmentMarks` takes a summary, or the attachments themselves).
+  const sides = type.isUnion() ? type.types : [type]
+  const listed = new Map()
+  let passesOn = false
+  for (const side of sides) {
+    for (const prop of checker.getPropertiesOfType(checker.getApparentType(side))) {
+      const declared = prop.valueDeclaration ?? prop.declarations?.[0]
+      if (!declared || !own(declared.getSourceFile().fileName)) {
+        passesOn = true
+        continue
+      }
+      if (listed.has(prop.name)) continue
+      const text = say(prop.getDocumentationComment(checker))
+      listed.set(prop.name, {
+        name: prop.name,
+        type: typeText(checker.getTypeOfSymbolAtLocation(prop, at), at),
+        // In a union a field is needed only on its own side.
+        ...(prop.flags & ts.SymbolFlags.Optional || sides.length > 1 ? {} : { required: true }),
+        ...(text ? { doc: text } : {}),
+      })
+    }
+  }
+  return { fields: [...listed.values()], passesOn }
+}
+
+/**
+ * A component is a value with a capital and then a small letter (not a CONSTANT) that can be called with props, or
+ * an object React draws (`memo`, `forwardRef`). A context is neither: it is listed among the other names.
+ */
 function propsOf(symbol) {
   const declaration = symbol.valueDeclaration ?? symbol.declarations?.[0]
-  if (!declaration || !/^[A-Z][a-z]/.test(symbol.name) || !declaration.getSourceFile().fileName.endsWith('.tsx')) return null
+  if (!declaration || !/^[A-Z][a-z]/.test(symbol.name)) return null
   const type = checker.getTypeOfSymbolAtLocation(symbol, declaration)
+  const exotic = type.getProperty('$$typeof') !== undefined
+  if (exotic && type.getProperty('Provider') && type.getProperty('Consumer')) return null
   let signature = type.getCallSignatures()[0]
   // `React.memo` and `forwardRef` give an object: its props are those of the type it was made with.
-  if (!signature && type.getProperty('$$typeof')) signature = checker.getTypeArguments(type)[0]?.getCallSignatures()[0] ?? null
-  if (!signature && !type.getProperty('$$typeof')) return null
+  if (!signature && exotic) signature = checker.getTypeArguments(type)[0]?.getCallSignatures()[0]
+  if (!signature && !exotic) return null
+  // What a component gives back is something React draws: a function that gives a string or a number is a helper.
+  if (signature && !exotic && !/Element|ReactNode|ReactPortal|\bnull\b/.test(checker.typeToString(signature.getReturnType()))) return null
   const first = signature?.getParameters()[0]
-  const props = first ? checker.getTypeOfSymbolAtLocation(first, declaration) : null
-  const all = props ? checker.getPropertiesOfType(checker.getApparentType(props)) : []
-  const listed = []
-  let passesOn = false
-  for (const prop of all) {
-    const at = prop.valueDeclaration ?? prop.declarations?.[0]
-    if (!at || !own(at.getSourceFile().fileName)) {
-      passesOn = true
-      continue
-    }
-    const text = say(prop.getDocumentationComment(checker))
-    listed.push({
-      name: prop.name,
-      type: short(checker.typeToString(checker.getTypeOfSymbolAtLocation(prop, declaration), declaration, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope).replace(/ \| undefined$/, ''), 200),
-      ...(prop.flags & ts.SymbolFlags.Optional ? {} : { required: true }),
-      ...(text ? { doc: text } : {}),
-    })
-  }
-  return { props: listed, passesOn }
+  if (!first) return { props: [], passesOn: false }
+  const found = fieldsOf(checker.getTypeOfSymbolAtLocation(first, declaration), declaration)
+  return { props: found.fields, passesOn: found.passesOn }
+}
+
+/** An object type an app writes values of (a column, a notice, an option): its fields. Not a union of words, not a function. */
+function typeOf(symbol) {
+  const declaration = symbol.declarations?.[0]
+  if (!declaration || !(ts.isTypeAliasDeclaration(declaration) || ts.isInterfaceDeclaration(declaration))) return null
+  const type = checker.getDeclaredTypeOfSymbol(symbol)
+  if (type.getCallSignatures().length > 0) return null
+  const sides = type.isUnion() ? type.types : [type]
+  if (!sides.some((side) => side.flags & ts.TypeFlags.Object)) return null
+  const { fields } = fieldsOf(type, declaration)
+  const parameters = (declaration.typeParameters ?? []).map((parameter) => parameter.getText())
+  return fields.length > 0 ? { fields, ...(parameters.length > 0 ? { parameters } : {}) } : null
 }
 
 function catalog() {
@@ -91,24 +140,29 @@ function catalog() {
         continue
       }
       const path = from.fileName.slice(root.length)
-      if (!files.has(path)) files.set(path, { file: path, about: headComment(from), components: [], also: [] })
+      if (!files.has(path)) files.set(path, { file: path, about: headComment(from), components: [], types: [], also: [] })
       const found = symbol.flags & ts.SymbolFlags.Value ? propsOf(symbol) : null
-      // The name an app imports, which is not always the one in the file (`Dialog as DialogRoot`).
+      const shape = found ? null : typeOf(symbol)
       const doc = say(symbol.getDocumentationComment(checker))
+      // The name an app imports, which is not always the one in the file (`Dialog as DialogRoot`).
       if (found) files.get(path).components.push({ name: exported.name, ...(doc ? { doc } : {}), ...(found.props.length > 0 ? { props: found.props } : {}), ...(found.passesOn ? { passesOn: true } : {}) })
+      // The props of a component have a type of their own (`ButtonProps`): they are already under the component.
+      else if (shape && !/Props$/.test(exported.name)) files.get(path).types.push({ name: exported.name, ...(shape.parameters ? { parameters: shape.parameters } : {}), ...(doc ? { doc } : {}), fields: shape.fields })
       else files.get(path).also.push(exported.name)
     }
     const list = [...files.values()].sort((a, b) => a.file.localeCompare(b.file, 'en'))
     for (const item of list) {
       item.components.sort((a, b) => a.name.localeCompare(b.name, 'en'))
+      item.types.sort((a, b) => a.name.localeCompare(b.name, 'en'))
       item.also.sort((a, b) => a.localeCompare(b, 'en'))
+      if (item.types.length === 0) delete item.types
       if (item.also.length === 0) delete item.also
       if (item.components.length === 0) delete item.components
     }
     entries.push({ import: name, files: list, ...(libraries.length > 0 ? { fromLibraries: libraries.sort((a, b) => a.localeCompare(b, 'en')) } : {}) })
   }
   return {
-    about: 'The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.',
+    about: 'The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `types` are the object types those props are made of (a column, a notice, an option), with their fields. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.',
     rules: 'DESIGN.md',
     entries,
   }
@@ -129,15 +183,19 @@ async function examples() {
     outExtension: { '.js': '.mjs' },
     logLevel: 'silent',
   })
-  const { apps } = await import(`${pathToFileURL(`${out}editor.mjs`).href}?${Date.now()}`)
-  return apps.map((app) => ({
-    path: `agents/examples/${app.id}.tsx`,
-    text: `// ${app.name}: ${app.about}\n// A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is \`src/App.tsx\`\n// of the project the editor exports: \`./host\` is that project's file for the window of a native build.\n${app.source}`,
-  }))
+  const { apps, host } = await import(`${pathToFileURL(`${out}editor.mjs`).href}?${Date.now()}`)
+  return [
+    ...apps.map((app) => ({
+      path: `agents/examples/${app.id}.tsx`,
+      text: `// ${app.name}: ${app.about}\n// A whole app in the toolkit's frame, written by the app editor of the showcase (scripts/agents.mjs). It is \`src/App.tsx\`\n// of the project the editor exports; \`./host\` is host.ts beside this file.\n${app.source}`,
+    })),
+    // What the apps import as `./host`: where the app runs, and the window's buttons of a native build.
+    { path: 'agents/examples/host.ts', text: host },
+  ]
 }
 
 const files = [{ path: 'agents/catalog.json', text: `${JSON.stringify(catalog(), null, 1)}\n` }, ...(await examples())]
-const stale = files.filter((file) => !existsSync(`${root}${file.path}`) || readFileSync(`${root}${file.path}`, 'utf8') !== file.text)
+const stale = files.filter((file) => !existsSync(`${root}${file.path}`) || readFileSync(`${root}${file.path}`, 'utf8').replace(/\r\n/g, '\n') !== file.text)
 const kept = new Set(files.map((file) => file.path))
 const gone = existsSync(`${root}agents/examples`) ? readdirSync(`${root}agents/examples`).map((name) => `agents/examples/${name}`).filter((path) => !kept.has(path)) : []
 

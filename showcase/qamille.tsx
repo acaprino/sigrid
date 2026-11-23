@@ -84,7 +84,7 @@ const MAIL: readonly Mail[] = [
   { id: 'review', from: 'Luca Bianchi', address: 'luca.bianchi@studio-example.com', account: 'work', subject: 'Design review moved to 3 pm', snippet: 'The room was taken at two. Same link, one hour later.', body: ['The room was taken at two, so the design review moves to 3 pm. Same link, one hour later.', 'Bring the two versions of the onboarding: we choose one today.', 'Luca'], essentials: 'The design review is now at 3 pm, same link. Bring both versions of the onboarding.', date: '08:15', unread: true, section: 'new', label: 'Team', folder: 'inbox' },
   { id: 'dinner', from: 'Sofia', address: 'sofia@example.org', account: 'personal', subject: 'Dinner on Saturday?', snippet: 'Marco found a place near the river. Eight, if it suits you.', body: ['Marco found a place near the river that takes six people. Eight o\'clock, if it suits you.', 'Tell me by tomorrow and I will book.'], essentials: 'Sofia asks if you can come to dinner on Saturday at eight. She books tomorrow.', date: 'Sun', unread: true, section: 'new', folder: 'inbox' },
   { id: 'kickoff', from: 'Paolo Verdi', address: 'paolo.verdi@partner-example.com', account: 'work', subject: 'Invitation: Partnership kickoff, Tue 10:00', snippet: 'One hour, on a call. The agenda is in the invitation.', body: ['You are invited to the partnership kickoff on Tuesday at 10:00. One hour, on a call.', 'Agenda: who does what, the dates of the first release, the shared folder.'], essentials: 'Kickoff call on Tuesday at 10:00, one hour. No answer given yet.', date: 'Sun', unread: false, section: 'new', folder: 'inbox' },
-  { id: 'invoice', from: 'Accounting', address: 'accounting@studio-example.com', account: 'work', subject: 'Invoice #2291 for October', snippet: 'Due on 30 November. The bank details are unchanged.', body: ['Please find invoice #2291 for October attached. It is due on 30 November; the bank details are unchanged.'], essentials: 'Invoice #2291 for October, due on 30 November.', date: 'Fri', unread: false, section: 'seen', label: 'Finance', file: { name: 'invoice-2291.pdf', size: '96 KB' }, folder: 'inbox' },
+  { id: 'invoice', from: 'Accounting', address: 'accounting@studio-example.com', account: 'work', subject: 'Invoice 2291 for October', snippet: 'Due on 30 November. The bank details are unchanged.', body: ['Please find invoice 2291 for October attached. It is due on 30 November; the bank details are unchanged.'], essentials: 'Invoice 2291 for October, due on 30 November.', date: 'Fri', unread: false, section: 'seen', label: 'Finance', file: { name: 'invoice-2291.pdf', size: '96 KB' }, folder: 'inbox' },
   { id: 'flight', from: 'Travel Desk', address: 'bookings@travel-example.com', account: 'work', subject: 'Your flight to Berlin is confirmed', snippet: 'Thu 3 Dec, 07:10. Check-in opens 24 hours before.', body: ['Your flight to Berlin on Thursday 3 December at 07:10 is confirmed.', 'Check-in opens 24 hours before departure. One cabin bag is included.'], essentials: 'Flight to Berlin confirmed for Thursday 3 December at 07:10.', date: 'Fri', unread: false, section: 'seen', label: 'Travel', folder: 'inbox' },
   { id: 'brief', from: 'The Weekly Brief', address: 'brief@newsletter-example.com', account: 'personal', subject: 'This week: 5 tools for focused work', snippet: 'A timer that hides the clock, and four more.', body: ['This week: five tools for focused work. A timer that hides the clock, a list that shows one thing, and three more.'], essentials: 'A newsletter: five tools for focused work.', date: 'Thu', unread: false, section: 'newsletters', label: 'Reading', folder: 'inbox' },
   { id: 'digest', from: 'Design Digest', address: 'digest@newsletter-example.com', account: 'personal', subject: 'Typography trends for 2027', snippet: 'Wider letters, fewer weights, and what it means for interfaces.', body: ['Wider letters, fewer weights, and what it means for interfaces: our yearly look at type.'], essentials: 'A newsletter: the type trends of the year.', date: 'Wed', unread: false, section: 'newsletters', folder: 'inbox' },
@@ -139,6 +139,8 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
   }
   /** Out of this folder at once, with the way back in the notice (R12). On a computer the next message is read. */
   const move = (target: Mail, to: string, said: string) => {
+    // A message already there stays where it is: nothing to say and nothing to undo.
+    if (target.folder === to) return
     const at = shown.findIndex((m) => m.id === target.id)
     const next = shown[at + 1] ?? shown[at - 1]
     setMail((list) => list.map((m) => (m.id === target.id ? { ...m, folder: to } : m)))
@@ -263,7 +265,7 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
       </div>
     ) : (
       // A folder can hold years of mail: only the rows in sight are drawn.
-      <VirtualList aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} className="h-full p-2">
+      <VirtualList key={`${folder} ${word}`} aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} className="h-full p-2">
         {(index) => {
           const m = shown[index]
           return m ? row(m) : null
@@ -341,9 +343,11 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
           Snooze
         </Button>
       )}
-      <Button variant="outline" onClick={() => move(opened, 'archive', 'Archived')}>
-        Archive {key('E')}
-      </Button>
+      {opened.folder === 'archive' ? null : (
+        <Button variant="outline" onClick={() => move(opened, 'archive', 'Archived')}>
+          Archive {key('E')}
+        </Button>
+      )}
       {phone ? null : (
         <Button variant="outline" onClick={() => setDraft({ to: [opened.address], subject: `Fwd: ${opened.subject}`, body: '', reply: false })}>
           Forward
@@ -433,7 +437,13 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
           }
         >
           {phone ? (
-            opened ? reader : list
+            // The list stays in the page under the message, so the way back finds it where it was left.
+            <>
+              <div hidden={opened !== null} className="h-full">
+                {list}
+              </div>
+              {opened ? reader : null}
+            </>
           ) : (
             <div className="flex h-full min-h-0">
               <div data-slot="mail-column" className="w-90 shrink-0 overflow-y-auto border-e border-line">

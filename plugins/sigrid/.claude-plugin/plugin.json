@@ -1,8 +1,9 @@
 {
   "name": "sigrid",
   "description": "Build and review app screens with the @acaprino/sigrid design system: its components, its rules and its check",
-  "version": "1.0.0",
-  "author": { "name": "acaprino" },
+  "author": {
+    "name": "acaprino"
+  },
   "repository": "https://github.com/acaprino/sigrid",
   "license": "MIT"
 }

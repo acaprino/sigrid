@@ -16,7 +16,7 @@ const pkg = JSON.parse(read('package.json')) as { files: string[]; bin: Record<s
 /** The entries an app imports code from: those with types. */
 const codeEntries = Object.entries(pkg.exports).filter(([, to]) => typeof to === 'object' && to !== null && 'types' in to).map(([key]) => key)
 
-type Catalog = { entries: { import: string; fromLibraries?: string[]; files: { file: string; about: string; components?: { name: string; doc?: string; props?: { name: string; type: string; doc?: string; required?: boolean }[]; passesOn?: boolean }[]; also?: string[] }[] }[] }
+type Catalog = { entries: { import: string; fromLibraries?: string[]; files: { file: string; about: string; types?: { name: string; parameters?: string[]; fields: { name: string; type: string; doc?: string; required?: boolean }[] }[]; components?: { name: string; doc?: string; props?: { name: string; type: string; doc?: string; required?: boolean }[]; passesOn?: boolean }[]; also?: string[] }[] }[] }
 const catalog = JSON.parse(read('agents/catalog.json')) as Catalog
 const component = (entry: string, name: string) => catalog.entries.find((e) => e.import === entry)?.files.flatMap((f) => f.components ?? []).find((c) => c.name === name)
 
@@ -52,6 +52,28 @@ describe('the catalogue for agents', () => {
     expect(component('@acaprino/sigrid/table', 'DataTable')!.props!.map((p) => p.name)).toEqual(expect.arrayContaining(['columns', 'rows', 'rowId', 'virtual']))
   })
 
+  test('a part of the motion and a component whose props are one of two shapes are components; a context is not', () => {
+    // Not in a .tsx file.
+    expect(component('@acaprino/sigrid', 'MotionProvider')).toBeDefined()
+    // Each side of the union gives its props.
+    expect(component('@acaprino/sigrid', 'AttachmentMarks')!.props!.map((p) => p.name)).toEqual(expect.arrayContaining(['kinds', 'count', 'attachments']))
+    for (const context of ['AppShellContext', 'TitleBarDragContext', 'TitleBarSizeContext']) expect(component('@acaprino/sigrid', context), context).toBeUndefined()
+  })
+
+  test('the object types a prop is made of are described: a column of the table, a notice', () => {
+    const types = catalog.entries.flatMap((e) => e.files.flatMap((f) => f.types ?? []))
+    const column = types.find((t) => t.name === 'DataColumn')!
+    expect(column.parameters).toEqual(['Row'])
+    expect(column.fields.find((f) => f.name === 'header')).toEqual({ name: 'header', type: 'string', required: true, doc: 'The heading of the column.' })
+    expect(types.find((t) => t.name === 'ToastItem')!.fields.map((f) => f.name)).toEqual(expect.arrayContaining(['id', 'text']))
+    // The props of a component are under the component, not a second time here.
+    expect(types.find((t) => t.name === 'ButtonProps')).toBeUndefined()
+  })
+
+  test('the paths in it are the same on every system', () => {
+    for (const entry of catalog.entries) for (const file of entry.files) expect(file.file).toMatch(/^src\/[\w./-]+$/)
+  })
+
   test('every file with a component says what it is, and a constant is not taken for a component', () => {
     for (const entry of catalog.entries) for (const file of entry.files) if (file.components) expect(file.about.length > 20 || file.components.some((c) => (c.doc ?? '').length > 20 || (c.props ?? []).some((p) => p.doc)), file.file).toBe(true)
     expect(component('@acaprino/sigrid', 'APP_SHELL_STEPS')).toBeUndefined()
@@ -84,12 +106,16 @@ describe('the documents for agents', () => {
 
   test('the entries AGENTS.md names are entries of the package, and the tokens it names are tokens', () => {
     const text = read('AGENTS.md')
-    for (const entry of ['table', 'virtual', 'reorder', 'rich-text']) {
+    for (const entry of ['table', 'virtual', 'reorder', 'rich-text', 'graph']) {
       expect(text).toContain(`\`/${entry}\``)
       expect(pkg.exports).toHaveProperty(`./${entry}`)
     }
     const theme = read('src/styles/theme.css')
-    for (const token of ['--color-paper', '--color-raised', '--color-ink', '--color-ink-soft', '--color-ink-mute', '--color-line', '--color-selected', '--color-primary', '--shadow-float', '--control-md', '--row-height', '--pad-md']) expect(theme, token).toContain(token)
+    // Each name whole: `--color-ink:` is not found in `--color-ink-soft:`.
+    for (const token of ['--color-paper', '--color-raised', '--color-ink', '--color-ink-soft', '--color-ink-mute', '--color-line', '--color-selected', '--color-accent', '--radius-sm', '--radius-md', '--radius-lg', '--shadow-xs', '--shadow-sm', '--shadow-md', '--shadow-lg', '--shadow-float']) expect(theme, token).toMatch(new RegExp(`${token}:`))
+    for (const measure of ['--control-md', '--row-height', '--pad-md']) expect(theme, measure).toContain(measure)
+    // The names the primitives use inside are not for whoever builds a screen.
+    expect(text).not.toMatch(/bg-primary|bg-background|text-foreground/)
   })
 
   test('the plugin of Claude Code: a marketplace with one plugin, which has one skill', () => {
@@ -100,7 +126,9 @@ describe('the documents for agents', () => {
     const plugin = market.plugins[0]!
     // A path in the same repository starts with `./`.
     expect(plugin.source.startsWith('./')).toBe(true)
-    const manifest = JSON.parse(read(`${plugin.source.slice(2)}/.claude-plugin/plugin.json`)) as { name: string; description: string; version: string }
+    const manifest = JSON.parse(read(`${plugin.source.slice(2)}/.claude-plugin/plugin.json`)) as { name: string; description: string; version?: string }
+    // No fixed version: the release does not raise one here, and a pinned one would keep an old skill installed.
+    expect(manifest.version).toBeUndefined()
     expect(manifest.name).toBe(plugin.name)
     expect(manifest.name).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
     const skill = read(`${plugin.source.slice(2)}/skills/sigrid/SKILL.md`)
@@ -139,6 +167,29 @@ describe('sigrid-check', () => {
     expect(said).not.toMatch(/Good\.tsx/)
   })
 
+  test("the package's own example apps pass it", () => {
+    const run = spawnSync(process.execPath, [`${root}bin/sigrid-check.mjs`, `${root}agents/examples`], { cwd: app, encoding: 'utf8' })
+    expect(run.stdout + run.stderr).toMatch(/3 files, 0 errors/)
+    expect(run.status).toBe(0)
+  })
+
+  test('a line that is right as it is can say so, with its reason', () => {
+    const ok = `// design-check-ignore-next-line color-value: an invoice number, not a colour\nexport const said = 'Invoice ${'#'}2291'\n`
+    mkdirSync(join(app, 'said'))
+    writeFileSync(join(app, 'said', 'said.ts'), ok)
+    expect(check('said').status).toBe(0)
+    writeFileSync(join(app, 'said', 'said.ts'), ok.split('\n').slice(1).join('\n'))
+    expect(check('said').status).toBe(1)
+  })
+
+  test('two folders, or an option it does not have, are refused and nothing is checked', () => {
+    for (const args of [['src', 'ui'], ['--fix'], ['--strict', 'src']]) {
+      const run = check(...args)
+      expect(run.status, args.join(' ')).toBe(2)
+      expect(run.stdout).not.toMatch(/check-code/)
+    }
+  })
+
   test('another folder can be named, and one that is not there is said so', () => {
     mkdirSync(join(app, 'ui'))
     writeFileSync(join(app, 'ui', 'A.tsx'), 'export const A = () => <p className="text-ink">A</p>\n')
@@ -148,8 +199,17 @@ describe('sigrid-check', () => {
     expect(none.stderr).toMatch(/no folder/)
   })
 
-  test("an app's own sigrid-check.config.json is used when no folder is named", () => {
-    writeFileSync(join(app, 'sigrid-check.config.json'), JSON.stringify({ root: 'src', ignore: ['Bad.tsx'], extensions: ['.tsx'], rules: { 'color-value': 'error', 'palette-class': 'error' } }))
+  test("an app's own sigrid-check.config.json holds with or without a folder, and its rules are laid over the toolkit's", () => {
+    // No `rules` here: the toolkit's stay as they are, so a shadow from a token is still allowed.
+    writeFileSync(join(app, 'sigrid-check.config.json'), JSON.stringify({ root: 'src', ignore: ['Bad.tsx'] }))
+    writeFileSync(join(app, 'src', 'card.css'), '.card { box-shadow: var(--shadow-md); }\n')
     expect(check().status).toBe(0)
+    expect(check('src').status).toBe(0)
+    // One rule turned off, the others still on.
+    writeFileSync(join(app, 'sigrid-check.config.json'), JSON.stringify({ root: 'src', rules: { 'palette-class': 'off' } }))
+    const run = check()
+    expect(run.status).toBe(1)
+    expect(run.stdout + run.stderr).toMatch(/color-value/)
+    expect(run.stdout + run.stderr).not.toMatch(/palette-class/)
   })
 })
