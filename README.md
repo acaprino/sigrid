@@ -19,7 +19,8 @@ It knows nothing of any app: no app's name, concepts or product components. The 
 window API of a desktop shell (its title bar is plain web, and a shell drives it from outside: see
 [Toolbar and title bar](#toolbar-and-title-bar)); what is Tauri's lives apart, in `tauri/`. An app builds its product
 components on top of it, usually in a package of its own that re-exports what the app needs from here.
-MIT licence (`LICENSE`); the third-party code it adapts, all MIT, is listed in `THIRD_PARTY.md`.
+MIT licence (`LICENSE`). The third-party code it adapts (all MIT), and the libraries and fonts it rests on with
+their licences, are listed in `THIRD_PARTY.md`.
 
 ## Use it
 
@@ -75,7 +76,13 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    never reaches the browser.
 4. **Colours: the theme engine** (`src/theme-engine.ts`, `src/theme-catalog.ts`, `src/themes.ts`, `src/colors.ts`):
    every colour is computed from the chosen theme and scheme and written as tokens on the root (`applyTheme`); the
-   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. A theme can also be made
+   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. In dark the backgrounds
+   are a neutral anthracite unless the theme sets its dark parameters (`ThemeDef.dark`), which the engine turns into
+   the whole ladder: `depth` is how dark the page is and how far below it the sidebar sits (`deep` a near-black page
+   at OKLCH lightness 0.20, `standard` 0.235, the default, `soft` 0.25, the page closer to its sheets), and `tint`
+   is `neutral` (the default) or `theme`, the hue of the theme's grays at a low chroma (0.016, or 0.008 for a warm
+   hue; a theme whose grays have no chroma stays neutral). Every contrast threshold holds on all six; `themeDark`
+   reads a saved value. A curated palette (`surfaces`, and so `colorTheme`) keeps its own backgrounds. A theme can also be made
    from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
    for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
    `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
@@ -91,13 +98,13 @@ Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.
 ## Density
 
 Density is data, like the themes (`src/density.ts`). The toolkit ships three presets, `DENSITIES`; `normal` is the
-default and equals the sizes the toolkit had before density existed.
+default, a 4px step under Park UI's md form (Park's md is `large` here).
 
 | | control heights (md/sm/xs) | side padding (md/sm/xs) | row height | row padding |
 |---|---|---|---|---|
-| `compact` | 36 / 32 / 28px | 12 / 10 / 8px | 32px | 4px |
-| `normal` | 40 / 36 / 32px | 14 / 12 / 10px | 40px | 8px |
-| `large` | 44 / 40 / 36px | 16 / 14 / 12px | 48px | 12px |
+| `compact` | 32 / 28 / 24px | 10 / 8 / 6px | 32px | 4px |
+| `normal` | 36 / 32 / 28px | 12 / 10 / 8px | 40px | 8px |
+| `large` | 40 / 36 / 32px | 14 / 12 / 10px | 48px | 12px |
 
 - `applyDensity(root, density)` takes a preset id or a `DensityDef` (an app's own, or a preset with some measures
   changed: `densityWith('compact', { row: { height: 28 } })`). It writes the measures on the element as `--density-*`
@@ -153,7 +160,7 @@ const win = getCurrentWindow()
     <ToolbarSpacer />
     <ToolbarSearch label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} />
     <ToolbarButton label="Archive" shortcut="E" icon={<Icon name="archive" />} onClick={archive} />
-    <ToolbarButton label="New message" variant="default" icon={<Icon name="add" />}>New</ToolbarButton>
+    <ToolbarButton label="New message" variant="default" icon={<Icon name="plus" />}>New</ToolbarButton>
   </Toolbar>
 </TitleBar>
 ```
@@ -207,6 +214,141 @@ hidden on a phone.
 </CommandsProvider>
 ```
 
+## Light, dark and the system's look
+
+In every app of the suite the person chooses light, dark or the system's look in the same place: three commands of
+the palette, «Light theme», «Dark theme» and «System theme», each with its icon (`sun`, `moon`, `appearance`), in a
+group of their own («Look»), the one in use checked. Each name stands alone, without the heading, so a screen reader
+says «Light theme, checked». No app draws a switch for it or writes these commands. The app makes two calls with one
+constant, its look and the key the choice is kept under: `applyKeptScheme` in its entry file, before React renders,
+and `useSchemeCommands` inside its `CommandsProvider`, which declares the three commands where it is called.
+
+```tsx
+// main.tsx, before createRoot(…).render(…)
+const LOOK = { theme: colorTheme({ id: 'tasks', label: 'Tasks', color: '#006398', spot: 'balanced' }), storageKey: 'tasks.scheme' }
+applyKeptScheme(LOOK)
+
+// in the app's component, inside <CommandsProvider>
+const { scheme } = useSchemeCommands(LOOK)
+useWindowTheme(scheme) // a Tauri app, from '@acaprino/sigrid/tauri': the window's frame follows
+```
+
+`applyKeptScheme` puts the kept scheme on the root as soon as the entry's script runs. What the page paints before
+that is the stylesheet's (`theme.css`: the gray baseline in the system's scheme), so a page whose stylesheet paints
+before the script runs can show the system's scheme for a moment; the toolkit has no way of its own to hold that paint.
+
+Choosing one puts the app's theme in that scheme on the document's root at once (`applyTheme`) and keeps the word
+(`light`, `dark` or `system`) under the key in `localStorage`: every page and every tab of the app that uses the same
+key follows it. The system's choice is the default and follows `prefers-color-scheme` while the page is open; a value
+kept that is not one of the three is the system's. The storage is the answer whenever it can be read: what another
+page keeps there, or a clear, is followed, and a choice the storage refuses to write (its quota full) does not hold.
+Only where the browser gives no storage at all (turned off or blocked, as some private modes do) does the choice hold
+in the page, until it is closed. On a server nothing reads the browser's storage: the hook says the system's choice,
+drawn light (as `useMedia` does there), and `applyKeptScheme` puts nothing. The hook says `{ choice, scheme }`, the
+scheme drawn now, for a part that draws in it: a Tauri app gives `scheme` to `useWindowTheme` (`@acaprino/sigrid/tauri`)
+so that the window's frame follows. The look is what `applyTheme` takes but the scheme (`theme`, and the user's `tone`,
+`own` or `palette`), given as the same objects at every render (a constant, or `useMemo`). The words are
+`useWords().scheme`. Any command that chooses one of several says so with `checked` (`useCommand`, or a `Command`
+given to the palette): the one in use has a check in the ink at the end of its row, the look of `Combobox`'s chosen
+option, and the others keep its room. For a screen reader it is `aria-checked` on the option, because `aria-selected`
+marks the highlighted row.
+
+## A tree of rows
+
+`Tree` is a list of nested rows on Ark UI's TreeView, for files and folders or any hierarchy: each node has an `id`, a
+`name`, an `icon` (a meaning of Sigrid's icons, `folder` and `file` among them) and an `openIcon` for a branch while it is open (`folderOpen`), a short fact at the end (`meta`, in tabular
+figures) and a `count` after it (a `Count`, R5), and either `children` or `hasChildren`, whose rows `loadChildren` brings
+when the branch is first opened. The rows look like every list of things (`ItemRow`): under the pointer a share of the
+selection tint, the chosen row the whole tint and the short accent bar at its start. The rows are one Tab stop (the
+chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
+out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
+Space or a press choose (and open or close a branch). One row is chosen: `selected` and `onSelect` for the app's choice,
+or `defaultSelected`; the open branches likewise (`expanded`, `onExpandedChange`, called only when the list changes,
+`defaultExpanded`). The chevron is the sidebar's and turns only with `animated`. A closed branch's rows are not in the
+page.
+
+A branch that loads says «Loading» and takes no second opening; one whose load failed says «Not loaded» and stays
+closed, and opening it again tries again. Loaded children belong to the node object they were loaded for: build the
+nodes once (a constant, state, `useMemo`); when the app gives another object for an id (another project, a refresh) or
+none, its children are dropped and a load still under way is given up (its signal aborts), so one project's rows never
+show in another.
+
+With `search` a field above the rows filters them; the text can also be the app's (`query`, `onQueryChange`,
+`defaultQuery`), typed in that field or in one of the app's own (then without `search`). `match(node, query)` says what
+is found (by default the name holds the text, whatever the case): a node found shows with all it holds, a branch that
+leads to one shows opened, and an app counts the finds with the same function over its nodes. A branch never loaded is
+not searched: to have it searched, give its children. Nothing found says «No results», the word of every search. What
+the person opens or closes while filtering is theirs: clearing the filter gives back their own branches, with those
+changes.
+
+A screen reader hears a tree named by the app; the row that has the focus is the `treeitem` itself, branch or leaf,
+named by its name, with its level, whether it is open and whether it is chosen, and the fact, the count or the state of
+its load after it. It is not the graph: `GraphCanvas` draws things joined by lines.
+
+```tsx
+const FILES: TreeNode[] = [
+  { id: 'src', name: 'src', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'src/app.ts', name: 'app.ts', icon: 'file', meta: '4 KB' }] },
+  { id: 'remote', name: 'remote', icon: 'folder', openIcon: 'folderOpen', hasChildren: true },
+]
+
+<Tree aria-label="Files" nodes={FILES} search selected={file} onSelect={setFile} defaultExpanded={['src']}
+  loadChildren={(node, signal) => fetchFolder(node.id, signal)} className="h-full" />
+
+// The app's filter: the whole path, and the count of finds with the same function.
+const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
+<Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
+```
+
+## A message that stays in the page
+
+`Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
+information (`tone`: `error`, `warning`, `success`, `info`, the default), with a `title`, its text (the children), an
+optional list (`items`, one entry each) and the buttons that answer it (`actions`). It has no close button: it goes
+when its cause is gone.
+
+One need, one look. Which to use:
+
+| What the page has to say | Use |
+|---|---|
+| Something failed: a view, a panel or a file that could not be read, a task that stopped | `Note` with `tone="error"`, with «Retry» as its action when it can be tried again |
+| There is nothing here: an empty list, a search with no result, a view not filled yet | `Empty` |
+| Something passed: saved, moved, sent, with «Undo» | a toast (`Toasts`) |
+
+A failure has the same mark wherever it is shown: Sigrid's `error` icon, the circle with an X, in a `Note`, in a toast
+with `kind: 'error'`, in a `ProgressRing` and before the «Failed» of a `Progress` or `ProgressSegments` with
+`status="error"`, and in the dot of a step of `Steps` that failed.
+
+Each tone is said three ways, never by colour alone: its icon from Sigrid's set (`info`, `check`, `alert`, `error`), its
+colour from the theme engine's status tokens (the soft fill of `success`, `warning` or `destructive`; information has
+none and is never the accent, so it is the quiet fill, the ink at 6%), and a word that screen readers read before the
+title («Error: Could not reach the server»: an error says `useWords().common.error`, the word of an error toast, and
+the other tones `useWords().note`). So a title does not start with the tone's word («Error: …», «Warning: …»): it
+would be read twice. An error or a warning is announced when it appears (`role="alert"`); information and a success
+are not, and are met in the page's order. A warning that is a fact of the item shown («Read only», «Out of date») takes
+`announce={false}`: it is not read again at each selection. A note whose tone changes in place is drawn anew, so an
+information that becomes an error is announced as it appears (a button inside it that had the focus loses it).
+
+A long word (a path, a JSON value, an address) breaks where it must, in the title, the text and the list, so the note
+never grows wider than its place. A tool's output, with its line breaks, goes in the text as `<Text pre>`. The form is
+Park UI's alert, flat in the page: a fill, with neither a border nor a shadow (R4). The actions are `outline` or
+`ghost`, whose labels read at 4.5:1 on the four fills in every theme; a solid button only if it is the one primary
+action of its screen (R3).
+
+```tsx
+<Note tone="error" title="Could not reach the server" items={failed.map((file) => file.name)}
+  actions={<Button variant="outline" onClick={retry}>Retry</Button>}>
+  The map was drawn before these files were read.
+</Note>
+
+<Note tone="warning" announce={false} title="Read only">
+  It belongs to another project.
+</Note>
+
+<Note tone="error" title="The analysis stopped">
+  <Text pre>{log}</Text>
+</Note>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -240,7 +382,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow`, `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -257,7 +399,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     which are in the main entry.
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
-    items there are and where each one is. Each place gives one row, never none.
+    items there are and where each one is. Each place gives one row, never none. With `fill` it is as tall as the
+    region that holds it, with `pad` the room around its rows.
   - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
     pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
     While a row is taken Escape is the list's, so a dialog or a sheet around it stays open.
@@ -358,6 +501,15 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
+      `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
+      many lines of that kind there are (a `Count`: zero shows nothing; screen readers hear it with the word, «12
+      calls»); `aria-label` names the list. Each entry is a short sample of the line (hidden from screen readers), its
+      word and its count, in a row that wraps on a narrow window. The samples are drawn by the same definitions as the
+      canvas's lines (`src/components/graph-lines.ts` and one rule of `graph.css`), so the key and the lines cannot
+      part. The word is always there: a tone is never said by its colour alone. It keys the lines only, not the
+      things. A summary beside the key (how many lines are in sight, say) is the app's to write, with `Text`: the key
+      has no prop for it.
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
@@ -384,7 +536,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
 
   // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
-  import { GraphCanvas } from '@acaprino/sigrid/graph'
+  import { GraphCanvas, GraphLegend } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
@@ -397,6 +549,10 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
       { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
     steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
+  // Its key, under it: each kind of line, its word and how many there are.
+  <GraphLegend aria-label="Kinds of line" entries={[{ label: 'Hangs from', count: tree.length },
+    { label: 'Needs the text', style: 'dashed', tone: 'warning', count: 1 }, { label: 'Not the same week', style: 'dotted', tone: 'destructive', count: 1 }]} />
+  // A summary beside it, if the app wants one, is its own words: <Text variant="caption">8 of 12 lines in sight</Text>.
   <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
@@ -420,12 +576,21 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
-- Icons: `Icon` draws a meaning (`settings`, `delete`) with the pack the user chose (`IconPackProvider`). The toolkit
-  draws what apps have in common (`ICON_NAMES`: the views and settings, the menu entries, and the actions of a mail,
-  calendar or editing screen: `mail`, `reply`, `archive`, `bold`, `undo`, `attach`, `windowMinimize`…), in every pack; an
-  app adds the meanings of its own subject with `icons`: `<IconPackProvider pack={pack} icons={{ invoice: { lucide: Receipt,
-  fluent: ReceiptColor, emoji: '\u{1F9FE}' } }}>`, then `<Icon name="invoice" />`. The line drawing is required; a pack left
-  out falls back to it; a name nobody draws is an empty slot of the same size.
+- Icons: Sigrid has one icon set of its own, Lucide, the same in every app (the owner, 2026-11-23); the user does not
+  choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
+  never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
+  and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
+  `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`) and the
+  four tones of a message (`info`, `check`, `alert`, and `error`, the circle with an X of every failure). An icon
+  a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
+  (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
+  not part of this: it stays the app's.
+- Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
+  `IconPackChoice` and `IconPackText` are gone: drop the choice of a pack from the app's settings and stop saving it (a
+  pack saved before is ignored). `IconPackProvider`, `useIconPack`, `IconSet`, `IconDrawing`, `IconArt` and `Icon`'s
+  `pack` prop are gone: remove the provider around the app (`Icon` draws Lucide without it), and ask for a meaning of
+  the app's own to be added to Sigrid's names (until then it is an empty slot). `Icon` no longer writes
+  `data-icon-pack`. No name is kept as an alias.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a
   match inside a text). Fixed for every theme, as the red is; the engine keeps their contrast on every theme.
 - `./theme.css` and `./fonts.css`: to `@import` in an app's own Tailwind CSS (with an `@source` on this package's
@@ -448,8 +613,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 ## Design rules, showcase and checks
 
 - `DESIGN.md`: the design file (zero-slop-design format): the tokens of the default theme in light and dark, the
-  owner's rules R1 to R10 of 2026-11-20 (accent in four places only, border or shadow, plain key hints and counts,
-  icons that inform, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots…), the approved
+  owner's rules R1 to R14, from 2026-11-20 on (the accent only where to look and what to press, one solid button,
+  border or shadow, plain key hints and tabular counts, icons from the one set, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots, the Vivid tone by default, undo in time order, an Advanced fold in each settings section, shared controls that never move…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
   which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
@@ -457,18 +622,19 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 - `docs/mobile.md`: the system on a phone. The idea (the same app in one column, one job on each screen, act at the
   foot, undo and do not ask), what the toolkit does by itself (44px with a finger, 16px fields, the drawer, the date
   card as a sheet…) with the measures at 390px, what an app adds (which navigation, the bar, actions, forms, sheets),
-  six layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
+  seven layouts and their code. The showcase shows it under «On a phone» in each guide view, and as one small app in a
   frame as wide as a phone under «Phone layouts», in the Practices view.
 - `docs/component-inventory.md` and `docs/tokens.css`: every component against Ark, Park and the other components,
   with each deviation approved (and why) or fixed; the tokens with the file each one comes from.
 - `showcase/`: the design system shown with its own frame (`AppShell`), in five views as tabs in the bar. Philosophy,
   Guidelines and Practices say what this README, `DESIGN.md`, `docs/patterns.md` and `docs/mobile.md` say, with live
-  examples (the layout gallery and the phone layouts are in Practices); Components shows every component in its variants, sizes and states
-  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows three
+  examples (the layout gallery and the phone layouts are in Practices); Components shows the components (all but a few, which `showcase/vite.config.mjs` names) in their variants, sizes and states
+  (hover, pressed and focus forced with `data-force`), in light and dark and in several palettes; Examples shows four
   whole apps of the suite made of these parts: a to-do list (Ethel) and a mail client (Qamille), each on a computer
   and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`), and a
   desktop workspace for terminal agents (Shinatama), as a native app on a computer only, whose missing parts are marked
-  `GAP:` in `showcase/shinatama.tsx`: sketches with made-up content and each app's own theme, with what the host
+  `GAP:` in `showcase/shinatama.tsx`, and a cleaner for Windows (Xiox) in the sheet frame (`AppShell frame="sheet"`),
+  also a native app on a computer only: sketches with made-up content and each app's own theme, with what the host
   changes and what it does not. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
@@ -486,14 +652,16 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     is, in a browser tab or as a native window in Tauri; for a phone it is drawn with the 44px sizes of a finger.
   - «Run» is the app running by itself (`/run.html`, which also opens in a tab of its own, or on a phone): its
     state, its navigation and its notices work, from the same description the export prints.
-  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`), in a project
+  - «Export» is the app as source: one React component made only of the toolkit's parts (`src/App.tsx`: no class, no
+    style and no element of its own, so it passes `sigrid-check` with `own-class` on), in a project
     that runs in a browser as it is (Vite, Tailwind, the entry file with the look) and as a native app in Tauri after
     the steps of its README (the window's bar and buttons, the browser's keys taken away, the safe areas of a phone).
     `test/editor-export.test.ts` type-checks that source against the toolkit, for the apps the editor starts from and
-    for one that holds every component in every setting. The app can also be saved as data and opened again.
+    for one that holds every component in every setting, and fails on a class, a style or an element of its own in it
+    or in the examples written from it for agents (`agents/examples`). The app can also be saved as data and opened again.
   - The inspector holds the component chosen, the screen, the app and the look: everything the toolkit lets an app
     configure (scheme, the theme's two colours, the tone of the accents, the corner shape, the font, the density and
-    each of its measures, the icon pack, motion). What is made is kept in the browser.
+    each of its measures, motion; the icons are Sigrid's one set, not a choice). What is made is kept in the browser.
   - Development only. The dragging, the selection, the outline and the history are Puck's (`@puckeditor/core`, MIT, a
     development dependency, pinned; with it come, for the showcase only, the packages it depends on, TipTap and one
     Radix popover among them: none of it is in the package). Everything it draws is the toolkit's, and the editor
@@ -513,11 +681,14 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: three whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
-  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`.
+  `agents/examples/`: four whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`. `tasks.tsx` and
+  `mail.tsx` are in the frame with lines, `workspace.tsx` in the sheet frame (laid out as Xiox), and `triage.tsx` is a
+  screen that fits (`Page fit`).
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
-- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`: the rules and the guides, now inside the package.
+- `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`, `docs/design-laws.md`: the rules and the guides, inside the
+  package.
 - `sigrid-check`: the design check, as a command of the package. In an app, `npx --no sigrid-check` checks `./src`
   against `DESIGN.md` and exits with 1 when it finds something, so an agent can run it and correct itself. It finds
   values written by hand where a token belongs (colours, palette classes, sizes in square brackets, gradients,
@@ -551,9 +722,10 @@ Without the plugin, one line in the app's own `AGENTS.md` or `CLAUDE.md` does th
 Every merge of `develop` into `main` publishes a [GitHub Release](https://github.com/acaprino/sigrid/releases) (tag
 `v<version>`). The repository is public: no login is needed to download. Each release holds three files:
 
-- `acaprino-sigrid-<version>.tgz`: the package, with `dist/`, `src/` (Tailwind's `@source` and the `./theme.css`,
-  `./fonts.css` and `./src/*` exports need it), `package.json`, `LICENSE`, `THIRD_PARTY.md`, `README.md` and
-  `provenance.json`.
+- `acaprino-sigrid-<version>.tgz`: the package, with what `files` in `package.json` lists: `dist/`, `src/` (Tailwind's
+  `@source` and the `./theme.css`, `./fonts.css` and `./src/*` exports need it), `tauri/`, `bin/` (`sigrid-check`),
+  `agents/`, `docs/`, `tools/zero-slop-design/`, `AGENTS.md`, `DESIGN.md`, `llms.txt`, `LICENSE`, `THIRD_PARTY.md`,
+  `README.md` and `provenance.json`, with `package.json` itself.
 - `manifest.json`: `{ "version", "packages": [{ "name", "file", "sha256" }] }`, the SHA-256 of the package.
 - `SHA256SUMS`: `<sha256>  <file>` for every other file of the release.
 
@@ -572,16 +744,20 @@ fetches the three files at once.
 release was built from and the SHA-256 of every file of the package except itself, so an installed copy can be checked
 file by file. `commit` is the parent of the `v<version>` tag: the tag's own commit ("release v<version>") only changes the
 version in `package.json` and `package-lock.json`, and the package was built with that version already written.
-The release is built by `npm run release` (`scripts/release.mjs`: build, typecheck, tests, then pack). To try it
+The release is built by `npm run release` (`scripts/release.mjs`: build, the checks CI runs, tests, then pack). To try it
 locally, `npm run release -- --skip-test` fills `release/` (not committed) without the tests.
 
 ## Build and test
 
 ```bash
 npm ci
-npm run typecheck   # tsc --noEmit
-npm run build       # dist/index.js (+ chunks/, Motion separate), dist/index.d.ts, dist/styles.css, dist/fonts/
-npm test            # vitest run
+npm run design:lint          # DESIGN.md is a valid zero-slop-design file
+npm run design:check         # the sources against DESIGN.md
+npm run typecheck            # tsc --noEmit, the sources and tauri/
+npm run showcase:typecheck   # the showcase
+npm run typecheck:test       # the sources and the tests together
+npm run build                # dist/index.js (+ chunks/, Motion separate), dist/index.d.ts, dist/styles.css, dist/fonts/
+npm test                     # vitest run
 ```
 
 An app's product package bundles the toolkit from this `dist` (its build and tests can rebuild it when the sources are

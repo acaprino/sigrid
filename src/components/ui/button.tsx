@@ -20,14 +20,16 @@
 // Park's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the
 // attachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,
 // unlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` ("Saving…") in place of
-// its label. With `loadingText` the label and the loading text share one grid cell, so the width is the wider of the
-// two before, during and after the wait.
+// its label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the
+// wider of the two before, during and after the wait.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { useRender } from "@base-ui/react/use-render"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 import { useMotion } from "../../internal/motion"
+import { useMergedRef } from "../../lib/refs"
+import { SwapLabel } from "../../internal/swap-label"
 
 const buttonVariants = cva(
   cn(
@@ -50,7 +52,9 @@ const buttonVariants = cva(
         // Park plain: text only; a quiet fill under the pointer. A step quieter than Park's (soft ink): here it
         // is the weakest action of a row, next to a solid or a surface one.
         ghost: "text-ink-soft hover:bg-ink/6 hover:text-ink active:bg-ink/9",
-        link: "text-ink underline-offset-4 hover:underline",
+        // A link is underlined at rest, as a link in a text is (`md-link`): without the line it reads as plain text
+        // until the pointer finds it. The line is muted, and takes the text colour under the pointer.
+        link: "text-ink underline decoration-ink-mute underline-offset-2 hover:decoration-current",
       },
       size: {
         // A control is 36px tall (44px with a finger, from the base classes). The heights and the side padding are the
@@ -116,14 +120,13 @@ function Button({
   const motion = useMotion(animated)
   const [el, setEl] = React.useState<HTMLElement | null>(null)
   // One ref for the caller and for the gestures; without `animated` the state is never set and nothing re-renders.
-  const ref = React.useCallback(
+  const gestures = React.useCallback(
     (node: HTMLButtonElement | null) => {
       if (motion) setEl(node)
-      if (typeof outer === "function") return outer(node)
-      if (outer) outer.current = node
     },
-    [outer, motion]
+    [motion]
   )
+  const ref = useMergedRef(gestures, outer)
   React.useEffect(() => {
     if (!motion || !el) return
     return motion.pressable(el, { ...(hoverScale === undefined ? {} : { hoverScale }), ...(tapScale === undefined ? {} : { tapScale }) })
@@ -152,29 +155,13 @@ function Button({
 
   return (
     <button ref={ref} {...own} type={type} {...props} {...busy}>
-      {loadingText === undefined ? children : <LoadingLabel loading={loading} label={children} loadingText={loadingText} />}
+      {loadingText === undefined ? children : <SwapLabel slot="button-label" first={children} second={loadingText} showSecond={loading} />}
     </button>
   )
 }
 
 /** A busy button: no pointer (no hover, no press, no click), the label at full contrast. */
 const BUSY = "pointer-events-none"
-
-/** One grid cell for the label and the loading text: the hidden one keeps its room, so the width never changes. */
-const LAYER = "col-start-1 row-start-1 inline-flex items-center justify-center gap-2"
-
-function LoadingLabel({ loading, label, loadingText }: { loading: boolean; label: React.ReactNode; loadingText: React.ReactNode }) {
-  return (
-    <span data-slot="button-label" className="grid">
-      <span className={cn(LAYER, loading && "invisible")} aria-hidden={loading || undefined}>
-        {label}
-      </span>
-      <span className={cn(LAYER, !loading && "invisible")} aria-hidden={!loading || undefined}>
-        {loadingText}
-      </span>
-    </span>
-  )
-}
 
 /**
  * The neutral quiet chip: Park's subtle variant for chips (a row of quick choices in an app), on top of the `ghost`
@@ -183,4 +170,12 @@ function LoadingLabel({ loading, label, loadingText }: { loading: boolean; label
  */
 const QUIET_CHIP = "bg-ink/6 font-semibold text-ink hover:bg-ink/9 hover:text-ink active:bg-ink/12"
 
-export { Button, buttonVariants, QUIET_CHIP }
+/**
+ * A quiet icon button that is the toolkit's own chrome, not an action of the screen (the close of a window, the button
+ * that empties a field, the handle that drags a row): a `ghost` icon button, one step quieter at rest (the muted ink),
+ * with the ink and the quiet fill under the pointer and while pressed, as every ghost button. Its class, on top of
+ * `variant="ghost"` and an `icon-*` size.
+ */
+const QUIET_ICON = "text-ink-mute"
+
+export { Button, buttonVariants, QUIET_CHIP, QUIET_ICON }

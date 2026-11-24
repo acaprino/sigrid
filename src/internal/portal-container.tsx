@@ -1,3 +1,5 @@
+// Where the overlays of a subtree mount (menus, popovers, selects, tooltips, dialogs, sheets): the page's body, or the
+// element a `PortalContainerProvider` names. Below the primitives: they read it, and it imports none of them.
 import { createContext, useContext, type ReactNode } from 'react'
 
 const Context = createContext<HTMLElement | null>(null)

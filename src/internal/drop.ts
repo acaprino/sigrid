@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
+import { useCallback, useRef, useState, type DragEvent } from 'react'
 import { DEFAULT_WORDS, type Words } from '../words'
 
 /**
@@ -97,7 +97,7 @@ export type DropTarget = {
  * A drag that starts INSIDE the element (the text selected in an input, dragged to another point of the same input)
  * is not a drop from outside: while it lasts the element leaves it to the browser, without `preventDefault` and
  * without calling `onDrop`. An empty drop (nothing readable) does not call `onDrop`. The drop stops here: it does not
- * reach a page target (`usePageDrop`) underneath.
+ * reach a listener further up the page.
  */
 export function useDropTarget(onDrop: (payload: DropPayload) => void): DropTarget {
   const [active, setActive] = useState(false)
@@ -134,86 +134,4 @@ export function useDropTarget(onDrop: (payload: DropPayload) => void): DropTarge
     [onDrop],
   )
   return { props: { onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop: handleDrop }, active }
-}
-
-/**
- * The whole window as a target, while the component is mounted (the Stack: drop wherever you like).
- *
- * - A drag that started in the page (text of the capture input, a row) is not a drop from outside: it is left to the
- *   browser, without `preventDefault`, and does not call `onDrop`.
- * - A drop inside a dialog (`role="dialog"`) is not for the Stack: it is left alone.
- * - A closer target (`useDropTarget`) stops the drop before it gets here.
- * - `active` holds only while dragging from outside over the window: a counter of `dragenter`/`dragleave` (entering a
- *   child the child's `dragenter` arrives and then the parent's `dragleave`), reset on drop.
- */
-export function usePageDrop(onDrop: (payload: DropPayload) => void): { active: boolean } {
-  const [active, setActive] = useState(false)
-  const latest = useRef(onDrop)
-  latest.current = onDrop
-  useEffect(() => {
-    let own = false
-    let depth = 0
-    const inDialog = (e: Event) => e.target instanceof Element && e.target.closest('[role="dialog"]') !== null
-    const hasFiles = (e: globalThis.DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files')
-    const reset = () => {
-      depth = 0
-      setActive(false)
-    }
-    const onDragStart = () => {
-      own = true
-    }
-    const onDragEnd = () => {
-      own = false
-      reset()
-    }
-    const onDragEnter = (e: globalThis.DragEvent) => {
-      if (own || inDialog(e)) return
-      depth += 1
-      setActive(true)
-    }
-    const onDragOver = (e: globalThis.DragEvent) => {
-      if (own) return
-      if (inDialog(e)) {
-        // A file dropped on a dialog is not for the Stack, but without `preventDefault` the browser would open it
-        // in place of the app. Text is left to the browser (the dialog's inputs accept it).
-        if (hasFiles(e)) {
-          e.preventDefault()
-          if (e.dataTransfer) e.dataTransfer.dropEffect = 'none'
-        }
-        return
-      }
-      e.preventDefault()
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-      setActive(true)
-    }
-    const onDragLeave = () => {
-      if (own) return
-      depth = Math.max(0, depth - 1)
-      if (depth === 0) setActive(false)
-    }
-    const onDropEvent = (e: globalThis.DragEvent) => {
-      if (own) return
-      if (inDialog(e)) {
-        if (hasFiles(e)) e.preventDefault()
-        return
-      }
-      e.preventDefault()
-      reset()
-      const payload = e.dataTransfer ? payloadFromDataTransfer(e.dataTransfer) : null
-      if (payload) latest.current(payload)
-    }
-    const on: [string, (e: globalThis.DragEvent) => void][] = [
-      ['dragstart', onDragStart],
-      ['dragend', onDragEnd],
-      ['dragenter', onDragEnter],
-      ['dragover', onDragOver],
-      ['dragleave', onDragLeave],
-      ['drop', onDropEvent],
-    ]
-    for (const [type, fn] of on) window.addEventListener(type, fn as EventListener)
-    return () => {
-      for (const [type, fn] of on) window.removeEventListener(type, fn as EventListener)
-    }
-  }, [])
-  return { active }
 }

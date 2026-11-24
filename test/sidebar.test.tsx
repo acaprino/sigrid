@@ -1,11 +1,11 @@
 // The sidebar (`Sidebar`, `SidebarGroup`): the navigation as groups of rows, shrunk to a rail, filtered by its search
 // box, and a drawer on a narrow window. The rows themselves (`NavItem`) are tested in form-and-navigation.test.tsx.
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { NavItem, Sidebar, SidebarGroup } from '../src'
+import { flush } from './helpers'
 
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
 afterEach(() => vi.unstubAllGlobals())
 
 function App({ onOpenChange, startCollapsed = false, open = false }: { onOpenChange?: (open: boolean) => void; startCollapsed?: boolean; open?: boolean }) {

@@ -3,16 +3,17 @@
 // type-checked against the toolkit as it is now, for every app the editor starts from and for one that holds every
 // component of its catalogue in every setting that changes what is printed. A prop of a part that is renamed, or a
 // part that goes, fails here, before someone exports an app that does not compile.
-import { mkdirSync, writeFileSync } from 'node:fs'
+// The source is made of the toolkit's parts and nothing else (AGENTS.md, «One look for every app»): no class, no
+// inline style and no HTML element of its own, in the apps it exports and in the examples written from it for agents
+// (`agents/examples`, scripts/agents.mjs), which `sigrid-check` with `own-class` on passes.
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { expect, test } from 'vitest'
 import { CATALOG, KINDS, type FieldSpec, type Kind, type Region } from '../showcase/editor/catalog'
 import { appSource, exportFiles, zip } from '../showcase/editor/codegen'
 import { STARTERS, make, readApp, screen, type AppModel, type Node } from '../showcase/editor/model'
-
-const root = fileURLToPath(new URL('../', import.meta.url))
+import { root } from './helpers'
 
 /** Every component once for each word of each of its choices, with every other field as it starts. */
 function variants(kind: Kind): Node[] {
@@ -127,11 +128,12 @@ test('a name with a line break stays inside its comment, and what is not a yes i
   // The name is the first line, a comment, and no line of the source starts with what the name tried to add.
   expect(source.split(/\r?\n|\u2028|\u2029/)[0]).toMatch(/^\/\/ Line one export const injected/)
   expect(source).not.toMatch(/^export const (injected|again)/m)
-  const hostile = { ...bare(), look: { ...bare().look, animated: 'false}><script/><X animated={true' as unknown as boolean, icons: `x'"y` as unknown as AppModel['look']['icons'] } }
+  const hostile = { ...bare(), look: { ...bare().look, animated: 'false}><script/><X animated={true' as unknown as boolean } }
   const main = exportFiles(hostile, { version: '0.0.0' }).find((file) => file.path === 'src/main.tsx')!.text
   expect(main).toContain('<MotionProvider animated={false}>')
   expect(main).not.toContain('<script')
-  expect(main).toMatch(/<IconPackProvider pack=\{.+\}>/)
+  // The icons are not chosen: Sigrid has one set, so the entry file names no pack.
+  expect(main).not.toMatch(/IconPack|pack=/)
 })
 
 test('two choices of one name have two values', () => {
@@ -164,7 +166,7 @@ test('data of any origin is made into an app that draws: a look, a region and an
     ],
   })!
   const start = STARTERS[0]!.make().look
-  expect(read.look).toEqual({ ...start, scheme: 'light', colors: 'own', tone: start.tone, shape: start.shape, font: start.font, icons: 'lucide', accent: start.accent, page: null, animated: false, accentAuto: start.accentAuto, density: read.look.density })
+  expect(read.look).toEqual({ ...start, scheme: 'light', colors: 'own', tone: start.tone, shape: start.shape, font: start.font, accent: start.accent, page: null, animated: false, accentAuto: start.accentAuto, density: read.look.density })
   expect(read.look.density.id).toBe('normal')
   const content = read.screens[0]!.content
   expect(content.map((node) => node.type)).toEqual(['Button', 'Button', 'Stack'])
@@ -172,9 +174,10 @@ test('data of any origin is made into an app that draws: a look, a region and an
   expect(inside.map((node) => node.type)).toEqual(['Text'])
   const ids = [...content, ...inside].map((node) => node.props['id'])
   expect(new Set(ids).size).toBe(ids.length)
-  // What is right is kept as it is.
+  // What is right is kept as it is; an icon pack kept from before is left out (Sigrid has one set).
   const kept = readApp({ name: 'x', look: { scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true }, screens: [{ name: 'One' }] })!
-  expect(kept.look).toMatchObject({ scheme: 'dark', accent: '#4452C4', icons: 'emoji', animated: true })
+  expect(kept.look).toMatchObject({ scheme: 'dark', accent: '#4452C4', animated: true })
+  expect(kept.look).not.toHaveProperty('icons')
 })
 
 test('the zip of an export holds every file, stored, with its checksum', () => {
@@ -191,4 +194,37 @@ test('the zip of an export holds every file, stored, with its checksum', () => {
   const text = new TextDecoder().decode(bytes.subarray(30 + name.length, 30 + name.length + view.getUint32(18, true)))
   expect(text).toBe(files[0]!.text)
   expect(files.find((file) => file.path === 'package.json')!.text).toContain('/v1.2.3/acaprino-sigrid-1.2.3.tgz')
+})
+
+/**
+ * What an app that writes no interface code of its own does not have: a class (`className=`, `class=`, a `…ClassName`
+ * prop, `className:` in an object: the pattern of `sigrid-check`'s `own-class`), an inline style, or an element of HTML
+ * (a lowercase tag) where a part of the toolkit belongs.
+ */
+const OWN_CLASS = /(?<![\w$-])(?:class|className|[a-z]\w*ClassName)\s*(?:=(?!=)|\+=|:(?!:))|\bclassList\.(?:add|toggle|replace)\s*\(|\bsetAttribute\(\s*['"]class['"]/
+const STYLE = /(?<![\w$-])style\s*(?:=(?!=)|:(?!:))/
+const ELEMENT = /(?<![\w$.])<[a-z][\w-]*[\s/>]/
+/** The source without the words in quotes: a notice that says «<here>» is text, not an element. */
+const code = (source: string) => source.replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, "''")
+
+test('an exported app is made of the toolkit\'s parts only: no class, no style, no element of its own', () => {
+  const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
+  for (const [id, app] of Object.entries(apps)) {
+    const source = code(appSource(app))
+    expect(source, `${id}: a class`).not.toMatch(OWN_CLASS)
+    expect(source, `${id}: a style`).not.toMatch(STYLE)
+    expect(source, `${id}: an element of its own`).not.toMatch(ELEMENT)
+  }
+})
+
+test('the examples written for agents carry no class, no style and no element of their own', () => {
+  const folder = join(root, 'agents/examples')
+  const files = readdirSync(folder).filter((file) => file.endsWith('.tsx'))
+  expect(files.length).toBeGreaterThan(0)
+  for (const file of files) {
+    const source = readFileSync(join(folder, file), 'utf8')
+    expect(source, `${file}: a class`).not.toMatch(OWN_CLASS)
+    expect(source, `${file}: a style`).not.toMatch(STYLE)
+    expect(source, `${file}: an element of its own`).not.toMatch(ELEMENT)
+  }
 })

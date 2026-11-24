@@ -75,6 +75,7 @@
     "showcase": "vite --config showcase/vite.config.mjs",
     "showcase:build": "vite build --config showcase/vite.config.mjs",
     "showcase:typecheck": "tsc -p showcase/tsconfig.json",
+    "typecheck:test": "tsc -p tsconfig.test.json",
     "design:lint": "node tools/zero-slop-design/zsd.mjs lint DESIGN.md --strict",
     "design:check": "node tools/zero-slop-design/zsd.mjs check-code DESIGN.md --config design-check.config.json --strict",
     "agents": "node scripts/agents.mjs",
@@ -116,7 +117,6 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
-    "@fluentui/react-icons": "2.0.345",
     "@internationalized/date": "3.12.4",
     "@material/material-color-utilities": "0.4.0",
     "@tanstack/react-table": "9.3.1",
@@ -125,10 +125,10 @@
     "@tiptap/react": "3.33.0",
     "@tiptap/starter-kit": "3.33.0",
     "@xyflow/react": "13.0.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.70.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.70.0",
     "motion": "14.6.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "3.7.0"
   }
 }

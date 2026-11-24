@@ -20,7 +20,9 @@ export interface Words {
     readonly undo: string
     /** The name of the region that holds the notices. */
     readonly notices: string
-    /** What screen readers hear before the text of a notice that is an error. */
+    /** The name of the button that closes a notice, from the notice's text. */
+    readonly closeNotice: (text: string) => string
+    /** What screen readers hear before the text of an error: a notice that is an error, and a `Note` with `tone="error"` («Error: Could not reach the server»). */
     readonly error: string
     /** How a key combination is read: keys pressed together, and one after the other. */
     readonly keysTogether: (keys: readonly string[]) => string
@@ -39,10 +41,6 @@ export interface Words {
     readonly noDateTime: string
     /** The button text of a range field without a value. */
     readonly noRange: string
-    /** No longer shown: the date cards have no button that removes the date (2026-11-22). Kept so an app's words still fit. */
-    readonly clear: string
-    /** No longer shown, as `clear`. */
-    readonly clearRange: string
     /** The quick choices above the calendar (`dayPicks`, `rangePicks`). */
     readonly today: string
     readonly tomorrow: string
@@ -69,11 +67,32 @@ export interface Words {
     readonly expand: string
     /** The search box that filters the rows: its name and its placeholder. */
     readonly search: string
-    /** Said when no row holds the text searched for. */
+    /** Said when no row holds the text searched for: by the sidebar's search, and by a `Tree`'s filter. */
     readonly empty: string
+    /** The button in the bar that opens the sidebar where the frame has made it a drawer (`DrawerButton`). */
+    readonly open: string
   }
   readonly search: {
     readonly clear: string
+  }
+  readonly copy: {
+    /** The name of a `CopyButton` that was given none. */
+    readonly copy: string
+    /** Shown and said right after the text is on the clipboard. */
+    readonly copied: string
+    /** Said when the system refused the clipboard. */
+    readonly failed: string
+  }
+  /** What a `Tree` says by itself. */
+  readonly tree: {
+    /** Said at the end of a branch while its children load. */
+    readonly loading: string
+    /** Said at the end of a branch whose children could not be loaded. */
+    readonly failed: string
+    /** Read after `failed` by screen readers: how to try again (the branch loads again when it is opened again). */
+    readonly retry: string
+    /** The field that filters the tree by name: its name and its placeholder. Nothing found says `sidebar.empty`, as every search of rows. */
+    readonly filter: string
   }
   readonly list: {
     /** Read before the title of a row not read yet (`ItemRow`). */
@@ -90,6 +109,18 @@ export interface Words {
     readonly command: string
     /** The name of the list of the keys that work now, in the window's foot (`KeyHints`). */
     readonly keys: string
+  }
+  /** The three commands that choose the look's scheme in the palette (`useSchemeCommands`). */
+  readonly scheme: {
+    /** The heading they sit under in the palette. */
+    readonly group: string
+    /** Each name stands alone, without the heading: a screen reader says the row and its state («Light theme, checked»), not the group. */
+    readonly light: string
+    readonly dark: string
+    /** The choice that follows the system's light or dark setting. */
+    readonly system: string
+    /** Other words the three are found by in the palette. */
+    readonly keywords: string
   }
   /** The names of the keys that are held, where a key of a command is written out (`formatKeys`): Cmd and Option on a Mac. */
   readonly keys: {
@@ -116,6 +147,12 @@ export interface Words {
     readonly indeterminate: string
     readonly complete: string
     readonly error: string
+  }
+  /** The tone of a `Note`, read by screen readers before its title («Warning: The map is out of date»). An error says `common.error`. */
+  readonly note: {
+    readonly info: string
+    readonly success: string
+    readonly warning: string
   }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
@@ -273,6 +310,7 @@ export const DEFAULT_WORDS: Words = {
     close: 'Close',
     undo: 'Undo',
     notices: 'Notices',
+    closeNotice: (text) => `Close the notice: ${text}`,
     error: 'Error',
     keysTogether: (keys) => keys.join(' + '),
     keysInSequence: (keys) => keys.join(' then '),
@@ -286,8 +324,6 @@ export const DEFAULT_WORDS: Words = {
     noDate: 'No date',
     noDateTime: 'No date and time',
     noRange: 'No dates',
-    clear: 'Clear the date',
-    clearRange: 'Clear the dates',
     today: 'Today',
     tomorrow: 'Tomorrow',
     weekend: 'This weekend',
@@ -310,9 +346,21 @@ export const DEFAULT_WORDS: Words = {
     expand: 'Expand the sidebar',
     search: 'Search the menu',
     empty: 'No results',
+    open: 'Open the menu',
   },
   search: {
     clear: 'Clear the search',
+  },
+  copy: {
+    copy: 'Copy',
+    copied: 'Copied',
+    failed: 'Could not copy',
+  },
+  tree: {
+    loading: 'Loading',
+    failed: 'Not loaded',
+    retry: 'Open it to try again',
+    filter: 'Filter by name',
   },
   list: {
     unread: 'Unread',
@@ -323,6 +371,13 @@ export const DEFAULT_WORDS: Words = {
     empty: 'No command found',
     command: 'Commands',
     keys: 'Keys',
+  },
+  scheme: {
+    group: 'Look',
+    light: 'Light theme',
+    dark: 'Dark theme',
+    system: 'System theme',
+    keywords: 'look theme scheme mode appearance',
   },
   keys: {
     ctrl: 'Ctrl',
@@ -343,6 +398,11 @@ export const DEFAULT_WORDS: Words = {
     indeterminate: 'In progress',
     complete: 'Complete',
     error: 'Failed',
+  },
+  note: {
+    info: 'Information',
+    success: 'Success',
+    warning: 'Warning',
   },
   shell: {
     skip: 'Skip to the content',

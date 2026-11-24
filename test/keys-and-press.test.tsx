@@ -6,10 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Button } from '../src'
 import { Kbd, Shortcut } from '../src/components/ui/kbd'
 import { preloadMotion } from '../src/internal/motion'
-
-/** `prefers-reduced-motion: reduce` on or off (jsdom has no matchMedia). */
-const systemMotion = (reduce: boolean) =>
-  vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce') ? reduce : false, media: q, addEventListener() {}, removeEventListener() {} }))
+import { systemMotion } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())
 

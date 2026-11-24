@@ -1,13 +1,10 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/internal/date-field'
+import { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateRange } from '../src/components/DateField'
+import { flush, noop } from './helpers'
 
-const noop = () => {}
-
-
-// Ark's date picker acts in a microtask and moves focus in an animation frame: the loop is let run.
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
+// `flush()`: Ark's date picker acts in a microtask and moves focus in an animation frame: the loop is let run.
 /** A key on the focused element, then Ark's machine and its focus move. */
 const key = async (name: string, init: KeyboardEventInit = {}) => {
   fireEvent.keyDown(document.activeElement!, { key: name, ...init })
@@ -120,6 +117,8 @@ test('Space on a day chooses it too: a day is a native button', async () => {
   render(<Controlled initial="2026-11-07" onChange={onChange} />)
   await openField('Due date')
   await key('ArrowRight')
+  // Ark moves focus in a frame, which a busy machine can run late: wait for the day itself, not for the clock.
+  await expectFocus('Sunday, November 8, 2026')
   // Space on a native button is a click.
   await press(document.activeElement!)
   expect(onChange).toHaveBeenCalledWith('2026-11-08')

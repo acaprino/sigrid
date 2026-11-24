@@ -7,7 +7,7 @@ import { DENSITIES } from '../../src/index'
 import { TAURI_PERMISSIONS } from '../../tauri/permissions'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
-import { DETAILS_CLASS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, contentClass, planOf, screenBody, type Plan } from './plan'
+import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, planOf, screenBody, type Plan } from './plan'
 
 export type ExportFile = { readonly path: string; readonly text: string }
 
@@ -146,16 +146,6 @@ function tagsIn(children: readonly (Child | Val | When)[], into: Set<string>): S
 
 /* ———— The app as one component ———— */
 
-const HELPERS: Record<string, { source: string; uses: readonly string[] }> = {
-  MenuButton: {
-    uses: ['Icon', 'ToolbarButton', 'useAppShell'],
-    source: `/** The button that opens the sidebar: in the bar only where the frame has taken the sidebar out of the layout. */
-function MenuButton({ onOpen }: { onOpen: () => void }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<Icon name="sidebarOpen" />} onClick={onOpen} /> : null
-}`,
-  },
-}
-
 /** An import of many names: on one line if it fits, otherwise filled line after line. */
 function importLines(names: readonly string[], from: string): string[] {
   const one = `import { ${names.join(', ')} } from '${from}'`
@@ -182,7 +172,7 @@ function region(vis: Vis, el: El): Val | When {
 /** The frame of the app, as elements: AppShell with its regions. */
 function frameSource(plan: Plan): El {
   const s = plan.settings
-  const account = s.account ? h('div', { className: 'flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink' }, h('Avatar', { name: s.account, size: 'xs', decorative: true }), h('span', { className: 'min-w-0 flex-1 truncate' }, s.account)) : undefined
+  const account = s.account ? h('SidebarRow', { leading: h('Avatar', { name: s.account, size: 'xs', decorative: true }) }, s.account) : undefined
   const props: Record<string, Val | When> = {
     desktop: name('ownWindow'),
     frame: s.frame === 'sheet' ? 'sheet' : undefined,
@@ -219,7 +209,7 @@ export function appSource(app: AppModel): string {
   const plan = planOf(app)
   const frame = frameSource(plan)
   const content = plan.screens.map((s) => [s.id, screenBody(s, s.content)] as const)
-  const inspectors = plan.screens.flatMap((s) => (s.details ? [[s.id, h('Inspector', { title: s.detailsTitle || 'Details', open: name('details'), onOpenChange: name('setDetails') }, h('div', { className: DETAILS_CLASS }, s.details))] as const] : []))
+  const inspectors = plan.screens.flatMap((s) => (s.details ? [[s.id, h('Inspector', { title: s.detailsTitle || 'Details', open: name('details'), onOpenChange: name('setDetails') }, h('Column', DETAILS_PROPS, s.details))] as const] : []))
   const actions = plan.screens.flatMap((s) => (s.actions ? [[s.id, h('Fragment', null, s.actions)] as const] : []))
   // A row that holds one fragment (a Job) is that fragment, not one inside another.
   const statuses = plan.screens.flatMap((s) => (s.status ? [[s.id, s.status.length === 1 && isEl(s.status[0]) && s.status[0].tag === 'Fragment' ? s.status[0] : h('Fragment', null, s.status)] as const] : []))
@@ -265,12 +255,10 @@ export function appSource(app: AppModel): string {
   // The notices sit above what the frame keeps at its foot: `AppShell` writes that room itself (`--bottom-bar-room`).
   if (plan.uses.say) head.push('  const say = (text: string) => setNotices((list) => [...list, { id: crypto.randomUUID(), text }])')
 
-  // Imports: the parts the elements name, what the helpers and the frame use, in the order of the alphabet.
+  // Imports: the parts the elements name and what the frame uses, in the order of the alphabet.
   const tags = tagsIn([frame, ...content.map(([, el]) => el), ...statuses.map(([, el]) => el), ...inspectors.map(([, el]) => el), ...actions.map(([, el]) => el)], new Set<string>())
-  const helpers = Object.keys(HELPERS).filter((id) => tags.has(id))
   const parts = new Set<string>(['useMedia', 'useDesktopGuard', 'WindowControls'])
-  for (const tag of tags) if (/^[A-Z]/.test(tag) && tag !== 'Fragment' && !(tag in HELPERS)) parts.add(tag)
-  for (const id of helpers) for (const part of HELPERS[id]!.uses) parts.add(part)
+  for (const tag of tags) if (tag !== 'Fragment') parts.add(tag)
   if (plan.uses.say) parts.add('Toasts')
   const names = [...parts].sort((a, b) => a.localeCompare(b))
   if (plan.uses.say) names.push('type ToastItem')
@@ -287,7 +275,6 @@ export function appSource(app: AppModel): string {
     `const SCREENS: Record<Screen, string> = ${literal(Object.fromEntries(plan.screens.map((s) => [s.id, s.name])))}`,
     '// Where the app runs: a Tauri window of its own on a computer, or a browser (or a phone, where the system draws the window).',
     'const HOST = readHost()',
-    ...helpers.flatMap((id) => ['', HELPERS[id]!.source]),
     '',
     'export function App() {',
     ...head,
@@ -322,7 +309,7 @@ function mainSource(app: AppModel): string {
   const preset = DENSITIES.find((d) => d.id === look.density.id)
   const density = preset ? lit(preset.id) : literal(look.density)
   const own = look.colors === 'own' ? `duoTheme({ base: ${lit(look.page)}, accent: ${lit(look.accent)} })` : 'null'
-  const parts = ['BASE_THEME', 'IconPackProvider', 'MotionProvider', 'applyDensity', 'applyFont', 'applyTheme', 'presetTone', ...(look.colors === 'own' ? ['duoTheme'] : [])].sort((a, b) => a.localeCompare(b))
+  const parts = ['BASE_THEME', 'MotionProvider', 'applyDensity', 'applyFont', 'applyTheme', 'presetTone', ...(look.colors === 'own' ? ['duoTheme'] : [])].sort((a, b) => a.localeCompare(b))
   return `import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ${parts.join(', ')} } from '@acaprino/sigrid'
@@ -339,9 +326,7 @@ applyFont(root, ${lit(look.font)})
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MotionProvider animated={${look.animated === true ? 'true' : 'false'}}>
-      <IconPackProvider pack={${lit(look.icons)}}>
-        <App />
-      </IconPackProvider>
+      <App />
     </MotionProvider>
   </StrictMode>,
 )

@@ -10,13 +10,13 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Toasts, type ToastItem } from '../src'
 import { preloadMotion } from '../src/internal/motion'
 import { TOASTS_LAYER } from '../src/internal/overlay'
+import { settle } from './helpers'
 
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
-/** Lets Ark's store and machines act (microtasks), inside React's `act`. */
-const settle = () => act(async () => {})
+// `settle()`: lets Ark's store and machines act (microtasks), inside React's `act`.
 /** Fake time passing, with the microtasks of Ark's machines in between. */
 const tick = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)))
 const two = [{ id: 'a', text: 'First' }, { id: 'b', text: 'Second', undo: { onClick: () => {} } }]

@@ -2,7 +2,6 @@
 // ink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the
 // others); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a
 // column of counts to stay aligned passes `reserve`.
-import * as React from "react"
 import { cn } from "../../lib/utils"
 
 export type CountProps = {

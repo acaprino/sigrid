@@ -13,14 +13,15 @@
 // here there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
-import { XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING } from "../../lib/focus"
-import { BACKDROP, ignoreToasts, inTitleBar } from "../../internal/overlay"
-import { usePortalContainer } from "../PortalContainer"
+import { Button, QUIET_ICON } from "./button"
+import { BACKDROP, inTitleBar, inToasts, renderWithOpenState } from "../../internal/overlay"
+import { usePortalContainer } from "../../internal/portal-container"
 import { useEntrance } from "../../internal/motion"
+import { useMergedRef } from "../../lib/refs"
 
 type RootProps = React.ComponentProps<typeof DialogPrimitive.Root>
 type ChangeDetails = Parameters<NonNullable<RootProps["onOpenChange"]>>[1]
@@ -28,17 +29,9 @@ type ChangeDetails = Parameters<NonNullable<RootProps["onOpenChange"]>>[1]
 /**
  * A click on a notification does not close the window: the user is undoing the last action, not leaving the window.
  * Base UI closes a modal only for a click on its backdrop (or on an ancestor of the panel), so the notification, which sits
- * above the backdrop, already does not close it; this is the second check, the same one the sheets use (`ignoreToasts`).
+ * above the backdrop, already does not close it; this is the second check, the same one the sheets use (`inToasts`).
  */
-function isToastPress(details: ChangeDetails): boolean {
-  if (details.reason !== "outside-press") return false
-  // A probe event with the same target: the real click event is left untouched (a `preventDefault` on a
-  // link in the notification would stop it from opening).
-  const probe = new Event("interactoutside", { cancelable: true })
-  Object.defineProperty(probe, "target", { value: details.event.target })
-  ignoreToasts()(probe)
-  return probe.defaultPrevented
-}
+const isToastPress = (details: ChangeDetails): boolean => details.reason === "outside-press" && inToasts(details.event.target)
 
 function Dialog({ onOpenChange, ...props }: RootProps) {
   return (
@@ -114,21 +107,17 @@ function DialogContent({
   const words = useWords()
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterDialog(el))
   const autoFocus = props.initialFocus === undefined
-  const popupRef = React.useCallback((el: HTMLDivElement | null) => {
-    enter(el)
+  const first = React.useCallback((el: HTMLDivElement | null) => {
     if (autoFocus) focusFirst(el)
-    if (typeof ref === "function") return ref(el)
-    if (ref) ref.current = el
-  }, [autoFocus, enter, ref])
+  }, [autoFocus])
+  const popupRef = useMergedRef(enter, first, ref)
   return (
     <DialogPortal container={container}>
       <DialogOverlay />
       <DialogPrimitive.Popup
         ref={popupRef}
         data-slot="dialog-content"
-        // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a sheet,
-        // a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
-        render={(renderProps, state) => <div {...renderProps} data-state={state.open ? "open" : "closed"} />}
+        render={renderWithOpenState}
         // The window is always modal (focus trapped, page blocked, the rest `aria-hidden`): this is also told
         // to screen readers, which Base UI does not announce by itself.
         aria-modal="true"
@@ -143,12 +132,10 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className={cn(
-              "absolute top-3 right-3 flex size-(--control-sm) items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-              FOCUS_RING
-            )}
+            render={<Button variant="ghost" size="icon-sm" />}
+            className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
           >
-            <XIcon aria-hidden="true" />
+            <Icon name="close" />
             <span className="sr-only">{words.common.close}</span>
           </DialogPrimitive.Close>
         )}

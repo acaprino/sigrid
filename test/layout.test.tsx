@@ -4,8 +4,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src'
+import { classes } from './helpers'
 
-const classes = (el: Element) => (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)!
 // The steps of the scale and the gap each one is (4, 8, 12, 16 and 24px on Tailwind's 4px unit).
 const SCALE: [Space, string][] = [['xs', 'gap-1'], ['sm', 'gap-2'], ['md', 'gap-3'], ['lg', 'gap-4'], ['xl', 'gap-6']]

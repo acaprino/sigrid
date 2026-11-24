@@ -17,7 +17,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
+import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -37,6 +37,11 @@ import {
   Checkbox,
   Combobox,
   SearchField,
+  CopyButton,
+  Disclosure,
+  InputGroup,
+  InputGroupButton,
+  InputGroupText,
   ItemList,
   ItemRow,
   OverflowList,
@@ -46,7 +51,17 @@ import {
   ToolbarTab,
   ToolbarTabs,
   Inspector,
-  useAppShell,
+  DrawerButton,
+  Card as SampleCard,
+  Cluster,
+  Column,
+  DescriptionList,
+  Dot,
+  Heading,
+  Separator,
+  SettingRow,
+  SidebarRow,
+  Text,
   TitleBar,
   Toolbar,
   ToolbarBrand,
@@ -97,6 +112,7 @@ import {
   DropdownMenuTrigger,
   DurationField,
   Empty,
+  Note,
   Icon,
   Input,
   Kbd,
@@ -129,6 +145,7 @@ import {
   ToggleGroupItem,
   TonePresetChoice,
   Tooltip,
+  Tree,
   DENSITIES,
   DEFAULT_SHAPE,
   THEME_SHAPES,
@@ -148,6 +165,7 @@ import {
   useMedia,
   isIconName,
   WordsProvider,
+  useWords,
   AppShellContext,
   type AttachmentView,
   type DateRange,
@@ -159,12 +177,15 @@ import {
   type ThemeShape,
   type ThemeTone,
   type ToastItem,
+  type TreeNode,
 } from '../src/index'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
+import { ContentSplit, type SheetWidth } from '../src/index'
+import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -269,12 +290,12 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Layout', icon: 'layout', ids: ['layout'] },
+  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition', 'composition-panes'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
   { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
-  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'reorder', 'graph'] },
+  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'tree', 'reorder', 'graph'] },
   { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
@@ -722,7 +743,7 @@ function StepsSection() {
     </div>
   )
   return (
-    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with a cross and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
+    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with the circle with an X (the one look of a failure, as in a Note error) and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
       <Row label="a wizard">
         <div className="flex flex-col gap-4">
           <Steps aria-label="Signup" steps={SIGNUP} current={current} onStepSelect={setCurrent} />
@@ -937,7 +958,7 @@ function Toolbars({ animated }: { animated: boolean }) {
       <ToolbarSpacer />
       <ToolbarSearch closed={field ? 'field' : 'icon'} label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
       <ToolbarGroup aria-label="View">
-        <ToolbarButton label="Filter" icon={<ListFilter aria-hidden="true" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
+        <ToolbarButton label="Filter" icon={<Icon name="filter" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
         <ToolbarButton label="Sort" icon={<ArrowDownUp aria-hidden="true" />} onClick={() => setSaid('Sort')} animated={animated} />
       </ToolbarGroup>
       <ToolbarSeparator />
@@ -994,11 +1015,6 @@ function Toolbars({ animated }: { animated: boolean }) {
   )
 }
 
-/** The button that opens the sidebar, in the bar only where the frame has taken the sidebar out of the layout. */
-function ShellMenuButton({ onOpen }: { onOpen: () => void }) {
-  return useAppShell().sidebar === 'drawer' ? <ToolbarButton label="Open the menu" icon={<PanelLeft aria-hidden="true" />} onClick={onOpen} /> : null
-}
-
 /** What each example recommends, in one sentence: the same words as docs/patterns.md. */
 const PATTERNS = {
   'list-detail': { name: 'List and detail', advice: 'For things to read and act on (mail, tasks, files). The sidebar says where, the list what, the inspector the details; the views are a row of tabs directly under the bar; Commands (Ctrl K) opens the palette.' },
@@ -1010,9 +1026,10 @@ type PatternId = keyof typeof PATTERNS
 
 /**
  * The gallery of layout patterns: complete screens made only of the toolkit's parts, at the widths where the frame
- * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits.
+ * changes. They are examples to start from, not rules: docs/patterns.md says when each one fits. Its palette also holds
+ * the scheme's three commands, acting on the showcase's own scheme (`scheme`, `onScheme`).
  */
-function Shells({ animated }: { animated: boolean }) {
+function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: ThemeScheme; onScheme: (scheme: ThemeScheme) => void }) {
   const [pattern, setPattern] = React.useState<PatternId>('list-detail')
   const [width, setWidth] = React.useState('1040')
   const [place, setPlace] = React.useState('all')
@@ -1034,6 +1051,16 @@ function Shells({ animated }: { animated: boolean }) {
   const [palette, setPalette] = React.useState(false)
   const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
   useCommandKey(() => setPalette(true))
+  // The scheme's commands as `useSchemeCommands` declares them in an app: its words, icons and checks. The hook is not
+  // mounted here: it would put a second scheme on the page's root, which the showcase keeps itself (the moon,
+  // `?scheme=`), light or dark. So the rows act on the showcase's scheme, and «System theme» puts the system's now.
+  const schemeWords = useWords().scheme
+  const systemDark = useMedia('(prefers-color-scheme: dark)')
+  const schemeCommands = [
+    { id: 'scheme-light', label: schemeWords.light, icon: <Icon name="sun" />, checked: scheme === 'light', onSelect: () => onScheme('light') },
+    { id: 'scheme-dark', label: schemeWords.dark, icon: <Icon name="moon" />, checked: scheme === 'dark', onSelect: () => onScheme('dark') },
+    { id: 'scheme-system', label: schemeWords.system, icon: <Icon name="appearance" />, checked: false, onSelect: () => onScheme(systemDark ? 'dark' : 'light') },
+  ].map((command) => ({ ...command, group: schemeWords.group, keywords: schemeWords.keywords }))
   const commandsButton = (
     <ToolbarButton label="Commands" shortcut="Ctrl K" icon={<Terminal aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated}>
       Commands
@@ -1065,7 +1092,7 @@ function Shells({ animated }: { animated: boolean }) {
   const bar = (title: string, items: React.ReactNode) => (
     <TitleBar size={barStyle === 'regular' ? 'default' : 'compact'} windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
       <Toolbar aria-label={title}>
-        {pattern === 'focus' ? null : <ShellMenuButton onOpen={() => setMenu(true)} />}
+        {pattern === 'focus' ? null : <DrawerButton onOpen={() => setMenu(true)} />}
         {items}
       </Toolbar>
       {/* Inside the frame, so it opens under the title bar as every overlay of a desktop window. */}
@@ -1077,6 +1104,7 @@ function Shells({ animated }: { animated: boolean }) {
           { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
           ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
           ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+          ...schemeCommands,
         ]}
       />
     </TitleBar>
@@ -1432,6 +1460,84 @@ function OverflowLists() {
   )
 }
 
+/** A project's files: two folders given whole, one whose rows load when it opens (and fail the first time). */
+const TREE_FILES: readonly TreeNode[] = [
+  {
+    id: 'src',
+    name: 'src',
+    icon: 'folder',
+    openIcon: 'folderOpen',
+    children: [
+      { id: 'src/components', name: 'components', icon: 'folder', openIcon: 'folderOpen', children: [
+        { id: 'src/components/button.tsx', name: 'button.tsx', icon: 'file', meta: '6 KB' },
+        { id: 'src/components/tree.tsx', name: 'tree.tsx', icon: 'file', meta: '14 KB' },
+      ] },
+      { id: 'src/index.ts', name: 'index.ts', icon: 'file', meta: '9 KB' },
+    ],
+  },
+  { id: 'docs', name: 'docs', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'docs/patterns.md', name: 'patterns.md', icon: 'file', meta: '21 KB' }] },
+  { id: 'remote', name: 'remote', icon: 'folder', openIcon: 'folderOpen', hasChildren: true },
+  { id: 'package.json', name: 'package.json', icon: 'file', meta: '3 KB' },
+  { id: 'README.md', name: 'README.md', icon: 'file', meta: '30 KB' },
+]
+
+/** An outline: no icons, and a count of what each part holds (R5). */
+const TREE_OUTLINE: readonly TreeNode[] = [
+  { id: 'intro', name: 'Introduction', children: [{ id: 'intro/why', name: 'Why a toolkit' }, { id: 'intro/how', name: 'How to read it' }] },
+  { id: 'rules', name: 'The rules', count: 14 },
+  { id: 'parts', name: 'The parts', count: 62 },
+]
+
+/** The rows of `remote`, after a second: the first try fails, so the row says so and the next opening tries again. */
+function remoteRows(): (node: TreeNode) => Promise<readonly TreeNode[]> {
+  let tries = 0
+  return () =>
+    new Promise((done, fail) => {
+      tries += 1
+      const first = tries === 1
+      setTimeout(() => (first ? fail(new Error('offline')) : done([
+        { id: 'remote/main', name: 'main', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'remote/main/build.log', name: 'build.log', icon: 'file', meta: '120 KB' }] },
+        { id: 'remote/release.yml', name: 'release.yml', icon: 'file', meta: '2 KB' },
+      ])), 1000)
+    })
+}
+
+/** The app's own filter: the whole path holds the text. The same function counts the finds. */
+const byPath = (node: TreeNode, text: string) => node.id.toLowerCase().includes(text.trim().toLowerCase())
+const treeNodes = (list: readonly TreeNode[]): TreeNode[] => list.flatMap((node) => [node, ...treeNodes(node.children ?? [])])
+
+function Trees({ animated }: { animated: boolean }) {
+  const [chosen, setChosen] = React.useState<string | null>('src/components/tree.tsx')
+  const [path, setPath] = React.useState('src/comp')
+  const load = React.useMemo(remoteRows, [])
+  const finds = path.trim() === '' ? null : treeNodes(TREE_FILES).filter((node) => byPath(node, path)).length
+  return (
+    <Section
+      id="tree"
+      title="Tree"
+      note="Nested rows on Ark UI's TreeView, for files and folders or any hierarchy: a name, one of Sigrid's icons (a folder that opens shows open), a short fact in tabular figures, a count. The rows of every list of things: the chosen one has the tint and the accent bar. One Tab stop; the arrows move, open and close, Home and End reach the ends, the first letters typed reach a name, Enter or a press chooses. A branch whose rows the app loads says «Loading», and if the load fails it says so and stays closed: opening it again tries again (here the first try fails). The field filters by name, opens what leads to a find, and gives back what the person had opened when it is cleared; an app can drive the filter and find by its own rule (here the path)."
+    >
+      <Row label="with a filter">
+        <div data-sample="tree" className="flex h-96 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Sample files" nodes={TREE_FILES} search selected={chosen} onSelect={setChosen} defaultExpanded={['src', 'src/components']} loadChildren={load} animated={animated} className="h-full" />
+        </div>
+      </Row>
+      <Row label="the app's filter, by path">
+        <div className="flex h-96 w-72 max-w-full flex-col gap-2 rounded-lg bg-raised p-2 shadow-sm">
+          <SearchField value={path} onValueChange={setPath} aria-label="Find a file by path" placeholder="Find a file by path" className="shrink-0" />
+          <p role="status" className="px-(--row-pad) text-xs text-ink-mute tabular-nums">{finds === null ? 'Every file' : `${finds} found`}</p>
+          <Tree aria-label="Sample files by path" nodes={TREE_FILES} query={path} match={byPath} loadChildren={load} animated={animated} className="min-h-0 flex-1" />
+        </div>
+      </Row>
+      <Row label="no icons">
+        <div className="w-60">
+          <Tree aria-label="Sample outline" nodes={TREE_OUTLINE} defaultExpanded={['intro']} animated={animated} />
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 const PEOPLE = [
   { value: 'ada', label: 'Ada Lovelace', detail: 'ada@example.com' },
   { value: 'alan', label: 'Alan Turing', detail: 'alan@example.com' },
@@ -1442,11 +1548,13 @@ const PEOPLE = [
 function Pickers() {
   const [zoom, setZoom] = React.useState(40)
   const [query, setQuery] = React.useState('invoice')
+  const [site, setSite] = React.useState('example.com')
+  const [shown, setShown] = React.useState(false)
   const [person, setPerson] = React.useState<string | null>('ada')
   const [labels, setLabels] = React.useState(['Home'])
   const [panel, setPanel] = React.useState(false)
   return (
-    <Section id="pickers" title="Slider, SearchField, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a choice from a list filtered while typing; a person as a neutral round tile.">
+    <Section id="pickers" title="Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar" note="A value on a scale; a search box with its clear button; a field with words or a small button inside it; a button that copies and says so; a row that opens in place what few people need; a choice from a list filtered while typing; a person as a neutral round tile.">
       <Row label="slider">
         <div className="flex w-64 flex-col gap-2">
           <Slider aria-label="Sample zoom" value={zoom} min={0} max={100} step={10} onValueChange={setZoom} />
@@ -1459,6 +1567,47 @@ function Pickers() {
       <Row label="search">
         <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
         <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
+      <Row label="field with parts">
+        <FormField label="Site" className="w-64">
+          <InputGroup start={<InputGroupText>https://</InputGroupText>} end={<CopyButton value={`https://${site}`} label="Copy the address" />} value={site} onChange={(event) => setSite(event.target.value)} />
+        </FormField>
+        <FormField label="Password" className="w-64">
+          <InputGroup type={shown ? 'text' : 'password'} defaultValue="correct horse" end={<InputGroupButton label="Show" pressed={shown} onClick={() => setShown(!shown)} />} />
+        </FormField>
+        <FormField label="Weight" error="Write a number." className="w-64">
+          <InputGroup defaultValue="heavy" end={<InputGroupText>kg</InputGroupText>} />
+        </FormField>
+        <FormField label="Coupon" className="w-64">
+          <InputGroup disabled defaultValue="SPRING" end={<InputGroupButton label="Apply" />} />
+        </FormField>
+      </Row>
+      <Row label="copy">
+        <CopyButton value="SIGRID-2026" label="Copy the code" />
+        <CopyButton value="SIGRID-2026" label="Copy the code" showLabel variant="outline" />
+        <CopyButton value="SIGRID-2026" label="Copy the code" showLabel disabled />
+      </Row>
+      <Row label="disclosure">
+        <div className="flex w-64 flex-col gap-3">
+          <FormField label="Name">
+            <Input defaultValue="Quarterly report" />
+          </FormField>
+          <Disclosure label="Add a note">
+            <FormField label="Note">
+              <Input placeholder="For whoever opens it" />
+            </FormField>
+          </Disclosure>
+        </div>
+        <div className="flex w-64 flex-col gap-3">
+          <Disclosure label="Advanced" summary="2 set" defaultOpen>
+            <FormField label="Retention" help="Days before a file is removed.">
+              <InputGroup defaultValue="30" end={<InputGroupText>days</InputGroupText>} />
+            </FormField>
+          </Disclosure>
+        </div>
+        <Disclosure label="Not available" disabled>
+          <span />
+        </Disclosure>
       </Row>
       <Row label="combobox">
         <FormField label="Assignee" className="w-64">
@@ -1890,6 +2039,221 @@ function Keys() {
   )
 }
 
+/**
+ * The parts an app composes a screen of with no class of its own, beside the layout parts: a card, a heading, a dot, a
+ * line, the facts of one thing, a choice of a settings page, a row of the sidebar's head or foot, the button that opens
+ * the sidebar's drawer; and the props that spare a class (`Empty fill`, `ToggleGroup fill`, `Progress inline`,
+ * `Checkbox label`). Each sample is written as an app writes it.
+ */
+function Composition({ animated }: { animated: boolean }) {
+  const [when, setWhen] = React.useState('today')
+  const [reminders, setReminders] = React.useState(true)
+  return (
+    <Section
+      id="composition"
+      title="Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton"
+      note="The parts the example apps needed to write no class: a group on a surface of its own (raised, or the quiet fill; never a border, and not for every group), the title of a page, a section, a card or a group, a colour or a state as an 8px dot beside its word, a hairline between groups, the facts of one thing, a choice of a settings page, a row of the sidebar's head or foot, the button that opens the sidebar where it is a drawer. Under them, the props that spare a class: an empty view that fills its region, a segment control that fills its place, a bar in a line of words, a check box with its words."
+    >
+      <Row label="card and heading">
+        <SampleCard as="section" aria-label="Now">
+          <Heading size="label" level={3} icon={<Icon name="now" />}>
+            Now
+          </Heading>
+          <Heading size="small" level={4}>
+            Read the terms of the new contract
+          </Heading>
+          <Cluster>
+            <Button>Complete</Button>
+            <Button variant="ghost">Postpone</Button>
+          </Cluster>
+        </SampleCard>
+        <SampleCard variant="quiet" pad="sm" gap="sm">
+          <Heading size="label" level={3}>
+            Home
+          </Heading>
+          <SampleCard pad="sm">Kitchen renovation</SampleCard>
+          <SampleCard pad="sm">Electricity contract</SampleCard>
+        </SampleCard>
+        <Column gap="xs">
+          <Heading size="page" level={3}>
+            Page
+          </Heading>
+          <Heading size="section" level={3}>
+            Section
+          </Heading>
+          <Heading size="card" level={3}>
+            Card
+          </Heading>
+          <Heading size="small" level={3}>
+            Small
+          </Heading>
+        </Column>
+      </Row>
+      <Row label="dot, line and facts">
+        <Column gap="sm">
+          <Cluster gap="xs">
+            <Dot color={COLORS[3]} />
+            <Text>A colour the person chose</Text>
+          </Cluster>
+          <Cluster gap="xs">
+            <Dot tone="success" />
+            <Text>Resources: available</Text>
+          </Cluster>
+          <Cluster gap="xs">
+            <Dot tone="warning" />
+            <Text>Waiting for an answer</Text>
+          </Cluster>
+          <Separator />
+          <DescriptionList
+            aria-label="Item"
+            items={[
+              { name: 'Level', value: 'Recommended' },
+              { name: 'Mode', value: 'Permanently' },
+              { name: 'Path', value: '%LOCALAPPDATA%\\npm-cache', code: true },
+            ]}
+          />
+        </Column>
+      </Row>
+      <Row label="settings and sidebar">
+        {/* The gallery gives each sample its place, as in the other rows: a settings page's width, a sidebar's. */}
+        <div className="w-full max-w-md">
+          <Column>
+            <SettingRow label="Scheme" control={<ToggleGroup aria-label="Scheme" value={when} onValueChange={setWhen} animated={animated}><ToggleGroupItem value="today">Light</ToggleGroupItem><ToggleGroupItem value="dark">Dark</ToggleGroupItem></ToggleGroup>} />
+            <SettingRow label="Reminders" description="A notice at 9:00 for what is due" control={<Switch aria-label="Reminders" checked={reminders} onCheckedChange={setReminders} animated={animated} />} />
+            <SettingRow label="Advanced" onClick={() => {}} />
+          </Column>
+        </div>
+        <div className="w-64">
+          <Column gap="xs">
+            <SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>Giulia Conti</SidebarRow>
+            <SidebarRow end={<Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>}>Threads</SidebarRow>
+            <Toolbar aria-label="Bar of a narrow frame">
+              <AppShellContext.Provider value={{ sidebar: 'drawer', inspector: 'drawer' }}>
+                <DrawerButton onOpen={() => {}} animated={animated} />
+              </AppShellContext.Provider>
+              <ToolbarBrand name="Tasks" page="Today" />
+            </Toolbar>
+          </Column>
+        </div>
+      </Row>
+      <Row label="the props">
+        <Column gap="md">
+          <ToggleGroup aria-label="When" value={when} onValueChange={setWhen} fill animated={animated}>
+            <ToggleGroupItem value="today">Today</ToggleGroupItem>
+            <ToggleGroupItem value="tomorrow">Tomorrow</ToggleGroupItem>
+            <ToggleGroupItem value="week">In a week</ToggleGroupItem>
+          </ToggleGroup>
+          <Cluster wrap={false}>
+            <Badge variant="secondary">Analyzing</Badge>
+            <Progress aria-label="Analysis" value={36} size="sm" inline />
+            <Text>36%</Text>
+          </Cluster>
+          <Checkbox label="Print the contract" defaultChecked animated={animated} />
+          <Empty fill title="Nothing here" description="An empty view, as tall as its region." />
+        </Column>
+      </Row>
+    </Section>
+  )
+}
+
+/** The tasks of the sample of a row with a control. */
+const PANE_TASKS = [
+  { id: 'terms', title: 'Read the terms of the new contract', facts: [{ text: '@home', color: COLORS[3] }, { text: 'Electricity contract' }, { text: 'Today', tone: 'accent' as const }, { text: '1/3', numeric: true }, { text: 'P1', tone: 'strong' as const }] },
+  { id: 'quote', title: 'Ask the carpenter for a quote', facts: [{ text: 'Kitchen renovation' }, { text: 'Today', tone: 'accent' as const }] },
+  { id: 'pass', title: 'Renew the transit pass', facts: [{ text: 'Fri 20 Nov' }, { text: 'P2', tone: 'strong' as const }] },
+]
+
+/**
+ * The parts that let the example apps go to no class at all: a row of a list with one control beside its button
+ * (`ItemRow control`, with its `facts`), two panes in the content (`ContentSplit`), a long list as tall as its region
+ * (`VirtualList fill`) and a sheet of a named width (`SheetContent width`). Each sample is written as an app writes it;
+ * the boxes around them are the gallery's, to give a pane a height and a width.
+ */
+function CompositionPanes({ animated }: { animated: boolean }) {
+  const [chosen, setChosen] = React.useState<string | null>('terms')
+  const [ticked, setTicked] = React.useState<readonly string[]>([])
+  const [show, setShow] = React.useState<'aside' | 'main'>('main')
+  const [panes, setPanes] = React.useState<1 | 2>(2)
+  const [width, setWidth] = React.useState<SheetWidth | null>(null)
+  const task = PANE_TASKS.find((t) => t.id === chosen)
+  const rows = (
+    <ItemList aria-label="Today">
+      {PANE_TASKS.map((t) => (
+        <ItemRow
+          key={t.id}
+          title={t.title}
+          facts={t.facts}
+          current={chosen === t.id && panes === 2}
+          onClick={() => {
+            setChosen(t.id)
+            setShow('main')
+          }}
+          control={<Checkbox aria-label={`Complete «${t.title}»`} checked={ticked.includes(t.id)} onCheckedChange={(on) => setTicked((list) => (on === true ? [...list, t.id] : list.filter((id) => id !== t.id)))} animated={animated} />}
+        />
+      ))}
+    </ItemList>
+  )
+  return (
+    <Section
+      id="composition-panes"
+      title="ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width"
+      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A long list as tall as its region, and a sheet at the side of a named width."
+    >
+      <Row label="a row with a control">
+        <div data-sample="item-row-control" className="w-full max-w-md">
+          {rows}
+        </div>
+      </Row>
+      <Row label="two panes">
+        <div data-sample="content-split" className="h-72 w-full max-w-3xl overflow-hidden rounded-lg border border-line">
+          <ContentSplit aside={<Column pad="sm">{rows}</Column>} asideLabel="Tasks" show={show} onPanesChange={setPanes}>
+            <Column gap="md" pad="lg">
+              {panes === 1 ? (
+                <Cluster>
+                  <Button variant="ghost" size="sm" onClick={() => setShow('aside')}>
+                    <Icon name="back" />
+                    Today
+                  </Button>
+                </Cluster>
+              ) : null}
+              <Heading size="card" level={3}>
+                {task?.title ?? 'Nothing chosen'}
+              </Heading>
+              <Text as="p" variant="soft">
+                The thing chosen, read or worked on in the room the column leaves.
+              </Text>
+            </Column>
+          </ContentSplit>
+        </div>
+      </Row>
+      <Row label="a long list that fills">
+        <div data-sample="virtual-fill" className="h-64 w-full max-w-md rounded-lg border border-line">
+          <VirtualList aria-label="Archive" count={5000} estimateSize={50} fill pad="sm">
+            {(index) => <ItemRow title={`Message ${index + 1}`} description="Put away" meta={`${(index % 28) + 1} Oct`} />}
+          </VirtualList>
+        </div>
+      </Row>
+      <Row label="sheet width">
+        <Cluster>
+          {(['sm', 'md', 'lg'] as const).map((w) => (
+            <Button key={w} variant="outline" onClick={() => setWidth(w)}>
+              Open {w}
+            </Button>
+          ))}
+        </Cluster>
+        <Sheet open={width !== null} onOpenChange={(open) => (open ? undefined : setWidth(null))}>
+          <SheetContent side="right" width={width ?? 'sm'} animated={animated}>
+            <SheetHeader>
+              <SheetTitle>A sheet, {width ?? 'sm'}</SheetTitle>
+              <SheetDescription>sm 384px, md 448px, lg 512px; under the sm width of the window, three quarters of it.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      </Row>
+    </Section>
+  )
+}
+
 function Empties() {
   return (
     <Section id="empty" title="Empty" note="A title alone; a title, a sentence and an action; with the optional icon.">
@@ -1903,6 +2267,78 @@ function Empties() {
         <Cell label="icon">
           <Empty icon={<Inbox />} title="No new messages" description="You have read everything." className="w-72 rounded-lg border border-line p-6" data-sample="empty-icon" />
         </Cell>
+      </Row>
+    </Section>
+  )
+}
+
+function Notes() {
+  const [shown, setShown] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
+  return (
+    <Section id="note" title="Note" note="A message that stays in the page until the app removes it: information, a success, a warning or an error. One look for a failure: an error note (the circle with an X, as in a toast, a progress and a step), never an empty state. Each tone has its icon and its colour, and screen readers hear its word before the title; an error and a warning are announced when they appear (unless announce is false: a fact of the item shown), information and a success are not, and a tone that changes is announced as a new note. A title, its text, a list and the buttons that answer it, outline or ghost (R3); no close button; a long word breaks to fit. A fill, flat in the page: neither a border nor a shadow (R4).">
+      <Row label="tones">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="info" title="Drawn from a sample">
+            The map shows the first 500 files. Open a folder to see the rest.
+          </Note>
+          <Note tone="success" title="The map is up to date" />
+          <Note tone="warning" title="Three links lead outside the project">
+            They are drawn as dashed lines and are not followed.
+          </Note>
+          <Note tone="error" title="Could not reach the server" actions={<Button variant="outline">Retry</Button>}>
+            The map was drawn before these files were read.
+          </Note>
+        </div>
+      </Row>
+      <Row label="list and actions">
+        <div className="w-full max-w-xl">
+          <Note
+            tone="error"
+            title="Two files were not read"
+            items={['src/app.ts: the file is too large', 'src/old/main.ts: the file was removed']}
+            actions={
+              <>
+                <Button variant="outline">Read them again</Button>
+                <Button variant="ghost">Open the log</Button>
+              </>
+            }
+          >
+            The rest of the map is complete.
+          </Note>
+        </div>
+      </Row>
+      <Row label="long words">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="error" title="Could not read C:/Users/someone/AppData/Local/projects/a-very-long-folder-name-without-any-space/settings.json" actions={<Button variant="outline">Retry</Button>}>
+            <Text pre>{'error: expected a value at line 3, column 14\n  "paths": ["src/**/*.ts", ,]\n                            ^'}</Text>
+          </Note>
+          <Note tone="warning" announce={false} title="Read only">
+            It belongs to another project: a fact of the item shown, not announced at each selection.
+          </Note>
+        </div>
+      </Row>
+      <Row label="live">
+        <div className="flex w-full max-w-xl flex-col items-start gap-3">
+          <Button variant="outline" data-sample="note-toggle" onClick={() => setShown(!shown)}>
+            {shown ? 'Remove the warning' : 'Show a warning'}
+          </Button>
+          {shown ? (
+            <Note tone="warning" title="The map is out of date">
+              Files changed since it was drawn: a screen reader hears this as it appears.
+            </Note>
+          ) : null}
+          <Button variant="outline" data-sample="note-tone" onClick={() => setFailed(!failed)}>
+            {failed ? 'Read the files again' : 'Fail the reading'}
+          </Button>
+          <Note
+            tone={failed ? 'error' : 'info'}
+            title={failed ? 'Could not read the files' : 'Reading the files'}
+            actions={failed ? <Button variant="outline" onClick={() => setFailed(false)}>Retry</Button> : undefined}
+          >
+            {failed ? 'The same note, now an error: drawn anew, so a screen reader hears it.' : 'The map fills in as they are read.'}
+          </Note>
+        </div>
       </Row>
     </Section>
   )
@@ -2415,6 +2851,8 @@ function App() {
         </Row>
       </Section>
       <LayoutParts />
+      <Composition animated={animated} />
+      <CompositionPanes animated={animated} />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
@@ -2440,9 +2878,11 @@ function App() {
       <Notices animated={animated} />
       <ProgressSection />
       <Empties />
+      <Notes />
       <Tables />
       <LongLists />
       <OverflowLists />
+      <Trees animated={animated} />
       <Reorders animated={animated} />
       <Graphs />
       <Files />
@@ -2462,7 +2902,7 @@ function App() {
             titleBar={
               <TitleBar>
                 <Toolbar aria-label="Showcase">
-                  <ShellMenuButton onOpen={() => setMenu(true)} />
+                  <DrawerButton onOpen={() => setMenu(true)} />
                   <ToolbarBrand name="Sigrid" />
                   {narrow ? null : views()}
                   <ToolbarSpacer />
@@ -2524,7 +2964,7 @@ function App() {
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} scheme={scheme} onScheme={setScheme} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>

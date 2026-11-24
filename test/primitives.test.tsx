@@ -73,18 +73,33 @@ test('primitives carry no automatic motion classes', () => {
 // heading of a group of rows, are the same in a menu, a select, a combo box, the labels field and the sidebar.
 test('every list highlights a row the same way and heads a group the same way', async () => {
   const { readFileSync } = await import('node:fs')
-  const { ROW_HIGHLIGHT, GROUP_LABEL } = await import('../src/lib/rows')
+  const { ROW_HIGHLIGHT, ROW_HIGHLIGHTED, ROW_HOVER, ROW_CHOSEN, GROUP_LABEL, LIST_ROW, LIST_CARD } = await import('../src/lib/rows')
   const source = (file: string) => readFileSync(`${process.cwd()}/src/${file}`, 'utf8')
   expect(ROW_HIGHLIGHT).toBe('bg-selected/60 text-ink')
-  // A row reached in a card: the share of the selection tint, never the page's second paper (it was next to invisible).
-  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/combobox.tsx', 'internal/chips.tsx']) {
-    expect(source(file), file).toMatch(/highlighted\]?:bg-selected\/60/)
-    expect(source(file), file).not.toMatch(/highlighted\]?:bg-paper-2/)
+  // A row reached in a card: the share of the selection tint, never the page's second paper (it was next to invisible),
+  // taken from the shared module by every list that floats (a menu, a select, a combo box, the suggestions of the
+  // labels field), never typed again by hand.
+  expect(ROW_HIGHLIGHTED).toBe(`data-highlighted:${ROW_HIGHLIGHT.split(' ').join(' data-highlighted:')}`)
+  expect(LIST_ROW).toContain(ROW_HIGHLIGHTED)
+  expect(LIST_ROW.split(' ')).toEqual(expect.arrayContaining(['min-h-(--row-height)', 'py-(--row-pad)', 'data-[disabled]:pointer-events-none', 'data-[disabled]:opacity-50']))
+  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/combobox.tsx', 'components/ChipsInput.tsx']) {
+    expect(source(file), file).toContain('LIST_ROW')
+    expect(source(file), file).toContain('LIST_CARD')
+    expect(source(file), file).not.toMatch(/highlighted\]?:bg-(selected|paper)/)
   }
+  expect(LIST_CARD.split(' ')).toEqual(expect.arrayContaining(['bg-popover', 'shadow-md', 'rounded-md', 'overflow-y-auto']))
   expect(source('components/ui/nav-list.tsx')).toContain('hover:bg-selected/60')
+  // A list of things and a tree: one row under the pointer, one chosen row with its tint and its accent bar (R1), taken
+  // from the shared module, never drawn again by hand.
+  expect(ROW_HOVER).toBe(`hover:${ROW_HIGHLIGHT.split(' ').join(' hover:')}`)
+  expect(ROW_CHOSEN.split(' ')).toEqual(expect.arrayContaining(['aria-[current=true]:bg-selected', 'aria-[current=true]:text-selected-ink', 'aria-[current=true]:before:bg-primary']))
+  for (const file of ['components/ui/item-list.tsx', 'components/ui/tree.tsx']) {
+    expect(source(file), file).toMatch(/ROW_HOVER[\s\S]*ROW_CHOSEN/)
+    expect(source(file), file).not.toContain('aria-[current=true]:before:bg-primary')
+  }
   // The heading of a group: the one overline, wherever a group has a heading.
   expect(GROUP_LABEL).toBe('text-2xs font-semibold tracking-[0.07em] uppercase')
-  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/sidebar.tsx', 'internal/attachments.tsx']) expect(source(file), file).toContain('GROUP_LABEL')
+  for (const file of ['components/ui/dropdown-menu.tsx', 'components/ui/select.tsx', 'components/ui/sidebar.tsx', 'components/Attachments.tsx']) expect(source(file), file).toContain('GROUP_LABEL')
 })
 
 test('what is on or chosen is the accent, in every control: no control keeps the ink for it', async () => {

@@ -45,10 +45,11 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/components/ui/combobox.tsx` | `combobox` | `@ark-ui/react/combobox` |
 | `src/components/ui/tabs.tsx` | `tabs` | `@ark-ui/react/tabs` |
 | `src/components/ui/calendar.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
-| `src/internal/date-field.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
-| `src/internal/chips.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
-| `src/internal/attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/DateField.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
+| `src/components/ChipsInput.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
+| `src/components/Attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/internal/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/ui/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -56,10 +57,10 @@ Notes:
   bottom, the oldest pushed out from the top) is laid out here, because Ark's `max` keeps a new notice waiting instead
   of pushing the oldest out and its layouts follow a list that still holds a notice while it leaves. Its motion is the
   toolkit's list transition (`NOTICES` in `motion-impl`).
-- `ui/calendar.tsx` and `internal/date-field.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
+- `ui/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
   its keyboard, month and year views). The roughly 380 lines of grid and keyboard code written here before are gone.
   Kept on top: a native `<button>` per day, the weekday headers readable by screen readers, Home and End for the week.
-- `internal/chips.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
+- `components/ChipsInput.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
   `ui/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
   are compared ignoring case, a chip is not edited in place.
 - `ui/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
@@ -70,8 +71,14 @@ Notes:
   a portal; the options are filtered here unless the caller answers `onQuery`.
 - `ui/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
-- `internal/attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
+- `components/Attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
+- `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
+  branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
+  ever and asks again on a second Enter), dropped when the app gives another node; the filter, which opens what leads to
+  a find and gives back what the person had opened; the failure of a load said in the row; the rows named by their name
+  alone; the branch's control made its `treeitem`, and its rows drawn only while it is open (not Ark's `Branch` and
+  `BranchContent`).
 
 ## Park UI
 
@@ -118,10 +125,12 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/components/ui/form-field.tsx` | `field` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts |
 | `src/components/ui/calendar.tsx` | `date-picker` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts |
 | `src/components/Toasts.tsx` | `toast` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts |
-| `src/internal/date-field.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
-| `src/internal/chips.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
-| `src/internal/attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/DateField.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
+| `src/components/ChipsInput.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
+| `src/components/Attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
+| `src/components/ui/note.tsx` | `alert` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts |
 
 Also following Park, without a recipe of their own: the shape and elevation in `src/theme-engine.ts` (its `radii` and
 `shadows` tokens) and `src/styles/theme.css` (its type scale and text styles; the tokens of the light navigation column
@@ -130,7 +139,7 @@ with the accent-tint selection of the approved preview).
 Notes:
 - `Toasts.tsx` keeps SmoothUI's dark card (the inverted ink surface of the approved preview); Park's toast is a light
   surface card, so of it only the form is taken (l3, lg elevation, padding, the semibold action, outline keys).
-- `ui/calendar.tsx`, `internal/chips.tsx`, `internal/attachments.tsx` have nothing of SmoothUI left: their look is
+- `ui/calendar.tsx`, `components/ChipsInput.tsx`, `components/Attachments.tsx` have nothing of SmoothUI left: their look is
   Park's (date-picker, tags-input, file-upload), their behaviour Ark UI's. They left the SmoothUI table.
 - Park's checkbox is square with l1 corners, and that is the toolkit's checkbox. An app can round its own, through
   `--radius-check`.
@@ -215,27 +224,16 @@ NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to t
 ```
 
 
-## Icon packs
+## Icons
 
-Two npm dependencies, installed and unmodified, never copied into `src/` (`src/icons.tsx` picks between them):
+Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Lucide, an npm dependency, installed and
+unmodified, never copied into `src/` (`src/icons.tsx` names each meaning's drawing).
 
-- `lucide-react` (ISC, Lucide contributors): the default pack.
-- `@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation", repository
-  https://github.com/microsoft/fluentui-system-icons): the optional `fluent` pack. Its repository's licence is plain
-  MIT, without the fonts-and-icons note of the Fluent UI repository.
+- `lucide-react` (ISC, Copyright (c) 2026 Lucide Icons and Contributors, https://lucide.dev), 1.70.0, pinned to the
+  exact version.
 
-Four packs are not dependencies: their drawings, one per meaning and unmodified, are in `src/icon-packs.generated.ts`,
-written by `scripts/icon-packs.mjs` from the Iconify API (https://iconify.design):
-
-- Phosphor Icons, duotone weight (MIT, "Copyright (c) 2023 Phosphor Icons", https://github.com/phosphor-icons/core):
-  the `duotone` pack.
-- Solar Icons, bold duotone style (CC BY 4.0, by 480 Design, https://www.figma.com/community/file/1166831539721848736):
-  the `solar` pack. Attribution: "Solar Icons by 480 Design".
-- Fluent Emoji, flat style (MIT, "Copyright (c) Microsoft Corporation", https://github.com/microsoft/fluentui-emoji):
-  the `emoji` pack.
-- Twemoji (graphics CC BY 4.0, "Copyright 2019 Twitter, Inc and other contributors",
-  https://github.com/twitter/twemoji): the `twemoji` pack. Attribution: "Twemoji by Twitter, Inc and other
-  contributors".
+The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
+Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.
 
 ## TanStack Table, TanStack Virtual, dnd-kit and TipTap
 
@@ -298,8 +296,8 @@ The files below are copied from the SmoothUI registry and **adapted** for `@acap
 tokens from `src/styles/theme.css`, animations off by default (the `animated` prop, never with `prefers-reduced-motion`),
 no springs, loops or decorative effects. Since the Park restyle (2026-11-19) their form (sizes, variants, corners,
 elevation) is Park UI's (see above): what stays from SmoothUI is the structure, the `data-slot`s and the API. `Toasts.tsx`
-keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `internal/chips.tsx`
-and `internal/attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
+keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `components/ChipsInput.tsx`
+and `components/Attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
 for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Slug SmoothUI | Source |
@@ -326,14 +324,14 @@ Notes:
 - `Toasts.tsx` keeps from `toast` only the surface of a notice (the dark card: text, action and close button on one
   row, the quick choices on a second); its form is Park's `toast`. Its primitive is Ark UI's Toast and its motion is the toolkit's list transition: the
   SmoothUI enter/exit values are gone.
-- `ui/calendar.tsx` and `internal/date-field.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
+- `ui/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
   DatePicker, the look Park's `date-picker`, and they left the table.
 - `ui/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
   primitive (keyboard, ARIA and a portal nested in the sheet).
 - `ui/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
 - `ui/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
   is not copied); it serves a segmented switch (a choice between a few views, for example).
-- `internal/chips.tsx` (Ark's TagsInput, Park's `tags-input`) and `internal/attachments.tsx` (Ark's FileUpload, Park's
+- `components/ChipsInput.tsx` (Ark's TagsInput, Park's `tags-input`) and `components/Attachments.tsx` (Ark's FileUpload, Park's
   `file-upload`) no longer have anything of SmoothUI and left the table.
 - `ui/empty.tsx`, `ui/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
   hint repeats the button's accessible name and is `aria-hidden`.
@@ -363,6 +361,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Motion, colour and class helpers
+
+Five more npm dependencies, pinned to the exact version, installed and unmodified, never copied into `src/`. Each
+licence is the one in the package's own folder in `node_modules`.
+
+- **Motion**: `motion` 14.6.0 (**MIT**, Copyright (c) 2024 Motion B.V., https://github.com/motiondivision/motion),
+  with `framer-motion`, `motion-dom` and `motion-utils` 14.6.0 (**MIT**, Copyright (c) 2018 Framer B.V.) that it
+  depends on. Only `src/internal/motion-impl.tsx` imports it, and the build keeps it in a chunk of its own, loaded only
+  when an app turns motion on (`animated` or `MotionProvider`).
+- **Material Color Utilities**: `@material/material-color-utilities` 0.4.0 (**Apache-2.0**, Google,
+  https://github.com/material-foundation/material-color-utilities). The tonal palette (HCT) that `src/palette.ts`
+  builds from an accent.
+- **class-variance-authority**: `class-variance-authority` 0.7.1 (**Apache-2.0**, Joe Bell,
+  https://github.com/joe-bell/cva). The variants and sizes of `ui/button.tsx` and `ui/badge.tsx`.
+- **clsx**: `clsx` 2.1.1 (**MIT**, Copyright (c) Luke Edwards, https://github.com/lukeed/clsx), and **tailwind-merge**:
+  `tailwind-merge` 3.7.0 (**MIT**, Copyright (c) 2021 Dany Castillo, https://github.com/dcastil/tailwind-merge). Joined
+  in `cn` (`src/lib/utils.ts`), which every part uses to put its classes together.
+
+## Fonts
+
+The woff2 files under `src/styles/fonts/` come with the package, unmodified (`src/styles/fonts.css` loads them). The
+copyright and the licence below are the ones written in the files' own name table.
+
+- **IBM Plex Sans** 3.201 (**SIL Open Font License 1.1**, Copyright 2019 IBM Corp.): the
+  Latin and extended Latin files of `@fontsource/ibm-plex-sans` 5.2, weights 400, 500 and 600
+  (`ibm-plex-sans-latin-*.woff2`, `ibm-plex-sans-latin-ext-*.woff2`). The default font of the interface.
+- **Inter** 4.001 (**SIL Open Font License 1.1**, Copyright 2016 The Inter Project Authors, https://github.com/rsms/inter):
+  `inter-0.woff2` to `inter-6.woff2`, at the same three weights. The fallback in every stack, for the glyphs outside
+  Latin.
 
 ## zero-slop-design
 

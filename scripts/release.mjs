@@ -37,7 +37,8 @@ rmSync(provenanceFile, { force: true })
 mkdirSync(release, { recursive: true })
 
 npm(['run', 'build'])
-npm(['run', 'typecheck'])
+// The checks CI runs (.github/workflows/ci.yml), so a release is never built from a commit CI would refuse.
+for (const check of ['design:lint', 'design:check', 'typecheck', 'showcase:typecheck', 'typecheck:test']) npm(['run', check])
 if (!args.includes('--skip-test')) npm(['test'])
 
 try {

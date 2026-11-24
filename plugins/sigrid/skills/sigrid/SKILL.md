@@ -21,12 +21,16 @@ installed, say so and stop: do not write from memory.
 1. `AGENTS.md` in that folder: how to build a screen, the rules broken most often, the check.
 2. `agents/catalog.json`: look up every component you are about to use, and its props. It is large: search it for
    the component's name instead of reading it whole.
-3. For a new screen, `docs/patterns.md` and one of `agents/examples/*.tsx`; for a phone, `docs/mobile.md`.
+3. For a new screen, `docs/patterns.md` and one of `agents/examples/*.tsx` (`tasks.tsx` and `mail.tsx` in the frame
+   with lines, `workspace.tsx` in the sheet frame, `triage.tsx` a screen that fits); for a phone, `docs/mobile.md`;
+   to design or review a screen, `docs/design-laws.md`.
 4. `DESIGN.md` when a rule is in doubt (R1 to R14, tokens, each component's form).
+5. `README.md` for the setup, the themes, the density, the words, the icons and the entries of the package.
 
 The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) come first where they speak, but never for a look of
 its own: every app of the suite has Sigrid's look, and only its layout, accent and icon are its own (the first section
-of `AGENTS.md`).
+of `AGENTS.md`). The app's icon is its own mark; the icons of its interface are Sigrid's one set (Lucide, through
+`Icon`), the same in every app.
 
 ## 3. Write
 
@@ -36,13 +40,21 @@ of `AGENTS.md`).
   column, a notice, an option) are under `types` in the same file of the catalogue.
 - If the toolkit has no component for the job, say so and stop: it is added to Sigrid, generic, and is not built in
   the app. Do not add another component library for it, and do not copy a toolkit component into the app.
+- Draw every icon of the interface with `Icon` and one of Sigrid's names (`ICON_NAMES`). If the name a function needs
+  is not there, say so: it is added to Sigrid's names, and the app neither draws it nor imports an icon library.
+- Light, dark and the system's look are chosen from the palette, the same in every app: `useSchemeCommands` inside
+  `CommandsProvider`, and `applyKeptScheme` in the entry file. Draw no switch for the scheme.
+- The words a component says by itself are English placeholders: an app in another language passes its own with
+  `WordsProvider`.
 
 ## 4. Check
 
 From the folder found in step 1's parent project (the one whose `package.json` has the dependency), run
 `npx --no sigrid-check` (or `npx --no sigrid-check <folder>`; the same as
 `node node_modules/@acaprino/sigrid/bin/sigrid-check.mjs`). `--no` matters: without it `npx` may fetch an unrelated
-package of that name from the registry. Fix every finding in the code, not by rewording what the user reads; a
+package of that name from the registry. Turn the rule `own-class` on, as every app does, with
+`{ "rules": { "own-class": "error" } }` in a `sigrid-check.config.json` beside that `package.json`: it reports every
+class written by hand and every stylesheet of the app. Fix every finding in the code, not by rewording what the user reads; a
 finding that is right as it is gets the ignore comment `AGENTS.md` describes, with its reason.
 
 The check reads files and builds nothing, and it sees only values written by hand. `AGENTS.md` lists what it does

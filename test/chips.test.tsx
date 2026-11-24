@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { ChipsInput } from '../src/internal/chips'
+import { ChipsInput } from '../src/components/ChipsInput'
+import { settle } from './helpers'
 
 // The labels field (chips) on Ark UI's TagsInput, with Park's `tags-input` form. No motion. (How an app shows labels
 // elsewhere is tested in the app's package.)
@@ -27,19 +28,18 @@ function Chips({ initial = [] as string[], spy }: { initial?: string[]; spy?: (v
 }
 const chipTexts = () => [...document.querySelectorAll('[data-slot="chip"]')].map((c) => c.textContent)
 
-// Ark's TagsInput acts in a microtask after each event (a paste, in an animation frame): `settle()` lets it.
-const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 50))))
+// Ark's TagsInput acts in a microtask after each event (a paste, in an animation frame): `settle(50)` lets it.
 const typed = async (box: HTMLElement, text: string) => {
   fireEvent.input(box, { target: { value: text } })
-  await settle()
+  await settle(50)
 }
 const pasted = async (box: HTMLElement, text: string) => {
   fireEvent.input(box, { target: { value: text }, inputType: 'insertFromPaste' })
-  await settle()
+  await settle(50)
 }
 const pressed = async (box: HTMLElement, key: string) => {
   fireEvent.keyDown(box, { key })
-  await settle()
+  await settle(50)
 }
 
 test('chips: labelled box, Enter and comma add, duplicates ignored, Backspace removes the last', async () => {
@@ -52,7 +52,7 @@ test('chips: labelled box, Enter and comma add, duplicates ignored, Backspace re
   )
   const box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
-  await settle()
+  await settle(50)
   await typed(box, 'home')
   await pressed(box, 'Enter')
   expect(chipTexts()).toEqual(['email', 'home'])
@@ -87,7 +87,7 @@ test('chips: labelled box, Enter and comma add, duplicates ignored, Backspace re
   await typed(box, 'four')
   fireEvent.pointerDown(screen.getByRole('button', { name: 'Elsewhere' }))
   act(() => screen.getByRole('button', { name: 'Elsewhere' }).focus())
-  await settle()
+  await settle(50)
   expect(chipTexts()).toEqual(['email', 'home', 'one', 'two', 'four'])
 })
 
@@ -96,7 +96,7 @@ test('chips: the arrows walk the chips from the box, and Delete or Backspace rem
   const { unmount } = render(<Chips initial={['email', 'home', 'work']} spy={spy} />)
   let box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
-  await settle()
+  await settle(50)
   const reached = () => [...document.querySelectorAll('[data-slot="chip"][data-highlighted]')].map((c) => c.textContent)
   await pressed(box, 'ArrowLeft')
   expect(reached()).toEqual(['work'])
@@ -124,7 +124,7 @@ test('chips: the arrows walk the chips from the box, and Delete or Backspace rem
   render(<Chips initial={['email', 'home', 'work']} spy={spy} />)
   box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
-  await settle()
+  await settle(50)
   await pressed(box, 'ArrowLeft')
   await pressed(box, 'ArrowLeft')
   expect(reached()).toEqual(['home'])
@@ -137,7 +137,7 @@ test('chips: text that arrives with commas in one go closes the labels before th
   render(<Chips initial={['email']} spy={spy} />)
   const box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
-  await settle()
+  await settle(50)
   await typed(box, 'ho')
   // An autocorrection replaces «ho» with «home, EMAIL, gar» in a single event.
   await typed(box, 'home, EMAIL, gar')
@@ -152,7 +152,7 @@ test('chips: text that arrives with commas in one go closes the labels before th
 test('chips: each chip is a badge with a named remove button that keeps focus in the box', async () => {
   const spy = vi.fn()
   render(<Chips initial={['email', 'home']} spy={spy} />)
-  await settle()
+  await settle(50)
   const chip = document.querySelector('[data-slot="chip"]') as HTMLElement
   expect(chip.getAttribute('data-variant')).toBe('secondary')
   // The label color, the same as the row's (test/tag-colors.test.tsx), as an 8px dot on a neutral chip (R10: data
@@ -172,7 +172,7 @@ test('chips: each chip is a badge with a named remove button that keeps focus in
   // The remove buttons are for the pointer: from the keyboard the field is one Tab stop (see the arrows above).
   expect(remove.tabIndex).toBe(-1)
   fireEvent.click(remove)
-  await settle()
+  await settle(50)
   expect(spy).toHaveBeenLastCalledWith(['home'])
   expect(chipTexts()).toEqual(['home'])
   expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Labels' }))
@@ -194,7 +194,7 @@ test('chips: the placeholder shows only with no tags; the box border is the ligh
   expect(box.className.split(' ')).toContain('border-line')
   // The darker border is only under the pointer.
   expect(box.className.split(' ')).not.toContain('border-input')
-  expect(box.className.split(' ')).toContain('hover:border-input')
+  expect(box.className.split(' ').some((c) => c.endsWith(':hover:border-input'))).toBe(true)
 })
 
 // The remove button of a chip, named and with its tooltip.
@@ -239,17 +239,17 @@ function Recipients({ initial = [] as string[], spy, suggestions }: { initial?: 
 test('chips: a chip shows the name given for its value, the value stays the caller\'s, and its remove button is named by the name', async () => {
   const spy = vi.fn()
   render(<Recipients initial={['giulia@studioferri.it', 'luca@esempio.it']} spy={spy} />)
-  await settle()
+  await settle(50)
   // A value with no name shows as it is.
   expect([...document.querySelectorAll('[data-part="item-text"]')].map((c) => c.textContent)).toEqual(['Giulia Ferri', 'luca@esempio.it'])
   fireEvent.click(screen.getByRole('button', { name: 'Remove label Giulia Ferri' }))
-  await settle()
+  await settle(50)
   expect(spy).toHaveBeenLastCalledWith(['luca@esempio.it'])
 })
 
 test('chips: a value that is not valid has the destructive chip and says so to screen readers; a valid one does not', async () => {
   render(<Recipients initial={['giulia@studioferri.it', 'luca@esempio']} />)
-  await settle()
+  await settle(50)
   const [good, bad] = [...document.querySelectorAll<HTMLElement>('[data-slot="chip"]')]
   expect(bad!.hasAttribute('data-invalid')).toBe(true)
   expect(bad!.className).toContain('border-destructive')
@@ -279,11 +279,11 @@ test('chips: every separator given closes a label, typed or arriving with other 
 
 test('chips: the dot is there by default and gone with dot={false}', async () => {
   const { unmount } = render(<Chips initial={['home']} />)
-  await settle()
+  await settle(50)
   expect(document.querySelector('[data-slot="chip-dot"]')).toBeTruthy()
   unmount()
   render(<Recipients initial={['giulia@studioferri.it']} />)
-  await settle()
+  await settle(50)
   expect(document.querySelector('[data-slot="chip-dot"]')).toBeNull()
 })
 
@@ -300,7 +300,7 @@ test('chips: a suggestion shows the name and the value after it, and is found by
   await typed(box, 'gmail')
   expect(rows().map((r) => r.querySelector('[data-part="item-text"]')!.textContent)).toEqual(['Sara Conti'])
   fireEvent.click(rows()[0]!)
-  await settle()
+  await settle(50)
   expect(spy).toHaveBeenLastCalledWith(['sara.conti@gmail.com'])
 })
 
@@ -309,16 +309,16 @@ test('chips: the text left in the box becomes a label when the focus goes elsewh
   const { unmount } = render(<Chips spy={plain} />)
   const box = screen.getByRole('textbox', { name: 'Labels' }) as HTMLInputElement
   act(() => box.focus())
-  await settle()
+  await settle(50)
   await typed(box, 'home')
   fireEvent.blur(box)
-  await settle()
+  await settle(50)
   expect(plain).toHaveBeenLastCalledWith(['home'])
   expect(box.value).toBe('')
   // Nothing written: nothing is added.
   plain.mockClear()
   fireEvent.blur(box)
-  await settle()
+  await settle(50)
   expect(plain).not.toHaveBeenCalled()
   unmount()
 
@@ -326,10 +326,10 @@ test('chips: the text left in the box becomes a label when the focus goes elsewh
   render(<Recipients spy={spy} suggestions={Object.keys(PEOPLE)} />)
   const to = screen.getByLabelText('To') as HTMLInputElement
   act(() => to.focus())
-  await settle()
+  await settle(50)
   await typed(to, 'left@x.it')
   fireEvent.blur(to)
-  await settle()
+  await settle(50)
   expect(spy).toHaveBeenLastCalledWith(['left@x.it'])
   expect(to.value).toBe('')
 })

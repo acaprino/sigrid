@@ -1,14 +1,14 @@
 // The frame as the window of a program (`AppShell desktop`) and the guard that takes the browser out of a page
 // (`guardDesktop`, `useDesktopGuard`): the techniques of Imago's windows, in the toolkit's own writing.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { useEffect, useState } from 'react'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
 import { AppShell, DialogContent, DialogRoot, DialogTitle, TitleBar, guardDesktop, isBrowserKey, useDesktopGuard } from '../src'
+import { flush } from './helpers'
 
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
 const key = (k: string, more: Partial<KeyboardEventInit> = {}) => ({ key: k, ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, ...more })
 /** Dispatches and says whether the default was refused. */
 const refused = (target: EventTarget, event: Event) => !target.dispatchEvent(event)

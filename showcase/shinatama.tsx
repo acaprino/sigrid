@@ -11,24 +11,36 @@
 //   Sessions view tiles the terminals. The inspector: the Sessions panel (running, saved), open on a wide frame.
 // - The notice at the foot is what Shinatama's widget does: a terminal asks for the person, and one press opens it.
 // Left out on purpose: the ONI look and the glass (Sigrid has neither), the mascot of the widget, the other views.
+// Outside the GAPs it writes no class: the layout is `Column` and `Cluster`, the words `Text`, the dot of a state `Dot`,
+// the rows of the sidebar's head and foot `SidebarRow`, and the keys are commands of the registry (`useCommand`), which
+// the foot lists (`KeyHints`).
 import * as React from 'react'
 import {
   AppShell,
   Button,
   Checkbox,
+  Cluster,
+  Column,
+  CommandsProvider,
+  ContentSplit,
   Count,
+  Dot,
   Empty,
   Icon,
   Inspector,
   ItemList,
   ItemRow,
-  Kbd,
+  KeyHints,
   MarkdownBlocks,
   NavItem,
   SearchField,
+  Section,
   Select,
   Sidebar,
   SidebarGroup,
+  SidebarRow,
+  Spacer,
+  Text,
   ToggleGroup,
   ToggleGroupItem,
   Toolbar,
@@ -37,11 +49,14 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
+  Tree,
   cn,
   colorTheme,
+  useCommand,
   type ToastItem,
+  type TreeNode,
 } from '../src/index'
-import { AppBar, Host, type AppProps } from './hosts'
+import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Shinatama's own theme: its rose (hue 355 in Imago; this hex is the nearest one picked by eye, not measured). */
 const THEME = colorTheme({ id: 'shinatama', label: 'Shinatama', color: '#b8326a', spot: 'balanced' })
@@ -122,18 +137,24 @@ const PROJECTS = ['billing-service', 'checkout-web', 'ledger-core', 'infra-terra
 
 const VIEWS = ['Workspace', 'Settings', 'Sessions', 'Overview', 'Files', 'Leftovers'] as const
 
-/** The file browser of the Workspace pane: a folder tree, one level open. */
-const TREE: readonly { name: string; depth: number; folder: boolean; open?: boolean; size?: string }[] = [
-  { name: '.claude', depth: 0, folder: true, open: true },
-  { name: 'agents', depth: 1, folder: true, open: true },
-  { name: 'billing-retries.md', depth: 2, folder: false, size: '6 KB' },
-  { name: 'settings.local.json', depth: 1, folder: false, size: '703 B' },
-  { name: '.github', depth: 0, folder: true },
-  { name: 'docs', depth: 0, folder: true },
-  { name: 'src', depth: 0, folder: true },
-  { name: 'test', depth: 0, folder: true },
-  { name: 'package.json', depth: 0, folder: false, size: '2 KB' },
-  { name: 'README.md', depth: 0, folder: false, size: '9 KB' },
+/** The file browser of the Workspace pane: a folder tree, `.claude/agents` open. */
+const FILES: readonly TreeNode[] = [
+  {
+    id: '.claude',
+    name: '.claude',
+    icon: 'folder',
+    openIcon: 'folderOpen',
+    children: [
+      { id: '.claude/agents', name: 'agents', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.claude/agents/billing-retries.md', name: 'billing-retries.md', icon: 'file', meta: '6 KB' }] },
+      { id: '.claude/settings.local.json', name: 'settings.local.json', icon: 'file', meta: '703 B' },
+    ],
+  },
+  { id: '.github', name: '.github', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.github/workflows', name: 'workflows', icon: 'folder', openIcon: 'folderOpen', children: [{ id: '.github/workflows/ci.yml', name: 'ci.yml', icon: 'file', meta: '1 KB' }] }] },
+  { id: 'docs', name: 'docs', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'docs/billing.md', name: 'billing.md', icon: 'file', meta: '4 KB' }] },
+  { id: 'src', name: 'src', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'src/retry.ts', name: 'retry.ts', icon: 'file', meta: '3 KB' }, { id: 'src/charge.ts', name: 'charge.ts', icon: 'file', meta: '5 KB' }] },
+  { id: 'test', name: 'test', icon: 'folder', openIcon: 'folderOpen', children: [{ id: 'test/checkout.spec.ts', name: 'checkout.spec.ts', icon: 'file', meta: '2 KB' }] },
+  { id: 'package.json', name: 'package.json', icon: 'file', meta: '2 KB' },
+  { id: 'README.md', name: 'README.md', icon: 'file', meta: '9 KB' },
 ]
 
 const PLAN = `# Billing retries
@@ -151,9 +172,6 @@ const SAVED = [
   { id: 's3', name: 'OpenCode · ledger-core', note: '19 Nov · 7 turns' },
 ] as const
 
-/** How far in a row of the tree sits, by its depth: on the 4px grid. */
-const INDENT = ['ps-2', 'ps-6', 'ps-10'] as const
-
 /** The tabs of the Workspace pane: the file browser, then the agents' terminals. */
 const DOCK = [
   { id: 'files', label: 'Files' },
@@ -162,34 +180,33 @@ const DOCK = [
 ] as const
 
 /**
- * The file browser: the tree at the start, the file at the end, in four modes.
- * GAP: a file tree (rows that open and close, with their depth): Sigrid has a flat list only.
- * GAP: a code editor beside its preview: the source is plain text here.
+ * The file browser: the tree in a column at the start (Sigrid's `Tree`, with its filter, in a `ContentSplit`), the file
+ * in the room that is left, in three modes.
+ * GAP: a code editor beside its preview: the source is plain text here, and the strip over the file and the two halves
+ * are the app's boxes.
  */
 function Files() {
   const [mode, setMode] = React.useState('split')
-  const [find, setFind] = React.useState('')
+  const [file, setFile] = React.useState<string | null>('.claude/agents/billing-retries.md')
+  const tree = (
+    <Column gap="sm" pad="sm">
+      <Select size="sm" aria-label="Project" options={PROJECTS.map((p) => ({ value: p, label: p }))} value="billing-service" onValueChange={() => {}} />
+      <Tree
+        aria-label="Files of billing-service"
+        nodes={FILES}
+        search
+        searchLabel="Find a file by name"
+        selected={file}
+        onSelect={setFile}
+        defaultExpanded={['.claude', '.claude/agents']}
+      />
+    </Column>
+  )
   return (
-    <div className="grid h-full min-h-0 grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <div className="flex min-h-0 flex-col gap-2 border-e border-line p-2">
-        <Select size="sm" aria-label="Project" options={PROJECTS.map((p) => ({ value: p, label: p }))} value="billing-service" onValueChange={() => {}} className="w-48" />
-        <SearchField value={find} onValueChange={setFind} aria-label="Find a file by name" placeholder="Find a file by name" />
-        <ul role="list" className="flex min-h-0 flex-1 flex-col overflow-y-auto text-sm">
-          {TREE.filter((f) => f.name.toLowerCase().includes(find.toLowerCase())).map((f) => (
-            <li key={f.name}>
-              <button type="button" className={cn('flex min-h-(--control-sm) w-full items-center gap-2 rounded-md pe-2 text-start text-ink-soft hover:bg-ink/6 hover:text-ink', INDENT[f.depth], f.name === 'billing-retries.md' && 'bg-selected font-semibold text-selected-ink')}>
-                <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">{f.folder ? <Icon name={f.open ? 'chevronDown' : 'chevron'} /> : null}</span>
-                <Icon name={f.folder ? 'newFolder' : 'attach'} />
-                <span className="min-w-0 flex-1 truncate">{f.name}</span>
-                {f.size ? <span className="text-2xs text-ink-mute tabular-nums">{f.size}</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="flex min-h-0 flex-col">
+    <ContentSplit aside={tree} asideLabel="Files" width="sm">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-center gap-2 border-b border-line p-2">
-          <span className="min-w-0 flex-1 truncate text-xs text-ink-mute">.claude / agents / billing-retries.md</span>
+          <span className="min-w-0 flex-1 truncate text-xs text-ink-mute">{(file ?? '').split('/').join(' / ')}</span>
           <ToggleGroup aria-label="Show the file as" value={mode} onValueChange={setMode}>
             <ToggleGroupItem value="source">Source</ToggleGroupItem>
             <ToggleGroupItem value="split">Split</ToggleGroupItem>
@@ -202,7 +219,7 @@ function Files() {
           {mode !== 'source' ? <div className="min-h-0 overflow-auto p-3 text-sm text-ink"><MarkdownBlocks text={PLAN} /></div> : null}
         </div>
       </div>
-    </div>
+    </ContentSplit>
   )
 }
 
@@ -238,7 +255,16 @@ function TerminalPane({ pane, focused, onFocus }: { pane: Pane; focused: boolean
   )
 }
 
-export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+/** Shinatama in its window, with the registry of its keys around it: they run while the focus is in the window. */
+export function Shinatama(props: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+  return (
+    <CommandsProvider keysIn={appKeys('shinatama')} palette={false}>
+      <ShinatamaApp {...props} />
+    </CommandsProvider>
+  )
+}
+
+function ShinatamaApp({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
   const [view, setView] = React.useState<string>('Workspace')
   const [thread, setThread] = React.useState('shell')
   const [focus, setFocus] = React.useState('p4')
@@ -248,29 +274,35 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
   const [filter, setFilter] = React.useState('')
   const [project, setProject] = React.useState('all')
   const [archived, setArchived] = React.useState(false)
-  const [notices, setNotices] = React.useState<readonly { id: string; text: string }[]>([{ id: 'n1', text: 'Needs your answer: billing-service · Codex' }])
+  const [notices, setNotices] = React.useState<readonly { id: string; text: string; asks?: boolean }[]>([{ id: 'n1', text: 'Needs your answer: billing-service · Codex', asks: true }])
   const dismiss = React.useCallback((id: string) => setNotices((list) => list.filter((n) => n.id !== id)), [])
-  const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, actions: [{ label: 'Terminal', items: [{ id: 'open', label: 'Open session', onClick: () => { setFocus('p1'); setView('Sessions'); dismiss(n.id) } }] }] }))
+  // A notice of a terminal that asks for the person opens it in one press; the others only say.
+  const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, ...(n.asks ? { actions: [{ label: 'Terminal', items: [{ id: 'open', label: 'Open session', onClick: () => { setFocus('p1'); setView('Sessions'); dismiss(n.id) } }] }] } : {}) }))
+  const count = React.useRef(1)
+  const newSession = () => setNotices((list) => [...list, { id: `n${(count.current += 1)}`, text: 'A new session would start here: the trial draws no new terminal' }])
+  // The key of «New session», declared once: it runs from anywhere in the window, and the foot names it.
+  useCommand({ id: 'new-session', label: 'New session', keys: 'Ctrl+Shift+T', run: newSession })
 
   const sidebar = (
     <Sidebar
       aria-label="Threads"
       animated={animated}
       header={
-        // GAP: a sidebar heading with its count and its actions: the app's own markup.
-        <div className="flex items-center gap-1 ps-2">
-          <h2 className="text-sm font-semibold text-sidebar-ink">Threads</h2>
-          <Count value={1} label="running" />
-          <span className="flex-1" />
-          <Button variant="ghost" size="xs" aria-label="Add a project folder"><Icon name="newFolder" /></Button>
-          <Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>
-        </div>
+        <SidebarRow
+          end={
+            <>
+              <Button variant="ghost" size="xs" aria-label="Add a project folder"><Icon name="newFolder" /></Button>
+              <Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>
+            </>
+          }
+        >
+          <Text variant="strong">Threads</Text> <Count value={1} label="running" />
+        </SidebarRow>
       }
       footer={
-        <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-          <Checkbox aria-label="Show archived threads" checked={archived} onCheckedChange={(next) => setArchived(next === true)} animated={animated} />
-          <span className="min-w-0 flex-1 truncate">Show archived threads</span>
-        </div>
+        <SidebarRow leading={<Checkbox aria-label="Show archived threads" checked={archived} onCheckedChange={(next) => setArchived(next === true)} animated={animated} />}>
+          Show archived threads
+        </SidebarRow>
       }
     >
       {/* GAP: a group heading with its count (9) and its actions (new thread, close): SidebarGroup has a label and an icon only. */}
@@ -312,11 +344,11 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         ))}
       </ToolbarTabs>
       <ToolbarSpacer />
-      <ToolbarButton label="New session" variant="default" icon={<Icon name="plus" />} keepWord animated={animated}>
+      <ToolbarButton label="New session" variant="default" icon={<Icon name="plus" />} keepWord onClick={newSession} animated={animated}>
         New session
       </ToolbarButton>
       {/* The resources as a dot in the status colour, with their state as the name (R2: a colour is never alone). */}
-      <ToolbarButton label="Resources: available" icon={<span aria-hidden="true" className="size-2 rounded-full bg-success" />} animated={animated} />
+      <ToolbarButton label="Resources: available" icon={<Dot tone="success" />} animated={animated} />
       <ToolbarButton label="More" variant="outline" animated={animated}>More</ToolbarButton>
     </>
   )
@@ -329,7 +361,7 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         <Toolbar aria-label="Tabs of pane 1" className="min-h-(--control-md) flex-none border-b border-line px-1">
           <ToolbarTabs aria-label="Open in pane 1" value={dock} onValueChange={setDock}>
             {DOCK.map((d) => (
-              <ToolbarTab key={d.id} value={d.id} icon={<Icon name={d.id === 'files' ? 'newFolder' : 'threads'} />}>{d.label}</ToolbarTab>
+              <ToolbarTab key={d.id} value={d.id} icon={<Icon name={d.id === 'files' ? 'folder' : 'threads'} />}>{d.label}</ToolbarTab>
             ))}
           </ToolbarTabs>
           <ToolbarButton label="New tab" icon={<Icon name="plus" />} animated={animated} />
@@ -343,64 +375,54 @@ export function Shinatama({ animated, density, look }: Pick<AppProps, 'animated'
         ))}
       </div>
     ) : (
-      <Empty className="h-full p-6" title={view} description="The trial stops here: the Workspace and Sessions views are drawn." />
+      <Empty fill title={view} description="The trial stops here: the Workspace and Sessions views are drawn." />
     )
 
   return (
-    <Host device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="shinatama" notices={toasts} onDismiss={dismiss} className="h-190 w-full max-w-300">
-      <div className="h-full">
-        <AppShell
-          // A box of the page's own (the host's window), maybe taller than the window: the frame fills the box.
-          className="h-full"
-          desktop
-          frame="sheet"
-          contentLabel={view}
-          titleBar={<AppBar device="desktop" host="native" label="Shinatama">{bar}</AppBar>}
-          sidebar={sidebar}
-          inspector={
-            <Inspector title="Sessions" open={sessions} onOpenChange={setSessions} animated={animated}>
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                  <SearchField value={filter} onValueChange={setFilter} aria-label="Filter the sessions" placeholder="Filter" className="min-w-0 flex-1" />
-                  <Select size="sm" aria-label="Project" options={[{ value: 'all', label: 'All projects' }, ...PROJECTS.map((p) => ({ value: p, label: p }))]} value={project} onValueChange={setProject} className="w-36 shrink-0" />
-                </div>
-                <section aria-label="Running" className="flex flex-col gap-1">
-                  <h3 className="text-sm font-semibold text-ink">Running</h3>
-                  <p className="text-sm text-ink-mute">No session is running.</p>
-                </section>
-                <section aria-label="Saved" className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="flex-1 text-sm font-semibold text-ink">Saved</h3>
-                    <Button variant="ghost" size="xs"><Icon name="refresh" />Reload</Button>
-                  </div>
-                  <ItemList aria-label="Saved sessions">
-                    {SAVED.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase())).map((s) => (
-                      <ItemRow key={s.id} title={s.name} description={s.note} leading={<Icon name="history" />} />
-                    ))}
-                  </ItemList>
-                </section>
-              </div>
-            </Inspector>
-          }
-          footer={
-            <>
-              {/* What the app says gives way first, cut with an ellipsis; the keys stay whole. */}
-              <span className="flex min-w-0 items-center gap-3 overflow-hidden whitespace-nowrap">
-                <span>Local runtime · experimental</span>
-                <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="size-2 rounded-full bg-success" />Resources: available</span>
-                <span className="tabular-nums">4 terminals</span>
-                <span className="truncate">Workspace 1 pane</span>
-              </span>
-              <span className="ms-auto inline-flex shrink-0 items-center gap-3 whitespace-nowrap">
-                <span className="inline-flex items-center gap-1"><Kbd>Ctrl K</Kbd> commands</span>
-                <span className="inline-flex items-center gap-1"><Kbd>Ctrl Shift T</Kbd> new session</span>
-              </span>
-            </>
-          }
-        >
-          {content}
-        </AppShell>
-      </div>
+    <Host app="shinatama" device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="shinatama" notices={toasts} onDismiss={dismiss} wide>
+      <AppShell
+        desktop
+        frame="sheet"
+        contentLabel={view}
+        titleBar={<AppBar device="desktop" host="native" label="Shinatama">{bar}</AppBar>}
+        sidebar={sidebar}
+        inspector={
+          <Inspector title="Sessions" open={sessions} onOpenChange={setSessions} animated={animated}>
+            <Column gap="lg">
+              <Cluster wrap={false}>
+                <SearchField value={filter} onValueChange={setFilter} aria-label="Filter the sessions" placeholder="Filter" />
+                <Select size="sm" aria-label="Project" options={[{ value: 'all', label: 'All projects' }, ...PROJECTS.map((p) => ({ value: p, label: p }))]} value={project} onValueChange={setProject} />
+              </Cluster>
+              <Section title="Running" level={3} icon={<Icon name="play" />} gap="xs">
+                <Text as="p" variant="muted">No session is running.</Text>
+              </Section>
+              <Section title="Saved" level={3} icon={<Icon name="history" />} gap="xs" end={<Button variant="ghost" size="xs"><Icon name="refresh" />Reload</Button>}>
+                <ItemList aria-label="Saved sessions">
+                  {SAVED.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase())).map((s) => (
+                    <ItemRow key={s.id} title={s.name} description={s.note} leading={<Icon name="history" />} />
+                  ))}
+                </ItemList>
+              </Section>
+            </Column>
+          </Inspector>
+        }
+        footer={
+          <>
+            <Text>Local runtime · experimental</Text>
+            <Cluster gap="xs" wrap={false}>
+              <Dot tone="success" />
+              <Text>Resources: available</Text>
+            </Cluster>
+            <Text>4 terminals</Text>
+            <Text>Workspace 1 pane</Text>
+            <Spacer />
+            {/* Ctrl K is the app's palette, which this trial does not draw: a key with its name, not a command here. */}
+            <KeyHints ids={[{ keys: 'Ctrl+K', label: 'Commands' }, 'new-session']} />
+          </>
+        }
+      >
+        {content}
+      </AppShell>
     </Host>
   )
 }

@@ -7,6 +7,9 @@
 // After Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,
 // `im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view
 // of an app, which the toolkit does not carry (test/build.test.ts).
+// `Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a
+// row on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line
+// and the 13px note beside a title.
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
@@ -33,6 +36,9 @@ function own(props: LayoutAttributes): LayoutAttributes {
 const listRole = (as: LayoutElement) => (as === "ul" || as === "ol" ? "list" : undefined)
 
 const ALIGN = { stretch: "items-stretch", start: "items-start", center: "items-center", end: "items-end" } as const
+// The widest a pile grows, centred in its place: a column of text (65 characters) or a column of content that reads as
+// one (a list with a field over it, a message), 768px.
+const WIDTH = { prose: "mx-auto w-full max-w-prose", page: "mx-auto w-full max-w-3xl" } as const
 const JUSTIFY = { start: "justify-start", center: "justify-center", end: "justify-end", between: "justify-between" } as const
 
 export type ColumnProps = LayoutAttributes & {
@@ -44,14 +50,16 @@ export type ColumnProps = LayoutAttributes & {
   align?: keyof typeof ALIGN | undefined
   /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
+  /** The widest it grows, centred in its place: `prose` a column of text (about 65 characters), `page` a column of content that reads as one (768px). Absent: as wide as its place. */
+  width?: keyof typeof WIDTH | undefined
   children?: React.ReactNode
 }
 
 /** A pile of parts, one under the other. */
-function Column({ gap = "sm", pad, align = "stretch", as = "div", children, ...props }: ColumnProps) {
+function Column({ gap = "sm", pad, align = "stretch", as = "div", width, children, ...props }: ColumnProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align], width && WIDTH[width])}>
       {children}
     </Tag>
   )
@@ -68,14 +76,16 @@ export type ClusterProps = LayoutAttributes & {
   align?: keyof typeof ALIGN | undefined
   /** The element it is: a `div` (the default), or a list, a list item, a section, an aside, a navigation. A list keeps `role="list"`. */
   as?: LayoutElement | undefined
+  /** False: one line whatever the width (an avatar and the words beside it); a part that can give way (a `Column`, a `Text`) narrows and wraps its own words. Default true. */
+  wrap?: boolean | undefined
   children?: React.ReactNode
 }
 
 /** A row of parts side by side that wraps to the next line when the room runs out: buttons, fields, chips. */
-function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "div", children, ...props }: ClusterProps) {
+function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "div", wrap = true, children, ...props }: ClusterProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="cluster" className={cn("flex min-w-0 flex-wrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="cluster" className={cn("flex min-w-0", wrap ? "flex-wrap" : "flex-nowrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align])}>
       {children}
     </Tag>
   )
@@ -239,13 +249,21 @@ function Page({ fit = false, header, footer, children, ...props }: PageProps) {
 
 const TEXT = {
   body: "",
+  soft: "text-ink-soft",
+  strong: "font-medium",
   muted: "text-ink-mute",
+  note: "text-xs text-ink-mute",
   caption: "text-2xs text-ink-mute",
   kicker: "text-2xs font-medium text-ink-mute",
 } as const
 
 export type TextProps = LayoutAttributes & {
-  /** `muted`: words of less weight, in the muted ink; `caption`: a small line under a thing; `kicker`: the small label above a title. `body` (the default) is the text around it. */
+  /**
+   * `body` (the default) is the text around it; `soft`: running text, the body of a message or a paragraph under a title;
+   * `strong`: the words that carry a line (a name, a subject), at medium weight in the colour of the line; `muted`: words of less
+   * weight, in the muted ink; `note`: a 13px muted line beside or under a title (a date, an address); `caption`: a small
+   * line under a thing; `kicker`: the small label above a title.
+   */
   variant?: keyof typeof TEXT | undefined
   /** The element: a `span` (the default), a paragraph or a block. */
   as?: "span" | "p" | "div" | undefined

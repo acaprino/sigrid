@@ -1,17 +1,17 @@
 /**
- * The theme engine: a theme from the catalog (theme-catalog.ts), in light or in dark, gives the values of all the `--color-*`
- * tokens and of the shape variables. The starting lightness values are those of the approved sketch
+ * The theme engine: a theme definition (its shape is in theme-catalog.ts; the app brings its own themes), in light or in
+ * dark, gives the values of all the `--color-*` tokens and of the shape variables. The starting lightness values are those of the approved sketch
  * (design/bozzetti/lista-attivita.html, `coloriDi`), the same for every theme: that is why every theme reads the same. The colors
  * are computed in OKLCH, brought back to sRGB by reducing chroma, and the contrast is guaranteed in the computation, on the final
  * hex values: a color below the threshold is darkened on light backgrounds and lightened on dark ones until
- * it gets there. Fixed, never from the theme: the destructive red, the ink of the icons on the user's colors.
+ * it gets there. Fixed, never from the theme: the destructive red and the status colours.
  * The solid button (`primary`) is the accent as a fill: in light it coincides with the accent as text, in dark it is a
  * solid and deeper tone of the accent with light text, while the accent as text (`accent`) stays light.
- * A theme with a strong accent (`fill` in the catalog) has a fill of its own, vivid, in both schemes: its label is the
+ * A theme with a strong accent (`fill` in its definition) has a fill of its own, vivid, in both schemes: its label is the
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import { DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
+import { DEFAULT_DARK_DEPTH, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -71,6 +71,8 @@ export function over(fg: string, bg: string, alpha: number): string {
 
 /** A small margin above every threshold: rounded values and browsers must not fall below it. */
 const MARGIN = 0.03
+/** Under this lightness a fill is nearly black: its hover lightens, a darker step would not be seen. */
+const NEAR_BLACK = 0.3
 
 /**
  * Moves the lightness of `c` in direction `dir` (−1 darker, +1 lighter) until `ok` is true on its hex value.
@@ -116,12 +118,11 @@ const atLeast = (bgs: readonly string[], min: number | ((bg: string) => number))
 /** The direction that moves a color away from this background: lighter on dark backgrounds, darker on light ones. */
 const awayFrom = (bg: string): -1 | 1 => (luminance(bg) < 0.18 ? 1 : -1)
 
-/* ———— The destructive red, the status colours and the ink of the icons: the same for every theme of the same scheme ———— */
+/* ———— The destructive red and the status colours: the same for every theme of the same scheme ———— */
 
 export const FIXED = {
   light: { destructive: '#ad2a1e', 'destructive-soft': '#fef1ef' },
   dark: { destructive: '#ff9a8d', 'destructive-soft': '#3d2420' },
-  markInk: { 'mark-ink-light': '#ffffff', 'mark-ink-dark': '#1b1916' },
 } as const
 
 /**
@@ -243,8 +244,8 @@ function shiftOf(tone: ThemeTone | null): Shift {
 const PAPER_LIGHT: Oklch = fromHex('#fafcfc')
 const PAGE_LIGHT = toHex(PAPER_LIGHT)
 
-/** Adapts one of the 18 user colors to the theme's profile and to the scheme, guaranteeing 3:1 (dot) or 3.5:1 (icon). */
-function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[], scheme: ThemeScheme, role: 'dot' | 'icon', bar: readonly string[] = [], tone: Shift = NO_SHIFT): string {
+/** Adapts one of the 18 user colors to the theme's profile and to the scheme, as a dot that holds 3:1 on every background. */
+function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[], scheme: ThemeScheme, bar: readonly string[] = [], tone: Shift = NO_SHIFT): string {
   const { C: c0, h: h0 } = fromHex(raw)
   const dark = scheme === 'dark'
   const delta = ((t.hue - h0 + 540) % 360) - 180
@@ -252,16 +253,16 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
   let L: number
   let C: number
   if (t.palette === 'mono') {
-    L = dark ? (role === 'icon' ? 0.74 : 0.68) : role === 'icon' ? 0.39 : 0.46
+    L = dark ? 0.68 : 0.46
     C = Math.min(c0 * 0.1, 0.015)
   } else if (t.palette === 'calm') {
-    L = dark ? (role === 'icon' ? 0.74 : 0.69) : role === 'icon' ? 0.48 : 0.54
+    L = dark ? 0.69 : 0.54
     C = Math.min(Math.max(c0 * 0.78, 0.05), 0.125)
   } else if (t.palette === 'soft') {
-    L = dark ? (role === 'icon' ? 0.75 : 0.7) : role === 'icon' ? 0.49 : 0.55
+    L = dark ? 0.7 : 0.55
     C = Math.min(Math.max(c0 * 0.84, 0.055), 0.145)
   } else {
-    L = dark ? (role === 'icon' ? 0.75 : 0.7) : role === 'icon' ? 0.48 : 0.55
+    L = dark ? 0.7 : 0.55
     C = Math.min(Math.max(c0 * 0.9, 0.06), 0.17)
   }
   // The chosen tone: the same hue, more or less saturated, lighter or darker (then corrected like any other).
@@ -269,7 +270,7 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
   // «Ink» keeps its colors almost gray whatever the tone: its character is the ink, not the color.
   if (t.palette === 'mono') C = Math.min(C, 0.015)
   L += tone.d
-  const min = role === 'icon' ? 3.5 : 3
+  const min = 3
   // The closest lightness that holds on every background, first in the scheme's direction: with a dark sidebar (`bar`)
   // beside a light page the color must stay between the two, so darkening alone would crush it to black. The search
   // stays near the color (it must remain that color); if there is no room for both, the content wins over the sidebar.
@@ -285,9 +286,32 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
 }
 
 /**
+ * The dark ladder of each depth (`ThemeDark.depth`), as OKLCH lightness: the page, the sidebar and the lanes below it,
+ * the solid sidebar, the sheets, the dividers, the soft background of the accent, the selected item and the selected
+ * row of a sidebar with its own colors. `standard` is the ladder every theme had before the depth was a parameter
+ * (2026-11-23), value for value.
+ *
+ * `deep` keeps its steps as contrast ratios from a darker page (the sidebar about 1.07:1 below; the sheets 1.16:1, the
+ * selected item 1.26:1 and the dividers 1.36:1 above): the same ratio is a wider step of lightness there. Its solid
+ * sidebar sits closer than the ratio asks, to stay above the drop of the elevation (0.12).
+ *
+ * `soft` can only bring the page up toward its sheets, because the standard ladder is already at two ceilings: with
+ * sheets above 0.285 a fill with a light label no longer holds 3:1 on them, and with a selected item above 0.32 the
+ * user's colors no longer hold 3:1 on it. So its sheets are the standard's, a closer step above a lighter page (about
+ * 1.11:1), its selected item rises by the little there is, to stay apart from the page in a calm tone, and the
+ * sidebar keeps its ratio below.
+ */
+const DARK_LADDER: Readonly<Record<DarkDepth, { readonly page: number; readonly sidebar: number; readonly solid: number; readonly raised: number; readonly line: number; readonly soft: number; readonly selected: number; readonly row: number }>> = {
+  deep: { page: 0.2, sidebar: 0.16, solid: 0.15, raised: 0.26, line: 0.31, soft: 0.265, selected: 0.285, row: 0.275 },
+  standard: { page: 0.235, sidebar: 0.205, solid: 0.176, raised: 0.285, line: 0.33, soft: 0.29, selected: 0.31, row: 0.3 },
+  soft: { page: 0.25, sidebar: 0.225, solid: 0.2, raised: 0.285, line: 0.335, soft: 0.29, selected: 0.315, row: 0.3 },
+}
+
+/**
  * The starting lightness values of a theme, before any correction. Three distinct levels in both schemes: sidebar and lanes
  * (`sidebar-paper`, `paper-2`), page (`paper`) and raised sheets (`raised`, like "Now" and panels). In dark the backgrounds
- * stay anthracite/stone, almost neutral, so as not to turn muddy on warm tones nor tire those who have ADHD.
+ * are anthracite, neutral, unless the theme sets its dark parameters (`ThemeDef.dark`): another depth, or its own hue at
+ * a low chroma, so as not to turn muddy on warm tones nor tire those who have ADHD.
  */
 function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
   const [ac0, ah] = t.accent
@@ -364,7 +388,7 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
       ink: g(0.2, 1.5), inkSoft: g(0.36, 1.5), inkMute: g(0.5, 1.2),
       // The accent as text is step 11 of the palette; step 12 is the stronger text step, taken where 11 falls short.
       accent, accentStrong: mono ? ok(0.2, 0, 0) : ok(0.39, ac, ah), fill: plain ?? accent, onFill: plain ? labelOn(plain, ok(1, 0, 0)) : ok(1, 0, 0), accentSoft: ok(0.94, mono ? 0 : tint(strong ? 0.045 : 0.032), ah),
-      selected: mono ? ok(0.87, 0, 0) : ok(0.895, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
+      selected: mono ? ok(0.9, 0, 0) : ok(0.915, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
       // The solid sidebar is dark enough for the user's colors to hold 3:1 on it and on the light page at once.
       // The tone tints the sidebar too: Calm takes it toward gray, Vivid gives it the theme's colour (owner, 2026-11-20).
       sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4 * tone.surface, 0.018), t.hue) : belowPage(g(0.946, 1.7 * tone.surface)),
@@ -377,13 +401,28 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
   // The tint of the dark backgrounds does not follow a stronger tint of the light ones: beyond this it turns muddy.
   const tc = mono ? 0 : warm ? 0.005 : Math.max(Math.min(t.chroma, 0.006) * 1.4, 0.0045)
   const f = (L: number, k = 1) => ok(L, tc * k, t.hue)
-  const n = (L: number) => ok(L, 0, 0)
+  // The dark parameters of the theme: the ladder of its depth, and the chroma of its backgrounds. None unless the theme
+  // asks for its own hue and its grays have one; a warm hue takes the soft strength, since it turns muddy sooner.
+  const dark = themeDark(t.dark)
+  const d = DARK_LADDER[dark?.depth ?? DEFAULT_DARK_DEPTH]
+  const bc = dark?.tint === 'theme' && !mono && t.chroma > 0 ? TINT_CHROMA[warm ? 'soft' : 'medium'][1] : 0
+  const n = (L: number, k = 1): Oklch => {
+    if (!bc) return ok(L, 0, 0)
+    // A tinted background is never lighter than its gray: the ladder sits at the thresholds measured on the grays (the
+    // fill at 3:1 on the sheets), and at the same lightness a hue can weigh a little more than the gray.
+    const most = luminance(toHex(ok(L, 0, 0)))
+    let c = ok(L, bc * k, t.hue)
+    while (luminance(toHex(c)) > most && c.L > 0) c = { ...c, L: c.L - 0.001 }
+    return c
+  }
   // The deeper tone of the accent that fills the button in dark, moved by the chosen tone.
   const darkFill = ok(0.52 + tone.d + tone.lift, Math.max(ac0 * 0.88, 0.08) * tone.k, ah)
   return {
-    // In dark the backgrounds are a neutral anthracite in every theme, as light has its base white (the owner's decision
-    // of 2026-11-19): the theme's character is its accent, and in light the tint of its sidebar.
-    raised: n(0.285), paper: n(0.235), paper2: n(0.205), line: n(0.33), input: n(0.53),
+    // In dark the backgrounds are a neutral anthracite unless the theme says otherwise, as light has its base white (the
+    // owner's decision of 2026-11-19): the theme's character is its accent, and in light the tint of its sidebar. Since
+    // 2026-11-23 that is the default of a parameter (`ThemeDef.dark`): the depth picks the ladder, the tint its chroma,
+    // spread as on a page the user derives (`surfacesFrom`: the sidebar and the sheets as the page, the lines a little less).
+    raised: n(d.raised), paper: n(d.page), paper2: n(d.sidebar), line: n(d.line, 0.9), input: n(0.53, 0.9),
     ink: f(0.92, 0.4), inkSoft: f(0.8, 0.45), inkMute: f(0.67, 0.5),
     // The accent as text is light, to be readable on the dark background; the button fill is a solid and deeper tone,
     // with light text on it. In "Ink" the button stays light with dark text.
@@ -391,11 +430,11 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     accentStrong: mono ? ok(0.96, 0, 0) : ok(0.92, Math.min(ac * 0.4, 0.06), ah),
     fill: mono ? ok(0.9, 0, 0) : (strong ?? darkFill),
     onFill: mono ? ok(0.16, 0, 0) : strong ? labelOn(strong, ok(0.99, 0.008, ah)) : tone.on ? labelOn(darkFill, ok(0.99, 0.008, ah)) : ok(0.99, 0.008, ah),
-    accentSoft: ok(0.29, mono ? 0 : tint(0.042), ah),
-    selected: mono ? ok(0.32, 0, 0) : ok(0.31, Math.max(sc * 0.38, tint(0.032)), sh), selectedInk: mono ? ok(0.96, 0, 0) : ok(0.94, sc * 0.25, sh),
-    sidebar: full ? f(0.176, 1.1) : n(0.205),
+    accentSoft: ok(d.soft, mono ? 0 : tint(0.042), ah),
+    selected: mono ? ok(d.selected + 0.01, 0, 0) : ok(d.selected, Math.max(sc * 0.38, tint(0.032)), sh), selectedInk: mono ? ok(0.96, 0, 0) : ok(0.94, sc * 0.25, sh),
+    sidebar: full ? ok(d.solid, Math.max(tc * 1.1, bc), t.hue) : n(d.sidebar),
     barInk: f(0.9, 0.4), barMute: f(0.68, 0.45),
-    barSelected: column ? f(0.3, 1) : ok(0.3, Math.max(ac * 0.45, 0.036), ah), barSelectedInk: column ? f(0.97, 0.3) : ok(0.95, ac * 0.25, ah),
+    barSelected: column ? f(d.row, 1) : ok(d.row, Math.max(ac * 0.45, 0.036), ah), barSelectedInk: column ? f(0.97, 0.3) : ok(0.95, ac * 0.25, ah),
     barAccent: mono ? ok(0.93, 0, 0) : ok(0.8, Math.min(ac * 1.2, 0.13), ah), barAccentInk: ok(0.22, mono ? 0 : 0.03, ah),
   }
 }
@@ -409,26 +448,30 @@ const at = (token: string, percent: number) => `color-mix(in srgb, var(--color-$
  * in dark) at Park's alpha steps (its gray a4 9%, a6 15%, a7 19%; in dark its black a8, ~47%). In light the ring is the
  * same drop color around the edge; in dark it is the ink inside the edge (a drop of light ink would be a glow). `float`
  * is what is lifted and dragged (Park's `xl`, with a second, closer drop).
+ * The finish is the toolkit's own (the owner, 2026-11-23): the edge is a crisp hairline (the ring at 15%) and the drop under
+ * it is wide and faint, with a blur of about three times its offset, so a raised surface reads as lifted off the page
+ * and not as resting on a smudge. The higher the surface, the wider the drop.
  */
 function elevationOf(scheme: ThemeScheme): Record<string, string> {
   if (scheme === 'light') {
     const soft = at('drop', 9)
+    const edge = at('drop', 15)
     return {
-      '--elevation-xs': `0 1px 2px ${at('drop', 15)}, 0 0 1px ${at('drop', 19)}`,
-      '--elevation-sm': `0 2px 4px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-md': `0 4px 8px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-lg': `0 8px 16px ${soft}, 0 0 1px ${soft}`,
-      '--elevation-float': `0 16px 24px ${soft}, 0 4px 8px ${soft}, 0 0 1px ${at('drop', 15)}`,
+      '--elevation-xs': `0 1px 2px ${edge}, 0 0 1px ${at('drop', 19)}`,
+      '--elevation-sm': `0 2px 6px ${soft}, 0 0 1px ${edge}`,
+      '--elevation-md': `0 6px 16px ${soft}, 0 0 1px ${edge}`,
+      '--elevation-lg': `0 12px 32px ${at('drop', 12)}, 0 0 1px ${edge}`,
+      '--elevation-float': `0 24px 48px ${edge}, 0 4px 8px ${soft}, 0 0 1px ${edge}`,
     }
   }
   const drop = at('drop', 47)
   const ring = `inset 0 0 1px ${at('ink', 33)}`
   return {
     '--elevation-xs': `0 1px 1px ${drop}, ${ring}`,
-    '--elevation-sm': `0 2px 4px ${drop}, ${ring}`,
-    '--elevation-md': `0 4px 8px ${drop}, ${ring}`,
-    '--elevation-lg': `0 8px 16px ${drop}, ${ring}`,
-    '--elevation-float': `0 16px 24px ${at('drop', 55)}, ${ring}`,
+    '--elevation-sm': `0 2px 6px ${drop}, ${ring}`,
+    '--elevation-md': `0 6px 16px ${drop}, ${ring}`,
+    '--elevation-lg': `0 12px 32px ${drop}, ${ring}`,
+    '--elevation-float': `0 24px 48px ${at('drop', 55)}, ${ring}`,
   }
 }
 
@@ -591,10 +634,10 @@ export function themeTokens(theme: ThemeDef, scheme: ThemeScheme, own?: OwnTheme
 }
 
 /**
- * The computation behind `themeTokens`, for any theme definition: also one outside the catalog, such as a catalog theme
- * with another sidebar. Every catalog theme has the light one (`tenue`); the dark column (`scura`) and the solid one
- * (`piena`) stay here, tested, for whoever wants them. `custom`: the definition carries the user's own colors.
- * Internal: not exported by the package.
+ * The computation behind `themeTokens`, for any theme definition as it is, without the user's own colors merged in:
+ * any of the three sidebars, the light one (`tenue`), the dark column (`scura`) or the solid one (`piena`).
+ * `custom`: the definition already carries the user's own colors. Exported by the package, for an app that builds its
+ * theme definitions itself (a palette from one colour does, in `applyTheme`).
  */
 export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone | null, custom = false): ThemeTokens {
   const light = scheme === 'light'
@@ -655,9 +698,11 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const line = hex(take('line', s.line, (-dir) as -1 | 1, (h) => backgrounds.every((bg) => contrast(h, bg) < 3 - MARGIN)))
   const input = hex(take('input', s.input, dir, (h) => atLeast(backgrounds, 3)(h) && backgrounds.every((bg) => contrast(h, bg) > contrast(line, bg))))
 
-  // The solid button: the text holds on the fill at rest and on hover (which always darkens). With light text
+  // The solid button: the text holds on the fill at rest and on hover (which darkens, see `hoverOf`). With light text
   // the fill darkens, with dark text ("Ink" in dark) it lightens.
-  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L - 0.045 })
+  // A fill that is nearly black has no room to darken (a step down from it cannot be seen): it lightens instead,
+  // by a step that can (the owner, 2026-11-23: the solid button must answer the pointer in every theme).
+  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
   // The fill is also a mark to be seen without text (timeline bars, the calendar's "today"): on the backgrounds
   // it holds at 3:1 (WCAG 1.4.11). In dark the deep tone may fall below: it lightens toward the text, but only
   // as long as the text still holds at 4.5:1. If that is not enough, the text wins.
@@ -741,12 +786,13 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
 
   const white = '#ffffff'
   const fixed = light ? FIXED.light : FIXED.dark
-  // The red is the same in every theme; on the surfaces of a curated palette (mid tones, tinted) it moves just enough
-  // to hold on them, on its soft background and on a highlighted menu item.
+  // The red is the same in every theme; on the surfaces of a curated palette (mid tones, tinted) and on a dark scheme
+  // with parameters of its own it moves just enough to hold on them, on its soft background and on a highlighted menu item.
   const redHolds = (h: string) =>
     contrast(h, fixed['destructive-soft']) >= 4.5 + MARGIN &&
     backgrounds.every((bg) => contrast(h, bg) >= 4.5 + MARGIN && contrast(h, over(fixed['destructive-soft'], bg, 0.8)) >= 4.5 + MARGIN && contrast(h, over(h, bg, 0.1)) >= 4.5 + MARGIN)
-  const destructive = theme.surfaces && !redHolds(fixed.destructive) ? hex(settle(fromHex(fixed.destructive), dir, redHolds).c) : fixed.destructive
+  const ownGround = !!theme.surfaces || (!light && themeDark(theme.dark) !== null)
+  const destructive = ownGround && !redHolds(fixed.destructive) ? hex(settle(fromHex(fixed.destructive), dir, redHolds).c) : fixed.destructive
   const onDestructive = [white, '#17161a', paper].sort((a, b) => contrast(b, destructive) - contrast(a, destructive))[0]!
 
   // The status colours: fixed, moved only where a theme's surfaces would sink them.
@@ -760,37 +806,25 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const inkHolds = (h: string) => contrast(ink, h) >= 7 + MARGIN
   const highlight = inkHolds(status.highlight) ? status.highlight : hex(settle(fromHex(status.highlight), light ? 1 : -1, inkHolds).c)
 
-  // The user's colors on the content backgrounds, and again on the bar: a bar with its own colors is dark even in the
-  // light scheme, where a color readable on white would sink, so there the colors are adapted as for a dark scheme.
+  // The user's colors on the content backgrounds; beside a solid bar they also hold on it.
   const marks: Record<string, string> = {}
   const solidBar = theme.sidebar === 'piena' ? [sidebar] : []
-  const barBgs = [sidebar, bar['sidebar-selected']!]
-  const barScheme: ThemeScheme = luminance(sidebar) < 0.18 ? 'dark' : 'light'
   for (let i = 0; i < COLORS.length; i++) {
-    marks[`mark-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, 'dot', solidBar, shift)
-    marks[`mark-icon-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, 'icon', solidBar, shift)
-    marks[`sidebar-mark-${i + 1}`] = full ? adaptMarkColor(COLORS[i]!, theme, barBgs, barScheme, 'dot', [], shift) : marks[`mark-${i + 1}`]!
-    marks[`sidebar-mark-icon-${i + 1}`] = full ? adaptMarkColor(COLORS[i]!, theme, barBgs, barScheme, 'icon', [], shift) : marks[`mark-icon-${i + 1}`]!
+    marks[`mark-${i + 1}`] = adaptMarkColor(COLORS[i]!, theme, backgrounds, scheme, solidBar, shift)
   }
 
   const colors: Record<string, string> = {
     paper, 'paper-2': paper2, 'sidebar-paper': sidebar, ink, 'ink-soft': inkSoft, 'ink-mute': inkMute, line,
     accent, 'accent-hover': accentHover, 'accent-soft': accentSoft, raised, drop,
-    background: paper, foreground: ink, card: raised, 'card-foreground': ink, popover: raised, 'popover-foreground': ink,
-    primary, 'primary-foreground': onFill, secondary: paper2, 'secondary-foreground': ink, muted: paper2, 'muted-foreground': inkMute,
+    background: paper, foreground: ink, popover: raised, 'popover-foreground': ink,
+    primary, 'primary-foreground': onFill, 'muted-foreground': inkMute,
     // The focus ring is the accent as text (R8): 2px, offset 2px, at least 3:1 on every background and on the selection.
-    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent, ...FIXED.markInk,
+    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent,
     selected, 'selected-ink': selectedInk, ...spot, ...bar, ...marks,
   }
   const attributes: Record<string, string> = {
-    // Rows in the open: no card around the group and no ruled line between the rows (theme.css, `data-rows="open"`).
-    'data-rows': 'open',
     // The solid sidebar has its own colors: the CSS redefines the ink there.
     'data-sidebar': full ? 'own' : 'shared',
-    // The selected item of the solid sidebar is a solid background: inside it, count, menu and icon take its text color.
-    // In the dark column it is a lighter neutral row with a short accent bar: the user's colors stay. On the light
-    // bar it is the accent tint, with the same short bar and the count as a fill in the accent.
-    'data-selection': column ? 'bar' : full ? 'filled' : 'tint',
   }
   return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
 }

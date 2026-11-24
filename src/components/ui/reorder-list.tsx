@@ -15,7 +15,7 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { cn } from "../../lib/utils"
-import { FOCUS_RING } from "../../lib/focus"
+import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../../internal/motion"
 import { useWords } from "../../words"
 
@@ -55,17 +55,18 @@ function ReorderRow({ id, name, moving, children }: { id: string; name: string; 
       style={{ transform: CSS.Translate.toString(transform ? { ...transform, x: 0 } : null), transition: moving ? transition : undefined }}
       className={cn(ROW, isDragging && "z-10 bg-raised shadow-float")}
     >
-      <button
+      <Button
         ref={setActivatorNodeRef}
-        type="button"
+        variant="ghost"
+        size="icon-xs"
         data-slot="reorder-handle"
         {...attributes}
         {...listeners}
         aria-label={words.reorder.handle(name)}
-        className={cn("flex size-(--control-xs) shrink-0 touch-none items-center justify-center rounded-md text-ink-mute pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink", FOCUS_RING)}
+        className={cn("touch-none", QUIET_ICON)}
       >
         <GripVertical aria-hidden="true" className="size-4" />
-      </button>
+      </Button>
       <div className="flex min-w-0 flex-1 items-center gap-2">{children}</div>
     </li>
   )

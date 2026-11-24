@@ -9,12 +9,11 @@
 //    corner radii, shadows, weights, icon sizes, a border with a shadow on one element (R4), boxed key hints (R5),
 //    loops and decorative effects. Accepted exceptions are listed in KNOWN with their reason.
 import { execFileSync } from 'node:child_process'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
+import { root, walk } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const zsd = (...args: string[]) => {
   try {
     return { code: 0, out: execFileSync(process.execPath, [join(root, 'tools/zero-slop-design/zsd.mjs'), ...args], { cwd: root, encoding: 'utf8' }) }
@@ -78,9 +77,7 @@ const radiusPx = (name: string) => (name === 'none' || name === 'full' ? TW_RADI
 /* ———— The sources ———— */
 
 /** The colour sources (the theme engine, the catalog with the curated palettes, the generated first paint) and the font faces are the tokens themselves. */
-// The generated icon drawings are the packs' own artwork, with the colours their authors drew.
-const TOKEN_SOURCES = new Set(['theme-engine.ts', 'theme-catalog.ts', 'colors.ts', 'icon-packs.generated.ts', 'styles/theme.css', 'styles/fonts.css'])
-const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f)]))
+const TOKEN_SOURCES = new Set(['theme-engine.ts', 'theme-catalog.ts', 'colors.ts', 'styles/theme.css', 'styles/fonts.css'])
 const sources = walk(join(root, 'src'))
   .filter((f) => /\.(tsx?|css)$/.test(f))
   .map((f) => ({ file: f.slice(join(root, 'src').length + 1), text: readFileSync(f, 'utf8') }))

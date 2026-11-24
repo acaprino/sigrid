@@ -8,6 +8,7 @@ import * as React from 'react'
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
 import { linesOf, openedFor, viewFor } from '../src/components/GraphCanvas'
+import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES } from '../src/components/graph-lines'
 import { GraphCanvas, layoutGraph, visibleGraph, type Graph, type GraphCanvasHandle, type GraphChange, type GraphEdge, type GraphNode } from '../src/graph'
 
 const GRAPH: Graph = {
@@ -149,11 +150,13 @@ describe('lines that do not hang', () => {
     // The same two things, joined both ways: two lines.
     expect(line('root→a').markerEnd).toBeUndefined()
     expect(line('root→a').className).toBeUndefined()
+    // What a line is drawn with is in its `style`, as `graph-lines.ts` says: at rest, solid in the muted ink.
+    expect(line('root→a').style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.default.stroke, '--sigrid-line-width': String(LINE_STYLES.solid.width), '--sigrid-line-dash': LINE_STYLES.solid.dash })
     expect(line('root→a#link').markerEnd).toMatchObject({ type: 'arrowclosed', color: 'var(--color-ink-mute)' })
     expect(edgeOf.get('root→a#link')).toBe(LINKED.edges[7])
     const waits = line('a1→b1#link')
     expect(waits.label).toBe('waits for')
-    expect(waits.className).toBe('sigrid-graph-dashed sigrid-graph-warning')
+    expect(waits.style).toMatchObject({ '--sigrid-line-dash': LINE_STYLES.dashed.dash, '--sigrid-line-stroke': LINE_TONES.warning.stroke })
     expect(waits.markerEnd).toMatchObject({ color: 'var(--color-warning)' })
     // What a `link` says is read in the description of its two things, not again on the line.
     expect(waits.domAttributes).toEqual({ 'aria-hidden': true })
@@ -161,7 +164,7 @@ describe('lines that do not hang', () => {
     const never = line('a2→a1#link')
     expect(never.markerEnd).toBeUndefined()
     expect(never.targetHandle).toBe('side')
-    expect(never.className).toBe('sigrid-graph-dotted sigrid-graph-destructive')
+    expect(never.style).toMatchObject({ '--sigrid-line-dash': LINE_STYLES.dotted.dash, '--sigrid-line-cap': LINE_STYLES.dotted.cap, '--sigrid-line-stroke': LINE_TONES.destructive.stroke })
     // «Copy» and «Screens» are of the same rank too; a `link` to a thing further along arrives where a `child` line does.
     expect(waits.targetHandle).toBe('side')
     expect(line('root→a#link').targetHandle).toBeUndefined()
@@ -174,14 +177,17 @@ describe('lines that do not hang', () => {
     const at = layoutGraph(LINKED, visibleGraph(LINKED, []).order, 'right')
     const { lines } = linesOf(LINKED.edges, at, { direction: 'right', chosen: 'b', marked: new Set(['a1', 'b1']), dimmed: new Set(['a2', 'root']), editable: false })
     const line = (id: string) => lines.find((it) => it.id === id)!
-    // A warning stays a warning on the path, its arrowhead too.
-    expect(line('a1→b1#link').className).toBe('sigrid-graph-dashed sigrid-graph-warning sigrid-graph-path')
+    // A warning stays a warning on the path, its arrowhead too: what it is drawn with (`style`, from `graph-lines.ts`) is
+    // thicker, and keeps its dash and its tone.
+    expect(line('a1→b1#link').style).toMatchObject({ '--sigrid-line-width': String(LINE_PATH.width), '--sigrid-line-dash': LINE_STYLES.dashed.dash, '--sigrid-line-stroke': LINE_TONES.warning.stroke })
     expect(line('a1→b1#link').markerEnd).toMatchObject({ color: 'var(--color-warning)' })
-    expect(line('a2→a1#link').className).toContain('sigrid-graph-dim')
-    expect(line('b→b1').className).toBe('sigrid-graph-near')
+    expect(line('a2→a1#link').className).toBe('sigrid-graph-dim')
+    // A line of the chosen thing, off the path: the soft ink, a little thicker.
+    expect(line('b→b1').className).toBeUndefined()
+    expect(line('b→b1').style).toMatchObject({ '--sigrid-line-stroke': LINE_NEAR.stroke, '--sigrid-line-width': String(LINE_NEAR.width) })
     // A line without a tone of its own takes the accent.
     const plain = linesOf(GRAPH.edges, at, { direction: 'right', chosen: null, marked: new Set(['a', 'a1']), dimmed: null, editable: false }).lines.find((it) => it.id === 'a→a1')!
-    expect(plain.className).toBe('sigrid-graph-accent sigrid-graph-path')
+    expect(plain.style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.accent.stroke, '--sigrid-line-width': String(LINE_PATH.width), '--sigrid-line-dash': LINE_STYLES.solid.dash })
   })
 })
 

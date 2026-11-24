@@ -11,6 +11,8 @@
 // shadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`
 // button (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives
 // `role="group"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).
+// The group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as
+// wide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.
 import * as React from "react"
 import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group"
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle"
@@ -21,7 +23,7 @@ import { steadyLabel } from "../../internal/steady-label"
 
 type Impl = NonNullable<ReturnType<typeof useMotion>>
 /** For the items: the pressed value and, with animations on, the Motion chunk and the id of this group's pill. */
-const GroupContext = React.createContext<{ value: string; motion: Impl | null; id: string } | null>(null)
+const GroupContext = React.createContext<{ value: string; motion: Impl | null; id: string; fill: boolean } | null>(null)
 
 export type ToggleGroupProps<Value extends string> = {
   /** The pressed value. */
@@ -33,13 +35,15 @@ export type ToggleGroupProps<Value extends string> = {
   children?: React.ReactNode
   /** The background of the pressed item slides to the new choice (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
+  /** As wide as its place, the items sharing it equally (a switch across a phone). Absent: as wide as its items. */
+  fill?: boolean | undefined
 }
 
 /** Single-choice group: a single tab stop, arrows to move, Space/Enter to choose. */
-function ToggleGroup<Value extends string>({ value, onValueChange, className, children, animated, ...props }: ToggleGroupProps<Value>) {
+function ToggleGroup<Value extends string>({ value, onValueChange, className, children, animated, fill = false, ...props }: ToggleGroupProps<Value>) {
   const motion = useMotion(animated)
   const id = React.useId()
-  const group = React.useMemo(() => ({ value, motion, id }), [value, motion, id])
+  const group = React.useMemo(() => ({ value, motion, id, fill }), [value, motion, id, fill])
   return (
     <ToggleGroupPrimitive<Value>
       data-slot="toggle-group"
@@ -49,7 +53,7 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
         const chosen = next[0]
         if (chosen !== undefined && chosen !== value) onValueChange(chosen)
       }}
-      className={cn("inline-flex items-center rounded-lg bg-paper-2 inset-ring inset-ring-line", className)}
+      className={cn("inline-flex items-center rounded-lg bg-paper-2 inset-ring inset-ring-line", fill ? "w-full" : "w-fit", className)}
       {...props}
     >
       <GroupContext.Provider value={group}>{children}</GroupContext.Provider>
@@ -77,6 +81,8 @@ export type ToggleGroupItemProps = {
 function ToggleGroupItem({ className, children, highlightClassName, ...props }: ToggleGroupItemProps) {
   const group = React.useContext(GroupContext)
   const motion = group?.motion ?? null
+  // In a group that fills its place, the items share it: equal halves, with the side padding of a narrow item.
+  if (group?.fill) className = cn("flex-1 px-2", className)
   if (motion && group) {
     // The pill is a layer under the text of the pressed item; the item itself stays without a background.
     return (

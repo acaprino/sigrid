@@ -2,24 +2,10 @@
 // Text contrast (WCAG 2.x, AA: 4.5:1 for small text), computed from the token values of `theme.css`, for the
 // light palette and for the dark one (`prefers-color-scheme: dark`). It does not measure the browser: it takes the declared colors and
 // the backgrounds the package draws them on (paper, paper 2, raised).
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
-import { colorTokens, palettes, themeCss, themePalettes } from './theme-tokens'
-
-export { colorTokens }
-
-const root = fileURLToPath(new URL('../', import.meta.url))
-
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-export function luminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-export function contrast(a: string, b: string): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
+import { palettes, themeCss } from './theme-tokens'
+import { contrast, luminance, root, walk } from './helpers'
 
 const { light, dark } = palettes(themeCss)
 /**
@@ -37,8 +23,8 @@ const PALETTES: [string, Record<string, string>][] = [
 const BACKGROUNDS = ['paper', 'paper-2', 'raised'] as const
 /** The muted text: every use of it must stay readable. `muted-foreground` is the placeholder of the primitives. */
 const MUTED = ['ink-mute', 'muted-foreground'] as const
-/** The same backgrounds with shadcn's semantic names, used by the primitives. */
-const SEMANTIC_BACKGROUNDS = ['background', 'card', 'popover', 'muted', 'secondary'] as const
+/** The same backgrounds with the semantic names the primitives use. */
+const SEMANTIC_BACKGROUNDS = ['background', 'popover'] as const
 const AA = 4.5
 
 describe.each(PALETTES)('text contrast from the theme tokens, palette %s', (_name, t) => {
@@ -79,7 +65,7 @@ describe.each(PALETTES)('text contrast from the theme tokens, palette %s', (_nam
 })
 
 /** fg with opacity alpha over bg, like a color with /80. */
-export function over(fg: string, bg: string, alpha: number): string {
+function over(fg: string, bg: string, alpha: number): string {
   const c = [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)))
   return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('')
 }
@@ -112,19 +98,36 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
     }
   })
 
+  test('a Note: the tone on its soft fill (icon and title), the ink on every fill (its text), the labels of its actions and the focus ring shown on them', () => {
+    for (const name of ['success', 'warning', 'destructive'] as const) expect(contrast(t[name]!, t[`${name}-soft`]!), `${name} on ${name}-soft`).toBeGreaterThanOrEqual(AA)
+    // Information has no status colour: the quiet fill (the ink at 6%), its icon in the soft ink.
+    const quiet = BACKGROUNDS.map((bg) => over(t['ink']!, t[bg]!, 0.06))
+    for (const fill of [t['success-soft']!, t['warning-soft']!, t['destructive-soft']!, ...quiet]) {
+      expect(contrast(t['ink']!, fill), 'ink on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ring']!, fill), 'ring on ' + fill).toBeGreaterThanOrEqual(3)
+      // Its actions are `outline` (the ink) or `ghost` (the soft ink), text at 4.5:1 on the four fills; under the
+      // pointer each lays its quiet fill (the ink at 4% and 6%) on the note's, with the ink as its label.
+      expect(contrast(t['ink-soft']!, fill), 'ghost label (ink-soft) on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ink']!, over(t['ink']!, fill, 0.04)), 'outline label under the pointer on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ink']!, over(t['ink']!, fill, 0.06)), 'ghost label under the pointer on ' + fill).toBeGreaterThanOrEqual(AA)
+    }
+  })
+
   test('accent as text (the “Now” label) reaches 4.5:1 on paper, paper-2 and white', () => {
     for (const bg of BACKGROUNDS) expect(contrast(t['accent']!, t[bg]!), 'accent on ' + bg).toBeGreaterThanOrEqual(AA)
   })
 
-  test('hover darkens the accent: it is one accent, not two', () => {
-    // Darker than the filled button it hovers (with the default tone, Vivid, the fill is livelier than the accent as text).
-    expect(luminance(t['accent-hover']!)).toBeLessThan(luminance(t['primary']!))
+  test('hover is a step of the accent that can be seen: it is one accent, not two', () => {
+    // Darker than the filled button it hovers (with the default tone, Vivid, the fill is livelier than the accent as
+    // text); a fill that is nearly black has no darker step to show, so its hover is lighter.
+    if (luminance(t['primary']!) < 0.02) expect(luminance(t['accent-hover']!)).toBeGreaterThan(luminance(t['primary']!) * 1.5)
+    else expect(luminance(t['accent-hover']!)).toBeLessThan(luminance(t['primary']!))
     // Same color, darker: the highest channel of the accent stays the highest on hover too.
     const dominant = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).reduce((best, v, i, all) => (v > all[best]! ? i : best), 0)
     expect(dominant(t['accent-hover']!)).toBe(dominant(t['accent']!))
   })
 
-  test('the primary button hover darkens with accent-hover, it does not lighten with an opacity mix', () => {
+  test('the primary button hover is the accent-hover token, never an opacity mix', () => {
     const button = readFileSync(`${root}src/components/ui/button.tsx`, 'utf8')
     expect(button).toContain('hover:bg-accent-hover')
     expect(button).not.toMatch(/hover:bg-accent\/\d+/)
@@ -137,7 +140,6 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
   })
 
   test('no source puts text on a bg-accent fill: the accent is a text color (light in the dark), fills with text use bg-primary', () => {
-    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
     const bad: string[] = []
     for (const f of walk(`${root}src`).filter((x) => x.endsWith('.tsx'))) {
       // The classes of an element sit on one line: a line with the accent fill and a label «on top» is an error.
@@ -167,7 +169,6 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
 describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3:1), palette %s', (_name, t) => {
   const NON_TEXT = 3
   const ALL_BACKGROUNDS = [...BACKGROUNDS, ...SEMANTIC_BACKGROUNDS]
-  const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
   const sources = walk(`${root}src`).filter((f) => f.endsWith('.tsx'))
 
   test('the theme declares the tokens of the control border and of the focus ring', () => {
@@ -223,10 +224,11 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
   })
 
   test('selects and the tags box use the light divider border, like the other fields (the design of 2026-11-22)', () => {
-    const line = (file: string, needle: string) => readFileSync(`${root}${file}`, 'utf8').split('\n').find((l) => l.includes(needle)) ?? ''
+    const text = (file: string) => readFileSync(`${root}${file}`, 'utf8')
+    // Every field takes its surface from one place (`lib/field.ts`), and that surface has the light divider border.
+    expect(text('src/lib/field.ts')).toMatch(/FIELD_SURFACE = '[^']*\bborder-line\b/)
     // The native `<select>`s became Base UI's Select: the border sits on its button.
-    expect(line('src/components/ui/select.tsx', 'flex w-full items-center justify-between')).toContain('border-line')
-    expect(line('src/internal/chips.tsx', 'flex min-h-(--control-md) w-full')).toContain('border-line')
+    for (const f of ['src/components/ui/select.tsx', 'src/components/ChipsInput.tsx', 'src/components/ui/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
   })
 })
 
@@ -270,17 +272,9 @@ describe.each(PALETTES)('the sidebar, the light bar of Park UI, palette %s', (_n
     for (const bg of [bar, selected]) expect(contrast(t['ring']!, bg)).toBeGreaterThanOrEqual(3)
   })
 
-  test('the eighteen user colors on the bar reach 3:1 (dots) and 3.5:1 (icons)', () => {
-    for (let n = 1; n <= 18; n++) {
-      expect(contrast(t[`sidebar-mark-${n}`]!, bar), `sidebar-mark-${n}`).toBeGreaterThanOrEqual(3)
-      expect(contrast(t[`sidebar-mark-icon-${n}`]!, bar), `sidebar-mark-icon-${n}`).toBeGreaterThanOrEqual(3.5)
-    }
-  })
-
 })
 
 describe('text colors in the sources', () => {
-  const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
   const sources = walk(`${root}src`).filter((f) => f.endsWith('.tsx'))
   const classes = (text: string) => text.match(/[A-Za-z0-9_:\-./\[\]#%()]+/g) ?? []
 
@@ -296,8 +290,9 @@ describe('text colors in the sources', () => {
   })
 
   test('placeholders and descriptions of the primitives use the muted-foreground token', () => {
+    expect(readFileSync(`${root}src/lib/field.ts`, 'utf8')).toMatch(/FIELD_TEXT = '[^']*placeholder:text-muted-foreground/)
     for (const f of ['src/components/ui/input.tsx', 'src/components/ui/textarea.tsx']) {
-      expect(readFileSync(`${root}${f}`, 'utf8'), f).toContain('placeholder:text-muted-foreground')
+      expect(readFileSync(`${root}${f}`, 'utf8'), f).toContain('FIELD_TEXT')
     }
   })
 

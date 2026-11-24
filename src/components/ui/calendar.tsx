@@ -5,7 +5,7 @@
 // with l2 corners and a quiet fill under the pointer, the chosen day solid in the accent (Park's solid variant), today
 // marked by a short accent dash under the number, 16px of padding. The grid itself is not written here: it is the day,
 // month and year views of Ark UI's DatePicker (`@ark-ui/react/date-picker`). It lives inside a `DatePicker.Root` (see
-// `internal/date-field.tsx`), which holds the value.
+// `components/DateField.tsx`), which holds the value.
 // Ark gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,
 // Home and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the
 // title that opens the months and then the years, and the announcement of the month when it changes.
@@ -14,7 +14,7 @@
 // for the start and the end of the week, as in the APG date grid (Ark's go to the start and the end of the month).
 import * as React from 'react'
 import { DatePicker, useDatePickerContext, type DatePickerRootProps } from '@ark-ui/react/date-picker'
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { Icon } from "../../icons"
 import { cn } from '../../lib/utils'
 import { DEFAULT_WORDS, type Words as ToolkitWords } from '../../words'
 import { FOCUS_RING } from '../../lib/focus'
@@ -67,7 +67,7 @@ function Header({ view }: { view: View }) {
   return (
     <DatePicker.ViewControl className="flex w-full items-center justify-between gap-1">
       <DatePicker.PrevTrigger className={NAV_CLASS}>
-        <ChevronLeftIcon className="size-4" aria-hidden />
+        <Icon name="back" className="size-4" />
       </DatePicker.PrevTrigger>
       <DatePicker.ViewTrigger
         aria-label={next}
@@ -76,7 +76,7 @@ function Header({ view }: { view: View }) {
         <DatePicker.RangeText />
       </DatePicker.ViewTrigger>
       <DatePicker.NextTrigger className={NAV_CLASS}>
-        <ChevronRightIcon className="size-4" aria-hidden />
+        <Icon name="chevron" className="size-4" />
       </DatePicker.NextTrigger>
     </DatePicker.ViewControl>
   )

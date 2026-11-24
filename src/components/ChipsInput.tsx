@@ -16,14 +16,16 @@
 // reached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).
 // No animation.
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
-import { ComboboxPrimitive as Combobox, createListCollection } from '../components/ui/combobox'
+import { ComboboxPrimitive as Combobox, createListCollection } from './ui/combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
-import { X } from 'lucide-react'
-import { Badge } from '../components/ui/badge'
-import { Tooltip } from '../components/ui/tooltip'
+import { Icon } from '../icons'
+import { Badge } from './ui/badge'
+import { Tooltip } from './ui/tooltip'
 import { cn } from '../lib/utils'
 import { FOCUS_RING, FOCUS_WITHIN_FIELD } from '../lib/focus'
-import { TAG_PILL, tagColorAttrs } from './tag-color'
+import { FIELD_HOVER_DATA, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
+import { LIST_CARD, LIST_ROW } from '../lib/rows'
+import { TAG_PILL, tagColorAttrs } from '../internal/tag-color'
 import { useWords, type Words } from '../words'
 
 export type ChipsInputProps = {
@@ -154,10 +156,10 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
     tags.setInputValue('')
     e.currentTarget.value = ''
   }
-  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className="min-w-24 flex-1 bg-transparent px-1 py-0.5 text-sm pointer-coarse:min-h-11 outline-none placeholder:text-muted-foreground" />
+  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className={cn('min-w-24 flex-1 bg-transparent px-1 py-0.5 pointer-coarse:min-h-11 outline-none', FIELD_TEXT)} />
   return (
     // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field; with the density it is half of what the control height leaves (30px: the chip and the two borders)
-    <TagsInput.Control className={cn('flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 rounded-md border border-line px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0 hover:border-input', FOCUS_WITHIN_FIELD)}>
+    <TagsInput.Control className={cn(FIELD_SURFACE, 'flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 px-1.5 py-[calc((var(--control-md)_-_30px)/2)] pointer-coarse:py-0', FIELD_HOVER_DATA, FOCUS_WITHIN_FIELD)}>
       {value.map((tag, index) => {
         const name = display?.(tag) ?? tag
         const wrong = invalid?.(tag) === true
@@ -183,7 +185,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
               {wrong ? <span className="sr-only">, {words.invalid}</span> : null}
               <Tooltip label={removeName(name)}>
                 <TagsInput.ItemDeleteTrigger className={cn("relative flex size-5 items-center justify-center rounded-sm text-ink-mute after:absolute after:-inset-1 after:content-[''] pointer-coarse:size-11 hover:bg-ink/9 hover:text-ink", FOCUS_RING)}>
-                  <X aria-hidden="true" className="size-3.5" />
+                  <Icon name="close" className="size-3.5" />
                 </TagsInput.ItemDeleteTrigger>
               </Tooltip>
             </Badge>
@@ -316,14 +318,14 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
             onKeyDown={(e) => {
               if (e.key === 'Escape') e.stopPropagation()
             }}
-            className="flex max-h-80 flex-col gap-0.5 overflow-y-auto rounded-md bg-popover p-1 text-sm text-popover-foreground shadow-md outline-none"
+            className={LIST_CARD}
           >
             {items.map((item) => (
-              <Combobox.Item key={item.value} item={item} data-slot="chips-suggestion" className="flex min-h-(--row-height) cursor-default items-center rounded-sm px-2 py-1 pointer-coarse:min-h-11 data-[highlighted]:bg-selected/60 data-[highlighted]:text-ink">
+              <Combobox.Item key={item.value} item={item} data-slot="chips-suggestion" className={LIST_ROW}>
                 <Combobox.ItemText className="truncate">{item.label}</Combobox.ItemText>
                 {/* The value under a name: after it, in the muted ink. */}
                 {item.label === item.value ? null : (
-                  <span data-slot="chips-suggestion-value" className="ml-2 truncate text-ink-mute">
+                  <span data-slot="chips-suggestion-value" className="truncate text-ink-mute">
                     {item.value}
                   </span>
                 )}

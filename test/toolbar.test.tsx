@@ -5,8 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { TitleBar, Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, WordsProvider } from '../src'
-
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)) })
+import { flush } from './helpers'
 
 function Bar({ onOpenChange, open }: { onOpenChange?: (open: boolean) => void; open?: boolean }) {
   const [text, setText] = useState('')

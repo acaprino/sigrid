@@ -1,5 +1,5 @@
 // The SmoothUI/Base UI RadioGroup (`src/components/ui/radio-group.tsx`) and the color group built on it
-// (`src/internal/swatches.tsx`): keyboard, accessible names in English, returned value, Tab stop, appearance.
+// (`src/components/Swatches.tsx`): keyboard, accessible names in English, returned value, Tab stop, appearance.
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -7,8 +7,9 @@ import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
 import { RadioGroup, RadioGroupItem } from '../src/components/ui/radio-group'
-import { Swatches } from '../src/internal/swatches'
+import { Swatches } from '../src/components/Swatches'
 import { palettes } from './theme-tokens'
+import { contrast } from './helpers'
 
 // Base UI moves the arrow focus in a microtask (`queueMicrotask` in `useCompositeRoot`, after the `returnFocus`
 // of FocusManager): the test waits for that microtask before looking at the focus, as the browser would.
@@ -183,15 +184,6 @@ describe('Swatches on the Base UI RadioGroup', () => {
 
 describe('contrast of the swatch ring and of the focus outline (theme.css tokens)', () => {
   const { light, dark } = palettes(readFileSync(resolve(process.cwd(), 'src/styles/theme.css'), 'utf8'))
-  const ch = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-  const lum = (hex: string) => {
-    const [r, g, b] = [1, 3, 5].map((i) => ch(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-  const contrast = (a: string, b: string) => {
-    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-    return (hi + 0.05) / (lo + 0.05)
-  }
 
   test.each([['light', light], ['dark', dark]] as const)('the ink ring and the ring outline reach 3:1 on paper, paper-2 and raised, palette %s', (_name, t) => {
     for (const bg of [t['paper']!, t['paper-2']!, t['raised']!]) {

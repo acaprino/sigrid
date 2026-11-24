@@ -1,7 +1,7 @@
 // The words a component says by itself are placeholders, in English, that an app replaces once for the whole tree
 // (`WordsProvider`), in any language. A component's own prop still wins; the helpers outside a component take the
 // words as their last argument.
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 import {
   AttachmentMarks,
@@ -22,6 +22,7 @@ import {
   SheetTitle,
   Shortcut,
   Swatches,
+  Toasts,
   COLORS,
   WordsProvider,
   kindLabel,
@@ -32,17 +33,18 @@ import {
   withinLimit,
   type WordsOverride,
 } from '../src'
+import { settle } from './helpers'
 
-const settle = () => act(async () => { await new Promise((done) => setTimeout(done, 120)) })
 const MB = 1024 * 1024
 
 /** An app's words, in Italian: every group, so each component below is seen to read them. */
 const ITALIAN: WordsOverride = {
-  common: { close: 'Chiudi', undo: 'Annulla', notices: 'Avvisi', keysTogether: (keys) => keys.join(' più '), keysInSequence: (keys) => keys.join(' poi ') },
+  common: { close: 'Chiudi', undo: 'Annulla', notices: 'Avvisi', closeNotice: (text) => `Chiudi l’avviso: ${text}`, keysTogether: (keys) => keys.join(' più '), keysInSequence: (keys) => keys.join(' poi ') },
   colors: { group: 'Colore', names: { [COLORS[0]!]: 'Rosso' }, numbered: (n) => `Colore ${n}` },
-  date: { noDate: 'Nessuna data', noDateTime: 'Nessuna data e ora', clear: 'Togli la data', time: 'Ora', timeOfDay: 'Ora del giorno', done: 'Fatto', calendar: 'Calendario', previous: (span) => `Precedente: ${span}`, next: (span) => `Successivo: ${span}` },
+  date: { noDate: 'Nessuna data', noDateTime: 'Nessuna data e ora', time: 'Ora', timeOfDay: 'Ora del giorno', done: 'Fatto', calendar: 'Calendario', previous: (span) => `Precedente: ${span}`, next: (span) => `Successivo: ${span}` },
   duration: { hours: 'ore', minutes: 'minuti', none: 'Nessuna', short: (h, m) => (h > 0 ? `${h} h` : `${m} min`) },
   search: { clear: 'Svuota la ricerca' },
+  copy: { copy: 'Copia', copied: 'Copiato', failed: 'Copia non riuscita' },
   combobox: { empty: 'Nessun risultato', trigger: 'Mostra le opzioni' },
   labels: { remove: (l) => `Togli l’etichetta ${l}`, count: (n) => (n === 1 ? '1 etichetta' : `${n} etichette`), suggestions: 'Suggerimenti' },
   kinds: { text: 'testo', file: 'file', email: 'messaggio', link: 'collegamento' },
@@ -163,9 +165,7 @@ describe('an app replaces the words, all or some', () => {
     expect(screen.getByRole('button', { name: 'Togli l’etichetta casa' })).toBeTruthy()
     // The card of the date field: its foot and the calendar's arrows.
     fireEvent.click(document.getElementById('day')!)
-    await settle()
-    // The date card has no button that removes the date (2026-11-22): the word for it is no longer shown.
-    expect(screen.queryByRole('button', { name: 'Togli la data' })).toBeNull()
+    await settle(120)
     expect(screen.getByRole('button', { name: 'Precedente: month' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Successivo: month' })).toBeTruthy()
   })
@@ -187,6 +187,19 @@ describe('an app replaces the words, all or some', () => {
     )
     expect(screen.getAllByRole('button', { name: 'Chiudi', hidden: true })).toHaveLength(2)
     expect(screen.queryByRole('button', { name: 'Close', hidden: true })).toBeNull()
+  })
+
+  test('a notice names its region, its undo and its close button with the app\'s words', async () => {
+    render(
+      <WordsProvider words={ITALIAN}>
+        <Toasts items={[{ id: 'a', text: 'Salvato', undo: { onClick: () => {} } }]} onDismiss={() => {}} />
+      </WordsProvider>,
+    )
+    await settle(120)
+    expect(screen.getByRole('status', { name: 'Avvisi' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Annulla' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Chiudi l’avviso: Salvato' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /^Close the notice/ })).toBeNull()
   })
 
   test('the attachments section: its heading, its zone, its rows and what it refuses', () => {

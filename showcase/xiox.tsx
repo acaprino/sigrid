@@ -4,21 +4,28 @@
 // a status row, a panel (`Panel`) with its filter, its search and the list, the inspector, the actions and the footer of
 // keys. The content is made up. Xiox is a Windows program, so there is one host, a Tauri window on a computer.
 // Left out on purpose: the acrylic of the real window (Sigrid has no glass) and ONI MODE.
+// It writes no class: the parts are the toolkit's, the words are `Text`, the facts of the item a `DescriptionList`, and
+// the keys are commands of the registry (`CommandsProvider`, `useCommand`): A analyzes, and the foot names only the
+// keys no control in sight shows (`KeyHints`).
 import * as React from 'react'
 import {
   AppShell,
   Badge,
   Button,
   Checkbox,
+  CommandsProvider,
+  DescriptionList,
   Icon,
   Inspector,
   Kbd,
+  KeyHints,
   NavItem,
   Panel,
   Progress,
   SearchField,
   Sidebar,
   SidebarGroup,
+  Spacer,
   Table,
   TableBody,
   TableCell,
@@ -32,10 +39,12 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
+  Text,
   colorTheme,
+  useCommand,
   type IconName,
 } from '../src/index'
-import { AppBar, Host, type AppProps } from './hosts'
+import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Xiox's own theme: its amber (picked by eye from the capture, not measured). */
 const THEME = colorTheme({ id: 'xiox', label: 'Xiox', color: '#8a5a12', spot: 'balanced' })
@@ -65,7 +74,16 @@ const ITEMS: readonly Item[] = [
 
 const LEVEL: Record<Level, 'secondary' | 'outline'> = { Recommended: 'secondary', Caution: 'secondary', Optional: 'outline' }
 
-export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+/** Xiox in its window, with the registry of its keys around it: they run while the focus is in the window. */
+export function Xiox(props: Pick<AppProps, 'animated' | 'density' | 'look'>) {
+  return (
+    <CommandsProvider keysIn={appKeys('xiox')} palette={false}>
+      <XioxApp {...props} />
+    </CommandsProvider>
+  )
+}
+
+function XioxApp({ animated, density, look }: Pick<AppProps, 'animated' | 'density' | 'look'>) {
   const [section, setSection] = React.useState<string>('Cleanup')
   const [category, setCategory] = React.useState('windows')
   const [filter, setFilter] = React.useState('all')
@@ -90,6 +108,8 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
       else next.add(id)
       return next
     })
+  // The key on the Analyze button: declared once, it runs from anywhere in the window while no analysis runs.
+  useCommand({ id: 'analyze', label: 'Analyze', keys: 'A', when: !busy, run: () => setJob(0) })
   const shown = ITEMS.filter((i) => (filter === 'selected' ? ticked.has(i.id) : filter === 'caution' ? i.level === 'Caution' : true)).filter((i) => i.name.toLowerCase().includes(search.toLowerCase()))
   const item = ITEMS.find((i) => i.id === chosen)!
 
@@ -112,7 +132,7 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
     <Sidebar aria-label="Categories">
       <SidebarGroup label="Categories" icon={<Icon name="labels" />}>
         {CATEGORIES.map((c) => (
-          <NavItem key={c.id} icon={<Icon name={c.icon} />} current={category === c.id} description={c.note} end={<span className="text-2xs tabular-nums">{c.size}</span>} onClick={() => setCategory(c.id)}>
+          <NavItem key={c.id} icon={<Icon name={c.icon} />} current={category === c.id} description={c.note} end={<Text variant="caption">{c.size}</Text>} onClick={() => setCategory(c.id)}>
             {c.name}
           </NavItem>
         ))}
@@ -121,119 +141,108 @@ export function Xiox({ animated, density, look }: Pick<AppProps, 'animated' | 'd
   )
 
   return (
-    <Host device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="xiox" className="h-190 w-full max-w-300">
-      <div className="h-full">
-        <AppShell
-          // A box of the page's own (the host's window), maybe taller than the window: the frame fills the box.
-          className="h-full"
-          desktop
-          frame="sheet"
-          contentLabel={section}
-          titleBar={<AppBar device="desktop" host="native" label="Xiox">{bar}</AppBar>}
-          sidebar={sidebar}
-          status={
-            busy ? (
-              // While a job runs the row is its progress: the state, the job, the bar, how far, and the item it is on.
-              <>
-                <Badge variant="secondary">Analyzing</Badge>
-                <span className="text-ink-soft">Analyzing…</span>
-                <Progress aria-label="Analysis" value={job} size="sm" className="w-48 shrink-0" />
-                <span className="font-semibold text-ink tabular-nums">{job}%</span>
-                <span className="min-w-0 truncate">Analyzing – {working}</span>
-                <span className="ms-auto shrink-0">administrator · RAM 32 GB</span>
-              </>
-            ) : (
-              <>
-                <Badge variant="secondary">Analysis done</Badge>
-                <span className="text-ink-soft">13.48 GB to delete · 46,999 files</span>
-                <span className="ms-auto">administrator · RAM 32 GB</span>
-              </>
-            )
-          }
-          inspector={
-            <Inspector title="Item" open={details} onOpenChange={setDetails} animated={animated} footer={<><Button variant="ghost" size="sm">Skip</Button><Button variant="outline" size="sm" disabled={Boolean(item.blocked)}>Clean</Button></>}>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                <dt className="text-ink-mute">Name</dt>
-                <dd>{item.name}</dd>
-                <dt className="text-ink-mute">Level</dt>
-                <dd>{item.level}</dd>
-                <dt className="text-ink-mute">Mode</dt>
-                <dd>Permanently</dd>
-                {item.blocked ? (
-                  <>
-                    <dt className="text-ink-mute">Blocked</dt>
-                    <dd>{item.blocked}</dd>
-                  </>
-                ) : null}
-                <dt className="text-ink-mute">Path</dt>
-                <dd className="font-mono text-xs break-all">{item.path}</dd>
-              </dl>
-            </Inspector>
-          }
+    <Host app="xiox" device="desktop" host="native" animated={animated} theme={THEME} look={look} density={density} address="xiox" wide>
+      <AppShell
+        desktop
+        frame="sheet"
+        contentLabel={section}
+        titleBar={<AppBar device="desktop" host="native" label="Xiox">{bar}</AppBar>}
+        sidebar={sidebar}
+        status={
+          busy ? (
+            // While a job runs the row is its progress: the state, the job, the bar, how far, and the item it is on.
+            <>
+              <Badge variant="secondary">Analyzing</Badge>
+              <Text variant="soft">Analyzing…</Text>
+              <Progress aria-label="Analysis" value={job} size="sm" inline />
+              <Text variant="strong">{job}%</Text>
+              <Text>Analyzing – {working}</Text>
+              <Spacer />
+              <Text>administrator · RAM 32 GB</Text>
+            </>
+          ) : (
+            <>
+              <Badge variant="secondary">Analysis done</Badge>
+              <Text variant="soft">13.48 GB to delete · 46,999 files</Text>
+              <Spacer />
+              <Text>administrator · RAM 32 GB</Text>
+            </>
+          )
+        }
+        inspector={
+          <Inspector title="Item" open={details} onOpenChange={setDetails} animated={animated} footer={<><Button variant="ghost" size="sm">Skip</Button><Button variant="outline" size="sm" disabled={Boolean(item.blocked)}>Clean</Button></>}>
+            <DescriptionList
+              items={[
+                { name: 'Name', value: item.name },
+                { name: 'Level', value: item.level },
+                { name: 'Mode', value: 'Permanently' },
+                item.blocked ? { name: 'Blocked', value: item.blocked } : null,
+                { name: 'Path', value: item.path, code: true },
+              ]}
+            />
+          </Inspector>
+        }
+        actions={
+          <>
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => setJob(0)}><Icon name="refresh" />Analyze <Kbd>A</Kbd></Button>
+            <Button size="sm" disabled={busy}>Clean {ticked.size} items <Kbd>↵</Kbd></Button>
+          </>
+        }
+        footer={
+          <>
+            <Text>Winapp2 260915 loaded · {ITEMS.length} items</Text>
+            <Spacer />
+            {/* Only the keys no control in sight already shows: A and Enter are on the buttons at the foot. */}
+            <KeyHints ids={[{ keys: '↑↓', label: 'move' }, { keys: 'Space', label: 'toggle' }]} />
+          </>
+        }
+      >
+        <Panel
+          title={section}
+          subtitle={`${ITEMS.length} items · ${ticked.size} selected`}
           actions={
             <>
-              <Button variant="outline" size="sm" disabled={busy} onClick={() => setJob(0)}><Icon name="refresh" />Analyze <Kbd>A</Kbd></Button>
-              <Button size="sm" disabled={busy}>Clean {ticked.size} items <Kbd>↵</Kbd></Button>
+              <ToggleGroup aria-label="Show" value={filter} onValueChange={setFilter} animated={animated}>
+                <ToggleGroupItem value="all">All</ToggleGroupItem>
+                <ToggleGroupItem value="selected">Selected</ToggleGroupItem>
+                <ToggleGroupItem value="caution">Caution</ToggleGroupItem>
+              </ToggleGroup>
+              <Button variant={details ? 'secondary' : 'ghost'} size="sm" aria-pressed={details} onClick={() => setDetails(!details)}>
+                Details
+              </Button>
             </>
           }
-          footer={
-            <>
-              <span>Winapp2 260915 loaded · {ITEMS.length} items</span>
-              <span className="ms-auto inline-flex items-center gap-3">
-                <span className="inline-flex items-center gap-1"><Kbd>↑↓</Kbd> move</span>
-                <span className="inline-flex items-center gap-1"><Kbd>Space</Kbd> toggle</span>
-                <span className="inline-flex items-center gap-1"><Kbd>↵</Kbd> clean</span>
-              </span>
-            </>
-          }
+          tools={<SearchField value={search} onValueChange={setSearch} aria-label="Search this view" placeholder="Search this view" />}
         >
-          <Panel
-            title={section}
-            subtitle={`${ITEMS.length} items · ${ticked.size} selected`}
-            actions={
-              <>
-                <ToggleGroup aria-label="Show" value={filter} onValueChange={setFilter} animated={animated}>
-                  <ToggleGroupItem value="all">All</ToggleGroupItem>
-                  <ToggleGroupItem value="selected">Selected</ToggleGroupItem>
-                  <ToggleGroupItem value="caution">Caution</ToggleGroupItem>
-                </ToggleGroup>
-                <Button variant={details ? 'secondary' : 'ghost'} size="sm" aria-pressed={details} onClick={() => setDetails(!details)}>
-                  Details
-                </Button>
-              </>
-            }
-            tools={<SearchField value={search} onValueChange={setSearch} aria-label="Search this view" placeholder="Search this view" className="flex-1" />}
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10"><span className="sr-only">Selected</span></TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead align="end">Files</TableHead>
-                  <TableHead align="end">Size</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead aria-label="Selected" />
+                <TableHead>Item</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead align="end">Files</TableHead>
+                <TableHead align="end">Size</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {shown.map((i) => (
+                <TableRow key={i.id} current={chosen === i.id} onClick={() => { setChosen(i.id); setDetails(true) }}>
+                  <TableCell>
+                    <Checkbox aria-label={`Clean «${i.name}»`} checked={ticked.has(i.id)} disabled={busy || Boolean(i.blocked)} onCheckedChange={() => toggle(i.id)} />
+                  </TableCell>
+                  <TableCell>
+                    <Text as="div" variant="strong">{i.name}</Text>
+                    <Text as="div" variant="caption">{i.note}</Text>
+                  </TableCell>
+                  <TableCell><Badge variant={LEVEL[i.level]}>{i.level}</Badge></TableCell>
+                  <TableCell align="end">{i.files}</TableCell>
+                  <TableCell align="end">{i.size}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shown.map((i) => (
-                  <TableRow key={i.id} current={chosen === i.id} onClick={() => { setChosen(i.id); setDetails(true) }}>
-                    <TableCell>
-                      <Checkbox aria-label={`Clean «${i.name}»`} checked={ticked.has(i.id)} disabled={busy || Boolean(i.blocked)} onCheckedChange={() => toggle(i.id)} />
-                    </TableCell>
-                    <TableCell>
-                      <span className="block font-medium text-ink">{i.name}</span>
-                      <span className="block text-2xs text-ink-mute">{i.note}</span>
-                    </TableCell>
-                    <TableCell><Badge variant={LEVEL[i.level]}>{i.level}</Badge></TableCell>
-                    <TableCell align="end" className="whitespace-nowrap">{i.files}</TableCell>
-                    <TableCell align="end" className="whitespace-nowrap">{i.size}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Panel>
-        </AppShell>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </Panel>
+      </AppShell>
     </Host>
   )
 }

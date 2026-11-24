@@ -6,10 +6,9 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, expect, test } from 'vitest'
+import { root } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 let app = ''
 beforeEach(() => {
   app = mkdtempSync(join(tmpdir(), 'sigrid-own-class-'))

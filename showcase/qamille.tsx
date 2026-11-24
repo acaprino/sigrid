@@ -3,15 +3,21 @@
 // Reply R and Archive E, the undo of what was just done, the web build that is a preview where sending is off), the
 // mail is made up, and the frame is the toolkit's `AppShell` (the real app has a frame of its own).
 // - On a computer: accounts, folders and labels are the sidebar (the dark column, as in Qamille); the messages are a
-//   column of the content and the one chosen is read beside it; its actions are under it, «Reply» the solid one;
+//   column of the content and the one chosen is read beside it (`ContentSplit`: the message is the work, so it is in
+//   the content and not in the inspector, which is for details); its actions are under it, «Reply» the solid one;
 //   writing is a panel at the end that leaves the mail readable.
-// - On a phone: the folders are too many for tabs, so they are the drawer; the list is the screen, a message is a
-//   page with its actions at the foot, and writing is a sheet. (Qamille has no phone build: this is how it would be.)
+// - On a phone, or wherever the two panes do not fit: the folders are too many for tabs, so they are the drawer; the
+//   list is the screen, a message is a page with its actions at the foot and the way back in the bar, and writing is a
+//   sheet. (Qamille has no phone build: this is how it would be.)
 // - The Archive holds five thousand messages: a folder is a `VirtualList` (the toolkit's `./virtual` entry), so only
 //   the rows in sight are in the page. A message is written in a `RichTextField` (the `./rich-text` entry).
-// Keys, where there is a keyboard: N writes, R replies, E archives, Z undoes, Ctrl K searches.
+// Keys, where there is a keyboard: N writes, R replies, E archives, Z undoes, Ctrl K searches. Each is a command of the
+// registry (`useCommand`), declared once: it runs while the focus is in the app, and the foot lists only the one no
+// button in sight shows (`KeyHints`).
+// It writes no class: the layout is `ContentSplit`, `Column`, `Cluster`, `Split` and `Card`, the words `Text` and
+// `Heading`, a colour a `Dot`, an empty view `Empty fill`, the long list `VirtualList fill`, the composer's width
+// `SheetContent width`.
 import * as React from 'react'
-import { ChevronLeft, Plus } from 'lucide-react'
 import { RichTextField } from '../src/rich-text'
 import { VirtualList } from '../src/virtual'
 import {
@@ -19,17 +25,28 @@ import {
   Avatar,
   Badge,
   Button,
+  Card,
   ChipsInput,
+  Cluster,
+  Column,
+  CommandsProvider,
+  ContentSplit,
   Count,
+  Dot,
+  DrawerButton,
   Empty,
   FormField,
+  Heading,
   Icon,
   Input,
   ItemList,
   ItemRow,
   Kbd,
+  KeyHints,
   NavItem,
+  ScrollArea,
   Select,
+  Separator,
   Sheet,
   SheetContent,
   SheetDescription,
@@ -38,6 +55,9 @@ import {
   SheetTitle,
   Sidebar,
   SidebarGroup,
+  Spacer,
+  Split,
+  Text,
   Toolbar,
   ToolbarBrand,
   ToolbarButton,
@@ -45,13 +65,13 @@ import {
   ToolbarSpacer,
   ToolbarTab,
   ToolbarTabs,
-  cn,
   colorTheme,
+  useCommand,
   type IconName,
   type ThemeDef,
   type ToastItem,
 } from '../src/index'
-import { AppBar, Dot, Host, MenuButton, isAppKey, type AppProps } from './hosts'
+import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Qamille's own theme: its indigo, and the dark column for the sidebar in both schemes. */
 const THEME: ThemeDef = { ...colorTheme({ id: 'qamille', label: 'Qamille', color: '#4f46e5', spot: 'balanced' }), sidebar: 'scura' }
@@ -101,7 +121,16 @@ const ARCHIVE: readonly Mail[] = Array.from({ length: 5000 }, (_, i): Mail => {
 type Notice = { id: string; text: string; undo?: () => void }
 type Draft = { to: string[]; subject: string; body: string; reply: boolean }
 
-export function Qamille({ device, host, animated, density, look }: AppProps) {
+/** Qamille in its host, with the registry of its keys around it: they run while the focus is in the app. */
+export function Qamille(props: AppProps) {
+  return (
+    <CommandsProvider keysIn={appKeys('qamille')} palette={false}>
+      <QamilleApp {...props} />
+    </CommandsProvider>
+  )
+}
+
+function QamilleApp({ device, host, animated, density, look }: AppProps) {
   const phone = device === 'phone'
   const preview = host === 'web'
   const [mail, setMail] = React.useState<readonly Mail[]>(() => [...MAIL, ...ARCHIVE])
@@ -112,6 +141,8 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
   const [essentials, setEssentials] = React.useState<readonly string[]>([])
   const [draft, setDraft] = React.useState<Draft | null>(null)
   const [menu, setMenu] = React.useState(false)
+  // One pane at a time (the split says when): the list, or the message with the way back to it in the bar.
+  const [one, setOne] = React.useState(phone)
   const [text, setText] = React.useState('')
   const [searching, setSearching] = React.useState(false)
   const [notices, setNotices] = React.useState<readonly Notice[]>([])
@@ -160,21 +191,13 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
     last.undo?.()
     dismiss(last.id)
   }
-  const keys = (event: React.KeyboardEvent) => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-      setSearching(true)
-      event.preventDefault()
-      return
-    }
-    if (!isAppKey(event)) return
-    const key = event.key.toLowerCase()
-    if (key === 'z') undo()
-    else if (key === 'n') setDraft({ to: [], subject: '', body: '', reply: false })
-    else if (key === 'r' && opened) reply(opened)
-    else if (key === 'e' && opened) move(opened, 'archive', 'Archived')
-    else return
-    event.preventDefault()
-  }
+  // The keys of the app, each declared once: the registry runs them (a plain key never in a field), the buttons show
+  // theirs, and the foot names the one no button shows.
+  useCommand({ id: 'search', label: 'Search the mail', keys: 'Ctrl+K', run: () => setSearching(true) })
+  useCommand({ id: 'write', label: 'New message', keys: 'N', run: () => setDraft({ to: [], subject: '', body: '', reply: false }) })
+  useCommand({ id: 'reply', label: 'Reply', keys: 'R', when: opened !== null, run: () => (opened ? reply(opened) : undefined) })
+  useCommand({ id: 'archive', label: 'Archive', keys: 'E', when: opened !== null, run: () => (opened ? move(opened, 'archive', 'Archived') : undefined) })
+  useCommand({ id: 'undo', label: 'Undo', keys: 'Z', run: undo })
   const toasts: ToastItem[] = notices.map((n) => ({ id: n.id, text: n.text, ...(n.undo ? { undo: { ...(phone ? {} : { hint: 'Z' }), onClick: () => { n.undo?.(); dismiss(n.id) } } } : {}) }))
 
   /* ———— The regions ———— */
@@ -206,16 +229,16 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
   )
 
   const compose = () => setDraft({ to: [], subject: '', body: '', reply: false })
-  const bar = phone && opened ? (
+  const bar = one && opened ? (
     <>
-      <ToolbarButton label={`Back to ${folderLabel}`} icon={<ChevronLeft aria-hidden="true" />} keepWord onClick={() => setOpenId(null)} animated={animated}>
+      <ToolbarButton label={`Back to ${folderLabel}`} icon={<Icon name="back" />} keepWord onClick={() => setOpenId(null)} animated={animated}>
         {folderLabel}
       </ToolbarButton>
       <ToolbarSpacer />
     </>
   ) : (
     <>
-      <MenuButton onOpen={() => setMenu(true)} animated={animated} />
+      <DrawerButton onOpen={() => setMenu(true)} animated={animated} />
       <ToolbarBrand name="Qamille" page={folderLabel} />
       <ToolbarSpacer />
       <ToolbarSearch label="Search the mail" shortcut="Ctrl K" closed={phone ? 'icon' : 'field'} value={text} onValueChange={setText} open={searching} onOpenChange={setSearching} animated={animated} />
@@ -223,7 +246,7 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
       {preview && !phone ? <Badge variant="secondary">Preview</Badge> : null}
       {phone ? null : <ToolbarButton label="Sync mail" icon={<Icon name="refresh" />} onClick={() => say('Mail is up to date')} animated={animated} />}
       {/* On the list of a phone writing is the one solid action; on a computer the solid one is Reply, under the message. */}
-      <ToolbarButton label="New message" shortcut="N" variant={phone ? 'default' : 'outline'} icon={<Plus aria-hidden="true" />} onClick={compose} animated={animated}>
+      <ToolbarButton label="New message" shortcut="N" variant={phone ? 'default' : 'outline'} icon={<Icon name="plus" />} onClick={compose} animated={animated}>
         New message
       </ToolbarButton>
     </>
@@ -235,37 +258,39 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
       title={m.from}
       description={
         <>
-          <span className="font-medium">{m.subject}</span> — {m.snippet}
+          <Text variant="strong">{m.subject}</Text> — {m.snippet}
         </>
       }
       meta={m.date}
       unread={m.unread}
-      current={!phone && m.id === openId}
-      end={m.file ? <span aria-label="With an attachment" className="inline-flex text-ink-mute [&_svg]:size-3.5"><Icon name="attach" /></span> : undefined}
+      current={!one && m.id === openId}
+      end={m.file ? <Text variant="muted" aria-label="With an attachment"><Icon name="attach" /></Text> : undefined}
       onClick={() => read(m.id)}
     />
   )
   const list =
     shown.length === 0 ? (
-      <Empty className="h-full p-6" title={word ? 'Nothing has that word' : folder === 'inbox' ? 'You’re all caught up' : 'Nothing here'} description={word ? 'Try a person, a word or a date.' : undefined} />
+      <Empty fill title={word ? 'Nothing has that word' : folder === 'inbox' ? 'You’re all caught up' : 'Nothing here'} description={word ? 'Try a person, a word or a date.' : undefined} />
     ) : folder === 'inbox' && filter === 'smart' ? (
-      <div className="flex flex-col gap-3 p-2">
+      <Column gap="md" pad="sm">
         {SECTIONS.map((section) => {
           const rows = shown.filter((m) => m.section === section.id)
           return rows.length === 0 ? null : (
-            <section key={section.id} aria-label={section.label}>
-              <h2 className="flex items-center gap-2 px-3 py-1 text-2xs font-medium text-ink-mute">
-                {section.label}
-                <span className="font-normal tabular-nums">{rows.length}</span>
-              </h2>
+            <Column key={section.id} as="section" aria-label={section.label} gap="xs">
+              <Cluster pad="xs">
+                <Heading size="label" level={2}>
+                  {section.label}
+                </Heading>
+                <Count value={rows.length} label="messages" />
+              </Cluster>
               <ItemList aria-label={section.label}>{rows.map(row)}</ItemList>
-            </section>
+            </Column>
           )
         })}
-      </div>
+      </Column>
     ) : (
-      // A folder can hold years of mail: only the rows in sight are drawn.
-      <VirtualList key={`${folder} ${word}`} aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} className="h-full p-2">
+      // A folder can hold years of mail: only the rows in sight are drawn, in a box as tall as the column.
+      <VirtualList key={`${folder} ${word}`} aria-label={folderLabel} count={shown.length} rowKey={(index) => shown[index]?.id ?? index} estimateSize={50} fill pad="sm">
         {(index) => {
           const m = shown[index]
           return m ? row(m) : null
@@ -274,62 +299,73 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
     )
 
   const reader = opened ? (
-    <article className="mx-auto flex max-w-2xl flex-col gap-4 p-4 md:p-6" data-slot="reader">
-      <p className="flex items-center gap-2 text-2xs text-ink-mute">
+    <Column gap="lg" pad="xl" width="page">
+      <Cluster>
         <Dot color={ACCOUNTS.find((a) => a.id === opened.account)?.color ?? '#6b7a8f'} />
-        {ACCOUNTS.find((a) => a.id === opened.account)?.name} › {folderLabel}
+        <Text variant="caption">
+          {ACCOUNTS.find((a) => a.id === opened.account)?.name} › {folderLabel}
+        </Text>
         {opened.label ? (
-          <span className="inline-flex items-center gap-1.5">
+          <Cluster gap="xs" wrap={false}>
             <Dot color={LABELS[opened.label] ?? '#6b7a8f'} />
-            {opened.label}
-          </span>
+            <Text variant="caption">{opened.label}</Text>
+          </Cluster>
         ) : null}
-      </p>
-      <h1 className="text-xl font-semibold text-ink">{opened.subject}</h1>
-      <div className="flex items-center gap-3">
+      </Cluster>
+      <Heading size="section" level={1}>
+        {opened.subject}
+      </Heading>
+      <Cluster gap="md" wrap={false}>
         <Avatar name={opened.from} size="sm" decorative />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-medium text-ink">{opened.from}</span>
-          <span className="truncate text-xs text-ink-mute">{opened.address}, to you</span>
-        </div>
-        <span className="shrink-0 text-2xs text-ink-mute tabular-nums">{opened.date}</span>
-      </div>
-      <section aria-label="The essentials" className="flex flex-col gap-2 rounded-lg bg-paper-2 p-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-sm font-medium text-ink">
-            <span aria-hidden="true" className="inline-flex text-ink-mute [&_svg]:size-4">
+        <Column gap="xs">
+          <Text variant="strong">{opened.from}</Text>
+          <Text variant="note">{opened.address}, to you</Text>
+        </Column>
+        <Spacer />
+        <Text variant="caption">{opened.date}</Text>
+      </Cluster>
+      <Card as="section" aria-label="The essentials" variant="quiet" pad="md" gap="sm">
+        <Split>
+          <Cluster>
+            <Text variant="muted">
               <Icon name="ai" />
-            </span>
-            Get the essentials
-          </h2>
+            </Text>
+            <Text variant="strong">Get the essentials</Text>
+          </Cluster>
           {essentials.includes(opened.id) ? null : (
             <Button variant="outline" size="sm" onClick={() => setEssentials((list) => [...list, opened.id])}>
               Summarize
             </Button>
           )}
-        </div>
-        {essentials.includes(opened.id) ? <p className="text-sm text-ink-soft">{opened.essentials}</p> : null}
-      </section>
-      <div data-selectable="" className="flex flex-col gap-3 text-sm text-ink-soft">
+        </Split>
+        {essentials.includes(opened.id) ? <Text as="p" variant="soft">{opened.essentials}</Text> : null}
+      </Card>
+      <Column gap="md" data-selectable="">
         {opened.body.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
+          <Text key={paragraph} as="p" variant="soft">
+            {paragraph}
+          </Text>
         ))}
-      </div>
+      </Column>
       {opened.file ? (
-        <div className="flex items-center gap-3 border-t border-line pt-3 text-sm">
-          <span aria-hidden="true" className="inline-flex text-ink-mute [&_svg]:size-4">
-            <Icon name="attach" />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-ink">{opened.file.name}</span>
-          <span className="text-2xs text-ink-mute tabular-nums">{opened.file.size}</span>
-          <Button variant="ghost" size="sm" onClick={() => say(`Opened ${opened.file?.name}`)}>
-            Preview
-          </Button>
-        </div>
+        <>
+          <Separator decorative />
+          <Cluster gap="md" wrap={false}>
+            <Text variant="muted">
+              <Icon name="attach" />
+            </Text>
+            <Text>{opened.file.name}</Text>
+            <Spacer />
+            <Text variant="caption">{opened.file.size}</Text>
+            <Button variant="ghost" size="sm" onClick={() => say(`Opened ${opened.file?.name}`)}>
+              Preview
+            </Button>
+          </Cluster>
+        </>
       ) : null}
-    </article>
+    </Column>
   ) : (
-    <Empty className="h-full p-6" title="A little more focus." description="Choose a message to read it here." />
+    <Empty fill title="A little more focus." description="Choose a message to read it here." />
   )
 
   const key = (letter: string) => (phone ? null : <Kbd>{letter}</Kbd>)
@@ -359,7 +395,7 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
     </>
   ) : undefined
 
-  const tabs = folder === 'inbox' && !(phone && opened) ? (
+  const tabs = folder === 'inbox' && !(one && opened) ? (
     <Toolbar aria-label="Views of the inbox">
       <ToolbarTabs aria-label="Show" value={filter} onValueChange={setFilter}>
         <ToolbarTab value="smart">Smart</ToolbarTab>
@@ -373,13 +409,15 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
   // Writing: a panel at the end on a computer, which leaves the mail readable; a sheet from the foot on a phone.
   const composer = (
     <Sheet open={draft !== null} onOpenChange={(next) => (next ? undefined : setDraft(null))} modal={phone} disablePointerDismissal={!phone}>
-      <SheetContent side={phone ? 'bottom' : 'right'} animated={animated} className={cn(!phone && 'sm:max-w-md')}>
+      {/* On a computer the panel is as wide as a message is written; from the foot of a phone it is the whole width. */}
+      <SheetContent side={phone ? 'bottom' : 'right'} width="md" animated={animated}>
         <SheetHeader>
           <SheetTitle>{draft?.reply ? 'Reply' : 'New message'}</SheetTitle>
           <SheetDescription>From Alex, {ACCOUNTS[0].address}</SheetDescription>
         </SheetHeader>
         {draft ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4">
+          <ScrollArea aria-label={draft.reply ? 'Reply' : 'New message'} pad="lg">
+            <Column gap="lg">
             <FormField label="To" id={`${id}-to`}>
               <ChipsInput id={`${id}-to`} value={draft.to} onChange={(to) => setDraft({ ...draft, to })} suggestions={Object.keys(PEOPLE)} display={(address) => PEOPLE[address] ?? address} invalid={(address) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)} separators={[',', ';', ' ']} placeholder="A name or an address" />
             </FormField>
@@ -389,72 +427,61 @@ export function Qamille({ device, host, animated, density, look }: AppProps) {
             <FormField label="Message" help={preview ? 'This is the preview: sending is off.' : undefined}>
               <RichTextField value={draft.body} onChange={(body) => setDraft((now) => (now ? { ...now, body } : now))} />
             </FormField>
-          </div>
+            </Column>
+          </ScrollArea>
         ) : null}
-        <SheetFooter className={phone ? undefined : 'flex-row justify-end'}>
-          {phone ? null : (
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Discard draft
+        <SheetFooter>
+          {phone ? (
+            <Button disabled={preview || !draft || draft.to.length === 0} onClick={send}>
+              Send
             </Button>
+          ) : (
+            <Cluster justify="end">
+              <Button variant="ghost" onClick={() => setDraft(null)}>
+                Discard draft
+              </Button>
+              <Button disabled={preview || !draft || draft.to.length === 0} onClick={send}>
+                Send
+              </Button>
+            </Cluster>
           )}
-          <Button disabled={preview || !draft || draft.to.length === 0} onClick={send}>
-            Send
-          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
   )
 
   return (
-    <Host device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`qamille.app/${folder}`} notices={toasts} onDismiss={dismiss}>
-      <div className="h-full" onKeyDown={keys}>
-        <AppShell
-          // A box of the page's own (the host's frame), maybe taller than the window: the frame fills the box.
-          className="h-full"
-          desktop={!phone && host === 'native'}
-          contentLabel={phone && opened ? opened.subject : folderLabel}
-          titleBar={
-            <AppBar device={device} host={host} label="Qamille" overlays={composer}>
-              {bar}
-            </AppBar>
-          }
-          tabs={tabs}
-          sidebar={sidebar}
-          actions={actions}
-          footer={
-            phone ? undefined : (
-              <>
-                <span>{preview ? 'Preview: sample mail, sending is off' : 'Connected'}</span>
-                <span className="tabular-nums">{toRead} to read</span>
-                <span className="ms-auto inline-flex items-center gap-3">
-                  {(['N write', 'R reply', 'E archive', 'Z undo'] as const).map((hint) => (
-                    <span key={hint} className="inline-flex items-center gap-1">
-                      <Kbd>{hint.slice(0, 1)}</Kbd> {hint.slice(2)}
-                    </span>
-                  ))}
-                </span>
-              </>
-            )
-          }
-        >
-          {phone ? (
-            // The list stays in the page under the message, so the way back finds it where it was left.
+    <Host app="qamille" device={device} host={host} animated={animated} theme={THEME} look={look} density={density} address={`qamille.app/${folder}`} notices={toasts} onDismiss={dismiss}>
+      <AppShell
+        desktop={!phone && host === 'native'}
+        contentLabel={one && opened ? opened.subject : folderLabel}
+        titleBar={
+          <AppBar device={device} host={host} label="Qamille" overlays={composer}>
+            {bar}
+          </AppBar>
+        }
+        tabs={tabs}
+        sidebar={sidebar}
+        actions={actions}
+        footer={
+          phone ? undefined : (
             <>
-              <div hidden={opened !== null} className="h-full">
-                {list}
-              </div>
-              {opened ? reader : null}
+              <Text>{preview ? 'Preview: sample mail, sending is off' : 'Connected'}</Text>
+              <Text>{toRead} to read</Text>
+              <Spacer />
+              {/* Only the keys no control in sight already shows: N, R and E are on their buttons. */}
+              <KeyHints ids={['undo']} />
             </>
-          ) : (
-            <div className="flex h-full min-h-0">
-              <div data-slot="mail-column" className="w-90 shrink-0 overflow-y-auto border-e border-line">
-                {list}
-              </div>
-              <div className="min-w-0 flex-1 overflow-y-auto">{reader}</div>
-            </div>
-          )}
-        </AppShell>
-      </div>
+          )
+        }
+      >
+        {/* Two panes in the content: the column of messages beside the message read, each scrolling by itself. Where
+            the two do not fit (a phone, a narrow window) one is on screen: the message once one is open, else the list,
+            which stays in the page under the message, so the way back finds it where it was left. */}
+        <ContentSplit aside={list} asideLabel="Messages" width="lg" show={opened ? 'main' : 'aside'} onPanesChange={(panes) => setOne(panes === 1)}>
+          {reader}
+        </ContentSplit>
+      </AppShell>
     </Host>
   )
 }

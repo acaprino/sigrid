@@ -1,7 +1,7 @@
 // A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is
 // TipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the
 // form is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`
-// with the icons of the pack the user chose (R6). It has its own entry of the package (`./rich-text`): TipTap is the
+// with Sigrid's icons (R6). It has its own entry of the package (`./rich-text`): TipTap is the
 // heaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.
 // - What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a
 //   paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written
@@ -20,6 +20,7 @@ import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/r
 import StarterKit from '@tiptap/starter-kit'
 import { Icon, type IconName } from '../icons'
 import { FOCUS_WITHIN_FIELD } from '../lib/focus'
+import { FIELD_HOVER_DATA, FIELD_SURFACE } from '../lib/field'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
 import { Toolbar, ToolbarButton, ToolbarSeparator } from './ui/toolbar'
@@ -155,7 +156,7 @@ function RichTextField({ value, onChange, id, required = false, disabled = false
     if (value !== editor.getHTML()) editor.chain().setMeta('addToHistory', false).setContent(value, { emitUpdate: false }).run()
   }, [editor, value])
   return (
-    <div data-slot="rich-text" data-disabled={disabled ? '' : undefined} data-invalid={aria['aria-invalid'] === true || aria['aria-invalid'] === 'true' ? '' : undefined} className={cn('flex flex-col rounded-md border border-line bg-transparent data-invalid:border-destructive data-disabled:opacity-50', FOCUS_WITHIN_FIELD, className)}>
+    <div data-slot="rich-text" data-disabled={disabled ? '' : undefined} data-invalid={aria['aria-invalid'] === true || aria['aria-invalid'] === 'true' ? '' : undefined} className={cn('flex flex-col', FIELD_SURFACE, FIELD_HOVER_DATA, 'data-disabled:opacity-50', FOCUS_WITHIN_FIELD, className)}>
       {disabled || !editor ? null : <Bar editor={editor} />}
       <EditorContent editor={editor} data-slot="rich-text-content" className="min-h-0 flex-1 overflow-y-auto" />
     </div>

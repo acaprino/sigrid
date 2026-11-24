@@ -33,8 +33,9 @@
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
-import { ChevronRight, Search } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { ChevronRight } from "lucide-react"
+import { Icon } from "../../icons"
+import { cn, isEmptyNode } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { steadyLabel } from "../../internal/steady-label"
 import { buttonVariants } from "./button"
@@ -99,7 +100,7 @@ const NARROW_GONE = "@max-md/toolbar:hidden"
 
 function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
-  const iconOnly = children === undefined || children === null || children === false
+  const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
   const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
   const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)
@@ -365,7 +366,7 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
         absent={absent}
         variant="outline"
         aria-expanded={false}
-        icon={<Search aria-hidden="true" className="text-ink-mute" />}
+        icon={<Icon name="search" className="text-ink-mute" />}
         className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @md/toolbar:w-48"
         onClick={() => {
           want.current = "input"
@@ -387,7 +388,7 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
         shortcut={shortcut}
         animated={animated}
         aria-expanded={false}
-        icon={<Search aria-hidden="true" />}
+        icon={<Icon name="search" />}
         onClick={() => {
           want.current = "input"
           set(true)

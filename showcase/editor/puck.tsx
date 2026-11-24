@@ -4,18 +4,20 @@
 // - the configuration of the library from the catalogue: each component with its fields as controls, each slot with
 //   the list of what it takes, and the root, whose slots are the regions of `AppShell`;
 // - what the canvas draws: the same `Frame` the run page uses (render.tsx), with a place to drop into where each
-//   region is, and each component drawn from its description with the state it starts in;
+//   region is, and each component drawn from its description with the state it starts in. A place to drop into that is
+//   inside a part of the toolkit (a `Column`, a `Cluster`, a `Card`) is a box of the library's that takes the layout of
+//   that part (`INHERIT`), so what is dropped in is laid out as the run page lays it out;
 // - the document of the canvas (an iframe, so the width of a phone is a real width for the stylesheet): the look of the
 //   app is put on its root, and what a component opens mounts inside it.
 import * as React from 'react'
 import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
-import { APP_SHELL_STEPS, FormField, Icon, IconPackProvider, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
+import { APP_SHELL_STEPS, Column, FormField, Icon, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
 import { touchDensity } from '../phone'
 import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
-import { equals, flag, type Child, type Expr } from './ir'
+import { equals, flag, h, type Child, type Expr } from './ir'
 import { applyLook } from './look'
 import { hasRegion, type AppModel, type Node, type Screen } from './model'
-import { DETAILS_CLASS, FIT_CLASS, contentClass, shownWhen, visible } from './plan'
+import { DETAILS_PROPS, bodyProps, shownWhen, visible } from './plan'
 import { Frame, draw, type HostKind } from './render'
 
 /* ———— What the canvas is told by the editor around it ———— */
@@ -131,7 +133,7 @@ function fieldOf(spec: FieldSpec, screens: AppModel['screens']): Field {
   }
 }
 
-/** The icon of a component: its drawing, and the list of every icon the packs draw. */
+/** The icon of a component: its drawing, and the list of every icon Sigrid draws. */
 function IconField({ value, onChange, field }: { value: unknown; onChange: (value: string) => void; field: { label?: string } }) {
   const chosen = typeof value === 'string' ? value : 'none'
   return (
@@ -209,6 +211,12 @@ const NOTHING: Expr = { $expr: '', run: () => () => {} }
 
 type SlotComponent = React.ComponentType<Record<string, unknown>>
 
+/**
+ * The box of a place to drop into, inside a part of the toolkit: it takes the part's own layout (a pile, a row that
+ * wraps, a grid and its columns, the gap), as wide as the part, so the components dropped in sit as in the app.
+ */
+const INHERIT = 'col-span-full w-full min-w-0 [display:inherit] [flex-direction:inherit] [flex-wrap:inherit] [align-items:inherit] [justify-content:inherit] [grid-template-columns:inherit] [gap:inherit]'
+
 /** One component on the canvas: drawn from its description as it starts, in a box the library drags it by. */
 function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: ((element: Element | null) => void) | null } }) {
   const env = useEnv()
@@ -223,7 +231,7 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
     screenName: fixed(env.screen.name),
     // On the canvas nothing runs: a value is what it starts as, and a press selects the component.
     state: (hint, initial) => ({ value: fixed(initial), set: NOTHING, name: hint, setter: hint }),
-    box: (slot, tag, own) => ({ $slot: props[slot] as SlotComponent, props: { as: tag, ...own, minEmptyHeight: 48 } }),
+    box: (slot, tag, own) => h(tag, own, { $slot: props[slot] as SlotComponent, props: { className: INHERIT, minEmptyHeight: 48 } }),
     spread: (slot, as) => [{ $slot: props[slot] as SlotComponent, props: { className: as, minEmptyHeight: 40 } }],
     act: () => undefined,
     current: (action) => (typeof action === 'string' && action.startsWith('go:') ? equals('screen', action.slice(3)) : undefined),
@@ -271,14 +279,22 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
           Content ? (
             screen.fit ? (
               <Page fit>
-                <Content className={FIT_CLASS} minEmptyHeight={160} />
+                <Content className={INHERIT} minEmptyHeight={160} />
               </Page>
             ) : (
-              <Content className={contentClass(screen)} minEmptyHeight={160} />
+              <Column {...bodyProps(screen)}>
+                <Content className={INHERIT} minEmptyHeight={160} />
+              </Column>
             )
           ) : null
         }
-        details={Details && screen.details === 'on' ? <Details className={DETAILS_CLASS} minEmptyHeight={120} /> : null}
+        details={
+          Details && screen.details === 'on' ? (
+            <Column {...DETAILS_PROPS}>
+              <Details className={INHERIT} minEmptyHeight={120} />
+            </Column>
+          ) : null
+        }
         actions={Actions && screen.actionsOn ? <Actions className={cn(row, 'justify-end gap-2')} minEmptyHeight={36} /> : null}
         menu={env.menu}
         onMenu={() => {}}
@@ -365,9 +381,7 @@ export function CanvasDocument({ children, document: doc }: { children: React.Re
   }, [doc])
   return (
     <MotionProvider animated={false}>
-      <IconPackProvider pack={look.icons}>
-        <PortalContainerProvider container={layer}>{children}</PortalContainerProvider>
-      </IconPackProvider>
+      <PortalContainerProvider container={layer}>{children}</PortalContainerProvider>
     </MotionProvider>
   )
 }

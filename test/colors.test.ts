@@ -3,19 +3,11 @@
 import { describe, expect, test } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
 import { palettes, themePalettes } from './theme-tokens'
+import { channel, contrast } from './helpers'
 
 const LEGACY = ['#e34432', '#ee6449', '#6b9fa0', '#78a271', '#7b68ee', '#297abc', '#f5a623']
 
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number]
-function luminance(hex: string): number {
-  const [r, g, b] = rgb(hex).map(channel) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-function contrast(a: string, b: string): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
 function lab(hex: string): [number, number, number] {
   const [r, g, b] = rgb(hex).map(channel) as [number, number, number]
   const x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047

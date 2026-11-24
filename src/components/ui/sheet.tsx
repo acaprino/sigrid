@@ -9,13 +9,14 @@
 // the shared Motion preference and respects reduced motion.
 import * as React from "react"
 import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
-import { XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
-import { FOCUS_RING } from "../../lib/focus"
+import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../../internal/motion"
-import { BACKDROP, TOASTS_ATTR, inTitleBar } from "../../internal/overlay"
-import { usePortalContainer } from "../PortalContainer"
+import { BACKDROP, inTitleBar, inToasts, openState } from "../../internal/overlay"
+import { useMergedRef } from "../../lib/refs"
+import { usePortalContainer } from "../../internal/portal-container"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
 
@@ -35,19 +36,26 @@ const VIEWPORT_SIDE_CLASS: Record<SheetSide, string> = {
 // it is not an animation, and at rest it is 0.
 const POPUP_SIDE_CLASS: Record<SheetSide, string> = {
 // No border on the inner edge: the sheet is a raised surface and its lg shadow already draws the edge (R4).
-  right: "h-full w-3/4 sm:max-w-sm [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
-  left: "h-full w-3/4 sm:max-w-sm [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
+  right: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
+  left: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
   top: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
   bottom: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
 }
+
+/**
+ * The widest a sheet at the side grows, from the `sm` width of the window up (under it, three quarters of the window):
+ * `sm` 384px, a form of a few fields (the default); `md` 448px, a message being written beside the mail; `lg` 512px,
+ * the width of a dialog. Steps of the scale, named with the toolkit's words for a size. A sheet at the top or the foot
+ * is as wide as the window, whatever its width.
+ */
+export type SheetWidth = "sm" | "md" | "lg"
+// Whole class names, so that Tailwind finds them in this file.
+const SIDE_WIDTH_CLASS: Record<SheetWidth, string> = { sm: "sm:max-w-sm", md: "sm:max-w-md", lg: "sm:max-w-lg" }
 
 /** `SheetContent` declares the side, the root needs the drag direction: it passes through here. */
 const SideContext = React.createContext<(side: SheetSide) => void>(() => {})
 /** The root says whether the sheet is modal: a non-modal one has no backdrop and leaves the page under it usable. */
 const ModalContext = React.createContext(true)
-
-const inToasts = (target: EventTarget | null | undefined): boolean =>
-  target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
 
 /** Why a sheet asks to close: the Esc key, a press outside it, or anything else (a close button, the code). */
 export type SheetCloseReason = "escape" | "outside" | "other"
@@ -112,6 +120,8 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
 type SheetContentProps = Omit<React.ComponentProps<typeof SheetPrimitive.Popup>, "className" | "finalFocus"> & {
   className?: string | undefined
   side?: SheetSide | undefined
+  /** At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot. */
+  width?: SheetWidth | undefined
   showCloseButton?: boolean | undefined
   /**
    * On closing, before the focus moves (like Radix's `onCloseAutoFocus`): `event.preventDefault()` says that
@@ -126,9 +136,11 @@ function SheetContent({
   className,
   children,
   side = "right",
+  width = "sm",
   showCloseButton = true,
   onCloseAutoFocus,
   animated,
+  ref,
   ...props
 }: SheetContentProps) {
   const setSide = React.useContext(SideContext)
@@ -161,6 +173,8 @@ function SheetContent({
     },
     [side]
   )
+  // The caller's ref gets the sheet too, without taking the place of the entrance and the focus above.
+  const popupRef = useMergedRef(enter, ref)
   // On closing the sheet decides the focus, as Radix did: after one turn (the sheet is unmounted and the page is no
   // longer `aria-hidden`), first the caller's handler, then, if it did not decide, the element that had focus before
   // opening. Base UI calls this function even if one of its effects restarts with the sheet open: then nothing is done.
@@ -181,25 +195,28 @@ function SheetContent({
       {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
       <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>
         <SheetPrimitive.Popup
-          ref={enter}
+          ref={popupRef}
           data-slot="sheet-content"
           data-side={side}
           finalFocus={finalFocus}
-          // The sheet itself is the `Drawer.Content`: a single element, with the caller's classes.
-          // `data-state` as with Radix: the client (`openWindow`, the notifications observer) reads it to know whether a
-          // sheet, a window or a menu is open. Base UI sets `data-open`/`data-closed`; this adds that one as well.
-          render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={state.open ? "open" : "closed"} />}
+          // The sheet itself is the `Drawer.Content`: a single element, with the caller's classes, and `data-state` as
+          // every overlay of the toolkit (`openState`).
+          render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={openState(state)} />}
           className={cn(
             "pointer-events-auto relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
             POPUP_SIDE_CLASS[side],
+            (side === "left" || side === "right") && SIDE_WIDTH_CLASS[width],
             className
           )}
           {...props}
         >
           {children}
           {showCloseButton && (
-            <SheetPrimitive.Close className={cn("absolute top-3 right-3 flex size-(--control-sm) items-center justify-center rounded-md text-ink-mute pointer-coarse:top-1.5 pointer-coarse:right-1.5 pointer-coarse:size-11 hover:bg-ink/6 hover:text-ink disabled:pointer-events-none", FOCUS_RING)}>
-              <XIcon className="size-4" />
+            <SheetPrimitive.Close
+              render={<Button variant="ghost" size="icon-sm" />}
+              className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
+            >
+              <Icon name="close" />
               <span className="sr-only">{words.common.close}</span>
             </SheetPrimitive.Close>
           )}

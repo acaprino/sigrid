@@ -1,4 +1,4 @@
-import type { RefObject } from 'react'
+import { createElement, type HTMLAttributes, type ReactElement, type Ref, type RefObject } from 'react'
 
 /**
  * True for a press on the bar of a window (`TitleBar`). In a desktop frame the overlays open under the bar, so a
@@ -41,7 +41,12 @@ export const SHEET_TOASTS_ROOM = 'pb-[max(1.5rem,calc(var(--toasts-room,0px)_+_0
  */
 export const BOTTOM_BAR_ROOM_VAR = '--bottom-bar-room'
 
-const inToasts = (target: EventTarget | null): boolean => target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
+/**
+ * True for a press (or a focus) on the stack of notices. A modal window or sheet that hears it as «outside» stays open:
+ * the user is undoing the last action, not leaving it. The one check behind `ignoreToasts` and the `Dialog` and `Sheet`
+ * of the toolkit.
+ */
+export const inToasts = (target: EventTarget | null | undefined): boolean => target instanceof Element && target.closest(`[${TOASTS_ATTR}]`) !== null
 
 /**
  * For the `onInteractOutside` of a modal window: a click on a notice (or focus arriving there) does not close it.
@@ -56,9 +61,9 @@ export function ignoreToasts<E extends Event>(next?: (event: E) => void) {
 }
 
 /**
- * For the `onCloseAutoFocus` of a window opened from state (without a Radix `Trigger` that can take focus back):
- * first the caller's handler, which can decide (`preventDefault`); otherwise, focus goes to `restoreFocusTo`.
- * Without either of the two, Radix's behavior remains.
+ * For the `onCloseAutoFocus` of a window opened from state (without a `Trigger` that can take focus back): first the
+ * caller's handler, which can decide (`preventDefault`); otherwise, focus goes to `restoreFocusTo`. Without either of
+ * the two, the window's own return of focus remains (`SheetContent`: the element that had it before opening).
  */
 export function restoreFocus<E extends Event>(next?: (event: E) => void, restoreFocusTo?: RefObject<HTMLElement | null> | undefined) {
   return (event: E) => {
@@ -70,3 +75,14 @@ export function restoreFocus<E extends Event>(next?: (event: E) => void, restore
     }
   }
 }
+
+/**
+ * `data-state="open"|"closed"` on an overlay of the toolkit (window, sheet, menu, card), as its parts carried before
+ * Base UI: an app that watches the page to know whether one of them is open reads it. Base UI sets
+ * `data-open`/`data-closed`; this adds that one as well.
+ */
+export const openState = (state: { open: boolean }): 'open' | 'closed' => (state.open ? 'open' : 'closed')
+
+/** The `render` of a Base UI popup drawn as a `<div>` with `data-state` (`openState`). */
+export const renderWithOpenState = (props: HTMLAttributes<HTMLElement> & { ref?: Ref<HTMLElement> | undefined }, state: { open: boolean }): ReactElement =>
+  createElement('div', { ...props, 'data-state': openState(state) })

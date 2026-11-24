@@ -1,5 +1,7 @@
+// A choice among the user's colours: the toolkit's radio group of swatches, each named by its colour (the words' names,
+// or «Color 8» for one that has none, never the hexadecimal).
 import { COLORS, colorHue, markHueAttrs } from '../colors'
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group'
+import { RadioGroup, RadioGroupItem } from './ui/radio-group'
 import { useWords, type Words } from '../words'
 
 export type SwatchesProps = {

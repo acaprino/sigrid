@@ -7,10 +7,16 @@
 // - The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.
 // - For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,
 //   `aria-posinset`): what is not drawn is still counted.
-// The box needs a height (`className="h-96"`, or a place in a column that gives it one).
+// The box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),
+// as `Empty fill` and `Page fit` are, so an app writes no class for it; `pad` is the room inside the box, around the
+// rows, a step of the scale.
 import * as React from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { cn } from "../../lib/utils"
+import type { Space } from "./layout"
+
+// Whole class names, so that Tailwind finds them in this file.
+const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6" }
 
 export type VirtualListProps = {
   /** Name of the list for screen readers («Messages»). */
@@ -25,14 +31,18 @@ export type VirtualListProps = {
   estimateSize?: number | undefined
   /** How many rows are drawn beyond the ones in sight, on each side. Default 8. */
   overscan?: number | undefined
-  /** Classes of the box that scrolls: its height. */
+  /** As tall as the region that holds it, which gives it its height (the content of the frame, a pane): the box scrolls, not the region. */
+  fill?: boolean | undefined
+  /** The room inside the box, around the rows: 4, 8, 12, 16 or 24px. Absent: none. */
+  pad?: Space | undefined
+  /** Classes of the box that scrolls: its height, where it is not `fill`. */
   className?: string | undefined
 }
 
 /** The gap between two rows of a list, in px: `gap-0.5`, as `ItemList`. */
 const GAP = 2
 
-function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8, className, ...props }: VirtualListProps) {
+function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8, fill = false, pad, className, ...props }: VirtualListProps) {
   const box = React.useRef<HTMLDivElement>(null)
   const list = React.useRef<HTMLUListElement>(null)
   const [size, setSize] = React.useState(estimateSize)
@@ -56,7 +66,7 @@ function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8,
   const first = drawn[0]
   const last = drawn[drawn.length - 1]
   return (
-    <div ref={box} data-slot="virtual-list" className={cn("overflow-y-auto", className)}>
+    <div ref={box} data-slot="virtual-list" data-fill={fill || undefined} className={cn("overflow-y-auto", fill && "h-full min-h-0", pad && PAD[pad], className)}>
       <ul ref={list} role="list" {...props} className="flex flex-col gap-0.5" style={{ paddingTop: first ? first.start : 0, paddingBottom: last ? Math.max(0, virtualizer.getTotalSize() - last.end) : 0 }}>
         {drawn.map((item) => (
           <React.Fragment key={rowKey ? rowKey(item.index) : item.index}>{children(item.index)}</React.Fragment>

@@ -1,5 +1,5 @@
 // The three guide views of the showcase: the philosophy, the guidelines and the practices of the design system. They say
-// in words what DESIGN.md (the rules, R1 to R13), the README, docs/patterns.md and docs/mobile.md (each view's «On a
+// in words what DESIGN.md (the rules, R1 to R14), the README, docs/patterns.md and docs/mobile.md (each view's «On a
 // phone») say, and show each point with the
 // toolkit's own parts, so they follow the theme chosen in Look. Figures that live in code (densities, corner radii, the
 // frame's steps) are read from the exports, never copied: a copy would fall behind. The wording of the rules and the
@@ -26,6 +26,10 @@ import {
   NavList,
   SHAPE_RADII,
   Switch,
+  ToggleGroup,
+  ToggleGroupItem,
+  Toolbar,
+  ToolbarButton,
   THEME_SHAPES,
   TOUCH_TARGET,
   cn,
@@ -131,7 +135,7 @@ function AccentDemo() {
 const PRINCIPLES: readonly { icon: IconName; title: string; refs: string; text: string }[] = [
   { icon: 'now', title: 'Show what matters first', refs: 'R2, R3', text: 'One solid primary action on each screen, and a solid red one only to delete. The other actions are outline or text buttons, so the eye has one place to land.' },
   { icon: 'tasks', title: 'Keep state in sight', refs: 'R1, R5', text: 'The chosen row has a tint, stronger text and a short accent bar. What is on shows in the accent. Counts are tabular numbers, so they do not jump.' },
-  { icon: 'tag', title: 'Draw anchors, not decoration', refs: 'R6', text: 'Every navigation item, section heading, menu entry and settings group has an icon from the pack the user chose. Sparkles, bolts and info icons as decoration are out.' },
+  { icon: 'tag', title: 'Draw anchors, not decoration', refs: 'R6', text: "Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set, the same in every app. Sparkles, bolts and info icons as decoration are out." },
   { icon: 'animations', title: 'Move calmly, only on a gesture', refs: 'Motion', text: 'Short tweens of 100 to 200 ms: entering decelerates, leaving accelerates. No springs, no loops except loading skeletons. The app switches motion on, and everything works with it off.' },
   { icon: 'settings', title: 'Offer few choices first', refs: 'R11, R13', text: 'Each settings section shows its essential choices and keeps the rest under an Advanced fold, closed by default. Calm, Balanced and Vivid move all the accents at once.' },
   { icon: 'check', title: 'Stay readable and reachable', refs: 'R8, R9, R12', text: 'Text keeps 4.5:1 and borders and rings 3:1 in every theme. The focus ring is 2px in the accent. With a finger every control is at least 44px. Z undoes the newest action.' },
@@ -272,6 +276,24 @@ const Rules = ({ children }: { children: React.ReactNode }) => (
   </ol>
 )
 
+/** R14 live: the switch at the start of its row and the add button stay where they are in both views; the board has no
+ *  search, so its place stays empty (`absent`). */
+function StableDemo() {
+  const [view, setView] = React.useState('list')
+  return (
+    <>
+      <ToggleGroup aria-label="Sample view" value={view} onValueChange={setView}>
+        <ToggleGroupItem value="list">List</ToggleGroupItem>
+        <ToggleGroupItem value="board">Board</ToggleGroupItem>
+      </ToggleGroup>
+      <Toolbar aria-label="Sample tools">
+        <ToolbarButton label="Search" icon={<Icon name="search" />} absent={view === 'board'} />
+        <ToolbarButton label="Add" icon={<Icon name="plus" />} variant="outline" />
+      </Toolbar>
+    </>
+  )
+}
+
 const DOTS: readonly (readonly [string, string])[] = [
   ['Travel', COLORS[10] as string],
   ['Contracts', COLORS[4] as string],
@@ -294,7 +316,7 @@ const NEVER_DRAW = [
 ]
 const NEVER_ADD = [
   'Sparkles, bolts or info icons as decoration.',
-  'Emoji in the interface, except the Emoji icon pack when the user picks it.',
+  'Emoji in the interface.',
   'Looping animation, except loading skeletons.',
   'A colour value outside the theme engine.',
 ]
@@ -376,7 +398,7 @@ const CHECKS: readonly (readonly [string, string])[] = [
 
 export function GuidelinesView() {
   return (
-    <Page title="Guidelines" lead="The rules of the design file, R1 to R13. Unlike the practices, these are rules: the code checks the ones it can read, and the tests check the contrast of every theme.">
+    <Page title="Guidelines" lead="The rules of the design file, R1 to R14. Unlike the practices, these are rules: the code checks the ones it can read, and the tests check the contrast of every theme.">
       <Section id="guidelines-accent" icon="now" title="Where the eye goes" note="The accent, the one solid action and the tone: what the eye finds first on a screen.">
         <Rules>
           <Rule
@@ -462,7 +484,7 @@ export function GuidelinesView() {
             Counts are tabular numbers, pills on a navigation row (accent on the chosen one). Key hints are plain 12px text, hidden at phone widths.
           </Rule>
           <Rule id="R6" title="Icons are anchors" see={<See view="components" id="nav-list">See NavList</See>}>
-            Every navigation item, section heading, menu entry and settings group has an icon from the icon pack the user chose in Settings. An empty slot keeps the alignment.
+            Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set (Lucide), the same in every app. An empty slot keeps the alignment.
           </Rule>
           <Rule id="R7" title="One scale" see={<See view="components" id="tokens">See the tokens</See>}>
             Radii 4, 6 and 10px, or a theme's sharp 2/4/6 or round 6/10/14. Round shapes only for avatars, dots and switches. A 4px spacing grid, heights 36, 32 and 28px at normal density, icons 16 or 14px, weights 400, 500 and 600, text sizes from the tokens.
@@ -481,7 +503,7 @@ export function GuidelinesView() {
           </Rule>
         </Rules>
       </Section>
-      <Section id="guidelines-access" icon="check" title="Readable, reachable, reversible" note="Focus, contrast, undo and the folds that keep a settings page short.">
+      <Section id="guidelines-access" icon="check" title="Readable, reachable, reversible" note="Focus, contrast, undo, the folds that keep a settings page short and the controls that keep their place.">
         <Rules>
           <Rule
             id="R8"
@@ -502,6 +524,9 @@ export function GuidelinesView() {
           </Rule>
           <Rule id="R13" title="Advanced fold" see={<See view="practices" id="patterns">See the layout patterns</See>}>
             Every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default.
+          </Rule>
+          <Rule id="R14" title="Controls keep their place" example={<StableDemo />} see={<See view="components" id="toolbar">See the Toolbar</See>}>
+            Controls every page shares keep their place, above all on a phone. A two-state switch stays where it is in both states, at the start of its row. A tool a view lacks keeps its place, empty: the tools beside it do not move.
           </Rule>
         </Rules>
       </Section>

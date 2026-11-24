@@ -31,9 +31,9 @@ x-zsd:
       - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
       - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
       - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
-      - "Owner rules of 2026-11-20 (R1 to R10 in the body)."
+      - "Owner rules since 2026-11-20 (R1 to R14 below)."
       - "Owner revision of 2026-11-20, later the same day: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
-      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icon packs are Lucide, Fluent Color and Emoji."
+      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
       - "Identity: calm neutral surfaces and one accent that means «act here» or «this is on»; one row highlight and one group heading in every list; red only for danger. Elegant and modern, made for an ADHD eye: what matters first, one primary action, state always in sight."
@@ -42,7 +42,7 @@ x-zsd:
       - "R3: one solid primary button on each screen, and a solid red one to delete; other actions are outline or text buttons."
       - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
       - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text, hidden at phone widths."
-      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the icon pack the user chose in Settings; an empty slot keeps alignment."
+      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the one set, Lucide; an empty slot keeps alignment."
       - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
@@ -58,7 +58,7 @@ x-zsd:
       - Sparkles, bolts or info icons as decoration.
       - Gradients.
       - Glass or blur effects.
-      - Emoji in the interface, except the Emoji icon pack when the user picks it (R6).
+      - Emoji in the interface (R6).
       - Looping animation, except loading skeletons.
       - Colour values outside the theme engine.
       - Data colours as filled blocks.
@@ -87,8 +87,6 @@ x-zsd:
     image-assets: []
     icon-assets:
       - lucide-react
-      - "@fluentui/react-icons"
-      - "src/icon-packs.generated.ts (four drawn packs)"
     checks: design-check.config.json
   unresolved:
     - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
@@ -105,15 +103,15 @@ x-zsd:
     color-divider: "{colors.divider}"
   elevation:
     xs: "0 1px 2px #14171726, 0 0 1px #14171730"
-    sm: "0 2px 4px #14171717, 0 0 1px #14171717"
-    md: "0 4px 8px #14171717, 0 0 1px #14171717"
-    lg: "0 8px 16px #14171717, 0 0 1px #14171717"
-    float: "0 16px 24px #14171717, 0 4px 8px #14171717, 0 0 1px #14171726"
+    sm: "0 2px 6px #14171717, 0 0 1px #14171726"
+    md: "0 6px 16px #14171717, 0 0 1px #14171726"
+    lg: "0 12px 32px #1417171F, 0 0 1px #14171726"
+    float: "0 24px 48px #14171726, 0 4px 8px #14171717, 0 0 1px #14171726"
     xs-dark: "0 1px 1px #05060678, inset 0 0 1px #E3E5E554"
-    sm-dark: "0 2px 4px #05060678, inset 0 0 1px #E3E5E554"
-    md-dark: "0 4px 8px #05060678, inset 0 0 1px #E3E5E554"
-    lg-dark: "0 8px 16px #05060678, inset 0 0 1px #E3E5E554"
-    float-dark: "0 16px 24px #0506068C, inset 0 0 1px #E3E5E554"
+    sm-dark: "0 2px 6px #05060678, inset 0 0 1px #E3E5E554"
+    md-dark: "0 6px 16px #05060678, inset 0 0 1px #E3E5E554"
+    lg-dark: "0 12px 32px #05060678, inset 0 0 1px #E3E5E554"
+    float-dark: "0 24px 48px #0506068C, inset 0 0 1px #E3E5E554"
   motion:
     duration-press: 100ms
     duration-tooltip: 100ms
@@ -580,7 +578,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Iconography
 
-Use the chosen icon pack (R6); Lucide, the default, keeps the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button an accessible name and a tooltip. A row without an icon keeps an empty slot.
+Use the one icon set, Lucide (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button an accessible name and a tooltip. A row without an icon keeps an empty slot.
 
 ## Imagery
 

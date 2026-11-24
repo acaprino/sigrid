@@ -14,12 +14,16 @@
 //   `ownKeysIn` names (a terminal, a code editor). A combination another handler refused (`useDesktopGuard` refuses
 //   the browser's Ctrl+F) still runs the app's command: the browser's use of the key is what was refused.
 // - A command whose `when` is false does not run, and the palette shows it dimmed, so the list does not jump.
+// - A command that chooses one of several (light, dark or the system's look: `useSchemeCommands`) says whether it is the
+//   one in use (`checked`): the palette marks it with a check in the ink, as a chosen option of a list.
 // - The registry is in the order the commands are declared in the tree; when two available commands share a key, the
 //   one declared last runs.
 // - `KeyHints`, in the window's foot, names the keys that work now of the commands the app picks (R5: plain text,
 //   hidden on a phone).
+// - An app that is one part of a larger page (a sample in a gallery, a widget) names its own place (`keysIn`): its keys
+//   run only while the focus is inside it, so two apps on one page do not both answer one key.
 import * as React from "react"
-import { FIELDS } from "../../internal/desktop-guard"
+import { FIELDS, within } from "../../internal/desktop-guard"
 import { cn } from "../../lib/utils"
 import { DEFAULT_WORDS, useWords, type Words } from "../../words"
 import { Kbd, ON_PHONE_HIDDEN } from "./kbd"
@@ -39,6 +43,8 @@ export type CommandDeclaration = {
   icon?: React.ReactNode
   /** Whether it can be done now (default true): when false its key does nothing and the palette shows it dimmed. */
   when?: boolean | undefined
+  /** For a command that chooses one of several (light, dark, the system's look): true for the one in use, which the palette marks with a check, false for the others. Absent: the command is not a choice. */
+  checked?: boolean | undefined
   /** What it does; the one of the latest render runs. */
   run: () => void
 }
@@ -155,10 +161,6 @@ const CONTROLS = 'button, a[href], summary, [role="button"], [role="tab"], [role
 const CONTROL_KEYS = new Set(["enter", " ", "arrowup", "arrowdown", "arrowleft", "arrowright", "home", "end", "pageup", "pagedown", "delete", "backspace"])
 // In a field, the keys that move the caret or edit, with Ctrl or Alt too (a word to the left, the start of the line).
 const CARET_KEYS = new Set(["arrowup", "arrowdown", "arrowleft", "arrowright", "home", "end", "pageup", "pagedown", "delete", "backspace", "enter", "tab"])
-const within = (event: Event, selector: string) => {
-  const target = event.target as Element | null
-  return target !== null && typeof target.closest === "function" && target.closest(selector) !== null
-}
 
 /** Whether a key press that matches a command belongs to what has the focus instead. */
 function leftToFocus(want: Combination, event: KeyboardEvent): boolean {
@@ -175,6 +177,8 @@ export type CommandsProviderProps = {
   ownKeysIn?: string | undefined
   /** Whether Ctrl+K opens the registry's palette (default true). False leaves Ctrl+K to an app that opens its palette itself. */
   palette?: boolean | undefined
+  /** A selector for the one place whose keys are the app's (`'[data-app="mail"]'`), for an app that is one part of a larger page: a key pressed with the focus elsewhere runs no command. Absent: the whole window. */
+  keysIn?: string | undefined
   children?: React.ReactNode
 }
 
@@ -182,7 +186,7 @@ export type CommandsProviderProps = {
  * The registry of an app's commands, around the whole app (outside `AppShell`): it runs their keys, holds the palette's
  * open state for a `CommandPalette` with no list, and holds Ctrl+K itself.
  */
-function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProviderProps) {
+function CommandsProvider({ ownKeysIn, palette = true, keysIn, children }: CommandsProviderProps) {
   const words = useWords()
   const [registry] = React.useState(createRegistry)
   const [open, setOpen] = React.useState(false)
@@ -202,7 +206,7 @@ function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProvi
   }, [registry, words.palette.command])
   React.useEffect(() => {
     const listen = (event: KeyboardEvent) => {
-      if (event.isComposing || (ownKeysIn && within(event, ownKeysIn))) return
+      if (event.isComposing || (ownKeysIn && within(event, ownKeysIn)) || (keysIn && !within(event, keysIn))) return
       for (const command of registry.all().reverse()) {
         if (!command.keys || command.when === false) continue
         const want = combination(command.keys)
@@ -214,7 +218,7 @@ function CommandsProvider({ ownKeysIn, palette = true, children }: CommandsProvi
     }
     window.addEventListener("keydown", listen)
     return () => window.removeEventListener("keydown", listen)
-  }, [registry, ownKeysIn, mac])
+  }, [registry, ownKeysIn, keysIn, mac])
   const value = React.useMemo(() => ({ registry, open, setOpen, mac }), [registry, open, mac])
   return <CommandsContext.Provider value={value}>{children}</CommandsContext.Provider>
 }
@@ -236,7 +240,7 @@ function useCommand(command: CommandDeclaration): void {
   // What the palette and the list of keys show changes with these: they are told.
   React.useEffect(() => {
     registry?.changed()
-  }, [registry, command.id, command.label, command.group, command.keys, command.keywords, command.when])
+  }, [registry, command.id, command.label, command.group, command.keys, command.keywords, command.when, command.checked])
 }
 
 const NONE: Registry = createRegistry()

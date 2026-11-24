@@ -11,15 +11,15 @@
 //   the DOM while it leaves, `removeDelay`), the root and title parts, and the region as a branch of Ark's dismissable
 //   layers (a click on a notice is not "outside" an Ark popover).
 // - Ours: the list is the caller's (`items`); an effect carries it into the store (adds the new ones, closes the removed
-//   ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; a
-//   fourth pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move
+//   ones). The column: at most `COLUMN_MAX` notices one above the other, all readable, the newest at the bottom; one
+//   more pushes the oldest out from the top (Ark's `max` would keep the new one waiting instead) and the others move
 //   up one place. Ark's own layouts are not used (`overlap` off): its places follow its own list, which still holds a
 //   notice while it leaves, so the others would wait for it to be gone before closing the gap.
 // - the region is `role="status"` with `aria-relevant="additions"` and a name in English; a notice is not a `status`
 //   with `tabIndex=0` of its own: no extra Tab stop per notice;
 // - the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts
 //   down (`duration` Infinity), and when it is left each one is rearmed from the start;
-// - Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a fourth notice or the caller.
+// - Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a notice past `COLUMN_MAX` or the caller.
 // Motion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with
 // prefers-reduced-motion, the same places are plain styles and nothing moves.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
@@ -29,7 +29,7 @@ import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
-import { CircleAlert } from 'lucide-react'
+import { Icon } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
 
 /** An extra action on a notice (a quick choice after a gesture): `pressed` marks it as already chosen. */
@@ -45,7 +45,9 @@ export type ToastItem = {
   /**
    * `error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it
    * shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with
-   * `onDismiss`) or the caller removes it. A mark before the text says what it is, and screen readers hear «Error».
+   * `onDismiss`) or the caller removes it. A mark before the text says what it is (Sigrid's `error` icon, the one look
+   * of a failure), and screen readers hear «Error». A failure the page shows until its cause is gone is a `Note`
+   * with `tone="error"`, not a toast.
    */
   kind?: 'error' | undefined
 }
@@ -203,10 +205,13 @@ function Notice({ id }: { id: string }) {
     <>
       <div className="flex items-center gap-3">
         {item.kind === 'error' ? (
-          // The mark of an error: an icon in the toast's own text colour (no red on the inverted surface), and the word
-          // for screen readers, read before the text.
+          // The mark of an error: Sigrid's `error` icon, the circle with an X that marks a failure everywhere (a `Note`,
+          // a progress, a step), in the toast's own text colour (no red on the inverted surface), and the word for
+          // screen readers, read before the text.
           <>
-            <CircleAlert data-slot="toast-error" aria-hidden="true" className="-ml-1 size-4 shrink-0" />
+            <span data-slot="toast-error" className="-ml-1 flex shrink-0">
+              <Icon name="error" />
+            </span>
             <span className="sr-only">{words.common.error}:</span>
           </>
         ) : null}
@@ -240,7 +245,7 @@ function Notice({ id }: { id: string }) {
                 {left}
               </span>
             ) : null}
-            <Button variant="ghost" size="xs" aria-label={`Close the notice: ${item.text}`} className={cn('text-paper hover:bg-paper/15 hover:text-paper', ON_TOAST_FOCUS)} disabled={out} onClick={out ? undefined : () => column.close?.(id)}>
+            <Button variant="ghost" size="xs" aria-label={words.common.closeNotice(item.text)} className={cn('text-paper hover:bg-paper/15 hover:text-paper', ON_TOAST_FOCUS)} disabled={out} onClick={out ? undefined : () => column.close?.(id)}>
               <span aria-hidden="true">×</span>
             </Button>
           </>

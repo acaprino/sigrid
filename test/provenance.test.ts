@@ -3,20 +3,12 @@
 // form and on SmoothUI for part of the look; the motion is its own code on Fluent 2's token values: INV-007 (provenance and dependencies) and
 // INV-008 (no decorative components, no infinite motion, no springs). An app's product package
 // has its own provenance test for its product components.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
+import { root, walk } from './helpers'
 
-const root = fileURLToPath(new URL('../', import.meta.url))
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, Record<string, string> | undefined>
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
-  })
-}
 
 const rel = (file: string) => relative(root, file).replaceAll('\\', '/')
 const srcFiles = walk(join(root, 'src'))
@@ -150,8 +142,8 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     test('a file that rests on Ark does not also import the Base UI primitive it replaced', () => {
       const replaced: Record<string, RegExp> = {
         'src/components/Toasts.tsx': /@base-ui\/react\/toast/,
-        'src/internal/date-field.tsx': /@base-ui\/react\/popover|ui\/popover/,
-        'src/internal/chips.tsx': /@base-ui\/react\/input/,
+        'src/components/DateField.tsx': /@base-ui\/react\/popover|ui\/popover/,
+        'src/components/ChipsInput.tsx': /@base-ui\/react\/input/,
       }
       for (const [file, old] of Object.entries(replaced)) expect(readFileSync(join(root, file), 'utf8'), file).not.toMatch(old)
       // Base UI's Toast is used by nothing else: it is out of the package.
@@ -202,14 +194,15 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     // The note of Fluent UI's licence is about its fonts and icons: none comes with the token values.
     expect(section).toContain('No font of Fluent is used anywhere in the toolkit, and no icon comes with these token values.')
     expect(section).toContain('https://aka.ms/fluentui-assets-license')
-    // Values, not code: the tokens package is not a dependency. The only package of Fluent installed is its icons,
-    // listed with their own licence (plain MIT, from fluentui-system-icons) under «Icon packs».
-    expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual(['@fluentui/react-icons'])
-    const iconsAt = text.indexOf('\n## Icon packs\n')
+    // Values, not code: no package of Fluent is a dependency (its colour icons left with the other packs, 2026-11-23).
+    expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual([])
+    // The icons are one set, Lucide, listed under «Icons».
+    const iconsAt = text.indexOf('\n## Icons\n')
     const icons = text.slice(iconsAt, text.indexOf('\n## ', iconsAt + 1))
     expect(iconsAt).toBeGreaterThan(-1)
-    expect(icons).toContain('`@fluentui/react-icons` (MIT, "Copyright (c) 2020 Microsoft Corporation"')
     expect(icons).toContain('`lucide-react` (ISC')
+    expect(icons).not.toContain('@fluentui/react-icons')
+    expect(text).not.toContain('\n## Icon packs\n')
     // The token values as they are in Fluent's two files at that commit; the toolkit declares only the ones it uses.
     const durations: Record<string, number> = { ultraFast: 50, faster: 100, fast: 150, normal: 200, gentle: 250, slow: 300, slower: 400, ultraSlow: 500 }
     const curves: Record<string, readonly number[]> = {

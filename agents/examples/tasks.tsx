@@ -4,10 +4,11 @@
 // Tasks: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useState, type ReactNode } from 'react'
 import {
-  AppShell, Avatar, Button, Count, DateField, FormField, Icon, Input, Inspector, ItemList, ItemRow, Kbd,
-  NavItem, Sidebar, SidebarGroup, Switch, Textarea, TitleBar, Toasts, ToggleGroup, ToggleGroupItem, Toolbar,
-  ToolbarBrand, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard,
-  useMedia, WindowControls, type ToastItem,
+  AppShell, Avatar, Button, Card, Cluster, Column, Count, DateField, FormField, Grid, Heading, Icon, Input,
+  Inspector, ItemList, ItemRow, KeyHints, NavItem, SettingRow, Sidebar, SidebarGroup, SidebarRow, Switch,
+  Text, Textarea, TitleBar, Toasts, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarBrand, ToolbarButton,
+  ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard, useMedia, WindowControls,
+  type ToastItem,
 } from '@acaprino/sigrid'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
@@ -42,16 +43,16 @@ export function App() {
 
   const content: Record<Screen, ReactNode> = {
     today: (
-      <div className="flex min-h-full flex-col gap-4 p-4 mx-auto w-full max-w-3xl">
-        <section className="flex flex-col gap-3 rounded-lg bg-raised shadow-xs p-4">
-          <p className="text-xs text-ink-mute">Now</p>
-          <h3 className="text-base font-semibold text-ink">Read the terms of the new contract</h3>
-          <div className="flex flex-wrap items-center gap-2 justify-start">
-            <Button className="w-fit" onClick={() => say('Completed')}>Complete</Button>
-            <Button variant="outline" className="w-fit">Focus</Button>
-            <Button variant="ghost" className="w-fit">Postpone</Button>
-          </div>
-        </section>
+      <Column gap="lg" pad="lg" width="page">
+        <Card>
+          <Text as="p" variant="note">Now</Text>
+          <Heading size="small">Read the terms of the new contract</Heading>
+          <Cluster>
+            <Button onClick={() => say('Completed')}>Complete</Button>
+            <Button variant="outline">Focus</Button>
+            <Button variant="ghost">Postpone</Button>
+          </Cluster>
+        </Card>
         <ItemList aria-label="Tasks for today">
           <ItemRow
             title="Read the terms of the new contract"
@@ -87,86 +88,67 @@ export function App() {
             }}
           />
         </ItemList>
-      </div>
+      </Column>
     ),
     board: (
-      <div className="flex min-h-full flex-col gap-4 p-4">
-        <div className="flex items-start gap-3 overflow-x-auto">
-          <section className="flex w-56 shrink-0 flex-col gap-2 rounded-lg bg-paper-2 p-2">
-            <h3 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink">
-              To do
-              <span className="text-2xs font-normal text-ink-mute tabular-nums">2</span>
-            </h3>
-            <div className="rounded-md bg-raised p-2 text-sm text-ink shadow-xs">Renew the identity card</div>
-            <div className="rounded-md bg-raised p-2 text-sm text-ink shadow-xs">Book the train to Rome</div>
-          </section>
-          <section className="flex w-56 shrink-0 flex-col gap-2 rounded-lg bg-paper-2 p-2">
-            <h3 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink">
-              Doing
-              <span className="text-2xs font-normal text-ink-mute tabular-nums">1</span>
-            </h3>
-            <div className="rounded-md bg-raised p-2 text-sm text-ink shadow-xs">Draft of the quote</div>
-          </section>
-          <section className="flex w-56 shrink-0 flex-col gap-2 rounded-lg bg-paper-2 p-2">
-            <h3 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink">
-              Done
-              <span className="text-2xs font-normal text-ink-mute tabular-nums">1</span>
-            </h3>
-            <div className="rounded-md bg-raised p-2 text-sm text-ink shadow-xs">Pay the waste tax</div>
-          </section>
-        </div>
-      </div>
+      <Column gap="lg" pad="lg">
+        <Grid min="sm">
+          <Card as="section" aria-label="To do" variant="quiet" pad="sm" gap="sm">
+            <Cluster gap="sm"><Text variant="strong">To do</Text><Count value={2} label="cards" /></Cluster>
+            <Card pad="sm">Renew the identity card</Card>
+            <Card pad="sm">Book the train to Rome</Card>
+          </Card>
+          <Card as="section" aria-label="Doing" variant="quiet" pad="sm" gap="sm">
+            <Cluster gap="sm"><Text variant="strong">Doing</Text><Count value={1} label="cards" /></Cluster>
+            <Card pad="sm">Draft of the quote</Card>
+          </Card>
+          <Card as="section" aria-label="Done" variant="quiet" pad="sm" gap="sm">
+            <Cluster gap="sm"><Text variant="strong">Done</Text><Count value={1} label="cards" /></Cluster>
+            <Card pad="sm">Pay the waste tax</Card>
+          </Card>
+        </Grid>
+      </Column>
     ),
     settings: (
-      <div className="flex min-h-full flex-col gap-4 p-4 mx-auto w-full max-w-prose">
-        <h2 className="text-xl font-semibold text-ink">Look</h2>
-        <p className="text-sm text-ink-mute">How the app looks on this device.</p>
-        <div className="flex flex-col gap-0">
-          <div
-            className="flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
-          >
-            <span className="flex min-w-0 flex-col"><span>Scheme</span></span>
-            <ToggleGroup aria-label="Scheme" value={setting} onValueChange={setSetting}>
-              <ToggleGroupItem value="light">Light</ToggleGroupItem>
-              <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-          <div
-            className="flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
-          >
-            <span className="flex min-w-0 flex-col">
-              <span>Reminders</span>
-              <span className="text-xs text-ink-mute">A notice at 9:00 for what is due</span>
-            </span>
-            <Switch aria-label="Reminders" defaultChecked />
-          </div>
-          <button
-            type="button"
-            className="flex min-h-12 w-full items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
-          >
-            <span className="flex min-w-0 flex-col"><span>Advanced</span></span>
-            <span className="inline-flex text-ink-mute"><Icon name="chevron" /></span>
-          </button>
-        </div>
-      </div>
+      <Column gap="lg" pad="lg" width="prose">
+        <Heading>Look</Heading>
+        <Text as="p" variant="muted">How the app looks on this device.</Text>
+        <Column gap="xs">
+          <SettingRow
+            label="Scheme"
+            control={
+              <ToggleGroup aria-label="Scheme" value={setting} onValueChange={setSetting}>
+                <ToggleGroupItem value="light">Light</ToggleGroupItem>
+                <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+              </ToggleGroup>
+            }
+          />
+          <SettingRow
+            label="Reminders"
+            description="A notice at 9:00 for what is due"
+            control={<Switch aria-label="Reminders" defaultChecked />}
+          />
+          <SettingRow label="Advanced" onClick={() => {}} />
+        </Column>
+      </Column>
     ),
   }
   const inspector: Partial<Record<Screen, ReactNode>> = {
     today: (
       <Inspector title="Task" open={details} onOpenChange={setDetails}>
-        <div className="flex flex-col gap-4">
+        <Column gap="lg">
           <FormField label="Title">
             <Input placeholder="Read the terms of the new contract" autoComplete="off" />
           </FormField>
           <FormField label="Notes"><Textarea placeholder="What there is to know" /></FormField>
           <FormField label="Due date"><DateField value={day} onChange={setDay} /></FormField>
-          <ToggleGroup aria-label="Priority" value={choice} onValueChange={setChoice} className="w-fit">
+          <ToggleGroup aria-label="Priority" value={choice} onValueChange={setChoice}>
             <ToggleGroupItem value="p1">P1</ToggleGroupItem>
             <ToggleGroupItem value="p2">P2</ToggleGroupItem>
             <ToggleGroupItem value="p3">P3</ToggleGroupItem>
             <ToggleGroupItem value="none">None</ToggleGroupItem>
           </ToggleGroup>
-        </div>
+        </Column>
       </Inspector>
     ),
   }
@@ -203,10 +185,9 @@ export function App() {
               open={menu}
               onOpenChange={setMenu}
               footer={
-                <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-ink">
-                  <Avatar name="Giulia Conti" size="xs" decorative />
-                  <span className="min-w-0 flex-1 truncate">Giulia Conti</span>
-                </div>
+                <SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>
+                  Giulia Conti
+                </SidebarRow>
               }
             >
               <SidebarGroup>
@@ -240,11 +221,11 @@ export function App() {
         footer={
           !narrow ? (
             <>
-              <span className="tabular-nums">Saved</span>
-              <span className="tabular-nums">3 for today</span>
+              <Text>Saved</Text>
+              <Text>3 for today</Text>
               <ToolbarSpacer />
-              <span className="inline-flex items-center gap-1"><Kbd>/</Kbd>search</span>
-              <span className="inline-flex items-center gap-1"><Kbd>Z</Kbd>undo</span>
+              <KeyHints ids={[{ keys: '/', label: 'search' }]} />
+              <KeyHints ids={[{ keys: 'Z', label: 'undo' }]} />
             </>
           ) : undefined
         }

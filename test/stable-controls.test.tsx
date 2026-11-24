@@ -7,8 +7,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test } from 'vitest'
 import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src'
+import { noop } from './helpers'
 
-const noop = () => {}
 const bar = () => screen.getByRole('toolbar', { name: 'Tools' })
 const slots = () => Array.from(bar().children).map((el) => el.getAttribute('data-slot'))
 

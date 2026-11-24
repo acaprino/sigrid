@@ -6,8 +6,13 @@
 // The commands are the app's: the palette knows none. Given no list, it shows the commands the app declared in its
 // registry (`CommandsProvider`, `useCommand`), by group, those that cannot be done now dimmed, and the registry opens it
 // with Ctrl+K. A command is found by its name and by its `keywords`; every word typed has to be in one of the two. The highlighted row is the one language of every list (`ROW_HIGHLIGHT`).
+// A command that chooses one of several (`checked`: light, dark, the system's look) is an option checked or not: the one
+// in use has a check at the end of its row, in the ink (R2), the look of `Combobox`'s chosen option; for a screen reader
+// it is `aria-checked` on the option, because `aria-selected` marks the highlighted row. The others keep the check's
+// room, so a key after it does not move.
 import * as React from "react"
-import { Search } from "lucide-react"
+import { Check } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { GROUP_LABEL, ROW_HIGHLIGHT } from "../../lib/rows"
 import { useWords } from "../../words"
@@ -27,6 +32,8 @@ export type Command = {
   /** Other words it is found by. */
   keywords?: string | undefined
   disabled?: boolean | undefined
+  /** For a command that chooses one of several: true for the one in use (a check at the end of its row, `aria-checked`), false for the others. Absent: not a choice. */
+  checked?: boolean | undefined
   onSelect: () => void
 }
 
@@ -73,7 +80,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
       grouped(
         declared
           .filter((command) => command.id !== PALETTE_COMMAND)
-          .map((command) => ({ id: command.id, label: command.label, group: command.group, shortcut: command.shortcut, icon: command.icon, keywords: command.keywords, disabled: command.when === false, onSelect: command.run })),
+          .map((command) => ({ id: command.id, label: command.label, group: command.group, shortcut: command.shortcut, icon: command.icon, keywords: command.keywords, disabled: command.when === false, checked: command.checked, onSelect: command.run })),
       ),
     [commandsProp, declared],
   )
@@ -110,7 +117,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
       <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="top-24 translate-y-0 gap-0 overflow-hidden p-0 md:p-0">
         <DialogTitle className="sr-only">{name}</DialogTitle>
         <label className="flex min-h-12 items-center gap-2 border-b border-line px-4">
-          <Search aria-hidden="true" className="size-4 shrink-0 text-ink-mute" />
+          <Icon name="search" className="size-4 text-ink-mute" />
           <input
             data-slot="command-palette-input"
             type="text"
@@ -162,6 +169,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
                   role="option"
                   aria-selected={i === current}
                   aria-disabled={command.disabled || undefined}
+                  aria-checked={command.checked}
                   data-slot="command-palette-item"
                   onPointerMove={() => {
                     if (!command.disabled && i !== current) setActive(i)
@@ -172,6 +180,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
                   {command.icon}
                   <span className="min-w-0 flex-1 truncate">{command.label}</span>
                   {command.shortcut ? <span data-slot="command-palette-shortcut" className="text-2xs font-medium text-ink-mute pointer-coarse:max-md:hidden">{command.shortcut}</span> : null}
+                  {command.checked === undefined ? null : <Check aria-hidden="true" data-slot="command-palette-check" className={cn("size-4 text-ink", !command.checked && "invisible")} />}
                 </div>
               </React.Fragment>
             ))

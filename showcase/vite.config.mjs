@@ -1,7 +1,10 @@
-// The toolkit's showcase: a page that renders every exported component in its variants, sizes and states, in light
-// and dark and in several palettes. Development only: `npm run showcase` serves it, `npm run showcase:build` writes
-// `showcase/dist/`. It is not part of the package (`files` publishes `dist` and `src` only) and it is not read by the
-// package's own Tailwind build (`src/styles/entry.css` excludes this folder).
+// The toolkit's showcase: a page that renders most exported components in their variants, sizes and states, in light
+// and dark and in several palettes (some are shown nowhere yet: KeyHints, CommandsProvider, FileDrop and the
+// look-settings controls DensityChoice, BaseColorChoice, PaletteComboChoice, ThemeCatalogChoice, ChoiceCards and
+// ChoiceGroup). Development only: `npm run showcase` serves it, `npm run showcase:build` writes `showcase/dist/`. It
+// is not part of the package (`files` in package.json publishes dist, src, tauri, bin, agents, docs,
+// tools/zero-slop-design and the files at the root, never showcase/) and it is not read by the package's own Tailwind
+// build (`src/styles/entry.css` excludes this folder).
 import { fileURLToPath } from 'node:url'
 import tailwind from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'

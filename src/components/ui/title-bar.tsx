@@ -16,7 +16,7 @@
 // program: the smallest control and 2px above and below it (32px at normal density), and the toolbar inside it takes
 // the small size by itself. Nothing else changes: it is a measure, chosen with a parameter.
 import * as React from "react"
-import { Copy, Minus, Square, X } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { useWords } from "../../words"
@@ -85,17 +85,17 @@ function WindowControls({ maximized = false, onMinimize, onMaximizeToggle, onClo
     <div data-slot="window-controls" className={cn("flex shrink-0 self-stretch", className)}>
       {onMinimize ? (
         <button type="button" data-window-control="minimize" aria-label={words.window.minimize} onClick={onMinimize} className={CONTROL}>
-          <Minus aria-hidden="true" className="size-3.5" />
+          <Icon name="windowMinimize" className="size-3.5" />
         </button>
       ) : null}
       {onMaximizeToggle ? (
         <button ref={maximizeRef} type="button" data-os-state={maximizeState} data-window-control={maximized ? "restore" : "maximize"} aria-label={maximized ? words.window.restore : words.window.maximize} onClick={onMaximizeToggle} className={CONTROL}>
-          {maximized ? <Copy aria-hidden="true" className="size-3.5 -scale-x-100" /> : <Square aria-hidden="true" className="size-3.5" />}
+          <Icon name={maximized ? "windowRestore" : "windowMaximize"} className="size-3.5" />
         </button>
       ) : null}
       {onClose ? (
         <button type="button" data-window-control="close" aria-label={words.window.close} onClick={onClose} className={cn(CONTROL, "hover:bg-primary hover:text-primary-foreground active:bg-accent-hover")}>
-          <X aria-hidden="true" className="size-3.5" />
+          <Icon name="close" className="size-3.5" />
         </button>
       ) : null}
     </div>
