@@ -19,6 +19,7 @@ export { DEFAULT_WORDS, WordsProvider, useWords, withWords, type CalendarSpan, t
 // Primitives.
 export { APP_SHELL_STEPS, AppShell, AppShellContext, Inspector, appShellLayout, useAppShell, type AppShellLayout, type AppShellProps, type AppShellSteps, type InspectorProps } from './components/ui/app-shell'
 export { Avatar, initials, type AvatarProps } from './components/ui/avatar'
+export { Logo, type LogoProps } from './components/ui/logo'
 export { Badge, badgeVariants } from './components/ui/badge'
 export { Button, QUIET_CHIP, buttonVariants, type ButtonProps } from './components/ui/button'
 export { CALENDAR_WORDS, Calendar, calendarWords, type CalendarProps } from './components/ui/calendar'

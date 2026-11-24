@@ -116,6 +116,7 @@ import {
   Icon,
   Input,
   Kbd,
+  Logo,
   MarkdownBlocks,
   InlineMarkdown,
   Popover,
@@ -1623,6 +1624,16 @@ function Pickers() {
             Labels
           </label>
           <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
+        </div>
+      </Row>
+      <Row label="logo: a small square picture, with the icon it falls back to">
+        <Logo src={PIXEL} name="Sample service" />
+        <Logo src={PIXEL} name="Sample service, larger" size="md" />
+        {/* An address that answers nothing: the icon stays in the box. */}
+        <Logo src="missing-logo.svg" icon="layers" name="A service whose picture is missing" />
+        <div className="flex items-center gap-2">
+          <Logo src={PIXEL} icon="package" decorative />
+          <span className="text-sm">Sample library</span>
         </div>
       </Row>
       <Row label="avatar">

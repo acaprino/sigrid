@@ -85,7 +85,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
   with it off.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
-  empty slot where there is none (R6).
+  empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
+  a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never
+  stands for an action or a kind of thing.
 - With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a part added
   to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own

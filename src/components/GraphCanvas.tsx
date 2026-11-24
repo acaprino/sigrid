@@ -90,9 +90,26 @@
 // with its branches closed (`defaultCollapsed`); in the graph mode every thing is in sight, so the whole graph is laid
 // out at every change of the nodes, the edges or the direction (choosing a thing or moving the focus lays out
 // nothing). With the app's places nothing is laid out here. Moving the view costs little: only what is in it is drawn.
-// Nothing moves by itself: the layout and the view jump to their new places, with or without animations, so reduced
-// motion is always honoured. The name of React Flow stays at the foot of the canvas, as its makers ask of whoever does
-// not pay for it.
+// - Groups opened in place (the graph mode). A thing with `open: true` is a frame: its title (the thing's own face
+//   and count), a button that closes it («Close Orders», `onToggle`), a line around it and a quiet fill, under the
+//   things and the lines. A thing whose `group` is the id of an open group is drawn inside it (React Flow's
+//   `parentId`): its `x` and `y` are then from the top left corner of the group, as a nested layout answers them; the
+//   routes of the lines (`points`) stay in the canvas's own px. Without the app's places the canvas lays each open
+//   group out by itself (dagre, the innermost first) and then the group as one box among the others. A group that is
+//   not open (`open: false`) is a thing as ever, with a button that opens it («Open Orders»). `onOpen` and `openLabel`
+//   are another thing: the app goes into the thing and shows something else; `onToggle` keeps the rest in sight.
+// - Things that move (`movable`): a drag (after 4px, so a press is not one) puts a thing elsewhere, and so do Alt and
+//   an arrow, 16px a step. The place is kept here until `layoutKey` changes or the person presses «Reset the layout»,
+//   which is among the view's buttons only while something was moved. A group is dragged by its title (its ground lets
+//   a press through to the canvas) and takes what it holds with it; a line to a moved thing leaves its route and goes
+//   from side to side.
+// - Motion (`animated`, or a `MotionProvider` around it, and never with reduced motion): after a gesture that changes
+//   the places the things glide there in 200ms, the lines are hidden meanwhile and drawn again at the end, with what
+//   is new, and the view goes where a gesture sends it in the same time. The gesture is the canvas's own (a group
+//   opened or closed, the reset) that new places follow within a second, or a press or a key in the canvas
+//   that a new `layoutKey` follows within a second. A new layout the app pushes by itself jumps. Nothing moves at the
+//   first paint, while a thing is dragged, or by itself. Without it everything jumps.
+// The name of React Flow stays at the foot of the canvas, as its makers ask of whoever does not pay for it.
 import * as React from 'react'
 import dagre from '@dagrejs/dagre'
 import { Background, BackgroundVariant, BaseEdge, getSmoothStepPath, Handle, MarkerType, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type EdgeProps, type Node, type NodeProps } from '@xyflow/react'
@@ -102,8 +119,10 @@ import { markHueAttrs } from '../colors'
 import { FOCUS_RING } from '../lib/focus'
 import { cn } from '../lib/utils'
 import { FIELDS } from '../internal/desktop-guard'
+import { useMotionAllowed } from '../internal/motion'
 import { useWords, type Words } from '../words'
 import { Count } from './ui/count'
+import { Logo } from './ui/logo'
 import { lineLook, lineVars } from './graph-lines'
 import { SearchField } from './ui/search-field'
 import { Button } from './ui/button'
@@ -117,8 +136,30 @@ export type GraphNode = {
   detail?: string | undefined
   /** One of Sigrid's icons before the name. */
   icon?: IconName | undefined
+  /**
+   * A picture of the thing, where it has one of its own (the logo of a service, of a framework, of a library): the
+   * address of an image the app serves (an SVG or a PNG of its own origin), drawn before the name in the icon's place,
+   * 16px, whole (never cropped): the toolkit's `Logo`. It is content, not an icon of the interface (those are `icon`, Sigrid's one set), and
+   * it names nothing: the name says what the thing is. While it loads and when it fails the `icon` (or the dot of the
+   * `color`) is drawn in the same 16px, so nothing shifts.
+   */
+  image?: string | undefined
   /** The colour the user gave the thing (`#rrggbb`): an 8px dot before the name (R10). */
   color?: string | undefined
+  /**
+   * In the graph mode, the thing is a group the app opens in place. `true`: it is drawn as a frame, with its title, a
+   * button that closes it and, inside, the things whose `group` is its id; give it the `width` and `height` of the
+   * frame with the app's places (the title takes its first 44px). `false`: a thing as the others, with a button that
+   * opens it. Both buttons call `onToggle` of the canvas, and are drawn only with it. Absent: not a group.
+   */
+  open?: boolean | undefined
+  /**
+   * In the graph mode, the id of the open group (`open: true`) the thing is in: it is drawn inside that frame and
+   * moves with it, and its `x` and `y` are then from the top left corner of the group (what a nested layout answers,
+   * and React Flow's `parentId` takes). Read only while that thing is there and open; otherwise the thing is on the
+   * canvas as the others.
+   */
+  group?: string | undefined
   /**
    * In the graph mode, the name of the action that opens the thing and of its › button («Open Orders»): only a thing
    * with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it.
@@ -157,8 +198,8 @@ export type GraphEdge = {
    * The app's name for the line, also React Flow's. An edge with an `id` is always a line of its own, so two between
    * the same two things (a call, and data that flows the same way) are two lines, each with its words. Without one
    * the line is named by its two ends, and a second one with the same ends by a number after them; an exact copy of
-   * an edge without an `id` (the same ends, `kind`, `label`, `labelShown`, `style`, `tone` and `directed`, and no
-   * `points`) is the same line, and taking that line away takes every copy.
+   * an edge without an `id` (the same ends, `kind`, `label`, `labelShown`, `style`, `tone`, `directed` and `path`, and
+   * no `points`) is the same line, and taking that line away takes every copy.
    */
   id?: string | undefined
   /**
@@ -187,6 +228,12 @@ export type GraphEdge = {
    * goes from one side of a thing to the facing side of the other.
    */
   points?: readonly { x: number; y: number }[] | null | undefined
+  /**
+   * The line is one of the path's own (the flow the app shows). When any edge of the graph has it, those lines alone
+   * are the path's (the accent or their own tone, thicker, their words drawn) and every other line is dimmed as off
+   * the path; the rule of `steps` (the first line between two things of the path) is then not applied.
+   */
+  path?: boolean | undefined
 }
 
 export type Graph = { nodes: readonly GraphNode[]; edges: readonly GraphEdge[] }
@@ -194,7 +241,7 @@ export type Graph = { nodes: readonly GraphNode[]; edges: readonly GraphEdge[] }
 /** What the user did to the graph: a thing hung from another, two things joined, things and joins taken away. */
 export type GraphChange = { kind: 'add'; node: GraphNode; edge: GraphEdge } | { kind: 'join'; edge: GraphEdge } | { kind: 'remove'; nodes: readonly string[]; edges: readonly GraphEdge[] }
 
-/** What the app can do to the view, through the canvas's `ref`. The view jumps: nothing moves by itself. */
+/** What the app can do to the view, through the canvas's `ref`. The view jumps, or with `animated` goes there in 200ms. */
 export type GraphCanvasHandle = {
   /** Brings these things into the view, as large as fits and never smaller than `minFitZoom`, opening what hides them. The keyboard focus stays where it is. `padding`: px around them (default 24). */
   focus: (ids: readonly string[], options?: { padding?: number | undefined }) => void
@@ -223,7 +270,8 @@ export type GraphCanvasProps = {
    * while it stays, a new draw (another choice, new flags, the same places) keeps the view where the user moved it.
    * Pass the new key with the new places. A change of the box's size keeps a view the user moved, with the chosen thing
    * still in it, and fits again one nobody moved. Without a key the view is fitted at the first paint and at every
-   * change of size.
+   * change of size. With a thing chosen, a change of the box's size never fits again: the view stays, panned only by
+   * what keeps the chosen thing in it (an inspector that opens on a first press moves nothing under a second press).
    */
   layoutKey?: string | undefined
   /**
@@ -239,6 +287,29 @@ export type GraphCanvasProps = {
   /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its › button. Without it nothing opens. */
   onOpen?: ((id: string) => void) | undefined
   /**
+   * In the graph mode, the person asks to open or close a group in place: the button of a thing with `open: false`
+   * («Open Orders»), a double press on it (when it has no `openLabel`), or the button of an open group's frame
+   * («Close Orders»). The app then passes the thing with the other `open`, and what it holds or not. It differs from
+   * `onOpen`: that one goes into the thing (the app shows something else), this one keeps the rest of the graph in sight.
+   */
+  onToggle?: ((id: string) => void) | undefined
+  /**
+   * The person can move the things: a drag (after 4px), or Alt and an arrow on the thing that has the focus (16px a
+   * step). The canvas keeps the place until `layoutKey` changes or «Reset the layout» is pressed (a button among the
+   * view's, there only while something was moved). An open group moves what it holds; a thing in a group stays in it.
+   */
+  movable?: boolean | undefined
+  /** A thing was moved: its id and its new place, the top left corner of its box in px, in the same terms as its `x` and `y` (from its group's corner when it is in one). The canvas keeps the place by itself; this is for an app that keeps it too. */
+  onMove?: ((id: string, place: { x: number; y: number }) => void) | undefined
+  /**
+   * After a gesture that changes the places the things glide to them and the view goes where a gesture sends it (the
+   * buttons, the keys, `fit`, `focus`), in 200ms. A gesture is the canvas's own (a group opened or closed with its
+   * button, the reset) that new places follow within a second, or a press or a key in the canvas that a
+   * new `layoutKey` follows within a second; a layout or places the app pushes by itself jump. Absent: what the
+   * `MotionProvider` around it says. Never with reduced motion, at the first paint or while a thing is dragged.
+   */
+  animated?: boolean | undefined
+  /**
    * A path the app numbers through the graph: the id of each thing on it and its step numbers (a thing may be several
    * steps). Each has the selection tint and its numbers; of the lines between two of them, the first in the order of
    * the edges is the path's (the accent, or the line's own `tone`, thicker), so an app that wants another one there
@@ -253,7 +324,8 @@ export type GraphCanvasProps = {
   /**
    * The smallest scale the view is fitted at (the first view, a change of size, the button, `fit`, `focus`): below it
    * a name could not be read, so a graph too large starts at its top left instead. Default 0.8, names of about 11px; 0
-   * fits the whole graph whatever its size, down to the smallest zoom (0.2). The user can still zoom out by hand.
+   * fits the whole graph whatever its size, down to the smallest zoom (0.2): for a map that is read whole first
+   * (`minFitZoom={0}`). The user can still zoom out by hand.
    */
   minFitZoom?: number | undefined
   /** A field that finds things by name. */
@@ -300,6 +372,216 @@ function placesOf(nodes: readonly GraphNode[]): Map<string, { x: number; y: numb
   }
   return places
 }
+/** The size of a thing's box: the app's, or the canvas's own. */
+type Size = { width: number; height: number }
+const sizeOfNode = (node: GraphNode | undefined): Size => (node ? { width: widthOf(node), height: heightOf(node) } : { width: WIDTH, height: 44 })
+/** The title of an open group's frame, in px: what it holds starts under it. */
+const HEAD = 44
+/** How far a thing goes at each press of Alt and an arrow: the step of the canvas's dots. */
+const STEP = 16
+/** A drag starts after this many px, so a press, or a pan that starts on a thing, is not one. */
+const DRAG_AFTER = 4
+/** How long the things take to glide to their new places and the view to go where a gesture sends it: Fluent's `normal`, on its easy-ease curve (graph.css). */
+const GLIDE_MS = 200
+/**
+ * How long after a gesture new places are its answer: the canvas's own gesture (a group opened or closed, the reset),
+ * or a press or a key in the canvas for a new layout of the app's (`layoutKey`). Later, they are the app's own doing
+ * and are not animated.
+ */
+const ARMED_MS = 1000
+/** No ids: the same set at every draw. */
+const NO_IDS: ReadonlySet<string> = new Set()
+/** Nothing moved: the same map at every draw. */
+const NOT_MOVED: ReadonlyMap<string, { x: number; y: number }> = new Map()
+/**
+ * The ground of an open group takes no press: a press on it reaches the canvas (a pan, a press that chooses nothing)
+ * and the lines under it, and with `movable` the group is dragged by its title, never by a pan that starts on its
+ * ground. Its title and its button take theirs back (`pointer-events-auto`). React Flow lays a node's `style` over its own.
+ */
+const FRAME_STYLE: React.CSSProperties = { pointerEvents: 'none' }
+const ARROWS: Readonly<Record<string, readonly [number, number]>> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
+
+/** The groups opened in place: which things are frames, the group each thing is in, and what each group holds, in the order of the things. */
+type Nest = { frames: ReadonlySet<string>; parent: ReadonlyMap<string, string>; held: ReadonlyMap<string, readonly string[]> }
+
+/**
+ * The open groups of the graph mode, or null when there is none (and nothing below costs anything). A `group` that
+ * names no open group, the thing itself or a ring of groups is not read: the thing is on the canvas as the others.
+ */
+function nestOf(byId: ReadonlyMap<string, GraphNode>): Nest | null {
+  const frames = new Set<string>()
+  for (const [id, node] of byId) if (node.open === true) frames.add(id)
+  if (frames.size === 0) return null
+  const parent = new Map<string, string>()
+  for (const [id, node] of byId) if (node.group !== undefined && node.group !== id && frames.has(node.group)) parent.set(id, node.group)
+  // A ring of groups holds nothing: the thing where it is found is let out.
+  for (const id of [...parent.keys()]) {
+    const seen = new Set<string>([id])
+    for (let up = parent.get(id); up !== undefined; up = parent.get(up)) {
+      if (seen.has(up)) {
+        parent.delete(id)
+        break
+      }
+      seen.add(up)
+    }
+  }
+  const held = new Map<string, string[]>()
+  for (const [id, up] of parent) held.set(up, [...(held.get(up) ?? []), id])
+  return { frames, parent, held }
+}
+
+/**
+ * The places when the app gave none and some groups are open: each group is laid out by itself (dagre, the innermost
+ * first), then it is one box among the others, as large as what it holds and its title. A line that crosses a frame
+ * counts, in each layout, between the two things of that layout it reaches. The places of what a group holds are from
+ * the group's corner, as the app's are.
+ */
+function layoutNested(graph: Graph, shown: readonly string[], direction: 'right' | 'down', nest: Nest): { rel: Map<string, { x: number; y: number }>; sizes: Map<string, Size> } {
+  const inSight = new Set(shown)
+  const rel = new Map<string, { x: number; y: number }>()
+  const sizes = new Map<string, Size>()
+  // The thing of a group (or of the canvas: undefined) that holds `id`, or is it.
+  const memberOf = (id: string, holder: string | undefined): string | undefined => {
+    for (let at = id; ; ) {
+      const up = nest.parent.get(at)
+      if (up === holder) return at
+      if (up === undefined) return undefined
+      at = up
+    }
+  }
+  // Of two things with one id, the first, as everywhere here.
+  const taken = new Set<string>()
+  const things = graph.nodes.filter((node) => inSight.has(node.id) && !taken.has(node.id) && taken.add(node.id))
+  const layoutIn = (holder: string | undefined): Size => {
+    const members = things.filter((node) => nest.parent.get(node.id) === holder)
+    const boxes = members.map((node) => (nest.frames.has(node.id) ? { ...node, ...layoutIn(node.id) } : node))
+    for (const box of boxes) if (nest.frames.has(box.id)) sizes.set(box.id, sizeOfNode(box))
+    const ids = new Set(members.map((node) => node.id))
+    const lines: GraphEdge[] = []
+    for (const edge of graph.edges) {
+      const from = memberOf(edge.from, holder)
+      const to = memberOf(edge.to, holder)
+      if (from === undefined || to === undefined || from === to || !ids.has(from) || !ids.has(to)) continue
+      lines.push({ from, to, kind: edge.kind })
+    }
+    const places = layoutGraph({ nodes: boxes, edges: lines }, [...ids], direction)
+    let width = WIDTH
+    let height = 0
+    for (const box of boxes) {
+      const at = places.get(box.id)
+      if (!at) continue
+      // Under the title of the group that holds them; dagre's own 16px are the room around them.
+      rel.set(box.id, holder === undefined ? at : { x: at.x, y: at.y + HEAD })
+      width = Math.max(width, at.x + widthOf(box) + 16)
+      height = Math.max(height, at.y + heightOf(box) + 16)
+    }
+    return { width, height: HEAD + height }
+  }
+  layoutIn(undefined)
+  return { rel, sizes }
+}
+
+/** The places on the canvas, from places that are each from the corner of the group that holds the thing. */
+function absolute(rel: ReadonlyMap<string, { x: number; y: number }>, parent: ReadonlyMap<string, string>): Map<string, { x: number; y: number }> {
+  const places = new Map<string, { x: number; y: number }>()
+  const at = (id: string): { x: number; y: number } | undefined => {
+    const known = places.get(id)
+    if (known) return known
+    const own = rel.get(id)
+    if (!own) return undefined
+    const up = parent.get(id)
+    const base = up === undefined ? undefined : at(up)
+    const place = base ? { x: base.x + own.x, y: base.y + own.y } : own
+    places.set(id, place)
+    return place
+  }
+  for (const id of rel.keys()) at(id)
+  return places
+}
+
+/**
+ * The thing that stands in for the Tab stop when the one that holds it is out of the view, and so not drawn: the first
+ * thing, in the order given, with a part of its box in the view. Null when the stop is in the view (it needs none) or
+ * when no thing is. It names a thing and nothing more: the focus, the choice and the view are not its business.
+ */
+export function standInFor(stop: string, order: readonly string[], boxOf: (id: string) => Box | undefined, view: { x: number; y: number; zoom: number }, room: Size): string | null {
+  const inView = (id: string) => {
+    const box = boxOf(id)
+    return box !== undefined && view.x + (box.x + box.width) * view.zoom > 0 && view.y + (box.y + box.height) * view.zoom > 0 && view.x + box.x * view.zoom < room.width && view.y + box.y * view.zoom < room.height
+  }
+  return inView(stop) ? null : (order.find(inView) ?? null)
+}
+
+/**
+ * The view moved by what keeps a box whole in a canvas of `room`, `pad` px from its edges, at the same scale; the same
+ * view when the box is whole already. A box larger than the room is kept by its start.
+ */
+export function viewKeeping<View extends { x: number; y: number; zoom: number }>(view: View, box: Box, room: Size, pad = 0): View | { x: number; y: number; zoom: number } {
+  const along = (at: number, start: number, length: number, full: number) => {
+    const end = at + (start + length) * view.zoom
+    const back = end > full - pad ? at - (end - (full - pad)) : at
+    return back + start * view.zoom < pad ? pad - start * view.zoom : back
+  }
+  const x = along(view.x, box.x, box.width, room.width)
+  const y = along(view.y, box.y, box.height, room.height)
+  return x === view.x && y === view.y ? view : { x, y, zoom: view.zoom }
+}
+
+/** Two sets of places are the same places: the same things, each where it was. */
+function samePlaces(a: ReadonlyMap<string, { x: number; y: number }>, b: ReadonlyMap<string, { x: number; y: number }>): boolean {
+  if (a === b) return true
+  if (a.size !== b.size) return false
+  for (const [id, at] of a) {
+    const to = b.get(id)
+    if (!to || to.x !== at.x || to.y !== at.y) return false
+  }
+  return true
+}
+
+/** The focus is nobody's: on the page itself, or on something that is no longer in it. Only then may the canvas take it by itself. */
+const focusIsFree = () => {
+  const active = typeof document === 'undefined' ? null : document.activeElement
+  return active === null || active === document.body || !active.isConnected
+}
+
+/**
+ * Two things as the canvas hands them to React Flow are the same: the same place, size, group and data, value by
+ * value. The one handed before is then handed again, so React Flow does not draw the thing again.
+ */
+function sameThing(a: Node<Drawn>, b: Node<Drawn>): boolean {
+  if (a.type !== b.type || a.position.x !== b.position.x || a.position.y !== b.position.y || a.width !== b.width || a.height !== b.height || a.parentId !== b.parentId || a.draggable !== b.draggable || a.zIndex !== b.zIndex || a.style !== b.style) return false
+  const from = a.extent
+  const to = b.extent
+  if (from !== to && !(Array.isArray(from) && Array.isArray(to) && from[0][0] === to[0][0] && from[0][1] === to[0][1] && from[1][0] === to[1][0] && from[1][1] === to[1][1])) return false
+  const was = a.data as Record<string, unknown>
+  const now = b.data as Record<string, unknown>
+  for (const key in now) if (was[key] !== now[key]) return false
+  return true
+}
+
+/**
+ * What React Flow is handed, from what it has (`now`) and the things as they are now drawn (`drawn`). A thing that is
+ * as it was stays the very object React Flow has. One that changed is the new one, with what React Flow measured of
+ * it (`measured`: with it React Flow keeps the thing's size and where its handles are, and does not measure again)
+ * only while that measure still holds: the same part (`type`), the same `width` and `height`, the same direction (the
+ * handles are on other sides in another). Otherwise it is handed without, and React Flow measures it again. A thing
+ * being dragged (`held`) stays where React Flow has it, and dragged.
+ */
+export function handOver(now: readonly Node<Drawn>[], drawn: readonly Node<Drawn>[], held: ReadonlySet<string>): Node<Drawn>[] {
+  const at = new Map(now.map((it) => [it.id, it]))
+  return drawn.map((it) => {
+    const was = at.get(it.id)
+    if (!was || was === it) return it
+    const measured = was.measured && was.type === it.type && was.width === it.width && was.height === it.height && was.data.direction === it.data.direction ? { measured: was.measured } : {}
+    if (held.has(it.id)) return { ...it, position: was.position, dragging: true, ...measured }
+    if (!was.dragging && sameThing(was, it)) return was
+    return 'measured' in measured ? { ...it, ...measured } : it
+  })
+}
+
+/** On the small map an open group is its outline, so the things it holds are told from it. */
+const mapClass = (node: Node) => (node.type === 'frame' ? 'sigrid-graph-map-group' : '')
+
 // Only `link` is a link: an edge that carries a `kind` field of the app's own (an object with more fields is still a
 // `GraphEdge`) hangs, as every edge did before there were kinds.
 const isChild = (edge: GraphEdge) => edge.kind !== 'link'
@@ -315,7 +597,7 @@ function idSet(ids: string | Iterable<string> | null | undefined): ReadonlySet<s
 function copyOf(edge: GraphEdge): string | null {
   if (edge.id || (edge.points && edge.points.length > 0)) return null
   const child = isChild(edge)
-  return JSON.stringify([edge.from, edge.to, child, edge.label || '', edge.labelShown === 'chosen', edge.style ?? 'solid', edge.tone ?? 'default', edge.directed ?? !child])
+  return JSON.stringify([edge.from, edge.to, child, edge.label || '', edge.labelShown === 'chosen', edge.style ?? 'solid', edge.tone ?? 'default', edge.directed ?? !child, edge.path === true])
 }
 /** The zoom the user can reach with the buttons and the wheel, and the default floor of a fit: names of 14px stay about 11px. */
 const MIN_ZOOM = 0.2
@@ -565,7 +847,9 @@ const STUB = 20
  * lines or more between the same two things, from the same side to the same side and without a route, are drawn side
  * by side: the line type `apart`, each `data.offset` px across its sides from the middle. Of the lines between two
  * things of the path (`marked`) the first is the path's: the accent, or the line's own tone, and thicker; with a path,
- * a line to a dimmed thing is dimmed too. With `routes` (the app placed the things) a line with `points` follows them.
+ * a line to a dimmed thing is dimmed too. When any edge says it is the path's (`path`), those alone are, and every
+ * other line is dimmed. With `routes` (the app placed the things) a line with `points` follows them, unless one of its
+ * two things is in `loose` (moved by the person: the route no longer reaches it).
  * `chosen` is the chosen thing, or the several the app marks: their lines are told from the others, and the words of
  * a line drawn only on a choice (`labelShown: 'chosen'`) are drawn while one of its two things is among them, or while
  * it is the path's (the canvas draws them too while one of its two things has the focus).
@@ -573,7 +857,7 @@ const STUB = 20
 export function linesOf(
   edges: readonly GraphEdge[],
   places: ReadonlyMap<string, { x: number; y: number }>,
-  { direction, chosen, marked, dimmed, editable, routes = false }: { direction: 'right' | 'down'; chosen: string | ReadonlySet<string> | null; marked: ReadonlySet<string> | null; dimmed: ReadonlySet<string> | null; editable: boolean; routes?: boolean },
+  { direction, chosen, marked, dimmed, editable, routes = false, loose = null }: { direction: 'right' | 'down'; chosen: string | ReadonlySet<string> | null; marked: ReadonlySet<string> | null; dimmed: ReadonlySet<string> | null; editable: boolean; routes?: boolean; loose?: ReadonlySet<string> | null },
 ): { lines: Edge[]; edgeOf: Map<string, GraphEdge> } {
   const lines: Edge[] = []
   const edgeOf = new Map<string, GraphEdge>()
@@ -583,6 +867,8 @@ export function linesOf(
   const copies = new Set<string>()
   const stepped = new Set<string>()
   const beside = new Map<string, Edge[]>()
+  // The app says which lines are the path's: then those alone are, and the others are off it.
+  const said = edges.some((edge) => edge.path === true)
   for (const edge of edges) {
     const from = places.get(edge.from)
     const to = places.get(edge.to)
@@ -602,8 +888,8 @@ export function linesOf(
     const near = picked.has(edge.from) || picked.has(edge.to)
     // Of the lines between two things of the path, the first is the path's: one line for each two of them.
     const pair = edge.from < edge.to ? `${edge.from}\n${edge.to}` : `${edge.to}\n${edge.from}`
-    const onPath = marked !== null && marked.has(edge.from) && marked.has(edge.to) && !stepped.has(pair)
-    if (onPath) stepped.add(pair)
+    const onPath = said ? edge.path === true : marked !== null && marked.has(edge.from) && marked.has(edge.to) && !stepped.has(pair)
+    if (onPath && !said) stepped.add(pair)
     // The words of a line drawn only on a choice wait for one of its ends to be chosen, or for the path; they are heard either way.
     const words = edge.label && (edge.labelShown !== 'chosen' || near || onPath) ? edge.label : undefined
     // The path takes the accent, but a tone of the line's own stays (a warning stays a warning): its thickness says the path.
@@ -615,7 +901,7 @@ export function linesOf(
     const look = lineLook(style, tone, { near, path: onPath })
     // A `link` to a thing no further along (a sibling, a thing before it) arrives on the far side: the line goes round, not across the boxes.
     // Along the app's route only with the app's places (`routes`): a route of its layout would cross dagre's.
-    const route = routes && edge.points && edge.points.length > 1 ? edge.points : null
+    const route = routes && edge.points && edge.points.length > 1 && !(loose !== null && (loose.has(edge.from) || loose.has(edge.to))) ? edge.points : null
     const back = !route && !child && (direction === 'right' ? to.x <= from.x : to.y <= from.y)
     const line: Edge = {
       id,
@@ -627,7 +913,7 @@ export function linesOf(
       focusable: false,
       selectable: editable,
       // Its look is all in `style`; the one class is for graph.css to dim a line to a dimmed thing.
-      className: !onPath && dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)) ? 'sigrid-graph-dim' : undefined,
+      className: !onPath && (said || (dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)))) ? 'sigrid-graph-dim' : undefined,
       // One object for one look (`lineVars`): a line whose look a change of choice leaves as it was keeps its `style`.
       style: lineVars(look),
       // The arrowheads are drawn apart from the lines, so they take the colour of the line's tone by name.
@@ -680,10 +966,23 @@ type Drawn = {
   /** In the graph mode, the names of what the thing's lines lead to and of what the lines into it come from. */
   leadsTo: readonly string[]
   comesFrom: readonly string[]
+  /** In the graph mode, a group the app opens in place (`open` of the node, with `onToggle`): it has the button that opens it, or closes it. */
+  toggles: boolean
+  /** An open group: how many things it holds, and the ids of their surfaces in the page, which screen readers hear inside it (`aria-owns`). */
+  holds: number
+  owns: string
+  /** The id of its surface in the page, where a group may own it; otherwise empty. */
+  domId: string
+  /** The id of the text that says how a thing is moved from the keyboard (`movable`); otherwise empty. */
+  keysId: string
   onToggle: (id: string) => void
   onAdd: (id: string) => void
   onOpen: (id: string) => void
   onFocus: (id: string) => void
+  /** Opens or closes a group in place: asked of the app. */
+  onGroup: (id: string) => void
+  /** The thing was drawn (it came into the view, or is new): the canvas gives it the focus it was keeping for it. */
+  onDrawn: (id: string) => void
 }
 
 const HANDLE = 'size-2! min-h-0! min-w-0! rounded-full! border-0! bg-ink-mute!'
@@ -700,17 +999,25 @@ function nameOf(node: GraphNode, steps: readonly number[] | undefined, words: Wo
   return node.external ? `${name}, ${words.external}` : name
 }
 
-/** What a thing shows: its icon or the dot of its colour, its name and the line under it, and «external» on an external one. */
+/** What a thing shows: its picture, its icon or the dot of its colour, its name and the line under it, and «external» on an external one. */
 function Face({ node, tinted, words }: { node: GraphNode; tinted: boolean; words: Words['graph'] }) {
+  const mark = node.icon ? (
+    <span aria-hidden="true" className="inline-flex shrink-0 text-ink-mute [&_svg]:size-4">
+      <Icon name={node.icon} />
+    </span>
+  ) : node.color ? (
+    <span {...markHueAttrs(node.color)} data-mark-dot="" aria-hidden="true" className="size-2 shrink-0 rounded-full bg-(--mark-dot)" />
+  ) : null
   return (
     <>
-      {node.icon ? (
-        <span aria-hidden="true" className="inline-flex shrink-0 text-ink-mute [&_svg]:size-4">
-          <Icon name={node.icon} />
-        </span>
-      ) : node.color ? (
-        <span {...markHueAttrs(node.color)} data-mark-dot="" aria-hidden="true" className="size-2 shrink-0 rounded-full bg-(--mark-dot)" />
-      ) : null}
+      {/* The picture of the thing (a logo) is the toolkit's `Logo`, 16px and whole: the icon or the dot is in its box while it loads and when it fails. The name of the thing says what it is. */}
+      {node.image ? (
+        <Logo src={node.image} decorative>
+          {mark}
+        </Logo>
+      ) : (
+        mark
+      )}
       {/* Beside «external» the name keeps 64px: in a narrow box the word is cut first. */}
       <span className={cn('flex flex-1 flex-col', node.external ? 'min-w-16' : 'min-w-0')}>
         <span className="truncate">{node.label}</span>
@@ -726,15 +1033,25 @@ function Face({ node, tinted, words }: { node: GraphNode; tinted: boolean; words
   )
 }
 
-/** The numbers of the path, round as the dots of `Steps`, on the raised ground so they show on the tint in both schemes: read in the name of the thing. */
-function StepDots({ steps }: { steps: readonly number[] }) {
+/**
+ * The numbers of the path, round as the dots of `Steps`, on the raised ground so they show on the tint in both schemes:
+ * read in the name of the thing. One or two are shown; of more, the first and how many more («+3», `graph.moreSteps`),
+ * so the name of the thing keeps its room. All of them are in the name screen readers hear.
+ */
+function StepDots({ steps, words }: { steps: readonly number[]; words: Words['graph'] }) {
+  const folded = steps.length > 2
   return (
     <span aria-hidden="true" data-slot="graph-steps" className="flex shrink-0 gap-0.5">
-      {steps.map((step, index) => (
+      {(folded ? steps.slice(0, 1) : steps).map((step, index) => (
         <span key={index} className="inline-flex size-5 items-center justify-center rounded-full bg-raised text-xs font-medium text-accent tabular-nums">
           {step}
         </span>
       ))}
+      {folded ? (
+        <span data-slot="graph-steps-more" className="inline-flex h-5 items-center justify-center rounded-full bg-raised px-1.5 text-xs font-medium text-accent tabular-nums">
+          {words.moreSteps(steps.length - 1)}
+        </span>
+      ) : null}
     </span>
   )
 }
@@ -747,10 +1064,11 @@ function SideHandle({ direction }: { direction: 'right' | 'down' }) {
 /** A thing on the canvas in the tree mode: an item of the tree. */
 const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
   const words = useWords().graph
-  const { node, direction, editable, steps } = data
+  const { node, direction, editable, steps, onDrawn } = data
   const has = data.children > 0
   const name = nameOf(node, steps, words)
   const tinted = data.chosen || steps !== undefined
+  React.useEffect(() => onDrawn(node.id), [onDrawn, node.id])
   return (
     <div
       role="treeitem"
@@ -763,7 +1081,7 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
       aria-selected={data.primary}
       aria-expanded={has ? data.open : undefined}
       aria-label={has && !data.open ? words.closed(name, data.hidden) : name}
-      aria-describedby={data.about ? data.aboutId : undefined}
+      aria-describedby={[data.about ? data.aboutId : '', data.keysId].filter(Boolean).join(' ') || undefined}
       onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
       className={cn(
         // The size of its box, which React Flow is given (`widthOf`, `heightOf`).
@@ -777,7 +1095,7 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
       {/* Where a line arrives and where it leaves: in sight only where the user may draw one. */}
       <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
       <Face node={node} tinted={tinted} words={words} />
-      {steps ? <StepDots steps={steps} /> : null}
+      {steps ? <StepDots steps={steps} words={words} /> : null}
       {data.about ? (
         <span id={data.aboutId} hidden>
           {data.about}
@@ -823,13 +1141,16 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
 const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   const words = useWords().graph
   const described = React.useId()
-  const { node, direction, editable, steps } = data
+  const { node, direction, editable, steps, onDrawn } = data
   const tinted = data.chosen || steps !== undefined
   // One clear action: the plus on the choice alone, not on each of the several chosen.
   const add = editable && data.primary
   // Only a thing the app says it opens has a ›, under the app's name for the action, and opens on a double press.
   const openLabel = data.opens && node.openLabel ? node.openLabel : undefined
-  const ends = (add ? 1 : 0) + (openLabel ? 1 : 0)
+  // A group the app opens in place has the arrow of every list that opens, before the › that goes into it.
+  const toggles = data.toggles
+  const ends = (add ? 1 : 0) + (toggles ? 1 : 0) + (openLabel ? 1 : 0)
+  React.useEffect(() => onDrawn(node.id), [onDrawn, node.id])
   // How many the app keeps out of sight inside it: shown and said only above 0.
   const hides = finite(node.hiddenCount) && node.hiddenCount > 0 ? node.hiddenCount : 0
   // Its name, its steps, «external» and how many it hides, then its second line; its relations describe it.
@@ -842,29 +1163,33 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
       <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
       <div
         role="button"
+        id={data.domId || undefined}
         data-slot="graph-node"
         data-node-id={node.id}
         tabIndex={data.stop ? 0 : -1}
         // Its name (with its steps on the path, «external», how many it hides) and its second line, as the eye reads them.
         aria-label={node.detail ? `${name}, ${node.detail}` : name}
+        // A group that opens in place is closed here: open, it is a frame.
+        aria-expanded={toggles ? false : undefined}
         // The chosen thing is the one the app shows: a choice, not a toggle that is pressed. When the app marks several
         // (one of its things drawn in several places), the first is current and the others say in their description
         // that they are chosen with it: one choice is heard, as the user makes one.
         aria-current={data.primary ? 'true' : undefined}
-        aria-describedby={[relations ? described : '', data.about ? data.aboutId : ''].filter(Boolean).join(' ') || undefined}
+        aria-describedby={[relations ? described : '', data.about ? data.aboutId : '', data.keysId].filter(Boolean).join(' ') || undefined}
         onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
-        onDoubleClick={openLabel ? () => data.onOpen(node.id) : undefined}
+        // A double press goes into the thing the app opens; on a group that only opens in place, it opens it.
+        onDoubleClick={openLabel ? () => data.onOpen(node.id) : toggles ? () => data.onGroup(node.id) : undefined}
         className={cn(
           'flex size-full cursor-default items-center gap-2 rounded-md bg-raised ps-3 text-sm text-ink shadow-sm',
           // Room at the end for the buttons that lie over it, and more with a finger, where each is 44px.
-          ends === 2 ? 'pe-18 pointer-coarse:pe-25' : ends === 1 ? 'pe-10 pointer-coarse:pe-14' : 'pe-3',
+          ends === 3 ? 'pe-26 pointer-coarse:pe-36' : ends === 2 ? 'pe-18 pointer-coarse:pe-25' : ends === 1 ? 'pe-10 pointer-coarse:pe-14' : 'pe-3',
           tinted && 'bg-selected text-selected-ink',
           data.chosen && 'font-semibold',
           FOCUS_RING,
         )}
       >
         <Face node={node} tinted={tinted} words={words} />
-        {steps ? <StepDots steps={steps} /> : null}
+        {steps ? <StepDots steps={steps} words={words} /> : null}
         {/* The count of a closed thing of the tree mode, at the same place: read in the name. */}
         <Count value={hides} />
       </div>
@@ -884,6 +1209,28 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
             <Tooltip label={words.addAfter(node.label)}>
               <button type="button" tabIndex={-1} data-slot="graph-add" aria-label={words.addAfter(node.label)} onClick={(event) => { event.stopPropagation(); data.onAdd(node.id) }} className={cn(ON_THING, TOUCH, 'text-selected-ink', FOCUS_RING)}>
                 <Icon name="plus" />
+              </button>
+            </Tooltip>
+          ) : null}
+          {toggles ? (
+            <Tooltip label={words.open(node.label)}>
+              <button
+                type="button"
+                // A Tab stop after the thing that has it, as its › is.
+                tabIndex={data.stop ? 0 : -1}
+                data-slot="graph-toggle"
+                aria-label={words.open(node.label)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  // The second click of a double press opens nothing more.
+                  if (event.detail > 1) return
+                  data.onGroup(node.id)
+                }}
+                onDoubleClick={(event) => event.stopPropagation()}
+                onFocus={() => data.onFocus(node.id)}
+                className={cn(ON_THING, TOUCH, tinted ? 'text-selected-ink' : 'text-ink-mute hover:text-ink', FOCUS_RING)}
+              >
+                <Icon name="chevron" />
               </button>
             </Tooltip>
           ) : null}
@@ -918,6 +1265,90 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   )
 })
 
+/**
+ * A group opened in place, in the graph mode: a frame as large as the app (or the canvas's layout) made it, a line
+ * around it and a quiet fill, no shadow (R4), under the things and the lines. Its title is the thing's own face, the
+ * button that chooses it as on any thing, with the count of what it holds; at its end the button that closes it, the
+ * arrow of every list that opens, turned down. What it holds is drawn by React Flow beside it, not inside it, so the
+ * frame is a group that owns those things for screen readers (`aria-owns`), named by its name and how many they are.
+ */
+const Frame = React.memo(function Frame({ data }: NodeProps<Node<Drawn>>) {
+  const words = useWords().graph
+  const described = React.useId()
+  const { node, direction, editable, steps, onDrawn } = data
+  const tinted = data.chosen || steps !== undefined
+  const name = nameOf(node, steps, words)
+  const relations = [data.leadsTo.length > 0 ? words.leadsTo(data.leadsTo) : '', data.comesFrom.length > 0 ? words.comesFrom(data.comesFrom) : ''].filter(Boolean).join(' · ')
+  React.useEffect(() => onDrawn(node.id), [onDrawn, node.id])
+  return (
+    <div data-thing={node.id} data-slot="graph-group" role="group" aria-label={words.holds(name, data.holds)} aria-owns={data.owns || undefined} className="relative size-full rounded-md border border-line bg-ink/6">
+      <Handle type="target" position={direction === 'right' ? Position.Left : Position.Top} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
+      <div
+        role="button"
+        id={data.domId || undefined}
+        data-slot="graph-node"
+        data-node-id={node.id}
+        tabIndex={data.stop ? 0 : -1}
+        aria-label={node.detail ? `${name}, ${node.detail}` : name}
+        aria-expanded="true"
+        aria-current={data.primary ? 'true' : undefined}
+        aria-describedby={[relations ? described : '', data.about ? data.aboutId : '', data.keysId].filter(Boolean).join(' ') || undefined}
+        onFocus={(event) => (event.target === event.currentTarget ? data.onFocus(node.id) : undefined)}
+        className={cn(
+          // The title: the first 44px of the frame (`HEAD`), which what it holds starts under.
+          'pointer-events-auto absolute inset-x-0 top-0 flex h-11 cursor-default items-center gap-2 rounded-md ps-3 text-sm font-medium text-ink',
+          data.toggles ? 'pe-10 pointer-coarse:pe-14' : 'pe-3',
+          tinted && 'bg-selected text-selected-ink',
+          data.chosen && 'font-semibold',
+          data.dim && 'opacity-40',
+          FOCUS_RING,
+        )}
+      >
+        <Face node={node} tinted={tinted} words={words} />
+        {steps ? <StepDots steps={steps} words={words} /> : null}
+        <Count value={data.holds} />
+      </div>
+      {data.about ? (
+        <span id={data.aboutId} hidden>
+          {data.about}
+        </span>
+      ) : null}
+      {relations ? (
+        <span id={described} className="sr-only">
+          {relations}
+        </span>
+      ) : null}
+      {data.toggles ? (
+        <span className="pointer-events-auto absolute end-2 top-0 flex h-11 items-center">
+          <Tooltip label={words.close(node.label)}>
+            <button
+              type="button"
+              // The next Tab stop after the title that has it.
+              tabIndex={data.stop ? 0 : -1}
+              data-slot="graph-toggle"
+              aria-label={words.close(node.label)}
+              onClick={(event) => {
+                event.stopPropagation()
+                if (event.detail > 1) return
+                data.onGroup(node.id)
+              }}
+              onDoubleClick={(event) => event.stopPropagation()}
+              onFocus={() => data.onFocus(node.id)}
+              className={cn(ON_THING, TOUCH, tinted ? 'text-selected-ink' : 'text-ink-mute hover:text-ink', FOCUS_RING)}
+            >
+              {/* Down, as the arrow of an open list. */}
+              <span aria-hidden="true" className="inline-flex rotate-90">
+                <Icon name="chevron" />
+              </span>
+            </button>
+          </Tooltip>
+        </span>
+      ) : null}
+      <Handle type="source" position={direction === 'right' ? Position.Right : Position.Bottom} isConnectable={editable} className={cn(HANDLE, !editable && 'opacity-0')} />
+      <SideHandle direction={direction} />
+    </div>
+  )
+})
 
 type Points = readonly { x: number; y: number }[]
 
@@ -1016,7 +1447,7 @@ const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY
   )
 })
 
-const NODE_TYPES = { thing: Thing, point: Point }
+const NODE_TYPES = { thing: Thing, point: Point, frame: Frame }
 const EDGE_TYPES = { route: Route, apart: Apart }
 /** Room around what is fitted, and at the head for the field and the buttons. */
 const PAD = { top: 64, right: 24, bottom: 24, left: 24 }
@@ -1036,7 +1467,7 @@ const NO_NAMES: readonly string[] = []
 let made = 0
 const freshId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `node-${Date.now()}-${++made}`)
 
-function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, fill = false, className, ...props }: GraphCanvasProps) {
+function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, onToggle, movable = false, onMove, animated, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, fill = false, className, ...props }: GraphCanvasProps) {
   const words = useWords().graph
   const flow = useReactFlow()
   // The library's helpers, as they are now: the view's own helpers below are made once.
@@ -1046,6 +1477,10 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const box = React.useRef<HTMLDivElement>(null)
   const tree = model === 'tree'
   const opens = !tree && onOpen !== undefined
+  // A group opens in place only where the app can be asked to.
+  const groups = !tree && onToggle !== undefined
+  // The time of what moves after a gesture: none unless the app turned motion on and the system allows it.
+  const glide = useMotionAllowed(animated) ? GLIDE_MS : 0
   const graph = React.useMemo<Graph>(() => ({ nodes, edges }), [nodes, edges])
   // Each thing by its id, once for the graph; the first of two with the same id, as the layout reads them.
   const byId = React.useMemo(() => {
@@ -1053,6 +1488,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     for (const node of nodes) if (!map.has(node.id)) map.set(node.id, node)
     return map
   }, [nodes])
+  // The groups opened in place, in the graph mode; null when there is none.
+  const nest = React.useMemo(() => (tree ? null : nestOf(byId)), [tree, byId])
   // The path: the things on it that are in the graph, in the order of their first step.
   const marked = steps && steps.size > 0 ? steps : null
   const path = React.useMemo(() => (marked ? [...marked.keys()].filter((id) => byId.has(id) && (marked.get(id) ?? []).length > 0).sort((a, b) => Math.min(...marked.get(a)!) - Math.min(...marked.get(b)!)) : []), [marked, byId])
@@ -1078,7 +1515,43 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // The app's places when it gave them all, and then nothing is laid out here (in the tree mode a thing opened or
   // closed keeps its place); otherwise dagre's. Either way only what is in sight has a place.
   const given = React.useMemo(() => placesOf(nodes), [nodes])
-  const places = React.useMemo(() => placesIn(graph, sight.order, direction, given), [graph, sight, direction, given])
+  // The place of each thing from the corner of the group that holds it (from the canvas's, for the others), and the
+  // sizes the canvas gave the open groups it laid out itself.
+  const layout = React.useMemo<{ rel: Map<string, { x: number; y: number }>; sizes: ReadonlyMap<string, Size> | null }>(
+    () => (nest && !given ? layoutNested(graph, sight.order, direction, nest) : { rel: placesIn(graph, sight.order, direction, given), sizes: null }),
+    [graph, sight, direction, given, nest],
+  )
+  // Where the person put the things they moved, kept for the layout they were moved on: another `layoutKey` forgets them.
+  const [movedOn, setMovedOn] = React.useState<{ key: string | undefined; at: ReadonlyMap<string, { x: number; y: number }> }>({ key: layoutKey, at: NOT_MOVED })
+  // Forgotten for good: going back to a layout does not bring back what was moved on it before.
+  if (movedOn.key !== layoutKey) setMovedOn({ key: layoutKey, at: NOT_MOVED })
+  const moved = movable && movedOn.key === layoutKey ? movedOn.at : NOT_MOVED
+  // The things being dragged now. The ref is the truth (it is read where a draw has not happened yet); the state draws.
+  const [dragged, setDragged] = React.useState<ReadonlySet<string>>(NO_IDS)
+  const draggedNow = React.useRef<ReadonlySet<string>>(NO_IDS)
+  const rel = React.useMemo(() => {
+    if (moved.size === 0) return layout.rel
+    const next = new Map(layout.rel)
+    for (const [id, at] of moved) if (next.has(id)) next.set(id, at)
+    return next
+  }, [layout, moved])
+  // The places on the canvas: what the view, the lines and the focus read.
+  const places = React.useMemo(() => (nest && nest.parent.size > 0 ? absolute(rel, nest.parent) : rel), [rel, nest])
+  const sizeOf = React.useCallback((id: string): Size => layout.sizes?.get(id) ?? sizeOfNode(byId.get(id)), [layout, byId])
+  // What was moved or is being dragged, and what such a group holds: a route the app gave no longer reaches them, so
+  // their lines go from side to side, and follow a thing while it is dragged.
+  const loose = React.useMemo(() => {
+    if (moved.size === 0 && dragged.size === 0) return null
+    const set = new Set<string>()
+    const take = (id: string) => {
+      if (set.has(id)) return
+      set.add(id)
+      for (const inside of nest?.held.get(id) ?? []) take(inside)
+    }
+    for (const id of moved.keys()) take(id)
+    for (const id of dragged) take(id)
+    return set
+  }, [moved, dragged, nest])
   const [query, setQuery] = React.useState('')
   const word = query.trim().toLowerCase()
   const found = React.useMemo(() => (word ? new Set(nodes.filter((node) => `${node.label} ${node.detail ?? ''}`.toLowerCase().includes(word)).map((node) => node.id)) : null), [nodes, word])
@@ -1099,6 +1572,11 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   }, [selectedKey, sight])
   const chosen = choice.ids
   const stop = focused != null && sight.level.has(focused) ? focused : (choice.first ?? sight.order[0] ?? null)
+  // Only what is in the view is drawn, so a stop out of it would be no Tab stop at all: after the view moved, a thing
+  // in the view stands in for it (`keepStop`), by its tabindex alone. The stop itself is as ever: it follows the
+  // focus, then the choice; the stand-in is for that stop only, and nothing else reads it.
+  const [stoodIn, setStoodIn] = React.useState<{ stop: string; id: string } | null>(null)
+  const tabStop = stoodIn !== null && stoodIn.stop === stop && sight.level.has(stoodIn.id) ? stoodIn.id : stop
   // What is joined to the chosen things, one line away on either side, and what is on the path or joined to it.
   const near = React.useMemo(() => (chosen.size > 0 ? new Set([...chosen].flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [chosen, joined])
   const pathNear = React.useMemo(() => (path.length > 0 ? new Set(path.flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [path, joined])
@@ -1129,28 +1607,83 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     return () => observer.disconnect()
   }, [])
 
-  // The thing to give the focus to once it is drawn where it now is: after a search, an opening, an addition.
+  // The thing to give the focus to once it is drawn where it now is: after a search, an opening, an addition, an arrow
+  // towards a thing out of the view.
   const wanted = React.useRef<string | null>(null)
-  const focus = (id: string) => {
+  // Until when the view is being fitted: a thing that takes the focus meanwhile does not move the view (the fit wins,
+  // and the thing is measured where it was, not where it goes).
+  const fitUntil = React.useRef(0)
+  // The wanted thing is the Tab stop, wanted because the thing that had the focus left the graph: that thing's id, or
+  // empty when the focus had already fallen to the page. Null for any other wanted thing.
+  const orphan = React.useRef<string | null>(null)
+  /** The view goes to a thing: its middle (the title's, for an open group) in the middle of the box, at the same scale. */
+  const panTo = (id: string) => {
+    const at = places.get(id)
+    if (!at) return
+    const size = sizeOf(id)
+    void flow.setCenter(at.x + size.width / 2, at.y + (nest?.frames.has(id) ? HEAD : size.height) / 2, { zoom: flow.getZoom(), duration: glide })
+  }
+  const focus = (id: string, bring = true) => {
     const el = box.current?.querySelector<HTMLElement>(`[data-node-id="${CSS.escape(id)}"]`)
     const at = places.get(id)
     if (!el || !at) return false
     el.focus({ preventScroll: true })
+    if (!bring || Date.now() < fitUntil.current) return true
     // Brought into the view only if it is out of it: a view that moved at every step would lose the user.
     const frame = box.current!.getBoundingClientRect()
     const rect = el.getBoundingClientRect()
-    if (rect.left < frame.left || rect.right > frame.right || rect.top < frame.top || rect.bottom > frame.bottom) {
-      const node = byId.get(id)
-      void flow.setCenter(at.x + (node ? widthOf(node) : WIDTH) / 2, at.y + (node ? heightOf(node) : 44) / 2, { zoom: flow.getZoom(), duration: 0 })
-    }
+    if (rect.left < frame.left || rect.right > frame.right || rect.top < frame.top || rect.bottom > frame.bottom) panTo(id)
     return true
   }
+  /**
+   * The focus goes to a thing, also one React Flow has not drawn because it is out of the view: the view goes to it,
+   * and the thing takes the focus as it is drawn (`handlers.drawn`).
+   */
+  const reach = (id: string) => {
+    if (focus(id) || !places.has(id)) return
+    wanted.current = id
+    panTo(id)
+  }
   React.useEffect(() => {
-    if (wanted.current !== null && sight.level.has(wanted.current) && focus(wanted.current)) wanted.current = null
+    // The thing that had the focus left the graph: the focus goes to the Tab stop, not to the page.
+    // Only a focus that is still on that thing (it is drawn until React Flow is handed the graph without it) or that
+    // is nobody's (the thing was out of the view, so not drawn, and the focus fell to the page). A focus the person
+    // put elsewhere meanwhile (a field of the app that filters the graph) is theirs: nothing takes it, nothing moves.
+    if (held !== null && !sight.level.has(held)) {
+      const active = document.activeElement
+      const onIt = active !== null && box.current !== null && box.current.contains(active) && active.closest<HTMLElement>('[data-thing]')?.dataset.thing === held
+      setHeld(null)
+      if (wanted.current === null && tabStop !== null && (onIt || focusIsFree())) {
+        wanted.current = tabStop
+        orphan.current = onIt ? held : ''
+      }
+    }
+    const id = wanted.current
+    if (id === null || !sight.level.has(id)) return
+    if (orphan.current !== null) {
+      // Taken for a thing that left: by now the focus may be someone's.
+      const active = document.activeElement
+      const still = focusIsFree() || (active !== null && active.closest<HTMLElement>('[data-thing]')?.dataset.thing === orphan.current)
+      orphan.current = null
+      wanted.current = null
+      // The view is not moved for it.
+      if (still) focus(id, false)
+      return
+    }
+    if (focus(id)) wanted.current = null
   })
 
-  const latest = React.useRef({ graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onChange, setClosed, focus, editable, tree })
-  latest.current = { graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onChange, setClosed, focus, editable, tree }
+  const latest = React.useRef({ graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onToggle, onChange, setClosed, focus, editable, tree, sizeOf, glide, stop, held })
+  latest.current = { graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onToggle, onChange, setClosed, focus, editable, tree, sizeOf, glide, stop, held }
+  // When a gesture that changes the places was made (a group opened or closed, the reset): the next change of places
+  // is its answer and, with motion, glides. And the group whose button was pressed: it is drawn again as another part
+  // (a thing, a frame), and takes the focus its button had.
+  const armed = React.useRef(0)
+  const reborn = React.useRef<{ id: string; at: number } | null>(null)
+  // When the person last pressed or typed in the canvas: a new layout of the app's that follows at once is its answer.
+  const touched = React.useRef(0)
+  // Whether the change of places being drawn glides: the fit of a new layout then takes the same time.
+  const glides = React.useRef(false)
 
   // What the view was last brought to, fitted again when the box changes size: the path (the first view), the whole
   // graph (the button, `fit`), or some things (`focus`). And the view that fit gave: while it is still that one, nobody
@@ -1162,14 +1695,14 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
      * Fits the view onto the target. With `opening`, on the layout it will have once what hides the things is opened
      * (the first view, `focus`); otherwise on the layout as it is. Returns what is then closed.
      */
-    const apply = (opening: boolean, keep: string | null = null) => {
+    const apply = (opening: boolean, keep: string | null = null, duration = 0) => {
       const now = latest.current
       const { ids: aim, padding } = target.current
       const ids = aim === 'all' ? [] : aim === 'path' ? now.path : aim
       let at = now.places
       const next = opening && ids.length > 0 ? openedFor(now.graph, now.closed, ids) : now.closed
       if (next !== now.closed) at = placesIn(now.graph, visibleGraph(now.graph, next).order, now.direction, now.given)
-      const boxOf = (id: string) => ({ ...at.get(id)!, width: widthOf(now.byId.get(id)!), height: heightOf(now.byId.get(id)!) })
+      const boxOf = (id: string) => ({ ...at.get(id)!, ...now.sizeOf(id) })
       const all = [...at.keys()].map(boxOf)
       const shown = ids.filter((id) => at.has(id)).map(boxOf)
       if (all.length === 0 || now.size.width === 0 || now.size.height === 0) return next
@@ -1186,7 +1719,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         if (left < 0 || top < 0 || left + kept.width * fitted.zoom > now.size.width || top + kept.height * fitted.zoom > now.size.height) fitted = viewFor([kept], { ...now.size, ...PAD }, floor, 1, all)
       }
       brought.current = fitted
-      void flowNow.current.setViewport(fitted, { duration: 0 })
+      if (duration > 0) fitUntil.current = Date.now() + duration + 40
+      void flowNow.current.setViewport(fitted, { duration })
       return next
     }
     /** The view is not the one it was last brought to: the user moved it (a drag, the wheel, the buttons, a key), or the app (`zoomTo`). */
@@ -1199,13 +1733,13 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     const hold = (was: { width: number; height: number }) => {
       const now = latest.current
       const at = now.chosen === null ? undefined : now.places.get(now.chosen)
-      const node = now.chosen === null ? undefined : now.byId.get(now.chosen)
-      if (!at || !node) return
+      if (now.chosen === null || !at) return
+      const own = now.sizeOf(now.chosen)
       const { x, y, zoom } = flowNow.current.getViewport()
       const left = x + at.x * zoom
       const top = y + at.y * zoom
-      const right = left + widthOf(node) * zoom
-      const bottom = top + heightOf(node) * zoom
+      const right = left + own.width * zoom
+      const bottom = top + own.height * zoom
       const inside = (room: { width: number; height: number }) => left >= 0 && top >= 0 && right <= room.width && bottom <= room.height
       if (!inside(was) || inside(now.size)) return
       // It was whole, so only the end or the foot of the box, which came nearer, cuts it.
@@ -1221,14 +1755,14 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         focus: (ids, options) => {
           target.current = { ids: [...ids], padding: options?.padding ?? PAD.right }
           const now = latest.current
-          const next = apply(true)
+          const next = apply(true, null, now.glide)
           if (next !== now.closed) now.setClosed(next)
         },
         fit: () => {
           target.current = { ids: 'all', padding: PAD.right }
-          apply(false)
+          apply(false, null, latest.current.glide)
         },
-        zoomTo: (scale) => void flowNow.current.zoomTo(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, scale)), { duration: 0 }),
+        zoomTo: (scale) => void flowNow.current.zoomTo(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, scale)), { duration: latest.current.glide }),
       } satisfies GraphCanvasHandle,
     }
   }, [])
@@ -1243,8 +1777,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     if (size.width === 0 || size.height === 0 || !flow.viewportInitialized || empty) return
     const was = seenIn.current
     seenIn.current = size
-    // At a change of size, a view moved over a layout of the app's (`layoutKey`) stays.
-    if (was !== null && was !== size && layoutKey !== undefined && view.moved()) {
+    // At a change of size, over a layout of the app's (`layoutKey`), a view that was moved stays; and so does any view
+    // while a thing is chosen: an inspector that opens on a first press must move nothing under the second.
+    if (was !== null && was !== size && layoutKey !== undefined && (latest.current.chosen !== null || view.moved())) {
       view.hold(was)
       return
     }
@@ -1253,11 +1788,71 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     setShown(true)
   }, [size, flow.viewportInitialized, empty, view])
 
+  // After a gesture that changes the places, with motion, the things glide to them: the box is marked for the time of
+  // the glide, and graph.css moves the things and hides the lines while it is (they are drawn again at the end, where
+  // the things then are). The mark is set before React Flow is handed the new places. A gesture is the canvas's own (a
+  // group opened or closed, the reset), whose new places may come late (a layout in a worker), or a press or a key in
+  // the canvas that a new `layoutKey` follows within a second. Never at the first paint; new places or a new layout
+  // nobody asked for here (the app's data) jump.
+  const seenPlaces = React.useRef(places)
+  const seenKey = React.useRef(layoutKey)
+  const gliding = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const endGlide = () => {
+    clearTimeout(gliding.current)
+    const el = box.current
+    if (!el) return
+    el.removeAttribute('data-gliding')
+    el.querySelectorAll('[data-arriving]').forEach((it) => it.removeAttribute('data-arriving'))
+  }
+  React.useLayoutEffect(() => {
+    // New places are places that differ: the same ones in a new object (a draw of the app's) change nothing, and do
+    // not spend the gesture that waits for its answer.
+    const changed = !samePlaces(seenPlaces.current, places)
+    const rekeyed = seenKey.current !== layoutKey
+    seenPlaces.current = places
+    seenKey.current = layoutKey
+    if (!changed && !rekeyed) return
+    const asked = Date.now() - armed.current < ARMED_MS || (rekeyed && Date.now() - touched.current < ARMED_MS)
+    glides.current = asked && glide > 0 && shown
+    if (!changed) return
+    armed.current = 0
+    const el = box.current
+    if (!el || !glides.current) return
+    el.setAttribute('data-gliding', '')
+    clearTimeout(gliding.current)
+    gliding.current = setTimeout(endGlide, glide + 40)
+  }, [places, layoutKey, glide, shown])
+  React.useEffect(() => () => clearTimeout(gliding.current), [])
+
   const handlers = React.useMemo(() => {
     const toggle = (id: string) => {
       const now = latest.current
       now.setClosed(now.closed.includes(id) ? now.closed.filter((it) => it !== id) : [...now.closed, id])
       wanted.current = id
+      armed.current = Date.now()
+    }
+    /** A group opens or closes in place: asked of the app, which passes the thing with the other `open`. */
+    const group = (id: string) => {
+      armed.current = Date.now()
+      reborn.current = { id, at: Date.now() }
+      latest.current.onToggle?.(id)
+    }
+    /** A thing was drawn: it takes the focus kept for it (it was out of the view, or is a group just opened or closed). */
+    const drawn = (id: string) => {
+      // A thing drawn while the others glide (what a group just opened holds, its frame) is shown with the lines, at
+      // the end: not before the frame it belongs to is there.
+      const el = box.current
+      if (el?.hasAttribute('data-gliding')) el.querySelector(`.react-flow__node[data-id="${CSS.escape(id)}"]`)?.setAttribute('data-arriving', '')
+      const again = reborn.current !== null && reborn.current.id === id && Date.now() - reborn.current.at < 5 * ARMED_MS
+      if (wanted.current !== id && !again) return
+      if (wanted.current !== id) {
+        // A group drawn again takes the focus only if nothing else took it meanwhile.
+        reborn.current = null
+        const active = document.activeElement
+        if (active !== null && active !== document.body && active.isConnected) return
+      }
+      // A group drawn again is where it was pressed: the view is not moved for it.
+      if (latest.current.focus(id, wanted.current === id) && wanted.current === id) wanted.current = null
     }
     const add = (id: string) => {
       const now = latest.current
@@ -1277,7 +1872,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       now.onChange?.({ nodes: now.graph.nodes.filter((node) => node.id !== id), edges: now.graph.edges.filter((edge) => !gone.includes(edge)) }, { kind: 'remove', nodes: [id], edges: gone })
       now.onSelect?.(null)
     }
-    return { toggle, add, remove, open: (id: string) => latest.current.onOpen?.(id), focus: (id: string) => setFocused(id) }
+    return { toggle, add, remove, group, drawn, open: (id: string) => latest.current.onOpen?.(id), focus: (id: string) => setFocused(id) }
   }, [words.newNode])
 
   // What screen readers hear of each thing's `link` lines: their words, which way, the thing at the other end.
@@ -1337,50 +1932,187 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     } else {
       // A graph's: along the ranks an arrow follows the thing's first line, forwards to where it leads or back to
       // where it comes from (every thing is in sight); across them it goes through the things in the app's order.
+      // An open group is entered the way the lines go, before any line of its own, and left the way they come from a
+      // thing in it that no line leads to.
       const right = direction === 'right'
-      if (event.key === (right ? 'ArrowRight' : 'ArrowDown')) to = below.get(id)?.[0]
-      else if (event.key === (right ? 'ArrowLeft' : 'ArrowUp')) to = above.get(id)?.[0]
+      if (event.key === (right ? 'ArrowRight' : 'ArrowDown')) to = nest?.held.get(id)?.[0] ?? below.get(id)?.[0]
+      else if (event.key === (right ? 'ArrowLeft' : 'ArrowUp')) to = above.get(id)?.[0] ?? nest?.parent.get(id)
       else if (event.key === (right ? 'ArrowDown' : 'ArrowRight')) to = order[at + 1]
       else if (event.key === (right ? 'ArrowUp' : 'ArrowLeft')) to = order[at - 1]
       else return false
     }
-    if (to !== undefined) focus(to)
+    if (to !== undefined) reach(to)
     return true
   }
+
+  /** A thing is put at a place (from the corner of its group, when it is in one): kept here, and told to the app. */
+  const put = (id: string, to: { x: number; y: number }) => {
+    setMovedOn((now) => ({ key: layoutKey, at: new Map(now.key === layoutKey ? now.at : NOT_MOVED).set(id, to) }))
+    onMove?.(id, to)
+  }
+  // What screen readers hear when a thing was moved with the keys.
+  const [said, setSaid] = React.useState('')
+  /** Alt and an arrow: the thing goes a step that way, and stays in the group that holds it, under its title. */
+  const nudge = (id: string, from: { x: number; y: number }, [dx, dy]: readonly [number, number]) => {
+    let to = { x: from.x + dx * STEP, y: from.y + dy * STEP }
+    const up = nest?.parent.get(id)
+    if (up !== undefined) {
+      const room = sizeOf(up)
+      const own = sizeOf(id)
+      to = { x: Math.max(0, Math.min(room.width - own.width, to.x)), y: Math.max(HEAD, Math.min(room.height - own.height, to.y)) }
+    }
+    // The view follows a thing that would leave it: it stays drawn, with the focus it has.
+    const at = places.get(id)
+    if (at && size.width > 0 && size.height > 0) {
+      const view = flow.getViewport()
+      const kept = viewKeeping(view, { x: at.x + to.x - from.x, y: at.y + to.y - from.y, ...sizeOf(id) }, size, STEP / 2)
+      if (kept !== view) void flow.setViewport(kept, { duration: 0 })
+    }
+    put(id, to)
+    setSaid(words.moved(byId.get(id)?.label ?? id, to.x, to.y))
+  }
+  const viewRow = React.useRef<HTMLDivElement>(null)
+  const reset = () => {
+    // The button goes with what was moved: the focus it had goes to the next button of the row, not to the page.
+    const row = viewRow.current
+    if (row && row.contains(document.activeElement)) Array.from(row.querySelectorAll('button')).find((it) => it.getAttribute('aria-label') !== words.resetLayout)?.focus()
+    armed.current = Date.now()
+    setMovedOn({ key: layoutKey, at: NOT_MOVED })
+    setSaid('')
+  }
+  // While a thing is dragged its place is React Flow's: what is handed over meanwhile (a choice, new data) keeps it
+  // there (below). A drag that ends without React Flow saying so (a second finger, a cancelled pointer, the window
+  // losing the focus, the thing leaving the graph) is ended here, after React Flow's own handlers have run.
+  const startDrag = (ids: readonly string[]) => {
+    draggedNow.current = new Set(ids)
+    setDragged(draggedNow.current)
+    endGlide()
+  }
+  const endDrag = () => {
+    if (draggedNow.current.size === 0) return
+    draggedNow.current = NO_IDS
+    setDragged(NO_IDS)
+  }
+  React.useEffect(() => {
+    if (dragged.size === 0) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const later = () => {
+      clearTimeout(timer)
+      timer = setTimeout(endDrag, 0)
+    }
+    const fingers = (event: TouchEvent) => {
+      if (event.touches.length > 1) later()
+    }
+    // The names of the events as keys, not as words in quotes: the last one is the window losing the focus, and the
+    // design check reads every quoted word as a class.
+    const ends = Object.keys({ pointerup: 0, pointercancel: 0, touchend: 0, touchcancel: 0, blur: 0 })
+    for (const name of ends) window.addEventListener(name, later)
+    window.addEventListener('touchstart', fingers)
+    return () => {
+      clearTimeout(timer)
+      for (const name of ends) window.removeEventListener(name, later)
+      window.removeEventListener('touchstart', fingers)
+    }
+  }, [dragged])
+  React.useEffect(() => {
+    for (const id of draggedNow.current) if (!sight.level.has(id)) return endDrag()
+  }, [sight])
+  /**
+   * After the view moved: if the thing that holds the Tab stop is out of the view (and so not drawn), the first thing
+   * in the view stands in for it, by its tabindex alone. Nothing else changes: not the focus, not the choice, not the
+   * view, not what Delete takes away. Not while a thing is dragged (the view moves with it, and its place is not known here yet).
+   */
+  const keepStop = () => {
+    const now = latest.current
+    if (draggedNow.current.size > 0 || now.stop === null || now.size.width === 0 || now.size.height === 0) return
+    const stop = now.stop
+    const boxOf = (id: string) => {
+      const at = now.places.get(id)
+      return at ? { ...at, ...now.sizeOf(id) } : undefined
+    }
+    const id = standInFor(stop, now.sight.order, boxOf, flowNow.current.getViewport(), now.size)
+    setStoodIn((was) => (id === null ? null : was !== null && was.stop === stop && was.id === id ? was : { stop, id }))
+  }
+  // A place being told to the app, until the canvas has drawn it: the same place is told once.
+  const told = React.useRef(new Map<string, { x: number; y: number }>())
+  /** A thing was let go at a place: kept and told if it is not where the canvas has it. */
+  const settle = (id: string, at: { x: number; y: number }) => {
+    // A thing that left the graph while it was dragged is nowhere: nothing is kept or told for it.
+    if (!rel.has(id)) return
+    const to = { x: Math.round(at.x), y: Math.round(at.y) }
+    const from = told.current.get(id) ?? rel.get(id)
+    if (from && Math.abs(from.x - to.x) < 1 && Math.abs(from.y - to.y) < 1) return
+    told.current.set(id, to)
+    put(id, to)
+  }
+  React.useEffect(() => told.current.clear(), [rel])
+  // The things handed to React Flow before, by their id: one that is the same is handed again as it was.
+  const handedBefore = React.useRef(new Map<string, Node<Drawn>>())
 
   // Every thing as it is drawn but for the Tab stop, which moves at every arrow: it is set on its own thing below, so
   // the others keep the same data, and React Flow does not draw them again.
   const primary = choice.first
-  const still = React.useMemo<Node<Drawn>[]>(
-    () =>
-      sight.order.flatMap((id, index) => {
-        const node = byId.get(id)
-        const at = places.get(id)
-        if (!node || !at) return []
-        const numbers = marked?.get(id)
-        const related = relations.get(id)
-        // One of several chosen, not the choice itself: it says it is chosen with it, before its lines.
-        const too = primary !== null && id !== primary && chosen.has(id) ? words.chosenToo(byId.get(primary)?.label ?? primary) : ''
-        return [
-          {
-            id,
-            type: tree ? 'thing' : 'point',
-            position: at,
-            width: widthOf(node),
-            height: heightOf(node),
-            draggable: false,
-            selectable: false,
-            focusable: false,
-            data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: chosen.has(id), primary: id === primary, steps: numbers && numbers.length > 0 ? numbers : undefined, about: [too, ...(about.get(id) ?? [])].filter(Boolean).join('. '), aboutId: `${uid}-about-${index}`, dim: dimmed?.has(id) ?? false, stop: false, editable, direction, opens, leadsTo: related?.leadsTo ?? NO_NAMES, comesFrom: related?.comesFrom ?? NO_NAMES, onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onFocus: handlers.focus },
-          },
-        ]
-      }),
-    [sight, byId, places, marked, about, uid, dimmed, below, closed, chosen, primary, words, editable, direction, tree, opens, relations, handlers],
-  )
-  const drawn = React.useMemo<Node<Drawn>[]>(() => still.map((it) => (it.id === stop ? { ...it, data: { ...it.data, stop: true } } : it)), [still, stop])
+  const still = React.useMemo<Node<Drawn>[]>(() => {
+    // With open groups, each thing has a name in the page, so a group can say which it holds.
+    const nameIn = nest ? new Map(sight.order.map((id, index) => [id, `${uid}-thing-${index}`])) : null
+    const all = sight.order.flatMap((id, index): Node<Drawn>[] => {
+      const node = byId.get(id)
+      const at = places.get(id)
+      if (!node || !at) return []
+      const numbers = marked?.get(id)
+      const related = relations.get(id)
+      // One of several chosen, not the choice itself: it says it is chosen with it, before its lines.
+      const too = primary !== null && id !== primary && chosen.has(id) ? words.chosenToo(byId.get(primary)?.label ?? primary) : ''
+      // An open group is a frame; a thing in one is placed from its corner and belongs to it (React Flow's `parentId`).
+      const frame = nest?.frames.has(id) ?? false
+      const up = nest?.parent.get(id)
+      const inside = frame ? (nest?.held.get(id) ?? NOTHING) : NOTHING
+      const within = up === undefined ? '' : words.inGroup(byId.get(up)?.label ?? up)
+      const size = sizeOf(id)
+      const room = up === undefined ? undefined : sizeOf(up)
+      return [
+        {
+          id,
+          type: tree ? 'thing' : frame ? 'frame' : 'point',
+          position: up === undefined ? at : (rel.get(id) ?? at),
+          width: size.width,
+          height: size.height,
+          ...(up === undefined ? {} : { parentId: up }),
+          // Dragged, a thing stays in the group that holds it, under its title.
+          ...(room && movable ? { extent: [[0, HEAD], [Math.max(room.width, size.width), Math.max(room.height, HEAD + size.height)]] as [[number, number], [number, number]] } : {}),
+          // Under the things and the lines.
+          ...(frame ? { zIndex: -1, style: FRAME_STYLE } : {}),
+          draggable: movable,
+          selectable: false,
+          focusable: false,
+          data: { node, level: sight.level.get(id) ?? 1, children: (below.get(id) ?? []).length, hidden: sight.hidden.get(id) ?? 0, open: !closed.includes(id), chosen: chosen.has(id), primary: id === primary, steps: numbers && numbers.length > 0 ? numbers : undefined, about: [too, within, ...(about.get(id) ?? [])].filter(Boolean).join('. '), aboutId: `${uid}-about-${index}`, dim: dimmed?.has(id) ?? false, stop: false, editable, direction, opens, leadsTo: related?.leadsTo ?? NO_NAMES, comesFrom: related?.comesFrom ?? NO_NAMES, toggles: groups && node.open !== undefined, holds: inside.length, owns: inside.map((it) => nameIn?.get(it) ?? '').filter(Boolean).join(' '), domId: nameIn?.get(id) ?? '', keysId: movable ? `${uid}-keys` : '', onToggle: handlers.toggle, onAdd: handlers.add, onOpen: handlers.open, onFocus: handlers.focus, onGroup: handlers.group, onDrawn: handlers.drawn },
+        },
+      ]
+    })
+    // A thing that is as it was handed before is handed again as that very object: one thing moved, chosen or renamed
+    // draws one thing again, not all.
+    const next = new Map<string, Node<Drawn>>()
+    const same = all.map((it) => {
+      const was = handedBefore.current.get(it.id)
+      const one = was !== undefined && sameThing(was, it) ? was : it
+      next.set(it.id, one)
+      return one
+    })
+    handedBefore.current = next
+    if (!nest || nest.parent.size === 0) return same
+    // React Flow reads a group before what it holds: the things by how deep they are, otherwise in their order.
+    const depth = (id: string) => {
+      let deep = 0
+      for (let up = nest.parent.get(id); up !== undefined; up = nest.parent.get(up)) deep += 1
+      return deep
+    }
+    const deep = new Map(same.map((it) => [it.id, depth(it.id)]))
+    return same.sort((a, b) => deep.get(a.id)! - deep.get(b.id)!)
+  }, [sight, byId, places, rel, sizeOf, nest, marked, about, uid, dimmed, below, closed, chosen, primary, words, editable, direction, tree, opens, groups, movable, relations, handlers])
+  const drawn = React.useMemo<Node<Drawn>[]>(() => still.map((it) => (it.id === tabStop ? { ...it, data: { ...it.data, stop: true } } : it)), [still, tabStop])
   const { lines: placed, edgeOf } = React.useMemo(
-    () => linesOf(edges, places, { direction, chosen: chosen.size > 0 ? chosen : null, marked: path.length > 0 ? new Set(path) : null, dimmed: path.length > 0 && !found ? dimmed : null, editable, routes: given !== null }),
-    [edges, places, direction, chosen, path, found, dimmed, editable, given],
+    () => linesOf(edges, places, { direction, chosen: chosen.size > 0 ? chosen : null, marked: path.length > 0 ? new Set(path) : null, dimmed: path.length > 0 && !found ? dimmed : null, editable, routes: given !== null, loose }),
+    [edges, places, direction, chosen, path, found, dimmed, editable, given, loose],
   )
   // The words that wait for a choice show too while one of the line's two things has the focus: only those lines are
   // handed over anew as the focus moves, so the others are not drawn again at every arrow.
@@ -1400,12 +2132,26 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // at every change of the graph, and its own changes are laid over them.
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<Drawn>>(drawn)
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(lines)
-  React.useEffect(() => setFlowNodes(drawn), [drawn, setFlowNodes])
+  React.useEffect(() => {
+    const held = draggedNow.current
+    // What React Flow has is kept where nothing changed, and what it measured only while the measure holds (`handOver`).
+    setFlowNodes((now) => handOver(now, drawn, held))
+  }, [drawn, dragged, setFlowNodes])
+  /**
+   * React Flow's own changes to the things. One of them is a place told after a drag the canvas had already ended (a
+   * second finger aborts the drag, and React Flow tells the last place when the finger lifts, with no drag stop): it
+   * is where the thing was let go, so it is kept and told as any other, and «Reset the layout» puts it back.
+   */
+  const onThingsChange: typeof onNodesChange = (changes) => {
+    onNodesChange(changes)
+    if (!movable) return
+    for (const change of changes) if (change.type === 'position' && change.dragging === false && change.position && !draggedNow.current.has(change.id)) settle(change.id, change.position)
+  }
   React.useEffect(() => setFlowEdges(lines), [lines, setFlowEdges])
 
   // The view: the buttons at the head of the canvas and the keys +, − and 0 do the same.
-  const zoomIn = () => void flow.zoomIn({ duration: 0 })
-  const zoomOut = () => void flow.zoomOut({ duration: 0 })
+  const zoomIn = () => void flow.zoomIn({ duration: glide })
+  const zoomOut = () => void flow.zoomOut({ duration: glide })
   const fit = () => view.handle.fit()
   // After a new layout of the app's (`layoutKey`) the whole graph is fitted again; on a draw of the same layout the view
   // stays where the user put it. Which one it is, the app says, as an app that lays out with an engine of its own knows
@@ -1416,15 +2162,28 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   React.useEffect(() => {
     if (fittedTo.current === layoutKey) return
     fittedTo.current = layoutKey
-    view.handle.fit()
-  }, [layoutKey, view])
+    // In the time of the glide when the new layout answers a gesture; at once when it is the app's own doing.
+    target.current = { ids: 'all', padding: PAD.right }
+    view.apply(false, null, glides.current ? glide : 0)
+  }, [layoutKey, view, glide])
   // The keys of the canvas, read at its box. +, − and 0 from anywhere in it but a field (the search keeps what is
   // typed into it), = as + (the same key without Shift); the others are the things' (`thingKey`). With Ctrl or Cmd
-  // they are the browser's own zoom; Shift is let through, since on some keyboards it makes the +.
+  // they are the browser's own zoom; Shift is let through, since on some keyboards it makes the +. With `movable`, Alt
+  // and an arrow move the thing that has the focus (or whose button has it) a step: a drag is not the only way.
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return
     const target = event.target instanceof Element ? event.target : null
     if (!target || target.closest(FIELDS)) return
+    if (movable && event.altKey && !event.ctrlKey && !event.metaKey) {
+      const step = ARROWS[event.key]
+      const id = target.closest<HTMLElement>('[data-thing]')?.dataset.thing
+      const from = id === undefined ? undefined : rel.get(id)
+      if (!step || id === undefined || !from) return
+      nudge(id, from, step)
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return
     if (event.key === '+' || event.key === '=') zoomIn()
     else if (event.key === '-') zoomOut()
     else if (event.key === '0') fit()
@@ -1471,6 +2230,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       data-slot="graph"
       data-fill={fill || undefined}
       onKeyDown={onKeyDown}
+      // A press or a key here is a gesture: a new layout of the app's that follows at once may glide (`animated`).
+      onPointerDownCapture={() => (touched.current = Date.now())}
+      onKeyDownCapture={() => (touched.current = Date.now())}
       onFocus={(event) => setHeld(event.target instanceof Element ? (event.target.closest<HTMLElement>('[data-thing]')?.dataset.thing ?? null) : null)}
       onBlur={(event) => {
         if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(null)
@@ -1486,7 +2248,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         edges={flowEdges}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
-        onNodesChange={onNodesChange}
+        onNodesChange={onThingsChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, node) => onSelect?.(node.id)}
         onPaneClick={() => onSelect?.(null)}
@@ -1506,7 +2268,22 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               }
             : undefined
         }
-        nodesDraggable={false}
+        nodesDraggable={movable}
+        // A drag starts after 4px: a press is not one, and neither is a pan that starts on a thing by mistake. With a
+        // finger a drag on a thing moves it and a drag on the ground moves the view, as with a mouse.
+        {...(movable
+          ? {
+              nodeDragThreshold: DRAG_AFTER,
+              selectNodesOnDrag: false,
+              // Nothing glides while a thing is dragged (`startDrag`).
+              onNodeDragStart: (_: unknown, __: unknown, taken: readonly Node<Drawn>[]) => startDrag(taken.map((it) => it.id)),
+              onNodeDragStop: (_: unknown, __: unknown, dropped: readonly Node<Drawn>[]) => {
+                endDrag()
+                for (const it of dropped) settle(it.id, it.position)
+              },
+            }
+          : {})}
+        onMoveEnd={keepStop}
         nodesConnectable={editable}
         nodesFocusable={false}
         edgesFocusable={false}
@@ -1521,7 +2298,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
         {/* At the start of the foot: the end of the foot is the library's own name, which it asks to be left in sight. */}
-        {minimap ? <MiniMap position="bottom-left" pannable zoomable ariaLabel={words.map} nodeBorderRadius={4} /> : null}
+        {minimap ? <MiniMap position="bottom-left" pannable zoomable ariaLabel={words.map} nodeBorderRadius={4} nodeClassName={mapClass} /> : null}
         {search ? (
           <Panel position="top-left">
             <SearchField
@@ -1540,7 +2317,15 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
           </Panel>
         ) : null}
         <Panel position="top-right">
-          <div role="group" aria-label={words.view} className="flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
+          <div ref={viewRow} role="group" aria-label={words.view} className="flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
+            {/* Only while something was moved, and at the start of the row, which is held at its end: the other buttons stay where they are (R14). */}
+            {moved.size > 0 ? (
+              <Tooltip label={words.resetLayout}>
+                <Button variant="ghost" size="icon-sm" data-slot="graph-reset" aria-label={words.resetLayout} onClick={reset}>
+                  <Icon name="undo" />
+                </Button>
+              </Tooltip>
+            ) : null}
             <Tooltip label={words.zoomOut}>
               <Button variant="ghost" size="icon-sm" aria-label={words.zoomOut} onClick={zoomOut}>
                 <Icon name="minus" />
@@ -1559,6 +2344,17 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
           </div>
         </Panel>
       </ReactFlow>
+      {movable ? (
+        <>
+          {/* How a thing is moved without a drag: in the description of each thing. And what the keys did, said as it happens. */}
+          <span id={`${uid}-keys`} hidden>
+            {words.moveKeys}
+          </span>
+          <span role="status" className="sr-only">
+            {said}
+          </span>
+        </>
+      ) : null}
     </div>
   )
 }

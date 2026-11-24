@@ -35,6 +35,7 @@ import { FOCUS_RING_INSET } from "../../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER } from "../../lib/rows"
 import { useMotion, type MotionImpl } from "../../internal/motion"
 import { Icon, type IconName } from "../../icons"
+import { Logo } from "./logo"
 import { useWords } from "../../words"
 import { Count } from "./count"
 import { SearchField } from "./search-field"
@@ -49,6 +50,12 @@ export type TreeNode = {
   icon?: IconName | (string & {}) | undefined
   /** The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed. */
   openIcon?: IconName | (string & {}) | undefined
+  /**
+   * A picture of the thing, where it has one of its own (the logo of a service, of a framework): the address of an SVG
+   * or a PNG the app serves, drawn in the icon's slot with `Logo`, 16px and whole. The row's icon is in its place
+   * while it loads and when it fails. The name of the row says what it is: the picture says nothing to screen readers.
+   */
+  image?: string | undefined
   /** A short fact at the end of the row, in tabular figures: a size, a date. */
   meta?: React.ReactNode
   /** How many things the node holds or waits on (changed, unread): a `Count` at the end of the row, after `meta`. Zero shows nothing. */
@@ -139,7 +146,7 @@ function resolve(nodes: readonly TreeNode[], loaded: ReadonlyMap<string, Loaded>
   let icons = false
   const walk = (list: readonly TreeNode[]): Inner[] =>
     list.map((node) => {
-      if (node.icon !== undefined || node.openIcon !== undefined) icons = true
+      if (node.icon !== undefined || node.openIcon !== undefined || node.image !== undefined) icons = true
       const toLoad = node.children === undefined && node.hasChildren === true
       const lazy = toLoad && canLoad
       const entry = lazy ? loaded.get(node.id) : undefined
@@ -207,6 +214,8 @@ type BodyProps = {
   /** The tree has icons: every row keeps the slot. */
   icons: boolean
   icon: string | undefined
+  /** The picture of the thing, drawn in the icon's slot; the icon is its fallback. */
+  image: string | undefined
   meta: React.ReactNode
   count: number | undefined
   /** A branch whose rows load: its state is said in a live part, there from the start. */
@@ -219,7 +228,7 @@ type BodyProps = {
  * What a row draws, from plain values: the same values, no paint. Ark's parts around it are painted again at each move
  * of the focus (Ark's context is new at each change); this is not.
  */
-const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen, icons, icon, meta, count, lazy, status, motion }: BodyProps) {
+const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen, icons, icon, image, meta, count, lazy, status, motion }: BodyProps) {
   const words = useWords()
   // On the chosen row the muted ink would not keep its contrast on the tint: the row's own ink, a step quieter.
   const quiet = chosen ? "opacity-80" : "text-ink-mute"
@@ -232,7 +241,7 @@ const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen
         <span aria-hidden="true" data-slot="tree-chevron" className={cn("flex size-4 items-center justify-center", quiet)}>
           {branch ? motion ? <motion.Turn open={open}>{arrow}</motion.Turn> : <span className={cn("inline-flex", open && "rotate-90")}>{arrow}</span> : null}
         </span>
-        {icons ? icon !== undefined ? <Icon name={icon} /> : <span aria-hidden="true" data-slot="tree-icon-empty" className="size-4" /> : null}
+        {icons ? image !== undefined ? <Logo src={image} icon={icon} decorative /> : icon !== undefined ? <Icon name={icon} /> : <span aria-hidden="true" data-slot="tree-icon-empty" className="size-4" /> : null}
       </span>
       <span id={nameId} data-slot="tree-name" className={cn("min-w-0 flex-1 truncate", chosen && "font-semibold")}>
         {name}
@@ -283,6 +292,7 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
       chosen={state.selected}
       icons={icons}
       icon={open && source.openIcon !== undefined ? source.openIcon : source.icon}
+      image={source.image}
       meta={hasMeta ? meta : undefined}
       count={hasCount ? source.count : undefined}
       lazy={node.lazy}
