@@ -360,13 +360,50 @@ test('as a drawer, reached with Tab (through the sentinel at its edge) and close
   expect(document.activeElement).toBe(button('First message'))
 })
 
-test('a control of the inspector removed with the focus on it: the focus goes back, and does not jump at the next closing', () => {
-  render(<Details />)
+test('a control of the inspector removed with the focus on it: the focus stays in the inspector, and Escape still closes it', () => {
+  const seen: boolean[] = []
+  render(<Details onChange={(open) => seen.push(open)} />)
   focus(button('First message'))
   focus(button('Remove the label'))
   fireEvent.click(button('Remove the label'))
   expect(screen.queryByRole('button', { name: 'Remove the label' })).toBeNull()
+  const details = screen.getByRole('complementary', { name: 'Details' })
+  expect(document.activeElement).toBe(details)
+  fireEvent.keyDown(details, { key: 'Escape' })
+  expect(seen).toEqual([false])
   expect(document.activeElement).toBe(button('First message'))
+})
+
+test('as a drawer too, a control removed with the focus on it leaves the focus in the inspector', async () => {
+  const resize = observed()
+  render(<Details start={false} />)
+  resize(900)
+  focus(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Remove the label'))
+  await settle(120)
+  fireEvent.click(button('Remove the label'))
+  await settle(120)
+  expect(document.activeElement).toBe(screen.getByRole('dialog', { name: 'Details' }))
+})
+
+test('the focus that left a field for nothing does not go back to it when the inspector closes: the content takes it', () => {
+  render(<Details />)
+  const field = screen.getByRole('searchbox', { name: 'Search the messages' })
+  focus(field)
+  // A touch outside any control: the field is left, and its keyboard goes.
+  act(() => field.blur())
+  focus(button('Edit'))
+  fireEvent.click(button('Close'))
+  expect(document.activeElement).toBe(screen.getByRole('main', { name: 'Messages' }))
+})
+
+test('after a control of the inspector is removed, a later closing with the focus elsewhere does not move it', () => {
+  render(<Details />)
+  focus(button('First message'))
+  focus(button('Remove the label'))
+  fireEvent.click(button('Remove the label'))
   // The person types in the search field, and the app closes the details: the field keeps the focus.
   const field = screen.getByRole('searchbox', { name: 'Search the messages' })
   focus(field)
@@ -389,8 +426,14 @@ test('docked, a search field that holds text keeps its Escape; empty, Escape clo
   const field = screen.getByRole('searchbox', { name: 'Find in the details' })
   focus(button('First message'))
   focus(field)
+  // An app's command on Escape (it listens on the window) does not hear the key of a field that holds text.
+  const heard: string[] = []
+  const listen = (event: KeyboardEvent) => heard.push(event.key)
+  window.addEventListener('keydown', listen)
   fireEvent.keyDown(field, { key: 'Escape' })
+  window.removeEventListener('keydown', listen)
   expect(seen).toEqual([])
+  expect(heard).toEqual([])
   fireEvent.change(field, { target: { value: '' } })
   fireEvent.keyDown(field, { key: 'Escape' })
   expect(seen).toEqual([false])

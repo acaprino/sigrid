@@ -89,11 +89,14 @@ const EDITED = '[contenteditable=""], [contenteditable="true"], [contenteditable
 // Base UI's sentinels at the ends of a layer: the focus passes through them, it is never the person's place.
 const GUARD = "[data-base-ui-focus-guard]"
 
+/** Whether `target` is a field that holds text, or text being edited in place. */
+const holdsText = (target: EventTarget | null) =>
+  target instanceof Element && (target.closest(EDITED) !== null || (target.matches(TEXT_FIELD) && (target as HTMLInputElement | HTMLTextAreaElement).value !== ""))
+
 /** Whether Escape pressed on `target`, in the inspector `region`, belongs to `target` and not to the inspector. */
 function keepsEscape(target: EventTarget | null, region: Element | null): boolean {
   if (!(target instanceof Element)) return false
-  if (target.closest(EDITED)) return true
-  if (target.matches(TEXT_FIELD) && (target as HTMLInputElement | HTMLTextAreaElement).value !== "") return true
+  if (holdsText(target)) return true
   const surface = target.closest(KEEPS_ESCAPE)
   return surface !== null && !(region && surface.contains(region))
 }
@@ -418,9 +421,16 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
   //   sends no `blur`; or the drawer is out of the page already).
   // The focus is in the inspector when the element that has it is `at`, or when it is nowhere and `inside` holds. Then,
   // and only then, the inspector gives it back to `from` (to the content, if `from` is gone, hidden or does not take
-  // it): when `open` turns false, when it is taken out of the page while open, and when what had the focus in it is
-  // removed and leaves the focus nowhere (seen at the inspector's next render). Otherwise it moves nothing.
+  // it): when `open` turns false, and when it is taken out of the page while open. Otherwise it moves nothing.
+  // When what had the focus in it is removed and leaves the focus nowhere (a link its own press replaced; seen at the
+  // inspector's next render), the focus stays in the inspector, on the inspector itself: the person is still there.
+  // `from` is dropped when the focus leaves it for nothing (a touch outside any control): a later closing must not
+  // bring back a field the person had left, and its keyboard with it.
   const focus = React.useRef<{ at: EventTarget | null; from: HTMLElement | null; inside: boolean }>({ at: null, from: null, inside: false })
+  const root = React.useRef<HTMLElement | null>(null)
+  const setRoot = React.useCallback((el: HTMLElement | null) => {
+    root.current = el
+  }, [])
   const within = React.useCallback(() => {
     const doc = content?.current?.ownerDocument ?? document
     return nowhere(doc) ? focus.current.inside : doc.activeElement === focus.current.at
@@ -456,16 +466,29 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
     }
     note(doc.activeElement)
     const listen = (event: FocusEvent) => note(event.target)
+    // To nothing, and not the window losing the focus (the document still has it there then).
+    const leave = (event: FocusEvent) => {
+      if (event.relatedTarget === null && event.target === focus.current.from && doc.activeElement !== event.target) focus.current.from = null
+    }
     doc.addEventListener("focusin", listen)
-    return () => doc.removeEventListener("focusin", listen)
+    doc.addEventListener("focusout", leave)
+    return () => {
+      doc.removeEventListener("focusin", listen)
+      doc.removeEventListener("focusout", leave)
+    }
   }, [content])
   React.useLayoutEffect(() => {
     if (!open) giveBack()
   }, [open, giveBack])
-  // What had the focus in the inspector is gone (a button its own action removed, the other form at another width).
+  // What had the focus in the inspector is gone (a link its own press replaced): the focus stays in the inspector.
+  // Where the inspector itself is not there to take it (the other form, at another width, not drawn yet), it goes back.
   React.useLayoutEffect(() => {
     const { at, inside } = focus.current
-    if (open && inside && at instanceof Node && !at.isConnected && nowhere(at.ownerDocument ?? document)) giveBack()
+    if (!open || !inside || !(at instanceof Node) || at.isConnected) return
+    const doc = at.ownerDocument ?? document
+    if (!nowhere(doc)) return
+    root.current?.focus({ preventScroll: true })
+    if (nowhere(doc)) giveBack()
   })
   // Taken out of the page.
   React.useLayoutEffect(() => giveBack, [giveBack])
@@ -508,6 +531,7 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
           animated={animated}
           initialFocus={false}
           onCloseAutoFocus={(event) => event.preventDefault()}
+          ref={setRoot}
           {...track}
           data-inspector-form="drawer"
           className={cn("gap-0 p-0", className)}
@@ -525,16 +549,21 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
       data-inspector-form="docked"
       aria-label={title}
       hidden={!open}
+      // It takes the focus itself, as the drawer does: on a press on its text, and when what had the focus in it is removed.
+      ref={setRoot}
+      tabIndex={-1}
       {...track}
       // Escape with the focus in it closes it, as the drawer's does, unless the key is already answered or belongs to
       // what has the focus: a field that holds text, an open list or menu.
       onKeyDown={(event) => {
         if (!onOpenChange || event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing || event.ctrlKey || event.altKey || event.metaKey) return
+        // The field's alone: an app's command on Escape does not close the details from it either, as in the drawer.
+        if (holdsText(event.target)) return event.stopPropagation()
         if (keepsEscape(event.target, event.currentTarget)) return
         event.preventDefault()
         onOpenChange(false)
       }}
-      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper", className)}
+      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper outline-none", className)}
     >
       {heading}
       {body}

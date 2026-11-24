@@ -381,18 +381,25 @@ opening it does not move the focus: a selection opened it, and the person goes i
 Closed with the focus in it (a menu or a list it opened counts), it gives the focus back to what last had it outside
 the inspector (a dialog or a menu does not count: the row under it does), or to the content when that is gone or
 hidden; closed with the focus elsewhere (an app's command closed it), it moves nothing. It gives the focus back in
-the same way when it is taken out of the page while open, and when the control that had the focus in it is removed
-and leaves the focus nowhere (seen when the inspector is drawn again).
+the same way when it is taken out of the page while open (if the row that had the focus goes in the same change, the
+focus is left on nothing: the app then puts it where it wants). What last had the focus is forgotten when the focus
+leaves it for nothing (a touch outside any control): closing then gives the focus to the content, not to a field the
+person had left. When the control that had the focus in the inspector is removed and leaves the focus nowhere (a
+link its own press replaced; seen when the inspector is drawn again), the focus stays in the inspector, on the
+inspector itself: Escape still closes it, and Tab goes on from there.
 
 An app that used the `Inspector` before 2026-11-24 meets four changes:
 
 - Escape in a docked inspector's field that holds text (a `SearchField` with a search, an inline edit) stays the
   field's; on an empty field, a button or the inspector's text it closes the inspector, which it did not do docked.
 - Escape with the focus outside the panel (a search field of the content, a row) no longer closes the panel. An app
-  that wants Escape to close the details from anywhere declares it:
+  that wants Escape to close the details from the rest of the window declares it:
   `useCommand({ id: 'close', label: 'Close the details', keys: 'Escape', when: open, run: () => setOpen(false) })`.
-- A control of the inspector removed while it has the focus (a «Remove» button) sends the focus back outside, where
-  it was; an app that wants it on the next control of the inspector focuses that control itself.
+  The command runs from a field of the content too (a command's Escape is not left to a field), and never from a
+  field of the inspector that holds text, docked or panel: there the key is the field's alone.
+- A control of the inspector removed while it has the focus (a «Remove» button, a link its press replaces) leaves the
+  focus on the inspector itself, which takes the focus (docked too: a press on its text gives it the focus); an app
+  that wants it on the next control focuses that control itself.
 - An inspector taken out of the page (`inspector={undefined}`) with the focus in it gives the focus back as on closing.
 
 `Sheet` has `closesOnEscape` for the same need: a function asked at each Esc, whose `false` leaves the sheet open and

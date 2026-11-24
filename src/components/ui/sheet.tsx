@@ -79,6 +79,9 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
  */
 function Sheet({ onOpenChange, closesOnEscape, ...props }: SheetProps) {
   const [side, setSide] = React.useState<SheetSide>("right")
+  // One answer for each press of Esc: Base UI asks twice for the same key (on the sheet, then on the document), and what
+  // the app does in between (it empties or removes the field that had the focus) must not change the answer.
+  const asked = React.useRef<{ event: unknown; closes: boolean } | null>(null)
   return (
     <ModalContext.Provider value={props.modal !== false}>
       <SideContext.Provider value={setSide}>
@@ -92,10 +95,13 @@ function Sheet({ onOpenChange, closesOnEscape, ...props }: SheetProps) {
             return
           }
           // An Esc that is not the sheet's: it stays open, and the key goes on to whoever else listens for it.
-          if (!open && details.reason === "escape-key" && closesOnEscape && !closesOnEscape()) {
-            details.cancel()
-            details.allowPropagation()
-            return
+          if (!open && details.reason === "escape-key" && closesOnEscape) {
+            if (asked.current?.event !== details.event) asked.current = { event: details.event, closes: closesOnEscape() }
+            if (!asked.current.closes) {
+              details.cancel()
+              details.allowPropagation()
+              return
+            }
           }
           const outside = details.reason === "outside-press" || details.reason === "focus-out"
           // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.
