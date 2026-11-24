@@ -249,8 +249,8 @@ function pairsOf(c: Readonly<Record<string, string>>): Pair[] {
     text(`ink on ${g}`, c['ink']!, bg)
     text(`ink-soft on ${g}`, c['ink-soft']!, bg)
     text(`ink-mute (and the letter of a key) on ${g}`, c['ink-mute']!, bg)
-    // A row under the pointer: the ink at 6% over the ground.
-    text(`ink-mute on a hovered row of ${g}`, c['ink-mute']!, mix(c['ink']!, bg, 0.06))
+    // A row under the pointer, as every list and menu draws it: 60% of the selection tint over the ground.
+    text(`ink-mute on a hovered row of ${g}`, c['ink-mute']!, mix(c['selected']!, bg, 0.6))
     text(`accent as text on ${g}`, c['accent']!, bg)
     for (const status of ['success', 'warning', 'destructive', 'info'] as const) text(`${status} on ${g}`, c[status]!, bg)
     part(`control border on ${g}`, c['input']!, bg)
@@ -302,6 +302,10 @@ describe('the preset the hooks were approved for, measured', () => {
           `primary ${c['primary']} label ${c['primary-foreground']} ${row('label on the primary button')}; accent ${c['accent']}; ink-soft ${c['ink-soft']}; info ${c['info']} on ${c['info-soft']} ${row('badge info (word and dot on its ground)')}; corrected: ${tokens.corrected.join(',') || 'none'}`,
       )
     }
+    // Not a pair the toolkit draws (the ink at 6% is the fill of a quiet button, whose label is the ink): measured
+    // only, because the first run of this test took it for the wash of a hovered row and it fell short in dark.
+    const first = tokensFor(shellPreset(SHELL_ACCENTS[0]), scheme, SHELL_TONE).colors
+    console.log(`[theme-hooks] ${scheme} measured only, ink-mute on the ink at 6% over: ${(['paper', 'paper-2', 'raised'] as const).map((g) => `${g} ${contrast(first['ink-mute']!, mix(first['ink']!, first[g]!, 0.06)).toFixed(2)}`).join(', ')}`)
     const text = worst(all, 'text')
     const part = worst(all, 'part')
     console.log(`[theme-hooks] ${scheme} worst text pair: ${text.name}, ${text.app}, ${text.ratio.toFixed(2)}:1 (needs 4.5)`)
