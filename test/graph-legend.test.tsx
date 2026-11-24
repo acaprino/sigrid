@@ -8,8 +8,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { linesOf } from '../src/components/GraphCanvas'
-import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES, lineLook, lineVars } from '../src/components/graph-lines'
+import { linesOf } from '../src/assemblies/GraphCanvas'
+import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES, lineLook, lineVars } from '../src/assemblies/graph-lines'
 import { GraphLegend, type GraphEdge, type GraphLegendEntry } from '../src/graph'
 
 const ENTRIES: GraphLegendEntry[] = [

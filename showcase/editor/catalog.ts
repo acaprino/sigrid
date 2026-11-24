@@ -8,8 +8,8 @@
 // `own-class` on (test/editor-export.test.ts). The only class names here are those of `box`, the box the canvas draws
 // around a component to drag it by, which is the editor's and is never exported; they are whole words, never put
 // together from pieces, as the stylesheet of the showcase is made by reading the source for them.
-import type { IconName } from '../../src/index'
-import { ICON_NAMES } from '../../src/index'
+import type { IconName } from '../../src/primitives'
+import { ICON_NAMES } from '../../src/primitives'
 import { call, equals, flag, h, handler, json, list, lit, name, not, number, oneOf, slug, text, type Call, type Child, type El, type Expr, type Val } from './ir'
 
 /** Where a component can be dropped. */

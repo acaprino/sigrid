@@ -3,7 +3,9 @@
 // the words are the app's to translate.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Icon, Steps, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { Icon } from '../src/primitives'
+import { Steps } from '../src/components'
 
 const STEPS = [{ label: 'Account' }, { label: 'Profile', description: 'Your name and photo' }, { label: 'Plan' }, { label: 'Done' }]
 

@@ -4,8 +4,8 @@
 import { render } from '@testing-library/react'
 import { Check, CircleX, CodeXml, ExternalLink, FileIcon, Folder, FolderOpen, GitBranch, Globe, Info, Key, Layers, MonitorSmartphone, Package, Router, Settings, Trash2, TriangleAlert, Waypoints, type LucideIcon } from 'lucide-react'
 import { expect, test } from 'vitest'
-import * as UI from '../src'
-import { ICON_NAMES, Icon, isIconName, type IconName } from '../src'
+import * as UI from './all'
+import { ICON_NAMES, Icon, isIconName, type IconName } from '../src/primitives'
 import { classes } from './helpers'
 
 /** The drawing an `Icon` of that name makes. */

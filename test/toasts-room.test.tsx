@@ -2,7 +2,7 @@
 // can keep its foot above them at every width (an app's own sheets read it too: tested in the app's package).
 import { act, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Toasts } from '../src'
+import { Toasts } from '../src/components'
 
 describe('the toasts publish the room they take at the bottom', () => {
   test('Toasts publish the height of their column on the document root, and take it away when they go', async () => {

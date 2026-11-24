@@ -4,9 +4,12 @@ This file is for a coding agent (Claude Code and others) that builds or changes 
 `@acaprino/sigrid`. It comes with the package: in an app it is at `node_modules/@acaprino/sigrid/AGENTS.md`, and the
 paths below start from that folder. The last section is for work on the toolkit itself.
 
-Sigrid is a React UI system in four levels: a toolkit (primitives, tokens, themes), advanced components (a table, a
-long list, a graph…), a layout system (the frame, its two forms, the patterns) and an app system for Tauri (the window
-wired by `@acaprino/sigrid/tauri`). ADHD first: calm neutral surfaces, one accent that says where to look and what to
+Sigrid is a React UI system in four levels, each made of the ones before it: primitives (one control each: a button,
+a field, an icon, the layout parts), components (primitives put together for one need: a field with its label, a note,
+a message), assemblies (components that do a whole function together: the command palette, a conversation, a table, a
+graph) and applications, which are examples to start from (`agents/examples`). Under them is the ground (tokens,
+themes, words) and beside them the frame of an app (`AppShell`, its two forms, the patterns) and the wiring of a Tauri
+window (`@acaprino/sigrid/tauri`). ADHD first: calm neutral surfaces, one accent that says where to look and what to
 press, one clear action at a time, and shared controls that never move (R14). It runs in a browser and in a Tauri
 window, on a computer and on a phone.
 
@@ -33,7 +36,7 @@ through `Icon`), the same in every app, and the user does not choose another.
 
 | To know | Read |
 |---|---|
-| Which component there is, its props and what each is for | `agents/catalog.json` (written from the source: file, what it is, components and their props, the object types those props are made of) |
+| Which component there is, the entry it is imported from, its props and what each is for | `agents/catalog.json` (written from the source, one list for each entry of the package: file, what it is, components and their props, the object types those props are made of) |
 | A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
@@ -55,9 +58,12 @@ copy a component of the toolkit into the app, and do not add another component l
    In a Tauri app, take where it runs, the drag attribute and the window's buttons from `@acaprino/sigrid/tauri`
    (`readHost`, `DRAG_REGION`, `useWindowControls`); it is page side only, and the native skeleton is the
    tauri-app-builder plugin's.
-2. Take every control from the toolkit. Import from `@acaprino/sigrid`; the table, the virtual list, the list put in
-   order by hand, the rich text field and the graph canvas have entries of their own (`/table`, `/virtual`,
-   `/reorder`, `/rich-text`, `/graph`; the graph also needs `@import "@acaprino/sigrid/graph.css"`).
+2. Take every control from the toolkit, each from the entry of its level: `@acaprino/sigrid/primitives`,
+   `/components`, `/layout` (the frame) and `/assemblies`; the main entry, `@acaprino/sigrid`, holds what does not
+   draw (themes, density, words, motion, media queries). The catalogue says which entry exports each name: do not
+   guess it. The table, the virtual list, the list put in order by hand, the rich text field and the graph canvas are
+   assemblies with entries of their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`; the graph also
+   needs `@import "@acaprino/sigrid/graph.css"`).
 3. Write no class of your own. The tokens are what the toolkit's parts are made of, and what a part added to the
    toolkit uses: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,
    `border-line`, `bg-selected`, `bg-accent`, `text-accent`, the radii `rounded-sm|md|lg`, the shadows
@@ -88,6 +94,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
   a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never
   stands for an action or a kind of thing.
+- Sides are logical: `ps-`, `pe-`, `ms-`, `me-`, `start-`, `end-`, `text-start`, `border-s`, never `pl-`, `mr-`,
+  `left-`, `text-left`, so a language written from the right mirrors by itself. A physical side only where the side
+  is the meaning (`test/logical-sides.test.ts`).
 - With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a part added
   to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own
@@ -148,7 +157,10 @@ by default, and every app turns it on: no app has interface code of its own (the
 In the repository of the toolkit: `npm run design:lint`, `npm run design:check`, `npm run typecheck`,
 `npm run showcase:typecheck`, `npm run typecheck:test`, `npm test`, `npm run build`. After a change to a component's props or comments run
 `npm run agents`, which writes `agents/` again (a test fails if it is behind); where nothing may be compiled, take `agents/`
-from the artifact `agents` that a failed CI run keeps. A component goes in the toolkit only
+from the artifact `agents` that a failed CI run keeps. A part goes in the folder and the entry of its level
+(`src/primitives`, `src/components`, `src/layout`, `src/assemblies`), imports from no level after it
+(`test/layers.test.ts`), and is added to the table of names the code export reads (`showcase/editor/entries.ts`). A
+component goes in the toolkit only
 if it carries no concept of one app, and only when a function needs it: never to bring back an app's former look
 (the first section). A new source file starts with a comment that says what it is: the catalogue
 reads it. A dependency is

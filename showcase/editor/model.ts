@@ -4,7 +4,7 @@
 // bar and the content are always there: every other region is the app's choice. It is plain data: kept in the browser,
 // copied and read back as JSON, and the one thing the run page and the export are given. Also here: the apps and the
 // layouts to start from, and where the data is kept.
-import type { IconName } from '../../src/index'
+import type { IconName } from '../../src/primitives'
 import { CATALOG, iconName, isKind, type FieldSpec, type Kind, type Region } from './catalog'
 import { flag, list, oneOf, slug, text } from './ir'
 import { START_LOOK, readLook, type Look } from './look'

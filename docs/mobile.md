@@ -296,7 +296,9 @@ The frame of a phone app with a few views: tabs at the foot, the solid action la
 bottom bar. The frame takes its height and its edges by itself, and tells the notices how tall the bar is.
 
 ```tsx
-import { AppShell, Icon, TitleBar, Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '@acaprino/sigrid'
+import { Icon } from '@acaprino/sigrid/primitives'
+import { Toasts } from '@acaprino/sigrid/components'
+import { AppShell, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '@acaprino/sigrid/layout'
 
 function Tasks() {
   const [view, setView] = useState('today')

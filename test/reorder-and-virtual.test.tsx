@@ -4,7 +4,8 @@
 // screen readers, their words, and the order a move gives.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { ItemRow, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { ItemRow } from '../src/components'
 import { ReorderList, moveItem } from '../src/reorder'
 import { VirtualList } from '../src/virtual'
 

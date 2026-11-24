@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { FileDrop } from '../src'
+import { FileDrop } from '../src/components'
 import { classes, dt, settle } from './helpers'
 
-// `FileDrop` (src/internal/file-drop.tsx): a file dropped on the zone or chosen with the picker, the checks of type,
+// `FileDrop` (src/components/file-drop.tsx): a file dropped on the zone or chosen with the picker, the checks of type,
 // size and count, the words of the app, the busy and the error states.
 
 // `settle(40)`: Ark's FileUpload judges the files and opens the picker in a microtask and an animation frame.

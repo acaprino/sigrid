@@ -2,7 +2,7 @@
 // scrolls and a foot, as the content and the inspector of Imago's frame are laid out.
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { Panel } from '../src'
+import { Panel } from '../src/layout'
 
 test('a panel is a region named by its title, with its parts in order', () => {
   render(

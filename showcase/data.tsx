@@ -3,11 +3,12 @@
 // (`./virtual`), a list put in order by its handles (`./reorder`) and a field for text with a little form
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
-import { Avatar, Badge, Button, Column, FormField, Icon, Input, ItemRow, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
+import { Avatar, Badge, Button, Column, Icon, Input, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/primitives'
+import { FormField, ItemRow } from '../src/components'
 import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
-import { RichTextField } from '../src/rich-text'
+import { EMPTY_EMAIL, EmailComposer, RichTextField, type EmailDraft } from '../src/rich-text'
 import { GraphCanvas, GraphLegend, type GraphCanvasHandle, type GraphEdge, type GraphLegendEntry, type GraphNode } from '../src/graph'
 import '../src/styles/graph.css'
 import { Code, Row, Section } from './parts'
@@ -194,6 +195,9 @@ export function Reorders({ animated }: { animated: boolean }) {
 export function RichTexts() {
   const [notes, setNotes] = React.useState('<p>Ask <strong>the supplier</strong> about the invoice.</p><ul><li><p>The amount</p></li><li><p>The date it is due</p></li></ul>')
   const [reply, setReply] = React.useState('')
+  const [mail, setMail] = React.useState<EmailDraft>({ ...EMPTY_EMAIL, to: ['ada@example.com'], subject: 'The invoice', html: '<p>Hello Ada,</p><p>here is <strong>the invoice</strong> for March.</p>' })
+  const [sending, setSending] = React.useState(false)
+  const [sent, setSent] = React.useState('')
   return (
     <Section
       id="rich-text"
@@ -226,6 +230,32 @@ export function RichTexts() {
       <Row label="disabled">
         <div className="w-full max-w-xl">
           <RichTextField aria-label="Sent message" value="<p>Sent on Monday. <em>It cannot be changed.</em></p>" onChange={() => {}} disabled />
+        </div>
+      </Row>
+      <Row label="a message of mail">
+        <div data-sample="email-composer" className="flex w-full max-w-xl flex-col gap-2">
+          <EmailComposer
+            value={mail}
+            onChange={setMail}
+            sending={sending}
+            contacts={['ada@example.com', 'grace@example.com', 'alan@example.com']}
+            display={(address) => ({ 'ada@example.com': 'Ada Lovelace', 'grace@example.com': 'Grace Hopper', 'alan@example.com': 'Alan Turing' })[address] ?? address}
+            onSend={(draft) => {
+              setSending(true)
+              setTimeout(() => {
+                setSending(false)
+                setSent(`Sent to ${[...draft.to, ...draft.cc, ...draft.bcc].join(', ')}`)
+                setMail(EMPTY_EMAIL)
+              }, 1200)
+            }}
+            onDiscard={() => setMail(EMPTY_EMAIL)}
+            tools={
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Attach a file">
+                <Icon name="attach" />
+              </Button>
+            }
+          />
+          <p className="text-xs text-ink-mute">{sent || 'EmailComposer, from the same entry: the app holds the draft and sends it.'}</p>
         </div>
       </Row>
     </Section>

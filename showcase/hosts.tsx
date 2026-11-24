@@ -17,23 +17,9 @@
 // also names the app it holds (`data-app`), so the keys of one example run only while the focus is in it
 // (`CommandsProvider keysIn`): the four examples share one page, and a key of one is not a key of the others.
 import * as React from 'react'
-import {
-  PortalContainerProvider,
-  TitleBar,
-  Toasts,
-  Toolbar,
-  WindowControls,
-  applyTheme,
-  cn,
-  densityOf,
-  densityVariables,
-  type DensityDef,
-  type DensityId,
-  type ThemeDef,
-  type ThemeScheme,
-  type ThemeShape,
-  type ToastItem,
-} from '../src/index'
+import { PortalContainerProvider, applyTheme, cn, densityOf, densityVariables, type DensityDef, type DensityId, type ThemeDef, type ThemeScheme, type ThemeShape } from '../src/index'
+import { Toasts, type ToastItem } from '../src/components'
+import { TitleBar, Toolbar, WindowControls } from '../src/layout'
 import { touchDensity } from './phone'
 
 /** What the page chose in Look, which an app's own theme follows: light or dark, and how round the corners are. */

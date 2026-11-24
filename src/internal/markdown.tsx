@@ -119,7 +119,7 @@ function renderInline(nodes: Inline[], key = ''): ReactNode[] {
       case 'del':
         return <del key={k}>{renderInline(n.children, k + '.')}</del>
       case 'code':
-        return <code key={k} className="rounded bg-paper-2 px-1 font-mono text-xs">{n.text}</code>
+        return <code key={k} className="rounded-sm bg-paper-2 px-1 font-mono text-xs">{n.text}</code>
       case 'link':
         return <span key={k} data-slot="md-link" title={n.href} className="underline decoration-ink-mute underline-offset-2">{renderInline(n.children, k + '.')}</span>
     }
@@ -196,7 +196,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
             )
           case 'quote':
             return (
-              <blockquote key={i} className="border-l-2 border-line pl-3 text-ink-soft">
+              <blockquote key={i} className="border-s-2 border-line ps-3 text-ink-soft">
                 {b.lines.map((l, j) => (
                   <Fragment key={j}>
                     {j > 0 ? <br /> : null}
@@ -210,7 +210,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
             const List = b.kind === 'ul' ? 'ul' : 'ol'
             const checklist = b.items.every((it) => it.check !== undefined)
             return (
-              <List key={i} className={cn('space-y-1 pl-5', checklist ? 'list-none pl-0' : b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
+              <List key={i} className={cn('space-y-1 ps-5', checklist ? 'list-none ps-0' : b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
                 {b.items.map((it, j) => (
                   <li key={j} className={cn(it.check !== undefined && 'flex items-start gap-2')}>
                     {it.check !== undefined ? (

@@ -16,12 +16,13 @@
 // reached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).
 // No animation.
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
-import { ComboboxPrimitive as Combobox, createListCollection } from './ui/combobox'
+import { ComboboxPrimitive as Combobox, createListCollection } from './combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
 import { Icon } from '../icons'
-import { Badge } from './ui/badge'
-import { Tooltip } from './ui/tooltip'
+import { Badge } from '../primitives/badge'
+import { Tooltip } from '../primitives/tooltip'
 import { cn } from '../lib/utils'
+import { useEntrance } from '../internal/motion'
 import { FOCUS_RING, FOCUS_WITHIN_FIELD } from '../lib/focus'
 import { FIELD_HOVER_DATA, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
 import { LIST_CARD, LIST_ROW } from '../lib/rows'
@@ -61,6 +62,8 @@ export type ChipsInputProps = {
   separators?: readonly string[] | undefined
   /** The 8px dot in the colour of the label's name (R10), on by default. Off for chips that are not coloured labels (people, addresses). */
   dot?: boolean | undefined
+  /** The list of suggestions enters with a movement, as a select's does. Absent: as `MotionProvider` says. */
+  animated?: boolean | undefined
 }
 
 const COMMA = [','] as const
@@ -176,7 +179,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
               // A value that is not valid: the destructive border and text on its soft fill, said in words too (below).
               className={cn(
                 TAG_PILL,
-                'h-7 gap-1.5 overflow-visible rounded-sm pr-1 text-xs data-highlighted:outline-solid data-highlighted:outline-2 data-highlighted:outline-offset-2 data-highlighted:outline-ring',
+                'h-7 gap-1.5 overflow-visible rounded-sm pe-1 text-xs data-highlighted:outline-solid data-highlighted:outline-2 data-highlighted:outline-offset-2 data-highlighted:outline-ring',
                 wrong ? 'border-destructive bg-destructive-soft text-destructive' : 'bg-ink/6 text-ink',
               )}
             >
@@ -202,14 +205,14 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
  * A list of labels as chips with an input: add with Enter or comma (also by pasting «a, b, c» or by leaving the
  * input), remove with the chip's button, and with Backspace on an empty input the last one is removed.
  */
-export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel, display, invalid, separators, dot }: ChipsInputProps) {
+export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel, display, invalid, separators, dot, animated }: ChipsInputProps) {
   const ids = useMemo(() => ({ input: id }), [id])
   const words = useWords()
   const translations = useMemo(() => tagWords(words, display), [words, display])
   const separatorsKey = separators?.join('\n')
   // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the content, not on the array's identity
   const split = useMemo(() => separatorPattern(separators), [separatorsKey])
-  if (suggestions !== undefined) return <SuggestingChips id={id} value={value} onChange={onChange} placeholder={placeholder} suggestions={suggestions} onQuery={onQuery} suggestionsLabel={suggestionsLabel} display={display} invalid={invalid} dot={dot} split={split} />
+  if (suggestions !== undefined) return <SuggestingChips id={id} value={value} onChange={onChange} placeholder={placeholder} suggestions={suggestions} onQuery={onQuery} suggestionsLabel={suggestionsLabel} display={display} invalid={invalid} dot={dot} animated={animated} split={split} />
   return (
     <TagsInput.Root
       ids={ids}
@@ -233,7 +236,9 @@ export function ChipsInput({ id, value, onChange, placeholder, suggestions, onQu
 const POSITIONING = { placement: 'bottom-start', sameWidth: true, gutter: 4, strategy: 'fixed' } as const
 
 /** The labels field with a list of suggestions under it: the two Ark machines share the text box and what is typed. */
-function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel, display, invalid, dot, split }: Omit<ChipsInputProps, 'placeholder' | 'suggestions' | 'separators'> & { placeholder: string | undefined; suggestions: readonly string[]; split: RegExp }) {
+function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuery, suggestionsLabel, display, invalid, dot, split, animated }: Omit<ChipsInputProps, 'placeholder' | 'suggestions' | 'separators'> & { placeholder: string | undefined; suggestions: readonly string[]; split: RegExp }) {
+  // The list comes from the side of the field it is under, as a select's and a menu's do.
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, el.ownerDocument.getElementById(id)))
   const ids = useMemo(() => ({ input: id }), [id])
   const words = useWords()
   const translations = useMemo(() => tagWords(words, display), [words, display])
@@ -311,6 +316,7 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
       {open ? (
         <Combobox.Positioner className="z-50">
           <Combobox.Content
+            ref={enter}
             data-slot="chips-suggestions"
             aria-label={suggestionsLabel ?? words.labels.suggestions}
             hidden={items.length === 0}

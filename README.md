@@ -1,18 +1,29 @@
 # Sigrid UI
 
-Sigrid is the UI system shared by a suite of React apps, ADHD first, in four levels:
+Sigrid is the UI system shared by a suite of React apps, ADHD first, in four levels, each made of the ones before it:
 
-1. **A toolkit.** The single source of truth for colours, tokens, fonts, primitives and motion (`@acaprino/sigrid`).
-2. **Advanced components.** A table, a long list, a list put in order by hand, a rich text field and a graph canvas, each
-   on an entry of its own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
-3. **A layout system.** The one frame of an app (`AppShell`) in two forms, with lines or as a sheet (Xiox's frame), its
-   regions and the widths where it gives way, `Panel`, the layout parts, and the patterns of `docs/patterns.md` and
-   `docs/mobile.md`.
-4. **An app system for Tauri.** The title bar, the window's buttons and the desktop guard, which are plain web, and
-   `@acaprino/sigrid/tauri`, which wires them to a Tauri window from the page. The app editor of the showcase lays a
-   whole app out and exports it as a project. The native skeleton (`src-tauri`) is the tauri-app-builder plugin's.
+1. **Primitives** (`@acaprino/sigrid/primitives`). One control or one surface each, with no idea of what it holds: a
+   button, a field, a check, a menu, a sheet, a hint, an icon, and the parts a screen is laid out with (`Column`,
+   `Cluster`, `Text`…).
+2. **Components** (`@acaprino/sigrid/components`). Primitives put together for one need: a field with its label and
+   its error, a date, a search box, a note, a row that opens, a list of items, a message, a notice.
+3. **Assemblies** (`@acaprino/sigrid/assemblies`). Components that do a whole function together, with a state of
+   their own: the command palette, a conversation and its field, a deck decided one card at a time, a tree, the
+   attachments and their viewer, the look settings. Those that rest on a library an app may not need have entries of
+   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
+4. **Applications, as examples** (`agents/examples`, and the showcase). Whole apps made of the three levels above and
+   nothing else: a to-do app, a mail client, a workspace, a screen that fits. They are there to start from and to
+   read; no app is part of the package's code.
 
-All four are made for coding agents: `AGENTS.md`, a catalogue written from the source (`agents/`), whole example apps,
+Under the levels is the ground, the main entry (`@acaprino/sigrid`): the theme engine, the tokens, the fonts, the
+words and the helpers, with nothing that draws. Beside them are the frame of an app (`@acaprino/sigrid/layout`:
+`AppShell` in two forms, with lines or as a sheet, its regions and the widths where it gives way, `Panel`, and the
+patterns of `docs/patterns.md` and `docs/mobile.md`) and the wiring of a Tauri window from the page
+(`@acaprino/sigrid/tauri`; the native skeleton, `src-tauri`, is the tauri-app-builder plugin's). A level never imports
+from one after it (`test/layers.test.ts`), and in the source each is a folder: `src/primitives`, `src/components`,
+`src/layout`, `src/assemblies`.
+
+All of it is made for coding agents: `AGENTS.md`, a catalogue written from the source (`agents/`), whole example apps,
 a check (`sigrid-check`) and a Claude Code plugin.
 
 It knows nothing of any app: no app's name, concepts or product components. The toolkit's source (`src/`) knows no
@@ -38,7 +49,8 @@ cd sigrid && npm ci && npm run build
 
 ```tsx
 import '@acaprino/sigrid/theme.css'   // in your Tailwind entry, with an @source on the toolkit's src
-import { BASE_THEME, applyTheme, applyDensity, Button } from '@acaprino/sigrid'
+import { BASE_THEME, applyTheme, applyDensity } from '@acaprino/sigrid'
+import { Button } from '@acaprino/sigrid/primitives'
 
 applyTheme(document.documentElement, { theme: BASE_THEME, scheme: 'light' })
 applyDensity(document.documentElement, 'normal') // or 'compact', 'large', or your own DensityDef
@@ -54,6 +66,13 @@ bar by itself, so no `h-dvh`, `h-screen` or `100vh` goes around it (`docs/mobile
 
 To depend on a published version instead of a checkout, see [Use a release](#use-a-release) below.
 
+**From 5.x to 6.** What draws is no longer exported by the main entry: each name is imported from the entry of its
+level (`/primitives`, `/components`, `/layout`, `/assemblies`), and `@acaprino/sigrid` keeps what does not draw
+(themes, density, words, motion, helpers). `agents/catalog.json` says which entry exports each name; the names and
+the props are the same. The source moved with it: `src/components/ui/*` is now `src/primitives`, `src/components`,
+`src/layout` or `src/assemblies`, for an app that reads a file by its path (`./src/*`). React 19 is needed (the peer is
+`^19.0.0`): the parts take `ref` as a prop and use `inert`, which React 18 does not have.
+
 To migrate from `@acaprino/toolkit`, update the dependency name and all imports, including stylesheet imports,
 to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at your checkout. Releases through
 `v1.0.1` carry the original package and tarball names.
@@ -68,7 +87,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    avatar. The split is meant to stay (the owner's decision of 2026-11-22): a control moves from one to the other only
    when it is rewritten anyway, or when a defect comes from the two living together.
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
-   levels and elevation of every primitive in `src/components/ui/`.
+   levels and elevation of every primitive in `src/primitives/`.
 3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
    decelerates, leaving accelerates, moving in place eases; no springs), enabled app-wide with `<MotionProvider animated={true}>` or per control with the `animated` prop, never
    with `prefers-reduced-motion`, only in answer to a gesture. `motion` (14.6.0) is imported by
@@ -352,6 +371,88 @@ action of its screen (R3).
 </Note>
 ```
 
+## A conversation with an assistant
+
+`Chat` (from `/assemblies`) is the whole of it, drawn from data: the app holds the messages (`ChatMessage`: who it
+is from, its text, and for an answer its `reasoning`, its `tools`, an `error`, a `vote`) and talks to its model; the
+chat tells it what the user did (`onSend`, `onStop`, `onRetry`, `onVote`). It decides what every app's chat does
+alike: an answer still being written has no actions and its reasoning is open until the text starts, «try again» is
+on the last answer only, a failed answer is an error note with «Try again», a suggestion fills the field.
+
+```tsx
+<Chat messages={messages} busy={busy} onSend={ask} onStop={stop} onRetry={askAgain} onVote={rate}
+  suggestions={messages.length === 0 ? ideas : undefined} empty={<Empty title="Ask about your tasks" />}
+  placeholder="Ask about your tasks" />
+```
+
+An app whose chat needs another arrangement composes the parts itself. The parts of a chat, the same in every app: `Conversation` (the thread), `Message` (one turn), `PromptInput` (the
+field a message is written in), `Suggestions` (ready-made requests), and, for what an assistant did on the way to its
+answer, `Reasoning` and `ToolCall`. The app holds the messages and talks to its model; the parts only draw.
+
+- `Conversation` scrolls: it stays at the latest message while the reader is at the end, so an answer being written
+  is followed, and stops following when the reader goes up; a button then leads back. It is a log for screen readers,
+  which wait while `busy` and read the answer once, whole.
+- `Message` with `from="user"` is a quiet block at the end of the row; `from="assistant"` is plain text on the page,
+  Markdown when it is a string. Under it, only the actions asked for: `copyText`, `onRetry`, `onVote` (with `vote`),
+  and the app's own (`actions`).
+- `PromptInput` grows with the text up to eight lines. Enter sends, Shift+Enter makes a new line (with a finger Enter
+  makes a new line and the button sends). Its one button sends; while `busy` it stops the answer (`onStop`), in the
+  same place. On a chat screen it is the one solid button (R3).
+- `Suggestions` are quiet chips: `onSelect` usually puts the text in the field, for the user to send or change.
+- `Reasoning` is open while it is written (`busy`) and closes when it is done, unless the reader chose; `ToolCall`
+  says a tool's name and its state (`pending`, `running`, `success`, `error`) and opens on `input` and `output`.
+- Nothing loops: no typing dots, no shimmer, no spinner. A failure of the answer is a `Note` with `tone="error"`
+  and «Retry», in the thread.
+
+```tsx
+<Column fill gap="md">
+  <Conversation label="Chat with the assistant" busy={busy} empty={<Empty title="Ask about your tasks" />}>
+    {turns.map((turn) => (
+      <Message key={turn.id} from={turn.from} copyText={turn.from === 'assistant' ? turn.text : undefined}>
+        {turn.text}
+      </Message>
+    ))}
+    {busy ? <Reasoning busy>{thinking}</Reasoning> : null}
+  </Conversation>
+  <Suggestions items={ideas} onSelect={(idea) => setDraft(idea.label)} />
+  <PromptInput value={draft} onValueChange={setDraft} onSubmit={send} busy={busy} onStop={stop} placeholder="Ask about your tasks" />
+</Column>
+```
+
+## A message of mail being written
+
+`EmailComposer` (from `@acaprino/sigrid/rich-text`, with the field its text is written in) is the form of a message:
+«To», «Cc» and «Bcc» behind a button until they are asked for or hold an address, the subject, and a text with a
+little form whose value is HTML. An address is a chip, closed by a comma, a semicolon, a blank or Enter; one that is
+not an address is said so on its chip. The app holds the draft (`EmailDraft`: `to`, `cc`, `bcc`, `subject`, `html`;
+start from `EMPTY_EMAIL`) and sends it. «Send», the one solid button, and Ctrl+Enter call `onSend` only with a draft
+that can go; otherwise the reason is said in words and the focus goes to «To» (`emailProblem`, `isEmailAddress`).
+
+```tsx
+<EmailComposer value={draft} onChange={setDraft} onSend={send} sending={sending} onDiscard={discard}
+  contacts={addressBook} display={(address) => names[address] ?? address}
+  from={<Select aria-label="From" value={account} onValueChange={setAccount} options={accounts} />}
+  attachments={<AttachmentsSection … />} />
+```
+
+## A pile decided one card at a time
+
+`SwipeDeck` shows the first of `items` as a card to decide to one of two sides (`leftLabel`, `rightLabel`: «Skip» and
+«Keep», «Refuse» and «Approve»). Three ways, one decision: drag the card past the mark or flick it, press the left or
+right arrow with the card in focus, or press one of the two buttons under the deck, which are always there. The deck
+keeps nothing: `onSwipe(item, direction)` tells the app, which takes the card out of `items`, and puts it first again
+to take the decision back (an Undo in a notice, `Toasts`). The card follows the finger at once; thrown, it leaves with
+a movement only with motion on.
+
+```tsx
+<SwipeDeck label="Requests to review" items={requests} getKey={(r) => r.id} getLabel={(r) => r.title}
+  leftLabel="Refuse" rightLabel="Approve" leftIcon="close" rightIcon="check"
+  onSwipe={(request, direction) => decide(request, direction === 'right')}
+  empty={<Empty title="All reviewed" />}>
+  {(request) => (<><Heading level={3}>{request.title}</Heading><Text as="p">{request.reason}</Text></>)}
+</SwipeDeck>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -440,11 +541,32 @@ set, `Icon` (R6), and no logo stands in for one.
 <Tree aria-label="Services" nodes={[{ id: 'db', name: 'Database', icon: 'layers', image: '/logos/postgresql.svg' }]} />
 ```
 
-- `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
+Each name is exported by one entry, the one of its level (`agents/catalog.json` lists every name of every entry; the
+list below goes by what a part is for, and names parts of every level):
+
+- `.`: the ground, with nothing that draws: the theme engine and catalog, the colour palette, the density, `cn`, the
+  words (`WordsProvider`), the Motion loader (`MotionProvider`), Markdown as data, drop payloads, media queries and
+  overlay layers.
+- `/primitives`: `Button`, `Input`, `Textarea`, `Checkbox`, `Select`, `Switch`, `Slider`, `RadioGroup*`,
+  `ToggleGroup*`, `Tabs*`, `Sheet*`, `DialogRoot`/`Dialog*` parts, `DropdownMenu*`, `Popover*`, `Tooltip`, `Kbd`,
+  `Badge`, `Count`, `Avatar`, `Logo`, `Progress*`, `Table*`, `Card`, `Heading`, `Dot`, `Separator`, `Thumbnail`, `Icon`, and
+  the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
+- `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
+  `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
+  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
+  and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
+- `/layout`: `AppShell`, `Inspector`, `TitleBar`, `WindowControls`, `Toolbar*`, `Sidebar*`, `SidebarRow`,
+  `DrawerButton`, `NavList`/`NavItem`, `Panel`, `ContentSplit`.
+- `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `Chat`, `Conversation`,
+  `PromptInput`, `SwipeDeck`, `Tree`, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
+  `ColorMatch`.
+
+What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
   `Tooltip`, `Kbd`, `Empty`, `Badge`, `Logo` (below), `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
-  `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
+  `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), the parts of a conversation
+  (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
 - Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are
@@ -456,7 +578,7 @@ set, `Icon` (R6), and no logo stands in for one.
     row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
     Make `columns` once (outside the component, or with `useMemo`): a new array at every paint sorts again. For
     filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and its parts,
-    which are in the main entry.
+    which are primitives (`@acaprino/sigrid/primitives`).
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
     items there are and where each one is. Each place gives one row, never none. With `fill` it is as tall as the
@@ -643,7 +765,7 @@ set, `Icon` (R6), and no logo stands in for one.
       many lines of that kind there are (a `Count`: zero shows nothing; screen readers hear it with the word, «12
       calls»); `aria-label` names the list. Each entry is a short sample of the line (hidden from screen readers), its
       word and its count, in a row that wraps on a narrow window. The samples are drawn by the same definitions as the
-      canvas's lines (`src/components/graph-lines.ts` and one rule of `graph.css`), so the key and the lines cannot
+      canvas's lines (`src/assemblies/graph-lines.ts` and one rule of `graph.css`), so the key and the lines cannot
       part. The word is always there: a tone is never said by its colour alone. It keys the lines only, not the
       things. A summary beside the key (how many lines are in sight, say) is the app's to write, with `Text`: the key
       has no prop for it.
@@ -654,7 +776,7 @@ set, `Icon` (R6), and no logo stands in for one.
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
   import { VirtualList } from '@acaprino/sigrid/virtual'
   import { ReorderList } from '@acaprino/sigrid/reorder'
-  import { RichTextField } from '@acaprino/sigrid/rich-text'
+  import { RichTextField, EmailComposer, EMPTY_EMAIL } from '@acaprino/sigrid/rich-text'
 
   const columns: DataColumn<File>[] = [
     { id: 'name', header: 'Name', cell: (file) => file.name, sortValue: (file) => file.name },

@@ -248,7 +248,7 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
 })
 
 // The four libraries under a table, a long list, a list put in order and formatted text (2026-11-23): pinned, listed, and
-// each behind its own entry of the package, so the main entry stays what it was.
+// each behind its own entry of the package, so the main entry and the entries of the levels stay light.
 describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, each in its own entry', () => {
   const PINNED: Record<string, string> = {
     '@tanstack/react-table': '9.3.1',
@@ -292,7 +292,7 @@ describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, 
     for (const { entry } of rows.values()) expect(exported[entry], entry).toEqual({ types: `./dist/${entry.slice(2)}.d.ts`, import: `./dist/${entry.slice(2)}.js` })
   })
 
-  test('the main entry of the package reaches none of them: an app that uses no such part loads no such library', () => {
+  test('the main entry and the entries of the levels reach none of them: an app that uses no such part loads no such library', () => {
     const seen = new Set<string>()
     const reach = (file: string) => {
       if (seen.has(file)) return
@@ -303,7 +303,9 @@ describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, 
         if (found) reach(found)
       }
     }
-    reach(join(root, 'src/index.ts'))
+    for (const entry of ['index', 'primitives', 'components', 'layout', 'assemblies']) reach(join(root, `src/${entry}.ts`))
+    // The walk went through the levels, not only the ground.
+    expect(seen.size).toBeGreaterThan(50)
     expect([...seen].filter((file) => imports(file).length > 0).map(rel)).toEqual([])
   })
 })

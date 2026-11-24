@@ -396,7 +396,7 @@
 
 /* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ————
    Curves: decelerateMid cubic-bezier(0, 0, 0, 1); accelerateMin cubic-bezier(0.8, 0, 0.78, 1); easyEase cubic-bezier(0.33, 0, 0.67, 1).
-   Durations: toast 200ms, mark 100ms, sheet 200ms, row 200ms, popup 150ms, land 150ms.
+   Durations: toast 200ms, mark 100ms, sheet 200ms, row 200ms, popup 150ms, land 150ms, throw 200ms, settle 150ms.
    Gestures: press 100ms, release 150ms, tooltip 100ms, follow 100ms, leave 100ms, turn 150ms, slide 150ms, enter 200ms, list 200ms.
    Travel: hint 4px, card 8px, row 8px, notice 24px, sheet 32px.
    Pressed scale: 0.96. Touch target: 44px. */

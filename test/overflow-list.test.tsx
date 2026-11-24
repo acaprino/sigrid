@@ -5,7 +5,8 @@
 import { act, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { OverflowList, WordsProvider, type OverflowListProps } from '../src'
+import { WordsProvider } from '../src'
+import { OverflowList, type OverflowListProps } from '../src/components'
 import { classes } from './helpers'
 
 const LABELS = ['Today 09:00', 'Every Monday', 'Kitchen', 'Home', 'Calls', 'Errands']

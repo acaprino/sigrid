@@ -3,7 +3,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { NavItem, Sidebar, SidebarGroup } from '../src'
+import { NavItem, Sidebar, SidebarGroup } from '../src/layout'
 import { flush } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())

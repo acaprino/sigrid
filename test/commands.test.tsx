@@ -5,7 +5,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { CommandPalette, CommandsProvider, PALETTE_COMMAND, formatKeys, useCommand, useCommands } from '../src'
+import { CommandPalette, CommandsProvider, PALETTE_COMMAND, formatKeys, useCommand, useCommands } from '../src/assemblies'
 import { flush } from './helpers'
 
 // `flush()`: the dialog opens and closes in a frame of its own, as in a browser.

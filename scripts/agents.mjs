@@ -19,6 +19,10 @@ const check = process.argv.includes('--check')
 /** The entries of the package, as an app imports them, and the file each one starts from. */
 const ENTRIES = [
   ['@acaprino/sigrid', 'src/index.ts'],
+  ['@acaprino/sigrid/primitives', 'src/primitives.ts'],
+  ['@acaprino/sigrid/components', 'src/components.ts'],
+  ['@acaprino/sigrid/layout', 'src/layout.ts'],
+  ['@acaprino/sigrid/assemblies', 'src/assemblies.ts'],
   ['@acaprino/sigrid/table', 'src/table.ts'],
   ['@acaprino/sigrid/virtual', 'src/virtual.ts'],
   ['@acaprino/sigrid/reorder', 'src/reorder.ts'],
@@ -166,7 +170,7 @@ function catalog() {
     entries.push({ import: name, files: list, ...(libraries.length > 0 ? { fromLibraries: libraries.sort((a, b) => a.localeCompare(b, 'en')) } : {}) })
   }
   return {
-    about: 'The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `types` are the object types those props are made of (a column, a notice, an option), with their fields. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.',
+    about: 'The components of @acaprino/sigrid, written from its source by scripts/agents.mjs. Each entry is a level of the package (the main entry holds what does not draw; then `/primitives`, `/components`, `/layout`, `/assemblies`, and the assemblies with an entry of their own): a name is imported from the entry it is listed under. `about` is the comment at the head of a file, `doc` the comment on a component. `props` are the props the toolkit declares; `passesOn` says the component also takes the props of the element or the part it draws. `types` are the object types those props are made of (a column, a notice, an option), with their fields. `also` are the other names the file exports: helpers, constants, types. `fromLibraries` are parts of Ark UI or Base UI the entry hands on unchanged.',
     rules: 'DESIGN.md',
     entries,
   }

@@ -39,17 +39,17 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | File | Ark UI component | Import |
 |---|---|---|
 | `src/components/Toasts.tsx` | `toast` | `@ark-ui/react/toast` |
-| `src/components/ui/switch.tsx` | `switch` | `@ark-ui/react/switch` |
-| `src/components/ui/slider.tsx` | `slider` | `@ark-ui/react/slider` |
-| `src/components/ui/avatar.tsx` | `avatar` | `@ark-ui/react/avatar` |
-| `src/components/ui/combobox.tsx` | `combobox` | `@ark-ui/react/combobox` |
-| `src/components/ui/tabs.tsx` | `tabs` | `@ark-ui/react/tabs` |
-| `src/components/ui/calendar.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
+| `src/primitives/switch.tsx` | `switch` | `@ark-ui/react/switch` |
+| `src/primitives/slider.tsx` | `slider` | `@ark-ui/react/slider` |
+| `src/primitives/avatar.tsx` | `avatar` | `@ark-ui/react/avatar` |
+| `src/components/combobox.tsx` | `combobox` | `@ark-ui/react/combobox` |
+| `src/primitives/tabs.tsx` | `tabs` | `@ark-ui/react/tabs` |
+| `src/components/calendar.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
 | `src/components/DateField.tsx` | `date-picker` | `@ark-ui/react/date-picker` |
 | `src/components/ChipsInput.tsx` | `tags-input` | `@ark-ui/react/tags-input` |
-| `src/components/Attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
-| `src/internal/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
-| `src/components/ui/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
+| `src/assemblies/Attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/components/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
+| `src/assemblies/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -57,23 +57,23 @@ Notes:
   bottom, the oldest pushed out from the top) is laid out here, because Ark's `max` keeps a new notice waiting instead
   of pushing the oldest out and its layouts follow a list that still holds a notice while it leaves. Its motion is the
   toolkit's list transition (`NOTICES` in `motion-impl`).
-- `ui/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
+- `components/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
   its keyboard, month and year views). The roughly 380 lines of grid and keyboard code written here before are gone.
   Kept on top: a native `<button>` per day, the weekday headers readable by screen readers, Home and End for the week.
 - `components/ChipsInput.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
-  `ui/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
+  `components/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
   are compared ignoring case, a chip is not edited in place.
-- `ui/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
+- `primitives/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
   slides with a CSS transition, only with `animated`.
-- `ui/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as Right and Left.
-- `ui/avatar.tsx`: Ark's Avatar, for the initials shown until the picture loads and again if it fails.
-- `ui/combobox.tsx`: Ark's Combobox (filtering as the user types, the list, its keyboard). The list is not moved to
+- `primitives/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as Right and Left.
+- `primitives/avatar.tsx`: Ark's Avatar, for the initials shown until the picture loads and again if it fails.
+- `components/combobox.tsx`: Ark's Combobox (filtering as the user types, the list, its keyboard). The list is not moved to
   a portal; the options are filtered here unless the caller answers `onQuery`.
-- `ui/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
+- `primitives/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
-- `components/Attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
+- `assemblies/Attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
-- `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
+- `assemblies/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
   branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
   ever and asks again on a second Enter), dropped when the app gives another node; the filter, which opens what leads to
   a find and gives back what the person had opened; the failure of a load said in the row; the rows named by their name
@@ -104,33 +104,33 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Park UI recipe | Source |
 |---|---|---|
-| `src/components/ui/button.tsx` | `button` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts |
-| `src/components/ui/badge.tsx` | `badge` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts |
-| `src/components/ui/checkbox.tsx` | `checkbox` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts |
-| `src/components/ui/input.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
-| `src/components/ui/textarea.tsx` | `textarea` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts |
-| `src/components/ui/kbd.tsx` | `kbd` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts |
-| `src/components/ui/select.tsx` | `select` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts |
-| `src/components/ui/toggle-group.tsx` | `segment-group` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts |
-| `src/components/ui/dropdown-menu.tsx` | `menu` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts |
-| `src/components/ui/popover.tsx` | `popover` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts |
-| `src/components/ui/dialog.tsx` | `dialog` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts |
-| `src/components/ui/sheet.tsx` | `drawer` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts |
-| `src/components/ui/tooltip.tsx` | `tooltip` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts |
-| `src/components/ui/switch.tsx` | `switch` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/switch.ts |
-| `src/components/ui/slider.tsx` | `slider` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/slider.ts |
-| `src/components/ui/avatar.tsx` | `avatar` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/avatar.ts |
-| `src/components/ui/combobox.tsx` | `combobox` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/combobox.ts |
-| `src/components/ui/tabs.tsx` | `tabs` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts |
-| `src/components/ui/form-field.tsx` | `field` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts |
-| `src/components/ui/calendar.tsx` | `date-picker` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts |
+| `src/primitives/button.tsx` | `button` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts |
+| `src/primitives/badge.tsx` | `badge` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts |
+| `src/primitives/checkbox.tsx` | `checkbox` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts |
+| `src/primitives/input.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
+| `src/primitives/textarea.tsx` | `textarea` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts |
+| `src/primitives/kbd.tsx` | `kbd` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts |
+| `src/primitives/select.tsx` | `select` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts |
+| `src/primitives/toggle-group.tsx` | `segment-group` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts |
+| `src/primitives/dropdown-menu.tsx` | `menu` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts |
+| `src/primitives/popover.tsx` | `popover` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts |
+| `src/primitives/dialog.tsx` | `dialog` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts |
+| `src/primitives/sheet.tsx` | `drawer` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts |
+| `src/primitives/tooltip.tsx` | `tooltip` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tooltip.ts |
+| `src/primitives/switch.tsx` | `switch` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/switch.ts |
+| `src/primitives/slider.tsx` | `slider` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/slider.ts |
+| `src/primitives/avatar.tsx` | `avatar` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/avatar.ts |
+| `src/components/combobox.tsx` | `combobox` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/combobox.ts |
+| `src/primitives/tabs.tsx` | `tabs` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts |
+| `src/components/form-field.tsx` | `field` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/field.ts |
+| `src/components/calendar.tsx` | `date-picker` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts |
 | `src/components/Toasts.tsx` | `toast` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/toast.ts |
 | `src/components/DateField.tsx` | `input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts |
 | `src/components/ChipsInput.tsx` | `tags-input` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts |
-| `src/components/Attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
-| `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
-| `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
-| `src/components/ui/note.tsx` | `alert` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts |
+| `src/assemblies/Attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/components/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
+| `src/assemblies/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
+| `src/components/note.tsx` | `alert` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts |
 
 Also following Park, without a recipe of their own: the shape and elevation in `src/theme-engine.ts` (its `radii` and
 `shadows` tokens) and `src/styles/theme.css` (its type scale and text styles; the tokens of the light navigation column
@@ -139,7 +139,7 @@ with the accent-tint selection of the approved preview).
 Notes:
 - `Toasts.tsx` keeps SmoothUI's dark card (the inverted ink surface of the approved preview); Park's toast is a light
   surface card, so of it only the form is taken (l3, lg elevation, padding, the semibold action, outline keys).
-- `ui/calendar.tsx`, `components/ChipsInput.tsx`, `components/Attachments.tsx` have nothing of SmoothUI left: their look is
+- `components/calendar.tsx`, `components/ChipsInput.tsx`, `assemblies/Attachments.tsx` have nothing of SmoothUI left: their look is
   Park's (date-picker, tags-input, file-upload), their behaviour Ark UI's. They left the SmoothUI table.
 - Park's checkbox is square with l1 corners, and that is the toolkit's checkbox. An app can round its own, through
   `--radius-check`.
@@ -266,11 +266,11 @@ entry of the package imports none of them.
 
 | File | Library | Entry of the package |
 |---|---|---|
-| `src/components/DataTable.tsx` | `@tanstack/react-table`, `@tanstack/react-virtual` | `./table` |
-| `src/components/ui/virtual-list.tsx` | `@tanstack/react-virtual` | `./virtual` |
-| `src/components/ui/reorder-list.tsx` | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `./reorder` |
-| `src/components/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
-| `src/components/GraphCanvas.tsx` | `@dagrejs/dagre`, `@xyflow/react` | `./graph` |
+| `src/assemblies/DataTable.tsx` | `@tanstack/react-table`, `@tanstack/react-virtual` | `./table` |
+| `src/assemblies/virtual-list.tsx` | `@tanstack/react-virtual` | `./virtual` |
+| `src/assemblies/reorder-list.tsx` | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `./reorder` |
+| `src/assemblies/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
+| `src/assemblies/GraphCanvas.tsx` | `@dagrejs/dagre`, `@xyflow/react` | `./graph` |
 
 ## Tauri's API
 
@@ -296,44 +296,44 @@ The files below are copied from the SmoothUI registry and **adapted** for `@acap
 tokens from `src/styles/theme.css`, animations off by default (the `animated` prop, never with `prefers-reduced-motion`),
 no springs, loops or decorative effects. Since the Park restyle (2026-11-19) their form (sizes, variants, corners,
 elevation) is Park UI's (see above): what stays from SmoothUI is the structure, the `data-slot`s and the API. `Toasts.tsx`
-keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `components/ChipsInput.tsx`
-and `components/Attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
+keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `components/calendar.tsx`, `components/ChipsInput.tsx`
+and `assemblies/Attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
 for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
 
 | File | Slug SmoothUI | Source |
 |---|---|---|
-| `src/components/ui/button.tsx` | `smooth-button` | https://smoothui.dev/r/base-nova/smooth-button.json |
-| `src/components/ui/badge.tsx` | `badge` | https://smoothui.dev/r/base-nova/badge.json |
-| `src/components/ui/checkbox.tsx` | `checkbox` | https://smoothui.dev/r/base-nova/checkbox.json |
-| `src/components/ui/input.tsx` | `input` | https://smoothui.dev/r/base-nova/input.json |
-| `src/components/ui/textarea.tsx` | `textarea` | https://smoothui.dev/r/base-nova/textarea.json |
-| `src/components/ui/dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
+| `src/primitives/button.tsx` | `smooth-button` | https://smoothui.dev/r/base-nova/smooth-button.json |
+| `src/primitives/badge.tsx` | `badge` | https://smoothui.dev/r/base-nova/badge.json |
+| `src/primitives/checkbox.tsx` | `checkbox` | https://smoothui.dev/r/base-nova/checkbox.json |
+| `src/primitives/input.tsx` | `input` | https://smoothui.dev/r/base-nova/input.json |
+| `src/primitives/textarea.tsx` | `textarea` | https://smoothui.dev/r/base-nova/textarea.json |
+| `src/primitives/dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
 | `src/components/Dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
-| `src/components/ui/sheet.tsx` | `drawer` | https://smoothui.dev/r/base-nova/drawer.json |
-| `src/components/ui/dropdown-menu.tsx` | `dropdown-menu` | https://smoothui.dev/r/base-nova/dropdown-menu.json |
-| `src/components/ui/popover.tsx` | `popover` | https://smoothui.dev/r/base-nova/popover.json |
+| `src/primitives/sheet.tsx` | `drawer` | https://smoothui.dev/r/base-nova/drawer.json |
+| `src/primitives/dropdown-menu.tsx` | `dropdown-menu` | https://smoothui.dev/r/base-nova/dropdown-menu.json |
+| `src/primitives/popover.tsx` | `popover` | https://smoothui.dev/r/base-nova/popover.json |
 | `src/components/Toasts.tsx` | `toast` | https://smoothui.dev/r/base-nova/toast.json |
-| `src/components/ui/select.tsx` | `select` | https://smoothui.dev/r/base-nova/select.json |
-| `src/components/ui/radio-group.tsx` | `radio-group` | https://smoothui.dev/r/base-nova/radio-group.json |
-| `src/components/ui/tooltip.tsx` | `tooltip` | https://smoothui.dev/r/base-nova/tooltip.json |
-| `src/components/ui/empty.tsx` | `empty` | https://smoothui.dev/r/base-nova/empty.json |
-| `src/components/ui/toggle-group.tsx` | `toggle-group` | https://smoothui.dev/r/base-nova/toggle-group.json |
+| `src/primitives/select.tsx` | `select` | https://smoothui.dev/r/base-nova/select.json |
+| `src/primitives/radio-group.tsx` | `radio-group` | https://smoothui.dev/r/base-nova/radio-group.json |
+| `src/primitives/tooltip.tsx` | `tooltip` | https://smoothui.dev/r/base-nova/tooltip.json |
+| `src/components/empty.tsx` | `empty` | https://smoothui.dev/r/base-nova/empty.json |
+| `src/primitives/toggle-group.tsx` | `toggle-group` | https://smoothui.dev/r/base-nova/toggle-group.json |
 
 Notes:
-- `ui/kbd.tsx` no longer rests on SmoothUI: its form is Park UI's `kbd`, the rest is the toolkit's own.
+- `primitives/kbd.tsx` no longer rests on SmoothUI: its form is Park UI's `kbd`, the rest is the toolkit's own.
 - `Toasts.tsx` keeps from `toast` only the surface of a notice (the dark card: text, action and close button on one
   row, the quick choices on a second); its form is Park's `toast`. Its primitive is Ark UI's Toast and its motion is the toolkit's list transition: the
   SmoothUI enter/exit values are gone.
-- `ui/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
+- `components/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
   DatePicker, the look Park's `date-picker`, and they left the table.
-- `ui/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
+- `primitives/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
   primitive (keyboard, ARIA and a portal nested in the sheet).
-- `ui/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
-- `ui/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
+- `primitives/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
+- `primitives/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
   is not copied); it serves a segmented switch (a choice between a few views, for example).
-- `components/ChipsInput.tsx` (Ark's TagsInput, Park's `tags-input`) and `components/Attachments.tsx` (Ark's FileUpload, Park's
+- `components/ChipsInput.tsx` (Ark's TagsInput, Park's `tags-input`) and `assemblies/Attachments.tsx` (Ark's FileUpload, Park's
   `file-upload`) no longer have anything of SmoothUI and left the table.
-- `ui/empty.tsx`, `ui/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
+- `components/empty.tsx`, `primitives/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
   hint repeats the button's accessible name and is `aria-hidden`.
 
 ### SmoothUI license
@@ -375,7 +375,7 @@ licence is the one in the package's own folder in `node_modules`.
   https://github.com/material-foundation/material-color-utilities). The tonal palette (HCT) that `src/palette.ts`
   builds from an accent.
 - **class-variance-authority**: `class-variance-authority` 0.7.1 (**Apache-2.0**, Joe Bell,
-  https://github.com/joe-bell/cva). The variants and sizes of `ui/button.tsx` and `ui/badge.tsx`.
+  https://github.com/joe-bell/cva). The variants and sizes of `primitives/button.tsx` and `primitives/badge.tsx`.
 - **clsx**: `clsx` 2.1.1 (**MIT**, Copyright (c) Luke Edwards, https://github.com/lukeed/clsx), and **tailwind-merge**:
   `tailwind-merge` 3.7.0 (**MIT**, Copyright (c) 2021 Dany Castillo, https://github.com/dcastil/tailwind-merge). Joined
   in `cn` (`src/lib/utils.ts`), which every part uses to put its classes together.

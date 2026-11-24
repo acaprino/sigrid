@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { useState } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { TitleBar, WindowControls, type TitleBarDragProps } from '../src'
+import { TitleBar, WindowControls, type TitleBarDragProps } from '../src/layout'
 import {
   DRAG_REGION,
   TAURI_PERMISSIONS,

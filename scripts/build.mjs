@@ -40,12 +40,13 @@ const compilerRuntime = {
 
 await build({
   plugins: [syncExternalStore, compilerRuntime],
-  // The main entry, and one for each part that rests on a library an app may not need (a table, a long list, a
-  // list put in order by dragging, formatted text, a graph): what they share with the main entry is in common chunks.
+  // The main entry (the ground: themes, words, helpers), one for each level that draws (primitives, components, the
+  // frame, assemblies), and one for each assembly that rests on a library an app may not need (a table, a long list, a
+  // list put in order by dragging, formatted text, a graph): what they share is in common chunks.
   // The Tauri entry's source is outside `src/` (the toolkit knows no shell): the entries are named, so each one is
   // `dist/<name>.js` wherever its source is.
   entryPoints: {
-    ...Object.fromEntries(['index', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => [entry, `${root}src/${entry}.ts`])),
+    ...Object.fromEntries(['index', 'primitives', 'components', 'layout', 'assemblies', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => [entry, `${root}src/${entry}.ts`])),
     tauri: `${root}tauri/index.ts`,
   },
   // `splitting`: Motion (src/internal/motion-impl.tsx) stays in a separate chunk, loaded only with animations on.
@@ -73,4 +74,4 @@ writeFileSync(`${root}dist/tauri.d.ts`, "export * from './tauri/index'\n")
 run('@tailwindcss/cli/dist/index.mjs', ['-i', 'src/styles/entry.css', '-o', 'dist/styles.css'])
 
 for (const f of readdirSync(`${root}src/styles/fonts`)) cpSync(`${root}src/styles/fonts/${f}`, `${root}dist/fonts/${f}`)
-console.log('@acaprino/sigrid: dist/index.js and its six entries (table, virtual, reorder, rich-text, graph, tauri), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')
+console.log('@acaprino/sigrid: dist/index.js and its ten entries (primitives, components, layout, assemblies, table, virtual, reorder, rich-text, graph, tauri), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')

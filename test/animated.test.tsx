@@ -5,7 +5,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState, type ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { Checkbox, Toasts } from '../src'
+import { Checkbox } from '../src/primitives'
+import { Toasts } from '../src/components'
 import { preloadMotion, useEntrance } from '../src/internal/motion'
 import { noop, settle, systemMotion } from './helpers'
 

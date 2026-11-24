@@ -7,7 +7,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { Toasts, type ToastItem } from '../src'
+import { Toasts, type ToastItem } from '../src/components'
 import { preloadMotion } from '../src/internal/motion'
 import { TOASTS_LAYER } from '../src/internal/overlay'
 import { settle } from './helpers'

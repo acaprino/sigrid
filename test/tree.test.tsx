@@ -7,7 +7,9 @@
 // at a class is the 44px a row asks for with a finger, which jsdom cannot measure.
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Icon, Tree, WordsProvider, type IconName, type TreeNode } from '../src'
+import { WordsProvider } from '../src'
+import { Icon, type IconName } from '../src/primitives'
+import { Tree, type TreeNode } from '../src/assemblies'
 
 const FILES: readonly TreeNode[] = [
   {

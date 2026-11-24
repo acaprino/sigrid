@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useRef, useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
-import { AttachmentMarks, AttachmentsSection } from '../src/components/Attachments'
+import { AttachmentMarks, AttachmentsSection } from '../src/assemblies/Attachments'
 import { limitLabel, MAX_FILE_BYTES, payloadFromDataTransfer, withinLimit } from '../src/internal/drop'
 import { Swatches } from '../src/components/Swatches'
 import { splitLines, useEdgeAutoScroll } from '../src'
@@ -165,7 +165,7 @@ test('the attachments section refuses dropped text with a neutral sentence, or w
 })
 
 test('the button that chooses a file is named by what it shows, title and hint (WCAG 2.5.3): it has no shorter label of its own', () => {
-  const source = readFileSync(`${process.cwd()}/src/components/Attachments.tsx`, 'utf8')
+  const source = readFileSync(`${process.cwd()}/src/assemblies/Attachments.tsx`, 'utf8')
   const at = source.indexOf('<FileUpload.Trigger')
   expect(at).toBeGreaterThan(-1)
   expect(source.slice(at, source.indexOf('>', at))).not.toContain('aria-label')

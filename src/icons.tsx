@@ -89,6 +89,8 @@ import {
   Shapes,
   Square,
   SquareStop,
+  ThumbsDown,
+  ThumbsUp,
   Sun,
   SwatchBook,
   Tag,
@@ -227,6 +229,8 @@ export const ICON_NAMES = [
   'key',
   'globe',
   'external',
+  'thumbUp',
+  'thumbDown',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
@@ -341,6 +345,8 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   key: Key,
   globe: Globe,
   external: ExternalLink,
+  thumbUp: ThumbsUp,
+  thumbDown: ThumbsDown,
 }
 
 /**

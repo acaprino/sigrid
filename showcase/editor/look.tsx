@@ -3,40 +3,8 @@
 // motion). The icons are not part of it: Sigrid has one set, the same in every app. The editor keeps the look with the
 // app, puts it on the canvas and on the run page, and the export writes it into the app's entry file.
 import * as React from 'react'
-import {
-  BASE_THEME,
-  COLORS,
-  COLOR_NAMES,
-  DEFAULT_SHAPE,
-  DENSITIES,
-  DENSITY_LIMITS,
-  FONTS,
-  Select,
-  Slider,
-  Switch,
-  THEME_SHAPES,
-  TONE_PRESETS,
-  ToggleGroup,
-  ToggleGroupItem,
-  accentSuggestions,
-  applyDensity,
-  applyFont,
-  applyTheme,
-  cn,
-  densityWith,
-  duoTheme,
-  pageTint,
-  presetTone,
-  toneHasEffect,
-  type DensityDef,
-  type FontId,
-  type Harmony,
-  type ThemeScheme,
-  type ThemeShape,
-  type TonePreset,
-  isFontId,
-  densityOf,
-} from '../../src/index'
+import { BASE_THEME, COLORS, COLOR_NAMES, DEFAULT_SHAPE, DENSITIES, DENSITY_LIMITS, FONTS, THEME_SHAPES, TONE_PRESETS, accentSuggestions, applyDensity, applyFont, applyTheme, cn, densityWith, duoTheme, pageTint, presetTone, toneHasEffect, type DensityDef, type FontId, type Harmony, type ThemeScheme, type ThemeShape, type TonePreset, isFontId, densityOf } from '../../src/index'
+import { Select, Slider, Switch, ToggleGroup, ToggleGroupItem } from '../../src/primitives'
 
 export type Look = {
   scheme: ThemeScheme

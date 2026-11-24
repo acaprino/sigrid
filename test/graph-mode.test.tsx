@@ -7,7 +7,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
-import { linesOf } from '../src/components/GraphCanvas'
+import { linesOf } from '../src/assemblies/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 
 // What the canvas asks of the view: the rest of React Flow is its own.

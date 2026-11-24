@@ -24,7 +24,7 @@
 // prefers-reduced-motion, the same places are plain styles and nothing moves.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Toast, Toaster, createToaster, useToastContext } from '@ark-ui/react/toast'
-import { Button } from './ui/button'
+import { Button } from '../primitives/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
@@ -197,7 +197,7 @@ function Notice({ id }: { id: string }) {
     // would run the inverse twice). `inert` removes pointer, keyboard and screen reader.
     inert: leaving !== false,
     // `pointer-events-auto`: a notice stays clickable when a modal window turns the pointer off on the body.
-    className: 'pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col gap-2 rounded-lg bg-ink py-2 pr-2 pl-4 text-sm text-paper shadow-lg',
+    className: 'pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col gap-2 rounded-lg bg-ink py-2 pe-2 ps-4 text-sm text-paper shadow-lg',
   }
   const style: CSSProperties = { zIndex: COLUMN_MAX - index }
   const out = leaving !== false
@@ -209,7 +209,7 @@ function Notice({ id }: { id: string }) {
           // a progress, a step), in the toast's own text colour (no red on the inverted surface), and the word for
           // screen readers, read before the text.
           <>
-            <span data-slot="toast-error" className="-ml-1 flex shrink-0">
+            <span data-slot="toast-error" className="-ms-1 flex shrink-0">
               <Icon name="error" />
             </span>
             <span className="sr-only">{words.common.error}:</span>
@@ -241,7 +241,7 @@ function Notice({ id }: { id: string }) {
           <>
             {total > 0 ? (
               // For those who can see: how much is left. Screen readers do not hear it count down every second.
-              <span aria-hidden="true" data-slot="toast-timer" className="w-5 text-right text-xs text-paper tabular-nums">
+              <span aria-hidden="true" data-slot="toast-timer" className="w-5 text-end text-xs text-paper tabular-nums">
                 {left}
               </span>
             ) : null}

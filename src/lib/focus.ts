@@ -35,3 +35,6 @@ export const FOCUS_WITHIN_FIELD = 'outline-hidden focus-within:outline-solid foc
  * whole field while the keyboard focus is in the text, and not while it is on one of its buttons (which has its own).
  */
 export const FOCUS_FIELD_HAS_INPUT = 'outline-hidden has-[input:focus-visible]:outline-solid has-[input:focus-visible]:outline-2 has-[input:focus-visible]:-outline-offset-1 has-[input:focus-visible]:outline-ring'
+
+/** The same for a field whose text box is a `<textarea>` among parts of its own (`PromptInput`). */
+export const FOCUS_FIELD_HAS_TEXTAREA = 'outline-hidden has-[textarea:focus-visible]:outline-solid has-[textarea:focus-visible]:outline-2 has-[textarea:focus-visible]:-outline-offset-1 has-[textarea:focus-visible]:outline-ring'

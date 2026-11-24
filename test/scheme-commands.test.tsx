@@ -10,7 +10,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { CommandPalette, CommandsProvider, WordsProvider, applyKeptScheme, colorTheme, themeVariables, useCommands, useSchemeCommands, type SchemeState } from '../src'
+import { WordsProvider, colorTheme, themeVariables } from '../src'
+import { CommandPalette, CommandsProvider, applyKeptScheme, useCommands, useSchemeCommands, type SchemeState } from '../src/assemblies'
 import { flush } from './helpers'
 
 // `flush()`: the dialog opens and closes in a frame of its own, as in a browser.

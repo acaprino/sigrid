@@ -68,7 +68,7 @@
   /* `md:` is the point where the sidebar stops being a drawer. */
   --breakpoint-md: 860px;
 
-  /* Semantic names that the toolkit's own primitives (src/components/ui) use, mapped onto the paper:
+  /* Semantic names that the toolkit's own primitives (src/primitives) use, mapped onto the paper:
      they are not part of the vocabulary for whoever builds screens (use paper/ink/accent). */
   --color-background: #fafcfc;
   --color-foreground: #161616;
@@ -260,7 +260,7 @@
   }
 }
 
-/* The title bar (src/components/ui/title-bar.tsx): its height follows the density (a dense control and 8px above and
+/* The title bar (src/layout/title-bar.tsx): its height follows the density (a dense control and 8px above and
    below it). `--titlebar-start` and `--titlebar-end` are the room the system keeps for its own window buttons over the
    page: an installed web app with the window-controls overlay reports it through `env(titlebar-area-*)`, in a browser
    tab it is zero, and an app whose host says nothing sets the two itself. The bar moves the window (`app-region`),
@@ -298,7 +298,7 @@
   background-color: transparent;
 }
 
-/* The frame of an app as the window of a program (`AppShell desktop`, src/components/ui/app-shell.tsx). Its chrome is
+/* The frame of an app as the window of a program (`AppShell desktop`, src/layout/app-shell.tsx). Its chrome is
    not selectable and keeps the arrow cursor; the content, the body of the inspector, every field and what carries
    `data-selectable` are selectable; a control is chrome wherever it is. The overlays of the frame mount into a layer
    that starts under the title bar: the transform makes it the box their `position: fixed` is measured from, so a

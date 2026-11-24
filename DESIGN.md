@@ -13,8 +13,10 @@ x-zsd:
       - src/theme-engine.ts
       - src/theme-catalog.ts
       - src/styles/fonts.css
-      - src/components/ui
+      - src/primitives
       - src/components
+      - src/layout
+      - src/assemblies
       - src/internal
       - docs/tokens.css
       - docs/component-inventory.md
@@ -75,8 +77,10 @@ x-zsd:
   implementation:
     token-source: src/styles/theme.css
     component-sources:
-      - src/components/ui
+      - src/primitives
       - src/components
+      - src/layout
+      - src/assemblies
       - src/internal
     style-sources:
       - src/theme-engine.ts

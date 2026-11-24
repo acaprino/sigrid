@@ -307,6 +307,61 @@ export interface Words {
     readonly undo: string
     readonly redo: string
   }
+  readonly chat: {
+    /** The name of the thread of a conversation, when the app gives none. */
+    readonly conversation: string
+    /** The name of the button that goes back to the last message, shown while the reader is further up. */
+    readonly latest: string
+    /** Who a message is from, read by screen readers before its text, when the app gives no name. */
+    readonly user: string
+    readonly assistant: string
+    /** The names of the buttons under an answer: ask for it again, say it was good, say it was not. */
+    readonly retry: string
+    readonly good: string
+    readonly bad: string
+    /** The name of the field a message is written in, and of its two buttons. */
+    readonly message: string
+    readonly send: string
+    readonly stop: string
+    /** The name of the row of ready-made requests. */
+    readonly suggestions: string
+    /** The row of a reasoning: while it is being written, and once it is done (with the seconds it took, when known). */
+    readonly thinking: string
+    readonly thought: (seconds?: number) => string
+    /** The state of a tool's call, read after its name; and the headings of what it was given and what it gave back. */
+    readonly toolPending: string
+    readonly toolRunning: string
+    readonly toolSuccess: string
+    readonly toolError: string
+    readonly toolInput: string
+    readonly toolOutput: string
+  }
+  readonly deck: {
+    /** What screen readers hear after a card is decided: how many are left. */
+    readonly left: (count: number) => string
+    /** What the deck says when no card is left and the app gives nothing to show. */
+    readonly empty: string
+  }
+  readonly mail: {
+    /** The name of the form a message is written in. */
+    readonly compose: string
+    /** The names of its rows. */
+    readonly from: string
+    readonly to: string
+    readonly cc: string
+    readonly bcc: string
+    readonly subject: string
+    /** The name of the text of the message. */
+    readonly body: string
+    /** The button of the «To» row that shows the rows of the copies. */
+    readonly copies: string
+    readonly send: string
+    readonly sending: string
+    readonly discard: string
+    /** Why a message was not sent. */
+    readonly noRecipient: string
+    readonly badAddress: string
+  }
   readonly checklist: {
     /** Read before an item of a checklist, with its colon and space. */
     readonly done: string
@@ -523,6 +578,46 @@ export const DEFAULT_WORDS: Words = {
     quote: 'Quote',
     undo: 'Undo',
     redo: 'Redo',
+  },
+  chat: {
+    conversation: 'Conversation',
+    latest: 'Go to the latest message',
+    user: 'You',
+    assistant: 'Assistant',
+    retry: 'Try again',
+    good: 'Good answer',
+    bad: 'Bad answer',
+    message: 'Message',
+    send: 'Send',
+    stop: 'Stop',
+    suggestions: 'Suggestions',
+    thinking: 'Thinking',
+    thought: (seconds) => (seconds === undefined ? 'Thought' : `Thought for ${seconds} s`),
+    toolPending: 'waiting',
+    toolRunning: 'running',
+    toolSuccess: 'done',
+    toolError: 'failed',
+    toolInput: 'Input',
+    toolOutput: 'Output',
+  },
+  deck: {
+    left: (count) => (count === 0 ? 'No cards left' : count === 1 ? '1 card left' : `${count} cards left`),
+    empty: 'Nothing left',
+  },
+  mail: {
+    compose: 'New message',
+    from: 'From',
+    to: 'To',
+    cc: 'Cc',
+    bcc: 'Bcc',
+    subject: 'Subject',
+    body: 'Message',
+    copies: 'Cc, Bcc',
+    send: 'Send',
+    sending: 'Sending…',
+    discard: 'Discard',
+    noRecipient: 'Add at least one address to send it to.',
+    badAddress: 'One of the addresses is not valid.',
   },
   checklist: { done: 'Done: ', todo: 'To do: ' },
 }

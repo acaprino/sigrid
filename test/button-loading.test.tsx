@@ -3,7 +3,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { Button } from '../src'
+import { Button } from '../src/primitives'
 
 test('without loading the button is as before: no busy state, no extra wrapper', () => {
   const { container } = render(<Button>Save</Button>)

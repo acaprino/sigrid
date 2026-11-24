@@ -7,18 +7,18 @@
 // (or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time
 // zones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).
 // Ark gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the
-// button), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).
+// button), the position of the card, focus on the chosen day when it opens, the grid (see `components/calendar.tsx`).
 // The card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its
 // focus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.
 import * as React from 'react'
 import { DatePicker, useDatePickerContext } from '@ark-ui/react/date-picker'
 import { CalendarDate, getDayOfWeek, getLocalTimeZone, parseDate } from '@internationalized/date'
 import { Icon } from '../icons'
-import { Calendar, calendarWords } from './ui/calendar'
+import { Calendar, calendarWords } from './calendar'
 import { DEFAULT_WORDS, useWords, type Words } from '../words'
-import { Button } from './ui/button'
-import { Checkbox } from './ui/checkbox'
-import { Input } from './ui/input'
+import { Button } from '../primitives/button'
+import { Checkbox } from '../primitives/checkbox'
+import { Input } from '../primitives/input'
 import { useEntrance } from '../internal/motion'
 import { cn } from '../lib/utils'
 import { FOCUS_FIELD } from '../lib/focus'
@@ -50,7 +50,7 @@ function parseDay(value: string | null | undefined): CalendarDate | null {
 const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate(locale).format(new Date(day.year, day.month - 1, day.day))
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
-const TRIGGER_CLASS = cn(FIELD_SURFACE, FIELD_HEIGHT, 'flex w-full min-w-0 items-center gap-2 px-(--pad-sm) py-1 text-left', FIELD_TEXT, FIELD_HOVER, FIELD_OFF, FOCUS_FIELD)
+const TRIGGER_CLASS = cn(FIELD_SURFACE, FIELD_HEIGHT, 'flex w-full min-w-0 items-center gap-2 px-(--pad-sm) py-1 text-start', FIELD_TEXT, FIELD_HOVER, FIELD_OFF, FOCUS_FIELD)
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.
 const NO_TRIGGER_NAME = () => undefined as unknown as string
@@ -473,7 +473,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder, min,
           // A half-typed time goes back to the last valid one: the field does not stay empty and the value does not break.
           onBlur={() => setTyped(time)}
         />
-        <Closing size="sm" variant="secondary" className="ml-auto">
+        <Closing size="sm" variant="secondary" className="ms-auto">
           {words?.done ?? toolkit.date.done}
         </Closing>
       </div>

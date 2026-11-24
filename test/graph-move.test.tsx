@@ -8,7 +8,7 @@ import * as React from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { NodeChangeset, type ReactFlowProps } from '@xyflow/react'
 import { MotionProvider } from '../src'
-import { handOver, standInFor, viewKeeping } from '../src/components/GraphCanvas'
+import { handOver, standInFor, viewKeeping } from '../src/assemblies/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 import { systemMotion } from './helpers'
 

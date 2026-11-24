@@ -3,7 +3,8 @@
 // read as text on the page; and it never sits where the fixed red is.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { ColorMatch, SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, themeTokens } from '../src'
+import { SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, themeTokens } from '../src'
+import { ColorMatch } from '../src/assemblies'
 import { contrast, fromHex, luminance } from '../src/theme-engine'
 
 const COLORS = ['#00857a', '#d1453b', '#eb6f0a', '#f5b800', '#058527', '#3db8e5', '#246fe0', '#7b3ff2', '#d6246e', '#3d4350']

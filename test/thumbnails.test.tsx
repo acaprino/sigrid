@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { safeThumbnail } from '../src/internal/thumbnail'
+import { safeThumbnail } from '../src/primitives/thumbnail'
 
 // Thumbnails of image attachments: only from JPEG/PNG data URLs. (How an app draws them is tested in the app's
 // package.)

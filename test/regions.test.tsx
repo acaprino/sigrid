@@ -3,7 +3,7 @@
 // and a region that is closed is skipped. Nothing for the app to write.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { AppShell, Inspector, NavItem, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarButton } from '../src'
+import { AppShell, Inspector, NavItem, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarButton } from '../src/layout'
 
 function Frame({ inspector = true }: { inspector?: boolean }) {
   return (

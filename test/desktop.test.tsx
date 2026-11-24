@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
-import { AppShell, DialogContent, DialogRoot, DialogTitle, TitleBar, guardDesktop, isBrowserKey, useDesktopGuard } from '../src'
+import { guardDesktop, isBrowserKey, useDesktopGuard } from '../src'
+import { DialogContent, DialogRoot, DialogTitle } from '../src/primitives'
+import { AppShell, TitleBar } from '../src/layout'
 import { flush } from './helpers'
 
 const key = (k: string, more: Partial<KeyboardEventInit> = {}) => ({ key: k, ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, ...more })

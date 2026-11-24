@@ -4,7 +4,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { afterEach, expect, test, vi } from 'vitest'
-import { APP_SHELL_STEPS, AppShell, CommandsProvider, Inspector, NavItem, SearchField, Sidebar, SidebarGroup, appShellLayout, useAppShell, useCommand } from '../src'
+import { SearchField } from '../src/components'
+import { APP_SHELL_STEPS, AppShell, Inspector, NavItem, Sidebar, SidebarGroup, appShellLayout, useAppShell } from '../src/layout'
+import { CommandsProvider, useCommand } from '../src/assemblies'
 import { settle } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())

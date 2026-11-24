@@ -6,7 +6,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { APP_HEIGHT_VAR, AppShell, BOTTOM_BAR_ROOM_VAR, Page, SHORT, Toolbar, ToolbarTab, ToolbarTabs, useAppHeight } from '../src'
+import { APP_HEIGHT_VAR, BOTTOM_BAR_ROOM_VAR, SHORT, useAppHeight } from '../src'
+import { Page } from '../src/primitives'
+import { AppShell, Toolbar, ToolbarTab, ToolbarTabs } from '../src/layout'
 import { classes, noop } from './helpers'
 
 const root = document.documentElement

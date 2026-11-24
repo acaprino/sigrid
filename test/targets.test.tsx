@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Button, Checkbox, Input } from '../src'
+import { Button, Checkbox, Input } from '../src/primitives'
 import { DENSITIES, DENSITY_LIMITS } from '../src/density'
 import { classes, noop } from './helpers'
 

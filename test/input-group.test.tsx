@@ -1,7 +1,7 @@
 // InputGroup: one field around its parts; the wiring of a FormField reaches the `<input>`; the buttons of the group.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { FormField, InputGroup, InputGroupButton, InputGroupText } from '../src'
+import { FormField, InputGroup, InputGroupButton, InputGroupText } from '../src/components'
 import { classes } from './helpers'
 
 const slot = (root: ParentNode, name: string) => root.querySelector(`[data-slot="${name}"]`) as HTMLElement

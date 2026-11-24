@@ -3,8 +3,8 @@
 // own uses of these motions are tested in the app's package.)
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { Button } from '../src'
-import { Kbd, Shortcut } from '../src/components/ui/kbd'
+import { Button } from '../src/primitives'
+import { Kbd, Shortcut } from '../src/primitives/kbd'
 import { preloadMotion } from '../src/internal/motion'
 import { systemMotion } from './helpers'
 

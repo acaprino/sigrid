@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { BASE_THEME, ThemeGallery, presetTone, themeVariables } from '../src'
+import { BASE_THEME, presetTone, themeVariables } from '../src'
+import { ThemeGallery } from '../src/assemblies'
 import { THEMES } from './fixtures/sample-themes'
 
 test('theme previews follow the scheme and tone, while the custom choice stays keyboard accessible', () => {
@@ -46,7 +47,8 @@ test('Home and End reach the first and the last tile and choose it, as in the ra
 })
 
 // The tone chooser does not offer three copies of one preview.
-import { TonePresetChoice as ToneChoice, BASE_THEME as GrayTheme, paletteTheme as paletteThemeOf, COLORS as SeedColors } from '../src'
+import { BASE_THEME as GrayTheme, paletteTheme as paletteThemeOf, COLORS as SeedColors } from '../src'
+import { TonePresetChoice as ToneChoice } from '../src/assemblies'
 test('on a theme with no hue the tone chooser says why it offers nothing; on a coloured theme it shows its three cards', () => {
   const text = { label: 'Tone', hint: '', noEffect: 'No hue: the tone changes nothing.', presets: { calm: { name: 'Calm', note: '' }, balanced: { name: 'Balanced', note: '' }, vivid: { name: 'Vivid', note: '' } } }
   const { unmount } = render(<ToneChoice theme={GrayTheme} scheme="light" palette={null} tone={null} onTone={() => {}} text={text} />)

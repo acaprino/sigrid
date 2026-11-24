@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { Tooltip, TOOLTIP_DELAY_MS } from '../src/components/ui/tooltip'
+import { Tooltip, TOOLTIP_DELAY_MS } from '../src/primitives/tooltip'
 
 
 afterEach(() => {

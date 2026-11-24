@@ -128,13 +128,13 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
   })
 
   test('the primary button hover is the accent-hover token, never an opacity mix', () => {
-    const button = readFileSync(`${root}src/components/ui/button.tsx`, 'utf8')
+    const button = readFileSync(`${root}src/primitives/button.tsx`, 'utf8')
     expect(button).toContain('hover:bg-accent-hover')
     expect(button).not.toMatch(/hover:bg-accent\/\d+/)
     // The text of buttons and badges on the accent is the token, never hand-written white (in the dark it would not be readable).
     expect(button).toContain('bg-primary text-primary-foreground')
     expect(button).not.toContain('text-white')
-    const badge = readFileSync(`${root}src/components/ui/badge.tsx`, 'utf8')
+    const badge = readFileSync(`${root}src/primitives/badge.tsx`, 'utf8')
     expect(badge).toContain('bg-destructive text-destructive-foreground')
     expect(badge).not.toContain('text-white')
   })
@@ -228,7 +228,7 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
     // Every field takes its surface from one place (`lib/field.ts`), and that surface has the light divider border.
     expect(text('src/lib/field.ts')).toMatch(/FIELD_SURFACE = '[^']*\bborder-line\b/)
     // The native `<select>`s became Base UI's Select: the border sits on its button.
-    for (const f of ['src/components/ui/select.tsx', 'src/components/ChipsInput.tsx', 'src/components/ui/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
+    for (const f of ['src/primitives/select.tsx', 'src/components/ChipsInput.tsx', 'src/primitives/input.tsx']) expect(text(f), f).toContain('FIELD_SURFACE')
   })
 })
 
@@ -291,7 +291,7 @@ describe('text colors in the sources', () => {
 
   test('placeholders and descriptions of the primitives use the muted-foreground token', () => {
     expect(readFileSync(`${root}src/lib/field.ts`, 'utf8')).toMatch(/FIELD_TEXT = '[^']*placeholder:text-muted-foreground/)
-    for (const f of ['src/components/ui/input.tsx', 'src/components/ui/textarea.tsx']) {
+    for (const f of ['src/primitives/input.tsx', 'src/primitives/textarea.tsx']) {
       expect(readFileSync(`${root}${f}`, 'utf8'), f).toContain('FIELD_TEXT')
     }
   })

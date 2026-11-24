@@ -3,11 +3,16 @@
 // of the project the editor exports; where it runs and its window come from `@acaprino/sigrid/tauri`.
 // Triage: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useState, type ReactNode } from 'react'
+import { useDesktopGuard, useMedia } from '@acaprino/sigrid'
 import {
-  AppShell, Button, Card, Cluster, Column, DateField, FormField, Heading, Icon, Input, Page, Progress, Select,
-  Text, Textarea, TitleBar, Toasts, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarBrand, ToolbarButton,
-  ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard, useMedia, WindowControls, type ToastItem,
-} from '@acaprino/sigrid'
+  Button, Card, Cluster, Column, Heading, Icon, Input, Page, Progress, Select, Text, Textarea, ToggleGroup,
+  ToggleGroupItem,
+} from '@acaprino/sigrid/primitives'
+import { DateField, FormField, Toasts, type ToastItem } from '@acaprino/sigrid/components'
+import {
+  AppShell, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs,
+  WindowControls,
+} from '@acaprino/sigrid/layout'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
 type Screen = 'sort' | 'write'

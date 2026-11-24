@@ -2,7 +2,7 @@
 // with the selection tint (R1) and the unread ones with the accent dot (R2).
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { ItemList, ItemRow } from '../src'
+import { ItemList, ItemRow } from '../src/components'
 
 test('a row is a button with its title, its line and its fact; the chosen one is current, with the tint and the accent bar', () => {
   const chosen = vi.fn()
