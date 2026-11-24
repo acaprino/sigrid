@@ -7,7 +7,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { MotionProvider } from '../src'
-import { ItemList, ItemRow, SearchField } from '../src/components'
+import { Combobox, ItemList, ItemRow, SearchField } from '../src/components'
 import { preloadMotion } from '../src/internal/motion'
 import { NavItem, NavList, Sidebar, SidebarGroup } from '../src/layout'
 import { FIELD_QUIET, FIELD_QUIET_RADIUS } from '../src/lib/field'
@@ -263,6 +263,7 @@ describe('a popover that hangs from something other than its button', () => {
     const [field, setField] = useState<HTMLDivElement | null>(null)
     const [query, setQuery] = useState('')
     const [when, setWhen] = useState('any')
+    const [who, setWho] = useState<string | null>(null)
     const change = (next: boolean) => {
       onOpenChange(next)
       setOpen(next)
@@ -275,6 +276,7 @@ describe('a popover that hangs from something other than its button', () => {
           {inside ? <PopoverAnchor>{search}</PopoverAnchor> : null}
           <PopoverContent initialFocus={false} width="xl" aria-label="Search filters">
             <Select aria-label="When" options={OPTS} value={when} onValueChange={setWhen} />
+            <Combobox aria-label="From" options={[{ value: 'ada', label: 'Ada Lovelace' }, { value: 'alan', label: 'Alan Turing' }]} value={who} onValueChange={setWho} />
             <button type="button">Apply</button>
           </PopoverContent>
         </Popover>
@@ -327,6 +329,15 @@ describe('a popover that hangs from something other than its button', () => {
     expect(onOpenChange).not.toHaveBeenCalled()
     expect(card()).not.toBeNull()
     expect(screen.getByRole('combobox', { name: 'When' }).textContent).toContain('This week')
+    // The same for a list a text box opens under itself (a combo box).
+    const from = screen.getByRole('combobox', { name: 'From' }) as HTMLInputElement
+    act(() => from.focus())
+    fireEvent.change(from, { target: { value: 'al' } })
+    await settle(120)
+    await pressOn(screen.getByRole('option', { name: 'Alan Turing' }))
+    expect(from.value).toBe('Alan Turing')
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(card()).not.toBeNull()
   })
 
   test('the card is as wide as the step asked for, and never wider than the room the window leaves', async () => {

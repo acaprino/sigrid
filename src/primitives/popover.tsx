@@ -8,7 +8,9 @@
 // `PopoverHeader`/`Title`/`Description`), not SmoothUI's `trigger`/`children` API, so whoever uses them does not change.
 // Removed: the spring and the automatic animation: with `animated` true (off by default, never with prefers-reduced-motion)
 // the card enters with a short fade. As before: non-modal, Esc or a click outside close it and focus returns to the
-// button; the button carries `data-state="open"|"closed"`. Closing, the card fades (theme.css, `data-ending-style`).
+// button; the button carries `data-state="open"|"closed"`. Closing, the card fades where the
+// app turned motion on with `MotionProvider` (theme.css, `data-ending-style`, under the root's `data-motion`): the
+// exit is the stylesheet's, so a card's own `animated` alone gives it the entrance only.
 // A card that belongs to something that is not its button (the filters under a search field, the suggestions of a
 // text box) needs no `PopoverTrigger`: the app opens it (`open`, `onOpenChange`) and says what it hangs from, with
 // `PopoverAnchor` around that thing or, when it is drawn elsewhere, with `anchor` on the `Popover`. The anchor is part
@@ -87,7 +89,10 @@ function PopoverTrigger({ asChild, children, ...props }: PopoverTriggerProps) {
 
 type PopoverContentProps = PopoverPrimitive.Popup.Props &
   Pick<PopoverPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionPadding"> & {
-    /** The card enters with a short fade, and fades as it closes (off by default, never with prefers-reduced-motion). */
+    /**
+     * The card enters with a short fade (off by default, never with prefers-reduced-motion). Its fade on closing is
+     * the app's `MotionProvider animated`, as for every surface.
+     */
     animated?: boolean | undefined
     /** How wide the card is: absent, 320px; `sm` 384px, `md` 448px, `lg` 512px, `xl` 576px, and never wider than the room the window leaves. */
     width?: PopoverWidth | undefined

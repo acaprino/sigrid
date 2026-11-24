@@ -247,7 +247,7 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 ### Popover
 
 - **Purpose**: a non-modal card anchored to a control (notifications, a quick form), or hanging from something that is not its button (the filters under a search field): then there is no `PopoverTrigger`, the app opens it (`open`, `onOpenChange`) and names the anchor (`PopoverAnchor` around it, or `anchor` on `Popover` for an element drawn elsewhere); `initialFocus={false}` leaves the focus in the field.
-- **Parts**: `Popover` (`anchor`), `PopoverTrigger` (`asChild`), `PopoverContent` (`align`, `side`, `sideOffset`, `width`: absent 320px, `sm` 384, `md` 448, `lg` 512, `xl` 576, never wider than the window leaves; `animated`: it enters from its anchor's side and fades as it closes), `PopoverAnchor`, `PopoverHeader`, `PopoverTitle`, `PopoverDescription`.
+- **Parts**: `Popover` (`anchor`), `PopoverTrigger` (`asChild`), `PopoverContent` (`align`, `side`, `sideOffset`, `width`: absent 320px, `sm` 384, `md` 448, `lg` 512, `xl` 576, never wider than the window leaves; `animated`: it enters from its anchor's side; under a `MotionProvider animated` it also fades as it closes, as every surface), `PopoverAnchor`, `PopoverHeader`, `PopoverTitle`, `PopoverDescription`.
 - **States**: open/closed (`data-state` on trigger and content).
 - **Tokens**: `popover`, `shadow-lg`, `radius-lg`, p 16, `text-sm`, `muted-foreground`.
 - **Accessibility**: Esc and outside click close, focus returns to the trigger. A press on the anchor, or the focus going to it, is not outside and does not close.
