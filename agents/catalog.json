@@ -1260,6 +1260,11 @@
          "required": true
         },
         {
+         "name": "mail",
+         "type": "{ readonly compose: string; readonly from: string; readonly to: string; readonly cc: string; readonly bcc: string; readonly subject: string; readonly body: string; readonly copies: string; readonly s…",
+         "required": true
+        },
+        {
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
@@ -1390,6 +1395,10 @@
          "type": "Partial<{ readonly left: (count: number) => string; readonly empty: string; }>"
         },
         {
+         "name": "mail",
+         "type": "Partial<{ readonly compose: string; readonly from: string; readonly to: string; readonly cc: string; readonly bcc: string; readonly subject: string; readonly body: string; readonly copies: string; re…"
+        },
+        {
          "name": "checklist",
          "type": "Partial<{ readonly done: string; readonly todo: string; }>"
         }
@@ -1418,7 +1427,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "required": true
         },
         {
@@ -2315,7 +2324,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons, drawn in the box while the picture loads and when it fails. Without it the box is empty, at the same size."
         },
         {
@@ -4977,7 +4986,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "An icon that tells what kind of request it is; none for most."
         }
        ]
@@ -7298,12 +7307,12 @@
         },
         {
          "name": "leftIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icons of the two buttons. Default the two arrows."
         },
         {
          "name": "rightIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…"
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
         },
         {
          "name": "empty",
@@ -7497,12 +7506,12 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -7809,6 +7818,124 @@
   {
    "import": "@acaprino/sigrid/rich-text",
    "files": [
+    {
+     "file": "src/assemblies/EmailComposer.tsx",
+     "about": "A message of mail being written, with a text that has a little form: who it goes to, its subject, its text, and\nthe button that sends it. It is on the `./rich-text` entry, with the field its text is written in (TipTap).\nThe rows are a form read from the top: «To», then «Cc» and «Bcc», which stay behind a button of the «To» row until\nthey are asked for or hold an address (most messages have neither), the subject, and the text (`RichTextField`:\nbold, italic, underline, two lists, a quote; its value is HTML). An address is a chip (`ChipsInput`): a comma, a\nsemicolon, a blank or Enter closes one, and one that is not an address is said so on its chip, never refused.\nThe app holds the draft (`value`, `onChange`) and sends it: the composer knows no server. «Send» is the one solid\nbutton (R3); Ctrl+Enter (⌘ Enter) does the same. A message that cannot go (nobody to send it to, an address that is\nnot one) is not sent: the reason is said in words above the buttons and the focus goes to «To». While it is being\nsent the button waits in its place. «Discard» is there only when the app can throw the draft away, and does it at\nonce: the app offers Undo in a notice (`Toasts`).",
+     "components": [
+      {
+       "name": "EmailComposer",
+       "doc": "A message of mail being written: to whom, the subject, a text with a little form, and the button that sends it.",
+       "props": [
+        {
+         "name": "value",
+         "type": "EmailDraft",
+         "required": true,
+         "doc": "The draft, which the app holds."
+        },
+        {
+         "name": "onChange",
+         "type": "(draft: EmailDraft) => void",
+         "required": true
+        },
+        {
+         "name": "onSend",
+         "type": "(draft: EmailDraft) => void",
+         "required": true,
+         "doc": "Send it: called only with a draft that can go (somebody to send it to, every address shaped as one)."
+        },
+        {
+         "name": "onDiscard",
+         "type": "(() => void)",
+         "doc": "Throw the draft away. Absent: no button."
+        },
+        {
+         "name": "sending",
+         "type": "boolean",
+         "doc": "It is being sent: the button waits, in its place."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the form for screen readers. Absent: the toolkit's words («New message»)."
+        },
+        {
+         "name": "from",
+         "type": "React.ReactNode",
+         "doc": "A row above «To»: who it is from, when the user has more than one address (the app's `Select`)."
+        },
+        {
+         "name": "contacts",
+         "type": "readonly string[]",
+         "doc": "Addresses to offer while one is written (an address book)."
+        },
+        {
+         "name": "onQuery",
+         "type": "((text: string) => void)",
+         "doc": "The text being typed in an address row, for an app that looks its contacts up as the user writes."
+        },
+        {
+         "name": "display",
+         "type": "((address: string) => string)",
+         "doc": "What a chip shows in place of the address (the person's name)."
+        },
+        {
+         "name": "attachments",
+         "type": "React.ReactNode",
+         "doc": "Under the text: the files that go with it (`AttachmentsSection`)."
+        },
+        {
+         "name": "tools",
+         "type": "React.ReactNode",
+         "doc": "At the start of the row of buttons: the app's own quiet tools (attach a file)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "EmailDraft",
+       "doc": "A message being written: its addresses, its subject and its text as HTML.",
+       "fields": [
+        {
+         "name": "to",
+         "type": "string[]",
+         "required": true
+        },
+        {
+         "name": "cc",
+         "type": "string[]",
+         "required": true
+        },
+        {
+         "name": "bcc",
+         "type": "string[]",
+         "required": true
+        },
+        {
+         "name": "subject",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "html",
+         "type": "string",
+         "required": true,
+         "doc": "The text, as the HTML `RichTextField` writes."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "EmailComposerProps",
+      "emailProblem",
+      "EMPTY_EMAIL",
+      "isEmailAddress"
+     ]
+    },
     {
      "file": "src/assemblies/RichTextField.tsx",
      "about": "A field for text with a little form: bold, italic and underlined words, two kinds of list, a quote. The editing is\nTipTap's (`@tiptap/react` and its starter kit, on ProseMirror: npm dependencies, pinned, see THIRD_PARTY.md); the\nform is the toolkit's: the border and the focus ring of a field, and above the text the toolkit's own `Toolbar`\nwith Sigrid's icons (R6). It has its own entry of the package (`./rich-text`): TipTap is the\nheaviest thing the toolkit rests on, and an app that writes no formatted text does not load it.\n- What the row of buttons offers is all the field does: headings, code, links and rules are switched off, so a\n  paste or a shortcut cannot bring in what the user has no button to take away. The value holds what was written\n  and nothing else: no empty paragraph is kept after a list (Enter twice leaves a list or a quote).\n- A button that is on (the caret is in bold text) says so with the selection tint, as any switch of a toolbar.\n- The value is HTML, the app's to keep: `onChange` gives it at every change. A value that comes from outside (a\n  draft opened) replaces the text and is not a step of the undo: Ctrl+Z never brings the other draft back. The\n  field's own changes never loop back, also when the app hands them back late (a store, a round trip): a value\n  the field itself gave a moment ago is not taken for a new one.\n- It takes what a `FormField` gives its control (`id`, `aria-describedby`, `aria-invalid`, `required`). A `<label>`\n  names only the browser's own fields, so the text finds the label that points at its `id`, takes its name from it\n  (`aria-labelledby`) and takes the focus when the label is pressed, as an input does.\n- Text is 16px below 860px, so a phone does not zoom, and 14px above.",
@@ -8153,7 +8280,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"all\" | \"tag\" | \"more\" | \"notifications\" | \"…",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons before the name."
         },
         {

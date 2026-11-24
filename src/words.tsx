@@ -342,6 +342,26 @@ export interface Words {
     /** What the deck says when no card is left and the app gives nothing to show. */
     readonly empty: string
   }
+  readonly mail: {
+    /** The name of the form a message is written in. */
+    readonly compose: string
+    /** The names of its rows. */
+    readonly from: string
+    readonly to: string
+    readonly cc: string
+    readonly bcc: string
+    readonly subject: string
+    /** The name of the text of the message. */
+    readonly body: string
+    /** The button of the «To» row that shows the rows of the copies. */
+    readonly copies: string
+    readonly send: string
+    readonly sending: string
+    readonly discard: string
+    /** Why a message was not sent. */
+    readonly noRecipient: string
+    readonly badAddress: string
+  }
   readonly checklist: {
     /** Read before an item of a checklist, with its colon and space. */
     readonly done: string
@@ -583,6 +603,21 @@ export const DEFAULT_WORDS: Words = {
   deck: {
     left: (count) => (count === 0 ? 'No cards left' : count === 1 ? '1 card left' : `${count} cards left`),
     empty: 'Nothing left',
+  },
+  mail: {
+    compose: 'New message',
+    from: 'From',
+    to: 'To',
+    cc: 'Cc',
+    bcc: 'Bcc',
+    subject: 'Subject',
+    body: 'Message',
+    copies: 'Cc, Bcc',
+    send: 'Send',
+    sending: 'Sending…',
+    discard: 'Discard',
+    noRecipient: 'Add at least one address to send it to.',
+    badAddress: 'One of the addresses is not valid.',
   },
   checklist: { done: 'Done: ', todo: 'To do: ' },
 }

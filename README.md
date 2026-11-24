@@ -406,6 +406,22 @@ answer, `Reasoning` and `ToolCall`. The app holds the messages and talks to its 
 </Column>
 ```
 
+## A message of mail being written
+
+`EmailComposer` (from `@acaprino/sigrid/rich-text`, with the field its text is written in) is the form of a message:
+«To», «Cc» and «Bcc» behind a button until they are asked for or hold an address, the subject, and a text with a
+little form whose value is HTML. An address is a chip, closed by a comma, a semicolon, a blank or Enter; one that is
+not an address is said so on its chip. The app holds the draft (`EmailDraft`: `to`, `cc`, `bcc`, `subject`, `html`;
+start from `EMPTY_EMAIL`) and sends it. «Send», the one solid button, and Ctrl+Enter call `onSend` only with a draft
+that can go; otherwise the reason is said in words and the focus goes to «To» (`emailProblem`, `isEmailAddress`).
+
+```tsx
+<EmailComposer value={draft} onChange={setDraft} onSend={send} sending={sending} onDiscard={discard}
+  contacts={addressBook} display={(address) => names[address] ?? address}
+  from={<Select aria-label="From" value={account} onValueChange={setAccount} options={accounts} />}
+  attachments={<AttachmentsSection … />} />
+```
+
 ## A pile decided one card at a time
 
 `SwipeDeck` shows the first of `items` as a card to decide to one of two sides (`leftLabel`, `rightLabel`: «Skip» and
@@ -747,7 +763,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
   import { VirtualList } from '@acaprino/sigrid/virtual'
   import { ReorderList } from '@acaprino/sigrid/reorder'
-  import { RichTextField } from '@acaprino/sigrid/rich-text'
+  import { RichTextField, EmailComposer, EMPTY_EMAIL } from '@acaprino/sigrid/rich-text'
 
   const columns: DataColumn<File>[] = [
     { id: 'name', header: 'Name', cell: (file) => file.name, sortValue: (file) => file.name },
