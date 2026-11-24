@@ -26,7 +26,7 @@ x-zsd:
   intent:
     audience: People who use the owner's apps (to-do, mail and more), many with ADHD.
     primary-task: Find, read and act on the items of an app, with one clear action at a time.
-    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
+    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that shows where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
     theme: light and dark; each app passes its own themes (the toolkit ships only the engine and a gray baseline); each theme has two mood colours and one accent; the user can make a palette from one base colour
     references:
@@ -34,7 +34,7 @@ x-zsd:
       - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
       - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
       - "Owner rules since 2026-11-20 (R1 to R14 below)."
-      - "Owner revision of 2026-11-20, later the same day: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
+      - "Owner revision of 2026-11-20: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
       - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
@@ -67,7 +67,7 @@ x-zsd:
     preserve:
       - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default, the dark column an option."
       - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22); 3:1 if `controls` is strong."
-      - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light mode, light in dark."
+      - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light, light in dark."
       - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the app, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density."
@@ -139,6 +139,7 @@ x-zsd:
     size-md: 16px
     size-sm: 14px
     dot: 8px
+    dot-sm: 6px
     stroke: 1.75
     cap: round
   layers:
@@ -566,7 +567,7 @@ Use `toast` for the result of an action. Undo and quick choices sit in the toast
 
 ### Status
 
-Pair `success`, `warning`, `info` or `destructive` with a word; a badge tone adds a 6px dot. Progress ends `success` or `destructive`. `highlight` marks hits.
+Pair `success`, `warning`, `info` or `destructive` with a word; a badge tone adds a `x-zsd.icons.dot-sm` dot. Progress ends `success` or `destructive`. `highlight` marks hits.
 
 ### Calendar
 
