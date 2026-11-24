@@ -31,6 +31,9 @@ through `Icon`), the same in every app, and the user does not choose another.
 - Before asking for a new part, look in the catalogue for the one Sigrid already has for the need. A request is
   weighed by the function that is missing, never by how the app looked before: a former look is no reason to change
   Sigrid.
+- The shell in Xiox's style (the window and its title bar, the frame, the commands, the look) is Imago's, which is built
+  with Sigrid: Shinatama, Daodan, Muro, Mukade and Xiox stand on it and bring only their screens. Sigrid knows no app.
+  Ethel and Qamille use Sigrid without Imago and keep its look.
 
 ## Read before you write
 
