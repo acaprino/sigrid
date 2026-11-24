@@ -128,7 +128,9 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    chosen view of a bar and the chosen item of a segment by weight 700 and the accent (a square line that grows from
    its middle; a track whose chosen item has an accent tint and border), `statusStrip: 'tall'` makes the status strip
    of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and
-   the system's monospace); nothing is shipped for it and it is never the default.
+   the system's monospace); nothing is shipped for it and it is never the default. A curated palette can also state
+   its muted text (`surfaces.<scheme>.mute`, held at 4.5:1 by the engine), and a `ToolbarButton variant="quiet"` is
+   an outline with the muted ink that keeps its hairline under strong control borders.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

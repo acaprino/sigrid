@@ -2177,10 +2177,13 @@ function ThemeHooks({ scheme, animated }: { scheme: ThemeScheme; animated: boole
         </div>
       </Row>
       <Row label="boxed keys, in a bar">
-        <div data-keys="boxed" data-sample="hook-keys-bar" className="w-full max-w-xl">
+        <div data-keys="boxed" data-controls="strong" data-sample="hook-keys-bar" className="w-full max-w-xl">
           <Toolbar aria-label="Sample bar with keys">
-            <ToolbarButton label="Commands" icon={<Icon name="search" />} shortcut="Ctrl K">
+            <ToolbarButton label="Commands" variant="quiet" shortcut="Ctrl K">
               Commands
+            </ToolbarButton>
+            <ToolbarButton label="Export" variant="outline">
+              Export
             </ToolbarButton>
             <ToolbarButton label="Save" variant="default" shortcut="Ctrl S">
               Save

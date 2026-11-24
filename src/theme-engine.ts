@@ -368,7 +368,7 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     return {
       // The control border: the palette's own when it states one (`Surfaces.input`), or derived from its dividers.
       raised: fromHex(s.raised), paper, paper2: side, line: fromHex(s.line), input: isAccentColor(s.input) ? fromHex(s.input.toLowerCase()) : { ...fromHex(s.line), L: light ? 0.63 : 0.525 },
-      ink: { ...ink, L: light ? Math.min(ink.L, 0.28) : ink.L }, inkSoft: { ...ink, L: light ? 0.38 : Math.min(ink.L - 0.08, 0.8) }, inkMute: { ...ink, L: light ? 0.5 : 0.67 },
+      ink: { ...ink, L: light ? Math.min(ink.L, 0.28) : ink.L }, inkSoft: { ...ink, L: light ? 0.38 : Math.min(ink.L - 0.08, 0.8) }, inkMute: isAccentColor(s.mute) ? fromHex(s.mute.toLowerCase()) : { ...ink, L: light ? 0.5 : 0.67 },
       accent, accentStrong: light ? ok(0.39, accent.C, accent.h) : ok(0.92, Math.min(accent.C * 0.4, 0.06), accent.h),
       fill, onFill: labelOn(fill, light ? ok(1, 0, 0) : ok(0.99, 0.008, fill.h)),
       accentSoft: ok(light ? paper.L - 0.035 : paper.L + 0.08, tint(0.04), accent.h),

@@ -63,12 +63,14 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
 
 // Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-24), an
 // exception to R7 scoped to that attribute. The group is a track: its hairline, 2px inside it and 2px between the
-// items, which are 4px shorter so the track stays a control tall, with corners one step under the track's. The chosen
+// items, which are 4px shorter so the track stays a control tall. The track has a control's corners (l2) and the
+// items one step under them (l1); its ground is the ink at 3% over what it lies on, a field a little apart from the
+// sheet (lighter in dark, darker in light), in place of the lanes' surface. The chosen
 // item is weight 700 with the accent as text at 16% for its fill and at 55% for its border, and no shadow (R4: a
 // border or a shadow). With `animated` the fill and the border are the sliding pill's, not the item's.
-const TRACK_BOLD = "[[data-tabs=bold]_&]:gap-0.5 [[data-tabs=bold]_&]:p-0.5"
+const TRACK_BOLD = "[[data-tabs=bold]_&]:gap-0.5 [[data-tabs=bold]_&]:rounded-md [[data-tabs=bold]_&]:bg-ink/3 [[data-tabs=bold]_&]:p-0.5"
 const ITEM_BOLD =
-  "[[data-tabs=bold]_&]:h-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:min-w-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:rounded-md [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-transparent [[data-tabs=bold]_&]:data-[pressed]:font-bold [[data-tabs=bold]_&]:data-[pressed]:shadow-none"
+  "[[data-tabs=bold]_&]:h-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:min-w-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:rounded-sm [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-transparent [[data-tabs=bold]_&]:data-[pressed]:font-bold [[data-tabs=bold]_&]:data-[pressed]:shadow-none"
 const ITEM_BOLD_PRESSED =
   "[[data-tabs=bold]_&]:data-[pressed]:border-accent/55 [[data-tabs=bold]_&]:data-[pressed]:bg-accent/16 [[data-tabs=bold]_&]:data-[pressed]:hover:bg-accent/16"
 const PILL_BOLD = "[[data-tabs=bold]_&]:-inset-px [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-accent/55 [[data-tabs=bold]_&]:bg-accent/16 [[data-tabs=bold]_&]:shadow-none"
