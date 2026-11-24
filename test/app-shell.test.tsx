@@ -1,8 +1,10 @@
 // The frame of an app (`AppShell`) and its `Inspector`: seven regions, and three steps that follow the frame's own
 // width (Imago's 1000, 850 and 620px), which the sidebar and the inspector read from the frame.
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { APP_SHELL_STEPS, AppShell, Inspector, NavItem, Sidebar, SidebarGroup, appShellLayout, useAppShell } from '../src'
+import { settle } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -149,4 +151,151 @@ test('the sheet has its corner and its start edge only where a sidebar lies besi
 test('a sheet frame without a sidebar has no corner either', () => {
   render(<AppShell contentLabel="Page" frame="sheet">Text</AppShell>)
   expect(document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')).toBe('alone')
+})
+
+// The inspector beside the rest of the window: a list to choose from, and the details of the one chosen.
+function Details({ start = true, onChange }: { start?: boolean; onChange?: (open: boolean) => void }) {
+  const [open, setOpen] = useState(start)
+  const [first, setFirst] = useState(true)
+  const change = (next: boolean) => {
+    onChange?.(next)
+    setOpen(next)
+  }
+  return (
+    <AppShell
+      contentLabel="Messages"
+      inspector={
+        <Inspector title="Details" open={open} onOpenChange={change}>
+          <button type="button">Edit</button>
+          <button type="button" aria-expanded="true">More facts</button>
+          <input aria-label="Label" role="combobox" aria-expanded="true" aria-controls="labels" />
+        </Inspector>
+      }
+    >
+      {first ? <button type="button" onClick={() => setOpen(true)}>First message</button> : null}
+      <button type="button">Second message</button>
+      <button type="button" onClick={() => setFirst(false)}>Archive</button>
+    </AppShell>
+  )
+}
+
+const button = (name: string) => screen.getByRole('button', { name })
+const focus = (el: HTMLElement) => act(() => el.focus())
+/** A whole press, as a pointer makes it: what closes a sheet when it lands outside it. */
+function pressOn(el: Element) {
+  fireEvent.pointerDown(el)
+  fireEvent.mouseDown(el)
+  fireEvent.pointerUp(el)
+  fireEvent.mouseUp(el)
+  fireEvent.click(el)
+}
+
+test('docked, the inspector closed with the focus in it gives the focus back to what had it before', () => {
+  render(<Details />)
+  focus(button('First message'))
+  focus(button('Edit'))
+  fireEvent.click(button('Close'))
+  expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull()
+  expect(document.activeElement).toBe(button('First message'))
+})
+
+test('docked, Escape with the focus in the inspector closes it and gives the focus back; Escape elsewhere is not its own', () => {
+  const seen: boolean[] = []
+  render(<Details onChange={(open) => seen.push(open)} />)
+  focus(button('First message'))
+  fireEvent.keyDown(button('First message'), { key: 'Escape' })
+  expect(seen).toEqual([])
+  focus(button('Edit'))
+  fireEvent.keyDown(button('Edit'), { key: 'Escape' })
+  expect(seen).toEqual([false])
+  expect(document.activeElement).toBe(button('First message'))
+})
+
+test('docked, a field whose list is open keeps its Escape; a row opened in place does not', () => {
+  const seen: boolean[] = []
+  render(<Details onChange={(open) => seen.push(open)} />)
+  focus(screen.getByRole('combobox', { name: 'Label' }))
+  fireEvent.keyDown(screen.getByRole('combobox', { name: 'Label' }), { key: 'Escape' })
+  expect(seen).toEqual([])
+  focus(button('More facts'))
+  fireEvent.keyDown(button('More facts'), { key: 'Escape' })
+  expect(seen).toEqual([false])
+})
+
+test('docked, the inspector closed with the focus elsewhere does not move it', () => {
+  render(<Details />)
+  focus(button('First message'))
+  focus(button('Edit'))
+  const close = button('Close')
+  // The person went back to the list: the focus is theirs.
+  focus(button('Second message'))
+  fireEvent.click(close)
+  expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull()
+  expect(document.activeElement).toBe(button('Second message'))
+})
+
+test('docked, when what had the focus is gone the content takes it', () => {
+  render(<Details />)
+  focus(button('First message'))
+  focus(button('Edit'))
+  fireEvent.click(button('Archive'))
+  expect(screen.queryByRole('button', { name: 'First message' })).toBeNull()
+  fireEvent.click(button('Close'))
+  expect(document.activeElement).toBe(screen.getByRole('main', { name: 'Messages' }))
+})
+
+test('as a drawer the inspector opens without taking the focus, and a press outside it leaves it open', async () => {
+  const resize = observed()
+  const seen: boolean[] = []
+  render(<Details start={false} onChange={(open) => seen.push(open)} />)
+  resize(900)
+  focus(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  expect(screen.getByRole('dialog', { name: 'Details' })).toBeTruthy()
+  expect(document.activeElement).toBe(button('First message'))
+  // Choosing another thing in the list: the details stay.
+  pressOn(button('Second message'))
+  await settle(120)
+  expect(seen).toEqual([])
+  expect(screen.getByRole('dialog', { name: 'Details' })).toBeTruthy()
+})
+
+test('as a drawer Escape and its button close the inspector, and the focus goes back to what had it before', async () => {
+  const resize = observed()
+  const seen: boolean[] = []
+  render(<Details start={false} onChange={(open) => seen.push(open)} />)
+  resize(900)
+  focus(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Edit'))
+  await settle(120)
+  fireEvent.keyDown(button('Edit'), { key: 'Escape' })
+  await settle(120)
+  expect(seen).toEqual([false])
+  expect(document.activeElement).toBe(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Close'))
+  await settle(120)
+  fireEvent.click(button('Close'))
+  await settle(120)
+  expect(seen).toEqual([false, false])
+  expect(document.activeElement).toBe(button('First message'))
+})
+
+test('as a drawer the inspector closed with the focus elsewhere does not move it', async () => {
+  const resize = observed()
+  const seen: boolean[] = []
+  render(<Details start={false} onChange={(open) => seen.push(open)} />)
+  resize(900)
+  focus(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Second message'))
+  fireEvent.keyDown(button('Second message'), { key: 'Escape' })
+  await settle(120)
+  expect(seen).toEqual([false])
+  expect(document.activeElement).toBe(button('Second message'))
 })

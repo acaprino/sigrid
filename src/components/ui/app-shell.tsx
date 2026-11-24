@@ -38,6 +38,10 @@
 // app to write (after Imago's `regions`). The frame answers F6 before anything else does (the notices' own F6 among
 // them), so the round is one. In a region the focus goes to the place the user is in (`aria-current`), else to the first
 // thing that takes it; the content takes it itself when it holds nothing that does.
+// The inspector leaves the rest of the window working, in both forms: a press outside it does not close it (a row, a
+// node of a canvas, the search field are still the person's), opening it does not move the focus, and closing it gives
+// the focus back only when the focus was in it: to what had it before it went in, or to the content when that is gone.
+// Its button closes it, Escape with the focus in it, and as a drawer a swipe towards its edge and Escape from anywhere.
 // Without a way to measure (a server, a test) the frame is the wide one.
 // Its height is the host's, never a guess (docs/mobile.md, «Heights and orientation»):
 // - it is as tall as what the person sees (`--app-height`, which it keeps up to date itself with `useAppHeight`: the
@@ -74,6 +78,9 @@ const REGIONS: readonly { inside: string; page?: string }[] = [
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex], [contenteditable=""], [contenteditable="true"]'
 // An open surface that is not a region of the round keeps F6 (a menu, a list of options, a dialog other than the inspector).
 const SURFACES = '[role="dialog"]:not([data-inspector-form]), [role="alertdialog"], [role="menu"], [role="listbox"]'
+// Inside the inspector, an open list, menu or dialog keeps its Escape, and so does the field or button whose list is
+// open; a row that is only opened in place (a `Disclosure`, a branch of a tree) does not.
+const KEEPS_ESCAPE = `${SURFACES}, [role="combobox"][aria-expanded="true"], [aria-haspopup][aria-expanded="true"]`
 const visible = (el: Element) => el.closest("[hidden], [inert], [aria-hidden=\"true\"]") === null
 const takes = (el: HTMLElement) => el.tabIndex >= 0 && visible(el) && !el.matches(":disabled")
 
@@ -116,6 +123,9 @@ export const AppShellContext = React.createContext<AppShellLayout | undefined>(u
 export function useAppShell(): AppShellLayout {
   return React.useContext(AppShellContext) ?? WIDE
 }
+
+/** The content of the frame around: where the inspector sends the focus when what had it is gone. */
+const ContentContext = React.createContext<{ readonly current: HTMLElement | null } | undefined>(undefined)
 
 export type AppShellProps = {
   /** The bar at the top (a `TitleBar`). */
@@ -162,6 +172,7 @@ const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
+  const content = React.useRef<HTMLElement>(null)
   const [layout, setLayout] = React.useState<AppShellLayout>(WIDE)
   const inspectorStep = steps?.inspector ?? APP_SHELL_STEPS.inspector
   const sidebarStep = steps?.sidebar ?? APP_SHELL_STEPS.sidebar
@@ -285,7 +296,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
             </div>
           ) : null}
           <div data-slot="app-shell-columns" className="flex min-h-0 flex-1">
-            <main id={id} tabIndex={-1} aria-label={contentLabel} data-slot="app-shell-content" className={cn("min-w-0 flex-1 overflow-y-auto", FOCUS_RING_INSET)}>
+            <main ref={content} id={id} tabIndex={-1} aria-label={contentLabel} data-slot="app-shell-content" className={cn("min-w-0 flex-1 overflow-y-auto", FOCUS_RING_INSET)}>
               {children}
             </main>
             {inspector}
@@ -320,6 +331,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   )
   return (
     <AppShellContext.Provider value={layout}>
+      <ContentContext.Provider value={content}>
       <div
         ref={root}
         data-slot="app-shell"
@@ -342,6 +354,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
         {/* The provider is there from the first render, with or without its layer: the frame is never mounted twice. */}
         {desktop ? <PortalContainerProvider container={overlays ?? outer}>{regions}</PortalContainerProvider> : regions}
       </div>
+      </ContentContext.Provider>
     </AppShellContext.Provider>
   )
 }
@@ -350,7 +363,10 @@ export type InspectorProps = {
   /** What it shows («Details»): its heading and its name for screen readers. */
   title: string
   open: boolean
-  /** With it, a button in the heading closes the inspector; as a drawer, Esc does too. */
+  /**
+   * With it, a button in the heading closes the inspector, and so does Escape pressed with the focus in it (as a
+   * drawer, Escape from anywhere and a swipe towards its edge too). A press outside it never closes it.
+   */
   onOpenChange?: ((open: boolean) => void) | undefined
   /** Under the body, always in sight: the actions on what is selected. */
   footer?: React.ReactNode
@@ -364,10 +380,49 @@ export type InspectorProps = {
  * The details or the form of what is selected, at the end of the frame. It is not modal: the rest of the window keeps
  * working beside it. Docked it is a column with a line at its inner edge (R4); in a frame under 1000px it is a raised
  * panel over the end of the content. Closed, the content takes its room.
+ * A press outside it does not close it, and opening it does not move the focus (a selection opened it, not a request:
+ * the person goes in with Tab, F6 or a press). Closed with the focus in it, it gives the focus back to what had it
+ * before, or to the content when that is gone or hidden; closed with the focus elsewhere, it moves nothing.
  */
 function Inspector({ title, open, onOpenChange, footer, animated, className, children }: InspectorProps) {
   const words = useWords()
   const { inspector } = useAppShell()
+  const content = React.useContext(ContentContext)
+  // The focus, the same way in both forms, from the focus events that reach the inspector (those of a menu it opens
+  // in a layer of the page too, since they come up React's tree): `inside`, whether the focus is in it; `from`, what
+  // had the focus when it came in from outside (the `relatedTarget` of that `focusin`); `left`, what the focus last
+  // left in it, so that a move between two things of the inspector is not taken for coming in. When `open` turns
+  // false with the focus inside, the focus goes to `from`, or to the content if `from` is gone, hidden or does not
+  // take it; with the focus elsewhere nothing moves. `document.activeElement` is not asked at that moment: the drawer
+  // may be out of the page already.
+  const focus = React.useRef<{ inside: boolean; from: EventTarget | null; left: EventTarget | null }>({ inside: false, from: null, left: null })
+  const track = {
+    onFocus: (event: React.FocusEvent<HTMLElement>) => {
+      if (!focus.current.inside && event.relatedTarget !== focus.current.left) focus.current.from = event.relatedTarget
+      focus.current.inside = true
+    },
+    onBlur: (event: React.FocusEvent<HTMLElement>) => {
+      focus.current.left = event.target
+      // The window losing the focus is not the focus leaving the inspector: the document still has it there.
+      if (event.currentTarget.ownerDocument.activeElement !== event.target) focus.current.inside = false
+    },
+  }
+  React.useLayoutEffect(() => {
+    if (open) return
+    const { inside, from } = focus.current
+    focus.current = { inside: false, from: null, left: null }
+    if (!inside) return
+    const back = from instanceof HTMLElement && from.isConnected && visible(from) ? from : null
+    back?.focus({ preventScroll: true })
+    if (!back || back.ownerDocument.activeElement !== back) content?.current?.focus({ preventScroll: true })
+  }, [open, content])
+  // The other form is another element: the focus that was in this one is nowhere.
+  React.useLayoutEffect(
+    () => () => {
+      focus.current = { inside: false, from: null, left: null }
+    },
+    [inspector],
+  )
   const heading = (
     <div data-slot="inspector-header" className="flex min-h-(--row-height) shrink-0 items-center gap-2 border-b border-line ps-4 pe-2">
       <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{title}</h2>
@@ -392,8 +447,18 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
   )
   if (inspector === "drawer") {
     return (
-      <Sheet open={open} modal={false} onOpenChange={(next) => onOpenChange?.(next)}>
-        <SheetContent side="right" showCloseButton={false} animated={animated} data-inspector-form="drawer" className={cn("gap-0 p-0", className)}>
+      <Sheet open={open} modal={false} disablePointerDismissal onOpenChange={(next) => onOpenChange?.(next)}>
+        {/* Not the sheet's ways: the focus stays where it is on opening, and on closing the inspector gives it back itself (above). */}
+        <SheetContent
+          side="right"
+          showCloseButton={false}
+          animated={animated}
+          initialFocus={false}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          {...track}
+          data-inspector-form="drawer"
+          className={cn("gap-0 p-0", className)}
+        >
           <SheetTitle className="sr-only">{title}</SheetTitle>
           {heading}
           {body}
@@ -402,7 +467,22 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
     )
   }
   return (
-    <aside data-slot="inspector" data-inspector-form="docked" aria-label={title} hidden={!open} className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper", className)}>
+    <aside
+      data-slot="inspector"
+      data-inspector-form="docked"
+      aria-label={title}
+      hidden={!open}
+      {...track}
+      // Escape with the focus in it closes it, as the drawer's does; an open list or menu in it keeps its own.
+      onKeyDown={(event) => {
+        if (!onOpenChange || event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing || event.ctrlKey || event.altKey || event.metaKey) return
+        const surface = event.target instanceof Element ? event.target.closest(KEEPS_ESCAPE) : null
+        if (surface && !surface.contains(event.currentTarget)) return
+        event.preventDefault()
+        onOpenChange(false)
+      }}
+      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper", className)}
+    >
       {heading}
       {body}
     </aside>

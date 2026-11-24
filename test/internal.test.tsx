@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
 import { AttachmentMarks, AttachmentsSection } from '../src/components/Attachments'
 import { limitLabel, MAX_FILE_BYTES, payloadFromDataTransfer, withinLimit } from '../src/internal/drop'
 import { Swatches } from '../src/components/Swatches'
+import { splitLines, useEdgeAutoScroll } from '../src'
 import { dt } from './helpers'
 
 // The normalized payload (plan 2C): files, then a link, then text. Before, there was `{ text?, urls?, files? }` all together.
@@ -168,4 +169,33 @@ test('the button that chooses a file is named by what it shows, title and hint (
   const at = source.indexOf('<FileUpload.Trigger')
   expect(at).toBeGreaterThan(-1)
   expect(source.slice(at, source.indexOf('>', at))).not.toContain('aria-label')
+})
+
+test('splitLines gives the lines of a text that are not empty, trimmed, whatever ends a line', () => {
+  expect(splitLines(' milk \r\n\r\nbread\rcall Anna\n   \n')).toEqual(['milk', 'bread', 'call Anna'])
+  expect(splitLines('')).toEqual([])
+  expect(splitLines(' \n\t')).toEqual([])
+})
+
+test('a drag within 48px of the left or right edge scrolls the element sideways, and no longer once it is gone', () => {
+  function Row() {
+    const ref = useRef<HTMLDivElement>(null)
+    useEdgeAutoScroll(ref)
+    return <div ref={ref} data-testid="row" />
+  }
+  const { unmount } = render(<Row />)
+  const row = screen.getByTestId('row')
+  row.getBoundingClientRect = () => ({ left: 100, right: 500 }) as DOMRect
+  // jsdom has no DragEvent: the hook reads only where the pointer is.
+  const dragOver = (clientX: number) => row.dispatchEvent(new MouseEvent('dragover', { clientX, bubbles: true }))
+  row.scrollLeft = 100
+  dragOver(147)
+  expect(row.scrollLeft).toBe(76)
+  dragOver(453)
+  expect(row.scrollLeft).toBe(100)
+  dragOver(300)
+  expect(row.scrollLeft).toBe(100)
+  unmount()
+  dragOver(147)
+  expect(row.scrollLeft).toBe(100)
 })

@@ -150,7 +150,9 @@ count is a pill at the end of the row (R5).
 **List and detail.** For things to read and act on: mail, tasks, files. The sidebar says where, the content is the
 list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot for unread), the inspector shows the
 one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
-covers the end of the list and the list stays usable beside it.
+covers the end of the list and the list stays usable beside it: choosing another row does not close the inspector
+(a press outside it never does, unlike a sheet), it shows the new one, and the focus stays in the list. Its button and
+Escape with the focus in it close it, and the focus goes back to where it was before it went in.
 Where the thing chosen is the work itself and not its details (a message to read, a file to edit), it needs the
 width the inspector does not have: the content is two panes, `ContentSplit`, the list a column of a fixed width and
 the thing chosen in the room that is left. The split measures itself as the frame does and, where the two do not fit,
