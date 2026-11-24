@@ -601,7 +601,7 @@
          "name": "Highlight",
          "type": "({ id, className }: { id: string; className?: string; }) => React.JSX.Element",
          "required": true,
-         "doc": "The pill under the chosen item of a group. Rendered inside the chosen item only; when the choice changes Motion carries it from the old item to the new one (`layoutId`). On mount it is simply there."
+         "doc": "The pill under the chosen item of a group. Rendered inside the chosen item only; when the choice changes Motion carries it from the old item to the new one (`layoutId`). On mount it is simply there. It moves for that alone (`layoutDependency` never changes): when its item changes place or size because another came or went, or the group was resized, it is drawn where the item is, at once, and never trails it."
         },
         {
          "name": "Turn",
@@ -611,9 +611,9 @@
         },
         {
          "name": "HoverHighlight",
-         "type": "({ container, selector, className }: { container: HTMLElement | null; selector: string; className?: string; }) => React.JSX.Element",
+         "type": "({ container, selector, className, as }: { container: HTMLElement | null; selector: string; className?: string; as?: \"div\" | \"li\"; }) => React.JSX.Element",
          "required": true,
-         "doc": "One hover background for the whole container: it appears at once on the first row, glides with the mouse from row to row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size of the new row at once, and is carried there from where and how large it was seen (a translation from the container's corner, a scale from its own). So it also glides between rows of different heights, without animating a size. The rows are found by `selector` (delegation: no handler per row); `container` must be positioned. Mouse only: a finger has no hover. It never takes the pointer from the rows under it."
+         "doc": "One hover background for the whole container: it appears at once on the first row, glides with the pointer from row to row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size of the new row at once, and is carried there from where and how large it was seen (a translation from the container's corner, a scale from its own). So it also glides between rows of different heights, without animating a size, and it has the corners of the row it is under. The rows are found by `selector` (delegation: no handler per row); `container` must be positioned. A mouse or a pen: a finger has no hover. It never takes the pointer from the rows under it. It follows its row: when rows come or go, or the list is resized, it is measured again, and it is gone with a row that left; when anything scrolls the list under a still pointer it fades, since the row is no longer under the pointer. `as` is the element it is drawn as: `li` inside a `<ul>` or an `<ol>`, which may hold nothing else."
         },
         {
          "name": "m",
@@ -2159,6 +2159,43 @@
      ]
     },
     {
+     "file": "src/primitives/hover-follow.tsx",
+     "about": "The hover background of a list, as one sheet that follows the pointer: with motion on it glides from the row the\npointer left to the row it is on, between rows of different heights too, and fades when the pointer leaves the list\nor the list scrolls under it. It is for a list whose rows are the app's own (the rows of `ItemList` have it by\nthemselves, with `animated`): the app gives it the element that holds the rows and how a row is found, and draws it\ninside that element. It is the tint of every row under the pointer (`ROW_HIGHLIGHT`), with the corners of the row it\nis under, and it lies under the rows: it never takes the pointer from them, and a row with a fill of its own (the\nchosen one) covers it. A mouse or a pen only: a finger has no hover.\nWhile it is at work the holder carries `data-hover-follow`, and only then: a row drops its own hover fill under that\nattribute, and keeps it without motion (the setting off, the system asking for less, the chunk not here yet), where\nthis part draws nothing and the list is exactly as it was.",
+     "components": [
+      {
+       "name": "HoverFollow",
+       "doc": "One hover background for the rows of `container`. Draw it inside `container`, after the rows. Without motion it draws nothing and marks nothing.",
+       "props": [
+        {
+         "name": "container",
+         "type": "HTMLElement | null",
+         "required": true,
+         "doc": "The element that holds the rows (from a `ref` kept in state, so it is known once it is in the page). It may scroll, or sit in what scrolls."
+        },
+        {
+         "name": "rows",
+         "type": "string",
+         "required": true,
+         "doc": "How a row is found inside it: a CSS selector (`[data-row]`). Rows may come and go."
+        },
+        {
+         "name": "as",
+         "type": "\"div\" | \"li\"",
+         "doc": "The element it is drawn as: `li` when the holder is a `<ul>` or an `<ol>`, which may hold nothing else."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The background follows the pointer (off by default, never with prefers-reduced-motion). Absent: what `MotionProvider` says."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "HoverFollowProps"
+     ]
+    },
+    {
      "file": "src/primitives/input.tsx",
      "about": "SmoothUI (MIT) input 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/input.json)\nPark UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)",
      "components": [
@@ -2570,7 +2607,7 @@
     },
     {
      "file": "src/primitives/popover.tsx",
-     "about": "SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/popover.json)\nPark UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)\nFrom Park's `popover` recipe comes the form: l3 corners, the lg elevation in place of a border, 16px of padding, 320px\nwide (Park's `xs`), the title 16px medium.\nFrom SmoothUI we keep the primitive (Base UI's `Popover`: Root, Trigger, Portal, Positioner, Popup), the structure of\n`PopoverContent` (Portal + Positioner + Popup) and the classes of the card. The parts stay as before\n(`Popover`, `PopoverTrigger` with `asChild`, `PopoverContent` with `align`/`side`/`sideOffset`, `PopoverAnchor`,\n`PopoverHeader`/`Title`/`Description`), not SmoothUI's `trigger`/`children` API, so whoever uses them does not change.\nRemoved: the spring and the automatic animation: with `animated` true (off by default, never with prefers-reduced-motion)\nthe card enters with a short fade. As before: non-modal, Esc or a click outside close it and focus returns to the\nbutton; the button carries `data-state=\"open\"|\"closed\"`.",
+     "about": "SmoothUI (MIT) popover 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/popover.json)\nPark UI (MIT) popover 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/popover.ts)\nFrom Park's `popover` recipe comes the form: l3 corners, the lg elevation in place of a border, 16px of padding, 320px\nwide (Park's `xs`), the title 16px medium.\nFrom SmoothUI we keep the primitive (Base UI's `Popover`: Root, Trigger, Portal, Positioner, Popup), the structure of\n`PopoverContent` (Portal + Positioner + Popup) and the classes of the card. The parts stay as before\n(`Popover`, `PopoverTrigger` with `asChild`, `PopoverContent` with `align`/`side`/`sideOffset`, `PopoverAnchor`,\n`PopoverHeader`/`Title`/`Description`), not SmoothUI's `trigger`/`children` API, so whoever uses them does not change.\nRemoved: the spring and the automatic animation: with `animated` true (off by default, never with prefers-reduced-motion)\nthe card enters with a short fade. As before: non-modal, Esc or a click outside close it and focus returns to the\nbutton; the button carries `data-state=\"open\"|\"closed\"`. Closing, the card fades (theme.css, `data-ending-style`).\nA card that belongs to something that is not its button (the filters under a search field, the suggestions of a\ntext box) needs no `PopoverTrigger`: the app opens it (`open`, `onOpenChange`) and says what it hangs from, with\n`PopoverAnchor` around that thing or, when it is drawn elsewhere, with `anchor` on the `Popover`. The anchor is part\nof the popover: a press on it, or the focus going to it, is not «outside» and does not close the card. To leave the\nfocus where the user is typing, `PopoverContent initialFocus={false}`; Esc still closes the card, and the focus\nstays in the field. `width` is the card's width on the toolkit's scale; a long card scrolls in a `ScrollArea bounded`.",
      "components": [
       {
        "name": "Popover",
@@ -2578,6 +2615,11 @@
         {
          "name": "onOpenChange",
          "type": "((open: boolean, details?: PopoverPrimitive.Root.ChangeEventDetails) => void)"
+        },
+        {
+         "name": "anchor",
+         "type": "Element | React.RefObject<Element | null> | null",
+         "doc": "What the card hangs from, when it is not its button and is drawn outside the popover (a search field in a bar): the element, or a `ref` to it. The card is placed against it, and a press on it or the focus going to it does not close the card. For a thing drawn inside the popover, `PopoverAnchor` around it does the same."
         }
        ],
        "passesOn": true
@@ -2593,7 +2635,12 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "The card enters with a short fade (off by default, never with prefers-reduced-motion)."
+         "doc": "The card enters with a short fade, and fades as it closes (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "width",
+         "type": "PopoverWidth",
+         "doc": "How wide the card is: absent, 320px; `sm` 384px, `md` 448px, `lg` 512px, `xl` 576px, and never wider than the room the window leaves."
         }
        ],
        "passesOn": true
@@ -2620,6 +2667,9 @@
        ],
        "passesOn": true
       }
+     ],
+     "also": [
+      "PopoverWidth"
      ]
     },
     {
@@ -4754,7 +4804,7 @@
     },
     {
      "file": "src/components/item-list.tsx",
-     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
+     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nWith `animated` the share of the tint under the pointer is one background for the whole list, which follows the\npointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring\nis the row's own, as without it.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
      "components": [
       {
        "name": "ItemList",
@@ -4764,6 +4814,11 @@
          "type": "string",
          "required": true,
          "doc": "Name of the list for screen readers («Messages»)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion)."
         },
         {
          "name": "className",
@@ -5139,7 +5194,7 @@
     },
     {
      "file": "src/components/search-field.tsx",
-     "about": "A search box: the toolkit's `Input` as a `type=\"search\"` field, with the magnifier at the start (functional chrome,\n16px, muted) and, while there is text, a button at the end that empties the field and gives it the focus back. The\nbrowser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no\nlabel of its own: the caller names it (`aria-label`, or a `FormField` around it).",
+     "about": "A search box: the toolkit's `Input` as a `type=\"search\"` field, with the magnifier at the start (functional chrome,\n16px, muted) and, while there is text, a button at the end that empties the field and gives it the focus back. The\nbrowser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no\nlabel of its own: the caller names it (`aria-label`, or a `FormField` around it).\n`variant=\"quiet\"` is the same field for a bar (a header, a toolbar), where the search is always there and must not\nweigh as much as the fields of the page: a well with round ends, a quiet fill in place of the border (`FIELD_QUIET`,\nlib/field.ts), the light divider only under the pointer; in focus it is the page's ground with the focus ring of\nevery field. Its height, its text and its parts are the same; what tells it from the bar is the fill, and what says\nit is a search is the magnifier and its words. The button that empties it is round as well.",
      "components": [
       {
        "name": "SearchField",
@@ -5159,6 +5214,11 @@
          "name": "clearLabel",
          "type": "string",
          "doc": "The name of the button that empties the field. Absent: the toolkit's words («Clear the search»)."
+        },
+        {
+         "name": "variant",
+         "type": "\"quiet\" | \"outline\"",
+         "doc": "`outline` (the default): the field of every form, with its border. `quiet`: for a search in a bar, a well with round ends, a quiet fill and no border at rest, so it does not stand out from the bar; the border shows under the pointer."
         }
        ],
        "passesOn": true
@@ -5777,7 +5837,7 @@
     },
     {
      "file": "src/layout/nav-list.tsx",
-     "about": "The rows of a navigation (R1 and R6 of the owner's rules): a list of places, each a row with an icon slot, a name\nand, at the end, whatever the caller adds (a `Count`). The row of the place the user is in carries\n`aria-current=\"page\"`, the selection tint, stronger text and a short accent bar at its left edge (R1). The icon slot is always there,\n16px wide, so a row without an icon stays aligned with the others (R6). A row is as tall as the density's row, and\nat least 44px with a coarse pointer.\nA row may have a second line under its name (`description`) and, beside it, controls of its own (`actions`: a button\nthat adds to the place, a menu). The controls sit outside the row, which is itself a button or a link; the rail shows\nneither.\nTwo tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's\nsidebar, where the theme has its own ink and its own selection (`sidebar-*`, the solid sidebar among them).",
+     "about": "The rows of a navigation (R1 and R6 of the owner's rules): a list of places, each a row with an icon slot, a name\nand, at the end, whatever the caller adds (a `Count`). The row of the place the user is in carries\n`aria-current=\"page\"`, the selection tint, stronger text and a short accent bar at its left edge (R1). The icon slot is always there,\n16px wide, so a row without an icon stays aligned with the others (R6). A row is as tall as the density's row, and\nat least 44px with a coarse pointer.\nA row may have a second line under its name (`description`) and, beside it, controls of its own (`actions`: a button\nthat adds to the place, a menu). The controls sit outside the row, which is itself a button or a link; the rail shows\nneither.\nTwo tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's\nsidebar, where the theme has its own ink and its own selection (`sidebar-*`, the solid sidebar among them).\nWith motion on (`animated` on the `NavList` or the `Sidebar`, or `MotionProvider`) the tint and the bar of the chosen\nrow are one mark for the whole navigation, which slides from the row the user left to the row they chose, as the\ntint of `Tabs` does (`Highlight` in `motion-impl`): one place is current, so there is one mark, and it crosses the\ngroups. It moves only when the current row changes; a row that is not shown (a closed group, a search) has no mark,\nso the mark never comes from, or goes to, a place that is not seen.",
      "components": [
       {
        "name": "NavItem",
@@ -5834,6 +5894,11 @@
         {
          "name": "tone",
          "type": "Tone"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The tint of the chosen row slides to the row chosen next (off by default, never with prefers-reduced-motion)."
         },
         {
          "name": "className",
@@ -5938,7 +6003,7 @@
     },
     {
      "file": "src/layout/sidebar.tsx",
-     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with\n  `toggle=\"head\"`, the button at the end of the header's row (the name of the list, its count and the button on one\n  row; on the rail the button alone, at the top);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).",
+     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with\n  `toggle=\"head\"`, the button at the end of the header's row (the name of the list, its count and the button on one\n  row; on the rail the button alone, at the top);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).\nWith `animated` that tint is one mark for the whole sidebar, which slides to the row chosen next, across the groups\n(`NavItem`, nav-list.tsx). It is drawn anew, without a slide, when the sidebar shrinks to its rail or widens, and a\nrow in a closed group or hidden by the search has none.",
      "components": [
       {
        "name": "Sidebar",
@@ -5991,7 +6056,7 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "The drawer slides in and the arrows of the groups turn (off by default, never with prefers-reduced-motion)."
+         "doc": "The drawer slides in, the arrows of the groups turn and the tint of the chosen row slides to the row chosen next (off by default, never with prefers-reduced-motion)."
         },
         {
          "name": "className",
