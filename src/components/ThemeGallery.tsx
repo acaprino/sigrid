@@ -1,3 +1,11 @@
+// The theme gallery: a compact picker of the app's themes, one tile each. A tile is drawn in its own theme, in the
+// scheme and tone the app shows now (`themeVariables` on the tile alone): its name on the theme's primary fill, then a
+// small sketch of a window (the sidebar with a chosen row, two rows, a button), so the person sees the theme before
+// choosing it. The tiles are one radio group: one Tab stop, the arrows, Home and End move and choose (`radioArrows`, as
+// the look settings' cards), and the chosen tile has the accent edge and a check in a dot (the choice is not shown by
+// the edge alone). An optional last tile, dashed, stands for a theme of the person's own: choosing it calls the app,
+// which opens its own editor; it is the chosen one when `selected` is null. Two columns, three from 352px of its own
+// width (a container query: it fits a narrow settings panel).
 import { useMemo, type CSSProperties } from 'react'
 import type { ThemeDef } from '../theme-catalog'
 import type { ThemeScheme, ThemeTone } from '../theme-engine'

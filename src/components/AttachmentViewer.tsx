@@ -1,8 +1,12 @@
+// The attachment viewer: a document or a picture opened over the page, in a sheet from the right, with its name, its
+// pages one under the other (each keeps its place before its image arrives, and asks for it with `onNeedPage`), the
+// zoom in steps (`VIEWER_ZOOMS`) and «Open the original»; it says when it is loading and when the file cannot be shown.
+// The pages and what the buttons do are the app's.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Download, Minus, Plus } from 'lucide-react'
 import { Button } from './ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet'
 import { cn } from '../lib/utils'
+import { Icon } from '../icons'
 import { useWords } from '../words'
 import { FOCUS_RING_INSET } from '../lib/focus'
 
@@ -79,19 +83,19 @@ export function AttachmentViewer({ open, onOpenChange, title, status, pages = []
       {ready && onZoomChange ? (
         <div className="flex shrink-0 items-center" role="group" aria-label={words.zoom}>
           <Button variant="ghost" size="icon-sm" aria-label={words.zoomOut} disabled={at <= 0} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.max(0, at - 1)] ?? 1)}>
-            <Minus aria-hidden="true" />
+            <Icon name="minus" />
           </Button>
           <span className="min-w-10 text-center text-xs text-ink-soft tabular-nums" aria-live="polite">
             {percent(step)}
           </span>
           <Button variant="ghost" size="icon-sm" aria-label={words.zoomIn} disabled={at >= VIEWER_ZOOMS.length - 1} onClick={() => onZoomChange(VIEWER_ZOOMS[Math.min(VIEWER_ZOOMS.length - 1, at + 1)] ?? 1)}>
-            <Plus aria-hidden="true" />
+            <Icon name="plus" />
           </Button>
         </div>
       ) : null}
       {onOpenOriginal ? (
         <Button variant="ghost" size="icon-sm" aria-label={originalLabel} title={originalLabel} onClick={onOpenOriginal}>
-          <Download aria-hidden="true" />
+          <Icon name="download" />
         </Button>
       ) : null}
     </div>

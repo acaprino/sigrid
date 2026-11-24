@@ -10,7 +10,8 @@
 // that holds it, and `fixed` keeps a scrolling body from clipping it). No animation.
 import * as React from "react"
 import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/react/combobox"
-import { Check, ChevronDown } from "lucide-react"
+import { Check } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { FOCUS_FIELD } from "../../lib/focus"
@@ -131,7 +132,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           tabIndex={-1}
           className="absolute inset-y-0 right-0 flex w-(--control-md) items-center justify-center text-ink-mute hover:text-ink disabled:pointer-events-none disabled:opacity-50"
         >
-          <ChevronDown aria-hidden="true" className="size-4" />
+          <Icon name="chevronDown" className="size-4" />
         </ComboboxPrimitive.Trigger>
       </ComboboxPrimitive.Control>
       <ComboboxPrimitive.Positioner className="z-50">

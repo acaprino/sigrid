@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { FileDrop } from '../src'
-import { dt, settle } from './helpers'
+import { classes, dt, settle } from './helpers'
 
 // `FileDrop` (src/internal/file-drop.tsx): a file dropped on the zone or chosen with the picker, the checks of type,
 // size and count, the words of the app, the busy and the error states.
@@ -90,6 +90,9 @@ describe('FileDrop', () => {
     expect(zone().getAttribute('data-drop-active')).toBe('false')
     fireEvent.dragOver(zone(), { dataTransfer: dt({}, [sized('a.csv', 1)]) })
     expect(zone().getAttribute('data-drop-active')).toBe('true')
+    // The dashed edge turns solid ink, not the accent (R2): the accent's ring is the focus's (R8).
+    expect(classes(zone())).toEqual(expect.arrayContaining(['border-solid', 'border-ink']))
+    expect(classes(zone())).not.toContain('border-ring')
     expect(screen.getByText('Drop it here')).toBeTruthy()
     expect(trigger()).toBeTruthy()
     for (const el of [zone(), trigger()]) expect(el.getAttribute('class') ?? '').not.toMatch(/transition|animate-|scale|duration/)

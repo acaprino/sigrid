@@ -13,7 +13,7 @@
 import * as React from 'react'
 import { DatePicker, useDatePickerContext } from '@ark-ui/react/date-picker'
 import { CalendarDate, getDayOfWeek, getLocalTimeZone, parseDate } from '@internationalized/date'
-import { CalendarIcon } from 'lucide-react'
+import { Icon } from '../icons'
 import { Calendar, calendarWords } from './ui/calendar'
 import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { Button } from './ui/button'
@@ -60,14 +60,15 @@ const POSITIONING = { placement: 'bottom-start', gutter: 4, strategy: 'fixed' } 
 // the field: there the calendar is taller than what is left under the field, and it would end below the window. The
 // positioner (Ark writes its place inline, hence the `!`) takes the bottom edge and dims the page behind it with the
 // one backdrop (`BACKDROP`); a tap on the dimmed page is a tap outside the card, so it closes. The card takes the
-// whole width, with the calendar in the middle, and leaves room for the home indicator.
+// whole width, with the calendar in the middle, and leaves room for the home indicator with the most the device keeps
+// at the foot (`--safe-area-max-inset-bottom`, as the frame's foot does): the live inset changes while the page scrolls.
 const PHONE_SHEET = cn(
   'z-50 max-md:pointer-coarse:fixed! max-md:pointer-coarse:inset-x-0! max-md:pointer-coarse:top-auto! max-md:pointer-coarse:bottom-0! max-md:pointer-coarse:transform-none!',
   // `bg-drop/40` is `BACKDROP` (internal/overlay.ts), written out: a class built from a constant is not compiled.
   "max-md:pointer-coarse:before:fixed max-md:pointer-coarse:before:inset-0 max-md:pointer-coarse:before:-z-10 max-md:pointer-coarse:before:bg-drop/40 max-md:pointer-coarse:before:content-['']",
 )
 const PHONE_SHEET_CARD =
-  'max-md:pointer-coarse:max-h-[85dvh] max-md:pointer-coarse:w-full max-md:pointer-coarse:overflow-y-auto max-md:pointer-coarse:rounded-b-none max-md:pointer-coarse:pb-[env(safe-area-inset-bottom)] max-md:pointer-coarse:[&>[data-slot=calendar]]:mx-auto'
+  'max-md:pointer-coarse:max-h-[85dvh] max-md:pointer-coarse:w-full max-md:pointer-coarse:overflow-y-auto max-md:pointer-coarse:rounded-b-none max-md:pointer-coarse:pb-(--safe-area-max-inset-bottom) max-md:pointer-coarse:[&>[data-slot=calendar]]:mx-auto'
 
 /** A quick choice above the calendar, as the card takes it: one day, or the two ends of a range. */
 type ShellPick = { label: string; days: readonly CalendarDate[] }
@@ -157,7 +158,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange,
     >
       <DatePicker.Control ref={control}>
         <DatePicker.Trigger data-slot="date-field" className={TRIGGER_CLASS}>
-          <CalendarIcon className="size-4 shrink-0 text-ink-soft" aria-hidden />
+          <Icon name="date" className="size-4 text-ink-soft" />
           <span className={cn('truncate', text ? undefined : 'text-ink-soft')}>{text ?? placeholder}</span>
         </DatePicker.Trigger>
       </DatePicker.Control>
@@ -304,8 +305,8 @@ export type DateFieldProps = {
   disabled?: boolean | undefined
   /** The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`. */
   locale?: string | undefined
-  /** The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22). */
-  words?: { clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
+  /** The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). */
+  words?: { time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined } | undefined
   /** Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend. */
   picks?: readonly DatePick[] | undefined
 }

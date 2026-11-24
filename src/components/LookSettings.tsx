@@ -1,5 +1,6 @@
 import { createContext, memo, useContext, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
+import { Check as LucideCheck } from 'lucide-react'
 import { COLORS, COLOR_NAMES } from '../colors'
 import { densityOf, type DensityDef } from '../density'
 import { FOCUS_RING, FOCUS_RING_SWATCH } from '../lib/focus'
@@ -23,13 +24,12 @@ export interface ChoiceText {
   readonly note: string
 }
 
-/** The mark on the chosen option: the choice is not shown by the border alone. */
+/**
+ * The mark on the chosen option: the choice is not shown by the border alone. The toolkit's check (Lucide's, as
+ * `Icon name="check"` draws it) with a heavier stroke, which `Icon` does not take: it sits alone at the corner of a card.
+ */
 function Check({ className }: { className: string }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
+  return <LucideCheck aria-hidden="true" strokeWidth={2.5} className={className} />
 }
 
 /**
@@ -41,20 +41,22 @@ export function choiceBorder(chosen: boolean): string {
 }
 
 /**
- * The arrow keys move focus and choose, as in a radio group; Tab enters the group on the chosen option. For a group
- * whose options are not all of one kind (cards, a pill beside swatches), which the toolkit's `RadioGroup` cannot hold;
- * a group of swatches alone is a `RadioGroup` (`Swatches`, the theme colour of `ColorMatch`).
+ * The arrow keys move focus and choose, as in a radio group, and Home and End reach the first and the last option, as
+ * in `RadioGroup`; Tab enters the group on the chosen option. For a group whose options are not all of one kind (cards,
+ * a pill beside swatches), which the toolkit's `RadioGroup` cannot hold; a group of swatches alone is a `RadioGroup`
+ * (`Swatches`, the theme colour of `ColorMatch`).
  */
 export function radioArrows(e: KeyboardEvent<HTMLDivElement>): void {
   const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
-  if (step === 0) return
+  if (step === 0 && e.key !== 'Home' && e.key !== 'End') return
   const entries = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'))
   const here = entries.indexOf(document.activeElement as HTMLElement)
-  const next = entries[(here + step + entries.length) % entries.length]
+  const next = e.key === 'Home' ? entries[0] : e.key === 'End' ? entries[entries.length - 1] : entries[(here + step + entries.length) % entries.length]
   if (here < 0 || !next) return
   e.preventDefault()
   next.focus()
-  next.click()
+  // An arrow always lands on another option; Home or End on the one already chosen chooses nothing again.
+  if (step !== 0 || next.getAttribute('aria-checked') !== 'true') next.click()
 }
 
 /** The same theme, scheme, own colours, tone and palette draw the same thing. */

@@ -3,7 +3,8 @@
 // browser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no
 // label of its own: the caller names it (`aria-label`, or a `FormField` around it).
 import * as React from "react"
-import { Search, X } from "lucide-react"
+import { Search } from "lucide-react"
+import { Icon } from "../../icons"
 import { Input } from "./input"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
@@ -47,7 +48,7 @@ function SearchField({ value, onValueChange, clearLabel, className, ref, disable
           }}
           className={cn("absolute right-1 pointer-coarse:right-0", QUIET_ICON)}
         >
-          <X aria-hidden="true" className="size-4" />
+          <Icon name="close" className="size-4" />
         </Button>
       ) : null}
     </div>

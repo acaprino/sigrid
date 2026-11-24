@@ -102,7 +102,7 @@ export function useFileChoice({ maxFiles, maxFileBytes, accept, disabled, onFile
 export const DROP_ZONE = 'rounded-lg border-2 border-dashed border-input bg-raised p-1.5'
 
 /** Something dragged over the zone: the dashed edge turns solid ink (the accent is not for this, R2) on the second paper. */
-export const DROP_ZONE_ACTIVE = 'border-solid border-ring bg-paper-2'
+export const DROP_ZONE_ACTIVE = 'border-solid border-ink bg-paper-2'
 
 /** The button that fills the zone and opens the picker: two centred lines (`DROP_TITLE`, `DROP_HINT`). Add `FOCUS_RING`. */
 export const DROP_BUTTON = 'flex w-full flex-col items-center justify-center rounded-md px-6 py-4 text-center'

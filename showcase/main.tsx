@@ -17,7 +17,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, ListFilter, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
+import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
   AttachmentViewer,
@@ -955,7 +955,7 @@ function Toolbars({ animated }: { animated: boolean }) {
       <ToolbarSpacer />
       <ToolbarSearch closed={field ? 'field' : 'icon'} label="Search the mail" shortcut="Ctrl K" value={text} onValueChange={setText} animated={animated} />
       <ToolbarGroup aria-label="View">
-        <ToolbarButton label="Filter" icon={<ListFilter aria-hidden="true" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
+        <ToolbarButton label="Filter" icon={<Icon name="filter" />} pressed={filter} onClick={() => setFilter(!filter)} animated={animated} />
         <ToolbarButton label="Sort" icon={<ArrowDownUp aria-hidden="true" />} onClick={() => setSaid('Sort')} animated={animated} />
       </ToolbarGroup>
       <ToolbarSeparator />
@@ -2112,21 +2112,26 @@ function Composition({ animated }: { animated: boolean }) {
         </Column>
       </Row>
       <Row label="settings and sidebar">
-        <Column width="prose">
-          <SettingRow label="Scheme" control={<ToggleGroup aria-label="Scheme" value={when} onValueChange={setWhen} animated={animated}><ToggleGroupItem value="today">Light</ToggleGroupItem><ToggleGroupItem value="dark">Dark</ToggleGroupItem></ToggleGroup>} />
-          <SettingRow label="Reminders" description="A notice at 9:00 for what is due" control={<Switch aria-label="Reminders" checked={reminders} onCheckedChange={setReminders} animated={animated} />} />
-          <SettingRow label="Advanced" onClick={() => {}} />
-        </Column>
-        <Column gap="xs">
-          <SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>Giulia Conti</SidebarRow>
-          <SidebarRow end={<Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>}>Threads</SidebarRow>
-          <Toolbar aria-label="Bar of a narrow frame">
-            <AppShellContext.Provider value={{ sidebar: 'drawer', inspector: 'drawer' }}>
-              <DrawerButton onOpen={() => {}} animated={animated} />
-            </AppShellContext.Provider>
-            <ToolbarBrand name="Tasks" page="Today" />
-          </Toolbar>
-        </Column>
+        {/* The gallery gives each sample its place, as in the other rows: a settings page's width, a sidebar's. */}
+        <div className="w-full max-w-md">
+          <Column>
+            <SettingRow label="Scheme" control={<ToggleGroup aria-label="Scheme" value={when} onValueChange={setWhen} animated={animated}><ToggleGroupItem value="today">Light</ToggleGroupItem><ToggleGroupItem value="dark">Dark</ToggleGroupItem></ToggleGroup>} />
+            <SettingRow label="Reminders" description="A notice at 9:00 for what is due" control={<Switch aria-label="Reminders" checked={reminders} onCheckedChange={setReminders} animated={animated} />} />
+            <SettingRow label="Advanced" onClick={() => {}} />
+          </Column>
+        </div>
+        <div className="w-64">
+          <Column gap="xs">
+            <SidebarRow leading={<Avatar name="Giulia Conti" size="xs" decorative />}>Giulia Conti</SidebarRow>
+            <SidebarRow end={<Button variant="ghost" size="xs" aria-label="Close every thread"><Icon name="close" /></Button>}>Threads</SidebarRow>
+            <Toolbar aria-label="Bar of a narrow frame">
+              <AppShellContext.Provider value={{ sidebar: 'drawer', inspector: 'drawer' }}>
+                <DrawerButton onOpen={() => {}} animated={animated} />
+              </AppShellContext.Provider>
+              <ToolbarBrand name="Tasks" page="Today" />
+            </Toolbar>
+          </Column>
+        </div>
       </Row>
       <Row label="the props">
         <Column gap="md">

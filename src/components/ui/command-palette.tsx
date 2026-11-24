@@ -11,7 +11,8 @@
 // it is `aria-checked` on the option, because `aria-selected` marks the highlighted row. The others keep the check's
 // room, so a key after it does not move.
 import * as React from "react"
-import { Check, Search } from "lucide-react"
+import { Check } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { GROUP_LABEL, ROW_HIGHLIGHT } from "../../lib/rows"
 import { useWords } from "../../words"
@@ -116,7 +117,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
       <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="top-24 translate-y-0 gap-0 overflow-hidden p-0 md:p-0">
         <DialogTitle className="sr-only">{name}</DialogTitle>
         <label className="flex min-h-12 items-center gap-2 border-b border-line px-4">
-          <Search aria-hidden="true" className="size-4 shrink-0 text-ink-mute" />
+          <Icon name="search" className="size-4 text-ink-mute" />
           <input
             data-slot="command-palette-input"
             type="text"

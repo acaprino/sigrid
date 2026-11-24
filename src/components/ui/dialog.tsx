@@ -13,7 +13,7 @@
 // here there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
-import { XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
@@ -135,7 +135,7 @@ function DialogContent({
             render={<Button variant="ghost" size="icon-sm" />}
             className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
           >
-            <XIcon aria-hidden="true" />
+            <Icon name="close" />
             <span className="sr-only">{words.common.close}</span>
           </DialogPrimitive.Close>
         )}

@@ -29,7 +29,6 @@
 // It is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and
 // the two share no code.
 import * as React from "react"
-import { ChevronRight } from "lucide-react"
 import { TreeView as TreeViewPrimitive, createTreeCollection, useTreeViewNodeContext } from "@ark-ui/react/tree-view"
 import { cn, isEmptyNode } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
@@ -224,7 +223,7 @@ const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen
   const words = useWords()
   // On the chosen row the muted ink would not keep its contrast on the tint: the row's own ink, a step quieter.
   const quiet = chosen ? "opacity-80" : "text-ink-mute"
-  const arrow = <ChevronRight aria-hidden="true" className="size-3.5" />
+  const arrow = <Icon name="chevron" className="size-3.5" />
   const detail = lazy || meta !== undefined || count !== undefined
   return (
     <>

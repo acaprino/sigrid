@@ -1,8 +1,9 @@
 // @vitest-environment node
 // The breakpoint of `useMedia`'s narrow query is the theme's `md`: both live in the toolkit.
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { root } from './helpers'
+import { root, walk } from './helpers'
 
 const readFile = (file: string) => readFileSync(`${root}${file}`, 'utf8')
 
@@ -21,6 +22,16 @@ test('the heights of theme.css: what is seen (100dvh until measured), the foot\'
   expect(css).toMatch(/html:has\(\[data-slot="page"\]\[data-fit\]\) \{\n\s*overscroll-behavior-y: none;/)
   // Nothing of the toolkit is sized with `100vh`: with the address bar showing it is taller than the screen.
   expect(css.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/100vh/)
+})
+
+test('no part sizes anything with the live inset at the foot: the room it keeps there is the maximum', () => {
+  // The live `env(safe-area-inset-bottom)` changes while the page scrolls (docs/mobile.md, «Heights and orientation»);
+  // the only place it is written is the fallback of `--safe-area-max-inset-bottom` in theme.css.
+  const found = walk(join(root, 'src'))
+    .filter((file) => /\.(tsx?|css)$/.test(file) && !file.endsWith('theme.css'))
+    .filter((file) => /env\(\s*safe-area-inset-bottom/.test(readFileSync(file, 'utf8')))
+  expect(found).toEqual([])
+  expect(readFile('src/components/DateField.tsx')).toContain('max-md:pointer-coarse:' + 'pb-(--safe-area-max-inset-bottom)')
 })
 
 test('the short query and the `short:` variant of the theme are one height', () => {

@@ -2,6 +2,14 @@
 // Lucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks
 // for an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in
 // every app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.
+// That binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the
+// meaning; a part draws a Lucide glyph directly only where `Icon` cannot give the same thing: a glyph no name means
+// (the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the mark
+// of a notice that failed, the kinds of an attachment), or a glyph that holds what `Icon`'s wrapping `<span>` would
+// take from it (its own place in the row, `ml-auto` or `absolute`; the bar's drag attribute; a `data-slot`; its place
+// on a line of text, in a box that is not a flex box, where the wrapper moves it by a pixel: the chevron of a select,
+// the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check on a card of the look
+// settings).
 // The other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a
 // pack and an app's own icons left on 2026-11-23.
 import {
@@ -41,6 +49,7 @@ import {
   Italic,
   Link,
   List,
+  ListFilter,
   ListOrdered,
   ListTodo,
   LogOut,
@@ -69,7 +78,6 @@ import {
   Settings,
   Shapes,
   Square,
-  SquareStack,
   SquareStop,
   Sun,
   SwatchBook,
@@ -89,7 +97,9 @@ import {
   X,
   Zap,
   type LucideIcon,
+  type LucideProps,
 } from 'lucide-react'
+import { forwardRef } from 'react'
 import { cn } from './lib/utils'
 
 /**
@@ -133,6 +143,7 @@ export const ICON_NAMES = [
   'now',
   'column',
   'date',
+  'filter',
   'clearFilter',
   'threads',
   'sidebarClose',
@@ -191,6 +202,13 @@ export function isIconName(value: unknown): value is IconName {
   return typeof value === 'string' && (ICON_NAMES as readonly string[]).includes(value)
 }
 
+/**
+ * A window to restore: two windows, the one behind up and to the right, as the systems draw it. Lucide has no such
+ * glyph: it is `Copy` turned over left to right, the drawing the title bar's button has always had.
+ */
+const WindowRestore = forwardRef<SVGSVGElement, LucideProps>(({ className, ...props }, ref) => <Copy ref={ref} {...props} className={cn('-scale-x-100', className)} />)
+WindowRestore.displayName = 'WindowRestore'
+
 /** The drawing of each meaning. Two meanings may share one (`all` and `bulletList`, `minus` and `windowMinimize`). */
 const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   all: List,
@@ -228,6 +246,7 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   now: Zap,
   column: Columns3,
   date: Calendar,
+  filter: ListFilter,
   clearFilter: FunnelX,
   threads: MessagesSquare,
   sidebarClose: PanelLeftClose,
@@ -264,7 +283,7 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   close: X,
   windowMinimize: Minus,
   windowMaximize: Square,
-  windowRestore: SquareStack,
+  windowRestore: WindowRestore,
   moon: Moon,
   sun: Sun,
   link: Link,

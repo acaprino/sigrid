@@ -5,7 +5,7 @@
 // It is at least 48px tall, and 44px with a finger at any density. The control names itself (`aria-label` with the
 // row's name): the row only lays it out.
 import type * as React from "react"
-import { ChevronRight } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 
@@ -34,7 +34,7 @@ function SettingRow({ label, description, control, onClick }: SettingRowProps) {
     return (
       <button type="button" data-slot="setting-row" onClick={onClick} className={cn(ROW, "cursor-default", FOCUS_RING_INSET)}>
         {words}
-        <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-ink-mute" />
+        <Icon name="chevron" className="size-4 text-ink-mute" />
       </button>
     )
   }

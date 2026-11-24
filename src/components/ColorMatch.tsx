@@ -1,3 +1,9 @@
+// Two colours for a theme of the person's own: the theme colour, picked among the app's swatches or with the system's
+// colour field, and the spot colour that goes with it, chosen among three proposals matched to the theme colour (from
+// quiet to loud), none, or a colour of the person's own. Both are radio groups (the swatches are the toolkit's
+// `RadioGroup`; the spot's choices are buttons with `radioArrows`, as the look settings' cards). Under them a sample of
+// a window drawn in the theme the two colours make (`colorTheme`, with the colours as chosen): a chosen row with its
+// count, something due, something running and a button, so the person sees what each colour will be used for.
 import { useId, useMemo, type CSSProperties } from 'react'
 import { SPOT_KINDS, colorTheme, isSpotKind, spotSuggestions, type SpotKind } from '../color-theme'
 import { isAccentColor, type ThemeScheme, type ThemeTone } from '../theme-engine'

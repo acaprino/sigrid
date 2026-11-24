@@ -25,8 +25,8 @@ of the suite look like the suite is somewhere else, and no law may be used to ta
 - **Still.** No glass, no gradient, no glow, nothing that loops. Motion answers a gesture, is short, and can be off.
 
 A change that makes a screen clearer and keeps these is right. A change that makes it look like another product's
-toolkit (a pill, a coloured shadow, a second accent, a badge above every title) is wrong even when a law seems to
-allow it.
+toolkit (a pill-shaped button, a coloured shadow, a second accent, a badge above every title) is wrong even when a law
+seems to allow it.
 
 ## The procedure
 

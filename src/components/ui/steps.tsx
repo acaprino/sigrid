@@ -6,7 +6,7 @@
 // is what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.
 // For screen readers it is an ordered list; the step the user is on has `aria-current="step"`, and each step says whether it
 // is done, current or not started (`words.steps`, in any language).
-import { CheckIcon, XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING } from "../../lib/focus"
 import { useWords } from "../../words"
@@ -64,7 +64,7 @@ function Steps({ steps, current, onStepSelect, orientation = "vertical", classNa
           const last = index === steps.length - 1
           const dot = (
             <span data-slot="step-dot" aria-hidden="true" className={cn("flex size-6 shrink-0 items-center justify-center rounded-full text-2xs font-medium tabular-nums", DOT[state])}>
-              {state === "done" ? <CheckIcon className="size-3.5" /> : state === "error" ? <XIcon className="size-3.5" /> : index + 1}
+              {state === "done" ? <Icon name="check" className="size-3.5" /> : state === "error" ? <Icon name="close" className="size-3.5" /> : index + 1}
             </span>
           )
           // The line to the next step: the accent as far as the steps done, the divider after.

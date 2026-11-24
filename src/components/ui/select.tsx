@@ -18,7 +18,8 @@
 // A value that is not among the options leaves the button empty (like the previous `<option hidden>`) and cannot be chosen.
 import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
-import { Check, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW } from "../../lib/rows"
 import { FOCUS_FIELD } from "../../lib/focus"
@@ -68,7 +69,7 @@ function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMar
       {renderMark ? renderMark(o) : null}
       <SelectPrimitive.ItemText style={o.style}>{o.label}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
-        <Check className="size-4" aria-hidden />
+        <Icon name="check" className="size-4" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   )

@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
 import { ComboboxPrimitive as Combobox, createListCollection } from './ui/combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
-import { X } from 'lucide-react'
+import { Icon } from '../icons'
 import { Badge } from './ui/badge'
 import { Tooltip } from './ui/tooltip'
 import { cn } from '../lib/utils'
@@ -185,7 +185,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
               {wrong ? <span className="sr-only">, {words.invalid}</span> : null}
               <Tooltip label={removeName(name)}>
                 <TagsInput.ItemDeleteTrigger className={cn("relative flex size-5 items-center justify-center rounded-sm text-ink-mute after:absolute after:-inset-1 after:content-[''] pointer-coarse:size-11 hover:bg-ink/9 hover:text-ink", FOCUS_RING)}>
-                  <X aria-hidden="true" className="size-3.5" />
+                  <Icon name="close" className="size-3.5" />
                 </TagsInput.ItemDeleteTrigger>
               </Tooltip>
             </Badge>

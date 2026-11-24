@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import { BASE_THEME, ThemeGallery, presetTone, themeVariables } from '../src'
+import { THEMES } from './fixtures/sample-themes'
 
 test('theme previews follow the scheme and tone, while the custom choice stays keyboard accessible', () => {
   const onTheme = vi.fn()
@@ -19,6 +20,29 @@ test('theme previews follow the scheme and tone, while the custom choice stays k
     .toBe(themeVariables({ theme: BASE_THEME, scheme: 'dark', tone })['--color-primary'])
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' })
   expect(onTheme).toHaveBeenCalledWith(BASE_THEME)
+})
+
+test('Home and End reach the first and the last tile and choose it, as in the radio group; on the chosen one they choose nothing again', () => {
+  const themes = THEMES.slice(0, 3)
+  const onTheme = vi.fn()
+  const custom = { label: 'Custom', onChoose: vi.fn() }
+  const view = render(<ThemeGallery label="Themes" themes={themes} selected={themes[1]!.id} onTheme={onTheme} custom={custom} scheme="light" />)
+  const middle = screen.getByRole('radio', { name: themes[1]!.label })
+  middle.focus()
+  expect(fireEvent.keyDown(middle, { key: 'End' })).toBe(false)
+  expect(custom.onChoose).toHaveBeenCalledOnce()
+  expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Custom' }))
+  fireEvent.keyDown(document.activeElement!, { key: 'Home' })
+  expect(onTheme).toHaveBeenCalledExactlyOnceWith(themes[0])
+  const first = screen.getByRole('radio', { name: themes[0]!.label })
+  expect(document.activeElement).toBe(first)
+  // On the chosen tile: the key is taken, nothing is chosen again.
+  view.rerender(<ThemeGallery label="Themes" themes={themes} selected={themes[0]!.id} onTheme={onTheme} custom={custom} scheme="light" />)
+  first.focus()
+  expect(fireEvent.keyDown(first, { key: 'Home' })).toBe(false)
+  expect(onTheme).toHaveBeenCalledOnce()
+  // Another key is left to the page.
+  expect(fireEvent.keyDown(first, { key: 'PageDown' })).toBe(true)
 })
 
 // The tone chooser does not offer three copies of one preview.

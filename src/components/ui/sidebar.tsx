@@ -12,7 +12,7 @@
 // What sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:
 // `header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).
 import * as React from "react"
-import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING_INSET } from "../../lib/focus"
 import { GROUP_LABEL } from "../../lib/rows"
@@ -32,7 +32,10 @@ export type SidebarProps = {
   collapsed?: boolean | undefined
   /** With it, a button at the foot shrinks and widens the sidebar. */
   onCollapsedChange?: ((collapsed: boolean) => void) | undefined
-  /** Below 860px: the drawer is open. Above, the sidebar is always there and this is not read. */
+  /**
+   * Where the sidebar is a drawer, the drawer is open: inside an `AppShell` under 620px of frame, alone under 860px of
+   * screen. Where it is a column or a rail, it is always there and this is not read.
+   */
   open?: boolean | undefined
   onOpenChange?: ((open: boolean) => void) | undefined
   /** Above the groups: the app's name, a menu that changes workspace. On the rail it is not shown. */
@@ -92,7 +95,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
           rail ? "self-center" : "self-end",
         )}
       >
-        {rail ? <PanelLeftOpen aria-hidden="true" className="size-4 shrink-0" /> : <PanelLeftClose aria-hidden="true" className="size-4 shrink-0" />}
+        {rail ? <Icon name="sidebarOpen" className="size-4" /> : <Icon name="sidebarClose" className="size-4" />}
       </button>
     </Tooltip>
   ) : null
@@ -171,7 +174,7 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
   React.useLayoutEffect(() => {
     setNone(query !== "" && list.current !== null && list.current.querySelector('[data-slot="nav-item-row"]:not([hidden])') === null)
   }, [query, children])
-  const arrow = <ChevronRight aria-hidden="true" className="size-3.5" />
+  const arrow = <Icon name="chevron" className="size-3.5" />
   const heading = (
     <>
       <span aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">
