@@ -45,8 +45,9 @@ function FormField({ label, help, error, required, id, className, children }: Fo
     <div
       data-slot="field"
       data-invalid={hasError || undefined}
-      // With an error the box under the control says what is wrong: the control keeps its own border, not a red one.
-      className={cn("flex flex-col gap-1.5 [&[data-invalid]_[aria-invalid=true]]:border-line", className)}
+      // With an error the box under the control says what is wrong: the control keeps its own border, not a red one
+      // (the control border under a theme with strong control borders, `ThemeDef.controls`).
+      className={cn("flex flex-col gap-1.5 [&[data-invalid]_[aria-invalid=true]]:border-line [[data-controls=strong]_&[data-invalid]_[aria-invalid=true]]:border-input", className)}
     >
       <label data-slot="field-label" htmlFor={controlId} className="flex items-center gap-0.5 text-start text-sm font-medium text-ink select-none">
         {label}

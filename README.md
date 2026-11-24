@@ -110,10 +110,25 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
    OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
    recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
-   The app editor's «Look» panel has it: choosing a base suggests its accents. The corners are `ThemeDef.shape`:
+   The app editor's «Look» panel has it: choosing a base suggests its accents. A theme can also be written by
+   names (`src/hues.ts`): the eighteen free colours are the tints (`HUE_NAMES`, from `red` to `burgundy`), and
+   `namedTheme({ id, label, accent: 'blue' })` is a theme definition with that colour as its accent on the tint's own
+   gray (`ground` takes another tint or `gray`, `second` another tint for the selection). Each tint also has a scale
+   of twelve steps by the roles of the 12-step palettes, in the three tones and a scheme:
+   `hueScale('blue', 'vivid', 'light')` gives the steps and the label that reads on the fill, `grayScale` the gray of
+   a tint. A scale is for a board, a chart or a picker: the engine does not read its roles from it, and its steps are
+   not classes. The corners are `ThemeDef.shape`:
    `sharp` (2/4/6px) is the default, `soft` (4/6/10px, the corners before 2026-11-24) and `round` (6/10/14px) are
    the choices; an app keeps the rounder look with `shape: 'soft'` on its theme, and `ThemeDef.radii` sets numbers
-   of its own.
+   of its own. Four more looks are off unless a theme asks for them by name (2026-11-24): `keys: 'boxed'` draws key
+   hints as 20px caps with a hairline in place of plain text (R5), `controls: 'strong'` gives fields and the outline
+   button the 3:1 control border in place of the light divider, `surfaces.<scheme>.input` states the control border
+   of a curated palette (the engine holds it at 3:1 on the chosen row too), and `Badge tone` (`success`, `warning`,
+   `danger`, `info`) draws a status as a label with a 6px dot. Three more, the same day: `tabs: 'bold'` marks the
+   chosen view of a bar and the chosen item of a segment by weight 700 and the accent (a square line that grows from
+   its middle; a track whose chosen item has an accent tint and border), `statusStrip: 'tall'` makes the status strip
+   of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and
+   the system's monospace); nothing is shipped for it and it is never the default.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

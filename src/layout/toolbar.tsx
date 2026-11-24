@@ -36,6 +36,7 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn, isEmptyNode } from "../lib/utils"
+import { KEY_CAP } from "../primitives/kbd"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { steadyLabel } from "../internal/steady-label"
 import { buttonVariants } from "../primitives/button"
@@ -102,7 +103,7 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
-  const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
+  const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className={cn("text-2xs font-medium opacity-70", KEY_CAP)}>{shortcut}</span> : null
   const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)
   const body = (
     <>
@@ -201,6 +202,14 @@ const TAB = cn(
   FOCUS_RING_INSET,
 )
 
+// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-24), an
+// exception to R7 scoped to that attribute: the mark of the chosen view is its weight and its line, not a fill. The
+// others are weight 500 in the muted ink and turn to the ink under the pointer, with no wash; the chosen one is 700
+// in the ink; the line is square and grows from its middle (`scale`, eased in styles/theme.css only with motion on).
+// Each class has the state of the class it takes the place of and one attribute more, so it wins over it.
+const TAB_BOLD =
+  "[[data-tabs=bold]_&]:not-aria-[current=page]:font-medium [[data-tabs=bold]_&]:not-aria-[current=page]:text-ink-mute [[data-tabs=bold]_&]:not-aria-[current=page]:hover:bg-transparent [[data-tabs=bold]_&]:not-aria-[current=page]:hover:text-ink [[data-tabs=bold]_&]:aria-[current=page]:font-bold [[data-tabs=bold]_&]:aria-[current=page]:text-ink [[data-tabs=bold]_&]:after:scale-x-0 [[data-tabs=bold]_&]:after:rounded-none [[data-tabs=bold]_&]:after:bg-primary [[data-tabs=bold]_&]:aria-[current=page]:after:scale-x-100"
+
 function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabProps) {
   const tabs = React.useContext(TabsContext)
   const current = tabs?.value === value
@@ -210,7 +219,7 @@ function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabPr
     tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs short:flex-row short:gap-1.5 short:py-0" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
   )
   return (
-    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, look, className)}>
+    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, TAB_BOLD, look, className)}>
       {icon}
       {/* As wide when it is the current view as when it is not: the views beside it never move. */}
       {steadyLabel(children)}
@@ -367,14 +376,14 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
         variant="outline"
         aria-expanded={false}
         icon={<Icon name="search" className="text-ink-mute" />}
-        className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @md/toolbar:w-48"
+        className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @max-md/toolbar:[[data-controls=strong]_&]:border-transparent @md/toolbar:w-48"
         onClick={() => {
           want.current = "input"
           set(true)
         }}
       >
         <span className="flex-1 truncate text-start">{placeholder ?? label}</span>
-        {shortcut ? <span data-slot="toolbar-search-shortcut" className="text-2xs font-medium">{shortcut}</span> : null}
+        {shortcut ? <span data-slot="toolbar-search-shortcut" className={cn("text-2xs font-medium", KEY_CAP)}>{shortcut}</span> : null}
       </ToolbarButton>
     )
   }

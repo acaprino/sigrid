@@ -15,6 +15,7 @@ import * as React from "react"
 import { Menu } from "@base-ui/react/menu"
 import { Check as CheckIcon, ChevronRight as ChevronRightIcon, Circle as CircleIcon } from "../internal/sigrid-icons"
 import { cn } from "../lib/utils"
+import { KEY_CAP } from "./kbd"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../lib/rows"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
@@ -237,7 +238,7 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"spa
     <span
       data-slot="dropdown-menu-shortcut"
       // A key hint (R5): plain 12px muted text, hidden on a phone (narrow and with a finger).
-      className={cn("ms-auto ps-4 text-2xs leading-none font-medium text-ink-mute max-md:pointer-coarse:hidden", className)}
+      className={cn("ms-auto ps-4 text-2xs leading-none font-medium text-ink-mute max-md:pointer-coarse:hidden", KEY_CAP, className)}
       {...props}
     />
   )

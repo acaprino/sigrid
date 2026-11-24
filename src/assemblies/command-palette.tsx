@@ -14,6 +14,7 @@ import * as React from "react"
 import { Check } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
+import { KEY_CAP } from "../primitives/kbd"
 import { GROUP_LABEL, ROW_HIGHLIGHT } from "../lib/rows"
 import { useWords } from "../words"
 import { CommandsContext, PALETTE_COMMAND, useCommands } from "./commands"
@@ -179,7 +180,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
                 >
                   {command.icon}
                   <span className="min-w-0 flex-1 truncate">{command.label}</span>
-                  {command.shortcut ? <span data-slot="command-palette-shortcut" className="text-2xs font-medium text-ink-mute pointer-coarse:max-md:hidden">{command.shortcut}</span> : null}
+                  {command.shortcut ? <span data-slot="command-palette-shortcut" className={cn("text-2xs font-medium text-ink-mute pointer-coarse:max-md:hidden", KEY_CAP)}>{command.shortcut}</span> : null}
                   {command.checked === undefined ? null : <Check aria-hidden="true" data-slot="command-palette-check" className={cn("size-4 text-ink", !command.checked && "invisible")} />}
                 </div>
               </React.Fragment>

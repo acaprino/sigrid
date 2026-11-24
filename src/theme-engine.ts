@@ -70,9 +70,15 @@ export function over(fg: string, bg: string, alpha: number): string {
 }
 
 /** A small margin above every threshold: rounded values and browsers must not fall below it. */
-const MARGIN = 0.03
+export const MARGIN = 0.03
 /** Under this lightness a fill is nearly black: its hover lightens, a darker step would not be seen. */
 const NEAR_BLACK = 0.3
+/**
+ * A fill under the pointer: a step darker. A fill that is nearly black has no room to darken (a step down from it
+ * cannot be seen): it lightens instead, by a step that can (the owner, 2026-11-23: the solid button must answer the
+ * pointer in every theme).
+ */
+export const hoverOf = (c: Oklch): Oklch => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
 
 /**
  * Moves the lightness of `c` in direction `dir` (−1 darker, +1 lighter) until `ok` is true on its hex value.
@@ -126,15 +132,15 @@ export const FIXED = {
 } as const
 
 /**
- * The status colours, beside the red: `success` and `warning` are text colours, each with a soft background of its own;
+ * The status colours, beside the red: `success`, `warning` and `info` are text colours, each with a soft background of its own;
  * `highlight` is a background for a match inside a text (a search hit), with the ink on it. They are meanings, not
  * accents: always with a word or an icon, never the only signal. The same for every theme of the same scheme; a
  * theme whose surfaces would sink one moves its lightness just enough to hold (4.5:1 for the text colours on every
  * background and on their soft one; 7:1 for the ink on the highlight).
  */
 export const STATUS = {
-  light: { success: '#1c6b3f', 'success-soft': '#eef8f1', warning: '#855000', 'warning-soft': '#fdf4e3', highlight: '#ffe38a' },
-  dark: { success: '#7fd3a0', 'success-soft': '#1c3326', warning: '#f0b85a', 'warning-soft': '#3a2c12', highlight: '#4f3f08' },
+  light: { success: '#1c6b3f', 'success-soft': '#eef8f1', warning: '#855000', 'warning-soft': '#fdf4e3', info: '#2b4a80', 'info-soft': '#e1e6ed', highlight: '#ffe38a' },
+  dark: { success: '#7fd3a0', 'success-soft': '#1c3326', warning: '#f0b85a', 'warning-soft': '#3a2c12', info: '#9db8ea', 'info-soft': '#2c3547', highlight: '#4f3f08' },
 } as const
 
 export type ThemeScheme = 'light' | 'dark'
@@ -147,7 +153,11 @@ export interface ThemeTokens {
   readonly colors: Readonly<Record<string, string>>
   /** The shape variables, with their full name (`--radius-md`). */
   readonly shape: Readonly<Record<string, string>>
-  /** The root attributes that state the shape choices that are not numbers (`data-sidebar`, …). */
+  /**
+   * The root attributes that state the choices that are not numbers: `data-sidebar` always; `data-keys="boxed"`,
+   * `data-controls="strong"`, `data-tabs="bold"` and `data-status-strip="tall"` only when the theme asks for them
+   * (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`).
+   */
   readonly attributes: Readonly<Record<string, string>>
   /** The roles that the computation had to move to reach the contrast. */
   readonly corrected: readonly string[]
@@ -192,6 +202,11 @@ export function presetTone(preset: TonePreset): ThemeTone | null {
 export function tonePresetOf(tone: ThemeTone | null): TonePreset {
   const intensity = tone?.intensity ?? DEFAULT_TONE_INTENSITY
   return intensity === 'faded' || intensity === 'soft' ? 'calm' : intensity === 'theme' ? 'balanced' : 'vivid'
+}
+
+/** How much a preset multiplies the chroma of the accents: the scales of a tint (hues.ts) share the number with the engine. */
+export function toneChroma(preset: TonePreset): number {
+  return shiftOf(presetTone(preset)).k
 }
 
 /**
@@ -351,7 +366,8 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     // The selected item takes the accent's hue, or the theme's second color; in light it sits clearly below the sidebar.
     const [selC, selH] = t.second ? [t.second[0] * tone.k, t.second[1]] : [accent.C, accent.h]
     return {
-      raised: fromHex(s.raised), paper, paper2: side, line: fromHex(s.line), input: { ...fromHex(s.line), L: light ? 0.63 : 0.525 },
+      // The control border: the palette's own when it states one (`Surfaces.input`), or derived from its dividers.
+      raised: fromHex(s.raised), paper, paper2: side, line: fromHex(s.line), input: isAccentColor(s.input) ? fromHex(s.input.toLowerCase()) : { ...fromHex(s.line), L: light ? 0.63 : 0.525 },
       ink: { ...ink, L: light ? Math.min(ink.L, 0.28) : ink.L }, inkSoft: { ...ink, L: light ? 0.38 : Math.min(ink.L - 0.08, 0.8) }, inkMute: { ...ink, L: light ? 0.5 : 0.67 },
       accent, accentStrong: light ? ok(0.39, accent.C, accent.h) : ok(0.92, Math.min(accent.C * 0.4, 0.06), accent.h),
       fill, onFill: labelOn(fill, light ? ok(1, 0, 0) : ok(0.99, 0.008, fill.h)),
@@ -618,6 +634,8 @@ function withOwn(t: ThemeDef, own: OwnTheme): ThemeDef {
   }
   return {
     id: t.id, label: t.label, hue: lightPaper.h, chroma: lightPaper.C, accent: [c, a.h], sidebar, palette: t.palette, ...(second ? { second } : {}),
+    // How keys and control borders are drawn is the app's choice, not a colour: it stays with the user's own page.
+    ...(t.keys ? { keys: t.keys } : {}), ...(t.controls ? { controls: t.controls } : {}), ...(t.tabs ? { tabs: t.tabs } : {}), ...(t.statusStrip ? { statusStrip: t.statusStrip } : {}),
     surfaces: { light: surfacesFrom(lightPaper, 'light', color), dark: surfacesFrom(darkPaper, 'dark', color) },
   }
 }
@@ -696,13 +714,13 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
 
   // Dividers below 3:1 (decorative), control border above 3:1 and above the dividers.
   const line = hex(take('line', s.line, (-dir) as -1 | 1, (h) => backgrounds.every((bg) => contrast(h, bg) < 3 - MARGIN)))
-  const input = hex(take('input', s.input, dir, (h) => atLeast(backgrounds, 3)(h) && backgrounds.every((bg) => contrast(h, bg) > contrast(line, bg))))
+  // A control border the palette states (`Surfaces.input`) also holds on the chosen row, where a checkbox sits: the
+  // derived one is held on the backgrounds only, as it always was.
+  const inputOn = theme.surfaces && isAccentColor(theme.surfaces[scheme].input) ? [...backgrounds, selected] : backgrounds
+  const input = hex(take('input', s.input, dir, (h) => atLeast(inputOn, 3)(h) && backgrounds.every((bg) => contrast(h, bg) > contrast(line, bg))))
 
   // The solid button: the text holds on the fill at rest and on hover (which darkens, see `hoverOf`). With light text
-  // the fill darkens, with dark text ("Ink" in dark) it lightens.
-  // A fill that is nearly black has no room to darken (a step down from it cannot be seen): it lightens instead,
-  // by a step that can (the owner, 2026-11-23: the solid button must answer the pointer in every theme).
-  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
+  // the fill darkens, with dark text ("Ink" in dark) it lightens (`hoverOf`).
   // The fill is also a mark to be seen without text (timeline bars, the calendar's "today"): on the backgrounds
   // it holds at 3:1 (WCAG 1.4.11). In dark the deep tone may fall below: it lightens toward the text, but only
   // as long as the text still holds at 4.5:1. If that is not enough, the text wins.
@@ -797,7 +815,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
 
   // The status colours: fixed, moved only where a theme's surfaces would sink them.
   const status = light ? STATUS.light : STATUS.dark
-  const statusText = (name: 'success' | 'warning') => {
+  const statusText = (name: 'success' | 'warning' | 'info') => {
     const soft = status[`${name}-soft`]
     const holds = (h: string) => contrast(h, soft) >= 4.5 + MARGIN && backgrounds.every((bg) => contrast(h, bg) >= 4.5 + MARGIN)
     return holds(status[name]) ? status[name] : hex(settle(fromHex(status[name]), dir, holds).c)
@@ -819,12 +837,17 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
     background: paper, foreground: ink, popover: raised, 'popover-foreground': ink,
     primary, 'primary-foreground': onFill, 'muted-foreground': inkMute,
     // The focus ring is the accent as text (R8): 2px, offset 2px, at least 3:1 on every background and on the selection.
-    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), highlight, border: line, input, ring: accent,
+    ...fixed, destructive, 'destructive-foreground': onDestructive, ...status, success: statusText('success'), warning: statusText('warning'), info: statusText('info'), highlight, border: line, input, ring: accent,
     selected, 'selected-ink': selectedInk, ...spot, ...bar, ...marks,
   }
   const attributes: Record<string, string> = {
     // The solid sidebar has its own colors: the CSS redefines the ink there.
     'data-sidebar': full ? 'own' : 'shared',
   }
+  // The two looks a theme asks for by name. Off unless asked: a theme without them writes no attribute.
+  if (theme.keys === 'boxed') attributes['data-keys'] = 'boxed'
+  if (theme.controls === 'strong') attributes['data-controls'] = 'strong'
+  if (theme.tabs === 'bold') attributes['data-tabs'] = 'bold'
+  if (theme.statusStrip === 'tall') attributes['data-status-strip'] = 'tall'
   return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
 }

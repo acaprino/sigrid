@@ -94,6 +94,8 @@
   --color-success-soft: #eef8f1;
   --color-warning: #855000;
   --color-warning-soft: #fdf4e3;
+  --color-info: #2b4a80;
+  --color-info-soft: #e1e6ed;
   --color-highlight: #ffe38a;
   --color-selected: #dedede;
   --color-selected-ink: #161616;
@@ -188,6 +190,8 @@
       --color-success-soft: #1c3326;
       --color-warning: #f0b85a;
       --color-warning-soft: #3a2c12;
+      --color-info: #9db8ea;
+      --color-info-soft: #2c3547;
       --color-highlight: #4f3f08;
       --color-selected: #333333;
       --color-selected-ink: #f2f2f2;
@@ -644,6 +648,12 @@ svg[data-glyph][stroke-width="2"] {
     transition-timing-function: var(--motion-ease-move);
   }
 
+  /* The line under the chosen view of a bar, under a theme with bold tabs (`data-tabs="bold"`, toolbar.tsx), grows
+     from its middle and shrinks back. Without that theme its scale never changes, so nothing moves. */
+  :where(:root[data-motion]) [data-slot="toolbar-tab"]::after {
+    transition: scale var(--motion-normal) var(--motion-ease-enter);
+  }
+
   /* The sidebar shrinks to its rail and widens again: its width eases, and what is beside it follows. */
   :where(:root[data-motion]) :where([data-slot="sidebar"]) {
     transition: width var(--motion-normal) var(--motion-ease-move);
@@ -805,4 +815,11 @@ svg[data-glyph][stroke-width="2"] {
   html:has([data-slot="page"][data-fit]) {
     overscroll-behavior-y: none;
   }
+}
+
+/* The system's font as the interface font (`SYSTEM_FONT`, written by `applyFont` as `data-font`): the monospace of
+   keys and code is the system's own too, Cascadia where it is. Nothing is shipped or fetched. Outside the layers, so
+   it wins over the `@theme` value on the same element. */
+[data-font="system"] {
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
 }

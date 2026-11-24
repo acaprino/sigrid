@@ -26,16 +26,16 @@ x-zsd:
   intent:
     audience: People who use the owner's apps (to-do, mail and more), many with ADHD.
     primary-task: Find, read and act on the items of an app, with one clear action at a time.
-    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that guides the eye to where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
+    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one guiding accent; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
-    theme: light and dark; each app passes its own theme definitions (the toolkit ships none, only the parametric engine and a gray baseline); each theme has two mood colours and one accent, and the user can make a palette of their own from one base colour
+    theme: light and dark; each app passes its own themes (the toolkit ships only the engine and a gray baseline); the user can make a palette from one base colour
     references:
-      - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
-      - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
-      - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
-      - "Owner rules since 2026-11-20 (R1 to R14 below)."
-      - "Owner revision of 2026-11-20, later the same day: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
-      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
+      - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved for behaviour)."
+      - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved for form)."
+      - "Approved previews of 2026-11-20 after their review: one for each app and the catalogue toolkit-catalogo.html."
+      - "Owner rules since 2026-11-20 (R1 to R14)."
+      - "Owner revision of 2026-11-20: the neutral look read as dull, with no accent to guide the ADHD eye; R1, R2 and R6 changed; default tone, toast stack and undo order added."
+      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; tone presets also tint the sidebar; icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
       - "Identity: calm neutral surfaces and one accent that means «act here» or «this is on»; one row highlight and one group heading in every list; red only for danger. Elegant and modern, made for an ADHD eye: what matters first, one primary action, state always in sight."
@@ -43,20 +43,20 @@ x-zsd:
       - "R2: the accent tells the ADHD eye where to look and what to click: the primary action, add actions, the current selection, what is on (checkbox, radio, switch, slider), the icons of the main views, progress, today and unread state, and focus. Everything else stays neutral, so the accent keeps its pull."
       - "R3: one solid primary button on each screen, and a solid red one to delete; other actions are outline or text buttons."
       - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
-      - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text, hidden at phone widths."
-      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the one set, Sigrid Icons; an empty slot keeps alignment."
+      - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text (caps if `keys` is boxed), hidden at phone widths."
+      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from Sigrid Icons; an empty slot keeps alignment."
       - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R14: controls every page shares keep their place, above all on a phone."
-      - "R7: radii 2, 4 and 6px, or a theme's `soft` 4/6/10 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 2, 4 and 6px, or a theme's `soft` 4/6/10 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600 (700 for the choice if `tabs` is bold); text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour, 2px away (a field: on its border), 3:1 or more in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
     must-avoid:
       - Side rails and accent bars on cards or fields.
       - A border and a shadow on the same element.
-      - Key hints drawn as boxes.
+      - Key hints drawn as boxes, unless `keys` is boxed.
       - Sparkles, bolts or info icons as decoration.
       - Gradients.
       - Glass or blur effects.
@@ -65,10 +65,10 @@ x-zsd:
       - Colour values outside the theme engine.
       - Data colours as filled blocks.
     preserve:
-      - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default and the dark column stays an option."
-      - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22)."
-      - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light mode, light in dark."
-      - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the application, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
+      - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default, the dark column an option."
+      - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22); 3:1 if `controls` is strong."
+      - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light, light in dark."
+      - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the app, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
@@ -93,9 +93,9 @@ x-zsd:
       - src/internal/sigrid-icons.tsx
     checks: design-check.config.json
   unresolved:
-    - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
-    - "Interface measurements at phone widths are not recorded."
-    - "The colour values below are an app's default theme from before 2026-11-19, not the toolkit's: the toolkit ships only the gray baseline (`BASE_THEME`); restate them as roles, or as the baseline's values."
+    - "The 12-step Park and Radix palettes are the target; the engine computes roles in OKLCH, with no step names."
+    - "Measurements at phone widths are not recorded."
+    - "The colour values are an app's default theme from before 2026-11-19: the toolkit ships only the gray baseline (`BASE_THEME`). Restate them as roles or baseline values."
   layout:
     content-max: 1152px
     viewport-min: 320px
@@ -139,6 +139,7 @@ x-zsd:
     size-md: 16px
     size-sm: 14px
     dot: 8px
+    dot-sm: 6px
     stroke: 1.75
     cap: round
   layers:
@@ -178,6 +179,7 @@ x-zsd:
         destructive-soft: "#3D2420"
         success: "#7FD3A0"
         warning: "#F0B85A"
+        info: "#9DB8EA"
         highlight: "#4F3F08"
         subtle-fill: "#232525"
         backdrop: "#05060666"
@@ -202,6 +204,7 @@ colors:
   destructive-soft: "#FEF1EF"
   success: "#1C6B3F"
   warning: "#855000"
+  info: "#2B4A80"
   highlight: "#FFE38A"
   subtle-fill: "#ECEEEE"
   backdrop: "#14171766"
@@ -410,6 +413,8 @@ components:
     textColor: "{colors.success}"
   status-warning:
     textColor: "{colors.warning}"
+  status-info:
+    textColor: "{colors.info}"
   status-match:
     backgroundColor: "{colors.highlight}"
 ---
@@ -514,7 +519,7 @@ Use `checkbox-checked` for the checked and indeterminate boxes, the radio dot an
 
 ### Segment
 
-Use `segment-thumb` for the chosen item of a single-choice group. The thumb slides only with `animated`.
+Use `segment-thumb` for the chosen item of a single-choice group. The thumb slides only with `animated`. If `tabs` is bold the chosen item and the chosen view take weight 700 and the accent.
 
 ### Label
 
@@ -562,7 +567,7 @@ Use `toast` for the result of an action. Undo and quick choices sit in the toast
 
 ### Status
 
-Pair `success` or `warning` with a word. Progress ends `success` or `destructive`, with a word. `highlight` marks hits.
+Pair `success`, `warning`, `info` or `destructive` with a word; a badge tone adds a `x-zsd.icons.dot-sm` dot. Progress ends `success` or `destructive`. `highlight` marks hits.
 
 ### Calendar
 
@@ -582,7 +587,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Iconography
 
-Use the one icon set, Sigrid Icons (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button an accessible name and a tooltip. A row without an icon keeps an empty slot.
+Use the one set, Sigrid Icons (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button a name and a tooltip. A row with no icon keeps an empty slot.
 
 ## Imagery
 
