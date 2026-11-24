@@ -76,7 +76,13 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    never reaches the browser.
 4. **Colours: the theme engine** (`src/theme-engine.ts`, `src/theme-catalog.ts`, `src/themes.ts`, `src/colors.ts`):
    every colour is computed from the chosen theme and scheme and written as tokens on the root (`applyTheme`); the
-   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. A theme can also be made
+   first paint's palettes are in `src/styles/theme.css`. No hard-coded colours anywhere else. In dark the backgrounds
+   are a neutral anthracite unless the theme sets its dark parameters (`ThemeDef.dark`), which the engine turns into
+   the whole ladder: `depth` is how dark the page is and how far below it the sidebar sits (`deep` a near-black page
+   at OKLCH lightness 0.20, `standard` 0.235, the default, `soft` 0.25, the page closer to its sheets), and `tint`
+   is `neutral` (the default) or `theme`, the hue of the theme's grays at a low chroma (0.016, or 0.008 for a warm
+   hue; a theme whose grays have no chroma stays neutral). Every contrast threshold holds on all six; `themeDark`
+   reads a saved value. A curated palette (`surfaces`, and so `colorTheme`) keeps its own backgrounds. A theme can also be made
    from two colours (`src/color-theme.ts`): `colorTheme` takes the theme colour and a spot colour, the one loud colour
    for the few things that ask for attention (tokens `spot`, `spot-foreground`, `spot-soft`, `spot-ink`);
    `spotSuggestions` proposes three spot colours that go with a theme colour, from quiet to loud, and the `ColorMatch`
@@ -293,6 +299,56 @@ const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
 <Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
 ```
 
+## A message that stays in the page
+
+`Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
+information (`tone`: `error`, `warning`, `success`, `info`, the default), with a `title`, its text (the children), an
+optional list (`items`, one entry each) and the buttons that answer it (`actions`). It has no close button: it goes
+when its cause is gone.
+
+One need, one look. Which to use:
+
+| What the page has to say | Use |
+|---|---|
+| Something failed: a view, a panel or a file that could not be read, a task that stopped | `Note` with `tone="error"`, with «Retry» as its action when it can be tried again |
+| There is nothing here: an empty list, a search with no result, a view not filled yet | `Empty` |
+| Something passed: saved, moved, sent, with «Undo» | a toast (`Toasts`) |
+
+A failure has the same mark wherever it is shown: Sigrid's `error` icon, the circle with an X, in a `Note`, in a toast
+with `kind: 'error'`, in a `ProgressRing` and before the «Failed» of a `Progress` or `ProgressSegments` with
+`status="error"`, and in the dot of a step of `Steps` that failed.
+
+Each tone is said three ways, never by colour alone: its icon from Sigrid's set (`info`, `check`, `alert`, `error`), its
+colour from the theme engine's status tokens (the soft fill of `success`, `warning` or `destructive`; information has
+none and is never the accent, so it is the quiet fill, the ink at 6%), and a word that screen readers read before the
+title («Error: Could not reach the server»: an error says `useWords().common.error`, the word of an error toast, and
+the other tones `useWords().note`). So a title does not start with the tone's word («Error: …», «Warning: …»): it
+would be read twice. An error or a warning is announced when it appears (`role="alert"`); information and a success
+are not, and are met in the page's order. A warning that is a fact of the item shown («Read only», «Out of date») takes
+`announce={false}`: it is not read again at each selection. A note whose tone changes in place is drawn anew, so an
+information that becomes an error is announced as it appears (a button inside it that had the focus loses it).
+
+A long word (a path, a JSON value, an address) breaks where it must, in the title, the text and the list, so the note
+never grows wider than its place. A tool's output, with its line breaks, goes in the text as `<Text pre>`. The form is
+Park UI's alert, flat in the page: a fill, with neither a border nor a shadow (R4). The actions are `outline` or
+`ghost`, whose labels read at 4.5:1 on the four fills in every theme; a solid button only if it is the one primary
+action of its screen (R3).
+
+```tsx
+<Note tone="error" title="Could not reach the server" items={failed.map((file) => file.name)}
+  actions={<Button variant="outline" onClick={retry}>Retry</Button>}>
+  The map was drawn before these files were read.
+</Note>
+
+<Note tone="warning" announce={false} title="Read only">
+  It belongs to another project.
+</Note>
+
+<Note tone="error" title="The analysis stopped">
+  <Text pre>{log}</Text>
+</Note>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -326,7 +382,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -445,6 +501,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
+      `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
+      many lines of that kind there are (a `Count`: zero shows nothing); `aria-label` names the list. Each entry is a
+      short sample of the line (hidden from screen readers), its word and its count, in a row that wraps on a narrow
+      window. The samples are drawn by the same definitions as the canvas's lines (`src/components/graph-lines.ts` and
+      one rule of `graph.css`), so the key and the lines cannot part. The word is always there: a tone is never said
+      by its colour alone. It keys the lines only, not the things.
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
@@ -471,7 +534,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   <FormField label="Notes"><RichTextField value={html} onChange={setHtml} /></FormField>
 
   // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
-  import { GraphCanvas } from '@acaprino/sigrid/graph'
+  import { GraphCanvas, GraphLegend } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
     selected={chosen} onSelect={setChosen} search minimap className="h-full" />
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
@@ -484,6 +547,9 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
       { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
     steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
+  // Its key, under it: each kind of line, its word and how many there are.
+  <GraphLegend aria-label="Kinds of line" entries={[{ label: 'Hangs from', count: tree.length },
+    { label: 'Needs the text', style: 'dashed', tone: 'warning', count: 1 }, { label: 'Not the same week', style: 'dotted', tone: 'destructive', count: 1 }]} />
   <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
@@ -511,7 +577,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
   never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
-  `bold`, `undo`, `attach`, `windowMinimize`…) and the rows of a tree of files (`folder`, `folderOpen`, `file`). An icon
+  `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`) and the
+  four tones of a message (`info`, `check`, `alert`, and `error`, the circle with an X of every failure). An icon
   a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
   (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
   not part of this: it stays the app's.

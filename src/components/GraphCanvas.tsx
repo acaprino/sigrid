@@ -93,6 +93,7 @@ import { cn } from '../lib/utils'
 import { FIELDS } from '../internal/desktop-guard'
 import { useWords, type Words } from '../words'
 import { Count } from './ui/count'
+import { lineLook, lineVars } from './graph-lines'
 import { SearchField } from './ui/search-field'
 import { Button } from './ui/button'
 import { Tooltip } from './ui/tooltip'
@@ -521,8 +522,6 @@ export function viewFor(aim: readonly Box[], room: Room, minZoom: number, maxZoo
   return { x: -edgeOf(sides[0], base).want * base, y: -edgeOf(sides[1], base).want * base, zoom: base }
 }
 
-/** The colour of a line and of its arrowhead (the arrowheads are drawn apart from the lines, so they take it by name). */
-const STROKE = { default: 'var(--color-ink-mute)', accent: 'var(--color-accent)', warning: 'var(--color-warning)', destructive: 'var(--color-destructive)' } as const
 /** The words on a line, on the canvas's own ground so the line stops around them. */
 const wordsOn = (label: string) => ({ label, labelShowBg: true, labelBgPadding: [4, 2] as [number, number], labelBgBorderRadius: 4 })
 /**
@@ -590,6 +589,9 @@ export function linesOf(
     const own = edge.tone ?? 'default'
     const tone = onPath && own === 'default' ? 'accent' : own
     const style = edge.style ?? 'solid'
+    // Its look (colour, width, dash, ends) comes from the module that also draws the key (`GraphLegend`): a line of the
+    // chosen things is told from the others, the path's is thicker.
+    const look = lineLook(style, tone, { near, path: onPath })
     // A `link` to a thing no further along (a sibling, a thing before it) arrives on the far side: the line goes round, not across the boxes.
     // Along the app's route only with the app's places (`routes`): a route of its layout would cross dagre's.
     const route = routes && edge.points && edge.points.length > 1 ? edge.points : null
@@ -604,14 +606,16 @@ export function linesOf(
       focusable: false,
       selectable: editable,
       className: cn(
-        // The lines of the chosen things are told from the others (graph.css).
+        // What the line is, by name; its look is in `style`, and graph.css dims a dimmed one.
         near && 'sigrid-graph-near',
         style !== 'solid' && `sigrid-graph-${style}`,
         tone !== 'default' && `sigrid-graph-${tone}`,
         onPath && 'sigrid-graph-path',
         !onPath && dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)) && 'sigrid-graph-dim',
       ) || undefined,
-      ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: STROKE[tone], width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
+      style: lineVars(look),
+      // The arrowheads are drawn apart from the lines, so they take the colour of the line's tone by name.
+      ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: lineLook(style, tone).stroke, width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
       ...(words ? wordsOn(words) : {}),
       // What a `link` or a line with words says is in the description of its two things: the line is not read again.
       ...(!child || edge.label ? { domAttributes: { 'aria-hidden': true } } : {}),

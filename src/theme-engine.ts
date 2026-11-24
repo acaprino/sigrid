@@ -11,7 +11,7 @@
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import { DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
+import { DEFAULT_DARK_DEPTH, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -286,9 +286,32 @@ function adaptMarkColor(raw: string, t: ThemeDef, backgrounds: readonly string[]
 }
 
 /**
+ * The dark ladder of each depth (`ThemeDark.depth`), as OKLCH lightness: the page, the sidebar and the lanes below it,
+ * the solid sidebar, the sheets, the dividers, the soft background of the accent, the selected item and the selected
+ * row of a sidebar with its own colors. `standard` is the ladder every theme had before the depth was a parameter
+ * (2026-11-23), value for value.
+ *
+ * `deep` keeps its steps as contrast ratios from a darker page (the sidebar about 1.07:1 below; the sheets 1.16:1, the
+ * selected item 1.26:1 and the dividers 1.36:1 above): the same ratio is a wider step of lightness there. Its solid
+ * sidebar sits closer than the ratio asks, to stay above the drop of the elevation (0.12).
+ *
+ * `soft` can only bring the page up toward its sheets, because the standard ladder is already at two ceilings: with
+ * sheets above 0.285 a fill with a light label no longer holds 3:1 on them, and with a selected item above 0.32 the
+ * user's colors no longer hold 3:1 on it. So its sheets are the standard's, a closer step above a lighter page (about
+ * 1.11:1), its selected item rises by the little there is, to stay apart from the page in a calm tone, and the
+ * sidebar keeps its ratio below.
+ */
+const DARK_LADDER: Readonly<Record<DarkDepth, { readonly page: number; readonly sidebar: number; readonly solid: number; readonly raised: number; readonly line: number; readonly soft: number; readonly selected: number; readonly row: number }>> = {
+  deep: { page: 0.2, sidebar: 0.16, solid: 0.15, raised: 0.26, line: 0.31, soft: 0.265, selected: 0.285, row: 0.275 },
+  standard: { page: 0.235, sidebar: 0.205, solid: 0.176, raised: 0.285, line: 0.33, soft: 0.29, selected: 0.31, row: 0.3 },
+  soft: { page: 0.25, sidebar: 0.225, solid: 0.2, raised: 0.285, line: 0.335, soft: 0.29, selected: 0.315, row: 0.3 },
+}
+
+/**
  * The starting lightness values of a theme, before any correction. Three distinct levels in both schemes: sidebar and lanes
  * (`sidebar-paper`, `paper-2`), page (`paper`) and raised sheets (`raised`, like "Now" and panels). In dark the backgrounds
- * stay anthracite/stone, almost neutral, so as not to turn muddy on warm tones nor tire those who have ADHD.
+ * are anthracite, neutral, unless the theme sets its dark parameters (`ThemeDef.dark`): another depth, or its own hue at
+ * a low chroma, so as not to turn muddy on warm tones nor tire those who have ADHD.
  */
 function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
   const [ac0, ah] = t.accent
@@ -378,13 +401,28 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
   // The tint of the dark backgrounds does not follow a stronger tint of the light ones: beyond this it turns muddy.
   const tc = mono ? 0 : warm ? 0.005 : Math.max(Math.min(t.chroma, 0.006) * 1.4, 0.0045)
   const f = (L: number, k = 1) => ok(L, tc * k, t.hue)
-  const n = (L: number) => ok(L, 0, 0)
+  // The dark parameters of the theme: the ladder of its depth, and the chroma of its backgrounds. None unless the theme
+  // asks for its own hue and its grays have one; a warm hue takes the soft strength, since it turns muddy sooner.
+  const dark = themeDark(t.dark)
+  const d = DARK_LADDER[dark?.depth ?? DEFAULT_DARK_DEPTH]
+  const bc = dark?.tint === 'theme' && !mono && t.chroma > 0 ? TINT_CHROMA[warm ? 'soft' : 'medium'][1] : 0
+  const n = (L: number, k = 1): Oklch => {
+    if (!bc) return ok(L, 0, 0)
+    // A tinted background is never lighter than its gray: the ladder sits at the thresholds measured on the grays (the
+    // fill at 3:1 on the sheets), and at the same lightness a hue can weigh a little more than the gray.
+    const most = luminance(toHex(ok(L, 0, 0)))
+    let c = ok(L, bc * k, t.hue)
+    while (luminance(toHex(c)) > most && c.L > 0) c = { ...c, L: c.L - 0.001 }
+    return c
+  }
   // The deeper tone of the accent that fills the button in dark, moved by the chosen tone.
   const darkFill = ok(0.52 + tone.d + tone.lift, Math.max(ac0 * 0.88, 0.08) * tone.k, ah)
   return {
-    // In dark the backgrounds are a neutral anthracite in every theme, as light has its base white (the owner's decision
-    // of 2026-11-19): the theme's character is its accent, and in light the tint of its sidebar.
-    raised: n(0.285), paper: n(0.235), paper2: n(0.205), line: n(0.33), input: n(0.53),
+    // In dark the backgrounds are a neutral anthracite unless the theme says otherwise, as light has its base white (the
+    // owner's decision of 2026-11-19): the theme's character is its accent, and in light the tint of its sidebar. Since
+    // 2026-11-23 that is the default of a parameter (`ThemeDef.dark`): the depth picks the ladder, the tint its chroma,
+    // spread as on a page the user derives (`surfacesFrom`: the sidebar and the sheets as the page, the lines a little less).
+    raised: n(d.raised), paper: n(d.page), paper2: n(d.sidebar), line: n(d.line, 0.9), input: n(0.53, 0.9),
     ink: f(0.92, 0.4), inkSoft: f(0.8, 0.45), inkMute: f(0.67, 0.5),
     // The accent as text is light, to be readable on the dark background; the button fill is a solid and deeper tone,
     // with light text on it. In "Ink" the button stays light with dark text.
@@ -392,11 +430,11 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     accentStrong: mono ? ok(0.96, 0, 0) : ok(0.92, Math.min(ac * 0.4, 0.06), ah),
     fill: mono ? ok(0.9, 0, 0) : (strong ?? darkFill),
     onFill: mono ? ok(0.16, 0, 0) : strong ? labelOn(strong, ok(0.99, 0.008, ah)) : tone.on ? labelOn(darkFill, ok(0.99, 0.008, ah)) : ok(0.99, 0.008, ah),
-    accentSoft: ok(0.29, mono ? 0 : tint(0.042), ah),
-    selected: mono ? ok(0.32, 0, 0) : ok(0.31, Math.max(sc * 0.38, tint(0.032)), sh), selectedInk: mono ? ok(0.96, 0, 0) : ok(0.94, sc * 0.25, sh),
-    sidebar: full ? f(0.176, 1.1) : n(0.205),
+    accentSoft: ok(d.soft, mono ? 0 : tint(0.042), ah),
+    selected: mono ? ok(d.selected + 0.01, 0, 0) : ok(d.selected, Math.max(sc * 0.38, tint(0.032)), sh), selectedInk: mono ? ok(0.96, 0, 0) : ok(0.94, sc * 0.25, sh),
+    sidebar: full ? ok(d.solid, Math.max(tc * 1.1, bc), t.hue) : n(d.sidebar),
     barInk: f(0.9, 0.4), barMute: f(0.68, 0.45),
-    barSelected: column ? f(0.3, 1) : ok(0.3, Math.max(ac * 0.45, 0.036), ah), barSelectedInk: column ? f(0.97, 0.3) : ok(0.95, ac * 0.25, ah),
+    barSelected: column ? f(d.row, 1) : ok(d.row, Math.max(ac * 0.45, 0.036), ah), barSelectedInk: column ? f(0.97, 0.3) : ok(0.95, ac * 0.25, ah),
     barAccent: mono ? ok(0.93, 0, 0) : ok(0.8, Math.min(ac * 1.2, 0.13), ah), barAccentInk: ok(0.22, mono ? 0 : 0.03, ah),
   }
 }
@@ -748,12 +786,13 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
 
   const white = '#ffffff'
   const fixed = light ? FIXED.light : FIXED.dark
-  // The red is the same in every theme; on the surfaces of a curated palette (mid tones, tinted) it moves just enough
-  // to hold on them, on its soft background and on a highlighted menu item.
+  // The red is the same in every theme; on the surfaces of a curated palette (mid tones, tinted) and on a dark scheme
+  // with parameters of its own it moves just enough to hold on them, on its soft background and on a highlighted menu item.
   const redHolds = (h: string) =>
     contrast(h, fixed['destructive-soft']) >= 4.5 + MARGIN &&
     backgrounds.every((bg) => contrast(h, bg) >= 4.5 + MARGIN && contrast(h, over(fixed['destructive-soft'], bg, 0.8)) >= 4.5 + MARGIN && contrast(h, over(h, bg, 0.1)) >= 4.5 + MARGIN)
-  const destructive = theme.surfaces && !redHolds(fixed.destructive) ? hex(settle(fromHex(fixed.destructive), dir, redHolds).c) : fixed.destructive
+  const ownGround = !!theme.surfaces || (!light && themeDark(theme.dark) !== null)
+  const destructive = ownGround && !redHolds(fixed.destructive) ? hex(settle(fromHex(fixed.destructive), dir, redHolds).c) : fixed.destructive
   const onDestructive = [white, '#17161a', paper].sort((a, b) => contrast(b, destructive) - contrast(a, destructive))[0]!
 
   // The status colours: fixed, moved only where a theme's surfaces would sink them.

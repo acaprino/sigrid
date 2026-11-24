@@ -164,7 +164,8 @@ Text with a little form (a message, a note) is written in a `RichTextField` (`@a
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
 (`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
 relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. The
-examples use them: the Archive and the composer of the mail client, the Stack of the to-do list.
+examples use them: the Archive and the composer of the mail client, the Stack of the to-do list. Lines of several
+kinds have their key under the canvas: a `GraphLegend`, from the same entry.
 
 **Sidebar and page.** For settings and documents. One column of text no wider than 65 characters, centred. Each
 choice is a row with its name at the start and its control at the end; a choice takes effect at once, with no Save
@@ -244,7 +245,8 @@ Imago's `imago-shell` crate does these for Tauri on Windows.
   («Analysis done · 13.48 GB to delete»).
 - A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
 - Where it is not known how far it is, `value={null}`: a track and the word «In progress». Nothing loops.
-- Do not make screen readers read every percent: say the end and the failure in a live region of the app (`Toasts`).
+- Do not make screen readers read every percent: say the end in a toast (`Toasts`), and the failure with a `Note`
+  `tone="error"` beside the progress (announced as it appears, with «Retry» as its action): one look for a failure.
 
 ## What to avoid
 

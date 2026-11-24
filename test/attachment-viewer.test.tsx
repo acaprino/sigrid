@@ -26,11 +26,13 @@ describe('AttachmentViewer', () => {
     expect(screen.queryByLabelText('Pages of the document')).toBeNull()
   })
 
-  it('an error is announced calmly and offers the original', () => {
+  it('an error has the one look of a failure, a `Note` error: announced, «Error» read first, and it offers the original', () => {
     const onOpenOriginal = vi.fn()
     viewer({ status: { kind: 'error', message: 'I cannot show this file.' }, onOpenOriginal, originalLabel: 'Download the file' })
     const notice = screen.getByRole('alert')
+    expect(within(notice).getByText('Error:')).toBeTruthy()
     expect(within(notice).getByText('I cannot show this file.')).toBeTruthy()
+    expect(notice.textContent).toMatch(/^Error: I cannot show this file\./)
     fireEvent.click(within(notice).getByRole('button', { name: 'Download the file' }))
     expect(onOpenOriginal).toHaveBeenCalledTimes(1)
   })

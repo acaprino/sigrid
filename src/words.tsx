@@ -22,7 +22,7 @@ export interface Words {
     readonly notices: string
     /** The name of the button that closes a notice, from the notice's text. */
     readonly closeNotice: (text: string) => string
-    /** What screen readers hear before the text of a notice that is an error. */
+    /** What screen readers hear before the text of an error: a notice that is an error, and a `Note` with `tone="error"` («Error: Could not reach the server»). */
     readonly error: string
     /** How a key combination is read: keys pressed together, and one after the other. */
     readonly keysTogether: (keys: readonly string[]) => string
@@ -147,6 +147,12 @@ export interface Words {
     readonly indeterminate: string
     readonly complete: string
     readonly error: string
+  }
+  /** The tone of a `Note`, read by screen readers before its title («Warning: The map is out of date»). An error says `common.error`. */
+  readonly note: {
+    readonly info: string
+    readonly success: string
+    readonly warning: string
   }
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
@@ -392,6 +398,11 @@ export const DEFAULT_WORDS: Words = {
     indeterminate: 'In progress',
     complete: 'Complete',
     error: 'Failed',
+  },
+  note: {
+    info: 'Information',
+    success: 'Success',
+    warning: 'Warning',
   },
   shell: {
     skip: 'Skip to the content',

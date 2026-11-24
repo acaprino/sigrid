@@ -3,7 +3,15 @@
 // done and failed are said as well as coloured, nothing is clamped wrongly, and the words are the app's.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Progress, ProgressRing, ProgressSegments, WordsProvider } from '../src'
+import { Icon, Progress, ProgressRing, ProgressSegments, WordsProvider } from '../src'
+
+/** The drawing of Sigrid's `error` at the size given: the one look of a failure, in a `Note`, a toast and a step too. */
+const failure = (className?: string) => {
+  const { container, unmount } = render(<Icon name="error" className={className} />)
+  const html = container.querySelector('svg')!.outerHTML
+  unmount()
+  return html
+}
 
 describe('Progress', () => {
   test('a named progressbar with its value and its text', () => {
@@ -55,7 +63,8 @@ describe('Progress', () => {
     expect(container.querySelector('[data-slot="progress-text"]')).toBeNull()
   })
 
-  test('a failure keeps where it stopped and says so', () => {
+  test('a failure keeps where it stopped and says so, after the mark of a failure', () => {
+    const mark = failure('size-3.5')
     const { container } = render(<Progress aria-label="Upload" value={30} status="error" showValue />)
     const bar = screen.getByRole('progressbar')
     expect(bar.getAttribute('data-state')).toBe('error')
@@ -63,6 +72,7 @@ describe('Progress', () => {
     expect(bar.getAttribute('aria-valuetext')).toBe('Failed')
     expect((container.querySelector('[data-slot="progress-range"]') as HTMLElement).style.width).toBe('30%')
     expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Failed')
+    expect(container.querySelector('[data-slot="progress-text"] svg')!.outerHTML).toBe(mark)
   })
 
   test('not knowing how far it is: no value, no range, the word is always shown', () => {
@@ -140,12 +150,16 @@ describe('ProgressRing', () => {
     expect(container.querySelector('[data-slot="progress-ring"] span')!.textContent).toBe('10')
   })
 
-  test('done shows a check, a failure a cross, and each its word below', () => {
+  test('done shows a check, a failure the mark of a failure, and each its word below', () => {
+    const mark = failure()
     const { container, rerender } = render(<ProgressRing aria-label="Import" value={100} showValue />)
     expect(container.querySelector('[role="progressbar"] svg + span svg')).not.toBeNull()
     expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Complete')
     rerender(<ProgressRing aria-label="Import" value={40} status="error" showValue />)
+    expect(container.querySelector('[role="progressbar"] svg + span svg')!.outerHTML).toBe(mark)
     expect(container.querySelector('[data-slot="progress-text"]')!.textContent).toBe('Failed')
+    // The ring holds the mark: the word below does not repeat it.
+    expect(container.querySelector('[data-slot="progress-text"] svg')).toBeNull()
   })
 
   test('an unknown value draws no arc and says so', () => {
