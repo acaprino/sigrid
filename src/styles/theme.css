@@ -630,6 +630,9 @@ svg.lucide[stroke-width="2"] {
   --motion-ease-leave: cubic-bezier(0.42, 0, 0.58, 1);
   --motion-ease-move: cubic-bezier(0.42, 0, 0.58, 1);
 }
+@keyframes surface-leave {
+  to { opacity: 0; }
+}
 /* Everything below moves only where the app turned motion on (`MotionProvider` marks the root with `data-motion`) and
    the system allows motion. Zero specificity on the gate (`:where`), so a part's own rule still wins. */
 @media (prefers-reduced-motion: no-preference) {
@@ -653,7 +656,7 @@ svg.lucide[stroke-width="2"] {
   :where(:root[data-motion]) {
     interpolate-size: allow-keywords;
   }
-  :where(:root[data-motion]) [data-reveal] {
+  :where(:root[data-motion]) [data-reveal=""] {
     overflow: clip;
     /* In a column of a flex box a part is never shorter than what it holds, unless told so. */
     min-height: 0;
@@ -666,9 +669,32 @@ svg.lucide[stroke-width="2"] {
       opacity: 0;
     }
   }
-  :where(:root[data-motion]) [data-reveal]:is([hidden], [data-closed]) {
+  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-closed]) {
     height: 0;
     opacity: 0;
+  }
+  /* A region beside the page that the app opens and closes (the inspector, docked) slides in from the end and out to
+     it: it keeps its width, so what is in it does not wrap again on the way, and the page takes the room it leaves. */
+  :where(:root[data-motion]) [data-reveal="side"] {
+    transition:
+      margin-inline-end var(--motion-normal) var(--motion-ease-move),
+      opacity var(--motion-normal) var(--motion-ease-move),
+      display var(--motion-normal) allow-discrete;
+    @starting-style {
+      margin-inline-end: -18.75rem;
+      opacity: 0;
+    }
+  }
+  :where(:root[data-motion]) [data-reveal="side"][hidden] {
+    margin-inline-end: -18.75rem;
+    opacity: 0;
+  }
+  /* A panel the person changed to (a tab's) fades in; the one it takes the place of is gone at once. */
+  :where(:root[data-motion]) [data-reveal="fade"] {
+    transition: opacity var(--motion-fast) var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+    }
   }
 
   /* A surface that closes leaves as it came, in the short time of what leaves: it fades, and a sheet goes back
@@ -687,6 +713,11 @@ svg.lucide[stroke-width="2"] {
     &[data-side="left"] { translate: -32px 0; }
     &[data-side="top"] { translate: 0 -32px; }
     &[data-side="bottom"] { translate: 0 32px; }
+  }
+  /* The lists and the card that Ark draws (a combo box's, the suggestions of the labels, the calendar) leave the same
+     way: Ark keeps one in the page while an animation of its closed state runs, so their fade is one, played once. */
+  :where(:root[data-motion]) :is([data-slot="combobox-content"], [data-slot="chips-suggestions"], [data-slot="date-field-content"])[data-state="closed"] {
+    animation: surface-leave var(--motion-faster) var(--motion-ease-leave) forwards;
   }
   /* The veil behind a window or a sheet fades in and out with it. */
   :where(:root[data-motion]) :where([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]) {

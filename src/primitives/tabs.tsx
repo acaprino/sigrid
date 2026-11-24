@@ -15,7 +15,7 @@ import { useMotion } from "../internal/motion"
 import { steadyLabel } from "../internal/steady-label"
 
 type Impl = NonNullable<ReturnType<typeof useMotion>>
-const TabsContext = React.createContext<{ value: string; motion: Impl | null; id: string } | null>(null)
+const TabsContext = React.createContext<{ value: string; motion: Impl | null; id: string; changed: boolean } | null>(null)
 
 export type TabsProps<Value extends string> = {
   /** The chosen tab. */
@@ -37,7 +37,11 @@ export type TabsProps<Value extends string> = {
 function Tabs<Value extends string>({ value, onValueChange, activation = "automatic", className, children, animated, ids }: TabsProps<Value>) {
   const motion = useMotion(animated)
   const id = React.useId()
-  const context = React.useMemo(() => ({ value, motion, id }), [value, motion, id])
+  // A panel fades in when the person changes tab, never the one in the page at first.
+  const first = React.useRef(value)
+  const changed = React.useRef(false)
+  if (first.current !== value) changed.current = true
+  const context = React.useMemo(() => ({ value, motion, id, changed: changed.current }), [value, motion, id, changed.current])
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -124,8 +128,9 @@ export type TabsContentProps = {
 
 /** The panel of a tab: in the page only while its tab is chosen, and a Tab stop of its own, after the tabs. */
 function TabsContent({ value, className, children }: TabsContentProps) {
+  const changed = React.useContext(TabsContext)?.changed === true
   return (
-    <TabsPrimitive.Content data-slot="tabs-content" value={value} className={cn("w-full", FOCUS_RING_INSET, className)}>
+    <TabsPrimitive.Content data-slot="tabs-content" value={value} {...(changed ? { "data-reveal": "fade" } : {})} className={cn("w-full", FOCUS_RING_INSET, className)}>
       {children}
     </TabsPrimitive.Content>
   )

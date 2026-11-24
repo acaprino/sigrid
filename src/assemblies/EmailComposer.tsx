@@ -16,6 +16,7 @@
 import * as React from 'react'
 import { cn, isEmptyNode } from '../lib/utils'
 import { useWords } from '../words'
+import { useReveal } from '../internal/reveal'
 import { Icon } from '../icons'
 import { Button } from '../primitives/button'
 import { Input } from '../primitives/input'
@@ -87,6 +88,8 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
   const [asked, setAsked] = React.useState(false)
   const held = value.cc.length > 0 || value.bcc.length > 0
   const copies = asked || held
+  // They glide open and shut after a press on their button; shown because they hold an address, they are just there.
+  const reveal = useReveal(copies)
   // The reason the last try to send did not go, until the draft changes; counted, so the same reason said again
   // is a new alert and is read again.
   const [problem, setProblem] = React.useState<{ why: 'noRecipient' | 'badAddress'; at: number } | null>(null)
@@ -169,12 +172,17 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
       {addresses(
         'to',
         words.to,
-        <Button type="button" variant="ghost" aria-expanded={copies} disabled={held} onClick={() => setAsked((now) => !now)}>
+        <Button type="button" variant="ghost" aria-expanded={copies} disabled={held} onClick={() => { reveal.pressed(); setAsked((now) => !now) }}>
           {words.copies}
         </Button>,
       )}
-      {copies ? addresses('cc', words.cc) : null}
-      {copies ? addresses('bcc', words.bcc) : null}
+      {/* In the page while shown, and after a press that hid them, so that they are seen closing. */}
+      {copies || reveal.byPress ? (
+        <div data-slot="email-composer-copies" hidden={!copies} {...reveal.attrs} className="flex shrink-0 flex-col gap-2">
+          {addresses('cc', words.cc)}
+          {addresses('bcc', words.bcc)}
+        </div>
+      ) : null}
       <div data-slot="email-composer-row" className={ROW}>
         <label htmlFor={`${id}-subject`} data-slot="email-composer-name" className={NAME}>
           {words.subject}

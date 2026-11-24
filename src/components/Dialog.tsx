@@ -82,7 +82,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   // The sheet gives focus back by itself to whoever had it before it opened.
   if (drawer) return (
     <Sheet open={open} onOpenChange={(next) => onOpenChange(next)}>
-      <SheetContent side="right" animated={animated} className={cn('w-full gap-5 overflow-hidden bg-raised p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>
+      <SheetContent side="right" cover animated={animated} className={cn('gap-5 overflow-hidden p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>
         <SheetHeader className="shrink-0 p-0 pe-6">
           <SheetTitle>{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
@@ -95,7 +95,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   )
   return (
     <DialogRoot open={open} onOpenChange={(next) => onOpenChange(next)}>
-      <DialogContent animated={animated} className="bg-raised" finalFocus={finalFocus}>
+      <DialogContent animated={animated} finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}

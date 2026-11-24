@@ -33,7 +33,7 @@ import { TreeView as TreeViewPrimitive, createTreeCollection, useTreeViewNodeCon
 import { cn, isEmptyNode } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER } from "../lib/rows"
-import { useMotion, type MotionImpl } from "../internal/motion"
+import { useMotion, useMotionAllowed, type MotionImpl } from "../internal/motion"
 import { Icon, type IconName } from "../icons"
 import { useWords } from "../words"
 import { Count } from "../primitives/count"
@@ -190,8 +190,10 @@ type Rows = {
   failed: ReadonlyMap<string, TreeNode>
   uid: string
   motion: MotionImpl | null
+  /** The branch the person last opened or closed, while motion is on: its rows glide open and shut. */
+  pressed: string | null
 }
-const RowsContext = React.createContext<Rows>({ icons: false, loading: new Map(), failed: new Map(), uid: "", motion: null })
+const RowsContext = React.createContext<Rows>({ icons: false, loading: new Map(), failed: new Map(), uid: "", motion: null, pressed: null })
 
 // The row of a branch (Ark's `BranchControl`, made the `treeitem`) and the row of a leaf (Ark's `Item`). `--depth` is the
 // level: one level in is 20px, the chevron's slot and its 4px gap, so the chevron of a row sits under the icon of the
@@ -269,7 +271,7 @@ const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen
 })
 
 function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
-  const { icons, loading, failed, uid, motion } = React.useContext(RowsContext)
+  const { icons, loading, failed, uid, motion, pressed } = React.useContext(RowsContext)
   const state = useTreeViewNodeContext()
   const source = node.source
   if (source === null) return null
@@ -326,8 +328,10 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
       >
         {body}
       </TreeViewPrimitive.BranchControl>
-      {open ? (
-        <div role="group" id={groupId} data-slot="tree-group" className="flex flex-col gap-0.5">
+      {/* The rows of the branch the person just opened or closed glide (theme.css, `[data-reveal]`): closing, they stay
+          in the page, hidden, until another branch is pressed. Every other branch draws its rows only while open. */}
+      {open || pressed === node.id ? (
+        <div role="group" id={groupId} data-slot="tree-group" hidden={!open} {...(pressed === node.id ? { "data-reveal": "" } : {})} className="flex flex-col gap-0.5">
           <TreeRows nodes={node.children ?? []} path={indexPath} />
         </div>
       ) : null}
@@ -422,7 +426,10 @@ function Tree({
       }),
     [shown],
   )
-  const rows = React.useMemo(() => ({ icons: tree.icons, loading, failed, uid, motion }), [tree.icons, loading, failed, uid, motion])
+  // The one branch the person last opened or closed, kept only with motion on: without it nothing changes in the page.
+  const moving = useMotionAllowed(animated)
+  const [pressed, setPressed] = React.useState<string | null>(null)
+  const rows = React.useMemo(() => ({ icons: tree.icons, loading, failed, uid, motion, pressed: moving ? pressed : null }), [tree.icons, loading, failed, uid, motion, moving, pressed])
 
   // What a load that ends after the paint it started in reads: the person's list and the app's callbacks as they are now.
   const latest = React.useRef({ open, controlled: expanded !== undefined, onExpandedChange, loadChildren })
@@ -531,6 +538,9 @@ function Tree({
           return !before.has(id) && node !== undefined && (node.lazy || node.children !== undefined)
         })
         const closed = new Set(view.filter((id) => !after.has(id)))
+        // One branch opened or closed is the person's press on it; several at once (`*`) glide nowhere.
+        const toggled = [...opened, ...closed]
+        setPressed(toggled.length === 1 ? toggled[0]! : null)
         // A branch whose rows are still to come loads them first, and opens once they are here.
         const ready = opened.filter((id) => {
           const node = tree.index.get(id)

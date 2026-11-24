@@ -139,6 +139,12 @@ type SheetContentProps = Omit<React.ComponentProps<typeof SheetPrimitive.Popup>,
   side?: SheetSide | undefined
   /** At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot. */
   width?: SheetWidth | undefined
+  /**
+   * On a narrow window the sheet covers it all (a message being read, a file being looked at): it is then that
+   * window's page, on the page's ground; from the `sm` width up it is a raised surface at the side, as wide as
+   * `width` or the caller's own `max-w-*`.
+   */
+  cover?: boolean | undefined
   showCloseButton?: boolean | undefined
   /**
    * On closing, before the focus moves (like Radix's `onCloseAutoFocus`): `event.preventDefault()` says that
@@ -154,6 +160,7 @@ function SheetContent({
   children,
   side = "right",
   width = "sm",
+  cover = false,
   showCloseButton = true,
   onCloseAutoFocus,
   animated,
@@ -220,9 +227,13 @@ function SheetContent({
           // every overlay of the toolkit (`openState`).
           render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={openState(state)} />}
           className={cn(
-            "pointer-events-auto relative flex flex-col gap-4 bg-background shadow-lg outline-none data-swiping:select-none",
+            // A sheet floats over the page: the raised surface (DESIGN.md), told from the page in dark too. One that covers
+            // the whole of a narrow window is that window's page, on the page's ground, and a raised surface from `sm` up.
+            "pointer-events-auto relative flex flex-col gap-4 bg-raised shadow-lg outline-none data-swiping:select-none",
             POPUP_SIDE_CLASS[side],
             (side === "left" || side === "right") && SIDE_WIDTH_CLASS[width],
+            // After the side's own width, which it replaces.
+            cover && "w-full max-sm:bg-paper",
             className
           )}
           {...props}

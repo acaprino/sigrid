@@ -29,3 +29,15 @@ export function useReveal(open: boolean): { pressed: () => void; byPress: boolea
     attrs: now.byPress ? { 'data-reveal': '' } : {},
   }
 }
+
+/**
+ * For a part the app opens and closes (`open` is the app's, and its press is not seen from here: the inspector beside
+ * the page): `side` once `open` has changed since the part was first drawn, so it never moves on load, and moves at
+ * each change after it. The stylesheet slides it in from, and out to, the edge it stands at.
+ */
+export function useRevealAfterMount(open: boolean): { 'data-reveal'?: 'side' } {
+  const first = useRef(open)
+  const changed = useRef(false)
+  if (first.current !== open) changed.current = true
+  return changed.current ? { 'data-reveal': 'side' } : {}
+}

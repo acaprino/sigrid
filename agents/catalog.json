@@ -2908,6 +2908,11 @@
          "doc": "At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot."
         },
         {
+         "name": "cover",
+         "type": "boolean",
+         "doc": "On a narrow window the sheet covers it all (a message being read, a file being looked at): it is then that window's page, on the page's ground; from the `sm` width up it is a raised surface at the side, as wide as `width` or the caller's own `max-w-*`."
+        },
+        {
          "name": "showCloseButton",
          "type": "boolean"
         },

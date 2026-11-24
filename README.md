@@ -146,10 +146,14 @@ where the system asks for less motion. A movement answers a gesture: it shows wh
 went, or that a press was felt. What moves:
 
 - a surface that opens comes from the side of what opened it, and one that closes fades out (a sheet goes back
-  towards its edge), with the veil behind it;
+  towards its edge), with the veil behind it: windows, sheets, menus, popovers, selects, hints, the list of a
+  combo box and of the labels, the calendar;
 - the sidebar's width eases between its column and its rail;
-- what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar) glides open
-  and shut, and its arrow turns, after the reader's press; opened or closed by the app, it changes at once;
+- what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar; a branch of
+  a `Tree`; the rows of the copies of an `EmailComposer`) glides open and shut, and its arrow turns, after the
+  reader's press; opened or closed by the app, it changes at once;
+- the `Inspector`, docked, slides in from the end and out to it, and the page takes the room it leaves; the panel
+  of a tab the person changed to fades in;
 - the pill under a tab or a choice, the thumb of a switch, the mark of a check, a button under the finger, the
   notices, a card of a deck thrown or let go, the things of a graph;
 - the fill, the border and the text of a control ease to the state under the pointer.
