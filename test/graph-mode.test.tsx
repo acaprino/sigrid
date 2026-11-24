@@ -382,7 +382,7 @@ describe('what a map of a program asked of the canvas', () => {
   })
 
   test('a picture of the thing (a logo) is drawn in the icon’s place, says nothing, and gives way to the icon while it loads and when it fails', () => {
-    const logo = (label: string) => thing(label).querySelector<HTMLElement>('[data-slot="graph-image"]')!
+    const logo = (label: string) => thing(label).querySelector<HTMLElement>('[data-slot="logo"]')!
     render(<Calls nodes={[{ id: 'db', label: 'Database', icon: 'layers', image: '/logos/database.svg' }, { id: 'queue', label: 'Queue', icon: 'layers', image: '/logos/queue.svg' }, { id: 'plain', label: 'Plain', icon: 'layers' }]} edges={[]} />)
     // The name of the thing is its own: the picture names nothing.
     expect(logo('Database').getAttribute('aria-hidden')).toBe('true')
@@ -390,16 +390,16 @@ describe('what a map of a program asked of the canvas', () => {
     expect(logo('Database').querySelector('img')!.getAttribute('src')).toBe('/logos/database.svg')
     // The same 16px box in every state, so nothing shifts; the icon is in it until the picture is there.
     expect(logo('Database').className).toContain('size-4')
-    expect(logo('Database').dataset.image).toBe('loading')
+    expect(logo('Database').dataset.state).toBe('loading')
     expect(logo('Database').querySelector('svg')).not.toBeNull()
     fireEvent.load(logo('Database').querySelector('img')!)
-    expect(logo('Database').dataset.image).toBe('shown')
+    expect(logo('Database').dataset.state).toBe('shown')
     expect(logo('Database').querySelector('svg')).toBeNull()
     fireEvent.error(logo('Queue').querySelector('img')!)
-    expect(logo('Queue').dataset.image).toBe('failed')
+    expect(logo('Queue').dataset.state).toBe('failed')
     expect(logo('Queue').querySelector('img')).toBeNull()
     expect(logo('Queue').querySelector('svg')).not.toBeNull()
-    expect(thing('Plain').querySelector('[data-slot="graph-image"]')).toBeNull()
+    expect(thing('Plain').querySelector('[data-slot="logo"]')).toBeNull()
   })
 
   test('when the thing that has the focus leaves the graph, the focus goes to the Tab stop, not to the page', () => {

@@ -120,6 +120,7 @@ import { FIELDS } from '../internal/desktop-guard'
 import { useMotionAllowed } from '../internal/motion'
 import { useWords, type Words } from '../words'
 import { Count } from './ui/count'
+import { Logo } from './ui/logo'
 import { lineLook, lineVars } from './graph-lines'
 import { SearchField } from './ui/search-field'
 import { Button } from './ui/button'
@@ -136,7 +137,7 @@ export type GraphNode = {
   /**
    * A picture of the thing, where it has one of its own (the logo of a service, of a framework, of a library): the
    * address of an image the app serves (an SVG or a PNG of its own origin), drawn before the name in the icon's place,
-   * 16px, whole (never cropped). It is content, not an icon of the interface (those are `icon`, Sigrid's one set), and
+   * 16px, whole (never cropped): the toolkit's `Logo`. It is content, not an icon of the interface (those are `icon`, Sigrid's one set), and
    * it names nothing: the name says what the thing is. While it loads and when it fails the `icon` (or the dot of the
    * `color`) is drawn in the same 16px, so nothing shifts.
    */
@@ -905,26 +906,6 @@ function nameOf(node: GraphNode, steps: readonly number[] | undefined, words: Wo
   return node.external ? `${name}, ${words.external}` : name
 }
 
-/**
- * The picture of a thing (`image` of a node: a logo), in the 16px of the icon and whole. Until it has loaded, and when
- * it fails, what is drawn there is the thing's icon or dot (`children`), so the box never changes size. It says
- * nothing to screen readers: the name of the thing does. `Avatar` (round, cropped, with initials) and the thumbnail of
- * an attachment (a data URL, 40px) are other things.
- */
-function Picture({ src, children }: { src: string; children: React.ReactNode }) {
-  const [seen, setSeen] = React.useState<{ src: string; is: 'shown' | 'failed' } | null>(null)
-  // Another address starts again.
-  const is = seen !== null && seen.src === src ? seen.is : 'loading'
-  return (
-    <span data-slot="graph-image" data-image={is} aria-hidden="true" className="relative inline-flex size-4 shrink-0 items-center justify-center">
-      {is === 'shown' ? null : children}
-      {is === 'failed' ? null : (
-        <img src={src} alt="" draggable={false} onLoad={() => setSeen({ src, is: 'shown' })} onError={() => setSeen({ src, is: 'failed' })} className={cn('absolute inset-0 size-full object-contain', is === 'loading' && 'opacity-0')} />
-      )}
-    </span>
-  )
-}
-
 /** What a thing shows: its picture, its icon or the dot of its colour, its name and the line under it, and «external» on an external one. */
 function Face({ node, tinted, words }: { node: GraphNode; tinted: boolean; words: Words['graph'] }) {
   const mark = node.icon ? (
@@ -936,7 +917,14 @@ function Face({ node, tinted, words }: { node: GraphNode; tinted: boolean; words
   ) : null
   return (
     <>
-      {node.image ? <Picture src={node.image}>{mark}</Picture> : mark}
+      {/* The picture of the thing (a logo) is the toolkit's `Logo`, 16px and whole: the icon or the dot is in its box while it loads and when it fails. The name of the thing says what it is. */}
+      {node.image ? (
+        <Logo src={node.image} decorative>
+          {mark}
+        </Logo>
+      ) : (
+        mark
+      )}
       {/* Beside «external» the name keeps 64px: in a narrow box the word is cut first. */}
       <span className={cn('flex flex-1 flex-col', node.external ? 'min-w-16' : 'min-w-0')}>
         <span className="truncate">{node.label}</span>

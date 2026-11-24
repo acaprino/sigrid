@@ -67,6 +67,21 @@ const drawing = (name: IconName) => {
 // Tailwind also scans `test/`: a class with a variant is composed, never written whole.
 const v = (variant: string, cls: string) => variant + cls
 
+describe('a row with a picture of its own', () => {
+  test('`image` is drawn in the icon’s slot with the row’s icon as its fallback, and every row keeps the slot', () => {
+    const { container } = render(<Tree aria-label="Services" nodes={[{ id: 'db', name: 'Database', icon: 'layers', image: '/logos/db.svg' }, { id: 'queue', name: 'Queue' }]} />)
+    const logo = container.querySelector<HTMLElement>('[data-slot="logo"]')!
+    expect(logo.getAttribute('aria-hidden')).toBe('true')
+    expect(logo.className).toContain('size-4')
+    expect(logo.querySelector('svg')).not.toBeNull()
+    fireEvent.error(logo.querySelector('img')!)
+    expect(logo.querySelector('img')).toBeNull()
+    expect(logo.querySelector('svg')).not.toBeNull()
+    // A tree where a row has a picture has the slot on every row.
+    expect(container.querySelectorAll('[data-slot="tree-icon-empty"]')).toHaveLength(1)
+  })
+})
+
 describe('the rows a screen reader hears', () => {
   test('a tree named by the app; each row its name, its level, whether it is open and whether it is chosen', async () => {
     render(<Tree aria-label="Files" nodes={FILES} defaultExpanded={['src']} defaultSelected="src/app.ts" />)
