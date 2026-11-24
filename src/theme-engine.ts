@@ -148,8 +148,9 @@ export interface ThemeTokens {
   /** The shape variables, with their full name (`--radius-md`). */
   readonly shape: Readonly<Record<string, string>>
   /**
-   * The root attributes that state the choices that are not numbers: `data-sidebar` always, `data-keys="boxed"` and
-   * `data-controls="strong"` only when the theme asks for them (`ThemeDef.keys`, `ThemeDef.controls`).
+   * The root attributes that state the choices that are not numbers: `data-sidebar` always; `data-keys="boxed"`,
+   * `data-controls="strong"`, `data-tabs="bold"` and `data-status-strip="tall"` only when the theme asks for them
+   * (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`).
    */
   readonly attributes: Readonly<Record<string, string>>
   /** The roles that the computation had to move to reach the contrast. */
@@ -623,7 +624,7 @@ function withOwn(t: ThemeDef, own: OwnTheme): ThemeDef {
   return {
     id: t.id, label: t.label, hue: lightPaper.h, chroma: lightPaper.C, accent: [c, a.h], sidebar, palette: t.palette, ...(second ? { second } : {}),
     // How keys and control borders are drawn is the app's choice, not a colour: it stays with the user's own page.
-    ...(t.keys ? { keys: t.keys } : {}), ...(t.controls ? { controls: t.controls } : {}),
+    ...(t.keys ? { keys: t.keys } : {}), ...(t.controls ? { controls: t.controls } : {}), ...(t.tabs ? { tabs: t.tabs } : {}), ...(t.statusStrip ? { statusStrip: t.statusStrip } : {}),
     surfaces: { light: surfacesFrom(lightPaper, 'light', color), dark: surfacesFrom(darkPaper, 'dark', color) },
   }
 }
@@ -838,5 +839,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   // The two looks a theme asks for by name. Off unless asked: a theme without them writes no attribute.
   if (theme.keys === 'boxed') attributes['data-keys'] = 'boxed'
   if (theme.controls === 'strong') attributes['data-controls'] = 'strong'
+  if (theme.tabs === 'bold') attributes['data-tabs'] = 'bold'
+  if (theme.statusStrip === 'tall') attributes['data-status-strip'] = 'tall'
   return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
 }

@@ -107,6 +107,26 @@ describe('build output', () => {
     for (const cls of ['.bg-' + 'info-soft', '.text-' + 'info', '.bg-' + 'success-soft', '.bg-' + 'warning-soft', '.bg-' + 'destructive-soft']) expect(c, cls).toMatch(new RegExp(`${cls.replace(/[.-]/g, '\\$&')}\\s*\\{`))
   })
 
+  test('bold tabs, a tall status strip and the system font are compiled, each under its attribute', () => {
+    const c = css()
+    const under = (attribute: string) => new RegExp(`${attribute.replace(/[[\]=-]/g, '\\$&')}\\s+(?:&|\\.|\\[data-slot)`)
+    // `ThemeDef.tabs`: the view of a bar, the item of a segment, and the label that keeps their width.
+    expect(c).toMatch(under('[data-tabs=bold]'))
+    // `ThemeDef.statusStrip`.
+    expect(c).toMatch(under('[data-status-strip=tall]'))
+    // The line of the chosen view eases its scale only with motion on, inside the reduced-motion gate.
+    const rule = c.search(/\[data-slot=["']?toolbar-tab["']?\]:{1,2}after/)
+    expect(rule).toBeGreaterThan(-1)
+    expect(c.slice(rule, c.indexOf('}', rule))).toMatch(/transition:\s*scale /)
+    expect(enclosingAtRules(c, rule).some((at) => at.includes('prefers-reduced-motion: no-preference') || at.includes('prefers-reduced-motion:no-preference'))).toBe(true)
+    // The system font: its monospace follows `data-font`, outside the layers; no face is shipped for either.
+    const font = c.search(/\[data-font=["']?system["']?\]/)
+    expect(font).toBeGreaterThan(-1)
+    expect(c.slice(font, c.indexOf('}', font))).toContain('Cascadia Mono')
+    expect(enclosingAtRules(c, font).some((at) => at.startsWith('@layer'))).toBe(false)
+    expect(c).not.toMatch(/@font-face[^}]*(?:Segoe|Cascadia)/)
+  })
+
   test('styles.css carries the muted text colors of theme.css, not an old copy', () => {
     const theme = readFileSync(`${root}src/styles/theme.css`, 'utf8')
     const c = css()

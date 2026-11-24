@@ -53,13 +53,25 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
         const chosen = next[0]
         if (chosen !== undefined && chosen !== value) onValueChange(chosen)
       }}
-      className={cn("inline-flex items-center rounded-lg bg-paper-2 inset-ring inset-ring-line", fill ? "w-full" : "w-fit", className)}
+      className={cn("inline-flex items-center rounded-lg bg-paper-2 inset-ring inset-ring-line", TRACK_BOLD, fill ? "w-full" : "w-fit", className)}
       {...props}
     >
       <GroupContext.Provider value={group}>{children}</GroupContext.Provider>
     </ToggleGroupPrimitive>
   )
 }
+
+// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-25), an
+// exception to R7 scoped to that attribute. The group is a track: its hairline, 2px inside it and 2px between the
+// items, which are 4px shorter so the track stays a control tall, with corners one step under the track's. The chosen
+// item is weight 700 with the accent as text at 16% for its fill and at 55% for its border, and no shadow (R4: a
+// border or a shadow). With `animated` the fill and the border are the sliding pill's, not the item's.
+const TRACK_BOLD = "[[data-tabs=bold]_&]:gap-0.5 [[data-tabs=bold]_&]:p-0.5"
+const ITEM_BOLD =
+  "[[data-tabs=bold]_&]:h-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:min-w-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:rounded-md [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-transparent [[data-tabs=bold]_&]:data-[pressed]:font-bold [[data-tabs=bold]_&]:data-[pressed]:shadow-none"
+const ITEM_BOLD_PRESSED =
+  "[[data-tabs=bold]_&]:data-[pressed]:border-accent/55 [[data-tabs=bold]_&]:data-[pressed]:bg-accent/16 [[data-tabs=bold]_&]:data-[pressed]:hover:bg-accent/16"
+const PILL_BOLD = "[[data-tabs=bold]_&]:-inset-px [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-accent/55 [[data-tabs=bold]_&]:bg-accent/16 [[data-tabs=bold]_&]:shadow-none"
 
 const ITEM = cn(
   // Park's segment item, md: 40px, 14px medium text; the chosen one is a raised sheet with the xs elevation.
@@ -86,8 +98,8 @@ function ToggleGroupItem({ className, children, highlightClassName, ...props }: 
   if (motion && group) {
     // The pill is a layer under the text of the pressed item; the item itself stays without a background.
     return (
-      <TogglePrimitive data-slot="toggle-group-item" className={cn(ITEM, className, "relative isolate data-[pressed]:bg-transparent data-[pressed]:shadow-none data-[pressed]:hover:bg-transparent")} {...props}>
-        {group.value === props.value ? <motion.Highlight id={group.id} className={cn("absolute inset-0 -z-10 rounded-[inherit] bg-raised shadow-xs", highlightClassName)} /> : null}
+      <TogglePrimitive data-slot="toggle-group-item" className={cn(ITEM, ITEM_BOLD, className, "relative isolate data-[pressed]:bg-transparent data-[pressed]:shadow-none data-[pressed]:hover:bg-transparent")} {...props}>
+        {group.value === props.value ? <motion.Highlight id={group.id} className={cn("absolute inset-0 -z-10 rounded-[inherit] bg-raised shadow-xs", PILL_BOLD, highlightClassName)} /> : null}
         {steadyLabel(children)}
       </TogglePrimitive>
     )
@@ -95,7 +107,7 @@ function ToggleGroupItem({ className, children, highlightClassName, ...props }: 
   return (
     <TogglePrimitive
       data-slot="toggle-group-item"
-      className={cn(ITEM, className)}
+      className={cn(ITEM, ITEM_BOLD, ITEM_BOLD_PRESSED, className)}
       {...props}
     >
       {/* As wide pressed as not: a two-state switch stays where it is in both states. */}
