@@ -69,7 +69,7 @@ function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, d
           >
             {label}
             {shortcut ? (
-              <span data-slot="tooltip-shortcut" className="ml-2 font-medium opacity-80">
+              <span data-slot="tooltip-shortcut" className="ms-2 font-medium opacity-80">
                 {shortcut}
               </span>
             ) : null}

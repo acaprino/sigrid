@@ -83,7 +83,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   if (drawer) return (
     <Sheet open={open} onOpenChange={(next) => onOpenChange(next)}>
       <SheetContent side="right" animated={animated} className={cn('w-full gap-5 overflow-hidden bg-raised p-6 sm:max-w-xl', SHEET_TOASTS_ROOM)} onCloseAutoFocus={restoreFocus(onCloseAutoFocus, restoreFocusTo)}>
-        <SheetHeader className="shrink-0 p-0 pr-6">
+        <SheetHeader className="shrink-0 p-0 pe-6">
           <SheetTitle>{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
         </SheetHeader>

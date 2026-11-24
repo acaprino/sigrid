@@ -114,7 +114,7 @@ function PopoverAnchor({ ref, ...props }: React.ComponentProps<"div">) {
 }
 
 function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="popover-header" className={cn("flex flex-col gap-1 text-sm", className)} {...props} />
+  return <div data-slot="popover-header" className={cn("flex flex-col gap-1.5 text-sm", className)} {...props} />
 }
 
 function PopoverTitle({ className, ...props }: React.ComponentProps<"div">) {

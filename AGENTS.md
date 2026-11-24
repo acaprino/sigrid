@@ -94,6 +94,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
   a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never
   stands for an action or a kind of thing.
+- Sides are logical: `ps-`, `pe-`, `ms-`, `me-`, `start-`, `end-`, `text-start`, `border-s`, never `pl-`, `mr-`,
+  `left-`, `text-left`, so a language written from the right mirrors by itself. A physical side only where the side
+  is the meaning (`test/logical-sides.test.ts`).
 - With a finger every control and row is at least 44px: the toolkit's components do it by themselves; a part added
   to the toolkit does it with `pointer-coarse:min-h-11`.
 - The words a toolkit component says by itself are English placeholders. An app in another language passes its own

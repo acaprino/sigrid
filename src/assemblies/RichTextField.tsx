@@ -44,8 +44,8 @@ export type RichTextFieldProps = {
 
 const TEXT = cn(
   'min-h-24 px-(--pad-sm) py-2 text-base text-ink outline-none md:text-sm',
-  '[&_p+p]:mt-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li+li]:mt-1 [&_ul]:my-2 [&_ol]:my-2',
-  '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-line [&_blockquote]:pl-3 [&_blockquote]:text-ink-soft',
+  '[&_p+p]:mt-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li+li]:mt-1 [&_ul]:my-2 [&_ol]:my-2',
+  '[&_blockquote]:my-2 [&_blockquote]:border-s-2 [&_blockquote]:border-line [&_blockquote]:ps-3 [&_blockquote]:text-ink-soft',
 )
 
 type Mark = 'bold' | 'italic' | 'underline' | 'bulletList' | 'orderedList' | 'blockquote'

@@ -196,7 +196,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
             )
           case 'quote':
             return (
-              <blockquote key={i} className="border-l-2 border-line pl-3 text-ink-soft">
+              <blockquote key={i} className="border-s-2 border-line ps-3 text-ink-soft">
                 {b.lines.map((l, j) => (
                   <Fragment key={j}>
                     {j > 0 ? <br /> : null}
@@ -210,7 +210,7 @@ export function MarkdownBlocks({ text, className }: { text: string; className?: 
             const List = b.kind === 'ul' ? 'ul' : 'ol'
             const checklist = b.items.every((it) => it.check !== undefined)
             return (
-              <List key={i} className={cn('space-y-1 pl-5', checklist ? 'list-none pl-0' : b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
+              <List key={i} className={cn('space-y-1 ps-5', checklist ? 'list-none ps-0' : b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
                 {b.items.map((it, j) => (
                   <li key={j} className={cn(it.check !== undefined && 'flex items-start gap-2')}>
                     {it.check !== undefined ? (

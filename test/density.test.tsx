@@ -131,7 +131,7 @@ describe('normal is what the toolkit is before any script runs', () => {
       for (const token of tokens) expect(line(file, needle), `${file}: ${token}`).toContain(token)
     }
     // Select: the button 36px (32 when `sm`), 10px left and 8px right; an item at least 40px with 8px above and below.
-    has('src/primitives/select.tsx', 'flex w-full items-center justify-between', 'pr-(--pad-xs)', 'pl-(--pad-sm)')
+    has('src/primitives/select.tsx', 'flex w-full items-center justify-between', 'pe-(--pad-xs)', 'ps-(--pad-sm)')
     has('src/primitives/select.tsx', 'size === "sm"', '"h-(--control-sm) w-auto"', '"h-(--control-md)"')
     // The rows of every floating list (select, combo box, suggestions, menu) are one constant.
     has('src/lib/rows.ts', 'export const LIST_ROW', 'min-h-(--row-height)', 'py-(--row-pad)')

@@ -74,7 +74,7 @@ export function AttachmentViewer({ open, onOpenChange, title, status, pages = []
   const position = ready && total > 0 ? words.page(Math.min(current + 1, total), total) : ' '
 
   const header = (
-    <div className="flex shrink-0 items-center gap-1 border-b border-line px-4 py-3 pr-14 pointer-coarse:py-2">
+    <div className="flex shrink-0 items-center gap-1 border-b border-line px-4 py-3 pe-14 pointer-coarse:py-2">
       <div className="min-w-0 flex-1">
         <SheetTitle className="truncate text-sm text-ink" title={title}>
           {title}

@@ -24,14 +24,14 @@ export interface ThemeGalleryProps<T extends ThemeDef> {
   custom?: { label: string; onChoose: () => void }
 }
 
-const TILE = 'relative min-w-0 overflow-hidden rounded-lg border border-line text-left hover:border-input aria-checked:border-primary aria-checked:ring-1 aria-checked:ring-primary'
+const TILE = 'relative min-w-0 overflow-hidden rounded-lg border border-line text-start hover:border-input aria-checked:border-primary aria-checked:ring-1 aria-checked:ring-primary'
 
 /**
  * The check in a 16px dot of the primary. Its own path, not the toolkit's check: at 12px Lucide's check draws a 1px
  * line on a 24 grid, this one a 1.5px line on a 16 grid, which the small dot needs to be read.
  */
 function ChosenMark() {
-  return <span aria-hidden="true" className="absolute right-1.5 bottom-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
+  return <span aria-hidden="true" className="absolute end-1.5 bottom-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
     <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 8 3 3 7-7" /></svg>
   </span>
 }
@@ -54,7 +54,7 @@ export function ThemeGallery<T extends ThemeDef>({ themes, scheme, tone, label, 
           <span style={style} className="block">
             <span className="block bg-primary px-2.5 py-1.5 text-sm font-semibold text-primary-foreground">{theme.label}</span>
             <span aria-hidden="true" className="flex h-12 bg-paper">
-              <span className="w-1/5 border-r border-line bg-sidebar-paper px-1 pt-2"><span className="block h-2 rounded-sm bg-sidebar-selected" /></span>
+              <span className="w-1/5 border-e border-line bg-sidebar-paper px-1 pt-2"><span className="block h-2 rounded-sm bg-sidebar-selected" /></span>
               <span className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 px-2">
                 <span className="flex w-full items-center gap-1"><span className="size-2 rounded-full border border-input" /><span className="h-1 w-2/3 rounded-full bg-line" /></span>
                 <span className="flex w-full items-center gap-1"><span className="size-2 rounded-full border border-input" /><span className="h-1 w-2/5 rounded-full bg-line" /></span>

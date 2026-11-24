@@ -228,11 +228,11 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                     {a.title}
                   </p>
                   {detail ? (
-                    <p className="truncate text-xs text-ink-soft" title={detail}>
+                    <p className="truncate text-xs text-ink-mute" title={detail}>
                       {detail}
                     </p>
                   ) : null}
-                  {state ? <p className="text-xs text-ink-soft">{state}</p> : null}
+                  {state ? <p className="text-xs text-ink-mute">{state}</p> : null}
                 </div>
                 {canOpen && open !== null ? (
                   <Button variant="ghost" size="xs" aria-label={said.openNamed(a.title)} onClick={() => onAction(open)}>
@@ -290,7 +290,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
           </form>
         </div>
       </FileUpload.RootProvider>
-      <p role="status" className={cn('text-xs text-ink-soft', !notice && 'sr-only')}>
+      <p role="status" className={cn('text-xs text-ink-mute', !notice && 'sr-only')}>
         {notice}
       </p>
     </section>

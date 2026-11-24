@@ -363,7 +363,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
           className,
         )}
       >
-        <a href={`#${id}`} data-slot="app-shell-skip" className={cn("sr-only top-2 left-2 z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-ink shadow-lg focus:not-sr-only focus:absolute", FOCUS_RING)}>
+        <a href={`#${id}`} data-slot="app-shell-skip" className={cn("sr-only top-2 start-2 z-50 rounded-md bg-raised px-3 py-2 text-sm font-medium text-ink shadow-lg focus:not-sr-only focus:absolute", FOCUS_RING)}>
           {words.shell.skip}
         </a>
         {/* The provider is there from the first render, with or without its layer: the frame is never mounted twice. */}

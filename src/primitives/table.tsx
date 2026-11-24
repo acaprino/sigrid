@@ -50,7 +50,7 @@ function TableRow({ className, current, ...props }: TableRowProps) {
         "border-b border-line aria-[current=true]:bg-selected aria-[current=true]:font-semibold aria-[current=true]:text-selected-ink",
         ROW_HOVER,
         // The accent bar is drawn at the start of the row's first cell.
-        "aria-[current=true]:[&>td:first-child]:before:absolute aria-[current=true]:[&>td:first-child]:before:top-1/2 aria-[current=true]:[&>td:first-child]:before:left-0 aria-[current=true]:[&>td:first-child]:before:h-4 aria-[current=true]:[&>td:first-child]:before:w-0.75 aria-[current=true]:[&>td:first-child]:before:-translate-y-1/2 aria-[current=true]:[&>td:first-child]:before:rounded-full aria-[current=true]:[&>td:first-child]:before:bg-primary aria-[current=true]:[&>td:first-child]:before:content-['']",
+        "aria-[current=true]:[&>td:first-child]:before:absolute aria-[current=true]:[&>td:first-child]:before:top-1/2 aria-[current=true]:[&>td:first-child]:before:start-0 aria-[current=true]:[&>td:first-child]:before:h-4 aria-[current=true]:[&>td:first-child]:before:w-0.75 aria-[current=true]:[&>td:first-child]:before:-translate-y-1/2 aria-[current=true]:[&>td:first-child]:before:rounded-full aria-[current=true]:[&>td:first-child]:before:bg-primary aria-[current=true]:[&>td:first-child]:before:content-['']",
         FOCUS_RING_INSET,
         className,
       )}

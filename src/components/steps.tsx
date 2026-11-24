@@ -80,7 +80,7 @@ function Steps({ steps, current, onStepSelect, orientation = "vertical", classNa
             // A row too narrow for the names keeps the current one; the others are still read, and the summary says where it is.
             <div className={cn("min-w-0", horizontal ? cn("pe-2", index !== current && "@max-md:sr-only") : last ? "" : "pb-4")}>
               {state === "done" && onStepSelect ? (
-                <button type="button" onClick={() => onStepSelect(index)} className={cn("rounded-sm text-start text-sm hover:text-ink", LABEL[state], FOCUS_RING)}>
+                <button type="button" onClick={() => onStepSelect(index)} className={cn("rounded-sm text-start text-sm pointer-coarse:min-h-11 hover:text-ink", LABEL[state], FOCUS_RING)}>
                   {text}
                 </button>
               ) : (

@@ -111,7 +111,7 @@ export const DROP_BUTTON = 'flex w-full flex-col items-center justify-center rou
 export const DROP_TITLE = 'block text-sm font-medium text-ink'
 
 /** The second line: what the zone takes. */
-export const DROP_HINT = 'mt-1 block text-xs text-ink-soft'
+export const DROP_HINT = 'mt-1 block text-xs text-ink-mute'
 
 function reasonOf(errors: readonly string[]): FileDropReason {
   if (errors.includes('TOO_MANY_FILES')) return 'count'

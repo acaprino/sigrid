@@ -13,6 +13,7 @@ import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/rea
 import { Check } from "lucide-react"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
+import { useEntrance } from "../internal/motion"
 import { useWords } from "../words"
 import { FOCUS_FIELD } from "../lib/focus"
 import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from "../lib/field"
@@ -27,6 +28,8 @@ export type ComboboxOption = {
 }
 
 export type ComboboxProps<O extends ComboboxOption = ComboboxOption> = {
+  /** The list enters with a movement, as a select's does. Absent: as `MotionProvider` says. */
+  animated?: boolean | undefined
   options: readonly O[]
   /** The chosen value, or null. */
   value: string | null
@@ -66,10 +69,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   disabled,
   invalid: invalidProp = false,
   required,
+  animated,
   className,
   ...aria
 }: ComboboxProps<O>) {
   const words = useWords()
+  // The list comes from the side of its field, as a select's and a menu's do.
+  const control = React.useRef<HTMLDivElement>(null)
+  const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, control.current))
   const invalid = invalidProp || aria["aria-invalid"] === true || aria["aria-invalid"] === "true"
   // What was typed since the list opened: empty again when it closes, so the next opening shows every option.
   const [query, setQuery] = React.useState("")
@@ -117,26 +124,27 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       invalid={invalid}
       className={cn("flex w-full min-w-0 flex-col", className)}
     >
-      <ComboboxPrimitive.Control data-slot="combobox-control" className="relative">
+      <ComboboxPrimitive.Control ref={control} data-slot="combobox-control" className="relative">
         <ComboboxPrimitive.Input
           data-slot="combobox-input"
           aria-label={aria["aria-label"]}
           aria-describedby={aria["aria-describedby"]}
           // `Input`'s field (`lib/field.ts`), with room at its end for the chevron. Ark puts `aria-invalid` on the box.
-          className={cn(FIELD_SURFACE, FIELD_HEIGHT, "w-full min-w-0 truncate py-1 pr-(--control-md) pl-(--pad-sm)", FIELD_TEXT, FIELD_OFF, FOCUS_FIELD, FIELD_HOVER)}
+          className={cn(FIELD_SURFACE, FIELD_HEIGHT, "w-full min-w-0 truncate py-1 pe-(--control-md) ps-(--pad-sm)", FIELD_TEXT, FIELD_OFF, FOCUS_FIELD, FIELD_HOVER)}
         />
         <ComboboxPrimitive.Trigger
           data-slot="combobox-trigger"
           aria-label={triggerLabel ?? words.combobox.trigger}
           // Out of the Tab order: the box opens the list with the arrows, and this button is for the pointer.
           tabIndex={-1}
-          className="absolute inset-y-0 right-0 flex w-(--control-md) items-center justify-center text-ink-mute hover:text-ink disabled:pointer-events-none disabled:opacity-50"
+          className="absolute inset-y-0 end-0 flex w-(--control-md) items-center justify-center text-ink-mute hover:text-ink disabled:pointer-events-none disabled:opacity-50"
         >
           <Icon name="chevronDown" className="size-4" />
         </ComboboxPrimitive.Trigger>
       </ComboboxPrimitive.Control>
       <ComboboxPrimitive.Positioner className="z-50">
         <ComboboxPrimitive.Content
+          ref={enter}
           data-slot="combobox-content"
           // Esc closes the list (Ark hears it first): it must not go on to the sheet that holds the field.
           onKeyDown={(event) => {

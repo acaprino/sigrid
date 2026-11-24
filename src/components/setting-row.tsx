@@ -20,7 +20,8 @@ export type SettingRowProps = {
   onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined
 }
 
-const ROW = "flex min-h-12 w-full min-w-0 items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink pointer-coarse:min-h-11"
+// 48px: room for a name and the line under it. (Taller than the 44px a finger needs, so no rule for a finger.)
+const ROW = "flex min-h-12 w-full min-w-0 items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
 
 /** One choice of a settings page: the name at the start, the control at the end. */
 function SettingRow({ label, description, control, onClick }: SettingRowProps) {
@@ -32,7 +33,8 @@ function SettingRow({ label, description, control, onClick }: SettingRowProps) {
   )
   if (onClick && !control) {
     return (
-      <button type="button" data-slot="setting-row" onClick={onClick} className={cn(ROW, "cursor-default", FOCUS_RING_INSET)}>
+      // A row that opens more answers the pointer as a quiet control does: the fill reaches a little past its words, to the row's edges.
+      <button type="button" data-slot="setting-row" onClick={onClick} className={cn(ROW, "-mx-(--pad-xs) w-auto cursor-default rounded-md px-(--pad-xs) hover:bg-ink/6 active:bg-ink/9", FOCUS_RING_INSET)}>
         {words}
         <Icon name="chevron" className="size-4 text-ink-mute" />
       </button>

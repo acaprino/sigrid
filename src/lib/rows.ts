@@ -42,7 +42,7 @@ export const LIST_ROW = `relative flex min-h-(--row-height) cursor-default items
  * draws the same bar in its own classes.)
  */
 export const ROW_CHOSEN =
-  "aria-[current=true]:bg-selected aria-[current=true]:text-selected-ink aria-[current=true]:before:absolute aria-[current=true]:before:top-1/2 aria-[current=true]:before:left-0 aria-[current=true]:before:h-4 aria-[current=true]:before:w-0.75 aria-[current=true]:before:-translate-y-1/2 aria-[current=true]:before:rounded-full aria-[current=true]:before:bg-primary aria-[current=true]:before:content-['']"
+  "aria-[current=true]:bg-selected aria-[current=true]:text-selected-ink aria-[current=true]:before:absolute aria-[current=true]:before:top-1/2 aria-[current=true]:before:start-0 aria-[current=true]:before:h-4 aria-[current=true]:before:w-0.75 aria-[current=true]:before:-translate-y-1/2 aria-[current=true]:before:rounded-full aria-[current=true]:before:bg-primary aria-[current=true]:before:content-['']"
 
 /**
  * The heading of a group of rows (in a menu, a select, the sidebar, a section of files): a 12px semibold overline in

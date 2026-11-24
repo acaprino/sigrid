@@ -100,7 +100,7 @@ const ROW = cn(
 const ROW_BOX = cn(
   "relative flex min-h-(--row-height) w-full cursor-default items-stretch rounded-md text-sm text-ink-soft pointer-coarse:min-h-11",
   ROW_HOVER,
-  "data-current:bg-selected data-current:text-selected-ink data-current:before:absolute data-current:before:top-1/2 data-current:before:left-0 data-current:before:h-4 data-current:before:w-0.75 data-current:before:-translate-y-1/2 data-current:before:rounded-full data-current:before:bg-primary data-current:before:content-['']",
+  "data-current:bg-selected data-current:text-selected-ink data-current:before:absolute data-current:before:top-1/2 data-current:before:start-0 data-current:before:h-4 data-current:before:w-0.75 data-current:before:-translate-y-1/2 data-current:before:rounded-full data-current:before:bg-primary data-current:before:content-['']",
 )
 const ROW_BUTTON = cn(
   "flex min-w-0 flex-1 cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start",

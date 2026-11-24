@@ -36,11 +36,11 @@ export function DurationField({ value, onChange }: DurationFieldProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Input id={hoursId} type="number" inputMode="numeric" min={0} max={24} step={1} value={hours} onChange={(e) => onChange({ hours: read(e.target.value), minutes: value?.minutes ?? 0 })} className="w-16" />
-      <label htmlFor={hoursId} className="text-xs text-ink-soft">
+      <label htmlFor={hoursId} className="text-xs text-ink-mute">
         {words.duration.hours}
       </label>
       <Input id={minutesId} type="number" inputMode="numeric" min={0} max={59} step={5} value={minutes} onChange={(e) => onChange({ hours: value?.hours ?? 0, minutes: read(e.target.value) })} className="w-16" />
-      <label htmlFor={minutesId} className="text-xs text-ink-soft">
+      <label htmlFor={minutesId} className="text-xs text-ink-mute">
         {words.duration.minutes}
       </label>
       <span className="flex flex-wrap gap-1">

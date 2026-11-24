@@ -1117,7 +1117,7 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
             event.stopPropagation()
             data.onToggle(node.id)
           }}
-          className={cn('nodrag nopan -me-1 inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1 text-ink-mute hover:bg-ink/6 hover:text-ink [&_svg]:size-3.5', FOCUS_RING)}
+          className={cn('nodrag nopan -me-1 inline-flex h-6 shrink-0 items-center justify-center gap-1 rounded-md px-1 text-ink-mute hover:bg-ink/6 hover:text-ink [&_svg]:size-3.5', TOUCH, FOCUS_RING)}
         >
           {data.open ? null : <Count value={data.hidden} />}
           {/* The arrow of every list that opens: to the side when closed, down when open. */}

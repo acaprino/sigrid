@@ -50,7 +50,7 @@ function parseDay(value: string | null | undefined): CalendarDate | null {
 const dayText = (day: CalendarDate, locale: string = DEFAULT_LOCALE) => longDate(locale).format(new Date(day.year, day.month - 1, day.day))
 
 // The surface of `Input` (Park's md field: same border, ring, 40px height, 12px of side padding), on a button.
-const TRIGGER_CLASS = cn(FIELD_SURFACE, FIELD_HEIGHT, 'flex w-full min-w-0 items-center gap-2 px-(--pad-sm) py-1 text-left', FIELD_TEXT, FIELD_HOVER, FIELD_OFF, FOCUS_FIELD)
+const TRIGGER_CLASS = cn(FIELD_SURFACE, FIELD_HEIGHT, 'flex w-full min-w-0 items-center gap-2 px-(--pad-sm) py-1 text-start', FIELD_TEXT, FIELD_HOVER, FIELD_OFF, FOCUS_FIELD)
 
 // The button is named by the field's `<label>`: Ark's own name for it («Open calendar») would replace that.
 const NO_TRIGGER_NAME = () => undefined as unknown as string
@@ -473,7 +473,7 @@ export function DateTimeField({ id, value, onChange, animated, placeholder, min,
           // A half-typed time goes back to the last valid one: the field does not stay empty and the value does not break.
           onBlur={() => setTyped(time)}
         />
-        <Closing size="sm" variant="secondary" className="ml-auto">
+        <Closing size="sm" variant="secondary" className="ms-auto">
           {words?.done ?? toolkit.date.done}
         </Closing>
       </div>

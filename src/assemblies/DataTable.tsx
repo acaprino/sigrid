@@ -190,7 +190,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
                     data-slot="table-sort"
                     aria-label={words.table.sortBy(column.header)}
                     onClick={() => setSort(nextSort(sorted, column.id))}
-                    className={cn('-mx-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs font-medium hover:text-ink', direction !== 'none' && 'text-ink', column.align === 'end' && 'flex-row-reverse', FOCUS_RING)}
+                    className={cn('-mx-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-2xs font-medium pointer-coarse:min-h-11 hover:text-ink', direction !== 'none' && 'text-ink', column.align === 'end' && 'flex-row-reverse', FOCUS_RING)}
                   >
                     {column.header}
                     {/* The arrow keeps its room when the column is not the one sorted by, so the headings do not shift. */}

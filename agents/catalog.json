@@ -3542,6 +3542,11 @@
          "name": "dot",
          "type": "boolean",
          "doc": "The 8px dot in the colour of the label's name (R10), on by default. Off for chips that are not coloured labels (people, addresses)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The list of suggestions enters with a movement, as a select's does. Absent: as `MotionProvider` says."
         }
        ]
       }
@@ -3557,6 +3562,11 @@
       {
        "name": "Combobox",
        "props": [
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The list enters with a movement, as a select's does. Absent: as `MotionProvider` says."
+        },
         {
          "name": "options",
          "type": "readonly O[]",

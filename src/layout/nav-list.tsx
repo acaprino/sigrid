@@ -50,7 +50,7 @@ function NavList({ tone = "page", className, children, ...props }: NavListProps)
 // plain numbers).
 const ROW = cn(
   "relative flex min-h-(--row-height) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sm pointer-coarse:min-h-11",
-  "aria-[current=page]:before:absolute aria-[current=page]:before:top-1/2 aria-[current=page]:before:left-0 aria-[current=page]:before:h-4 aria-[current=page]:before:w-0.75 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:rounded-full aria-[current=page]:before:content-['']",
+  "aria-[current=page]:before:absolute aria-[current=page]:before:top-1/2 aria-[current=page]:before:start-0 aria-[current=page]:before:h-4 aria-[current=page]:before:w-0.75 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:rounded-full aria-[current=page]:before:content-['']",
   "[&_[data-slot=count]]:min-w-5 [&_[data-slot=count]]:rounded-full [&_[data-slot=count]]:px-1.5 [&_[data-slot=count]]:py-0.5 [&_[data-slot=count]]:text-center [&_[data-slot=count]]:font-semibold",
 )
 const TONES: Record<Tone, string> = {

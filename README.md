@@ -70,7 +70,8 @@ To depend on a published version instead of a checkout, see [Use a release](#use
 level (`/primitives`, `/components`, `/layout`, `/assemblies`), and `@acaprino/sigrid` keeps what does not draw
 (themes, density, words, motion, helpers). `agents/catalog.json` says which entry exports each name; the names and
 the props are the same. The source moved with it: `src/components/ui/*` is now `src/primitives`, `src/components`,
-`src/layout` or `src/assemblies`, for an app that reads a file by its path (`./src/*`).
+`src/layout` or `src/assemblies`, for an app that reads a file by its path (`./src/*`). React 19 is needed (the peer is
+`^19.0.0`): the parts take `ref` as a prop and use `inert`, which React 18 does not have.
 
 To migrate from `@acaprino/toolkit`, update the dependency name and all imports, including stylesheet imports,
 to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at your checkout. Releases through

@@ -61,14 +61,14 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
 }
 
 /** The row of every list (`LIST_ROW`), with room at its end for the check of the chosen one. */
-const ITEM_CLASS = cn(LIST_ROW, "pr-8")
+const ITEM_CLASS = cn(LIST_ROW, "pe-8")
 
 function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
   return (
     <SelectPrimitive.Item value={o.value} data-slot="select-item" className={ITEM_CLASS}>
       {renderMark ? renderMark(o) : null}
       <SelectPrimitive.ItemText style={o.style}>{o.label}</SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
+      <SelectPrimitive.ItemIndicator className="absolute end-2 flex size-4 items-center justify-center">
         <Icon name="check" className="size-4" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
@@ -102,7 +102,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
         data-slot="select-trigger"
         // The field's surface, text, hover and invalid border (`lib/field.ts`); open, the border is the ink.
         className={cn(
-          "flex w-full items-center justify-between gap-2 pr-(--pad-xs) pl-(--pad-sm) text-left pointer-coarse:min-h-11",
+          "flex w-full items-center justify-between gap-2 pe-(--pad-xs) ps-(--pad-sm) text-start pointer-coarse:min-h-11",
           FIELD_SURFACE,
           FIELD_TEXT,
           FIELD_HOVER,

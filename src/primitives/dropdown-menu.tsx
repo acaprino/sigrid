@@ -149,7 +149,7 @@ function DropdownMenuGroup({ ...props }: Menu.Group.Props) {
 /** A row of the menu: the row of every list (`LIST_ROW`) with l2 corners, Park's menu item. */
 const ITEM = cn(
   LIST_ROW,
-  "rounded-md outline-hidden focus-visible:bg-selected/60 focus-visible:text-ink data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  "rounded-md outline-hidden focus-visible:bg-selected/60 focus-visible:text-ink data-[inset]:ps-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 )
 
 type DropdownMenuItemProps = Menu.Item.Props & {
@@ -183,10 +183,10 @@ function DropdownMenuCheckboxItem({ className, children, ...props }: Menu.Checkb
   return (
     <Menu.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
-      className={cn(ITEM, "pr-2 pl-8", className)}
+      className={cn(ITEM, "pe-2 ps-8", className)}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-4 items-center justify-center">
+      <span className="pointer-events-none absolute start-2 flex size-4 items-center justify-center">
         <Menu.CheckboxItemIndicator>
           <CheckIcon className="size-4" />
         </Menu.CheckboxItemIndicator>
@@ -202,8 +202,8 @@ function DropdownMenuRadioGroup({ ...props }: Menu.RadioGroup.Props) {
 
 function DropdownMenuRadioItem({ className, children, ...props }: Menu.RadioItem.Props) {
   return (
-    <Menu.RadioItem data-slot="dropdown-menu-radio-item" className={cn(ITEM, "pr-2 pl-8", className)} {...props}>
-      <span className="pointer-events-none absolute left-2 flex size-4 items-center justify-center">
+    <Menu.RadioItem data-slot="dropdown-menu-radio-item" className={cn(ITEM, "pe-2 ps-8", className)} {...props}>
+      <span className="pointer-events-none absolute start-2 flex size-4 items-center justify-center">
         <Menu.RadioItemIndicator>
           <CircleIcon className="size-2 fill-current" />
         </Menu.RadioItemIndicator>
@@ -222,7 +222,7 @@ function DropdownMenuLabel({ className, inset, ...props }: React.ComponentProps<
     <div
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn("flex h-(--row-height) items-center px-2 text-ink-mute data-[inset]:pl-8", GROUP_LABEL, className)}
+      className={cn("flex h-(--row-height) items-center px-2 text-ink-mute data-[inset]:ps-8", GROUP_LABEL, className)}
       {...props}
     />
   )
@@ -237,7 +237,7 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"spa
     <span
       data-slot="dropdown-menu-shortcut"
       // A key hint (R5): plain 12px muted text, hidden on a phone (narrow and with a finger).
-      className={cn("ml-auto pl-4 text-2xs leading-none font-medium text-ink-mute max-md:pointer-coarse:hidden", className)}
+      className={cn("ms-auto ps-4 text-2xs leading-none font-medium text-ink-mute max-md:pointer-coarse:hidden", className)}
       {...props}
     />
   )
@@ -266,7 +266,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      <ChevronRightIcon className="ms-auto size-4" />
     </Menu.SubmenuTrigger>
   )
 }

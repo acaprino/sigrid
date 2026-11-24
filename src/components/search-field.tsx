@@ -25,7 +25,7 @@ function SearchField({ value, onValueChange, clearLabel, className, ref, disable
   const setRef = useMergedRef(own, ref)
   return (
     <div data-slot="search-field" className={cn("relative flex w-full min-w-0 items-center", className)}>
-      <Search aria-hidden="true" className="pointer-events-none absolute left-(--pad-sm) size-4 text-ink-mute" />
+      <Search aria-hidden="true" className="pointer-events-none absolute start-(--pad-sm) size-4 text-ink-mute" />
       <Input
         {...props}
         ref={setRef}
@@ -34,7 +34,7 @@ function SearchField({ value, onValueChange, clearLabel, className, ref, disable
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
         // design-check-ignore-next-line dimension-value: the icon's 16px and its 8px gap after the field's own side padding
-        className="pr-(--control-md) pl-[calc(var(--pad-sm)_+_1.5rem)] [&::-webkit-search-cancel-button]:appearance-none"
+        className="pe-(--control-md) ps-[calc(var(--pad-sm)_+_1.5rem)] [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value !== "" && !disabled ? (
         <Button
@@ -46,7 +46,7 @@ function SearchField({ value, onValueChange, clearLabel, className, ref, disable
             onValueChange("")
             own.current?.focus()
           }}
-          className={cn("absolute right-1 pointer-coarse:right-0", QUIET_ICON)}
+          className={cn("absolute end-1 pointer-coarse:end-0", QUIET_ICON)}
         >
           <Icon name="close" className="size-4" />
         </Button>

@@ -96,7 +96,7 @@ export const TonePreview = memo(
           <span className="size-2 shrink-0 rounded-full bg-mark-1" />
           <span className="size-2 shrink-0 rounded-full bg-mark-5" />
           <span className="size-2 shrink-0 rounded-full bg-mark-11" />
-          <span className="ml-auto h-3 w-6 shrink-0 rounded-sm bg-primary" />
+          <span className="ms-auto h-3 w-6 shrink-0 rounded-sm bg-primary" />
         </span>
       </span>
     )
@@ -155,7 +155,7 @@ export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: 
       aria-checked={choice}
       tabIndex={choice ? 0 : -1}
       onClick={onChoose}
-      className={cn('relative flex flex-col rounded-lg border bg-raised px-3 py-2 text-left pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(choice && !(motion && group)))}
+      className={cn('relative flex flex-col rounded-lg border bg-raised px-3 py-2 text-start pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(choice && !(motion && group)))}
     >
       {choice && motion && group ? <motion.Highlight id={group} className="pointer-events-none absolute -inset-px rounded-[inherit] border border-primary ring-1 ring-primary" /> : null}
       {preview}
@@ -331,7 +331,7 @@ export function ThemeCatalogChoice({ themes, chosen, scheme, tone, onTheme, text
               aria-checked={on}
               tabIndex={on || (chosen === null && t === themes[0]) ? 0 : -1}
               onClick={() => onTheme(t.id)}
-              className={cn('group flex flex-col overflow-hidden rounded-lg border bg-raised text-left', FOCUS_RING, choiceBorder(on))}
+              className={cn('group flex flex-col overflow-hidden rounded-lg border bg-raised text-start', FOCUS_RING, choiceBorder(on))}
             >
               <span className="block h-16 w-full overflow-hidden border-b border-line">
                 <PaletteStrip pick={{ theme: t, scheme, tone }} />

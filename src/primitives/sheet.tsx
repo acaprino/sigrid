@@ -231,7 +231,7 @@ function SheetContent({
           {showCloseButton && (
             <SheetPrimitive.Close
               render={<Button variant="ghost" size="icon-sm" />}
-              className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
+              className={cn("absolute top-3 end-3 pointer-coarse:top-1.5 pointer-coarse:end-1.5", QUIET_ICON)}
             >
               <Icon name="close" />
               <span className="sr-only">{words.common.close}</span>
