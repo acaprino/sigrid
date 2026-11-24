@@ -63,6 +63,11 @@ export type SheetCloseReason = "escape" | "outside" | "other"
 type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpenChange" | "swipeDirection"> & {
   /** `reason` is told when it closes: an app that keeps a form in the sheet may answer a press outside differently from the Esc. */
   onOpenChange?: ((open: boolean, reason: SheetCloseReason) => void) | undefined
+  /**
+   * Asked at each Esc: false leaves the sheet open and the key to what has the focus and to the app's commands (the
+   * `Inspector` beside the page answers it so, when the focus is not in it). Absent: Esc always closes the sheet.
+   */
+  closesOnEscape?: (() => boolean) | undefined
 }
 
 /**
@@ -72,8 +77,11 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
  * A click on the notifications (which sit above, outside the sheet) does not close it: Base UI closes a modal only on what
  * is behind it, and here a second safeguard also cancels the closing caused by focus moving to the notifications.
  */
-function Sheet({ onOpenChange, ...props }: SheetProps) {
+function Sheet({ onOpenChange, closesOnEscape, ...props }: SheetProps) {
   const [side, setSide] = React.useState<SheetSide>("right")
+  // One answer for each press of Esc: Base UI asks twice for the same key (on the sheet, then on the document), and what
+  // the app does in between (it empties or removes the field that had the focus) must not change the answer.
+  const asked = React.useRef<{ event: unknown; closes: boolean } | null>(null)
   return (
     <ModalContext.Provider value={props.modal !== false}>
       <SideContext.Provider value={setSide}>
@@ -85,6 +93,15 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
           if (!open && details.reason === "focus-out" && props.modal === false) {
             details.cancel()
             return
+          }
+          // An Esc that is not the sheet's: it stays open, and the key goes on to whoever else listens for it.
+          if (!open && details.reason === "escape-key" && closesOnEscape) {
+            if (asked.current?.event !== details.event) asked.current = { event: details.event, closes: closesOnEscape() }
+            if (!asked.current.closes) {
+              details.cancel()
+              details.allowPropagation()
+              return
+            }
           }
           const outside = details.reason === "outside-press" || details.reason === "focus-out"
           // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.

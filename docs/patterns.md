@@ -152,7 +152,10 @@ list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot 
 one selected. The row chosen has the selection tint (R1). Under 1000px the inspector
 covers the end of the list and the list stays usable beside it: choosing another row does not close the inspector
 (a press outside it never does, unlike a sheet), it shows the new one, and the focus stays in the list. Its button and
-Escape with the focus in it close it, and the focus goes back to where it was before it went in.
+Escape with the focus in it close it (a swipe towards its edge too, under 1000px), and the focus goes back to where
+it last was outside it. Escape with the focus in the list or in the search field is theirs, or the app's: to close
+the details with Escape from anywhere, the app declares a command on Escape (`useCommand`, `when` the details are
+open). In the inspector, Escape on a field that holds text, or with a list open, stays there.
 Where the thing chosen is the work itself and not its details (a message to read, a file to edit), it needs the
 width the inspector does not have: the content is two panes, `ContentSplit`, the list a column of a fixed width and
 the thing chosen in the room that is left. The split measures itself as the frame does and, where the two do not fit,
