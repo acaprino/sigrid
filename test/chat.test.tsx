@@ -6,7 +6,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
 import { Message, Reasoning, Suggestions, ToolCall, type ToolCallStatus } from '../src/components'
-import { Conversation, PromptInput } from '../src/assemblies'
+import { Chat, type ChatMessage, Conversation, PromptInput } from '../src/assemblies'
 
 describe('Conversation', () => {
   test('a named log that waits while an answer is written', () => {
@@ -197,5 +197,71 @@ describe('ToolCall', () => {
     )
     expect(screen.getByText(', in corso')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Invia' })).toBeTruthy()
+  })
+})
+
+describe('Chat', () => {
+  const TURNS: ChatMessage[] = [
+    { id: '1', from: 'user', text: 'Hi' },
+    { id: '2', from: 'assistant', text: 'An **older** answer', time: '10:00' },
+    { id: '3', from: 'user', text: 'More' },
+    { id: '4', from: 'assistant', text: 'The last answer', reasoning: 'Thinking it over', reasoningSeconds: 2, tools: [{ id: 't', name: 'Search', summary: '2 results' }] },
+  ]
+
+  test('draws the messages it is given: who each is from, Markdown in an answer, the reasoning and the tools before the text', () => {
+    render(<Chat label="Help" messages={TURNS} onSend={() => {}} />)
+    const turns = within(screen.getByRole('log', { name: 'Help' })).getAllByRole('article')
+    expect(turns.map((turn) => turn.getAttribute('data-from'))).toEqual(['user', 'assistant', 'user', 'assistant'])
+    expect(turns[1]!.querySelector('strong')!.textContent).toBe('older')
+    expect(within(turns[3]!).getByRole('button', { name: 'Thought for 2 s' })).toBeTruthy()
+    expect(within(turns[3]!).getByText('Search')).toBeTruthy()
+  })
+
+  test('«try again» is on the last answer only, and names the message; a vote names it too', () => {
+    const onRetry = vi.fn()
+    const onVote = vi.fn()
+    render(<Chat messages={TURNS} onSend={() => {}} onRetry={onRetry} onVote={onVote} />)
+    const retry = screen.getAllByRole('button', { name: 'Try again' })
+    expect(retry).toHaveLength(1)
+    fireEvent.click(retry[0]!)
+    expect(onRetry).toHaveBeenCalledWith(TURNS[3])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Good answer' })[0]!)
+    expect(onVote).toHaveBeenCalledWith(TURNS[1], 'up')
+  })
+
+  test('an answer still being written has no actions, and its reasoning is open until the text starts', () => {
+    const writing: ChatMessage[] = [...TURNS.slice(0, 3), { id: '4', from: 'assistant', text: '', reasoning: 'Looking' }]
+    const { rerender } = render(<Chat messages={writing} busy onSend={() => {}} onRetry={() => {}} onVote={() => {}} />)
+    const last = () => screen.getAllByRole('article')[3]!
+    expect(within(last()).getByRole('button', { name: 'Thinking' }).getAttribute('aria-expanded')).toBe('true')
+    expect(within(last()).queryByRole('button', { name: 'Try again' })).toBeNull()
+    expect(within(last()).queryByRole('button', { name: 'Good answer' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeTruthy()
+    rerender(<Chat messages={[...writing.slice(0, 3), { ...writing[3]!, text: 'Here' }]} busy onSend={() => {}} onRetry={() => {}} onVote={() => {}} />)
+    expect(within(last()).getByRole('button', { name: 'Thought' }).getAttribute('aria-expanded')).toBe('false')
+  })
+
+  test('an answer that failed is an error note in the thread, with «Try again» when the app can', () => {
+    const onRetry = vi.fn()
+    const failed: ChatMessage = { id: '5', from: 'assistant', text: '', error: 'The model did not answer' }
+    render(<Chat messages={[...TURNS, failed]} onSend={() => {}} onRetry={onRetry} />)
+    const note = screen.getByRole('alert')
+    expect(note.textContent).toContain('Error: The model did not answer')
+    fireEvent.click(within(note).getByRole('button', { name: 'Try again' }))
+    expect(onRetry).toHaveBeenCalledWith(failed)
+  })
+
+  test('a suggestion fills the field and gives it the focus; sending tells the app and empties the field', () => {
+    const onSend = vi.fn()
+    render(<Chat messages={[]} empty="Ask anything" onSend={onSend} suggestions={[{ id: 's', label: 'Plan my day' }]} />)
+    expect(screen.getByText('Ask anything')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Plan my day' }))
+    const field = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Message' })
+    expect(field.value).toBe('Plan my day')
+    expect(document.activeElement).toBe(field)
+    expect(onSend).not.toHaveBeenCalled()
+    fireEvent.keyDown(field, { key: 'Enter' })
+    expect(onSend).toHaveBeenCalledWith('Plan my day')
+    expect(field.value).toBe('')
   })
 })

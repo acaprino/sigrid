@@ -6353,6 +6353,190 @@
      ]
     },
     {
+     "file": "src/assemblies/chat.tsx",
+     "about": "A whole chat with an assistant, ready to wire to a model: the thread, what the assistant did on the way to each\nanswer, the ready-made requests and the field, put together the one way they go together. The app holds the\nmessages as data and talks to its model; the chat draws them and tells the app what the user did: sent a message,\nstopped the answer, asked for it again, said it was good or not.\nIt is the parts of a conversation and nothing more (`Conversation`, `Message`, `Reasoning`, `ToolCall`,\n`Suggestions`, `PromptInput`): an app whose chat needs another arrangement composes those itself.\nWhat it decides, so every app's chat behaves alike: an answer still being written (`busy`, the last message) shows\nno actions yet, and its reasoning is open until the text starts; «try again» is offered on the last answer only; a\nfailed answer is a `Note` with `tone=\"error\"` in the thread, with «Try again»; a suggestion fills the field and\ngives it the focus, for the user to send or change; the field keeps its text while an answer is written.",
+     "components": [
+      {
+       "name": "Chat",
+       "doc": "A whole chat with an assistant: the thread, the ready-made requests and the field.",
+       "props": [
+        {
+         "name": "messages",
+         "type": "readonly ChatMessage[]",
+         "required": true,
+         "doc": "The turns, oldest first."
+        },
+        {
+         "name": "onSend",
+         "type": "(text: string) => void",
+         "required": true,
+         "doc": "The user sent a message: the app adds it to `messages` and asks its model."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "An answer is being written: the last message is the one growing, and the field's button stops it."
+        },
+        {
+         "name": "onStop",
+         "type": "(() => void)",
+         "doc": "Stop the answer being written."
+        },
+        {
+         "name": "onRetry",
+         "type": "((message: ChatMessage) => void)",
+         "doc": "Ask again for an answer (the last one, or one that failed). Absent: no button."
+        },
+        {
+         "name": "onVote",
+         "type": "((message: ChatMessage, vote: MessageVote | null) => void)",
+         "doc": "The reader says an answer was good or not; `null` takes it back. Absent: no buttons."
+        },
+        {
+         "name": "suggestions",
+         "type": "readonly Suggestion[]",
+         "doc": "Ready-made requests above the field: choosing one fills the field. The app passes them while they help (an empty thread, a follow-up)."
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode",
+         "doc": "What the thread shows while it has no message: a greeting, an `Empty`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the chat for screen readers. Absent: the toolkit's word."
+        },
+        {
+         "name": "assistantName",
+         "type": "string",
+         "doc": "The assistant's name, read before its answers. Absent: the toolkit's word."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "What the field shows while empty."
+        },
+        {
+         "name": "maxLength",
+         "type": "number",
+         "doc": "The most characters a message may have."
+        },
+        {
+         "name": "draft",
+         "type": "string",
+         "doc": "The text of the field, when the app keeps it (a draft kept between visits)."
+        },
+        {
+         "name": "onDraftChange",
+         "type": "((text: string) => void)"
+        },
+        {
+         "name": "tools",
+         "type": "React.ReactNode",
+         "doc": "The app's tools in the field's row (attach a file, choose a model)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "ChatMessage",
+       "doc": "One turn of a chat, as data.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "from",
+         "type": "\"user\" | \"assistant\"",
+         "required": true
+        },
+        {
+         "name": "text",
+         "type": "string",
+         "required": true,
+         "doc": "The text: Markdown in an answer, as written in a user's message. Empty while an answer has not started."
+        },
+        {
+         "name": "time",
+         "type": "string",
+         "doc": "When it was sent, already written out («10:42»)."
+        },
+        {
+         "name": "reasoning",
+         "type": "string",
+         "doc": "What the assistant thought before answering, as Markdown, and how many seconds it took."
+        },
+        {
+         "name": "reasoningSeconds",
+         "type": "number"
+        },
+        {
+         "name": "tools",
+         "type": "readonly ChatTool[]",
+         "doc": "The tools it used, in order."
+        },
+        {
+         "name": "error",
+         "type": "string",
+         "doc": "The answer failed: what happened, in a few words. Shown as an error note, with «Try again» when the app can."
+        },
+        {
+         "name": "vote",
+         "type": "MessageVote | null",
+         "doc": "What the reader said of the answer."
+        }
+       ]
+      },
+      {
+       "name": "ChatTool",
+       "doc": "A tool an assistant used on the way to an answer.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "The tool's name, as the app calls it."
+        },
+        {
+         "name": "status",
+         "type": "ToolCallStatus",
+         "doc": "Where the call is. `success` by default."
+        },
+        {
+         "name": "summary",
+         "type": "string",
+         "doc": "A few words on what it did."
+        },
+        {
+         "name": "input",
+         "type": "string",
+         "doc": "What it was given and what it gave back, shown as written."
+        },
+        {
+         "name": "output",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ChatProps"
+     ]
+    },
+    {
      "file": "src/assemblies/ColorMatch.tsx",
      "about": "Two colours for a theme of the person's own: the theme colour, picked among the app's swatches or with the system's\ncolour field, and the spot colour that goes with it, chosen among three proposals matched to the theme colour (from\nquiet to loud), none, or a colour of the person's own. Both are radio groups (the swatches are the toolkit's\n`RadioGroup`; the spot's choices are buttons with `radioArrows`, as the look settings' cards). Under them a sample of\na window drawn in the theme the two colours make (`colorTheme`, with the colours as chosen): a chosen row with its\ncount, something due, something running and a button, so the person sees what each colour will be used for.",
      "components": [

@@ -53,7 +53,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'WindowControls',
   ],
   '@acaprino/sigrid/assemblies': [
-    'applyKeptScheme', 'AttachmentMarks', 'AttachmentsSection', 'AttachmentViewer', 'BaseColorChoice', 'ChoiceCard',
+    'applyKeptScheme', 'AttachmentMarks', 'AttachmentsSection', 'AttachmentViewer', 'BaseColorChoice', 'Chat', 'ChoiceCard',
     'ChoiceCards', 'ChoiceGroup', 'ChoicePreview', 'ColorMatch', 'CommandPalette', 'CommandsProvider', 'Conversation',
     'CONVERSATION_NEAR_PX', 'DensityChoice', 'filterCommands', 'formatKeys', 'KeyHints', 'PALETTE_COMMAND',
     'PaletteComboChoice', 'PaletteStrip', 'PromptInput', 'radioArrows', 'stateText', 'summarize', 'SWIPE_DISTANCE_PX',

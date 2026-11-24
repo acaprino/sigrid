@@ -372,7 +372,19 @@ action of its screen (R3).
 
 ## A conversation with an assistant
 
-The parts of a chat, the same in every app: `Conversation` (the thread), `Message` (one turn), `PromptInput` (the
+`Chat` (from `/assemblies`) is the whole of it, drawn from data: the app holds the messages (`ChatMessage`: who it
+is from, its text, and for an answer its `reasoning`, its `tools`, an `error`, a `vote`) and talks to its model; the
+chat tells it what the user did (`onSend`, `onStop`, `onRetry`, `onVote`). It decides what every app's chat does
+alike: an answer still being written has no actions and its reasoning is open until the text starts, «try again» is
+on the last answer only, a failed answer is an error note with «Try again», a suggestion fills the field.
+
+```tsx
+<Chat messages={messages} busy={busy} onSend={ask} onStop={stop} onRetry={askAgain} onVote={rate}
+  suggestions={messages.length === 0 ? ideas : undefined} empty={<Empty title="Ask about your tasks" />}
+  placeholder="Ask about your tasks" />
+```
+
+An app whose chat needs another arrangement composes the parts itself. The parts of a chat, the same in every app: `Conversation` (the thread), `Message` (one turn), `PromptInput` (the
 field a message is written in), `Suggestions` (ready-made requests), and, for what an assistant did on the way to its
 answer, `Reasoning` and `ToolCall`. The app holds the messages and talks to its model; the parts only draw.
 
@@ -544,7 +556,7 @@ list below goes by what a part is for, and names parts of every level):
   and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
 - `/layout`: `AppShell`, `Inspector`, `TitleBar`, `WindowControls`, `Toolbar*`, `Sidebar*`, `SidebarRow`,
   `DrawerButton`, `NavList`/`NavItem`, `Panel`, `ContentSplit`.
-- `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `Conversation`,
+- `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `Chat`, `Conversation`,
   `PromptInput`, `SwipeDeck`, `Tree`, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
   `ColorMatch`.
 

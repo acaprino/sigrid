@@ -22,7 +22,7 @@ import { BACKDROP, BASE_THEME, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLO
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
-import { AttachmentMarks, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
+import { AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
@@ -131,17 +131,16 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
 
 /**
  * The sections of the component gallery in the groups of the index, in the order of the page: the page follows the
- * index, so scrolling reads down it. A section in no group goes under «More».
+ * index, so scrolling reads down it. The groups are the levels of the toolkit, each made of the ones before it: the
+ * ground (what does not draw), the primitives, the components, the frame of an app and the assemblies. A section that
+ * shows parts of two levels is in the group of the first part of its title. A section in no group goes under «More».
  */
 const COMPONENT_GROUPS: readonly Group[] = [
-  { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition', 'composition-panes'] },
-  { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
-  { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
-  { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
-  { label: 'Overlays and notices', icon: 'notifications', ids: ['popover', 'overlays', 'toasts', 'progress', 'empty'] },
-  { label: 'Lists and tables', icon: 'data', ids: ['table', 'virtual-list', 'overflow-list', 'tree', 'reorder', 'graph'] },
-  { label: 'Content', icon: 'all', ids: ['attachments', 'markdown'] },
+  { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
+  { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
+  { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'overflow-list', 'markdown'] },
+  { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
+  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
 
@@ -2135,7 +2134,59 @@ const CHAT_SUGGESTIONS = [
 
 type Turn = { id: number; from: 'user' | 'assistant'; text: string }
 
-function Chat() {
+const FIRST_TURNS: ChatMessage[] = [
+  { id: 'm1', from: 'user', text: 'Which invoices are still open?' },
+  {
+    id: 'm2',
+    from: 'assistant',
+    time: '10:42',
+    reasoning: 'I look for invoices that were sent and have no payment against them.',
+    reasoningSeconds: 3,
+    tools: [{ id: 't1', name: 'Search invoices', summary: '2 results', input: '{ "paid": false }', output: '[{ "number": 104 }, { "number": 107 }]' }],
+    text: 'Two invoices are open:\n\n- **104**, Acme, due on Friday\n- **107**, Globex, due next week',
+  },
+  { id: 'm3', from: 'user', text: 'Send a reminder for 104.' },
+  { id: 'm4', from: 'assistant', text: '', tools: [{ id: 't2', name: 'Send the email', status: 'error', summary: 'no connection' }], error: 'The reminder was not sent' },
+]
+
+/** `Chat` wired to a model that is a timer: the app holds the messages and adds to them. */
+function WholeChat() {
+  const [messages, setMessages] = React.useState(FIRST_TURNS)
+  const [busy, setBusy] = React.useState(false)
+  const timers = React.useRef<ReturnType<typeof setTimeout>[]>([])
+  React.useEffect(() => () => timers.current.forEach(clearTimeout), [])
+  const answer = (after: ChatMessage[], about: string) => {
+    const id = `a${Date.now()}`
+    setMessages([...after, { id, from: 'assistant', text: '', reasoning: 'Reading the request…' }])
+    setBusy(true)
+    const patch = (part: Partial<ChatMessage>) => setMessages((all) => all.map((m) => (m.id === id ? { ...m, ...part } : m)))
+    timers.current = [
+      setTimeout(() => patch({ reasoning: 'Reading the request. It is a sample, so I answer with its own words.', reasoningSeconds: 1, text: 'You asked:' }), 900),
+      setTimeout(() => {
+        patch({ text: `You asked: «${about}». This answer is a sample: the app writes the real one.`, time: 'now' })
+        setBusy(false)
+      }, 1800),
+    ]
+  }
+  return (
+    <Chat
+      label="Chat about the invoices"
+      messages={messages}
+      busy={busy}
+      onSend={(text) => answer([...messages, { id: `u${Date.now()}`, from: 'user', text }], text)}
+      onStop={() => {
+        timers.current.forEach(clearTimeout)
+        setBusy(false)
+      }}
+      onRetry={(message) => answer(messages.filter((m) => m.id !== message.id), 'the same again')}
+      onVote={(message, vote) => setMessages((all) => all.map((m) => (m.id === message.id ? { ...m, vote } : m)))}
+      suggestions={[{ id: 's1', label: 'What is due this week?' }, { id: 's2', label: 'Draft a reminder' }]}
+      placeholder="Ask about the invoices"
+    />
+  )
+}
+
+function ChatParts() {
   const [turns, setTurns] = React.useState<Turn[]>([
     { id: 1, from: 'user', text: 'What is late this week?' },
     { id: 2, from: 'assistant', text: 'Two tasks are past their date:\n\n- **Send the invoice** to Acme, due Monday\n- **Book the room** for the review, due yesterday\n\nThe rest of the week is on time.' },
@@ -2158,7 +2209,7 @@ function Chat() {
     setBusy(false)
   }
   return (
-    <Section id="chat" title="Conversation, Message, PromptInput, Suggestions, Reasoning, ToolCall" note="The parts of a conversation with an assistant. The thread follows the latest message while the reader is at its end, and shows a button back to it when the reader goes up. What the user wrote is a quiet block at the end of the row; an answer is plain text on the page, with Markdown, and under it quiet actions that never change place. The field grows with the text up to eight lines; Enter sends and Shift+Enter makes a new line; its one button sends and, while an answer is written, stops it in the same place (R14). Suggestions are quiet chips that fill the field. A reasoning and a tool's call stay behind a row each. Nothing loops: no typing dots, no shimmer, no spinner.">
+    <Section id="chat" title="Chat, Conversation, Message, PromptInput, Suggestions, Reasoning, ToolCall" note="A chat with an assistant: Chat is the whole of it, drawn from the messages the app holds; under it are its parts, for an app that needs another arrangement. The thread follows the latest message while the reader is at its end, and shows a button back to it when the reader goes up. What the user wrote is a quiet block at the end of the row; an answer is plain text on the page, with Markdown, and under it quiet actions that never change place. The field grows with the text up to eight lines; Enter sends and Shift+Enter makes a new line; its one button sends and, while an answer is written, stops it in the same place (R14). Suggestions are quiet chips that fill the field. A reasoning and a tool's call stay behind a row each. Nothing loops: no typing dots, no shimmer, no spinner.">
       <Row label="a conversation">
         <div className="flex h-96 w-full max-w-2xl flex-col gap-3">
           <Conversation label="Chat with the assistant" busy={busy}>
@@ -2200,6 +2251,11 @@ function Chat() {
               </Tooltip>
             }
           />
+        </div>
+      </Row>
+      <Row label="Chat: the whole of it, from data">
+        <div className="flex h-96 w-full max-w-2xl flex-col">
+          <WholeChat />
         </div>
       </Row>
       <Row label="a tool's call, its four states">
@@ -2806,7 +2862,7 @@ function App() {
       title="Components"
       lead={
         <>
-          Every component in its variants, sizes and states, under the theme, shape and density chosen in Look. Hover, pressed and focus are forced with <Code>data-force</Code>, so they can be seen at once. What opens on a gesture opens from the address: <Code>?open=menu</Code>, <Code>popover</Code>, <Code>select</Code>, <Code>dialog</Code>, <Code>sheet</Code> and more.
+          Every part in its variants, sizes and states, by level (the ground, the primitives, the components, the frame, the assemblies), under the theme, shape and density chosen in Look. Hover, pressed and focus are forced with <Code>data-force</Code>, so they can be seen at once. What opens on a gesture opens from the address: <Code>?open=menu</Code>, <Code>popover</Code>, <Code>select</Code>, <Code>dialog</Code>, <Code>sheet</Code> and more.
         </>
       }
     >
@@ -2836,45 +2892,50 @@ function App() {
           </div>
         </Row>
       </Section>
+      {/* Primitives */}
       <LayoutParts />
-      <Composition animated={animated} />
-      <CompositionPanes animated={animated} />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
       <Keys />
       <Fields />
-      <FormFields />
       <Selects />
-      <Pickers />
       <Checkboxes animated={animated} />
       <Radios />
       <Switches animated={animated} />
-      <Dates animated={animated} />
-      <OtherFields />
-      <RichTexts />
       <TabSets animated={animated} />
-      <StepsSection />
-      <Navigation />
-      <SidebarSample animated={animated} />
-      <Toolbars animated={animated} />
       <Menus animated={animated} />
       <Popovers animated={animated} />
       <Overlays animated={animated} />
-      <Notices animated={animated} />
       <ProgressSection />
+      <Tables />
+      {/* Components */}
+      <Composition animated={animated} />
+      <CompositionPanes animated={animated} />
+      <FormFields />
+      <Pickers />
+      <Dates animated={animated} />
+      <OtherFields />
+      <StepsSection />
+      <Notices animated={animated} />
       <Empties />
       <Notes />
-      <Chat />
-      <Deck />
-      <Tables />
-      <LongLists />
       <OverflowLists />
-      <Trees animated={animated} />
-      <Reorders animated={animated} />
-      <Graphs />
-      <Files />
       <Content />
+      {/* The frame */}
+      <Navigation />
+      <SidebarSample animated={animated} />
+      <Toolbars animated={animated} />
+      {/* Assemblies */}
+      <ChatParts />
+      <Deck />
+      <Trees animated={animated} />
+      <Files />
+      <LongLists />
+      <Reorders animated={animated} />
+      <RichTexts />
+      <Graphs />
+      {/* Motion */}
       <HoverRows animated={animated} />
       <MotionPieces animated={animated} />
     </Page>
