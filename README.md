@@ -110,7 +110,14 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
    OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
    recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
-   The app editor's «Look» panel has it: choosing a base suggests its accents. The corners are `ThemeDef.shape`:
+   The app editor's «Look» panel has it: choosing a base suggests its accents. A theme can also be written by
+   names (`src/hues.ts`): the eighteen free colours are the tints (`HUE_NAMES`, from `red` to `burgundy`), and
+   `namedTheme({ id, label, accent: 'blue' })` is a theme definition with that colour as its accent on the tint's own
+   gray (`ground` takes another tint or `gray`, `second` another tint for the selection). Each tint also has a scale
+   of twelve steps by the roles of the 12-step palettes, in the three tones and a scheme:
+   `hueScale('blue', 'vivid', 'light')` gives the steps and the label that reads on the fill, `grayScale` the gray of
+   a tint. A scale is for a board, a chart or a picker: the engine does not read its roles from it, and its steps are
+   not classes. The corners are `ThemeDef.shape`:
    `sharp` (2/4/6px) is the default, `soft` (4/6/10px, the corners before 2026-11-24) and `round` (6/10/14px) are
    the choices; an app keeps the rounder look with `shape: 'soft'` on its theme, and `ThemeDef.radii` sets numbers
    of its own. Four more looks are off unless a theme asks for them by name (2026-11-24): `keys: 'boxed'` draws key
