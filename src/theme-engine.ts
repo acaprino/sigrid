@@ -70,9 +70,15 @@ export function over(fg: string, bg: string, alpha: number): string {
 }
 
 /** A small margin above every threshold: rounded values and browsers must not fall below it. */
-const MARGIN = 0.03
+export const MARGIN = 0.03
 /** Under this lightness a fill is nearly black: its hover lightens, a darker step would not be seen. */
 const NEAR_BLACK = 0.3
+/**
+ * A fill under the pointer: a step darker. A fill that is nearly black has no room to darken (a step down from it
+ * cannot be seen): it lightens instead, by a step that can (the owner, 2026-11-23: the solid button must answer the
+ * pointer in every theme).
+ */
+export const hoverOf = (c: Oklch): Oklch => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
 
 /**
  * Moves the lightness of `c` in direction `dir` (−1 darker, +1 lighter) until `ok` is true on its hex value.
@@ -195,6 +201,11 @@ export function presetTone(preset: TonePreset): ThemeTone | null {
 export function tonePresetOf(tone: ThemeTone | null): TonePreset {
   const intensity = tone?.intensity ?? DEFAULT_TONE_INTENSITY
   return intensity === 'faded' || intensity === 'soft' ? 'calm' : intensity === 'theme' ? 'balanced' : 'vivid'
+}
+
+/** How much a preset multiplies the chroma of the accents: the scales of a tint (hues.ts) share the number with the engine. */
+export function toneChroma(preset: TonePreset): number {
+  return shiftOf(presetTone(preset)).k
 }
 
 /**
@@ -708,10 +719,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const input = hex(take('input', s.input, dir, (h) => atLeast(inputOn, 3)(h) && backgrounds.every((bg) => contrast(h, bg) > contrast(line, bg))))
 
   // The solid button: the text holds on the fill at rest and on hover (which darkens, see `hoverOf`). With light text
-  // the fill darkens, with dark text ("Ink" in dark) it lightens.
-  // A fill that is nearly black has no room to darken (a step down from it cannot be seen): it lightens instead,
-  // by a step that can (the owner, 2026-11-23: the solid button must answer the pointer in every theme).
-  const hoverOf = (c: Oklch) => fit({ ...c, L: c.L < NEAR_BLACK ? c.L + 0.07 : c.L - 0.045 })
+  // the fill darkens, with dark text ("Ink" in dark) it lightens (`hoverOf`).
   // The fill is also a mark to be seen without text (timeline bars, the calendar's "today"): on the backgrounds
   // it holds at 3:1 (WCAG 1.4.11). In dark the deep tone may fall below: it lightens toward the text, but only
   // as long as the text still holds at 4.5:1. If that is not enough, the text wins.
