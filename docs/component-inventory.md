@@ -561,6 +561,12 @@ Each is off unless asked, or a new choice of a prop; `test/theme-details.test.ts
 | The text of a tall strip | `ThemeDef.statusStrip: 'tall'` (as before) | The status strip speaks at the size of the body (14px) in place of 12px. The footer of `AppShell` has the strip's text style, so it takes the same size; its height stays its own |
 | The quiet button of a bar | `ToolbarButton variant="quiet"` | An outline button with the muted ink (the ink under the pointer) whose border stays the divider's hairline under `controls: 'strong'`, where an `outline` takes the control border: the way to the commands, with its key. No existing variant drew it: `ghost` has no border, `outline` has the ink and, under strong borders, the control border. A variant, not a choice of the theme: the app says which button is the quiet one |
 
+## Added on 2026-11-24: the sidebar's button at its head
+
+| Part | What an app writes | What changes, and only then |
+|---|---|---|
+| `Sidebar toggle` | `toggle="head"` (the default is `foot`), with `onCollapsedChange` | The button that shrinks and widens the sidebar is at the end of the header's row, beside `header`, in place of a line of its own at the foot: the name of the list, its count and the button on one row. With no `header` the row holds the button alone, at its end; on the rail the header is gone as before and the button is at the top, in the middle. Its name, `aria-expanded`, its hint, its 44px with a finger and the easing of the width are the same; where there is no button (the drawer, a rail the frame forces) nothing changes. The title row is not a new part: a `SidebarRow` with a `Count` at its `end` |
+
 ## Off-scale values (with locations, before the polish pass)
 
 | Value | Where |
