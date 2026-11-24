@@ -30,13 +30,14 @@
    of the chosen thing (the soft ink, a little thicker) and the path's (as thick as the accent). Each line of the
    canvas (`linesOf`) and each sample of the key (`GraphLegend`) carries them as custom properties, and this one rule
    draws both, so the key and the lines cannot part. What a kind of line means is said by its dash and its words,
-   never by its colour alone. */
+   never by its colour alone. Each property falls back on the default line (`lineLook()`: solid, 1px, the muted
+   ink), so a line drawn without them is still a line. */
 .react-flow__edge .react-flow__edge-path,
 .sigrid-graph-sample {
-  stroke: var(--sigrid-line-stroke);
-  stroke-width: var(--sigrid-line-width);
-  stroke-dasharray: var(--sigrid-line-dash);
-  stroke-linecap: var(--sigrid-line-cap);
+  stroke: var(--sigrid-line-stroke, var(--color-ink-mute));
+  stroke-width: var(--sigrid-line-width, 1px);
+  stroke-dasharray: var(--sigrid-line-dash, none);
+  stroke-linecap: var(--sigrid-line-cap, butt);
 }
 
 /* With a path, a line to a dimmed thing is dimmed as the thing is. */

@@ -17,7 +17,7 @@ export type GraphLegendEntry = {
   tone?: GraphEdge['tone']
   /** What a line of this kind means («calls», «waits for»): always written, so the colour is never alone. */
   label: string
-  /** How many lines of this kind the graph has: a `Count` after the word. Zero, or none, shows nothing. */
+  /** How many lines of this kind the graph has: a `Count` after the word, which screen readers hear with the word («12 calls»). Zero, or none, shows nothing. */
   count?: number | undefined
 }
 
@@ -40,7 +40,10 @@ export function GraphLegend({ entries, 'aria-label': label }: GraphLegendProps) 
             <line x1="2" y1="4" x2="22" y2="4" className="sigrid-graph-sample" style={lineVars(lineLook(entry.style, entry.tone))} />
           </svg>
           <span>{entry.label}</span>
-          <Count value={entry.count} />
+          {/* A space between the word and the count, so the text reads «Calls 12», not «Calls12» (the row draws no
+              space, its gap is the room between them); the count says what it counts, «12 Calls». */}
+          {entry.count ? ' ' : null}
+          <Count value={entry.count} label={entry.label} />
         </li>
       ))}
     </Cluster>

@@ -7647,7 +7647,7 @@
         {
          "name": "count",
          "type": "number",
-         "doc": "How many lines of this kind the graph has: a `Count` after the word. Zero, or none, shows nothing."
+         "doc": "How many lines of this kind the graph has: a `Count` after the word, which screen readers hear with the word («12 calls»). Zero, or none, shows nothing."
         }
        ]
       }
