@@ -477,7 +477,13 @@
          "name": "throwCard",
          "type": "(el: Element, direction: \"left\" | \"right\") => { done: Promise<void>; release: () => void; }",
          "required": true,
-         "doc": "A card of a deck thrown to the side it was decided to: it goes on from where the finger left it, by its own width, and fades, gathering speed as what leaves does. It stays out (`release` puts it back) until the deck has drawn the next card, so the card thrown is never seen at rest again. `done` always resolves."
+         "doc": "A card of a deck thrown to the side it was decided to: it goes on from where the finger left it, by its own width, and fades, gathering speed as what leaves does. It is the one thing that leaves by a long way, because the way is the decision (left or right): so it takes the time of what crosses a distance (`DURATION_MS.throw`), not the short time of what fades where it is. It stays out (`release` puts it back) until the deck has drawn the next card, so the card thrown is never seen at rest again. `done` always resolves."
+        },
+        {
+         "name": "settleCard",
+         "type": "(el: Element, from: { translate: string; rotate: string; }) => void",
+         "required": true,
+         "doc": "A card of a deck let go before the mark: it comes back to its place from where the finger left it (`translate` and `rotate` as they were under the finger), settling as what enters does, in the time of a button coming back."
         },
         {
          "name": "pressable",
@@ -528,7 +534,7 @@
         },
         {
          "name": "DURATION_MS",
-         "type": "{ readonly toast: 200; readonly mark: 100; readonly sheet: 200; readonly row: 200; readonly popup: 150; readonly land: 150; }",
+         "type": "{ readonly toast: 200; readonly mark: 100; readonly sheet: 200; readonly row: 200; readonly popup: 150; readonly land: 150; readonly throw: 200; readonly settle: 150; }",
          "required": true,
          "doc": "Durations in milliseconds of what enters or leaves once: all under 250 ms (test/animated.test.tsx). `toast` is how long a notice that leaves the column stays in the DOM (Ark's `removeDelay`): longer than its exit (`GESTURE_MS.leave`)."
         },
@@ -3719,7 +3725,7 @@
     },
     {
      "file": "src/components/DateField.tsx",
-     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)\nFrom Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of\nside padding); the card is Park's date-picker content (l3 corners, the lg elevation).\nThe date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker\n(`@ark-ui/react/date-picker`). Two variants (a form can use both), with the same contract as the native fields they\nreplace: `DateField` gives and receives `YYYY-MM-DD` (or null), `DateTimeField` `YYYY-MM-DDTHH:mm` in local time\n(or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time\nzones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).\nArk gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the\nbutton), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).\nThe card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its\nfocus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.",
+     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)\nFrom Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of\nside padding); the card is Park's date-picker content (l3 corners, the lg elevation).\nThe date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker\n(`@ark-ui/react/date-picker`). Two variants (a form can use both), with the same contract as the native fields they\nreplace: `DateField` gives and receives `YYYY-MM-DD` (or null), `DateTimeField` `YYYY-MM-DDTHH:mm` in local time\n(or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time\nzones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).\nArk gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the\nbutton), the position of the card, focus on the chosen day when it opens, the grid (see `components/calendar.tsx`).\nThe card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its\nfocus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.",
      "components": [
       {
        "name": "DateField",
@@ -4072,14 +4078,14 @@
     },
     {
      "file": "src/components/disclosure.tsx",
-     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.",
+     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.\nThe arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,\na quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row\nthe app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.",
      "components": [
       {
        "name": "Disclosure",
        "props": [
         {
          "name": "label",
-         "type": "string",
+         "type": "React.ReactNode",
          "required": true,
          "doc": "What the row holds, in the words people would look for («Add a coupon», «Advanced»)."
         },
@@ -4105,6 +4111,11 @@
         {
          "name": "disabled",
          "type": "boolean"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The arrow turns when the reader opens or closes the row. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -4625,6 +4636,11 @@
          "doc": "The app's own quiet actions, after the toolkit's: `Button variant=\"ghost\" size=\"icon-sm\"` with a `Tooltip`."
         },
         {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hints of its buttons enter with a movement. Absent: as `MotionProvider` says."
+        },
+        {
          "name": "className",
          "type": "string"
         }
@@ -4715,7 +4731,7 @@
     },
     {
      "file": "src/components/reasoning.tsx",
-     "about": "What an assistant did on the way to its answer, kept behind a row each so the answer stays the thing to read:\n`Reasoning`, what it thought, and `ToolCall`, a tool it used. Both are rows that open in place (Base UI's\n`Collapsible`, as `Disclosure`).\n`Reasoning` is open while it is being written (`busy`) and closes by itself when it is done, unless the reader\nopened or closed it: the reader's choice stays. Its row says «Thinking», then «Thought for 4 s».\n`ToolCall` says the tool's name and its state three ways, never by colour alone: an icon (a clock while it waits,\nthe bolt while it runs, a check, the circle with an X of a failure), its colour, and a word for screen readers. It\nopens only when there is something to show: what the tool was given and what it gave back.\nNothing loops: no shimmer and no spinner. A state changes once, when the app says so.",
+     "about": "What an assistant did on the way to its answer, kept behind a row each so the answer stays the thing to read:\n`Reasoning`, what it thought, and `ToolCall`, a tool it used. Both are the toolkit's row that opens in place\n(`Disclosure`): the same row, the same arrow, the same panel.\n`Reasoning` is open while it is being written (`busy`) and closes by itself when it is done, unless the reader\nopened or closed it: the reader's choice stays. Its row says «Thinking», then «Thought for 4 s». Its text is set\napart as a quote is: the soft ink behind a line at its start.\n`ToolCall` says the tool's name and its state three ways, never by colour alone: an icon (a clock while it waits,\nthe bolt while it runs, a check, the circle with an X of a failure), its colour, and a word for screen readers. It\nopens only when there is something to show: what the tool was given and what it gave back, as written, in the\nmonospace of code; a long one scrolls in its block, which the keyboard reaches.\nNothing loops: no shimmer and no spinner. A state changes once, when the app says so.",
      "components": [
       {
        "name": "Reasoning",
@@ -4739,6 +4755,11 @@
         {
          "name": "onOpenChange",
          "type": "((open: boolean) => void)"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The arrow turns when the reader opens or closes the row. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -4785,6 +4806,11 @@
          "name": "defaultOpen",
          "type": "boolean",
          "doc": "Open at first. Default closed."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The arrow turns when the reader opens or closes the row. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -4960,6 +4986,11 @@
         {
          "name": "disabled",
          "type": "boolean"
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "A chip answers the press with a movement. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -6437,6 +6468,11 @@
          "doc": "The app's tools in the field's row (attach a file, choose a model)."
         },
         {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Its buttons answer the press and its hints enter with a movement. Absent: as `MotionProvider` says."
+        },
+        {
          "name": "className",
          "type": "string"
         }
@@ -6860,7 +6896,7 @@
     },
     {
      "file": "src/assemblies/conversation.tsx",
-     "about": "The thread of a conversation with an assistant (or with a person): the column that scrolls. It stays at the last\nmessage while the reader is there, so an answer being written is followed, and it stops following as soon as the\nreader goes up to read; a button then leads back to the latest message. What is in it are the turns (`Message`),\nand what an assistant did on the way (`Reasoning`, `ToolCall`); the field under it is `PromptInput`.\nScreen readers meet the thread as a log: while an answer is being written (`busy`) the log waits, so the answer is\nread once, whole, and not word by word.\nNothing moves by itself: no typing dots, no shimmer. That an answer is on its way is said by the stop button of\n`PromptInput` and by the row of `Reasoning`.",
+     "about": "The thread of a conversation with an assistant (or with a person): the column that scrolls. It stays at the last\nmessage while the reader is there, so an answer being written is followed, and it stops following as soon as the\nreader moves up, by however little; a button then leads back to the latest message. What is in it are the turns\n(`Message`), and what an assistant did on the way (`Reasoning`, `ToolCall`); the field under it is `PromptInput`.\nScreen readers meet the thread as a log: while an answer is being written (`busy`) the log waits, so the answer is\nread once, whole, and not word by word.\nNothing moves by itself: no typing dots, no shimmer. That an answer is on its way is said by the stop button of\n`PromptInput` and by the row of `Reasoning`. Following the answer and going back to its end are done at once, never\nas a glide: a long way across the screen is not a movement of this toolkit. The button back, which the reader's own\nscroll brings up, enters as a hint does when motion is on.",
      "components": [
       {
        "name": "Conversation",
@@ -6880,6 +6916,11 @@
          "name": "empty",
          "type": "React.ReactNode",
          "doc": "What is shown in place of the thread while it has no message: a greeting, an `Empty`, a `Suggestions`."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The button back to the latest message enters with a movement. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -7396,6 +7437,11 @@
          "doc": "Reaches the `<textarea>`."
         },
         {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The button answers the press and its hint enters with a movement. Absent: as `MotionProvider` says."
+        },
+        {
          "name": "className",
          "type": "string"
         }
@@ -7436,7 +7482,7 @@
     },
     {
      "file": "src/assemblies/swipe-deck.tsx",
-     "about": "A deck of cards decided one at a time, each to one of two sides: keep or skip, approve or refuse, now or later.\nOne card, one decision: nothing else on the screen asks for attention while a pile is sorted.\nThree ways to decide, all the same decision: drag the card past a third of the way (or flick it) and let go; press\nthe left or right arrow with the card in focus; or press one of the two buttons under the deck, which are always\nthere and never move (R14), so nothing depends on a gesture. While the card is dragged far enough, the word of the\nside it would go to shows on it: what letting go will do is said before it is done.\nThe deck keeps nothing: the app holds the cards (`items`, the first is on top) and takes the decided one out when\n`onSwipe` tells it; to take a decision back it puts the card first again (an `Undo` in a notice, `Toasts`). A card\nthe app leaves in comes back to its place.\nThe card follows the finger at once (that is the gesture, not an animation); thrown, it leaves with a movement only\nwhen motion is on (`animated`, or `MotionProvider`). The next card lies under the top one, still: the flat page has\nno stack that zooms.",
+     "about": "A deck of cards decided one at a time, each to one of two sides: keep or skip, approve or refuse, now or later.\nOne card, one decision: nothing else on the screen asks for attention while a pile is sorted.\nThree ways to decide, all the same decision: drag the card past a third of the way (or flick it) and let go; press\nthe left or right arrow with the card in focus; or press one of the two buttons under the deck, which are always\nthere and never move (R14), so nothing depends on a gesture. While the card is dragged far enough, the word of the\nside it would go to shows on it: what letting go will do is said before it is done.\nThe deck keeps nothing: the app holds the cards (`items`, the first is on top) and takes the decided one out when\n`onSwipe` tells it; to take a decision back it puts the card first again (an `Undo` in a notice, `Toasts`). A card\nthe app leaves in comes back to its place.\nThe app takes the card out as `onSwipe` runs, and puts it back if saving the decision fails: a card taken out\nlater is seen once more at rest before it goes.\nThe card follows the finger at once (that is the gesture, not an animation); thrown, it leaves with a movement, and\nlet go before the mark it comes back with one, only when motion is on (`animated`, or `MotionProvider`). The next\ncard lies under the top one, still: the flat page has no stack that zooms.",
      "components": [
       {
        "name": "SwipeDeck",
@@ -7470,7 +7516,7 @@
          "name": "onSwipe",
          "type": "(item: T, direction: SwipeDirection) => void",
          "required": true,
-         "doc": "A card was decided: the app takes it out of `items` (and offers Undo in a notice)."
+         "doc": "A card was decided: the app takes it out of `items` as this runs (and offers Undo in a notice), and puts it back if the decision could not be saved."
         },
         {
          "name": "label",
@@ -7511,7 +7557,7 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "The thrown card leaves with a movement. Absent: as `MotionProvider` says."
+         "doc": "The thrown card leaves with a movement, and a card let go early comes back with one. Absent: as `MotionProvider` says."
         },
         {
          "name": "className",
@@ -8004,7 +8050,7 @@
    "files": [
     {
      "file": "src/assemblies/EmailComposer.tsx",
-     "about": "A message of mail being written, with a text that has a little form: who it goes to, its subject, its text, and\nthe button that sends it. It is on the `./rich-text` entry, with the field its text is written in (TipTap).\nThe rows are a form read from the top: «To», then «Cc» and «Bcc», which stay behind a button of the «To» row until\nthey are asked for or hold an address (most messages have neither), the subject, and the text (`RichTextField`:\nbold, italic, underline, two lists, a quote; its value is HTML). An address is a chip (`ChipsInput`): a comma, a\nsemicolon, a blank or Enter closes one, and one that is not an address is said so on its chip, never refused.\nThe app holds the draft (`value`, `onChange`) and sends it: the composer knows no server. «Send» is the one solid\nbutton (R3); Ctrl+Enter (⌘ Enter) does the same. A message that cannot go (nobody to send it to, an address that is\nnot one) is not sent: the reason is said in words above the buttons and the focus goes to «To». While it is being\nsent the button waits in its place. «Discard» is there only when the app can throw the draft away, and does it at\nonce: the app offers Undo in a notice (`Toasts`).",
+     "about": "A message of mail being written, with a text that has a little form: who it goes to, its subject, its text, and\nthe button that sends it. It is on the `./rich-text` entry, with the field its text is written in (TipTap).\nThe rows are a form read from the top: «To», then «Cc» and «Bcc», which stay behind a button of the «To» row until\nthey are asked for or hold an address (most messages have neither), the subject, and the text (`RichTextField`:\nbold, italic, underline, two lists, a quote; its value is HTML). An address is a chip (`ChipsInput`): a comma, a\nsemicolon, a blank or Enter closes one, and one that is not an address is said so on its chip, never refused.\nThe app holds the draft (`value`, `onChange`) and sends it: the composer knows no server. «Send» is the one solid\nbutton (R3); Ctrl+Enter (⌘ Enter) does the same from anywhere in the form, after an address still being typed is\nclosed into its chip. Enter alone never sends: in the subject it does nothing, in the text it makes a new line.\nA message that cannot go (nobody to send it to, an address that is not one) is not sent: the reason is said in\nwords above the buttons and the focus goes to the row that is wrong.\nThe names of the rows are at their start, in the muted ink, not above the fields as in a `FormField`: a message\nis read down one column of fields, and the names are a margin beside it. While it is being\nsent the button waits in its place. «Discard» is there only when the app can throw the draft away, and does it at\nonce: the app offers Undo in a notice (`Toasts`).",
      "components": [
       {
        "name": "EmailComposer",

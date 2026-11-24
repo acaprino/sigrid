@@ -9,6 +9,8 @@
 import * as React from "react"
 import { cn, isEmptyNode } from "../lib/utils"
 import { FIELD_HOVER_DATA, FIELD_SURFACE, FIELD_TEXT } from "../lib/field"
+import { FOCUS_FIELD_HAS_TEXTAREA } from "../lib/focus"
+import { useMergedRef } from "../lib/refs"
 import { Icon } from "../icons"
 import { useWords } from "../words"
 import { COARSE, useMedia } from "../internal/media"
@@ -41,13 +43,17 @@ export type PromptInputProps = {
   autoFocus?: boolean | undefined
   /** Reaches the `<textarea>`. */
   ref?: React.Ref<HTMLTextAreaElement> | undefined
+  /** The button answers the press and its hint enters with a movement. Absent: as `MotionProvider` says. */
+  animated?: boolean | undefined
   className?: string | undefined
 }
 
 /** The field a message is written in, with the button that sends it or stops the answer. */
-function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy = false, onStop, disabled = false, label, placeholder, maxLength, attachments, tools, autoFocus, ref, className }: PromptInputProps) {
+function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy = false, onStop, disabled = false, label, placeholder, maxLength, attachments, tools, autoFocus, ref, animated, className }: PromptInputProps) {
   const words = useWords().chat
   const coarse = useMedia(COARSE)
+  const field = React.useRef<HTMLTextAreaElement>(null)
+  const merged = useMergedRef(field, ref)
   const [own, setOwn] = React.useState(defaultValue)
   const text = value ?? own
   const set = (next: string) => {
@@ -59,6 +65,9 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
     if (!ready) return
     onSubmit(text.trim())
     set("")
+    // Sent with the button, the focus would stay on a button that is now off (the text is empty): it goes back to
+    // the text, where the next message is written, and a phone's keyboard stays open.
+    field.current?.focus()
   }
   const stopping = busy && !disabled
   const name = stopping ? words.stop : words.send
@@ -69,8 +78,9 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
       className={cn(
         FIELD_SURFACE,
         FIELD_HOVER_DATA,
-        "flex min-w-0 flex-col outline-hidden has-[textarea:focus-visible]:outline-solid has-[textarea:focus-visible]:outline-2 has-[textarea:focus-visible]:-outline-offset-1 has-[textarea:focus-visible]:outline-ring",
-        disabled && "opacity-50",
+        FOCUS_FIELD_HAS_TEXTAREA,
+        // Off, the field fades as one thing: a button inside does not fade again (as in `InputGroup`).
+        "flex min-w-0 flex-col data-disabled:opacity-50 data-disabled:[&_button]:opacity-100",
         className,
       )}
       onSubmit={(event) => {
@@ -84,7 +94,7 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
         </div>
       )}
       <textarea
-        ref={ref}
+        ref={merged}
         data-slot="prompt-input-text"
         rows={1}
         value={text}
@@ -94,10 +104,11 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
         disabled={disabled}
         autoFocus={autoFocus}
         // Eight lines of 20px and the padding, then it scrolls.
-        className={cn("field-sizing-content max-h-44 w-full resize-none bg-transparent px-(--pad-sm) py-2 text-ink outline-hidden disabled:cursor-not-allowed", FIELD_TEXT)}
+        className={cn("field-sizing-content max-h-44 w-full resize-none bg-transparent px-(--pad-sm) py-2 text-ink outline-hidden pointer-coarse:min-h-11 disabled:cursor-not-allowed", FIELD_TEXT)}
         onChange={(event) => set(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || coarse) return
+          // A composition in progress owns Enter (it confirms a candidate); Safari says so only with the key code 229.
+          if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229 || coarse) return
           event.preventDefault()
           send()
         }}
@@ -107,17 +118,18 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
           {tools}
         </div>
         {maxLength === undefined ? null : (
-          <span data-slot="prompt-input-count" aria-hidden="true" className="px-(--pad-xs) text-xs text-ink-mute tabular-nums">
+          <span data-slot="prompt-input-count" aria-hidden="true" className="px-(--pad-xs) text-2xs text-ink-mute tabular-nums">
             {text.length}/{maxLength}
           </span>
         )}
-        <Tooltip label={name} side="top">
+        <Tooltip label={name} side="top" animated={animated}>
           <Button
             data-slot="prompt-input-button"
             data-state={stopping ? "stop" : "send"}
             type={stopping ? "button" : "submit"}
             variant={stopping ? "outline" : "default"}
             size="icon-sm"
+            animated={animated}
             aria-label={name}
             disabled={stopping ? onStop === undefined : !ready}
             onClick={stopping ? onStop : undefined}

@@ -11,7 +11,7 @@
 import * as React from "react"
 import { Switch as SwitchPrimitive } from "@ark-ui/react/switch"
 import { cn } from "../lib/utils"
-import { useMotion } from "../internal/motion"
+import { useMotionAllowed } from "../internal/motion"
 
 export type SwitchProps = {
   /** On (controlled). */
@@ -37,7 +37,8 @@ export type SwitchProps = {
 }
 
 function Switch({ checked, defaultChecked, onCheckedChange, disabled, invalid, required, name, id, children, className, animated, ...aria }: SwitchProps) {
-  const moving = useMotion(animated) !== null
+  // The thumb moves with CSS alone: whether it may is all that is asked, and the Motion chunk is not loaded for it.
+  const moving = useMotionAllowed(animated)
   // Without a visible label Ark still points the input at its label part (`aria-labelledby`), which is not on the page:
   // the pointer is taken off, and the name is the caller's `aria-label` or the `<label htmlFor>` elsewhere.
   const input = React.useRef<HTMLInputElement>(null)

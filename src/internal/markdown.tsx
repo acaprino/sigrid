@@ -119,7 +119,7 @@ function renderInline(nodes: Inline[], key = ''): ReactNode[] {
       case 'del':
         return <del key={k}>{renderInline(n.children, k + '.')}</del>
       case 'code':
-        return <code key={k} className="rounded bg-paper-2 px-1 font-mono text-xs">{n.text}</code>
+        return <code key={k} className="rounded-sm bg-paper-2 px-1 font-mono text-xs">{n.text}</code>
       case 'link':
         return <span key={k} data-slot="md-link" title={n.href} className="underline decoration-ink-mute underline-offset-2">{renderInline(n.children, k + '.')}</span>
     }

@@ -57,23 +57,23 @@ Notes:
   bottom, the oldest pushed out from the top) is laid out here, because Ark's `max` keeps a new notice waiting instead
   of pushing the oldest out and its layouts follow a list that still holds a notice while it leaves. Its motion is the
   toolkit's list transition (`NOTICES` in `motion-impl`).
-- `ui/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
+- `components/calendar.tsx` and `components/DateField.tsx`: Ark's DatePicker (value, open state, dismissal, position, grid and
   its keyboard, month and year views). The roughly 380 lines of grid and keyboard code written here before are gone.
   Kept on top: a native `<button>` per day, the weekday headers readable by screen readers, Home and End for the week.
 - `components/ChipsInput.tsx`: Ark's TagsInput; with `suggestions`, also Ark's Combobox on the same text box, taken from
-  `ui/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
+  `components/combobox.tsx`. Kept on top: Backspace in the empty box removes the last label at once, labels
   are compared ignoring case, a chip is not edited in place.
-- `ui/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
+- `primitives/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
   slides with a CSS transition, only with `animated`.
-- `ui/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as Right and Left.
-- `ui/avatar.tsx`: Ark's Avatar, for the initials shown until the picture loads and again if it fails.
-- `ui/combobox.tsx`: Ark's Combobox (filtering as the user types, the list, its keyboard). The list is not moved to
+- `primitives/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as Right and Left.
+- `primitives/avatar.tsx`: Ark's Avatar, for the initials shown until the picture loads and again if it fails.
+- `components/combobox.tsx`: Ark's Combobox (filtering as the user types, the list, its keyboard). The list is not moved to
   a portal; the options are filtered here unless the caller answers `onQuery`.
-- `ui/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
+- `primitives/tabs.tsx`: Ark's Tabs (tablist, roving focus, automatic or manual activation, panels). Ark's own indicator
   part is not used: with `animated` the tint is the toolkit's `Highlight`.
 - `assemblies/Attachments.tsx`: Ark's FileUpload for the picker (trigger and hidden input) and for the size limit. The
   drop stays `useDropTarget`: Ark's dropzone takes files only, and here a dropped link is an attachment too.
-- `ui/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
+- `assemblies/tree.tsx`: Ark's TreeView and its tree collection (the keys, the first letters typed, one choice, the open
   branches). Kept on top: the loads of a branch's children (not Ark's `loadChildren`, which keeps a branch «loaded» for
   ever and asks again on a second Enter), dropped when the app gives another node; the filter, which opens what leads to
   a find and gives back what the person had opened; the failure of a load said in the row; the rows named by their name
@@ -139,7 +139,7 @@ with the accent-tint selection of the approved preview).
 Notes:
 - `Toasts.tsx` keeps SmoothUI's dark card (the inverted ink surface of the approved preview); Park's toast is a light
   surface card, so of it only the form is taken (l3, lg elevation, padding, the semibold action, outline keys).
-- `ui/calendar.tsx`, `components/ChipsInput.tsx`, `assemblies/Attachments.tsx` have nothing of SmoothUI left: their look is
+- `components/calendar.tsx`, `components/ChipsInput.tsx`, `assemblies/Attachments.tsx` have nothing of SmoothUI left: their look is
   Park's (date-picker, tags-input, file-upload), their behaviour Ark UI's. They left the SmoothUI table.
 - Park's checkbox is square with l1 corners, and that is the toolkit's checkbox. An app can round its own, through
   `--radius-check`.
@@ -296,7 +296,7 @@ The files below are copied from the SmoothUI registry and **adapted** for `@acap
 tokens from `src/styles/theme.css`, animations off by default (the `animated` prop, never with `prefers-reduced-motion`),
 no springs, loops or decorative effects. Since the Park restyle (2026-11-19) their form (sizes, variants, corners,
 elevation) is Park UI's (see above): what stays from SmoothUI is the structure, the `data-slot`s and the API. `Toasts.tsx`
-keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `ui/calendar.tsx`, `components/ChipsInput.tsx`
+keeps only the look of SmoothUI's surface and rests on Ark UI for what it does; `components/calendar.tsx`, `components/ChipsInput.tsx`
 and `assemblies/Attachments.tsx` have nothing of SmoothUI left and are no longer listed here. Each file carries the comment `// SmoothUI (MIT) <slug> 4.0.0 — adapted
 for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that the list and the headers match.
 
@@ -320,20 +320,20 @@ for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that th
 | `src/primitives/toggle-group.tsx` | `toggle-group` | https://smoothui.dev/r/base-nova/toggle-group.json |
 
 Notes:
-- `ui/kbd.tsx` no longer rests on SmoothUI: its form is Park UI's `kbd`, the rest is the toolkit's own.
+- `primitives/kbd.tsx` no longer rests on SmoothUI: its form is Park UI's `kbd`, the rest is the toolkit's own.
 - `Toasts.tsx` keeps from `toast` only the surface of a notice (the dark card: text, action and close button on one
   row, the quick choices on a second); its form is Park's `toast`. Its primitive is Ark UI's Toast and its motion is the toolkit's list transition: the
   SmoothUI enter/exit values are gone.
-- `ui/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
+- `components/calendar.tsx` and `components/DateField.tsx` no longer have anything of SmoothUI: the grid is Ark UI's
   DatePicker, the look Park's `date-picker`, and they left the table.
-- `ui/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
+- `primitives/select.tsx` keeps SmoothUI's data API and shape, but in place of its hand-made list it uses Base UI's `Select`
   primitive (keyboard, ARIA and a portal nested in the sheet).
-- `ui/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
-- `ui/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
+- `primitives/radio-group.tsx` adds Home/End and the `swatch` variant (color pills); all of Motion is removed.
+- `primitives/toggle-group.tsx` is single-choice only and uses Base UI's `Toggle` directly (SmoothUI's `toggle` slug
   is not copied); it serves a segmented switch (a choice between a few views, for example).
 - `components/ChipsInput.tsx` (Ark's TagsInput, Park's `tags-input`) and `assemblies/Attachments.tsx` (Ark's FileUpload, Park's
   `file-upload`) no longer have anything of SmoothUI and left the table.
-- `ui/empty.tsx`, `ui/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
+- `components/empty.tsx`, `primitives/tooltip.tsx`: SmoothUI's structure and `data-slot`, paper/ink tokens; the
   hint repeats the button's accessible name and is `aria-hidden`.
 
 ### SmoothUI license
@@ -375,7 +375,7 @@ licence is the one in the package's own folder in `node_modules`.
   https://github.com/material-foundation/material-color-utilities). The tonal palette (HCT) that `src/palette.ts`
   builds from an accent.
 - **class-variance-authority**: `class-variance-authority` 0.7.1 (**Apache-2.0**, Joe Bell,
-  https://github.com/joe-bell/cva). The variants and sizes of `ui/button.tsx` and `ui/badge.tsx`.
+  https://github.com/joe-bell/cva). The variants and sizes of `primitives/button.tsx` and `primitives/badge.tsx`.
 - **clsx**: `clsx` 2.1.1 (**MIT**, Copyright (c) Luke Edwards, https://github.com/lukeed/clsx), and **tailwind-merge**:
   `tailwind-merge` 3.7.0 (**MIT**, Copyright (c) 2021 Dany Castillo, https://github.com/dcastil/tailwind-merge). Joined
   in `cn` (`src/lib/utils.ts`), which every part uses to put its classes together.

@@ -16,7 +16,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Button, QUIET_ICON } from "../primitives/button"
-import { useMotion } from "../internal/motion"
+import { useMotionAllowed } from "../internal/motion"
 import { useWords } from "../words"
 
 export type ReorderListProps<Item> = {
@@ -74,7 +74,8 @@ function ReorderRow({ id, name, moving, children }: { id: string; name: string; 
 
 function ReorderList<Item>({ items, itemId, itemName, onReorder, children, animated, className, ...props }: ReorderListProps<Item>) {
   const words = useWords()
-  const moving = useMotion(animated) !== null
+  // The rows make room with dnd-kit's own transition: whether they may is all that is asked of the toolkit's motion.
+  const moving = useMotionAllowed(animated)
   const ids = React.useMemo(() => items.map(itemId), [items, itemId])
   // A small move before a drag starts, so a press on the handle is still a press.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))

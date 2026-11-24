@@ -43,7 +43,7 @@ function Empty({ action, className, description, icon, title, titleClassName, fi
           {icon}
         </div>
       ) : null}
-      <div data-slot="empty-title" className={cn("text-base font-medium text-ink", titleClassName)}>
+      <div data-slot="empty-title" className={cn("text-base font-semibold text-ink", titleClassName)}>
         {title}
       </div>
       {description ? (

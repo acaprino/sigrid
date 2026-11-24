@@ -104,6 +104,41 @@ describe('EmailComposer', () => {
     expect(onSend).not.toHaveBeenCalled()
   })
 
+  test('only the button and Ctrl+Enter send: the form is never sent by Enter in a field of one line', () => {
+    const onSend = vi.fn()
+    render(<Composer start={READY} onSend={onSend} />)
+    expect(screen.getByRole('button', { name: 'Send' }).getAttribute('type')).toBe('button')
+    fireEvent.submit(screen.getByRole('form'))
+    fireEvent.keyDown(screen.getByLabelText('Subject'), { key: 'Enter' })
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  test('Ctrl+Enter sends the draft with an address still being typed closed into its chip', () => {
+    const onSend = vi.fn()
+    render(<Composer start={{ ...EMPTY_EMAIL, subject: 'Hello' }} onSend={onSend} />)
+    const to = screen.getByLabelText<HTMLInputElement>('To')
+    to.focus()
+    fireEvent.change(to, { target: { value: 'ada@example.com' } })
+    fireEvent.keyDown(to, { key: 'Enter', ctrlKey: true })
+    expect(onSend).toHaveBeenCalledTimes(1)
+    expect(onSend.mock.calls[0]![0]).toMatchObject({ to: ['ada@example.com'], subject: 'Hello' })
+  })
+
+  test('the focus goes to the row that is wrong, and the same reason said again is a new alert', () => {
+    render(<Composer start={{ ...READY, cc: ['grace'] }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    expect(document.activeElement).toBe(screen.getByLabelText('Cc'))
+    const first = screen.getByRole('alert')
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    expect(screen.getByRole('alert')).not.toBe(first)
+    expect(screen.getByRole('alert').textContent).toBe('One of the addresses is not valid.')
+  })
+
+  test('the row of who it is from is a group of that name, so the control the app puts in it is named', () => {
+    render(<EmailComposer value={READY} onChange={() => {}} onSend={() => {}} from={<select><option>me@example.com</option></select>} />)
+    expect(within(screen.getByRole('group', { name: 'From' })).getByRole('combobox')).toBeTruthy()
+  })
+
   test("the words are the app's", () => {
     render(
       <WordsProvider words={{ mail: { compose: 'Nuovo messaggio', to: 'A', send: 'Invia' } }}>

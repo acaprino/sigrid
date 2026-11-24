@@ -83,11 +83,13 @@ export type ChatProps = {
   onDraftChange?: ((text: string) => void) | undefined
   /** The app's tools in the field's row (attach a file, choose a model). */
   tools?: React.ReactNode
+  /** Its buttons answer the press and its hints enter with a movement. Absent: as `MotionProvider` says. */
+  animated?: boolean | undefined
   className?: string | undefined
 }
 
 /** A whole chat with an assistant: the thread, the ready-made requests and the field. */
-function Chat({ messages, onSend, busy = false, onStop, onRetry, onVote, suggestions, empty, label, assistantName, placeholder, maxLength, draft, onDraftChange, tools, className }: ChatProps) {
+function Chat({ messages, onSend, busy = false, onStop, onRetry, onVote, suggestions, empty, label, assistantName, placeholder, maxLength, draft, onDraftChange, tools, animated, className }: ChatProps) {
   const words = useWords().chat
   const field = React.useRef<HTMLTextAreaElement>(null)
   const [own, setOwn] = React.useState('')
@@ -99,11 +101,11 @@ function Chat({ messages, onSend, busy = false, onStop, onRetry, onVote, suggest
   const last = messages[messages.length - 1]
   return (
     <div data-slot="chat" className={cn('flex min-h-0 min-w-0 flex-1 flex-col gap-3', className)}>
-      <Conversation label={label} busy={busy} empty={empty}>
+      <Conversation label={label} busy={busy} empty={empty} animated={animated}>
         {messages.map((message) => {
           if (message.from === 'user') {
             return (
-              <Message key={message.id} from="user" time={message.time}>
+              <Message key={message.id} from="user" time={message.time} animated={animated}>
                 {message.text}
               </Message>
             )
@@ -120,15 +122,16 @@ function Chat({ messages, onSend, busy = false, onStop, onRetry, onVote, suggest
               copyText={done && message.text !== '' ? message.text : undefined}
               onRetry={done && message === last && onRetry ? () => onRetry(message) : undefined}
               vote={message.vote}
+              animated={animated}
               onVote={done && onVote ? (vote) => onVote(message, vote) : undefined}
             >
               {message.reasoning === undefined ? null : (
-                <Reasoning busy={writing && message.text === ''} seconds={message.reasoningSeconds}>
+                <Reasoning busy={writing && message.text === ''} seconds={message.reasoningSeconds} animated={animated}>
                   {message.reasoning}
                 </Reasoning>
               )}
               {(message.tools ?? []).map((tool) => (
-                <ToolCall key={tool.id} name={tool.name} status={tool.status} summary={tool.summary} input={tool.input} output={tool.output} />
+                <ToolCall key={tool.id} name={tool.name} status={tool.status} summary={tool.summary} input={tool.input} output={tool.output} animated={animated} />
               ))}
               {message.text === '' ? null : <MarkdownBlocks text={message.text} />}
               {failed ? (
@@ -151,13 +154,14 @@ function Chat({ messages, onSend, busy = false, onStop, onRetry, onVote, suggest
       {suggestions && suggestions.length > 0 ? (
         <Suggestions
           items={suggestions}
+          animated={animated}
           onSelect={(item) => {
             setText(item.label)
             field.current?.focus()
           }}
         />
       ) : null}
-      <PromptInput ref={field} value={text} onValueChange={setText} onSubmit={onSend} busy={busy} onStop={onStop} placeholder={placeholder} maxLength={maxLength} tools={isEmptyNode(tools) ? undefined : tools} />
+      <PromptInput ref={field} value={text} onValueChange={setText} onSubmit={onSend} busy={busy} onStop={onStop} placeholder={placeholder} maxLength={maxLength} tools={isEmptyNode(tools) ? undefined : tools} animated={animated} />
     </div>
   )
 }

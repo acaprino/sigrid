@@ -36,11 +36,13 @@ export type MessageProps = {
   onVote?: ((vote: MessageVote | null) => void) | undefined
   /** The app's own quiet actions, after the toolkit's: `Button variant="ghost" size="icon-sm"` with a `Tooltip`. */
   actions?: React.ReactNode
+  /** The hints of its buttons enter with a movement. Absent: as `MotionProvider` says. */
+  animated?: boolean | undefined
   className?: string | undefined
 }
 
 /** One turn of a conversation. */
-function Message({ from, name, avatar, children, time, copyText, onRetry, vote, onVote, actions, className }: MessageProps) {
+function Message({ from, name, avatar, children, time, copyText, onRetry, vote, onVote, actions, animated, className }: MessageProps) {
   const words = useWords().chat
   const user = from === "user"
   const who = name ?? (user ? words.user : words.assistant)
@@ -57,13 +59,15 @@ function Message({ from, name, avatar, children, time, copyText, onRetry, vote, 
       children
     )
   const voteButton = (value: MessageVote, label: string) => (
-    <Tooltip label={label} side="bottom">
+    <Tooltip label={label} side="bottom" animated={animated}>
       <Button
         variant="ghost"
         size="icon-sm"
         aria-label={label}
         aria-pressed={vote === value}
-        className={cn(QUIET_ICON, "aria-pressed:bg-ink/9 aria-pressed:text-ink")}
+        animated={animated}
+        // On, it is the selection tint, as every button that stays pressed (a tool of the bar, a quick date).
+        className={cn(QUIET_ICON, "aria-pressed:bg-selected aria-pressed:text-selected-ink")}
         onClick={() => onVote?.(vote === value ? null : value)}
       >
         <Icon name={value === "up" ? "thumbUp" : "thumbDown"} />
@@ -80,7 +84,7 @@ function Message({ from, name, avatar, children, time, copyText, onRetry, vote, 
       <div className={cn("flex min-w-0 flex-col gap-1", user ? "max-w-4/5 items-end" : "flex-1")}>
         <div
           data-slot="message-body"
-          className={cn("min-w-0 text-sm text-ink wrap-anywhere", user ? "rounded-lg bg-ink/6 px-3 py-2" : "flex flex-col gap-3")}
+          className={cn("min-w-0 text-sm text-ink wrap-anywhere", user ? "rounded-lg bg-ink/6 px-(--pad-md) py-2" : "flex flex-col gap-3")}
         >
           <span className="sr-only">{who}: </span>
           {body}
@@ -88,14 +92,14 @@ function Message({ from, name, avatar, children, time, copyText, onRetry, vote, 
         {hasFoot ? (
           <div data-slot="message-actions" className={cn("flex min-h-(--control-sm) items-center gap-1", !user && "-ms-(--pad-xs)")}>
             {isEmptyNode(time) ? null : (
-              <span data-slot="message-time" className={cn("px-(--pad-xs) text-xs text-ink-mute tabular-nums")}>
+              <span data-slot="message-time" className="px-(--pad-xs) text-2xs text-ink-mute tabular-nums">
                 {time}
               </span>
             )}
-            {copyText === undefined ? null : <CopyButton value={copyText} className={QUIET_ICON} />}
+            {copyText === undefined ? null : <CopyButton value={copyText} className={QUIET_ICON} animated={animated} />}
             {onRetry ? (
-              <Tooltip label={words.retry} side="bottom">
-                <Button variant="ghost" size="icon-sm" aria-label={words.retry} className={QUIET_ICON} onClick={onRetry}>
+              <Tooltip label={words.retry} side="bottom" animated={animated}>
+                <Button variant="ghost" size="icon-sm" aria-label={words.retry} className={QUIET_ICON} animated={animated} onClick={onRetry}>
                   <Icon name="refresh" />
                 </Button>
               </Tooltip>

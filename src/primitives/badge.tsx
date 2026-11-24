@@ -28,8 +28,8 @@ const badgeVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90",
         outline:
-          "border-border text-foreground [a&]:hover:bg-paper-2 [a&]:hover:text-ink",
-        ghost: "[a&]:hover:bg-paper-2 [a&]:hover:text-ink",
+          "border-border text-foreground [a&]:hover:bg-ink/4 [a&]:hover:text-ink",
+        ghost: "[a&]:hover:bg-ink/6 [a&]:hover:text-ink",
         link: "text-ink underline decoration-ink-mute underline-offset-2 [a&]:hover:decoration-current",
       },
     },

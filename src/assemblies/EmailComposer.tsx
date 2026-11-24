@@ -5,8 +5,12 @@
 // bold, italic, underline, two lists, a quote; its value is HTML). An address is a chip (`ChipsInput`): a comma, a
 // semicolon, a blank or Enter closes one, and one that is not an address is said so on its chip, never refused.
 // The app holds the draft (`value`, `onChange`) and sends it: the composer knows no server. «Send» is the one solid
-// button (R3); Ctrl+Enter (⌘ Enter) does the same. A message that cannot go (nobody to send it to, an address that is
-// not one) is not sent: the reason is said in words above the buttons and the focus goes to «To». While it is being
+// button (R3); Ctrl+Enter (⌘ Enter) does the same from anywhere in the form, after an address still being typed is
+// closed into its chip. Enter alone never sends: in the subject it does nothing, in the text it makes a new line.
+// A message that cannot go (nobody to send it to, an address that is not one) is not sent: the reason is said in
+// words above the buttons and the focus goes to the row that is wrong.
+// The names of the rows are at their start, in the muted ink, not above the fields as in a `FormField`: a message
+// is read down one column of fields, and the names are a margin beside it. While it is being
 // sent the button waits in its place. «Discard» is there only when the app can throw the draft away, and does it at
 // once: the app offers Undo in a notice (`Toasts`).
 import * as React from 'react'
@@ -83,22 +87,38 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
   const [asked, setAsked] = React.useState(false)
   const held = value.cc.length > 0 || value.bcc.length > 0
   const copies = asked || held
-  // The reason the last try to send did not go, until the draft changes.
-  const [problem, setProblem] = React.useState<'noRecipient' | 'badAddress' | null>(null)
+  // The reason the last try to send did not go, until the draft changes; counted, so the same reason said again
+  // is a new alert and is read again.
+  const [problem, setProblem] = React.useState<{ why: 'noRecipient' | 'badAddress'; at: number } | null>(null)
+  const tries = React.useRef(0)
   const set = (part: Partial<EmailDraft>) => {
     setProblem(null)
     onChange({ ...value, ...part })
   }
+  const focusRow = (field: 'to' | 'cc' | 'bcc') => form.current?.ownerDocument.getElementById(`${id}-${field}`)?.focus()
   const send = () => {
     if (sending) return
-    const found = emailProblem(value)
-    setProblem(found)
-    if (found) form.current?.ownerDocument.getElementById(`${id}-to`)?.focus()
-    else onSend(value)
+    const why = emailProblem(value)
+    if (why === null) {
+      setProblem(null)
+      onSend(value)
+      return
+    }
+    tries.current += 1
+    setProblem({ why, at: tries.current })
+    // To the first row with an address that is not one; with nobody to send it to, to «To».
+    focusRow(why === 'badAddress' ? ((['to', 'cc', 'bcc'] as const).find((field) => !value[field].every(isEmailAddress)) ?? 'to') : 'to')
   }
+  // Ctrl+Enter sends what the form holds once it is drawn again: an address being typed has become a chip by then.
+  const [asking, setAsking] = React.useState(0)
+  const sendLatest = React.useRef(send)
+  sendLatest.current = send
+  React.useEffect(() => {
+    if (asking > 0) sendLatest.current()
+  }, [asking])
   const addresses = (field: 'to' | 'cc' | 'bcc', name: string, end?: React.ReactNode) => (
     <div data-slot="email-composer-row" className={ROW}>
-      <label htmlFor={`${id}-${field}`} className={NAME}>
+      <label htmlFor={`${id}-${field}`} data-slot="email-composer-name" className={NAME}>
         {name}
       </label>
       <div className="min-w-0 flex-1">
@@ -124,19 +144,25 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
       aria-label={label ?? words.compose}
       noValidate
       className={cn('flex min-h-0 min-w-0 flex-col gap-2', className)}
-      onSubmit={(event) => {
+      // Enter in a field of one line would send the form: here only the button and Ctrl+Enter send.
+      onSubmit={(event) => event.preventDefault()}
+      // Before the fields see it: the text's own Ctrl+Enter (a line break) does not run as well.
+      onKeyDownCapture={(event) => {
+        if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || event.nativeEvent.isComposing || event.keyCode === 229) return
         event.preventDefault()
-        send()
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || event.nativeEvent.isComposing) return
-        event.preventDefault()
-        send()
+        event.stopPropagation()
+        // Leaving the field closes an address being typed into its chip.
+        const active = form.current?.ownerDocument.activeElement
+        if (active instanceof HTMLElement && form.current?.contains(active)) active.blur()
+        setAsking((n) => n + 1)
       }}
     >
       {isEmptyNode(from) ? null : (
-        <div data-slot="email-composer-row" className={ROW}>
-          <span className={NAME}>{words.from}</span>
+        // A group named «From»: the app's control inside it is named by the row.
+        <div data-slot="email-composer-row" role="group" aria-labelledby={`${id}-from`} className={ROW}>
+          <span id={`${id}-from`} data-slot="email-composer-name" className={NAME}>
+            {words.from}
+          </span>
           <div className="min-w-0 flex-1">{from}</div>
         </div>
       )}
@@ -150,7 +176,7 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
       {copies ? addresses('cc', words.cc) : null}
       {copies ? addresses('bcc', words.bcc) : null}
       <div data-slot="email-composer-row" className={ROW}>
-        <label htmlFor={`${id}-subject`} className={NAME}>
+        <label htmlFor={`${id}-subject`} data-slot="email-composer-name" className={NAME}>
           {words.subject}
         </label>
         <Input id={`${id}-subject`} className="min-w-0 flex-1" value={value.subject} onChange={(event) => set({ subject: event.target.value })} />
@@ -158,19 +184,21 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
       <RichTextField aria-label={words.body} value={value.html} onChange={(html) => set({ html })} className="min-h-0 flex-1" />
       {isEmptyNode(attachments) ? null : <div data-slot="email-composer-attachments">{attachments}</div>}
       {problem ? (
-        <p role="alert" data-slot="email-composer-problem" className="flex items-center gap-2 text-sm text-destructive">
+        <p key={problem.at} role="alert" data-slot="email-composer-problem" className="flex items-center gap-2 text-sm text-destructive">
           <Icon name="error" />
-          {words[problem]}
+          {words[problem.why]}
         </p>
       ) : null}
       <div data-slot="email-composer-actions" className="flex items-center gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1">{tools}</div>
+        <div data-slot="email-composer-tools" className="flex min-w-0 flex-1 items-center gap-1">
+          {tools}
+        </div>
         {onDiscard ? (
           <Button type="button" variant="ghost" onClick={onDiscard}>
             {words.discard}
           </Button>
         ) : null}
-        <Button type="submit" loading={sending} loadingText={words.sending}>
+        <Button type="button" loading={sending} loadingText={words.sending} onClick={send}>
           <Icon name="send" />
           {words.send}
         </Button>

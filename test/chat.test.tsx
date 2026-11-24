@@ -5,8 +5,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
-import { Message, Reasoning, Suggestions, ToolCall, type ToolCallStatus } from '../src/components'
-import { Chat, type ChatMessage, Conversation, PromptInput } from '../src/assemblies'
+import { Disclosure, Message, Reasoning, Suggestions, ToolCall, type ToolCallStatus } from '../src/components'
+import { CONVERSATION_NEAR_PX, Chat, type ChatMessage, Conversation, PromptInput } from '../src/assemblies'
 
 describe('Conversation', () => {
   test('a named log that waits while an answer is written', () => {
@@ -30,20 +30,62 @@ describe('Conversation', () => {
     expect(within(screen.getByRole('log', { name: 'Conversation' })).getByText('Ask anything')).toBeTruthy()
   })
 
-  test('the button back to the latest message shows only while the reader is away from the end', () => {
+  /** The thread as tall as `height` showing `shown` of it, at `top`: jsdom lays nothing out. */
+  const place = (log: HTMLElement, top: number) => {
+    Object.defineProperties(log, { scrollHeight: { value: 1000, configurable: true }, clientHeight: { value: 200, configurable: true } })
+    log.scrollTop = top
+    fireEvent.scroll(log)
+  }
+  const latest = () => screen.queryByRole('button', { name: 'Go to the latest message' })
+
+  test('the button back to the latest message shows only while the reader is away from the end, and gives the focus to the thread', () => {
     render(
       <Conversation>
         <Message from="assistant">A long answer</Message>
       </Conversation>,
     )
     const log = screen.getByRole('log')
-    expect(screen.queryByRole('button', { name: 'Go to the latest message' })).toBeNull()
-    Object.defineProperties(log, { scrollHeight: { value: 1000, configurable: true }, clientHeight: { value: 200, configurable: true } })
-    log.scrollTop = 100
-    fireEvent.scroll(log)
-    fireEvent.click(screen.getByRole('button', { name: 'Go to the latest message' }))
+    place(log, 800)
+    expect(latest()).toBeNull()
+    place(log, 100)
+    fireEvent.click(latest()!)
     expect(log.scrollTop).toBe(1000)
-    expect(screen.queryByRole('button', { name: 'Go to the latest message' })).toBeNull()
+    expect(latest()).toBeNull()
+    // The button is gone: the focus it had is on the thread, not nowhere.
+    expect(document.activeElement).toBe(log)
+  })
+
+  test('any move up leaves the end, however small, so a slow scroll is not pulled back; coming back near takes it up again', () => {
+    render(
+      <Conversation>
+        <Message from="assistant">A long answer</Message>
+      </Conversation>,
+    )
+    const log = screen.getByRole('log')
+    place(log, 800)
+    // Ten pixels up: still within reach of the end, and yet the reader has left it.
+    place(log, 790)
+    expect(latest()).not.toBeNull()
+    // Down again, to within reach of the end (which is at 800).
+    expect(800 - 795).toBeLessThanOrEqual(CONVERSATION_NEAR_PX)
+    place(log, 795)
+    expect(latest()).toBeNull()
+  })
+
+  test('a condition that came out false is not a message: the empty thread still shows what the app gives', () => {
+    const none: string[] = []
+    render(
+      <Conversation empty="Ask anything">
+        {none.map((text) => (
+          <Message key={text} from="user">
+            {text}
+          </Message>
+        ))}
+        {null}
+        {false}
+      </Conversation>,
+    )
+    expect(screen.getByText('Ask anything')).toBeTruthy()
   })
 })
 
@@ -129,6 +171,21 @@ describe('PromptInput', () => {
     expect(onStop).toHaveBeenCalledTimes(1)
   })
 
+  test('sent with the button, the focus goes back to the text, not to a button that is now off', () => {
+    render(<PromptInput defaultValue="Hello" onSubmit={() => {}} />)
+    const button = screen.getByRole('button', { name: 'Send' })
+    button.focus()
+    fireEvent.click(button)
+    expect(document.activeElement).toBe(screen.getByRole('textbox'))
+  })
+
+  test('Enter that confirms a composition (an IME) does not send', () => {
+    const onSubmit = vi.fn()
+    render(<PromptInput defaultValue="こん" onSubmit={onSubmit} />)
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', keyCode: 229 })
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
   test('a controlled field asks for an empty text after sending; the count shows with a limit', () => {
     const onValueChange = vi.fn()
     const { container } = render(<PromptInput value="Hi" onValueChange={onValueChange} onSubmit={() => {}} maxLength={100} />)
@@ -186,6 +243,28 @@ describe('ToolCall', () => {
     expect(screen.getByText('Input')).toBeTruthy()
     expect(screen.getByText('{"q":"x"}').tagName).toBe('PRE')
     expect(screen.getByText('Output')).toBeTruthy()
+  })
+
+  test('what a tool was given and gave back is code that the keyboard can reach and scroll', () => {
+    render(<ToolCall name="Run" input="ls -la" defaultOpen />)
+    const block = screen.getByText('ls -la')
+    expect(block.getAttribute('tabindex')).toBe('0')
+    expect(block.getAttribute('aria-label')).toBe('Input')
+    expect(block.className).toMatch(/\bfont-mono\b/)
+  })
+
+  test('a reasoning and a call are the row of every disclosure: the same row, the same arrow', () => {
+    const { container } = render(
+      <>
+        <Disclosure label="More">x</Disclosure>
+        <Reasoning>y</Reasoning>
+        <ToolCall name="Run" input="z" />
+      </>,
+    )
+    const rows = [...container.querySelectorAll('[data-slot="disclosure-row"]')]
+    expect(rows).toHaveLength(3)
+    expect(new Set(rows.map((row) => row.className)).size).toBe(1)
+    expect(new Set(rows.map((row) => row.querySelector('[data-slot="disclosure-chevron"]')!.innerHTML)).size).toBe(1)
   })
 
   test("the words are the app's", () => {

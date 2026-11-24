@@ -15,7 +15,9 @@
 // Every duration is under 250 ms, so of Fluent's eight only the first four are used:
 //   100  `faster`  small and near: a press, a hint, the check mark, the hover background, whatever leaves
 //   150  `fast`    a button coming back, an arrow turning, the pill, a menu or popover card, a card landing
+//   150  (also)    a card of a deck coming back to its place
 //   200  `normal`  several things moving together (a list, the column of notices), a row closing up, a side sheet;
+//                  a card of a deck thrown to its side (the one long way out: the way is the decision);
 //                  and how long a leaving notice stays in the DOM, after its exit has ended
 //
 // In the plane. Things slide and fade; they do not zoom, which would add a depth the flat page does not have. A
@@ -57,7 +59,7 @@ export const FLUENT_CURVES = {
  * Durations in milliseconds of what enters or leaves once: all under 250 ms (test/animated.test.tsx). `toast` is how
  * long a notice that leaves the column stays in the DOM (Ark's `removeDelay`): longer than its exit (`GESTURE_MS.leave`).
  */
-export const DURATION_MS = { toast: FLUENT_DURATIONS.normal, mark: FLUENT_DURATIONS.faster, sheet: FLUENT_DURATIONS.normal, row: FLUENT_DURATIONS.normal, popup: FLUENT_DURATIONS.fast, land: FLUENT_DURATIONS.fast } as const
+export const DURATION_MS = { toast: FLUENT_DURATIONS.normal, mark: FLUENT_DURATIONS.faster, sheet: FLUENT_DURATIONS.normal, row: FLUENT_DURATIONS.normal, popup: FLUENT_DURATIONS.fast, land: FLUENT_DURATIONS.fast, throw: FLUENT_DURATIONS.normal, settle: FLUENT_DURATIONS.fast } as const
 
 const s = (ms: number) => ms / 1000
 
@@ -307,19 +309,33 @@ export function landCard(el: Element): void {
 
 /**
  * A card of a deck thrown to the side it was decided to: it goes on from where the finger left it, by its own width,
- * and fades, gathering speed as what leaves does. It stays out (`release` puts it back) until the deck has drawn the
- * next card, so the card thrown is never seen at rest again. `done` always resolves.
+ * and fades, gathering speed as what leaves does. It is the one thing that leaves by a long way, because the way is
+ * the decision (left or right): so it takes the time of what crosses a distance (`DURATION_MS.throw`), not the short
+ * time of what fades where it is. It stays out (`release` puts it back) until the deck has drawn the next card, so the
+ * card thrown is never seen at rest again. `done` always resolves.
  */
 export function throwCard(el: Element, direction: 'left' | 'right'): { done: Promise<void>; release: () => void } {
   if (typeof el.animate !== 'function') return { done: Promise.resolve(), release: () => {} }
   const node = el as HTMLElement
   const from = node.style.getPropertyValue('translate') || '0px 0px'
   const far = (direction === 'left' ? -1 : 1) * Math.max(node.offsetWidth, TRAVEL_PX.sheet)
-  const run = node.animate(
-    { opacity: [1, 0], translate: [from, `${far}px 0px`] },
-    { duration: DURATION_MS.row, easing: `cubic-bezier(${FLUENT_CURVES.accelerateMin.join(',')})`, fill: 'forwards' },
-  )
+  const run = node.animate({ opacity: [1, 0], translate: [from, `${far}px 0px`] }, { duration: DURATION_MS.throw, easing: bezier(FLUENT_CURVES.accelerateMin), fill: 'forwards' })
   return { done: run.finished.then(() => {}, () => {}), release: () => run.cancel() }
+}
+
+/**
+ * A card of a deck let go before the mark: it comes back to its place from where the finger left it (`translate` and
+ * `rotate` as they were under the finger), settling as what enters does, in the time of a button coming back.
+ */
+export function settleCard(el: Element, from: { translate: string; rotate: string }): void {
+  if (typeof el.animate !== 'function') return
+  // Only the start is given: the end is the card's own place, whatever its style says once it is drawn again.
+  el.animate([{ ...from, offset: 0 }], { duration: DURATION_MS.settle, easing: bezier(FLUENT_CURVES.decelerateMid) })
+}
+
+/** A curve of `FLUENT_CURVES` as the Web Animations API takes it. */
+function bezier(curve: readonly number[]): string {
+  return `cubic-bezier(${curve.join(',')})`
 }
 
 // --- Gestures on an element that already exists (no remount when the chunk arrives). ---

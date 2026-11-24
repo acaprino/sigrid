@@ -577,7 +577,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
     Make `columns` once (outside the component, or with `useMemo`): a new array at every paint sorts again. For
     filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and its parts,
-    which are in the main entry.
+    which are primitives (`@acaprino/sigrid/primitives`).
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
     items there are and where each one is. Each place gives one row, never none. With `fill` it is as tall as the

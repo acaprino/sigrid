@@ -82,7 +82,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
   // One icon at the foot, at its end on the column and in the middle of the rail: the name is a hint and the button's name, not
   // a line of text that takes a row of the sidebar.
   const toggle = onCollapsedChange && !narrow && !forced ? (
-    <Tooltip label={rail ? words.sidebar.expand : words.sidebar.collapse} side="right">
+    <Tooltip label={rail ? words.sidebar.expand : words.sidebar.collapse} side="right" animated={animated}>
       <button
         type="button"
         data-slot="sidebar-collapse"

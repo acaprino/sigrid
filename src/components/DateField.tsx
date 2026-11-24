@@ -7,7 +7,7 @@
 // (or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time
 // zones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).
 // Ark gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the
-// button), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).
+// button), the position of the card, focus on the chosen day when it opens, the grid (see `components/calendar.tsx`).
 // The card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its
 // focus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.
 import * as React from 'react'

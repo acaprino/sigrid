@@ -208,7 +208,7 @@ export function BaseColorChoice({ palette, seed, onPalette, text }: { palette: P
           aria-checked={!palette}
           tabIndex={palette ? -1 : 0}
           onClick={() => onPalette(null)}
-          className={cn('flex h-(--control-xs) items-center rounded-full border bg-raised px-3 text-xs pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(!palette))}
+          className={cn('flex h-(--control-xs) items-center rounded-md border bg-raised px-3 text-xs pointer-coarse:min-h-11', FOCUS_RING, choiceBorder(!palette))}
         >
           {text.theme}
         </button>
