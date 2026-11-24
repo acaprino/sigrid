@@ -396,7 +396,8 @@ An app that used the `Inspector` before 2026-11-24 meets four changes:
   that wants Escape to close the details from the rest of the window declares it:
   `useCommand({ id: 'close', label: 'Close the details', keys: 'Escape', when: open, run: () => setOpen(false) })`.
   The command runs from a field of the content too (a command's Escape is not left to a field), and never from a
-  field of the inspector that holds text, docked or panel: there the key is the field's alone.
+  field of the inspector that holds text, docked or panel: there the registry leaves the key to the field. The key
+  itself still goes on: a listener of the app's own on the document hears it, and decides for itself.
 - A control of the inspector removed while it has the focus (a «Remove» button, a link its press replaces) leaves the
   focus on the inspector itself, which takes the focus (docked too: a press on its text gives it the focus); an app
   that wants it on the next control focuses that control itself.

@@ -168,8 +168,18 @@ function leftToFocus(want: Combination, event: KeyboardEvent): boolean {
   const plain = !want.ctrl && !want.alt && !functionKey
   if (plain && event.defaultPrevented) return true
   if (within(event, SURFACES) && (plain || functionKey)) return true
-  if (within(event, FIELDS)) return plain ? want.key !== "escape" : !functionKey && CARET_KEYS.has(want.key)
+  if (within(event, FIELDS)) return plain ? want.key !== "escape" || filledInInspector(event) : !functionKey && CARET_KEYS.has(want.key)
   return plain && CONTROL_KEYS.has(want.key) && within(event, CONTROLS)
+}
+
+/**
+ * Escape in a field is the app's, but for a field of the `Inspector` that holds text: there the key is the field's (it
+ * empties a search, gives up an edit) and the inspector itself stays open (app-shell.tsx), so a command does not run.
+ */
+function filledInInspector(event: KeyboardEvent): boolean {
+  const target = event.target
+  if (!(target instanceof Element) || target.closest("[data-inspector-form]") === null) return false
+  return !(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) || target.value !== ""
 }
 
 export type CommandsProviderProps = {

@@ -405,7 +405,9 @@ export type InspectorProps = {
  * A press outside it does not close it, and opening it does not move the focus (a selection opened it, not a request:
  * the person goes in with Tab, F6 or a press). Closed with the focus in it, it gives the focus back to what last had
  * it outside, or to the content when that is gone or hidden; closed with the focus elsewhere, it moves nothing. It
- * does the same when it is taken out of the page while open, and when what had the focus in it is removed.
+ * does the same when it is taken out of the page while open. When what had the focus in it is removed, the focus
+ * stays in it, on the inspector itself (it takes the focus, with the ring of a region: F6 lands there too when it
+ * holds no control).
  */
 function Inspector({ title, open, onOpenChange, footer, animated, className, children }: InspectorProps) {
   const words = useWords()
@@ -557,13 +559,12 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
       // what has the focus: a field that holds text, an open list or menu.
       onKeyDown={(event) => {
         if (!onOpenChange || event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing || event.ctrlKey || event.altKey || event.metaKey) return
-        // The field's alone: an app's command on Escape does not close the details from it either, as in the drawer.
-        if (holdsText(event.target)) return event.stopPropagation()
+        // The key goes on, as in the drawer: an app's own listener still hears it (the registry leaves it to the field).
         if (keepsEscape(event.target, event.currentTarget)) return
         event.preventDefault()
         onOpenChange(false)
       }}
-      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper outline-none", className)}
+      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper", FOCUS_RING_INSET, className)}
     >
       {heading}
       {body}

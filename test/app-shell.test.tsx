@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { afterEach, expect, test, vi } from 'vitest'
-import { APP_SHELL_STEPS, AppShell, Inspector, NavItem, SearchField, Sidebar, SidebarGroup, appShellLayout, useAppShell } from '../src'
+import { APP_SHELL_STEPS, AppShell, CommandsProvider, Inspector, NavItem, SearchField, Sidebar, SidebarGroup, appShellLayout, useAppShell, useCommand } from '../src'
 import { settle } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())
@@ -189,6 +189,12 @@ function Details({ start = true, shown = true, find = '', onChange }: { start?: 
       <button type="button" onClick={() => setOpen(false)}>Hide the details</button>
     </AppShell>
   )
+}
+
+/** An app's command on Escape, in the registry. */
+function CloseCommand({ run }: { run: () => void }) {
+  useCommand({ id: 'close', label: 'Close the details', keys: 'Escape', run })
+  return null
 }
 
 const button = (name: string) => screen.getByRole('button', { name })
@@ -422,22 +428,35 @@ test('closed with the focus in a menu of its own, in a layer of the page, the in
 
 test('docked, a search field that holds text keeps its Escape; empty, Escape closes the inspector', () => {
   const seen: boolean[] = []
-  render(<Details find="invoice" onChange={(open) => seen.push(open)} />)
+  const ran = vi.fn()
+  render(
+    <CommandsProvider>
+      <CloseCommand run={ran} />
+      <Details find="invoice" onChange={(open) => seen.push(open)} />
+    </CommandsProvider>,
+  )
   const field = screen.getByRole('searchbox', { name: 'Find in the details' })
   focus(button('First message'))
   focus(field)
-  // An app's command on Escape (it listens on the window) does not hear the key of a field that holds text.
+  // The key of a field that holds text: the registry's command on Escape does not run, and the key still goes on to
+  // a listener of the app's own on the document.
   const heard: string[] = []
   const listen = (event: KeyboardEvent) => heard.push(event.key)
-  window.addEventListener('keydown', listen)
+  document.addEventListener('keydown', listen)
   fireEvent.keyDown(field, { key: 'Escape' })
-  window.removeEventListener('keydown', listen)
+  document.removeEventListener('keydown', listen)
   expect(seen).toEqual([])
-  expect(heard).toEqual([])
+  expect(ran).not.toHaveBeenCalled()
+  expect(heard).toEqual(['Escape'])
   fireEvent.change(field, { target: { value: '' } })
   fireEvent.keyDown(field, { key: 'Escape' })
   expect(seen).toEqual([false])
+  // The inspector answered the key: the command does not run too.
+  expect(ran).not.toHaveBeenCalled()
   expect(document.activeElement).toBe(button('First message'))
+  // From the list, the command is the app's.
+  fireEvent.keyDown(button('First message'), { key: 'Escape' })
+  expect(ran).toHaveBeenCalledTimes(1)
 })
 
 test('taken out of the page while open with the focus in it, the inspector gives the focus back', () => {
