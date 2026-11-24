@@ -365,6 +365,13 @@ from the frame; the steps are recommended, and an app passes its own with `steps
 a drawer. F6 moves the focus to the next region (title bar, sidebar, content, inspector) and
 Shift+F6 to the one before, skipping a closed one: the frame does it, with nothing for the app to write.
 
+The `Inspector` lets the rest of the window work beside it, in both forms. A press outside it does not close it (the
+person keeps choosing in the list or on the canvas, and typing in the search field, while it shows what is chosen);
+its button closes it, Escape pressed with the focus in it, and as a panel also a swipe towards its edge and Escape
+from anywhere. Opening it does not move the focus: a selection opened it, and the person goes in with Tab, F6 or a
+press. Closed with the focus in it, it gives the focus back to what had it before the focus went in, or to the content
+when that is gone or hidden; closed with the focus elsewhere (an app's command closed it), it moves nothing.
+
 ```tsx
 <AppShell
   contentLabel="Messages"

@@ -61,9 +61,9 @@ height is what the person sees (`--app-height`), measured by the frame itself: s
 | Fields | 16px text below 860px, so iOS does not zoom the page on focus. No other text size changes | `Input`, `Textarea`, `Combobox`, the date fields |
 | Key hints | Hidden: `Kbd`, the shortcuts of a menu and of the command palette (R5) | `max-md:pointer-coarse:hidden` |
 | Sidebar | A drawer when the frame is under 620px (outside a frame, when the screen is under 860px). A swipe towards its edge closes it | `Sidebar`, `APP_SHELL_STEPS.rail` |
-| Inspector | Under 1000px a panel over the end of the content, three quarters of the frame wide, not modal | `Inspector`, `APP_SHELL_STEPS.inspector` |
+| Inspector | Under 1000px a panel over the end of the content, three quarters of the frame wide, not modal: a press outside it does not close it (the list beside it is still chosen from), a swipe towards its edge, its button and Esc do, and it opens without taking the focus | `Inspector`, `APP_SHELL_STEPS.inspector` |
 | Toolbar | Under 448px of its own width a button keeps its icon and drops its word, and a search field is its magnifier. Under 256px the app's name goes. The buttons never go | `Toolbar` |
-| Sheets | Close with a swipe in the direction of their side, as well as with Esc and a press outside | `Sheet` |
+| Sheets | Close with a swipe in the direction of their side, as well as with Esc and a press outside (the inspector's panel is the exception: a press outside leaves it open) | `Sheet` |
 | Date card | A sheet at the foot of the screen, 85% of its height at most, with room for the home indicator | `DateField`, `DateRangeField`, `DateTimeField` |
 | Dialog | As wide as the screen less 16px at each side | `Dialog` |
 | Notices | In the middle of the foot below 860px, above what the frame keeps there (its actions, its footer and its bottom bar: the frame writes that room to `--bottom-bar-room`; an app with a bar of its own sets it) | `Toasts`, `--bottom-bar-room` |
