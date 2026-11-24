@@ -6,7 +6,8 @@
 // nothing here is part of the package, and the toolkit itself still knows no app.
 // `?device=phone&host=native` opens both examples in that host.
 import * as React from 'react'
-import { ToggleGroup, ToggleGroupItem, type DensityId } from '../src/index'
+import { type DensityId } from '../src/index'
+import { ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { Ethel } from './ethel'
 import { HOSTS, type AppProps, type Device, type HostKind, type Look } from './hosts'
 import { Code, Page, Section } from './parts'

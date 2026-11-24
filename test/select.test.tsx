@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { Select } from '../src/components/ui/select'
+import { Select } from '../src/primitives/select'
 import { noop, settle } from './helpers'
 
 afterEach(() => vi.useRealTimers())

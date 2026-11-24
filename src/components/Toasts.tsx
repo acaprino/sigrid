@@ -24,7 +24,7 @@
 // prefers-reduced-motion, the same places are plain styles and nothing moves.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Toast, Toaster, createToaster, useToastContext } from '@ark-ui/react/toast'
-import { Button } from './ui/button'
+import { Button } from '../primitives/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'

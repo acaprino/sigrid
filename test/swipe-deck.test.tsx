@@ -5,7 +5,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { SWIPE_DISTANCE_PX, SWIPE_FLICK, SwipeDeck, type SwipeDirection } from '../src'
+import { SWIPE_DISTANCE_PX, SWIPE_FLICK, SwipeDeck, type SwipeDirection } from '../src/assemblies'
 
 type Card = { id: string; title: string }
 const CARDS: Card[] = [{ id: 'a', title: 'First' }, { id: 'b', title: 'Second' }]

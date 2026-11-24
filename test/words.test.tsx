@@ -3,36 +3,10 @@
 // words as their last argument.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import {
-  AttachmentMarks,
-  AttachmentsSection,
-  ChipsInput,
-  Combobox,
-  DEFAULT_WORDS,
-  DateField,
-  DateTimeField,
-  DialogRoot,
-  DialogContent,
-  DialogTitle,
-  DurationField,
-  MarkdownBlocks,
-  SearchField,
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  Shortcut,
-  Swatches,
-  Toasts,
-  COLORS,
-  WordsProvider,
-  kindLabel,
-  overLimitNotice,
-  stateText,
-  useWords,
-  withWords,
-  withinLimit,
-  type WordsOverride,
-} from '../src'
+import { DEFAULT_WORDS, COLORS, WordsProvider, kindLabel, overLimitNotice, useWords, withWords, withinLimit, type WordsOverride } from '../src'
+import { DialogRoot, DialogContent, DialogTitle, Sheet, SheetContent, SheetTitle, Shortcut } from '../src/primitives'
+import { ChipsInput, Combobox, DateField, DateTimeField, DurationField, MarkdownBlocks, SearchField, Swatches, Toasts } from '../src/components'
+import { AttachmentMarks, AttachmentsSection, stateText } from '../src/assemblies'
 import { settle } from './helpers'
 
 const MB = 1024 * 1024

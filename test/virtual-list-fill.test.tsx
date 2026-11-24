@@ -2,7 +2,7 @@
 // scale (`pad`): an app writes no class for either.
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { ItemRow } from '../src'
+import { ItemRow } from '../src/components'
 import { VirtualList } from '../src/virtual'
 
 const box = () => screen.getByRole('list', { name: 'Messages' }).parentElement!

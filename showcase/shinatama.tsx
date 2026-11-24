@@ -15,47 +15,11 @@
 // the rows of the sidebar's head and foot `SidebarRow`, and the keys are commands of the registry (`useCommand`), which
 // the foot lists (`KeyHints`).
 import * as React from 'react'
-import {
-  AppShell,
-  Button,
-  Checkbox,
-  Cluster,
-  Column,
-  CommandsProvider,
-  ContentSplit,
-  Count,
-  Dot,
-  Empty,
-  Icon,
-  Inspector,
-  ItemList,
-  ItemRow,
-  KeyHints,
-  MarkdownBlocks,
-  NavItem,
-  SearchField,
-  Section,
-  Select,
-  Sidebar,
-  SidebarGroup,
-  SidebarRow,
-  Spacer,
-  Text,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  Tree,
-  cn,
-  colorTheme,
-  useCommand,
-  type ToastItem,
-  type TreeNode,
-} from '../src/index'
+import { cn, colorTheme } from '../src/index'
+import { Button, Checkbox, Cluster, Column, Count, Dot, Icon, Section, Select, Spacer, Text, ToggleGroup, ToggleGroupItem } from '../src/primitives'
+import { Empty, ItemList, ItemRow, MarkdownBlocks, SearchField, type ToastItem } from '../src/components'
+import { AppShell, ContentSplit, Inspector, NavItem, Sidebar, SidebarGroup, SidebarRow, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { CommandsProvider, KeyHints, Tree, useCommand, type TreeNode } from '../src/assemblies'
 import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Shinatama's own theme: its rose (hue 355 in Imago; this hex is the nearest one picked by eye, not measured). */

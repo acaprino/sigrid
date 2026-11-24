@@ -3,8 +3,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Count, FormField, Icon, Input, NavItem, NavList, Select, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from '../src'
-import { NavContext } from '../src/components/ui/nav-list'
+import { Count, Icon, Input, Select, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from '../src/primitives'
+import { FormField } from '../src/components'
+import { NavItem, NavList } from '../src/layout'
+import { NavContext } from '../src/layout/nav-list'
 import { classes, settle } from './helpers'
 
 // Careful: Tailwind also scans `test/`. Class names with a variant are composed, not written whole.

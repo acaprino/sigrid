@@ -3,7 +3,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { AppShell, CommandPalette, Toolbar, ToolbarButton, ToolbarTab, ToolbarTabs, filterCommands, useCommandKey, type Command } from '../src'
+import { AppShell, Toolbar, ToolbarButton, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { CommandPalette, filterCommands, useCommandKey, type Command } from '../src/assemblies'
 import { flush } from './helpers'
 
 function commands(ran: string[]): Command[] {

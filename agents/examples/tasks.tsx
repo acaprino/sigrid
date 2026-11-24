@@ -3,13 +3,19 @@
 // of the project the editor exports; where it runs and its window come from `@acaprino/sigrid/tauri`.
 // Tasks: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useState, type ReactNode } from 'react'
+import { useDesktopGuard, useMedia } from '@acaprino/sigrid'
 import {
-  AppShell, Avatar, Button, Card, Cluster, Column, Count, DateField, FormField, Grid, Heading, Icon, Input,
-  Inspector, ItemList, ItemRow, KeyHints, NavItem, SettingRow, Sidebar, SidebarGroup, SidebarRow, Switch,
-  Text, Textarea, TitleBar, Toasts, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarBrand, ToolbarButton,
-  ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard, useMedia, WindowControls,
-  type ToastItem,
-} from '@acaprino/sigrid'
+  Avatar, Button, Card, Cluster, Column, Count, Grid, Heading, Icon, Input, Switch, Text, Textarea,
+  ToggleGroup, ToggleGroupItem,
+} from '@acaprino/sigrid/primitives'
+import {
+  DateField, FormField, ItemList, ItemRow, SettingRow, Toasts, type ToastItem,
+} from '@acaprino/sigrid/components'
+import {
+  AppShell, Inspector, NavItem, Sidebar, SidebarGroup, SidebarRow, TitleBar, Toolbar, ToolbarBrand,
+  ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs, WindowControls,
+} from '@acaprino/sigrid/layout'
+import { KeyHints } from '@acaprino/sigrid/assemblies'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
 type Screen = 'today' | 'board' | 'settings'

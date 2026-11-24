@@ -2,7 +2,7 @@
 // at a time where the split, measured by itself, is narrower than its step.
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { ContentSplit } from '../src'
+import { ContentSplit } from '../src/layout'
 
 afterEach(() => vi.unstubAllGlobals())
 

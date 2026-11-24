@@ -20,38 +20,10 @@ import { createRoot } from 'react-dom/client'
 import { Puck, createUsePuck, type Data } from '@puckeditor/core'
 import { Copy, Download, ExternalLink, FileUp, PanelLeft, PanelRight, Play, Plus, Redo2, Trash2, Undo2 } from 'lucide-react'
 import pkg from '../package.json'
-import {
-  APP_SHELL_STEPS,
-  AppShell,
-  BASE_THEME,
-  Button,
-  FormField,
-  Icon,
-  Input,
-  Inspector,
-  SearchField,
-  Select,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  Switch,
-  TitleBar,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSeparator,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  appShellLayout,
-  applyTheme,
-  cn,
-  type IconName,
-} from '../src/index'
+import { BASE_THEME, applyTheme, cn } from '../src/index'
+import { Button, Icon, Input, Select, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Switch, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
+import { FormField, SearchField } from '../src/components'
+import { APP_SHELL_STEPS, AppShell, Inspector, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSeparator, ToolbarSpacer, ToolbarTab, ToolbarTabs, appShellLayout } from '../src/layout'
 import { CATALOG, ICON_OPTIONS, isKind } from './editor/catalog'
 import { exportFiles, zip } from './editor/codegen'
 import { slug } from './editor/ir'

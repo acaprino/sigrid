@@ -10,11 +10,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from './ui/dialog'
+} from '../primitives/dialog'
 import { restoreFocus, SHEET_TOASTS_ROOM } from '../internal/overlay'
 import { cn } from '../lib/utils'
 import { usePortalContainer } from '../internal/portal-container'
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from './ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '../primitives/sheet'
 
 export type DialogProps = {
   open: boolean

@@ -7,7 +7,8 @@
 // fitted again is in test/graph.test.tsx.
 import { render, screen } from '@testing-library/react'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { AppShell, Cluster, Column, ContentSplit, Input, Page, ScrollArea } from '../src'
+import { Cluster, Column, Input, Page, ScrollArea } from '../src/primitives'
+import { AppShell, ContentSplit } from '../src/layout'
 import { GraphCanvas, GraphLegend, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 import { VirtualList } from '../src/virtual'
 import { classes } from './helpers'

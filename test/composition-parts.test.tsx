@@ -7,32 +7,11 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import {
-  AppShellContext,
-  Card,
-  Checkbox,
-  Cluster,
-  Column,
-  CommandsProvider,
-  DescriptionList,
-  Dot,
-  DrawerButton,
-  Empty,
-  Heading,
-  ICON_NAMES,
-  Icon,
-  Progress,
-  Separator,
-  SettingRow,
-  SidebarRow,
-  Switch,
-  Text,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  WordsProvider,
-  useCommand,
-} from '../src'
+import { WordsProvider } from '../src'
+import { Card, Checkbox, Cluster, Column, Dot, Heading, ICON_NAMES, Icon, Progress, Separator, Switch, Text, ToggleGroup, ToggleGroupItem } from '../src/primitives'
+import { DescriptionList, Empty, SettingRow } from '../src/components'
+import { AppShellContext, DrawerButton, SidebarRow, Toolbar } from '../src/layout'
+import { CommandsProvider, useCommand } from '../src/assemblies'
 import { classes } from './helpers'
 
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)

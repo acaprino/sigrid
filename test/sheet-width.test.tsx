@@ -2,7 +2,7 @@
 // foot or the top is as wide as the window.
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { Sheet, SheetContent, SheetTitle, type SheetWidth } from '../src'
+import { Sheet, SheetContent, SheetTitle, type SheetWidth } from '../src/primitives'
 
 function Open({ side, width }: { side: 'left' | 'right' | 'bottom' | 'top'; width?: SheetWidth }) {
   return (

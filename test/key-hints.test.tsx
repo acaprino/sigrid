@@ -4,7 +4,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test } from 'vitest'
-import { CommandsProvider, KeyHints, PALETTE_COMMAND, useCommand } from '../src'
+import { CommandsProvider, KeyHints, PALETTE_COMMAND, useCommand } from '../src/assemblies'
 
 function Detail() {
   const [open, setOpen] = useState(false)

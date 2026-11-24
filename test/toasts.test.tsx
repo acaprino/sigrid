@@ -5,7 +5,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { type ReactElement } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
-import { Dialog, Icon, Toasts } from '../src'
+import { Icon } from '../src/primitives'
+import { Dialog, Toasts } from '../src/components'
 import { ignoreToasts } from '../src/internal/overlay'
 import { noop, settle } from './helpers'
 
@@ -246,10 +247,9 @@ test('the toast layer is above every overlay of the package', async () => {
   const toastZ = Number(/(?:^|\s)z-\[(\d+)\]/.exec(status.className)?.[1])
   expect(Number.isFinite(toastZ), 'the notices layer has a z-index').toBe(true)
   // The maximum z-index of windows, sheets, menus and popovers: read from the sources, so a new layer does not silently overtake it.
-  const dir = 'src/components/ui/'
-  const overlayZ = readdirSync(dir)
-    .filter((f) => f.endsWith('.tsx'))
-    .flatMap((f) => [...readFileSync(dir + f, 'utf8').matchAll(/(?:^|[\s"'`])z-(\d+)(?=[\s"'`])/g)].map((m) => Number(m[1])))
+  const overlayZ = ['src/primitives/', 'src/layout/']
+    .flatMap((dir) => readdirSync(dir).filter((f) => f.endsWith('.tsx')).map((f) => dir + f))
+    .flatMap((file) => [...readFileSync(file, 'utf8').matchAll(/(?:^|[\s"'`])z-(\d+)(?=[\s"'`])/g)].map((m) => Number(m[1])))
   expect(overlayZ.length).toBeGreaterThan(0)
   expect(toastZ).toBeGreaterThan(Math.max(...overlayZ))
   // The cards of a notice stay clickable even when a modal window puts `pointer-events: none` on the body.

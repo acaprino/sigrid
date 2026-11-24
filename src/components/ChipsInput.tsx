@@ -16,11 +16,11 @@
 // reached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).
 // No animation.
 import { useEffect, useMemo, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from 'react'
-import { ComboboxPrimitive as Combobox, createListCollection } from './ui/combobox'
+import { ComboboxPrimitive as Combobox, createListCollection } from './combobox'
 import { TagsInput, useTagsInputContext, type TagsInputRootProps } from '@ark-ui/react/tags-input'
 import { Icon } from '../icons'
-import { Badge } from './ui/badge'
-import { Tooltip } from './ui/tooltip'
+import { Badge } from '../primitives/badge'
+import { Tooltip } from '../primitives/tooltip'
 import { cn } from '../lib/utils'
 import { FOCUS_RING, FOCUS_WITHIN_FIELD } from '../lib/focus'
 import { FIELD_HOVER_DATA, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'

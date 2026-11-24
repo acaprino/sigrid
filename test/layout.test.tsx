@@ -3,7 +3,7 @@
 // the types never reaches the page.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src'
+import { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src/primitives'
 import { classes } from './helpers'
 
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)!

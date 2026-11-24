@@ -11,7 +11,10 @@
 //   app is put on its root, and what a component opens mounts inside it.
 import * as React from 'react'
 import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
-import { APP_SHELL_STEPS, Column, FormField, Icon, Input, MotionProvider, Page, PortalContainerProvider, Select, Textarea, ToggleGroup, ToggleGroupItem, appShellLayout, applyDensity, cn, type IconName } from '../../src/index'
+import { MotionProvider, PortalContainerProvider, applyDensity, cn } from '../../src/index'
+import { Column, Icon, Input, Page, Select, Textarea, ToggleGroup, ToggleGroupItem, type IconName } from '../../src/primitives'
+import { FormField } from '../../src/components'
+import { APP_SHELL_STEPS, appShellLayout } from '../../src/layout'
 import { touchDensity } from '../phone'
 import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
 import { equals, flag, h, type Child, type Expr } from './ir'

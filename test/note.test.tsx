@@ -6,7 +6,9 @@
 // measure.
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Button, DEFAULT_WORDS, Icon, Note, WordsProvider, type IconName, type NoteTone } from '../src'
+import { DEFAULT_WORDS, WordsProvider } from '../src'
+import { Button, Icon, type IconName } from '../src/primitives'
+import { Note, type NoteTone } from '../src/components'
 
 const TONES: readonly NoteTone[] = ['info', 'success', 'warning', 'error']
 const WORD: Record<NoteTone, string> = { info: 'Information', success: 'Success', warning: 'Warning', error: 'Error' }

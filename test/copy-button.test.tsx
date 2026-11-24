@@ -1,7 +1,8 @@
 // CopyButton: the text goes on the clipboard, the button says so in place for two seconds, and nothing changes size.
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { COPIED_MS, CopyButton, InputGroup, WordsProvider, DEFAULT_WORDS } from '../src'
+import { WordsProvider, DEFAULT_WORDS } from '../src'
+import { COPIED_MS, CopyButton, InputGroup } from '../src/components'
 
 const writeText = vi.fn<(text: string) => Promise<void>>()
 const press = async (button: HTMLElement) => {

@@ -2,7 +2,7 @@
 // header, the section and its rows, and how a page asks the frame to show another view.
 import * as React from 'react'
 import { ArrowRight } from 'lucide-react'
-import { Button, Icon, type IconName } from '../src/index'
+import { Button, Icon, type IconName } from '../src/primitives'
 
 /** The five views of the showcase: the idea, the rules, the way to put the parts together, the parts themselves, and whole apps made of them. */
 export const VIEWS = [

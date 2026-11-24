@@ -2,25 +2,11 @@
 // canvas of the editor uses the same `Frame` with places to drop components in. What the frame is made of here is
 // what the export writes (codegen.ts `frameSource`): change the two together.
 import * as React from 'react'
-import * as Sigrid from '../../src/index'
-import {
-  AppShell,
-  AppShellContext,
-  Avatar,
-  BOTTOM_BAR_ROOM_VAR,
-  Column,
-  Inspector,
-  Sidebar,
-  SidebarRow,
-  TitleBar,
-  Toasts,
-  Toolbar,
-  WindowControls,
-  useDesktopGuard,
-  useMedia,
-  type AppShellLayout,
-  type ToastItem,
-} from '../../src/index'
+import * as Sigrid from './all'
+import { BOTTOM_BAR_ROOM_VAR, useDesktopGuard, useMedia } from '../../src/index'
+import { Avatar, Column } from '../../src/primitives'
+import { Toasts, type ToastItem } from '../../src/components'
+import { AppShell, AppShellContext, Inspector, Sidebar, SidebarRow, TitleBar, Toolbar, WindowControls, type AppShellLayout } from '../../src/layout'
 import { isEl, isExpr, isJson, isSlot, isWhen, type Child, type Scope, type Val } from './ir'
 import type { AppModel, Settings } from './model'
 import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, planOf, screenBody, visible, type ScreenPlan } from './plan'

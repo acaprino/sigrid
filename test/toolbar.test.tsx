@@ -4,7 +4,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
-import { TitleBar, Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { TitleBar, Toolbar, ToolbarBrand, brandInitial, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls } from '../src/layout'
 import { flush } from './helpers'
 
 function Bar({ onOpenChange, open }: { onOpenChange?: (open: boolean) => void; open?: boolean }) {

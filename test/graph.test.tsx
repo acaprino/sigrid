@@ -7,8 +7,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
-import { linesOf, openedFor, viewFor } from '../src/components/GraphCanvas'
-import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES } from '../src/components/graph-lines'
+import { linesOf, openedFor, viewFor } from '../src/assemblies/GraphCanvas'
+import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES } from '../src/assemblies/graph-lines'
 import { GraphCanvas, layoutGraph, visibleGraph, type Graph, type GraphCanvasHandle, type GraphChange, type GraphEdge, type GraphNode } from '../src/graph'
 
 const GRAPH: Graph = {

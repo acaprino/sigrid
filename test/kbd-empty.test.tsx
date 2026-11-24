@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { Empty } from '../src/components/ui/empty'
-import { Kbd } from '../src/components/ui/kbd'
+import { Empty } from '../src/components/empty'
+import { Kbd } from '../src/primitives/kbd'
 
 test('Kbd renders a <kbd> with the same words', () => {
   render(<Kbd>Ctrl+Enter</Kbd>)

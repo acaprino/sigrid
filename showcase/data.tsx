@@ -3,7 +3,8 @@
 // (`./virtual`), a list put in order by its handles (`./reorder`) and a field for text with a little form
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
-import { Avatar, Badge, Button, Column, FormField, Icon, Input, ItemRow, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
+import { Avatar, Badge, Button, Column, Icon, Input, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/primitives'
+import { FormField, ItemRow } from '../src/components'
 import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'

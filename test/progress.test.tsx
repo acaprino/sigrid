@@ -3,7 +3,8 @@
 // done and failed are said as well as coloured, nothing is clamped wrongly, and the words are the app's.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Icon, Progress, ProgressRing, ProgressSegments, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { Icon, Progress, ProgressRing, ProgressSegments } from '../src/primitives'
 
 /** The drawing of Sigrid's `error` at the size given: the one look of a failure, in a `Note`, a toast and a step too. */
 const failure = (className?: string) => {

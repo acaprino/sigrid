@@ -20,7 +20,7 @@ const write = (file: string, text: string) => writeFileSync(join(app, file), tex
 const on = (severity = 'error') => write('sigrid-check.config.json', JSON.stringify({ rules: { 'own-class': severity } }))
 
 // An app laid out with the toolkit's parts, and one that writes a class, an HTML class and a stylesheet.
-const clean = "import { Column, Text } from '@acaprino/sigrid'\nexport const A = () => <Column gap=\"sm\"><Text variant=\"muted\">Fine</Text></Column>\n"
+const clean = "import { Column, Text } from '@acaprino/sigrid/primitives'\nexport const A = () => <Column gap=\"sm\"><Text variant=\"muted\">Fine</Text></Column>\n"
 const classed = 'export const B = () => <div className="flex gap-2">B</div>\n'
 
 test('off by default: an app with classes and a stylesheet passes, as it did', () => {

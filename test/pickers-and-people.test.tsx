@@ -3,9 +3,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Avatar, ChipsInput, Combobox, DateField, DateTimeField, DialogContent, DialogRoot, DialogTitle, SearchField, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src'
+import { Avatar, DialogContent, DialogRoot, DialogTitle, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src/primitives'
+import { ChipsInput, Combobox, DateField, DateTimeField, SearchField } from '../src/components'
 import { contrast } from '../src'
-import { inkOn } from '../src/components/ui/avatar'
+import { inkOn } from '../src/primitives/avatar'
 import { classes, settle } from './helpers'
 
 const coarse = (cls: string) => 'pointer-coarse:' + cls

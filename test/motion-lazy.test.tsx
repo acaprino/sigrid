@@ -38,7 +38,7 @@ function fakeMatchMedia(reduce = false) {
 // `settle(25)`: after mounting, lets effects and microtasks pass: a load that was never requested stays never requested.
 
 async function loadModules() {
-  const { Checkbox } = await import('../src/components/ui/checkbox')
+  const { Checkbox } = await import('../src/primitives/checkbox')
   const { Toasts } = await import('../src/components/Toasts')
   const motion = await import('../src/internal/motion')
   return { Checkbox, Toasts, ...motion }

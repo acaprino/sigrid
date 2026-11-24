@@ -12,6 +12,7 @@ import ts from 'typescript'
 import { expect, test } from 'vitest'
 import { CATALOG, KINDS, type FieldSpec, type Kind, type Region } from '../showcase/editor/catalog'
 import { appSource, exportFiles, zip } from '../showcase/editor/codegen'
+import { ENTRY_NAMES } from '../showcase/editor/entries'
 import { STARTERS, make, readApp, screen, type AppModel, type Node } from '../showcase/editor/model'
 import { root } from './helpers'
 
@@ -62,7 +63,7 @@ function check(files: Record<string, string>): string[] {
     lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
     types: [],
     baseUrl: root,
-    paths: { '@acaprino/sigrid': ['src/index.ts'], '@acaprino/sigrid/tauri': ['tauri/index.ts'] },
+    paths: { '@acaprino/sigrid': ['src/index.ts'], '@acaprino/sigrid/primitives': ['src/primitives.ts'], '@acaprino/sigrid/components': ['src/components.ts'], '@acaprino/sigrid/layout': ['src/layout.ts'], '@acaprino/sigrid/assemblies': ['src/assemblies.ts'], '@acaprino/sigrid/tauri': ['tauri/index.ts'] },
   }
   const host = ts.createCompilerHost(options)
   const read = host.readFile.bind(host)
@@ -227,4 +228,18 @@ test('the examples written for agents carry no class, no style and no element of
     expect(source, `${file}: a style`).not.toMatch(STYLE)
     expect(source, `${file}: an element of its own`).not.toMatch(ELEMENT)
   }
+})
+
+test('the table of entries the code export imports from lists every name each entry exports, and no other', () => {
+  // Read from the entry files themselves: the parts cannot be loaded here (no DOM), and need not be.
+  const exported = (file: string) => {
+    const source = ts.createSourceFile(file, readFileSync(join(root, file), 'utf8'), ts.ScriptTarget.Latest, false)
+    return source.statements
+      .filter((statement): statement is ts.ExportDeclaration => ts.isExportDeclaration(statement) && !statement.isTypeOnly)
+      .flatMap((statement) => (statement.exportClause && ts.isNamedExports(statement.exportClause) ? statement.exportClause.elements.filter((element) => !element.isTypeOnly).map((element) => element.name.text) : []))
+      .sort()
+  }
+  const files = { '@acaprino/sigrid': 'src/index.ts', '@acaprino/sigrid/primitives': 'src/primitives.ts', '@acaprino/sigrid/components': 'src/components.ts', '@acaprino/sigrid/layout': 'src/layout.ts', '@acaprino/sigrid/assemblies': 'src/assemblies.ts' }
+  expect(Object.keys(ENTRY_NAMES)).toEqual(Object.keys(files))
+  for (const [entry, file] of Object.entries(files)) expect([...ENTRY_NAMES[entry]!].sort(), entry).toEqual(exported(file))
 })

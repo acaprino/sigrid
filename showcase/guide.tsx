@@ -8,36 +8,9 @@
 // The guide pages are themselves the «sidebar and page» pattern of Practices: one column of text no wider than 65
 // characters (`max-w-prose`), with the examples allowed to be wider.
 import * as React from 'react'
-import {
-  APP_SHELL_STEPS,
-  Button,
-  Checkbox,
-  COLORS,
-  Count,
-  DEFAULT_SHAPE,
-  DENSITIES,
-  Icon,
-  Input,
-  Kbd,
-  COARSE,
-  NARROW,
-  SHORT,
-  NavItem,
-  NavList,
-  SHAPE_RADII,
-  Switch,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  ToolbarButton,
-  THEME_SHAPES,
-  TOUCH_TARGET,
-  cn,
-  densityVariables,
-  densityWith,
-  markHueAttrs,
-  type IconName,
-} from '../src/index'
+import { COLORS, DEFAULT_SHAPE, DENSITIES, COARSE, NARROW, SHORT, SHAPE_RADII, THEME_SHAPES, TOUCH_TARGET, cn, densityVariables, densityWith, markHueAttrs } from '../src/index'
+import { Button, Checkbox, Count, Icon, Input, Kbd, Switch, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
+import { APP_SHELL_STEPS, NavItem, NavList, Toolbar, ToolbarButton } from '../src/layout'
 import { Code, Page, Section, See } from './parts'
 
 /* ———— Small parts ———— */
@@ -154,10 +127,10 @@ const PHONE_PRINCIPLES: readonly { icon: IconName; title: string; refs: string; 
 
 /** The four levels of the README: what Sigrid is, each with where to see it. */
 const LEVELS: readonly { name: string; text: string; view?: 'components' | 'practices' | 'examples'; id?: string; see?: string }[] = [
-  { name: 'Toolkit', text: 'The theme engine, the tokens, the fonts and the primitives: buttons, fields, lists, menus, dialogs, sheets, notices, the command palette.', view: 'components', id: 'button', see: 'the components' },
-  { name: 'Advanced components', text: 'A table, a long list, a list put in order by hand, a rich text field and a graph canvas, each on an entry of its own, so an app loads only what it uses.' },
-  { name: 'Layout system', text: 'The one frame of an app, AppShell, with lines or as a sheet, its regions and the widths where it gives way; Panel, the layout parts, and the patterns for a computer and a phone.', view: 'practices', id: 'practices-frame', see: 'the frame' },
-  { name: 'App system for Tauri', text: 'The title bar, the window’s buttons and the desktop guard, wired to a Tauri window by @acaprino/sigrid/tauri; the app editor lays a whole app out and exports it. The native skeleton is the tauri-app-builder plugin’s.', view: 'examples', id: 'examples-xiox', see: 'an app in the sheet frame' },
+  { name: 'Primitives', text: 'One control or one surface each, with no idea of what it holds: buttons, fields, checks, menus, sheets, hints, icons, and the parts a screen is laid out with. From the entry /primitives.', view: 'components', id: 'button', see: 'the primitives' },
+  { name: 'Components', text: 'Primitives put together for one need: a field with its label and its error, a date, a search box, a note, a row that opens, a list of items, a message, a notice. From the entry /components.', view: 'components', id: 'note', see: 'a component' },
+  { name: 'Assemblies', text: 'Components that do a whole function together: the command palette, a conversation and its field, a deck decided one card at a time, a tree, the attachments; and, each on an entry of its own, a table, a long list, a list put in order by hand, a rich text field and a graph canvas.', view: 'components', id: 'chat', see: 'a conversation' },
+  { name: 'Applications, as examples', text: 'Whole apps made of the three levels above and nothing else, in the one frame of an app (AppShell, from /layout), wired to a Tauri window by @acaprino/sigrid/tauri; the app editor lays one out and exports it. They are there to start from.', view: 'examples', id: 'examples-xiox', see: 'an app in the sheet frame' },
 ]
 
 /** What the toolkit rests on, as the README says it, each with where to see it. */

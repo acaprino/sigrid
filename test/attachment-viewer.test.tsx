@@ -2,7 +2,7 @@
 // stepped zoom, the original button and the request for pages. The package does not open the document.
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps } from '../src/components/AttachmentViewer'
+import { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps } from '../src/assemblies/AttachmentViewer'
 
 const A4 = { width: 595, height: 842 }
 

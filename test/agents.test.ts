@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, describe, expect, test } from 'vitest'
-import * as UI from '../src'
+import * as UI from './all'
 import { root } from './helpers'
 
 const read = (path: string) => readFileSync(`${root}${path}`, 'utf8')
@@ -17,7 +17,15 @@ const codeEntries = Object.entries(pkg.exports).filter(([, to]) => typeof to ===
 
 type Catalog = { entries: { import: string; fromLibraries?: string[]; files: { file: string; about: string; types?: { name: string; parameters?: string[]; fields: { name: string; type: string; doc?: string; required?: boolean }[] }[]; components?: { name: string; doc?: string; props?: { name: string; type: string; doc?: string; required?: boolean }[]; passesOn?: boolean }[]; also?: string[] }[] }[] }
 const catalog = JSON.parse(read('agents/catalog.json')) as Catalog
-const component = (entry: string, name: string) => catalog.entries.find((e) => e.import === entry)?.files.flatMap((f) => f.components ?? []).find((c) => c.name === name)
+/** The main entry and the entries of the levels: the ground, the primitives, the components, the frame, the assemblies. */
+const LEVELS = ['@acaprino/sigrid', '@acaprino/sigrid/primitives', '@acaprino/sigrid/components', '@acaprino/sigrid/layout', '@acaprino/sigrid/assemblies']
+/** A component by its name: in the entry named, or in whichever level holds it when the main entry is named. */
+const component = (entry: string, name: string) =>
+  catalog.entries
+    .filter((e) => (entry === '@acaprino/sigrid' ? LEVELS.includes(e.import) : e.import === entry))
+    .flatMap((e) => e.files)
+    .flatMap((f) => f.components ?? [])
+    .find((c) => c.name === name)
 
 describe('the catalogue for agents', () => {
   test('agents/ is what scripts/agents.mjs writes from the source as it is now', () => {
@@ -31,9 +39,10 @@ describe('the catalogue for agents', () => {
     expect(catalog.entries.map((e) => e.import).sort()).toEqual(entries.sort())
   })
 
-  test('every name the main entry exports is in it, as a component or beside one', () => {
-    const main = catalog.entries.find((e) => e.import === '@acaprino/sigrid')!
-    const named = new Set([...main.files.flatMap((f) => [...(f.components ?? []).map((c) => c.name), ...(f.also ?? [])]), ...(main.fromLibraries ?? [])])
+  test('every name the main entry and the entries of the levels export is in it, as a component or beside one', () => {
+    const levels = catalog.entries.filter((e) => LEVELS.includes(e.import))
+    expect(levels.length).toBe(LEVELS.length)
+    const named = new Set(levels.flatMap((main) => [...main.files.flatMap((f) => [...(f.components ?? []).map((c) => c.name), ...(f.also ?? [])]), ...(main.fromLibraries ?? [])]))
     expect(Object.keys(UI).filter((name) => !named.has(name))).toEqual([])
   })
 

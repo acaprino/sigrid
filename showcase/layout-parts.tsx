@@ -1,7 +1,7 @@
 // The layout parts in the showcase (Components view): a piece of a page laid out with `Column`, `Cluster`, `Split`,
 // `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` and `Text` and no class of its own, as an app writes it. The frame
 // around it (the showcase's `Section`, `Row`) is the showcase's.
-import { Badge, Button, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text } from '../src/index'
+import { Badge, Button, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text } from '../src/primitives'
 import { Code, Row, Section } from './parts'
 
 const FILES = ['src/retry.ts', 'src/charge.ts', 'src/webhooks.ts', 'src/dunning.ts', 'test/retry.spec.ts', 'test/charge.spec.ts', 'test/webhooks.spec.ts', 'README.md']

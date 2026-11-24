@@ -5,7 +5,8 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import * as React from 'react'
 import { expect, test, vi } from 'vitest'
-import { FormField, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { FormField } from '../src/components'
 import { RichTextField } from '../src/rich-text'
 
 // ProseMirror asks where the caret is to keep it in sight; jsdom lays nothing out and has no such answers.

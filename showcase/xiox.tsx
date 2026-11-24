@@ -8,42 +8,11 @@
 // the keys are commands of the registry (`CommandsProvider`, `useCommand`): A analyzes, and the foot names only the
 // keys no control in sight shows (`KeyHints`).
 import * as React from 'react'
-import {
-  AppShell,
-  Badge,
-  Button,
-  Checkbox,
-  CommandsProvider,
-  DescriptionList,
-  Icon,
-  Inspector,
-  Kbd,
-  KeyHints,
-  NavItem,
-  Panel,
-  Progress,
-  SearchField,
-  Sidebar,
-  SidebarGroup,
-  Spacer,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  ToggleGroup,
-  ToggleGroupItem,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  Text,
-  colorTheme,
-  useCommand,
-  type IconName,
-} from '../src/index'
+import { colorTheme } from '../src/index'
+import { Badge, Button, Checkbox, Icon, Kbd, Progress, Spacer, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, ToggleGroup, ToggleGroupItem, Text, type IconName } from '../src/primitives'
+import { DescriptionList, SearchField } from '../src/components'
+import { AppShell, Inspector, NavItem, Panel, Sidebar, SidebarGroup, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { CommandsProvider, KeyHints, useCommand } from '../src/assemblies'
 import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Xiox's own theme: its amber (picked by eye from the capture, not measured). */

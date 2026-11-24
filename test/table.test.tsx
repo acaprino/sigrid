@@ -2,7 +2,8 @@
 // sorts and draws only the rows in sight (`DataTable`, the `./table` entry, on TanStack Table and TanStack Virtual).
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, WordsProvider } from '../src'
+import { WordsProvider } from '../src'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../src/primitives'
 import { DataTable, nextSort, type DataColumn } from '../src/table'
 
 type File = { id: string; name: string; size: number | null; changed: string }

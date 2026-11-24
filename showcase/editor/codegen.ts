@@ -4,6 +4,7 @@
 // holes: the regions are printed from the same elements the run page draws, so the export is what was seen.
 // The frame printed by `frameSource` is the one render.tsx draws (`Frame`, `RunApp`): change the two together.
 import { DENSITIES } from '../../src/index'
+import { byEntry } from './entries'
 import { TAURI_PERMISSIONS } from '../../tauri/permissions'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
@@ -268,7 +269,7 @@ export function appSource(app: AppModel): string {
     // The name is on one line whatever it holds: a line break in it would end the comment and start code.
     `// ${plan.name.replace(/[\r\n\u2028\u2029]+/g, ' ')}: made with the Sigrid app editor. Every part is the toolkit's own; change anything.`,
     `import { ${react.join(', ')}, type ReactNode } from 'react'`,
-    ...importLines(names, '@acaprino/sigrid'),
+    ...byEntry(names).flatMap(([entry, own]) => importLines(own, entry)),
     "import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'",
     '',
     `type Screen = ${plan.screens.map((s) => lit(s.id)).join(' | ')}`,

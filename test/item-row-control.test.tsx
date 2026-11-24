@@ -2,7 +2,8 @@
 // opens), and the facts of a row (`facts`) and its title on two lines (`wrapTitle`).
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
-import { Checkbox, ItemList, ItemRow } from '../src'
+import { Checkbox } from '../src/primitives'
+import { ItemList, ItemRow } from '../src/components'
 
 function Task({ current = false, side, onOpen = () => {}, onTick = () => {} }: { current?: boolean; side?: 'start' | 'end'; onOpen?: () => void; onTick?: (checked: boolean) => void }) {
   return (

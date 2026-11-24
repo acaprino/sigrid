@@ -20,57 +20,11 @@
 import * as React from 'react'
 import { RichTextField } from '../src/rich-text'
 import { VirtualList } from '../src/virtual'
-import {
-  AppShell,
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  ChipsInput,
-  Cluster,
-  Column,
-  CommandsProvider,
-  ContentSplit,
-  Count,
-  Dot,
-  DrawerButton,
-  Empty,
-  FormField,
-  Heading,
-  Icon,
-  Input,
-  ItemList,
-  ItemRow,
-  Kbd,
-  KeyHints,
-  NavItem,
-  ScrollArea,
-  Select,
-  Separator,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  Sidebar,
-  SidebarGroup,
-  Spacer,
-  Split,
-  Text,
-  Toolbar,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSearch,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  colorTheme,
-  useCommand,
-  type IconName,
-  type ThemeDef,
-  type ToastItem,
-} from '../src/index'
+import { colorTheme, type ThemeDef } from '../src/index'
+import { Avatar, Badge, Button, Card, Cluster, Column, Count, Dot, Heading, Icon, Input, Kbd, ScrollArea, Select, Separator, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Spacer, Split, Text, type IconName } from '../src/primitives'
+import { ChipsInput, Empty, FormField, ItemList, ItemRow, type ToastItem } from '../src/components'
+import { AppShell, ContentSplit, DrawerButton, NavItem, Sidebar, SidebarGroup, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { CommandsProvider, KeyHints, useCommand } from '../src/assemblies'
 import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Qamille's own theme: its indigo, and the dark column for the sidebar in both schemes. */

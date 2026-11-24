@@ -4,7 +4,9 @@
 // a reasoning follows `busy` until the reader chooses, and a tool's call says its state in a word.
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Conversation, Message, PromptInput, Reasoning, Suggestions, ToolCall, WordsProvider, type ToolCallStatus } from '../src'
+import { WordsProvider } from '../src'
+import { Message, Reasoning, Suggestions, ToolCall, type ToolCallStatus } from '../src/components'
+import { Conversation, PromptInput } from '../src/assemblies'
 
 describe('Conversation', () => {
   test('a named log that waits while an answer is written', () => {

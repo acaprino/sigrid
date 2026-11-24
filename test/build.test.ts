@@ -222,7 +222,7 @@ describe('build output', () => {
   })
 })
 
-import * as UI from '../src'
+import * as UI from './all'
 
 describe('package invariants', () => {
   test('the toolkit carries no app component: an app\'s product components live in its own package', () => {

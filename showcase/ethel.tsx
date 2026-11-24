@@ -16,60 +16,11 @@
 // empty view `Empty fill`, and a task is a row of the toolkit's list with its box beside it (`ItemRow control`).
 import * as React from 'react'
 import { ReorderList } from '../src/reorder'
-import {
-  AppShell,
-  Avatar,
-  Button,
-  Card,
-  Checkbox,
-  ChipsInput,
-  Cluster,
-  Column,
-  CommandsProvider,
-  Count,
-  DateField,
-  Dot,
-  DrawerButton,
-  Empty,
-  FormField,
-  Heading,
-  Icon,
-  Input,
-  Inspector,
-  ItemList,
-  ItemRow,
-  KeyHints,
-  NavItem,
-  NavList,
-  Page,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  Sidebar,
-  SidebarGroup,
-  SidebarRow,
-  Spacer,
-  Text,
-  Textarea,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSearch,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  colorTheme,
-  dayPicks,
-  useCommand,
-  type IconName,
-  type ItemFact,
-  type ToastItem,
-} from '../src/index'
+import { colorTheme } from '../src/index'
+import { Avatar, Button, Card, Checkbox, Cluster, Column, Count, Dot, Heading, Icon, Input, Page, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Spacer, Text, Textarea, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
+import { ChipsInput, DateField, Empty, FormField, ItemList, ItemRow, dayPicks, type ItemFact, type ToastItem } from '../src/components'
+import { AppShell, DrawerButton, Inspector, NavItem, NavList, Sidebar, SidebarGroup, SidebarRow, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { CommandsProvider, KeyHints, useCommand } from '../src/assemblies'
 import { AppBar, Host, appKeys, type AppProps } from './hosts'
 
 /** Ethel's own theme: its teal, with the spot colour the app starts with. */

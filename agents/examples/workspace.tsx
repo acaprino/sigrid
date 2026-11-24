@@ -3,12 +3,16 @@
 // of the project the editor exports; where it runs and its window come from `@acaprino/sigrid/tauri`.
 // Workspace: made with the Sigrid app editor. Every part is the toolkit's own; change anything.
 import { useEffect, useState, type ReactNode } from 'react'
+import { useDesktopGuard, useMedia } from '@acaprino/sigrid'
 import {
-  AppShell, Badge, Button, Cluster, Column, Count, DrawerButton, Empty, Heading, Icon, Inspector, ItemList,
-  ItemRow, KeyHints, NavItem, Panel, Progress, SettingRow, Sidebar, SidebarGroup, Switch, Text, TitleBar,
-  Toasts, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs, useDesktopGuard,
-  useMedia, WindowControls, type ToastItem,
-} from '@acaprino/sigrid'
+  Badge, Button, Cluster, Column, Count, Heading, Icon, Progress, Switch, Text,
+} from '@acaprino/sigrid/primitives'
+import { Empty, ItemList, ItemRow, SettingRow, Toasts, type ToastItem } from '@acaprino/sigrid/components'
+import {
+  AppShell, DrawerButton, Inspector, NavItem, Panel, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarBrand,
+  ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs, WindowControls,
+} from '@acaprino/sigrid/layout'
+import { KeyHints } from '@acaprino/sigrid/assemblies'
 import { DRAG_REGION, readHost, useWindowControls } from '@acaprino/sigrid/tauri'
 
 type Screen = 'cleanup' | 'registry' | 'settings'

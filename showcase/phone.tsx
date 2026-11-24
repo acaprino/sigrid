@@ -18,51 +18,10 @@
 // The overlays of the frame (the capture sheet, the drawer) mount into a layer of the frame, so they open inside it.
 import * as React from 'react'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
-import {
-  AppShell,
-  Button,
-  Count,
-  DrawerButton,
-  Empty,
-  FormField,
-  Icon,
-  Input,
-  ItemList,
-  ItemRow,
-  NavItem,
-  Page,
-  PortalContainerProvider,
-  Progress,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  Sidebar,
-  SidebarGroup,
-  Switch,
-  TOUCH_TARGET,
-  Textarea,
-  TitleBar,
-  Toasts,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  ToolbarBrand,
-  ToolbarButton,
-  ToolbarSpacer,
-  ToolbarTab,
-  ToolbarTabs,
-  cn,
-  densityOf,
-  densityVariables,
-  densityWith,
-  type Density,
-  type DensityDef,
-  type DensityId,
-  type IconName,
-} from '../src/index'
+import { PortalContainerProvider, TOUCH_TARGET, cn, densityOf, densityVariables, densityWith, type Density, type DensityDef, type DensityId } from '../src/index'
+import { Button, Count, Icon, Input, Page, Progress, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Switch, Textarea, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
+import { Empty, FormField, ItemList, ItemRow, Toasts } from '../src/components'
+import { AppShell, DrawerButton, NavItem, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
 import { Section } from './parts'
 
 /** What each layout recommends, in one sentence: the same words as docs/mobile.md. */

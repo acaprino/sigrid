@@ -6,7 +6,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test } from 'vitest'
-import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem, Toolbar, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src'
+import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '../src/primitives'
+import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
 import { noop } from './helpers'
 
 const bar = () => screen.getByRole('toolbar', { name: 'Tools' })

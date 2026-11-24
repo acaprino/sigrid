@@ -1,4 +1,4 @@
-// The SmoothUI/Base UI RadioGroup (`src/components/ui/radio-group.tsx`) and the color group built on it
+// The SmoothUI/Base UI RadioGroup (`src/primitives/radio-group.tsx`) and the color group built on it
 // (`src/components/Swatches.tsx`): keyboard, accessible names in English, returned value, Tab stop, appearance.
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
-import { RadioGroup, RadioGroupItem } from '../src/components/ui/radio-group'
+import { RadioGroup, RadioGroupItem } from '../src/primitives/radio-group'
 import { Swatches } from '../src/components/Swatches'
 import { palettes } from './theme-tokens'
 import { contrast } from './helpers'

@@ -3,24 +3,10 @@
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { createRef, useRef, useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import {
-  BaseColorChoice,
-  COLORS,
-  ChipsInput,
-  ColorMatch,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-  Input,
-  Select,
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from '../src'
+import { COLORS } from '../src'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Input, Select, Sheet, SheetContent, SheetTitle } from '../src/primitives'
+import { ChipsInput } from '../src/components'
+import { BaseColorChoice, ColorMatch } from '../src/assemblies'
 import { useMergedRef } from '../src/lib/refs'
 import { isEmptyNode } from '../src/lib/utils'
 import { SwapLabel } from '../src/internal/swap-label'
