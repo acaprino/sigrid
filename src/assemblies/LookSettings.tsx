@@ -145,7 +145,7 @@ export function ChoiceCards({ labelledBy, columns = 3, children }: { labelledBy:
 }
 
 /** An option: a small preview of what it does, its name and note, and the mark when chosen. */
-export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: boolean; name: string; note: string; onChoose: () => void; preview?: ReactNode }) {
+export function ChoiceCard({ choice, name, note, onChoose, preview, detail }: { choice: boolean; name: string; note: string; onChoose: () => void; preview?: ReactNode; /** A fact of the option at the end of its row, before the mark: a price, a size. */ detail?: ReactNode }) {
   const group = useContext(ChoiceHighlightId)
   const motion = useMotion()
   return (
@@ -164,7 +164,11 @@ export function ChoiceCard({ choice, name, note, onChoose, preview }: { choice: 
           <span className="block text-sm font-medium">{name}</span>
           <span className="block text-xs text-ink-mute">{note}</span>
         </span>
-        {choice ? <Check className="mt-0.5 size-4 shrink-0" /> : null}
+        <span className="flex shrink-0 items-start gap-2">
+          {detail === undefined || detail === null ? null : <span data-slot="choice-card-detail" className="text-sm font-semibold tabular-nums">{detail}</span>}
+          {/* The mark keeps its room, so a detail does not move when the option is chosen. */}
+          <span className="mt-0.5 inline-flex size-4">{choice ? <Check className="size-4" /> : null}</span>
+        </span>
       </span>
     </button>
   )

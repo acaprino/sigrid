@@ -40,7 +40,7 @@ through `Icon`), the same in every app, and the user does not choose another.
 | To know | Read |
 |---|---|
 | Which component there is, the entry it is imported from, its props and what each is for | `agents/catalog.json` (written from the source, one list for each entry of the package: file, what it is, components and their props, the object types those props are made of) |
-| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits) |
+| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits), `agents/examples/signup.tsx` (signing in or up, then a path of steps) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
 | How to design and review a screen: twenty laws of use, and what is Sigrid's own | `docs/design-laws.md` |
@@ -109,6 +109,7 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - Light, dark and the system's look are chosen from the palette, the same in every app: `useSchemeCommands` inside
   `CommandsProvider`, and `applyKeptScheme` in the entry file (`README.md`). No app draws a switch for the scheme.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
+  One that cannot is asked first with a `ConfirmDialog`, never with a window of the app's own.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
   tool a view lacks keeps its place empty (`ToolbarButton absent`), it is not left out.

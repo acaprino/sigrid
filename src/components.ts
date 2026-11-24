@@ -4,6 +4,7 @@
 export { CALENDAR_WORDS, Calendar, calendarWords, type CalendarProps } from './components/calendar'
 export { ChipsInput, type ChipsInputProps } from './components/ChipsInput'
 export { Combobox, type ComboboxOption, type ComboboxProps } from './components/combobox'
+export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog'
 export { COPIED_MS, CopyButton, type CopyButtonProps } from './components/copy-button'
 export { DateField, DateRangeField, DateTimeField, dayPicks, rangePicks, type DateFieldProps, type DatePick, type DateRange, type DateRangeFieldProps, type DateRangePick, type DateTimeFieldProps } from './components/DateField'
 export { DescriptionList, type DescriptionItem, type DescriptionListProps } from './components/description-list'

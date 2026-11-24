@@ -6,6 +6,7 @@
 export { AttachmentMarks, AttachmentsSection, stateText, summarize, typedUrl, type AttachmentMarksInput, type AttachmentState, type AttachmentSummary, type AttachmentView, type AttachmentsSectionProps } from './assemblies/Attachments'
 export { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps, type AttachmentViewerStatus, type ViewerPage } from './assemblies/AttachmentViewer'
 export { ColorMatch, type ColorMatchProps } from './assemblies/ColorMatch'
+export { AUTH_PASSWORD_MIN, AuthForm, type AuthFormProps, type AuthMode, type AuthProvider, type AuthValues } from './assemblies/auth-form'
 export { Chat, type ChatMessage, type ChatProps, type ChatTool } from './assemblies/chat'
 export { CommandPalette, filterCommands, useCommandKey, type Command, type CommandPaletteOpenness, type CommandPaletteProps } from './assemblies/command-palette'
 export { CommandsProvider, KeyHints, PALETTE_COMMAND, formatKeys, useCommand, useCommandPalette, useCommands, type CommandDeclaration, type CommandsProviderProps, type KeyHint, type KeyHintsProps, type KeyNames } from './assemblies/commands'
@@ -16,3 +17,5 @@ export { applyKeptScheme, useSchemeCommands, type SchemeChoice, type SchemeComma
 export { SWIPE_DISTANCE_PX, SWIPE_FLICK, SwipeDeck, type SwipeDeckProps, type SwipeDirection } from './assemblies/swipe-deck'
 export { ThemeGallery, type ThemeGalleryProps } from './assemblies/ThemeGallery'
 export { Tree, type TreeNode, type TreeProps } from './assemblies/tree'
+export { Lightbox, type LightboxImage, type LightboxProps } from './assemblies/lightbox'
+export { Wizard, type WizardProps, type WizardStep } from './assemblies/wizard'

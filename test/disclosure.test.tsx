@@ -92,7 +92,7 @@ describe('what opens in place glides only after the reader\'s own press', () => 
   test('the stylesheet moves it only with motion on and where the system allows it, and what closes waits for the end', async () => {
     const { readFileSync } = await import('node:fs')
     const css = readFileSync(`${process.cwd()}/src/styles/theme.css`, 'utf8')
-    const at = css.indexOf(':where(:root[data-motion]) [data-reveal] {')
+    const at = css.indexOf(':where(:root[data-motion]) [data-reveal=""] {')
     expect(at).toBeGreaterThan(-1)
     expect(css.lastIndexOf('@media (prefers-reduced-motion: no-preference) {', at)).toBeGreaterThan(-1)
     const rule = css.slice(at, css.indexOf('\n  }\n', at))

@@ -26,16 +26,16 @@ x-zsd:
   intent:
     audience: People who use the owner's apps (to-do, mail and more), many with ADHD.
     primary-task: Find, read and act on the items of an app, with one clear action at a time.
-    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one accent that shows where to look and what to click; icons as visual anchors; Park UI controls; calm motion only on a gesture.
+    character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one guiding accent; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
     theme: light and dark; each app passes its own themes (the toolkit ships only the engine and a gray baseline); each theme has two mood colours and one accent; the user can make a palette from one base colour
     references:
       - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
       - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
-      - "Approved previews of 2026-11-20 after their review: one preview for each app and the catalogue toolkit-catalogo.html."
-      - "Owner rules since 2026-11-20 (R1 to R14 below)."
-      - "Owner revision of 2026-11-20: the neutral look read as monochrome and dull, with no accent to tell the ADHD eye where to look; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
-      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look-settings controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
+      - "Approved previews of 2026-11-20 after their review: one for each app and the catalogue toolkit-catalogo.html."
+      - "Owner rules since 2026-11-20 (R1 to R14)."
+      - "Owner revision of 2026-11-20: the neutral look read as monochrome and dull, with no accent to guide the ADHD eye; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
+      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
       - "Identity: calm neutral surfaces and one accent that means «act here» or «this is on»; one row highlight and one group heading in every list; red only for danger. Elegant and modern, made for an ADHD eye: what matters first, one primary action, state always in sight."
@@ -93,8 +93,8 @@ x-zsd:
       - lucide-react
     checks: design-check.config.json
   unresolved:
-    - "The 12-step Park and Radix palettes are the target; the engine computes each role in OKLCH and has no step names."
-    - "Interface measurements at phone widths are not recorded."
+    - "The 12-step Park and Radix palettes are the target; the engine computes roles in OKLCH, with no step names."
+    - "Measurements at phone widths are not recorded."
     - "The colour values are an app's default theme from before 2026-11-19: the toolkit ships only the gray baseline (`BASE_THEME`). Restate them as roles or baseline values."
   layout:
     content-max: 1152px
@@ -441,7 +441,7 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 - `surface`: Use for the page, inputs and outline buttons.
 - `on-surface`: Use for body text, checked boxes, the tooltip and the toast surface.
 - `surface-ground`: Use for lanes, the segment track, quiet fills and highlighted items.
-- `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb.
+- `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb. A sheet that covers a narrow window (`cover`) is on `surface` there.
 - `text-soft`: Use for secondary text and the label of the plain button.
 - `text-muted`: Use for placeholders, descriptions, metadata and key hints. It keeps 4.5:1.
 - `divider`: Use for lines and the border of inputs, selects and outline buttons.

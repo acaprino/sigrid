@@ -60,7 +60,7 @@ export function Page({ title, lead, children }: { title: string; lead: React.Rea
     <div data-showcase-page={title.toLowerCase()}>
       <header className="py-8">
         <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-        <p className="mt-2 max-w-prose text-base text-ink-soft">{lead}</p>
+        <p className="mt-2 max-w-5xl text-base text-ink-soft">{lead}</p>
       </header>
       {children}
     </div>
@@ -82,7 +82,8 @@ export function Section({ id, title, note, icon, children }: { id: string; title
         ) : null}
         {title}
       </h2>
-      {note ? <p className="mt-2 max-w-prose text-sm text-ink-soft">{note}</p> : null}
+      {/* As wide as the page gives, up to a line still easy to read on a wide window. */}
+      {note ? <p className="mt-2 max-w-5xl text-sm text-ink-soft">{note}</p> : null}
       <div className="mt-6 flex flex-col gap-6">{children}</div>
     </section>
   )

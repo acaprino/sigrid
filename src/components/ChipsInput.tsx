@@ -313,7 +313,9 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
       </TagsInput.Root>
       {/* The list exists whenever Ark has it open, hidden while nothing matches: Ark attaches its Esc and its
           outside-press handling when it opens. Not in a portal: it stays inside the sheet that holds the field. */}
-      {open ? (
+      {/* Always given to Ark, which draws it only while open (`lazyMount`, `unmountOnExit`) and keeps it until it has
+          left (theme.css): a list taken out here at once could not be seen closing. */}
+      {(
         <Combobox.Positioner className="z-50">
           <Combobox.Content
             ref={enter}
@@ -339,7 +341,7 @@ function SuggestingChips({ id, value, onChange, placeholder, suggestions, onQuer
             ))}
           </Combobox.Content>
         </Combobox.Positioner>
-      ) : null}
+      )}
     </Combobox.Root>
   )
 }

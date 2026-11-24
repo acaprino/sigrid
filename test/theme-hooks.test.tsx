@@ -287,6 +287,18 @@ describe('the preset the hooks were approved for, measured', () => {
       expect(tokens.attributes).toMatchObject({ 'data-keys': 'boxed', 'data-controls': 'strong' })
       // The dividers and the hairline of a key are decoration: under 3:1 by design.
       for (const g of ['paper', 'paper-2', 'raised', 'sidebar-paper'] as const) expect(contrast(c['line']!, c[g]!), `${accent.id}: line on ${g}`).toBeLessThan(PART)
+      // The hairline of a boxed key where it is the text's colour at 35%: on the solid button (and at 70% of that
+      // for a toolbar's shortcut), in the inverted toast, and in the inverted tooltip (at 80%). Decoration, so no
+      // threshold of its own: it must show at least as well as the hairline of a key on the page (`line` on `paper`).
+      const onPage = contrast(c['line']!, c['paper']!)
+      const hairlines = [
+        ['solid button', contrast(mix(c['primary-foreground']!, c['primary']!, 0.35), c['primary']!)],
+        ['solid toolbar button (70%)', contrast(mix(c['primary-foreground']!, c['primary']!, 0.35 * 0.7), c['primary']!)],
+        ['toast', contrast(mix(c['paper']!, c['ink']!, 0.35), c['ink']!)],
+        ['tooltip (80%)', contrast(mix(c['paper']!, c['ink']!, 0.35 * 0.8), c['ink']!)],
+      ] as const
+      for (const [where, ratio] of hairlines) expect(ratio, `${accent.id} ${scheme}: hairline of a key on the ${where}`).toBeGreaterThanOrEqual(onPage)
+      console.log(`[theme-hooks] ${scheme} ${accent.id} hairline of a key: page ${onPage.toFixed(2)}, ${hairlines.map(([where, ratio]) => `${where} ${ratio.toFixed(2)}`).join(', ')}; control border on raised ${contrast(c['input']!, c['raised']!).toFixed(2)}`)
       const pairs = pairsOf(c)
       for (const p of pairs) {
         all.push({ ...p, app: accent.id })

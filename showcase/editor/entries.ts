@@ -41,11 +41,11 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'Textarea', 'Thumbnail', 'ToggleGroup', 'ToggleGroupItem', 'Tooltip', 'TOOLTIP_DELAY_MS',
   ],
   '@acaprino/sigrid/components': [
-    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'COPIED_MS', 'CopyButton', 'DateField',
-    'DateRangeField', 'DateTimeField', 'dayPicks', 'DescriptionList', 'Dialog', 'Disclosure', 'DurationField',
-    'Empty', 'FileDrop', 'FormField', 'InlineMarkdown', 'InputGroup', 'InputGroupButton', 'InputGroupText',
-    'ItemList', 'ItemRow', 'MarkdownBlocks', 'Message', 'Note', 'OverflowList', 'rangePicks', 'Reasoning',
-    'SearchField', 'SettingRow', 'Steps', 'Suggestions', 'Swatches', 'Toasts', 'ToolCall',
+    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'COPIED_MS',
+    'CopyButton', 'DateField', 'DateRangeField', 'DateTimeField', 'dayPicks', 'DescriptionList', 'Dialog',
+    'Disclosure', 'DurationField', 'Empty', 'FileDrop', 'FormField', 'InlineMarkdown', 'InputGroup',
+    'InputGroupButton', 'InputGroupText', 'ItemList', 'ItemRow', 'MarkdownBlocks', 'Message', 'Note', 'OverflowList',
+    'rangePicks', 'Reasoning', 'SearchField', 'SettingRow', 'Steps', 'Suggestions', 'Swatches', 'Toasts', 'ToolCall',
   ],
   '@acaprino/sigrid/layout': [
     'APP_SHELL_STEPS', 'AppShell', 'AppShellContext', 'appShellLayout', 'brandInitial', 'ContentSplit',
@@ -55,13 +55,13 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'WindowControls',
   ],
   '@acaprino/sigrid/assemblies': [
-    'applyKeptScheme', 'AttachmentMarks', 'AttachmentsSection', 'AttachmentViewer', 'BaseColorChoice', 'Chat', 'ChoiceCard',
-    'ChoiceCards', 'ChoiceGroup', 'ChoicePreview', 'ColorMatch', 'CommandPalette', 'CommandsProvider', 'Conversation',
-    'CONVERSATION_NEAR_PX', 'DensityChoice', 'filterCommands', 'formatKeys', 'KeyHints', 'PALETTE_COMMAND',
-    'PaletteComboChoice', 'PaletteStrip', 'PromptInput', 'radioArrows', 'stateText', 'summarize', 'SWIPE_DISTANCE_PX',
-    'SWIPE_FLICK', 'SwipeDeck', 'ThemeCatalogChoice', 'ThemeGallery', 'TonePresetChoice', 'TonePreview', 'Tree',
-    'typedUrl', 'useCommand', 'useCommandKey', 'useCommandPalette', 'useCommands', 'useSchemeCommands',
-    'VIEWER_ZOOMS',
+    'applyKeptScheme', 'AttachmentMarks', 'AttachmentsSection', 'AttachmentViewer', 'AUTH_PASSWORD_MIN', 'AuthForm',
+    'BaseColorChoice', 'Chat', 'ChoiceCard', 'ChoiceCards', 'ChoiceGroup', 'ChoicePreview', 'ColorMatch',
+    'CommandPalette', 'CommandsProvider', 'Conversation', 'CONVERSATION_NEAR_PX', 'DensityChoice', 'filterCommands',
+    'formatKeys', 'KeyHints', 'Lightbox', 'PALETTE_COMMAND', 'PaletteComboChoice', 'PaletteStrip', 'PromptInput',
+    'radioArrows', 'stateText', 'summarize', 'SWIPE_DISTANCE_PX', 'SWIPE_FLICK', 'SwipeDeck', 'ThemeCatalogChoice',
+    'ThemeGallery', 'TonePresetChoice', 'TonePreview', 'Tree', 'typedUrl', 'useCommand', 'useCommandKey',
+    'useCommandPalette', 'useCommands', 'useSchemeCommands', 'VIEWER_ZOOMS', 'Wizard',
   ],
 }
 

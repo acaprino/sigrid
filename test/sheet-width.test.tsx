@@ -34,3 +34,21 @@ test('at the foot or the top the width is not used: the sheet is as wide as the 
   rerender(<Open side="top" width="lg" />)
   expect(sheet().className).not.toContain('max-w-')
 })
+
+test('a sheet floats on the raised surface; one that covers a narrow window is on the page\'s ground there', () => {
+  const drawn = (cover: boolean) => {
+    const { unmount } = render(
+      <Sheet open>
+        <SheetContent cover={cover}>
+          <SheetTitle>Details</SheetTitle>
+        </SheetContent>
+      </Sheet>,
+    )
+    const classes = document.querySelector('[data-slot="sheet-content"]')!.className.split(/\s+/)
+    unmount()
+    return classes
+  }
+  expect(drawn(false)).toContain('bg-raised')
+  expect(drawn(false)).not.toContain('max-sm:bg-paper')
+  expect(drawn(true)).toEqual(expect.arrayContaining(['bg-raised', 'w-full', 'max-sm:bg-paper']))
+})

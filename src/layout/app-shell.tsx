@@ -57,6 +57,7 @@
 // - under 500px of height (`short:`, a phone lying down) the bottom bar is 44px and its views put the word beside the
 //   icon, so the bar does not eat the screen.
 import * as React from "react"
+import { useRevealAfterMount } from "../internal/reveal"
 import { AppShellContext, type AppShellLayout } from "../internal/frame"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
@@ -404,6 +405,8 @@ export type InspectorProps = {
  * holds no control).
  */
 function Inspector({ title, open, onOpenChange, footer, animated, className, children }: InspectorProps) {
+  // Docked, it slides in from the end and out to it when the app opens or closes it; never on load.
+  const reveal = useRevealAfterMount(open)
   const words = useWords()
   const { inspector } = useAppShell()
   const content = React.useContext(ContentContext)
@@ -530,7 +533,8 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
           ref={setRoot}
           {...track}
           data-inspector-form="drawer"
-          className={cn("gap-0 p-0", className)}
+          // The inspector is a region of the frame, drawn over the page here: the ground it has when docked.
+          className={cn("gap-0 bg-paper p-0", className)}
         >
           <SheetTitle className="sr-only">{title}</SheetTitle>
           {heading}
@@ -545,6 +549,7 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
       data-inspector-form="docked"
       aria-label={title}
       hidden={!open}
+      {...reveal}
       // It takes the focus itself, as the drawer does: on a press on its text, and when what had the focus in it is removed.
       ref={setRoot}
       tabIndex={-1}

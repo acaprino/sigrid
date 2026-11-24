@@ -8,7 +8,28 @@
     "types": [
       "vite/client"
     ],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": "..",
+    "paths": {
+      "@acaprino/sigrid": [
+        "src/index.ts"
+      ],
+      "@acaprino/sigrid/primitives": [
+        "src/primitives.ts"
+      ],
+      "@acaprino/sigrid/components": [
+        "src/components.ts"
+      ],
+      "@acaprino/sigrid/layout": [
+        "src/layout.ts"
+      ],
+      "@acaprino/sigrid/assemblies": [
+        "src/assemblies.ts"
+      ],
+      "@acaprino/sigrid/tauri": [
+        "tauri/index.ts"
+      ]
+    }
   },
   "include": [
     "./",

@@ -150,10 +150,14 @@ where the system asks for less motion. A movement answers a gesture: it shows wh
 went, or that a press was felt. What moves:
 
 - a surface that opens comes from the side of what opened it, and one that closes fades out (a sheet goes back
-  towards its edge), with the veil behind it;
+  towards its edge), with the veil behind it: windows, sheets, menus, popovers, selects, hints, the list of a
+  combo box and of the labels, the calendar;
 - the sidebar's width eases between its column and its rail;
-- what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar) glides open
-  and shut, and its arrow turns, after the reader's press; opened or closed by the app, it changes at once;
+- what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar; a branch of
+  a `Tree`; the rows of the copies of an `EmailComposer`) glides open and shut, and its arrow turns, after the
+  reader's press; opened or closed by the app, it changes at once;
+- the `Inspector`, docked, slides in from the end and out to it, and the page takes the room it leaves; the panel
+  of a tab the person changed to fades in;
 - the pill under a tab or a choice, the thumb of a switch, the mark of a check, a button under the finger, the
   notices, a card of a deck thrown or let go, the things of a graph;
 - the fill, the border and the text of a control ease to the state under the pointer.
@@ -472,6 +476,42 @@ that can go; otherwise the reason is said in words and the focus goes to «To» 
   attachments={<AttachmentsSection … />} />
 ```
 
+## The flows a person goes through
+
+Four parts for the moments every app has, so they look and behave the same in each.
+
+- `ConfirmDialog` (`/components`) is the question before an action that cannot be taken back: what will happen as
+  its `title`, what is lost as its `description`, «Cancel» (which has the focus) and the one button that does it,
+  named by its verb (`confirmLabel`). Red when it destroys something, the solid button with `destructive={false}`;
+  with `busy` it waits and the window stays. Only for what cannot be undone: what can is done at once and offers
+  Undo in a notice.
+- `Wizard` (`/assemblies`) is a path of steps taken one at a time: the path above (`Steps`), one question on the
+  screen, «Back» and the one solid button at its foot. The app holds `current` and the answers; a step with
+  `canContinue: false` keeps the person there; a step already done is a button of the path.
+- `AuthForm` (`/assemblies`) is the form to sign in or up, in three `mode`s: `signIn`, `signUp` (with `askName`, a
+  name too) and `link` (an address alone; with `sentTo` it says where to look). `providers` are the accounts kept
+  elsewhere, above the fields. What is wrong is said under its field; a refusal of the server is `error`. It gives
+  the app what was written (`onSubmit(values, mode)`) and knows no server.
+- `Lightbox` (`/assemblies`) shows `images` one at a time, large and whole, with the caption, «2 of 5» and the two
+  buttons to the one before and the one after; the arrows do the same.
+
+```tsx
+<ConfirmDialog open={asking} onOpenChange={setAsking} title={`Delete «${project.name}»?`}
+  description="Its tasks are deleted too. This cannot be undone." confirmLabel="Delete the project" onConfirm={remove} />
+
+<Wizard label="Setup" steps={steps} current={step} onCurrentChange={setStep} onFinish={start} finishLabel="Start">
+  {(now) => (now.id === 'plan' ? <PlanChoice /> : <WorkspaceName />)}
+</Wizard>
+
+<AuthForm mode={mode} onModeChange={setMode} onSubmit={signIn} busy={busy} error={refusal}
+  providers={[{ id: 'acme', name: 'Acme', logo: '/logos/acme.svg' }]} onProvider={goOnWith} />
+```
+
+A choice among a few options with a line each (a plan, a density) is `ChoiceCards` with a `ChoiceCard` each, whose
+`detail` is a fact at the end of its row (a price). `TabsList scroll` is a row of tabs that scrolls sideways under the
+finger when they do not fit (the filters of a list on a phone). A `SheetContent` at the foot shows the short bar that
+says it is pulled down to close.
+
 ## A pile decided one card at a time
 
 `SwipeDeck` shows the first of `items` as a card to decide to one of two sides (`leftLabel`, `rightLabel`: «Skip» and
@@ -590,11 +630,12 @@ list below goes by what a part is for, and names parts of every level):
   the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
 - `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
   `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
-  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
+  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
   and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
 - `/layout`: `AppShell`, `Inspector`, `TitleBar`, `WindowControls`, `Toolbar*`, `Sidebar*`, `SidebarRow`,
   `DrawerButton`, `NavList`/`NavItem`, `Panel`, `ContentSplit`.
-- `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `Chat`, `Conversation`,
+- `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `AuthForm`, `Wizard`,
+  `Lightbox`, `Chat`, `Conversation`,
   `PromptInput`, `SwipeDeck`, `Tree`, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
   `ColorMatch`.
 

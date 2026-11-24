@@ -220,6 +220,26 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
     expect(elsewhere).toEqual([])
   })
 
+  test('every key hint a part draws by itself takes the cap of `Kbd` (`KEY_CAP`), so boxed keys reach them all', () => {
+    // A hint is a `<kbd>`, or an element whose slot ends in `shortcut` or `hint`. `Shortcut` is a row of `Kbd`s.
+    const missing: string[] = []
+    let found = 0
+    for (const s of sources) {
+      if (/^primitives.kbd\.tsx$/.test(s.file)) continue
+      const text = code(s.text)
+      for (const m of text.matchAll(/<kbd\b|data-slot="[a-z-]*(?:shortcut|-hint)"/g)) {
+        found++
+        // The tag it is in: from its `<` to the `>` that ends its attributes (no hint has a `>` inside them).
+        const start = text.lastIndexOf('<', m.index)
+        const tag = text.slice(start, text.indexOf('>', m.index) + 1)
+        if (!/\bKEY_CAP\b/.test(tag)) missing.push(`${s.file}: ${m[0]}`)
+      }
+    }
+    // The toolbar's button and its search, a row of the palette, a menu's shortcut, a toast's hint, a tooltip's key.
+    expect(found).toBeGreaterThanOrEqual(6)
+    expect(missing).toEqual([])
+  })
+
   test('no loops, gradients or blur (motion rules; must-avoid)', () => {
     check('effect', ({ base }) => /^animate-(?!none$)/.test(base) || /^(bg-(linear|radial|conic|gradient)|from|via|to)-/.test(base) || /^(backdrop-)?blur(-|$)/.test(base))
   })
