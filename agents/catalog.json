@@ -882,7 +882,7 @@
         {
          "name": "tabs",
          "type": "\"bold\" | \"plain\"",
-         "doc": "How the chosen view of a bar (`ToolbarTab`) and the chosen item of a segment (`ToggleGroup`) are marked. Absent, `plain` or any other value: as the toolkit draws them (weight 600; a round line under the view; a raised thumb in the segment). `bold`: the mark is the weight and the accent, an exception to R7 a theme asks for: the chosen one is weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill and at 55% as its border. The engine writes `data-tabs=\"bold\"` on the root. The toolkit's own fonts stop at 600: a theme that asks for this takes a font with a 700 (`FONTS`: `system`)."
+         "doc": "How the chosen view of a bar (`ToolbarTab`) and the chosen item of a segment (`ToggleGroup`) are marked. Absent, `plain` or any other value: as the toolkit draws them (weight 600; a round line under the view; a raised thumb in the segment). `bold`: the mark is the weight and the accent, an exception to R7 a theme asks for: the chosen one is weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill and at 55% as its border. The engine writes `data-tabs=\"bold\"` on the root. The toolkit's own fonts stop at 600: a theme that asks for this takes a font with a 700 (`SYSTEM_FONT`)."
         },
         {
          "name": "statusStrip",
@@ -967,6 +967,7 @@
       "PaletteProfile",
       "SHAPE_RADII",
       "SidebarKind",
+      "SYSTEM_FONT",
       "THEME_SHAPES",
       "themeDark",
       "ThemeShape"
