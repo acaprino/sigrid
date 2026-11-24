@@ -114,7 +114,7 @@ export interface ThemeDef {
    * weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle
    * (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill
    * and at 55% as its border. The engine writes `data-tabs="bold"` on the root. The toolkit's own fonts stop at 600:
-   * a theme that asks for this takes a font with a 700 (`FONTS`: `system`).
+   * a theme that asks for this takes a font with a 700 (`SYSTEM_FONT`).
    */
   readonly tabs?: 'plain' | 'bold' | undefined
   /**
@@ -181,8 +181,7 @@ export interface FontDef {
 }
 
 /**
- * The fonts to choose from, all but the last with an open license (OFL) and inside the app (no network); the last,
- * `system`, is the font the system already has, and never the default: IBM Plex Sans (the default)
+ * The fonts to choose from, all with an open license (OFL) and inside the app (no network): IBM Plex Sans (the default)
  * and Inter are in `styles/fonts.css`; an app that offers another one loads its faces itself (from `@fontsource`, for
  * instance). Inter stays in the stack
  * of each one: a glyph that a font does not have (outside the Latin alphabet) is drawn in Inter.
@@ -201,12 +200,18 @@ export const FONTS = [
   { id: 'nunito', label: 'Nunito', stack: '"Nunito", "Inter", system-ui, sans-serif' },
   { id: 'serif', label: 'Source Serif', stack: '"Source Serif 4", Georgia, serif' },
   { id: 'mono', label: 'JetBrains Mono', stack: '"JetBrains Mono", ui-monospace, Consolas, monospace' },
-  // The system's own interface font (Segoe UI on Windows): nothing is shipped or fetched for it, and it has a 700. With
-  // it the monospace of keys and code is the system's too (`[data-font="system"]` in styles/theme.css).
-  { id: 'system', label: 'System', stack: '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif' },
 ] as const satisfies readonly FontDef[]
 
-export type FontId = (typeof FONTS)[number]['id']
+/**
+ * The system's own interface font (Segoe UI on Windows): nothing is shipped or fetched for it, and it has a 700. It is
+ * not one of `FONTS`, so no list of fonts an app shows to a person has it: an app sets it by name
+ * (`applyFont(el, 'system')`). With it the monospace of keys and code is the system's too (`[data-font="system"]` in
+ * styles/theme.css).
+ */
+export const SYSTEM_FONT = { id: 'system', label: 'System', stack: '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif' } as const satisfies FontDef
+
+/** A font `applyFont` can set: one of `FONTS`, or the system's own (`SYSTEM_FONT`). */
+export type FontId = (typeof FONTS)[number]['id'] | (typeof SYSTEM_FONT)['id']
 
 /** The font before any choice (the default). */
 export const DEFAULT_FONT: FontId = 'plex'

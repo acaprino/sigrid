@@ -202,7 +202,7 @@ const TAB = cn(
   FOCUS_RING_INSET,
 )
 
-// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-25), an
+// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-24), an
 // exception to R7 scoped to that attribute: the mark of the chosen view is its weight and its line, not a fill. The
 // others are weight 500 in the muted ink and turn to the ink under the pointer, with no wash; the chosen one is 700
 // in the ink; the line is square and grows from its middle (`scale`, eased in styles/theme.css only with motion on).

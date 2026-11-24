@@ -1,4 +1,4 @@
-// Three more looks a theme asks for by name (the owner, 2026-11-25), each off unless asked: bold tabs
+// Three more looks a theme asks for by name (the owner, 2026-11-24), each off unless asked: bold tabs
 // (`ThemeDef.tabs: 'bold'`: the chosen view of a bar and the chosen item of a segment are marked by weight 700 and the
 // accent), a tall status strip (`ThemeDef.statusStrip: 'tall'`), and the system's font among `FONTS`. First: with none
 // asked nothing changes. Then each one. Last: the contrast of the bold tabs on the preset they were approved for,
@@ -8,10 +8,10 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { preloadMotion } from '../src/internal/motion'
 import { AppShell, Toolbar, ToolbarTab, ToolbarTabs } from '../src/layout'
 import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '../src/primitives'
-import { DEFAULT_FONT, FONTS } from '../src/theme-catalog'
+import { DEFAULT_FONT, FONTS, SYSTEM_FONT } from '../src/theme-catalog'
 import type { ThemeDef } from '../src/theme-catalog'
 import { themeTokens, tokensFor } from '../src/theme-engine'
-import { BASE_THEME, THEME_ATTRIBUTES, applyFont, applyTheme, copyTheme, fontById } from '../src/themes'
+import { BASE_THEME, THEME_ATTRIBUTES, applyFont, applyTheme, copyTheme, fontById, isFontId } from '../src/themes'
 import { THEMES } from './fixtures/sample-themes'
 import { SHELL_ACCENTS, SHELL_TONE, shellPreset } from './fixtures/shell-preset'
 import { classes, contrast, systemMotion } from './helpers'
@@ -220,9 +220,17 @@ describe('a tall status strip', () => {
 })
 
 describe('the system\'s font', () => {
-  test('one of the fonts, the last, never the default; nothing of it is shipped; with it the monospace is the system\'s too', () => {
+  test('the fonts an app lists to a person are those of v6.2.1 and no more: the system\'s is apart', () => {
+    expect(FONTS.map((f) => f.id)).toEqual(['inter', 'lexend', 'plex', 'source', 'atkinson', 'jakarta', 'dm', 'manrope', 'figtree', 'work', 'nunito', 'serif', 'mono'])
+    expect((FONTS as readonly { id: string }[]).some((f) => f.id === SYSTEM_FONT.id)).toBe(false)
+    expect((FONTS as readonly { stack: string }[]).some((f) => f.stack.includes('Segoe'))).toBe(false)
+  })
+
+  test('set by name, never the default; nothing of it is shipped; with it the monospace is the system\'s too', () => {
     const system = fontById('system')
-    expect(FONTS[FONTS.length - 1]).toBe(system)
+    expect(system).toBe(SYSTEM_FONT)
+    expect(isFontId('system')).toBe(true)
+    expect(isFontId('segoe')).toBe(false)
     expect(system.stack).toBe('"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif')
     expect(DEFAULT_FONT).toBe('plex')
     const el = document.createElement('div')

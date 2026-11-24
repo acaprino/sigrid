@@ -5,7 +5,7 @@
  * choice (`test/first-paint.test.ts` keeps them equal to the computation); an app paints its own default over them.
  */
 import { DENSITY_VARIABLES } from './density'
-import { DEFAULT_FONT, FONTS } from './theme-catalog'
+import { DEFAULT_FONT, FONTS, SYSTEM_FONT } from './theme-catalog'
 import type { FontDef, FontId, ThemeDef } from './theme-catalog'
 import { themeTokens, tokensFor } from './theme-engine'
 import type { OwnTheme, ThemeScheme, ThemeTokens, ThemeTone } from './theme-engine'
@@ -51,9 +51,10 @@ export const THEME_VARIABLES: readonly string[] = (() => {
 })()
 
 export function isFontId(value: unknown): value is FontId {
-  return FONTS.some((f) => f.id === value)
+  return value === SYSTEM_FONT.id || FONTS.some((f) => f.id === value)
 }
 export function fontById(id: FontId): FontDef {
+  if (id === SYSTEM_FONT.id) return SYSTEM_FONT
   return (FONTS as readonly FontDef[]).find((f) => f.id === id) ?? FONTS[0]
 }
 

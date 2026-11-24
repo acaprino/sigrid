@@ -2105,10 +2105,10 @@ function BoldTabsSample({ animated }: { animated: boolean }) {
   )
 }
 
-/** The looks a theme asks for by name (2026-11-24 and 2026-11-25), each drawn under its own attribute so it shows whatever Look says. */
+/** The looks a theme asks for by name (2026-11-24), each drawn under its own attribute so it shows whatever Look says. */
 function ThemeHooks({ scheme, animated }: { scheme: ThemeScheme; animated: boolean }) {
   return (
-    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page. Since 2026-11-25 also bold tabs (tabs), a tall status strip (statusStrip) and the system's font, each with its switch in «Look»; the strip is seen in the frames of «Layout patterns».">
+    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page. Also bold tabs (tabs), a tall status strip (statusStrip) and the system's font, each with its switch in «Look»; the strip is seen in the frames of «Layout patterns».">
       <Row label="bold tabs">
         <BoldTabsSample animated={animated} />
       </Row>

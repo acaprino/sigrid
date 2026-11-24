@@ -536,9 +536,9 @@ is written. `test/theme-hooks.test.tsx` holds each one and measures the contrast
 | H3 Strong control borders | `ThemeDef.controls: 'strong'` (the default is `divider`); the engine writes `data-controls="strong"` on the root | Fields (`FIELD_SURFACE`: input, textarea, select, combo box, date, labels, input group, prompt, formatted text) and the outline button take `input` (3:1) in place of `line`. The rule sits in `:where()`, so the invalid red, the focus ring and every state win over it as they do over the divider. A field then has no step left under the pointer: its border is already `input` | The light divider on fields and outline buttons (the owner, 2026-11-22) |
 | H4 Stated control border | `Surfaces.input` (`#rrggbb`) on a curated palette (absent by default) | The engine starts from that colour and moves it until it holds 3:1 on the page, the sidebar, the sheets **and the chosen row**. Without it the border is derived from the dividers and held on the page, the sidebar and the sheets only, as before: on a chosen row it can fall under 3:1 | None: it lets a palette reach a threshold the derived border misses |
 
-## Added on 2026-11-25: bold tabs, a tall status strip, the system's font
+## Added on 2026-11-24: bold tabs, a tall status strip, the system's font
 
-The owner approved them on 2026-11-25: the shape of the tabs and segments of the shell that stands on Sigrid. Each is
+The owner approved them on 2026-11-24: the shape of the tabs and segments of the shell that stands on Sigrid. Each is
 off unless asked; with none asked every part draws as before. `test/theme-tabs.test.tsx` holds them and measures the
 bold tabs on the preset they were approved for.
 
@@ -546,7 +546,7 @@ bold tabs on the preset they were approved for.
 |---|---|---|---|
 | Bold tabs | `ThemeDef.tabs: 'bold'` (the default is `plain`); the engine writes `data-tabs="bold"` on the root | `ToolbarTab`: not chosen is weight 500 in the muted ink, the ink under the pointer with no wash; chosen is weight 700 in the ink; the 2px line is square and grows from its middle in the toolkit's own time and curve (`--motion-normal`, `--motion-ease-enter`), only with motion on and never with reduced motion. `ToggleGroup`: a track with its hairline, 2px inside it and 2px between the items (4px shorter, so the track stays a control tall), corners one step under the track's; the chosen item is weight 700 with the accent as text at 16% for its fill and at 55% for its border, no shadow; with `animated` the fill and the border are the sliding pill's. The label keeps the width of its 700 self. `TabsList` is a tint, not an underline: unchanged. Keyboard, focus ring, forced colours, the off state and the 44px floor: unchanged | R7 (weights stop at 600), and the segment's raised thumb. The toolkit's own fonts have no 700: a theme that asks for this takes a font that has one |
 | Tall status strip | `ThemeDef.statusStrip: 'tall'` (the default is `slim`); `data-status-strip="tall"` on the root | The status strip of `AppShell` is 40px (44px with a finger) in place of a dense control's height, so a 20px badge is centred with room around it. Nothing else of the frame moves | None |
-| The system's font | `applyFont(el, 'system')`: the last of `FONTS`, never the default | The interface is in the system's own font (Segoe UI on Windows), which has a 700; under `data-font="system"` the monospace of keys and code is the system's too (Cascadia Mono, then Consolas). No file is shipped or fetched | None |
+| The system's font | `applyFont(el, 'system')`: `SYSTEM_FONT`, apart from `FONTS` (no list of fonts shows it), never the default | The interface is in the system's own font (Segoe UI on Windows), which has a 700; under `data-font="system"` the monospace of keys and code is the system's too (Cascadia Mono, then Consolas). No file is shipped or fetched | None |
 
 ## Off-scale values (with locations, before the polish pass)
 

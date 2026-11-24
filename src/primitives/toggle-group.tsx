@@ -61,7 +61,7 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
   )
 }
 
-// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-25), an
+// Under a theme with bold tabs (`ThemeDef.tabs: 'bold'`, `data-tabs="bold"` on the root; the owner, 2026-11-24), an
 // exception to R7 scoped to that attribute. The group is a track: its hairline, 2px inside it and 2px between the
 // items, which are 4px shorter so the track stays a control tall, with corners one step under the track's. The chosen
 // item is weight 700 with the accent as text at 16% for its fill and at 55% for its border, and no shadow (R4: a

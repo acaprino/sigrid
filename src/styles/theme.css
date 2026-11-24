@@ -817,7 +817,7 @@ svg.lucide[stroke-width="2"] {
   }
 }
 
-/* The system's font as the interface font (`FONTS`: `system`, written by `applyFont` as `data-font`): the monospace of
+/* The system's font as the interface font (`SYSTEM_FONT`, written by `applyFont` as `data-font`): the monospace of
    keys and code is the system's own too, Cascadia where it is. Nothing is shipped or fetched. Outside the layers, so
    it wins over the `@theme` value on the same element. */
 [data-font="system"] {

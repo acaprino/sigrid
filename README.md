@@ -117,7 +117,7 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    hints as 20px caps with a hairline in place of plain text (R5), `controls: 'strong'` gives fields and the outline
    button the 3:1 control border in place of the light divider, `surfaces.<scheme>.input` states the control border
    of a curated palette (the engine holds it at 3:1 on the chosen row too), and `Badge tone` (`success`, `warning`,
-   `danger`, `info`) draws a status as a label with a 6px dot. Three more since 2026-11-25: `tabs: 'bold'` marks the
+   `danger`, `info`) draws a status as a label with a 6px dot. Three more, the same day: `tabs: 'bold'` marks the
    chosen view of a bar and the chosen item of a segment by weight 700 and the accent (a square line that grows from
    its middle; a track whose chosen item has an accent tint and border), `statusStrip: 'tall'` makes the status strip
    of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and

@@ -111,13 +111,13 @@ describe('the catalog', () => {
     }
   })
 
-  test('13 fonts from the sketch and the system\'s own, Inter first, Lexend included; IBM Plex Sans is the default; every stack ends with a system fallback', () => {
-    expect(FONTS).toHaveLength(14)
+  test('13 fonts from the sketch, Inter first, Lexend included; IBM Plex Sans is the default; every stack ends with a system fallback', () => {
+    expect(FONTS).toHaveLength(13)
     expect(FONTS[0].id).toBe('inter')
     expect(DEFAULT_FONT).toBe('plex')
     expect(FONTS.find((f) => f.id === DEFAULT_FONT)!.stack).toMatch(/^"IBM Plex Sans", "Inter", /)
     expect(FONTS.map((f) => f.label)).toContain('Lexend')
-    expect(new Set(FONTS.map((f) => f.id)).size).toBe(14)
+    expect(new Set(FONTS.map((f) => f.id)).size).toBe(13)
     for (const f of FONTS) expect(f.stack, f.id).toMatch(/(sans-serif|serif|monospace)$/)
   })
 
