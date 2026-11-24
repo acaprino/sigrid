@@ -479,7 +479,7 @@ function elevationOf(scheme: ThemeScheme): Record<string, string> {
  * The shape of a theme: its corners (`ThemeDef.shape`: three nested levels l1/l2/l3 as `sm`, `md`, `lg`; `xl` is l3
  * too; buttons and labels take l2), round boxes in `--radius-check` (for an app that rounds its own checkboxes; the
  * toolkit's `Checkbox` keeps l1), 1.75 stroke, rows in the open without a card around the group, and elevation in
- * place of borders. Without a shape the theme is `soft` (4/6/10px). With the scheme only the elevation changes.
+ * place of borders. Without a shape the theme is `sharp` (2/4/6px). With the scheme only the elevation changes.
  */
 function shapeOf(theme: ThemeDef, scheme: ThemeScheme): Record<string, string> {
   const [l1, l2, l3] = SHAPE_RADII[isThemeShape(theme.shape) ? theme.shape : DEFAULT_SHAPE]

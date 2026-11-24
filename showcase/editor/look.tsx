@@ -7,6 +7,7 @@ import {
   BASE_THEME,
   COLORS,
   COLOR_NAMES,
+  DEFAULT_SHAPE,
   DENSITIES,
   DENSITY_LIMITS,
   FONTS,
@@ -56,7 +57,7 @@ export type Look = {
 const SEEDS: readonly string[] = COLORS.filter((_, i) => i % 3 === 1)
 const NORMAL: DensityDef = DENSITIES.find((d) => d.id === 'normal')!
 // The canvas starts in colour: on the gray baseline the accent, the tone and the selection would all read as gray.
-export const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: 'soft', font: 'plex', density: NORMAL, animated: false }
+export const START_LOOK: Look = { scheme: 'light', colors: 'own', page: null, accent: accentSuggestions(null)[0]!.color, accentAuto: true, tone: 'vivid', shape: DEFAULT_SHAPE, font: 'plex', density: NORMAL, animated: false }
 const title = (word: string) => word[0]!.toUpperCase() + word.slice(1)
 
 const HEX = /^#[0-9a-f]{6}$/i

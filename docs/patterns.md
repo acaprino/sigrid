@@ -105,7 +105,7 @@ The same parts give a denser, older look by a parameter, with no second set of c
   28px items by itself. Use it where the content needs every row: tables, logs, editors.
 - For the bars of a classic Windows program, keep the compact caption for the app and the place, and put under it
   (`AppShell`'s `tabs`) a `Toolbar size="sm"`: text buttons that open a `DropdownMenu` («File», «Edit», «View») are
-  its menu bar, and the icons beside them its toolbar. A `sharp` theme (`ThemeDef.shape`) squares the corners, and the
+  its menu bar, and the icons beside them its toolbar. The corners are the square ones by default (2/4/6px; a theme may round them with `ThemeDef.shape`), and the
   `compact` density lowers the rows to match.
 - The regular bar is still the recommendation for an app used with a finger, or by someone new to it: bigger targets,
   fewer things in sight. With a coarse pointer every control is 44px in both.

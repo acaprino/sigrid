@@ -10,11 +10,12 @@ export type SidebarKind = 'tenue' | 'piena' | 'scura'
 /**
  * How round the corners of a theme are. The three nested levels (what sits inside a control, a control, what holds
  * controls) move together, so a preset is a choice of character, not three free numbers: `sharp` 2/4/6px (Park UI as
- * it ships), `soft` 4/6/10px (the default), `round` 6/10/14px.
+ * it ships; the default since the owner's decision of 2026-11-24, which asked for less round corners), `soft` 4/6/10px
+ * (a step rounder, the default before), `round` 6/10/14px. A theme chooses its own with `ThemeDef.shape`.
  */
 export type ThemeShape = 'sharp' | 'soft' | 'round'
 export const THEME_SHAPES = ['sharp', 'soft', 'round'] as const satisfies readonly ThemeShape[]
-export const DEFAULT_SHAPE: ThemeShape = 'soft'
+export const DEFAULT_SHAPE: ThemeShape = 'sharp'
 /** The corner radii of each shape, in px: l1, l2, l3. */
 export const SHAPE_RADII: Readonly<Record<ThemeShape, readonly [number, number, number]>> = { sharp: [2, 4, 6], soft: [4, 6, 10], round: [6, 10, 14] }
 /** The corner radii of a theme in px (`ThemeDef.radii`). */
@@ -87,7 +88,7 @@ export interface ThemeDef {
   readonly accent: readonly [number, number]
   readonly sidebar: SidebarKind
   readonly palette: PaletteProfile
-  /** How round the corners are. Absent: `soft` (4/6/10px). A value that is not a shape counts as absent. */
+  /** How round the corners are. Absent: `sharp` (2/4/6px). A value that is not a shape counts as absent. */
   readonly shape?: ThemeShape | undefined
   /**
    * The corner radii in px, for an app whose corners are none of the three shapes (for example 4/6/8/12): `sm`, `md`, `lg`

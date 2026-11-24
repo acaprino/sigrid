@@ -91,7 +91,10 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    white); `accentSuggestions(base)` proposes the accents that go with it by the classical harmonies, all on the
    OKLCH wheel (split complement, complement, triad, neighbours, the same hue), ranked, with the first marked as
    recommended, none in the red of errors; `duoTheme({ base, accent })` gives the two to `applyTheme` as its `own`.
-   The app editor's «Look» panel has it: choosing a base suggests its accents.
+   The app editor's «Look» panel has it: choosing a base suggests its accents. The corners are `ThemeDef.shape`:
+   `sharp` (2/4/6px) is the default, `soft` (4/6/10px, the corners before 2026-11-24) and `round` (6/10/14px) are
+   the choices; an app keeps the rounder look with `shape: 'soft'` on its theme, and `ThemeDef.radii` sets numbers
+   of its own.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
@@ -638,7 +641,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `DESIGN.md`: the design file (zero-slop-design format): the tokens of the default theme in light and dark, the
   owner's rules R1 to R14, from 2026-11-20 on (the accent only where to look and what to press, one solid button,
-  border or shadow, plain key hints and tabular counts, icons from the one set, radii 4/6/10 (a theme may be `sharp` 2/4/6 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots, the Vivid tone by default, undo in time order, an Advanced fold in each settings section, shared controls that never move…), the approved
+  border or shadow, plain key hints and tabular counts, icons from the one set, radii 2/4/6 (a theme may be `soft` 4/6/10 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots, the Vivid tone by default, undo in time order, an Advanced fold in each settings section, shared controls that never move…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
   which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase

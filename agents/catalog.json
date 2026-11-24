@@ -6385,7 +6385,7 @@
         {
          "name": "shape",
          "type": "ThemeShape",
-         "doc": "How round the corners are. Absent: `soft` (4/6/10px). A value that is not a shape counts as absent."
+         "doc": "How round the corners are. Absent: `sharp` (2/4/6px). A value that is not a shape counts as absent."
         },
         {
          "name": "radii",
