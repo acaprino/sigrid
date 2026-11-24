@@ -20,6 +20,8 @@ of the suite look like the suite is somewhere else, and no law may be used to ta
 - **Lines and space, not boxes.** A group is told by the space around it, then by a hairline. A surface is flat; a
   shadow is only for what floats over the page (a menu, a dialog, a notice).
 - **Keys as words.** A key is plain text beside its action and at the foot of the window, never a boxed cap (R5).
+  The one exception (the owner, 2026-11-24) is a theme that asks for boxed keys (`ThemeDef.keys: 'boxed'`): there a
+  key is a 20px cap with a hairline, still beside its action and still read by its letter. No app draws one by hand.
 - **A fact by its form.** A level, a state or a kind is told by the form of its mark and by a word, never by a colour
   alone. A colour the person gave to a thing is an 8px dot (R10).
 - **Still.** No glass, no gradient, no glow, nothing that loops. Motion answers a gesture, is short, and can be off.

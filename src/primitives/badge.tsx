@@ -7,6 +7,8 @@
 // From SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with
 // Base UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its
 // looping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.
+// `tone` (the owner, 2026-11-24) is a status as a label: the status colour on its soft ground, with a 6px dot before the
+// word. It is a meaning, not a colour the user gave (R10's 8px dots), and not the accent (R2); the word is always there.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { useRender } from "@base-ui/react/use-render"
@@ -39,18 +41,40 @@ const badgeVariants = cva(
   }
 )
 
+/** The status a badge can say: each is the status text colour on its soft ground. `danger` is the destructive red. */
+export type BadgeTone = "success" | "warning" | "danger" | "info"
+
+const TONE: Record<BadgeTone, string> = {
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  danger: "bg-destructive-soft text-destructive",
+  info: "bg-info-soft text-info",
+}
+
+/** The 6px dot before the word of a toned badge, in the tone's colour: drawn by the badge itself, so it is there with `asChild` too. */
+const TONE_DOT = "before:size-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-['']"
+
 function Badge({
   className,
   variant = "default",
+  tone,
   asChild = false,
   children,
   ...props
 }: React.ComponentProps<"span"> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+  VariantProps<typeof badgeVariants> & {
+    asChild?: boolean
+    /**
+     * A status as a label: its colour on its soft ground, and a 6px dot before the word. It takes the place of the
+     * variant's colours. Always with a word: the colour is never the only signal. Absent: the variant as it is.
+     */
+    tone?: BadgeTone | undefined
+  }) {
   const own = {
     "data-slot": "badge",
     "data-variant": variant,
-    className: cn(badgeVariants({ variant }), className),
+    ...(tone ? { "data-tone": tone } : {}),
+    className: tone ? cn(badgeVariants({ variant: null }), TONE[tone], TONE_DOT, className) : cn(badgeVariants({ variant }), className),
   }
   // With `asChild` the child takes classes, attributes and handlers (its own win, handlers add up, the ref is merged);
   // without a child element nothing is rendered, like the Slot.

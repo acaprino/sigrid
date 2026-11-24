@@ -90,6 +90,22 @@ describe('build output', () => {
     expect(c).toContain('url(./fonts/inter-0.woff2)')
   })
 
+  test('the looks a theme asks for by name are compiled, each under its attribute and nowhere else', () => {
+    const c = css()
+    // Boxed keys (`ThemeDef.keys`): the cap of a key under `[data-keys=boxed]`, and its hairline inside a button.
+    expect(c).toMatch(/\[data-keys=["']?boxed["']?\]\s+(?:&|\.|\[data-slot=["']?button["']?\])/)
+    // Strong control borders (`ThemeDef.controls`): inside `:where()`, so the rule is as weak as the divider it
+    // replaces and the invalid red and every state still win over it.
+    expect(c).toMatch(/:where\(\[data-controls=["']?strong["']?\]\)\s+(?:&|\.)/)
+    // The tone of a badge: the `info` status colour and its soft ground, as tokens and as utilities.
+    for (const scheme of ['light', 'dark'] as const) {
+      const t = themeTokens(BASE_THEME, scheme).colors
+      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info:\s*${t['info']}`))
+      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info-soft:\s*${t['info-soft']}`))
+    }
+    for (const cls of ['.bg-info-soft', '.text-info', '.bg-success-soft', '.bg-warning-soft', '.bg-destructive-soft']) expect(c, cls).toMatch(new RegExp(`${cls.replace(/[.-]/g, '\$&')}\s*\{`))
+  })
+
   test('styles.css carries the muted text colors of theme.css, not an old copy', () => {
     const theme = readFileSync(`${root}src/styles/theme.css`, 'utf8')
     const c = css()

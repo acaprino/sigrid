@@ -209,6 +209,17 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
     expect(bad).toEqual([])
   })
 
+  test('the one exception to R5: the cap of a key is drawn only under a theme that asks for boxed keys (`data-keys="boxed"`)', () => {
+    // Every class of kbd.tsx that draws a box (a fill, a border, a corner, a shadow) carries the variant of the attribute.
+    const kbd = sources.find((s) => s.file.replace(/\/g, '/') === 'primitives/kbd.tsx')!
+    const box = classes(kbd.text).filter((c) => /^(bg-|border|rounded|shadow-)/.test(c.base))
+    expect(box.map((c) => c.base)).toEqual(expect.arrayContaining(['border', 'border-line', 'rounded-sm']))
+    expect(box.filter((c) => !c.cls.startsWith('[[data-keys=boxed]_&]' + ':')).map((c) => c.cls)).toEqual([])
+    // And no other source draws on that attribute: a key is the only thing it changes.
+    const elsewhere = sources.filter((s) => s !== kbd && /\[data-keys[=\]]/.test(code(s.text))).map((s) => s.file.replace(/\/g, '/'))
+    expect(elsewhere).toEqual([])
+  })
+
   test('no loops, gradients or blur (motion rules; must-avoid)', () => {
     check('effect', ({ base }) => /^animate-(?!none$)/.test(base) || /^(bg-(linear|radial|conic|gradient)|from|via|to)-/.test(base) || /^(backdrop-)?blur(-|$)/.test(base))
   })

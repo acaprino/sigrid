@@ -45,7 +45,9 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         // Park outline: a border, no fill; a quiet fill under the pointer. The border is the light divider colour, as
         // on fields and selects (the owner's design of 2026-11-22): the label says it is a button, not the border.
-        outline: "border border-line text-ink hover:bg-ink/4 active:bg-ink/6",
+        // Under a theme with strong control borders (`ThemeDef.controls`) it is the control border, as on a field
+        // (`STRONG_BORDER` in lib/field.ts, written out here because Tailwind reads the classes as they are written).
+        outline: "border border-line text-ink hover:bg-ink/4 active:bg-ink/6 [:where([data-controls=strong])_&]:border-input",
         // Park subtle, in the neutral gray: a quiet fill, no border and no shadow (R4: a control has a border or a
         // shadow, never both; Park's surface added both).
         secondary: "bg-ink/6 text-ink hover:bg-ink/9 active:bg-ink/12",

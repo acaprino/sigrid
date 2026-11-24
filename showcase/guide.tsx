@@ -283,7 +283,7 @@ const DO = [
 const NEVER_DRAW = [
   'Side rails or accent bars on cards or fields.',
   'A border and a shadow on the same element.',
-  'Key hints drawn as boxes.',
+  'Key hints drawn as boxes, unless the theme asks for boxed keys.',
   'Gradients, glass or blur.',
   'Data colours as filled blocks.',
 ]
@@ -454,7 +454,7 @@ export function GuidelinesView() {
               </>
             }
           >
-            Counts are tabular numbers, pills on a navigation row (accent on the chosen one). Key hints are plain 12px text, hidden at phone widths.
+            Counts are tabular numbers, pills on a navigation row (accent on the chosen one). Key hints are plain 12px text, hidden at phone widths. A theme can ask for boxed keys: 20px caps with a hairline.
           </Rule>
           <Rule id="R6" title="Icons are anchors" see={<See view="components" id="nav-list">See NavList</See>}>
             Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set (Lucide), the same in every app. An empty slot keeps the alignment.
