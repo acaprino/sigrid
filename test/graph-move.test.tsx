@@ -6,7 +6,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
-import type { ReactFlowProps } from '@xyflow/react'
+import { NodeChangeset, type ReactFlowProps } from '@xyflow/react'
 import { MotionProvider } from '../src'
 import { standInFor, viewKeeping } from '../src/components/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
@@ -210,7 +210,7 @@ describe('things that move', () => {
     const { rerender } = render(<Chart movable />)
     act(() => handed.props!.onNodeDragStart!({} as never, node('store') as never, [node('store')] as never))
     // React Flow moves it as the pointer goes.
-    act(() => handed.props!.onNodesChange!([{ id: 'store', type: 'position', position: { x: 650, y: 200 }, dragging: true }]))
+    act(() => handed.props!.onNodesChange!(new NodeChangeset([{ id: 'store', type: 'position', position: { x: 650, y: 200 }, dragging: true }])))
     // The line leaves the app's route at once, so it follows the thing.
     expect(line('gateway→store').type).not.toBe('route')
     // The app draws again meanwhile (a choice): it is drawn, and the thing is not put back.
