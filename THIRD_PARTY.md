@@ -130,6 +130,7 @@ The test `test/provenance.test.ts` checks that the list and the headers match.
 | `src/components/Attachments.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/internal/file-drop.tsx` | `file-upload` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts |
 | `src/components/ui/tree.tsx` | `tree-view` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts |
+| `src/components/ui/note.tsx` | `alert` | https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts |
 
 Also following Park, without a recipe of their own: the shape and elevation in `src/theme-engine.ts` (its `radii` and
 `shadows` tokens) and `src/styles/theme.css` (its type scale and text styles; the tokens of the light navigation column

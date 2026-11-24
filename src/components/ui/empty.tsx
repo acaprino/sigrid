@@ -6,6 +6,8 @@
 // `text-ink-soft`, `bg-paper-2`) instead of `foreground`/`muted-foreground`; the title is a `<div>` and not an `<h3>`:
 // empty states sit inside views that already have their own titles, and the title can be markup from the caller
 // (the Stack accepts any `ReactNode`, even a `<p>`), which would not be valid inside an `<h3>` or a `<p>`.
+// One need, one look: it says that there is nothing here. Something that failed (a view that could not load) is a
+// `Note` with `tone="error"`, with «Retry» when it can be tried again.
 // Spacing and size are chosen by whoever uses it with `className`/`titleClassName` (tailwind-merge). The title is 16px
 // (the toolkit's title size, R7); the optional icon is a plain 16px muted icon, not a tile (R6, R7). No animation.
 import type * as React from "react"
@@ -27,9 +29,10 @@ export type EmptyProps = Omit<React.ComponentProps<"div">, "title"> & {
 }
 
 /**
- * The empty state of a view or a list: a title, a sentence if needed and an action. Also the end of a task of several
- * steps: the title says what happened with its particulars («240 € sent to Sam Lee»), the sentence what happens next,
- * the action moves on. A task of several steps never ends on a notice alone.
+ * The empty state of a view or a list («nothing here»): a title, a sentence if needed and an action. Also the end of a
+ * task of several steps that went well: the title says what happened with its particulars («240 € sent to Sam Lee»),
+ * the sentence what happens next, the action moves on. A task of several steps never ends on a notice alone. A failure
+ * is a `Note` with `tone="error"`, never an empty state.
  */
 function Empty({ action, className, description, icon, title, titleClassName, fill = false, ...props }: EmptyProps) {
   return (

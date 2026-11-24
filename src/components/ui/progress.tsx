@@ -7,6 +7,8 @@
 // The ring and the blocks are ours; Park's circular recipe was not read.
 // The colours: the track is the quiet fill (the ink at 6%), the range is the accent as progress (R2); done is the
 // success colour and a failure the destructive one, each with a word (DESIGN.md "Status": a colour is never alone).
+// A failure also has the one look it has everywhere: Sigrid's `error` icon (the circle with an X), inside the ring and
+// before the word of the bar and of the blocks.
 // Nothing moves: the range jumps to the value, as the steps do. A progress that changes by events (an upload) is not a
 // gesture, so no tween (DESIGN.md Motion). The range is `primary`, the fill of the accent, as in the checkbox and the
 // switch (DESIGN.md Colors).
@@ -17,7 +19,8 @@
 // «Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should
 // announce the end and the failure only, in a live region of its own, not every percent.
 import * as React from "react"
-import { CheckIcon, XIcon } from "lucide-react"
+import { CheckIcon } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 
@@ -40,7 +43,7 @@ export type ProgressProps = {
   size?: "sm" | "md" | undefined
   /** In a line of words (the frame's status row): 192px, and it never gives way, so the words around it keep their place. Absent: as wide as its place. */
   inline?: boolean | undefined
-  /** `error`: the task failed. The range stays where it stopped, in red, and the text says so. */
+  /** `error`: the task failed. The range stays where it stopped, in red, and the text says so, after Sigrid's `error` icon (the one look of a failure). */
   status?: "error" | undefined
   className?: string | undefined
 }
@@ -71,12 +74,19 @@ function useProgress({ value, max = 100, valueText, status, countdown }: Pick<Pr
 
 const TRACK = "bg-ink/6"
 
-/** The text beside the shape: the value, or what became of the task. Said once to screen readers, by `aria-valuetext`. */
-const Text = ({ mood, children }: { mood: Mood; children: React.ReactNode }) => (
-  <span data-slot="progress-text" aria-hidden="true" className={cn("text-xs font-medium tabular-nums", TEXT[mood])}>
-    {children}
-  </span>
-)
+/**
+ * The text beside the shape: the value, or what became of the task. Said once to screen readers, by `aria-valuetext`.
+ * With `mark`, a failure starts with the `error` icon (the ring holds its own, inside it).
+ */
+const Text = ({ mood, mark = false, children }: { mood: Mood; mark?: boolean; children: React.ReactNode }) => {
+  const failed = mark && mood === "error"
+  return (
+    <span data-slot="progress-text" aria-hidden="true" className={cn("text-xs font-medium tabular-nums", TEXT[mood], failed && "inline-flex items-center gap-1")}>
+      {failed ? <Icon name="error" className="size-3.5" /> : null}
+      {children}
+    </span>
+  )
+}
 
 /** A bar that fills from the start. */
 function Progress({ size = "md", showValue, inline = false, className, ...props }: ProgressProps) {
@@ -86,7 +96,11 @@ function Progress({ size = "md", showValue, inline = false, className, ...props 
       <div {...p.aria} aria-label={props["aria-label"]} className={cn("w-full overflow-hidden rounded-sm", TRACK, size === "sm" ? "h-2" : "h-2.5")}>
         <div data-slot="progress-range" className={cn("h-full", FILL[p.mood])} style={{ width: `${p.fraction * 100}%` }} />
       </div>
-      {showValue || p.mood !== "active" ? <Text mood={p.mood}>{p.text}</Text> : null}
+      {showValue || p.mood !== "active" ? (
+        <Text mood={p.mood} mark>
+          {p.text}
+        </Text>
+      ) : null}
     </div>
   )
 }
@@ -100,7 +114,7 @@ export type ProgressRingProps = ProgressProps & {
 function ProgressRing({ size = "md", showValue, children, className, ...props }: ProgressRingProps) {
   const p = useProgress(props)
   const inside =
-    children ?? (p.mood === "complete" ? <CheckIcon aria-hidden="true" className="size-4" /> : p.mood === "error" ? <XIcon aria-hidden="true" className="size-4" /> : showValue && p.mood === "active" ? p.text : null)
+    children ?? (p.mood === "complete" ? <CheckIcon aria-hidden="true" className="size-4" /> : p.mood === "error" ? <Icon name="error" /> : showValue && p.mood === "active" ? p.text : null)
   return (
     <div data-slot="progress-ring" data-state={p.mood} className={cn("inline-flex flex-col items-center gap-1.5", className)}>
       <div {...p.aria} aria-label={props["aria-label"]} className={cn("relative flex items-center justify-center", size === "sm" ? "size-10" : "size-16")}>
@@ -128,7 +142,11 @@ function ProgressSegments({ size = "md", showValue, className, max = 10, ...prop
           <span key={i} data-slot="progress-segment" data-filled={i < filled ? "" : undefined} className={cn("flex-1 rounded-sm", size === "sm" ? "h-2" : "h-2.5", i < filled ? FILL[p.mood] : TRACK)} />
         ))}
       </div>
-      {showValue || p.mood !== "active" ? <Text mood={p.mood}>{p.text}</Text> : null}
+      {showValue || p.mood !== "active" ? (
+        <Text mood={p.mood} mark>
+          {p.text}
+        </Text>
+      ) : null}
     </div>
   )
 }

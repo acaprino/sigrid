@@ -3,7 +3,7 @@
 // the words are the app's to translate.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Steps, WordsProvider } from '../src'
+import { Icon, Steps, WordsProvider } from '../src'
 
 const STEPS = [{ label: 'Account' }, { label: 'Profile', description: 'Your name and photo' }, { label: 'Plan' }, { label: 'Done' }]
 
@@ -67,14 +67,18 @@ describe('Steps', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(STEPS.length)
   })
 
-  test('a step that failed is red, says so in words, and the line before it stays the accent', () => {
+  test('a step that failed is red with the mark of a failure, says so in words, and the line before it stays the accent', () => {
+    // Sigrid's `error`, at 14px in the dot: the one look of a failure, in a `Note`, a toast and a progress too.
+    const icon = render(<Icon name="error" className="size-3.5" />)
+    const mark = icon.container.querySelector('svg')!.outerHTML
+    icon.unmount()
     const failing = [{ label: 'Upload' }, { label: 'Convert', status: 'error' as const }, { label: 'Publish' }]
     const { container } = render(<Steps aria-label="Import" steps={failing} current={1} />)
     const items = screen.getAllByRole('listitem')
     expect(items.map((item) => item.getAttribute('data-state'))).toEqual(['done', 'error', 'upcoming'])
     expect(items[1]!.textContent).toContain('Convert, failed')
     expect(items[1]!.getAttribute('aria-current')).toBe('step')
-    expect(container.querySelectorAll('[data-slot="step-dot"]')[1]!.querySelector('svg')).not.toBeNull()
+    expect(container.querySelectorAll('[data-slot="step-dot"]')[1]!.querySelector('svg')!.outerHTML).toBe(mark)
     expect(Array.from(container.querySelectorAll('[data-slot="step-line"]')).map((line) => line.className.includes('bg-primary'))).toEqual([true, false])
   })
 

@@ -29,7 +29,7 @@ import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'
-import { CircleAlert } from 'lucide-react'
+import { Icon } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
 
 /** An extra action on a notice (a quick choice after a gesture): `pressed` marks it as already chosen. */
@@ -45,7 +45,9 @@ export type ToastItem = {
   /**
    * `error`: something failed and the user has to know. It never counts down (`durationMs` does not apply to it), it
    * shows no seconds, and newer notices push the others out before it: it stays until it is closed (the «×», with
-   * `onDismiss`) or the caller removes it. A mark before the text says what it is, and screen readers hear «Error».
+   * `onDismiss`) or the caller removes it. A mark before the text says what it is (Sigrid's `error` icon, the one look
+   * of a failure), and screen readers hear «Error». A failure the page shows until its cause is gone is a `Note`
+   * with `tone="error"`, not a toast.
    */
   kind?: 'error' | undefined
 }
@@ -203,10 +205,13 @@ function Notice({ id }: { id: string }) {
     <>
       <div className="flex items-center gap-3">
         {item.kind === 'error' ? (
-          // The mark of an error: an icon in the toast's own text colour (no red on the inverted surface), and the word
-          // for screen readers, read before the text.
+          // The mark of an error: Sigrid's `error` icon, the circle with an X that marks a failure everywhere (a `Note`,
+          // a progress, a step), in the toast's own text colour (no red on the inverted surface), and the word for
+          // screen readers, read before the text.
           <>
-            <CircleAlert data-slot="toast-error" aria-hidden="true" className="-ml-1 size-4 shrink-0" />
+            <span data-slot="toast-error" className="-ml-1 flex shrink-0">
+              <Icon name="error" />
+            </span>
             <span className="sr-only">{words.common.error}:</span>
           </>
         ) : null}

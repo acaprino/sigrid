@@ -2,7 +2,7 @@
 // meaning is drawn, with Lucide's own drawing; a value read back is checked; a name Sigrid does not draw is an empty
 // slot; the packs, the choice of a pack and an app's own icons are gone, with no name left behind for them.
 import { render } from '@testing-library/react'
-import { FileIcon, Folder, FolderOpen, Settings, Trash2, type LucideIcon } from 'lucide-react'
+import { Check, CircleX, FileIcon, Folder, FolderOpen, Info, Settings, Trash2, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { expect, test } from 'vitest'
 import * as UI from '../src'
 import { ICON_NAMES, Icon, isIconName, type IconName } from '../src'
@@ -46,6 +46,10 @@ test("an icon is Lucide's own drawing for its meaning", () => {
     ['folder', Folder],
     ['folderOpen', FolderOpen],
     ['file', FileIcon],
+    ['info', Info],
+    ['check', Check],
+    ['alert', TriangleAlert],
+    ['error', CircleX],
   ]
   for (const [name, Glyph] of MEANINGS) {
     expect(draw(name), name).toBe(lucide(Glyph))
@@ -60,6 +64,14 @@ test('the rows of a tree of files: a folder, a folder shown open and a file, thr
   expect(draw('file')).not.toBe(draw('folder'))
   // A folder is not the action that makes one.
   expect(draw('folder')).not.toBe(draw('newFolder'))
+})
+
+test("the four tones of a message, four meanings drawn apart: a failure is the circle with an X, never the information's circle", () => {
+  const tones = ['info', 'check', 'alert', 'error'] as const
+  expect(new Set(tones.map((name) => draw(name))).size).toBe(4)
+  // One look for a failure: the same drawing in a `Note`, a toast, a progress and a step (their own tests).
+  expect(draw('error')).not.toBe(draw('info'))
+  expect(draw('error')).not.toBe(draw('close'))
 })
 
 test('a value read back is checked: only the names Sigrid draws pass', () => {

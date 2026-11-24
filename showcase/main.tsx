@@ -112,6 +112,7 @@ import {
   DropdownMenuTrigger,
   DurationField,
   Empty,
+  Note,
   Icon,
   Input,
   Kbd,
@@ -183,6 +184,8 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
+import { ContentSplit, type SheetWidth } from '../src/index'
+import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
@@ -287,7 +290,7 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Look', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition'] },
+  { label: 'Layout', icon: 'layout', ids: ['layout', 'composition', 'composition-panes'] },
   { label: 'Actions', icon: 'now', ids: ['button', 'toggle-group', 'badge', 'kbd'] },
   { label: 'Fields', icon: 'tasks', ids: ['input', 'form-field', 'select', 'pickers', 'checkbox', 'radio', 'switch', 'date', 'fields', 'rich-text'] },
   { label: 'Navigation', icon: 'structure', ids: ['tabs', 'steps', 'nav-list', 'sidebar', 'toolbar', 'menu'] },
@@ -740,7 +743,7 @@ function StepsSection() {
     </div>
   )
   return (
-    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with a cross and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
+    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with the circle with an X (the one look of a failure, as in a Note error) and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
       <Row label="a wizard">
         <div className="flex flex-col gap-4">
           <Steps aria-label="Signup" steps={SIGNUP} current={current} onStepSelect={setCurrent} />
@@ -2153,6 +2156,104 @@ function Composition({ animated }: { animated: boolean }) {
   )
 }
 
+/** The tasks of the sample of a row with a control. */
+const PANE_TASKS = [
+  { id: 'terms', title: 'Read the terms of the new contract', facts: [{ text: '@home', color: COLORS[3] }, { text: 'Electricity contract' }, { text: 'Today', tone: 'accent' as const }, { text: '1/3', numeric: true }, { text: 'P1', tone: 'strong' as const }] },
+  { id: 'quote', title: 'Ask the carpenter for a quote', facts: [{ text: 'Kitchen renovation' }, { text: 'Today', tone: 'accent' as const }] },
+  { id: 'pass', title: 'Renew the transit pass', facts: [{ text: 'Fri 20 Nov' }, { text: 'P2', tone: 'strong' as const }] },
+]
+
+/**
+ * The parts that let the example apps go to no class at all: a row of a list with one control beside its button
+ * (`ItemRow control`, with its `facts`), two panes in the content (`ContentSplit`), a long list as tall as its region
+ * (`VirtualList fill`) and a sheet of a named width (`SheetContent width`). Each sample is written as an app writes it;
+ * the boxes around them are the gallery's, to give a pane a height and a width.
+ */
+function CompositionPanes({ animated }: { animated: boolean }) {
+  const [chosen, setChosen] = React.useState<string | null>('terms')
+  const [ticked, setTicked] = React.useState<readonly string[]>([])
+  const [show, setShow] = React.useState<'aside' | 'main'>('main')
+  const [panes, setPanes] = React.useState<1 | 2>(2)
+  const [width, setWidth] = React.useState<SheetWidth | null>(null)
+  const task = PANE_TASKS.find((t) => t.id === chosen)
+  const rows = (
+    <ItemList aria-label="Today">
+      {PANE_TASKS.map((t) => (
+        <ItemRow
+          key={t.id}
+          title={t.title}
+          facts={t.facts}
+          current={chosen === t.id && panes === 2}
+          onClick={() => {
+            setChosen(t.id)
+            setShow('main')
+          }}
+          control={<Checkbox aria-label={`Complete «${t.title}»`} checked={ticked.includes(t.id)} onCheckedChange={(on) => setTicked((list) => (on === true ? [...list, t.id] : list.filter((id) => id !== t.id)))} animated={animated} />}
+        />
+      ))}
+    </ItemList>
+  )
+  return (
+    <Section
+      id="composition-panes"
+      title="ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width"
+      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A long list as tall as its region, and a sheet at the side of a named width."
+    >
+      <Row label="a row with a control">
+        <div data-sample="item-row-control" className="w-full max-w-md">
+          {rows}
+        </div>
+      </Row>
+      <Row label="two panes">
+        <div data-sample="content-split" className="h-72 w-full max-w-3xl overflow-hidden rounded-lg border border-line">
+          <ContentSplit aside={<Column pad="sm">{rows}</Column>} asideLabel="Tasks" show={show} onPanesChange={setPanes}>
+            <Column gap="md" pad="lg">
+              {panes === 1 ? (
+                <Cluster>
+                  <Button variant="ghost" size="sm" onClick={() => setShow('aside')}>
+                    <Icon name="back" />
+                    Today
+                  </Button>
+                </Cluster>
+              ) : null}
+              <Heading size="card" level={3}>
+                {task?.title ?? 'Nothing chosen'}
+              </Heading>
+              <Text as="p" variant="soft">
+                The thing chosen, read or worked on in the room the column leaves.
+              </Text>
+            </Column>
+          </ContentSplit>
+        </div>
+      </Row>
+      <Row label="a long list that fills">
+        <div data-sample="virtual-fill" className="h-64 w-full max-w-md rounded-lg border border-line">
+          <VirtualList aria-label="Archive" count={5000} estimateSize={50} fill pad="sm">
+            {(index) => <ItemRow title={`Message ${index + 1}`} description="Put away" meta={`${(index % 28) + 1} Oct`} />}
+          </VirtualList>
+        </div>
+      </Row>
+      <Row label="sheet width">
+        <Cluster>
+          {(['sm', 'md', 'lg'] as const).map((w) => (
+            <Button key={w} variant="outline" onClick={() => setWidth(w)}>
+              Open {w}
+            </Button>
+          ))}
+        </Cluster>
+        <Sheet open={width !== null} onOpenChange={(open) => (open ? undefined : setWidth(null))}>
+          <SheetContent side="right" width={width ?? 'sm'} animated={animated}>
+            <SheetHeader>
+              <SheetTitle>A sheet, {width ?? 'sm'}</SheetTitle>
+              <SheetDescription>sm 384px, md 448px, lg 512px; under the sm width of the window, three quarters of it.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      </Row>
+    </Section>
+  )
+}
+
 function Empties() {
   return (
     <Section id="empty" title="Empty" note="A title alone; a title, a sentence and an action; with the optional icon.">
@@ -2166,6 +2267,78 @@ function Empties() {
         <Cell label="icon">
           <Empty icon={<Inbox />} title="No new messages" description="You have read everything." className="w-72 rounded-lg border border-line p-6" data-sample="empty-icon" />
         </Cell>
+      </Row>
+    </Section>
+  )
+}
+
+function Notes() {
+  const [shown, setShown] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
+  return (
+    <Section id="note" title="Note" note="A message that stays in the page until the app removes it: information, a success, a warning or an error. One look for a failure: an error note (the circle with an X, as in a toast, a progress and a step), never an empty state. Each tone has its icon and its colour, and screen readers hear its word before the title; an error and a warning are announced when they appear (unless announce is false: a fact of the item shown), information and a success are not, and a tone that changes is announced as a new note. A title, its text, a list and the buttons that answer it, outline or ghost (R3); no close button; a long word breaks to fit. A fill, flat in the page: neither a border nor a shadow (R4).">
+      <Row label="tones">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="info" title="Drawn from a sample">
+            The map shows the first 500 files. Open a folder to see the rest.
+          </Note>
+          <Note tone="success" title="The map is up to date" />
+          <Note tone="warning" title="Three links lead outside the project">
+            They are drawn as dashed lines and are not followed.
+          </Note>
+          <Note tone="error" title="Could not reach the server" actions={<Button variant="outline">Retry</Button>}>
+            The map was drawn before these files were read.
+          </Note>
+        </div>
+      </Row>
+      <Row label="list and actions">
+        <div className="w-full max-w-xl">
+          <Note
+            tone="error"
+            title="Two files were not read"
+            items={['src/app.ts: the file is too large', 'src/old/main.ts: the file was removed']}
+            actions={
+              <>
+                <Button variant="outline">Read them again</Button>
+                <Button variant="ghost">Open the log</Button>
+              </>
+            }
+          >
+            The rest of the map is complete.
+          </Note>
+        </div>
+      </Row>
+      <Row label="long words">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Note tone="error" title="Could not read C:/Users/someone/AppData/Local/projects/a-very-long-folder-name-without-any-space/settings.json" actions={<Button variant="outline">Retry</Button>}>
+            <Text pre>{'error: expected a value at line 3, column 14\n  "paths": ["src/**/*.ts", ,]\n                            ^'}</Text>
+          </Note>
+          <Note tone="warning" announce={false} title="Read only">
+            It belongs to another project: a fact of the item shown, not announced at each selection.
+          </Note>
+        </div>
+      </Row>
+      <Row label="live">
+        <div className="flex w-full max-w-xl flex-col items-start gap-3">
+          <Button variant="outline" data-sample="note-toggle" onClick={() => setShown(!shown)}>
+            {shown ? 'Remove the warning' : 'Show a warning'}
+          </Button>
+          {shown ? (
+            <Note tone="warning" title="The map is out of date">
+              Files changed since it was drawn: a screen reader hears this as it appears.
+            </Note>
+          ) : null}
+          <Button variant="outline" data-sample="note-tone" onClick={() => setFailed(!failed)}>
+            {failed ? 'Read the files again' : 'Fail the reading'}
+          </Button>
+          <Note
+            tone={failed ? 'error' : 'info'}
+            title={failed ? 'Could not read the files' : 'Reading the files'}
+            actions={failed ? <Button variant="outline" onClick={() => setFailed(false)}>Retry</Button> : undefined}
+          >
+            {failed ? 'The same note, now an error: drawn anew, so a screen reader hears it.' : 'The map fills in as they are read.'}
+          </Note>
+        </div>
       </Row>
     </Section>
   )
@@ -2679,6 +2852,7 @@ function App() {
       </Section>
       <LayoutParts />
       <Composition animated={animated} />
+      <CompositionPanes animated={animated} />
       <Buttons animated={animated} />
       <Toggles animated={animated} />
       <Badges />
@@ -2704,6 +2878,7 @@ function App() {
       <Notices animated={animated} />
       <ProgressSection />
       <Empties />
+      <Notes />
       <Tables />
       <LongLists />
       <OverflowLists />

@@ -5,7 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { type ReactElement } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
-import { Dialog, Toasts } from '../src'
+import { Dialog, Icon, Toasts } from '../src'
 import { ignoreToasts } from '../src/internal/overlay'
 import { noop, settle } from './helpers'
 
@@ -94,12 +94,18 @@ test('a timed toast shows the seconds left and a close button; an untimed one ha
 })
 
 test('an error never counts down: it shows no seconds, keeps its close button and stays when the others have gone', async () => {
+  // The drawing of Sigrid's `error`: the one look of a failure, the same as a `Note`'s error.
+  const icon = render(<Icon name="error" />)
+  const failure = icon.container.querySelector('svg')!.outerHTML
+  icon.unmount()
   vi.useFakeTimers()
   const onDismiss = vi.fn()
   render(<Toasts items={[{ id: 'e', text: 'Could not save', kind: 'error' }, { id: 'a', text: 'First' }]} durationMs={3000} onDismiss={onDismiss} />)
   await settle()
   // The mark and the word for screen readers, before the text; no seconds, but the «×».
   expect(card('Could not save').querySelector('[data-slot="toast-error"]')).toBeTruthy()
+  expect(card('Could not save').querySelector('svg')!.outerHTML).toBe(failure)
+  expect(card('First').querySelector('svg')).toBeNull()
   expect(card('Could not save').textContent).toMatch(/^Error:Could not save/)
   expect(card('Could not save').querySelector('[data-slot="toast-timer"]')).toBeNull()
   expect(card('First').querySelector('[data-slot="toast-timer"]')!.textContent).toBe('3')

@@ -15,6 +15,21 @@ import { palettes } from './theme-tokens'
 const mix = (fg: string, bg: string, alpha: number) =>
   '#' + [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)).toString(16).padStart(2, '0')).join('')
 
+/**
+ * The labels of a `Note`'s actions, `outline` (the ink) and `ghost` (the soft ink), as text at 4.5:1 on the four fills
+ * (the soft fill of success, warning and red, and the quiet fill, the ink at 6%, over each background); under the
+ * pointer each lays its quiet fill (the ink at 4% and 6%) on the note's, with the ink as its label.
+ */
+const noteActionsHold = (t: Readonly<Record<string, string>>, backgrounds: readonly string[], at: string) => {
+  const fills = [t['success-soft']!, t['warning-soft']!, t['destructive-soft']!, ...backgrounds.map((bg) => mix(t['ink']!, bg, 0.06))]
+  for (const fill of fills) {
+    expect(contrast(t['ink']!, fill), `${at}: outline label (ink) on the note ${fill}`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['ink-soft']!, fill), `${at}: ghost label (ink-soft) on the note ${fill}`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['ink']!, mix(t['ink']!, fill, 0.04)), `${at}: outline label under the pointer on the note ${fill}`).toBeGreaterThanOrEqual(AA)
+    expect(contrast(t['ink']!, mix(t['ink']!, fill, 0.06)), `${at}: ghost label under the pointer on the note ${fill}`).toBeGreaterThanOrEqual(AA)
+  }
+}
+
 const SCHEMES = ['light', 'dark'] as const
 const CASES = THEMES.flatMap((t) => SCHEMES.map((scheme) => [`${t.id} ${scheme === 'light' ? 'light' : 'dark'}`, t.id, scheme] as const))
 const AA = 4.5
@@ -204,6 +219,17 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     expect(contrast(t['ink']!, t['highlight']!), 'ink on highlight').toBeGreaterThanOrEqual(7)
     // The highlight is seen on every background it can sit on.
     for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
+  })
+
+  test('a Note: its text (the ink) and the labels of its actions read on the soft fill of each tone and on the quiet fill over every background; its icon and the focus ring of its buttons show on them', () => {
+    // The icon and the title of a tone are its colour on its soft fill: asserted above (status) and below (red).
+    // Information has no status colour: its icon is the soft ink, on the quiet fill.
+    const quiet = BG.map((bg) => mix(t['ink']!, bg, 0.06))
+    for (const fill of [t['success-soft']!, t['warning-soft']!, t['destructive-soft']!, ...quiet]) {
+      expect(contrast(t['ink']!, fill), 'ink on ' + fill).toBeGreaterThanOrEqual(AA)
+      expect(contrast(t['ring']!, fill), 'ring on ' + fill).toBeGreaterThanOrEqual(3)
+    }
+    noteActionsHold(t, BG, 'the theme')
   })
 
   test('red: the same for every theme of the scheme, and it holds on every background and with its text', () => {
@@ -405,6 +431,7 @@ describe('the user\'s own theme', () => {
     expect(contrast(t['sidebar-ink']!, t['sidebar-paper']!), `${at}: sidebar text`).toBeGreaterThanOrEqual(AA)
     expect(contrast(t['sidebar-mute']!, t['sidebar-paper']!), `${at}: sidebar muted text`).toBeGreaterThanOrEqual(AA)
     expect(contrast(t['sidebar-selected-ink']!, t['sidebar-selected']!), `${at}: selected item of the sidebar`).toBeGreaterThanOrEqual(AA)
+    noteActionsHold(t, BG, at)
   }
 
   test('only a #rrggbb counts as a color: anything else leaves the theme as it is', () => {
