@@ -11,7 +11,7 @@
 // it is `aria-checked` on the option, because `aria-selected` marks the highlighted row. The others keep the check's
 // room, so a key after it does not move.
 import * as React from "react"
-import { Check } from "lucide-react"
+import { Check } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { GROUP_LABEL, ROW_HIGHLIGHT } from "../lib/rows"

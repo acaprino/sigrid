@@ -923,9 +923,11 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
-- Icons: Sigrid has one icon set of its own, Lucide, the same in every app (the owner, 2026-11-23); the user does not
+- Icons: Sigrid has one icon set of its own, Sigrid Icons, the same in every app (the owner, 2026-11-23; since
+  2026-11-24 the set is MynaUI's drawings with fifteen of Sigrid's own beside them, in place of Lucide, and no package
+  of icons is a dependency); the user does not
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
-  never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
+  never the name of a drawing: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
   `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
   of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
@@ -939,7 +941,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
 - Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
   `IconPackChoice` and `IconPackText` are gone: drop the choice of a pack from the app's settings and stop saving it (a
   pack saved before is ignored). `IconPackProvider`, `useIconPack`, `IconSet`, `IconDrawing`, `IconArt` and `Icon`'s
-  `pack` prop are gone: remove the provider around the app (`Icon` draws Lucide without it), and ask for a meaning of
+  `pack` prop are gone: remove the provider around the app (`Icon` draws the set without it), and ask for a meaning of
   the app's own to be added to Sigrid's names (until then it is an empty slot). `Icon` no longer writes
   `data-icon-pack`. No name is kept as an alias.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a

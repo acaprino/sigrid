@@ -178,7 +178,7 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
   test('icons are 16 or 14px, dots 8px (R7, R10)', () => {
     const iconPx = (n: string) => Number.parseFloat(n) * 4
     for (const s of sources) {
-      const icons = new Set(['Icon', ...[...s.text.matchAll(/import \{([^}]+)\} from ['"]lucide-react['"]/g)].flatMap((m) => m[1]!.split(',').map((x) => x.trim().split(/\s+as\s+/).pop()!))])
+      const icons = new Set(['Icon', ...[...s.text.matchAll(/import \{([^}]+)\} from ['"][./]+(?:internal\/)?sigrid-icons['"]/g)].flatMap((m) => m[1]!.split(',').map((x) => x.trim().split(/\s+as\s+/).pop()!))])
       const bad: string[] = []
       for (const m of code(s.text).matchAll(/<([A-Z]\w*)\b[^>]*?className=(?:"([^"]*)"|\{[^}]*?['"`]([^'"`]*)['"`])/g)) {
         if (!icons.has(m[1]!)) continue

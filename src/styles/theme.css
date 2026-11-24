@@ -569,7 +569,7 @@
 
 /* Icons: the theme's stroke and caps. Only those with the default stroke (2): an icon with a deliberately chosen stroke
    (the check mark, the big "+") keeps it. */
-svg.lucide[stroke-width="2"] {
+svg[data-glyph][stroke-width="2"] {
   stroke-width: var(--icon-stroke, 1.75);
   stroke-linecap: var(--icon-cap, round);
   stroke-linejoin: var(--icon-join, round);

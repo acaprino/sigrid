@@ -33,7 +33,7 @@
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
 import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn, isEmptyNode } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"

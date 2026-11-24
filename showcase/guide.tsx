@@ -457,7 +457,7 @@ export function GuidelinesView() {
             Counts are tabular numbers, pills on a navigation row (accent on the chosen one). Key hints are plain 12px text, hidden at phone widths.
           </Rule>
           <Rule id="R6" title="Icons are anchors" see={<See view="components" id="nav-list">See NavList</See>}>
-            Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set (Lucide), the same in every app. An empty slot keeps the alignment.
+            Every navigation item, section heading, menu entry and settings group has an icon from Sigrid's one set (Sigrid Icons), the same in every app. An empty slot keeps the alignment.
           </Rule>
           <Rule id="R7" title="One scale" see={<See view="components" id="tokens">See the tokens</See>}>
             Radii 2, 4 and 6px, or a theme's soft 4/6/10 or round 6/10/14. Round shapes only for avatars, dots and switches. A 4px spacing grid, heights 36, 32 and 28px at normal density, icons 16 or 14px, weights 400, 500 and 600, text sizes from the tokens.

@@ -3,7 +3,7 @@
 // browser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no
 // label of its own: the caller names it (`aria-label`, or a `FormField` around it).
 import * as React from "react"
-import { Search } from "lucide-react"
+import { Search } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { Input } from "../primitives/input"
 import { cn } from "../lib/utils"

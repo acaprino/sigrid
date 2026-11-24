@@ -15,6 +15,7 @@ export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions }
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
 export { useEdgeAutoScroll } from './internal/edge-scroll'
 export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './internal/kinds'
+export type { Glyph, GlyphProps } from './internal/sigrid-icons'
 export { splitLines } from './internal/lines'
 export { hasMarkdown, parseBlocks, parseInline, plainText } from './internal/markdown'
 export { COARSE, NARROW, SHORT, useMedia, usePhone } from './internal/media'

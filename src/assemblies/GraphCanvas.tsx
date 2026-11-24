@@ -113,7 +113,7 @@
 import * as React from 'react'
 import dagre from '@dagrejs/dagre'
 import { Background, BackgroundVariant, BaseEdge, getSmoothStepPath, Handle, MarkerType, MiniMap, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow, type Connection, type Edge, type EdgeProps, type Node, type NodeProps } from '@xyflow/react'
-import { Maximize } from 'lucide-react'
+import { Maximize } from '../internal/sigrid-icons'
 import { Icon, type IconName } from '../icons'
 import { markHueAttrs } from '../colors'
 import { FOCUS_RING } from '../lib/focus'

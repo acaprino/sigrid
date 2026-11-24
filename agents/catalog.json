@@ -680,6 +680,14 @@
      ]
     },
     {
+     "file": "src/internal/sigrid-icons.tsx",
+     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Fifteen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
+     "also": [
+      "Glyph",
+      "GlyphProps"
+     ]
+    },
+    {
      "file": "src/internal/tag-color.ts",
      "about": "The colors of a user's labels (tags): eight background/ink pairs per scheme in `theme.css` (`--tag-1-*` …\n`--tag-8-*`), picked from the label's name, so the same name has the same color everywhere and on every device,\nwithout an extra datum. The chips of the labels field (`ChipsInput.tsx`) use them, and so can an app's own label pills.",
      "also": [
@@ -1497,7 +1505,7 @@
    "files": [
     {
      "file": "src/icons.tsx",
-     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThat binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the\nmeaning; a part draws a Lucide glyph directly only where `Icon` cannot give the same thing: a glyph no name means\n(the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the kinds\nof an item, which `kindIcon` hands out as Lucide's components), or a glyph that holds what `Icon`'s wrapping `<span>`\nwould take from it (its own place, `ml-auto` or `absolute`: the submenu's chevron, the search field's magnifier; the\nbar's drag attribute; a `data-slot`; its place in a box that is not a flex box, where the wrapper moves it by a pixel:\nthe chevron of a select, the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check\non a card of the look settings).\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
+     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own\n(the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app: Sigrid Icons, MynaUI's\ndrawings and Sigrid's own beside them (the owner, 2026-11-24; `src/internal/sigrid-icons.tsx`), in place of Lucide. A\ncomponent asks for an icon by what it means (`settings`, `delete`), never by the name of a drawing, so a meaning\nkeeps its drawing in every app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThat binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the\nmeaning; a part draws a glyph of the set directly only where `Icon` cannot give the same thing: a glyph no name means\n(the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the kinds\nof an item, which `kindIcon` hands out as glyphs), or a glyph that holds what `Icon`'s wrapping `<span>`\nwould take from it (its own place, `ml-auto` or `absolute`: the submenu's chevron, the search field's magnifier; the\nbar's drag attribute; a `data-slot`; its place in a box that is not a flex box, where the wrapper moves it by a pixel:\nthe chevron of a select, the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check\non a card of the look settings).\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23; Lucide left on 2026-11-24.",
      "components": [
       {
        "name": "Icon",
@@ -1505,7 +1513,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "required": true
         },
         {
@@ -2118,12 +2126,12 @@
         },
         {
          "name": "justify",
-         "type": "\"center\" | \"start\" | \"end\" | \"between\"",
+         "type": "\"end\" | \"center\" | \"start\" | \"between\"",
          "doc": "Where the parts gather along the row (default `start`)."
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"end\" | \"center\" | \"start\" | \"stretch\"",
          "doc": "How they line up across the row (default `center`)."
         },
         {
@@ -2159,7 +2167,7 @@
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"end\" | \"center\" | \"start\" | \"stretch\"",
          "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
         },
         {
@@ -2402,7 +2410,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons, drawn in the box while the picture loads and when it fails. Without it the box is empty, at the same size."
         },
         {
@@ -3960,6 +3968,15 @@
          "type": "string"
         },
         {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
          "name": "animated",
          "type": "boolean"
         },
@@ -3972,15 +3989,6 @@
          "name": "placeholder",
          "type": "string",
          "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
-        },
-        {
-         "name": "min",
-         "type": "string",
-         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
-        },
-        {
-         "name": "max",
-         "type": "string"
         },
         {
          "name": "locale",
@@ -4674,7 +4682,7 @@
         },
         {
          "name": "controlSide",
-         "type": "\"start\" | \"end\"",
+         "type": "\"end\" | \"start\"",
          "doc": "Where the control is: at the `start` of the row (the default: a box to tick) or at its `end`."
         },
         {
@@ -5182,7 +5190,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "An icon that tells what kind of request it is; none for most."
         }
        ]
@@ -6656,7 +6664,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons, drawn while the logo loads, or in its place."
         }
        ]
@@ -7926,12 +7934,12 @@
         },
         {
          "name": "leftIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icons of the two buttons. Default the two arrows."
         },
         {
          "name": "rightIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
         },
         {
          "name": "empty",
@@ -8125,12 +8133,12 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -9007,7 +9015,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons before the name."
         },
         {

@@ -226,11 +226,44 @@ NOTE: Usage of the fonts and icons referenced in Fluent UI React is subject to t
 
 ## Icons
 
-Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Lucide, an npm dependency, installed and
-unmodified, never copied into `src/` (`src/icons.tsx` names each meaning's drawing).
+Sigrid has one icon set, the same in every app (the owner, 2026-11-23): Sigrid Icons, its own
+(`src/internal/sigrid-icons.tsx`; `src/icons.tsx` names each meaning's drawing). No package of icons is a dependency.
+The set is made of two kinds of drawing (the owner, 2026-11-24):
 
-- `lucide-react` (ISC, Copyright (c) 2026 Lucide Icons and Contributors, https://lucide.dev), 1.70.0, pinned to the
-  exact version.
+- Drawings of MynaUI Icons (`@mynaui/icons` 0.4.12, https://github.com/praveenjuge/mynaui-icons): the paths of the
+  icons the toolkit uses are copied into that file as they are, each under MynaUI's own name. MynaUI draws them with a
+  stroke of 1.5; Sigrid strokes them with the theme's. **MIT**, not installed:
+
+```
+MIT License
+
+Copyright (c) Praveen Juge
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+- Fifteen drawings of Sigrid's own, for the meanings MynaUI has no drawing for (`FolderMove`, `FilterX`, `TextQuote`,
+  `History`, `ReplyAll`, `Tags`, `CalendarClock`, `Bot`, `Shapes`, `FolderOpen`, `UserPen`, `Tree`, `Graph`, `Router`,
+  `Devices`). Five of them start from a path of MynaUI (`FolderMove` and `FolderOpen` from its folder, `FilterX` from
+  its funnel, `History` from its undo, `ReplyAll` from its corner arrow); the rest are drawn from nothing.
+
+Lucide (`lucide-react`, ISC), the set until 2026-11-24, left with its dependency.
 
 The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
 Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.

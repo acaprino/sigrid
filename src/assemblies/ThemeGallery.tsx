@@ -27,7 +27,7 @@ export interface ThemeGalleryProps<T extends ThemeDef> {
 const TILE = 'relative min-w-0 overflow-hidden rounded-lg border border-line text-start hover:border-input aria-checked:border-primary aria-checked:ring-1 aria-checked:ring-primary'
 
 /**
- * The check in a 16px dot of the primary. Its own path, not the toolkit's check: at 12px Lucide's check draws a 1px
+ * The check in a 16px dot of the primary. Its own path, not the toolkit's check: at 12px the set's check draws a 1px
  * line on a 24 grid, this one a 1.5px line on a 16 grid, which the small dot needs to be read.
  */
 function ChosenMark() {
