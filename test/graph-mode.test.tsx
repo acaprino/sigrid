@@ -402,6 +402,40 @@ describe('what a map of a program asked of the canvas', () => {
     expect(thing('Plain').querySelector('[data-slot="logo"]')).toBeNull()
   })
 
+  test('a focus the person put elsewhere is theirs: a thing that leaves the graph does not take it back', () => {
+    // The thing that had the focus is no longer drawn (it is out of the view) and the canvas heard no blur; the person
+    // types in a field of the app, which filters the graph.
+    const silent = (event: Event) => event.stopPropagation()
+    window.addEventListener('focusout', silent, true)
+    window.addEventListener('focusin', silent, true)
+    try {
+      const { rerender } = render(
+        <>
+          <input aria-label="Filter" />
+          <Calls />
+        </>,
+      )
+      window.removeEventListener('focusin', silent, true)
+      act(() => thing('Mail').focus())
+      window.addEventListener('focusin', silent, true)
+      const field = screen.getByRole('textbox', { name: 'Filter' })
+      act(() => field.focus())
+      expect(document.activeElement).toBe(field)
+      rerender(
+        <>
+          <input aria-label="Filter" />
+          <Calls nodes={NODES.filter((node) => node.id !== 'mail')} edges={EDGES.filter((edge) => edge.to !== 'mail')} />
+        </>,
+      )
+      expect(screen.queryByRole('button', { name: 'Mail' })).toBeNull()
+      expect(document.activeElement).toBe(field)
+      expect(view.setViewport).not.toHaveBeenCalled()
+    } finally {
+      window.removeEventListener('focusout', silent, true)
+      window.removeEventListener('focusin', silent, true)
+    }
+  })
+
   test('when the thing that has the focus leaves the graph, the focus goes to the Tab stop, not to the page', () => {
     const { rerender } = render(<Calls />)
     act(() => thing('Mail').focus())

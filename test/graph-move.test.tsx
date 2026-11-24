@@ -230,6 +230,59 @@ describe('things that move', () => {
     expect((node('store').data as { chosen: boolean }).chosen).toBe(true)
   })
 
+  test('a place React Flow tells after a drag the canvas had ended (a second finger) is where the thing was let go: kept, told, and reset as any other', async () => {
+    const onMove = vi.fn()
+    render(<Chart movable onMove={onMove} />)
+    act(() => handed.props!.onNodeDragStart!({} as never, node('store') as never, [node('store')] as never))
+    act(() => handed.props!.onNodesChange!(new NodeChangeset([{ id: 'store', type: 'position', position: { x: 650, y: 200 }, dragging: true }])))
+    // The second finger: React Flow aborts the drag and says nothing; the canvas ends it.
+    act(() => void window.dispatchEvent(new Event('touchcancel')))
+    await act(async () => {
+      await new Promise((done) => setTimeout(done, 5))
+    })
+    expect(onMove).not.toHaveBeenCalled()
+    // The finger lifts: React Flow tells the last place, with no drag stop.
+    act(() => handed.props!.onNodesChange!(new NodeChangeset([{ id: 'store', type: 'position', position: { x: 650.3, y: 200 }, dragging: false }])))
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(onMove).toHaveBeenLastCalledWith('store', { x: 650, y: 200 })
+    expect(node('store').position).toEqual({ x: 650, y: 200 })
+    expect(line('gateway→store').type).not.toBe('route')
+    fireEvent.click(reset()!)
+    expect(node('store').position).toEqual({ x: 700, y: 172 })
+  })
+
+  test('a drop that React Flow tells both ways is told to the app once', () => {
+    const onMove = vi.fn()
+    render(<Chart movable onMove={onMove} />)
+    act(() => handed.props!.onNodeDragStart!({} as never, node('store') as never, [node('store')] as never))
+    act(() => {
+      handed.props!.onNodeDragStop!({} as never, { ...node('store'), position: { x: 640, y: 300 } } as never, [{ ...node('store'), position: { x: 640, y: 300 } }] as never)
+      handed.props!.onNodesChange!(new NodeChangeset([{ id: 'store', type: 'position', position: { x: 640, y: 300 }, dragging: false }]))
+    })
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(node('store').position).toEqual({ x: 640, y: 300 })
+  })
+
+  test('a thing that is as it was is handed to React Flow as the object it has, and one that changed keeps what React Flow measured', () => {
+    const { rerender } = render(<Chart />)
+    act(() =>
+      handed.props!.onNodesChange!(
+        new NodeChangeset([
+          { id: 'gateway', type: 'dimensions', dimensions: { width: 208, height: 44 } },
+          { id: 'cart', type: 'dimensions', dimensions: { width: 208, height: 44 } },
+        ]),
+      ),
+    )
+    const before = node('gateway')
+    expect(before.measured).toEqual({ width: 208, height: 44 })
+    // The store is chosen: the gateway, joined to it, is as it was; the cart is dimmed.
+    rerender(<Chart selected="store" />)
+    expect((node('store').data as { chosen: boolean }).chosen).toBe(true)
+    expect(node('gateway')).toBe(before)
+    expect((node('cart').data as { dim: boolean }).dim).toBe(true)
+    expect(node('cart').measured).toEqual({ width: 208, height: 44 })
+  })
+
   test('a thing moved with the keys past the edge of the view takes the view with it, and keeps the focus', async () => {
     const restore = sized()
     try {
@@ -382,6 +435,35 @@ describe('motion', () => {
       const arriving = Array.from(document.querySelectorAll('.react-flow__node[data-arriving]')).map((el) => el.getAttribute('data-id')).sort()
       expect(arriving).toEqual(['rows', 'store'])
     } finally {
+      restore()
+    }
+  })
+
+  test('a gesture waits a second for its new places: the same places in a new object do not spend it, and later places are the app’s own', async () => {
+    systemMotion(false)
+    const restore = sized()
+    const clock = vi.spyOn(Date, 'now')
+    try {
+      let time = 1_000_000
+      clock.mockImplementation(() => time)
+      const moved = (x: number) => NODES.map((it) => (it.id === 'store' ? { ...it, x } : it))
+      const { rerender } = render(<Chart animated onToggle={() => {}} />)
+      await act(async () => {})
+      // The person closes a group; the app lays out elsewhere and draws meanwhile, with the same places.
+      fireEvent.click(thing('Close Orders'))
+      rerender(<Chart animated onToggle={() => {}} nodes={NODES.map((it) => ({ ...it }))} />)
+      expect(box().hasAttribute('data-gliding')).toBe(false)
+      time += 300
+      rerender(<Chart animated onToggle={() => {}} nodes={moved(720)} />)
+      expect(box().hasAttribute('data-gliding')).toBe(true)
+      box().removeAttribute('data-gliding')
+      // A gesture nothing answered: what the app pushes two seconds later jumps.
+      fireEvent.click(thing('Close Orders'))
+      time += 2000
+      rerender(<Chart animated onToggle={() => {}} nodes={moved(760)} />)
+      expect(box().hasAttribute('data-gliding')).toBe(false)
+    } finally {
+      clock.mockRestore()
       restore()
     }
   })

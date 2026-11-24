@@ -584,7 +584,10 @@ set, `Icon` (R6), and no logo stands in for one.
       first and «+N»; the focus of a thing that leaves the graph goes to the Tab stop; a thing in the view stands in
       for a Tab stop that is out of it; an arrow towards a thing out of the view moves the view to it; with a
       `layoutKey` and a thing chosen, a change of the box's size no longer fits the view again; a thing that is the
-      same from one draw to the next is not drawn again. Nothing else.
+      same from one draw to the next is handed to React Flow as the object it has, with what it measured, so it is
+      not measured or drawn again. And under a `MotionProvider animated` a canvas now moves as the other parts do (the
+      view goes where a button, a key, `fit`, `focus` or `zoomTo` sends it in 200 ms, the things glide when a branch
+      opens or closes); `animated={false}` on the canvas keeps it still. Nothing else.
     - Groups opened in place (the graph mode). `onOpen` goes into a thing: the app shows something else. `onToggle`
       opens a group where it is, with the rest of the graph still in sight. A node with `open: false` is a group not
       opened: a thing as the others, with a button that opens it («Open Orders», the word `graph.open`; a double
@@ -620,9 +623,9 @@ set, `Icon` (R6), and no logo stands in for one.
       gesture that changes the places the things glide to them in 200 ms on the toolkit's easy-ease curve, the lines
       are hidden meanwhile and drawn again at the end, together with what is new (a group just opened and what it
       holds), and the view goes where a gesture sends it (the buttons, the keys, `fit`, `focus`, `zoomTo`) in the same
-      time. What counts as a gesture: the canvas's own (a group opened or closed with its button, the reset), whose
-      new places may come up to ten seconds later (a layout in a worker), and a press or a key in the canvas that a
-      new `layoutKey` follows within a second. So an app asks for the glide by answering the gesture; a new layout or
+      time. What counts as a gesture: the canvas's own (a group opened or closed with its button, the reset) that new
+      places follow within a second, and a press or a key in the canvas that a new `layoutKey` follows within a second
+      (a layout that takes longer in a worker jumps). The same places in a new object are no new places. So an app asks for the glide by answering the gesture; a new layout or
       new places it pushes by itself (its data changed) jump, and so does that layout's fit. Nothing moves at the first
       paint, while a thing is dragged or at a change of the box's size; nothing loops. Without it everything jumps.
     - Its height. The box is 384px tall. With `fill` it is as tall as the region that holds it, as `VirtualList fill`

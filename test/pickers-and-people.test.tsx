@@ -163,6 +163,16 @@ describe('Logo', () => {
     const still = render(<Logo src="/logos/broken.svg" icon="layers" />)
     expect(logo(still.container).dataset.state).toBe('failed')
     expect(logo(still.container).querySelector('img')).toBeNull()
+    still.unmount()
+    // A minute later the address may answer: drawn again, the picture is asked for once more.
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000)
+    try {
+      const later = render(<Logo src="/logos/broken.svg" icon="layers" />)
+      expect(logo(later.container).dataset.state).toBe('loading')
+      expect(logo(later.container).querySelector('img')).not.toBeNull()
+    } finally {
+      clock.mockRestore()
+    }
   })
 
   test('it goes where an icon goes: the leading of a row, the icon of a navigation row', () => {

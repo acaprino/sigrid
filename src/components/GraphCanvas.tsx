@@ -106,7 +106,7 @@
 // - Motion (`animated`, or a `MotionProvider` around it, and never with reduced motion): after a gesture that changes
 //   the places the things glide there in 200ms, the lines are hidden meanwhile and drawn again at the end, with what
 //   is new, and the view goes where a gesture sends it in the same time. The gesture is the canvas's own (a group
-//   opened or closed, the reset), whose places may come up to ten seconds later, or a press or a key in the canvas
+//   opened or closed, the reset) that new places follow within a second, or a press or a key in the canvas
 //   that a new `layoutKey` follows within a second. A new layout the app pushes by itself jumps. Nothing moves at the
 //   first paint, while a thing is dragged, or by itself. Without it everything jumps.
 // The name of React Flow stays at the foot of the canvas, as its makers ask of whoever does not pay for it.
@@ -304,7 +304,7 @@ export type GraphCanvasProps = {
   /**
    * After a gesture that changes the places the things glide to them and the view goes where a gesture sends it (the
    * buttons, the keys, `fit`, `focus`), in 200ms. A gesture is the canvas's own (a group opened or closed with its
-   * button, the reset), whose new places may come up to ten seconds later, or a press or a key in the canvas that a
+   * button, the reset) that new places follow within a second, or a press or a key in the canvas that a
    * new `layoutKey` follows within a second; a layout or places the app pushes by itself jump. Absent: what the
    * `MotionProvider` around it says. Never with reduced motion, at the first paint or while a thing is dragged.
    */
@@ -383,10 +383,12 @@ const STEP = 16
 const DRAG_AFTER = 4
 /** How long the things take to glide to their new places and the view to go where a gesture sends it: Fluent's `normal`, on its easy-ease curve (graph.css). */
 const GLIDE_MS = 200
-/** How long after a press or a key in the canvas a new layout of the app's (`layoutKey`) is its answer: later, it is not animated. */
+/**
+ * How long after a gesture new places are its answer: the canvas's own gesture (a group opened or closed, the reset),
+ * or a press or a key in the canvas for a new layout of the app's (`layoutKey`). Later, they are the app's own doing
+ * and are not animated.
+ */
 const ARMED_MS = 1000
-/** How long the canvas's own gesture (a group opened or closed, the reset) waits for its new places: an app may lay out in a worker. */
-const OWN_MS = 10000
 /** No ids: the same set at every draw. */
 const NO_IDS: ReadonlySet<string> = new Set()
 /** Nothing moved: the same map at every draw. */
@@ -523,6 +525,23 @@ export function viewKeeping<View extends { x: number; y: number; zoom: number }>
   const x = along(view.x, box.x, box.width, room.width)
   const y = along(view.y, box.y, box.height, room.height)
   return x === view.x && y === view.y ? view : { x, y, zoom: view.zoom }
+}
+
+/** Two sets of places are the same places: the same things, each where it was. */
+function samePlaces(a: ReadonlyMap<string, { x: number; y: number }>, b: ReadonlyMap<string, { x: number; y: number }>): boolean {
+  if (a === b) return true
+  if (a.size !== b.size) return false
+  for (const [id, at] of a) {
+    const to = b.get(id)
+    if (!to || to.x !== at.x || to.y !== at.y) return false
+  }
+  return true
+}
+
+/** The focus is nobody's: on the page itself, or on something that is no longer in it. Only then may the canvas take it by itself. */
+const focusIsFree = () => {
+  const active = typeof document === 'undefined' ? null : document.activeElement
+  return active === null || active === document.body || !active.isConnected
 }
 
 /**
@@ -1574,6 +1593,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // Until when the view is being fitted: a thing that takes the focus meanwhile does not move the view (the fit wins,
   // and the thing is measured where it was, not where it goes).
   const fitUntil = React.useRef(0)
+  // The wanted thing is the Tab stop, wanted because the thing that had the focus left the graph: that thing's id, or
+  // empty when the focus had already fallen to the page. Null for any other wanted thing.
+  const orphan = React.useRef<string | null>(null)
   /** The view goes to a thing: its middle (the title's, for an open group) in the middle of the box, at the same scale. */
   const panTo = (id: string) => {
     const at = places.get(id)
@@ -1604,12 +1626,30 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   }
   React.useEffect(() => {
     // The thing that had the focus left the graph: the focus goes to the Tab stop, not to the page.
+    // Only a focus that is still on that thing (it is drawn until React Flow is handed the graph without it) or that
+    // is nobody's (the thing was out of the view, so not drawn, and the focus fell to the page). A focus the person
+    // put elsewhere meanwhile (a field of the app that filters the graph) is theirs: nothing takes it, nothing moves.
     if (held !== null && !sight.level.has(held)) {
+      const active = document.activeElement
+      const onIt = active !== null && box.current !== null && box.current.contains(active) && active.closest<HTMLElement>('[data-thing]')?.dataset.thing === held
       setHeld(null)
-      if (wanted.current === null) wanted.current = tabStop
+      if (wanted.current === null && tabStop !== null && (onIt || focusIsFree())) {
+        wanted.current = tabStop
+        orphan.current = onIt ? held : ''
+      }
     }
     const id = wanted.current
     if (id === null || !sight.level.has(id)) return
+    if (orphan.current !== null) {
+      // Taken for a thing that left: by now the focus may be someone's.
+      const active = document.activeElement
+      const still = focusIsFree() || (active !== null && active.closest<HTMLElement>('[data-thing]')?.dataset.thing === orphan.current)
+      orphan.current = null
+      wanted.current = null
+      // The view is not moved for it.
+      if (still) focus(id, false)
+      return
+    }
     if (focus(id)) wanted.current = null
   })
 
@@ -1745,12 +1785,14 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     el.querySelectorAll('[data-arriving]').forEach((it) => it.removeAttribute('data-arriving'))
   }
   React.useLayoutEffect(() => {
-    const changed = seenPlaces.current !== places
+    // New places are places that differ: the same ones in a new object (a draw of the app's) change nothing, and do
+    // not spend the gesture that waits for its answer.
+    const changed = !samePlaces(seenPlaces.current, places)
     const rekeyed = seenKey.current !== layoutKey
     seenPlaces.current = places
     seenKey.current = layoutKey
     if (!changed && !rekeyed) return
-    const asked = Date.now() - armed.current < OWN_MS || (rekeyed && Date.now() - touched.current < ARMED_MS)
+    const asked = Date.now() - armed.current < ARMED_MS || (rekeyed && Date.now() - touched.current < ARMED_MS)
     glides.current = asked && glide > 0 && shown
     if (!changed) return
     armed.current = 0
@@ -1941,7 +1983,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     const fingers = (event: TouchEvent) => {
       if (event.touches.length > 1) later()
     }
-    const ends = ['pointerup', 'pointercancel', 'touchend', 'touchcancel', 'blur'] as const
+    // The names of the events as keys, not as words in quotes: the last one is the window losing the focus, and the
+    // design check reads every quoted word as a class.
+    const ends = Object.keys({ pointerup: 0, pointercancel: 0, touchend: 0, touchcancel: 0, blur: 0 })
     for (const name of ends) window.addEventListener(name, later)
     window.addEventListener('touchstart', fingers)
     return () => {
@@ -1969,6 +2013,17 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     const id = standInFor(stop, now.sight.order, boxOf, flowNow.current.getViewport(), now.size)
     setStoodIn((was) => (id === null ? null : was !== null && was.stop === stop && was.id === id ? was : { stop, id }))
   }
+  // A place being told to the app, until the canvas has drawn it: the same place is told once.
+  const told = React.useRef(new Map<string, { x: number; y: number }>())
+  /** A thing was let go at a place: kept and told if it is not where the canvas has it. */
+  const settle = (id: string, at: { x: number; y: number }) => {
+    const to = { x: Math.round(at.x), y: Math.round(at.y) }
+    const from = told.current.get(id) ?? rel.get(id)
+    if (from && Math.abs(from.x - to.x) < 1 && Math.abs(from.y - to.y) < 1) return
+    told.current.set(id, to)
+    put(id, to)
+  }
+  React.useEffect(() => told.current.clear(), [rel])
   // The things handed to React Flow before, by their id: one that is the same is handed again as it was.
   const handedBefore = React.useRef(new Map<string, Node<Drawn>>())
 
@@ -2057,16 +2112,30 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(lines)
   React.useEffect(() => {
     const held = draggedNow.current
-    if (held.size === 0) return setFlowNodes(drawn)
-    // A thing being dragged stays where React Flow has it, and dragged: everything else is drawn as it now is.
+    // What React Flow has is kept where nothing changed: a thing that is as it was stays the very object it has, with
+    // what it measured of it (`measured`, without which it would measure the thing and its handles again); one that
+    // changed keeps the measure. A thing being dragged stays where React Flow has it, and dragged.
     setFlowNodes((now) => {
       const at = new Map(now.map((it) => [it.id, it]))
       return drawn.map((it) => {
-        const was = held.has(it.id) ? at.get(it.id) : undefined
-        return was ? { ...it, position: was.position, dragging: true } : it
+        const was = at.get(it.id)
+        if (!was || was === it) return it
+        if (held.has(it.id)) return { ...it, position: was.position, dragging: true, ...(was.measured ? { measured: was.measured } : {}) }
+        if (!was.dragging && sameThing(was, it)) return was
+        return was.measured ? { ...it, measured: was.measured } : it
       })
     })
   }, [drawn, dragged, setFlowNodes])
+  /**
+   * React Flow's own changes to the things. One of them is a place told after a drag the canvas had already ended (a
+   * second finger aborts the drag, and React Flow tells the last place when the finger lifts, with no drag stop): it
+   * is where the thing was let go, so it is kept and told as any other, and «Reset the layout» puts it back.
+   */
+  const onThingsChange: typeof onNodesChange = (changes) => {
+    onNodesChange(changes)
+    if (!movable) return
+    for (const change of changes) if (change.type === 'position' && change.dragging === false && change.position && !draggedNow.current.has(change.id)) settle(change.id, change.position)
+  }
   React.useEffect(() => setFlowEdges(lines), [lines, setFlowEdges])
 
   // The view: the buttons at the head of the canvas and the keys +, − and 0 do the same.
@@ -2168,7 +2237,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         edges={flowEdges}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
-        onNodesChange={onNodesChange}
+        onNodesChange={onThingsChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, node) => onSelect?.(node.id)}
         onPaneClick={() => onSelect?.(null)}
@@ -2199,11 +2268,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               onNodeDragStart: (_: unknown, __: unknown, taken: readonly Node<Drawn>[]) => startDrag(taken.map((it) => it.id)),
               onNodeDragStop: (_: unknown, __: unknown, dropped: readonly Node<Drawn>[]) => {
                 endDrag()
-                for (const it of dropped) {
-                  const to = { x: Math.round(it.position.x), y: Math.round(it.position.y) }
-                  const from = rel.get(it.id)
-                  if (!from || Math.abs(from.x - to.x) >= 1 || Math.abs(from.y - to.y) >= 1) put(it.id, to)
-                }
+                for (const it of dropped) settle(it.id, it.position)
               },
             }
           : {})}

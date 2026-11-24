@@ -19,13 +19,20 @@ const SIZES = {
 
 /**
  * What became of each address, so a picture drawn again (a row that scrolls back, a thing of a graph that comes into
- * view) is there at once, without its icon first, and one that failed is not asked for again. Kept for the page's
+ * view) is there at once, without its icon first, and one that failed is not asked for again for a minute. Kept for the page's
  * life, a few hundred addresses at most.
  */
-const SEEN = new Map<string, "shown" | "failed">()
+const SEEN = new Map<string, { is: "shown" | "failed"; at: number }>()
+/** How long a picture that failed is not asked for again: after it, the next time it is drawn it is tried once more (the address may answer by then). */
+const FAILED_FOR_MS = 60_000
 const remember = (src: string, is: "shown" | "failed") => {
   if (SEEN.size >= 500) SEEN.clear()
-  SEEN.set(src, is)
+  SEEN.set(src, { is, at: Date.now() })
+}
+const known = (src: string): "shown" | "failed" | "loading" => {
+  const seen = SEEN.get(src)
+  if (!seen) return "loading"
+  return seen.is === "failed" && Date.now() - seen.at >= FAILED_FOR_MS ? "loading" : seen.is
 }
 
 export type LogoProps = {
@@ -47,7 +54,9 @@ export type LogoProps = {
 function Logo({ src, name, decorative = false, size = "sm", icon, children, className }: LogoProps) {
   const [seen, setSeen] = React.useState<{ src: string; is: "shown" | "failed" } | null>(null)
   // Another address starts again, from what is known of it.
-  const state = seen !== null && seen.src === src ? seen.is : (SEEN.get(src) ?? "loading")
+  // What is known is read once, as it is drawn: a picture on the page does not start again by itself.
+  const [first] = React.useState(() => ({ src, is: known(src) }))
+  const state = seen !== null && seen.src === src ? seen.is : first.src === src ? first.is : known(src)
   const settle = (is: "shown" | "failed") => {
     remember(src, is)
     setSeen({ src, is })
