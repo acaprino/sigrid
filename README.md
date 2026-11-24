@@ -575,10 +575,16 @@ set, `Icon` (R6), and no logo stands in for one.
       there in 200 ms. A map that is read whole first passes `minFitZoom={0}`: the first view and every fit show the
       whole graph, down to 0.2, and the person zooms in.
     - The keyboard and what is not drawn. Only the things in the view are drawn, so an arrow towards a thing out of it
-      moves the view to that thing, which takes the focus as it is drawn. The Tab stop is always a thing that is
-      drawn: after the view moved, if the thing that held it is out of the view, the first thing in the view holds
-      it (and has the focus, if the other had it); with no thing in the view the stop stays where it was until one
-      is. When the thing that has the focus leaves the graph, the focus goes to the Tab stop, not to the page.
+      moves the view to that thing, which takes the focus as it is drawn. The Tab stop follows the focus, then the
+      choice, as ever; after the person moved the view, if the thing that holds it is out of the view (and so not
+      drawn), the first thing in the view stands in for it, by its tabindex alone: the focus, the choice and the view
+      stay as they are. With no thing in the view there is no stand-in. When the thing that has the focus leaves the
+      graph, the focus goes to the Tab stop, not to the page.
+    - What changed for a canvas that passes none of the new props (5.1): a thing with more than two steps shows the
+      first and «+N»; the focus of a thing that leaves the graph goes to the Tab stop; a thing in the view stands in
+      for a Tab stop that is out of it; an arrow towards a thing out of the view moves the view to it; with a
+      `layoutKey` and a thing chosen, a change of the box's size no longer fits the view again; a thing that is the
+      same from one draw to the next is not drawn again. Nothing else.
     - Groups opened in place (the graph mode). `onOpen` goes into a thing: the app shows something else. `onToggle`
       opens a group where it is, with the rest of the graph still in sight. A node with `open: false` is a group not
       opened: a thing as the others, with a button that opens it («Open Orders», the word `graph.open`; a double
@@ -607,13 +613,18 @@ set, `Icon` (R6), and no logo stands in for one.
       are (R14). `onMove(id, { x, y })` tells an app that keeps the places too, in the terms of the node's `x` and `y`.
       An open group is dragged by its title and takes what it holds with it (the ground of its frame takes no press:
       a drag there moves the view, as on the canvas); a thing in a group stays in it, under its title; a line to a
-      moved thing leaves the app's route and goes from side to side.
+      thing that is dragged or was moved leaves the app's route and goes from side to side, so it follows the thing.
+      A thing moved with the keys past the edge of the view takes the view with it. Going to another layout forgets
+      the moves for good. When the reset button goes away under the focus, the focus goes to the next button of the row.
     - Motion. With `animated` (or a `MotionProvider animated` around it), and never with reduced motion: after a
-      gesture that changes the places (a group opened or closed, a new `layoutKey`, the reset) the things glide to
-      them in 200 ms on the toolkit's easy-ease curve, the lines are hidden meanwhile and drawn again at the end, and
-      the view goes where a gesture sends it (the buttons, the keys, `fit`, `focus`, `zoomTo`, the fit of a new
-      `layoutKey`) in the same time. Nothing moves at the first paint, while a thing is dragged, at a change of the
-      box's size, or for new places nobody asked for; nothing loops. Without it everything jumps, as before.
+      gesture that changes the places the things glide to them in 200 ms on the toolkit's easy-ease curve, the lines
+      are hidden meanwhile and drawn again at the end, together with what is new (a group just opened and what it
+      holds), and the view goes where a gesture sends it (the buttons, the keys, `fit`, `focus`, `zoomTo`) in the same
+      time. What counts as a gesture: the canvas's own (a group opened or closed with its button, the reset), whose
+      new places may come up to ten seconds later (a layout in a worker), and a press or a key in the canvas that a
+      new `layoutKey` follows within a second. So an app asks for the glide by answering the gesture; a new layout or
+      new places it pushes by itself (its data changed) jump, and so does that layout's fit. Nothing moves at the first
+      paint, while a thing is dragged or at a change of the box's size; nothing loops. Without it everything jumps.
     - Its height. The box is 384px tall. With `fill` it is as tall as the region that holds it, as `VirtualList fill`
       is, and gives way with it: the content of the `AppShell`, a pane of a `ContentSplit`, the body of a `Page fit`.
       With other parts over or under it (a row of filters, its key) it takes the height they leave, in the body of a

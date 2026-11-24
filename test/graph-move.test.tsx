@@ -8,12 +8,13 @@ import * as React from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ReactFlowProps } from '@xyflow/react'
 import { MotionProvider } from '../src'
+import { standInFor, viewKeeping } from '../src/components/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 import { systemMotion } from './helpers'
 
 // What the canvas hands React Flow, kept to be read, and what it asks of the view: React Flow draws as ever.
 const handed = vi.hoisted(() => ({ props: null as ReactFlowProps | null }))
-const view = vi.hoisted(() => ({ zoomIn: vi.fn(), setViewport: vi.fn() }))
+const view = vi.hoisted(() => ({ zoomIn: vi.fn(), setViewport: vi.fn(), setCenter: vi.fn() }))
 vi.mock('@xyflow/react', async (importOriginal) => {
   const flow = await importOriginal<typeof import('@xyflow/react')>()
   const { createElement } = await import('react')
@@ -32,6 +33,10 @@ vi.mock('@xyflow/react', async (importOriginal) => {
       },
       setViewport: (viewport?: unknown, options?: unknown) => {
         view.setViewport(viewport, options)
+        return Promise.resolve(true)
+      },
+      setCenter: (x?: unknown, y?: unknown, options?: unknown) => {
+        view.setCenter(x, y, options)
         return Promise.resolve(true)
       },
     }),
@@ -53,7 +58,10 @@ beforeEach(() => {
   handed.props = null
   for (const fn of Object.values(view)) fn.mockClear()
 })
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
 
 /** The canvas's box is 1280 by 800 until `restore` (jsdom keeps the sizes on `Element`), so it has a first view. */
 function sized() {
@@ -180,6 +188,68 @@ describe('things that move', () => {
     expect(reset()).toBeNull()
   })
 
+  test('going back to a layout does not bring back what was moved on it before', () => {
+    const { rerender } = render(<Chart movable />)
+    drop('store', { x: 640, y: 300 })
+    rerender(<Chart movable layoutKey="b" />)
+    rerender(<Chart movable layoutKey="a" />)
+    expect(node('store').position).toEqual({ x: 700, y: 172 })
+    expect(reset()).toBeNull()
+  })
+
+  test('«Reset the layout» goes away under the focus: the focus goes to the next button of the row, not to the page', () => {
+    render(<Chart movable />)
+    drop('store', { x: 640, y: 300 })
+    act(() => reset()!.focus())
+    fireEvent.click(reset()!)
+    expect(reset()).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Zoom out' }))
+  })
+
+  test('while a thing is dragged a new draw keeps it where it is and draws the rest; its line follows it; a drag that is cancelled puts it back', async () => {
+    const { rerender } = render(<Chart movable />)
+    act(() => handed.props!.onNodeDragStart!({} as never, node('store') as never, [node('store')] as never))
+    // React Flow moves it as the pointer goes.
+    act(() => handed.props!.onNodesChange!([{ id: 'store', type: 'position', position: { x: 650, y: 200 }, dragging: true }]))
+    // The line leaves the app's route at once, so it follows the thing.
+    expect(line('gateway→store').type).not.toBe('route')
+    // The app draws again meanwhile (a choice): it is drawn, and the thing is not put back.
+    rerender(<Chart movable selected="gateway" />)
+    expect((node('gateway').data as { chosen: boolean }).chosen).toBe(true)
+    expect(node('store').position).toEqual({ x: 650, y: 200 })
+    // A second finger, or a pointer the system takes: React Flow says nothing, and the drag is over all the same.
+    act(() => void window.dispatchEvent(new Event('pointercancel')))
+    await act(async () => {
+      await new Promise((done) => setTimeout(done, 5))
+    })
+    expect(node('store').position).toEqual({ x: 700, y: 172 })
+    expect(line('gateway→store').type).toBe('route')
+    expect(reset()).toBeNull()
+    // And the canvas draws what comes next as ever.
+    rerender(<Chart movable selected="store" />)
+    expect((node('store').data as { chosen: boolean }).chosen).toBe(true)
+  })
+
+  test('a thing moved with the keys past the edge of the view takes the view with it, and keeps the focus', async () => {
+    const restore = sized()
+    try {
+      // Whole in the box of 1280px, 8px from its end.
+      render(<Chart movable nodes={[...NODES, { id: 'edge', label: 'Edge', x: 1064, y: 100 }]} />)
+      await act(async () => {})
+      act(() => thing('Edge').focus())
+      view.setViewport.mockClear()
+      fireEvent.keyDown(thing('Edge'), { key: 'ArrowLeft', altKey: true })
+      expect(view.setViewport).not.toHaveBeenCalled()
+      fireEvent.keyDown(thing('Edge'), { key: 'ArrowRight', altKey: true })
+      fireEvent.keyDown(thing('Edge'), { key: 'ArrowRight', altKey: true })
+      expect(view.setViewport).toHaveBeenLastCalledWith({ x: -16, y: 0, zoom: 1 }, { duration: 0 })
+      expect(document.activeElement).toBe(thing('Edge'))
+      expect(view.setCenter).not.toHaveBeenCalled()
+    } finally {
+      restore()
+    }
+  })
+
   test('a moved group takes what it holds with it, and a thing in a group stays in it', () => {
     const onMove = vi.fn()
     render(<Chart movable onMove={onMove} />)
@@ -257,11 +327,60 @@ describe('motion', () => {
       // New places on the same layout, which nobody asked for: they jump.
       rerender(<Chart animated movable nodes={NODES.map((it) => (it.id === 'store' ? { ...it, x: 720 } : it))} />)
       expect(box().hasAttribute('data-gliding')).toBe(false)
-      // A new layout of the app's: they glide, and the view is fitted in the same time.
+      // A new layout the app pushes by itself (its data changed): it jumps too, and so does its fit.
       view.setViewport.mockClear()
       rerender(<Chart animated movable layoutKey="b" nodes={NODES.map((it) => (it.id === 'store' ? { ...it, x: 760 } : it))} />)
+      expect(box().hasAttribute('data-gliding')).toBe(false)
+      expect(view.setViewport).toHaveBeenLastCalledWith(expect.anything(), { duration: 0 })
+      // A new layout that follows a press in the canvas: the things glide, and the view is fitted in the same time.
+      fireEvent.pointerDown(box())
+      rerender(<Chart animated movable layoutKey="c" nodes={NODES.map((it) => (it.id === 'store' ? { ...it, x: 800 } : it))} />)
       expect(box().hasAttribute('data-gliding')).toBe(true)
       expect(view.setViewport).toHaveBeenLastCalledWith(expect.anything(), { duration: 200 })
+    } finally {
+      restore()
+    }
+  })
+
+  test('a group opened with a new layout: the fit wins, and the frame that takes the focus does not move the view', async () => {
+    systemMotion(false)
+    const restore = sized()
+    // Every thing is measured out of the box, as a frame is while it is still where it was: a focus would bring it in.
+    // Only the canvas's box and the things' own surfaces: what React Flow measures stays as jsdom has it.
+    const real = Element.prototype.getBoundingClientRect
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const slot = this.getAttribute('data-slot')
+      if (slot !== 'graph' && slot !== 'graph-node') return real.call(this)
+      const [left, right] = slot === 'graph' ? [0, 1280] : [2000, 2200]
+      return { left, right, top: 0, bottom: 44, x: left, y: 0, width: right - left, height: 44, toJSON: () => ({}) } as DOMRect
+    })
+    function Opening() {
+      const [open, setOpen] = React.useState(false)
+      const nodes: GraphNode[] = [
+        { id: 'gateway', label: 'Gateway', x: 28, y: 100 },
+        { id: 'store', label: 'Store', open, x: 400, y: 60, ...(open ? { width: 260, height: 180 } : {}) },
+        ...(open ? [{ id: 'rows', label: 'Rows', group: 'store', x: 16, y: 60 }] : []),
+      ]
+      return <GraphCanvas aria-label="Map" model="graph" animated nodes={nodes} edges={[{ from: 'gateway', to: 'store' }]} layoutKey={open ? 'open' : 'closed'} onToggle={() => setOpen((now) => !now)} />
+    }
+    try {
+      render(<Opening />)
+      await act(async () => {})
+      view.setViewport.mockClear()
+      view.setCenter.mockClear()
+      const button = thing('Open Store')
+      act(() => button.focus())
+      fireEvent.pointerDown(button)
+      fireEvent.click(button)
+      // The frame is drawn in place of the thing, with the focus its button had; the view is fitted, in the time of the glide, and nothing else moves it.
+      expect(screen.getByRole('group', { name: 'Store, open, holds 1' })).toBeTruthy()
+      expect(document.activeElement).toBe(thing('Store'))
+      expect(view.setViewport).toHaveBeenLastCalledWith(expect.anything(), { duration: 200 })
+      expect(view.setCenter).not.toHaveBeenCalled()
+      expect(box().hasAttribute('data-gliding')).toBe(true)
+      // What the group holds, and its frame, are shown together at the end of the glide.
+      const arriving = Array.from(document.querySelectorAll('.react-flow__node[data-arriving]')).map((el) => el.getAttribute('data-id')).sort()
+      expect(arriving).toEqual(['rows', 'store'])
     } finally {
       restore()
     }
@@ -280,5 +399,82 @@ describe('motion', () => {
     } finally {
       restore()
     }
+  })
+})
+
+describe('the Tab stop after the view moved', () => {
+  // The chosen thing is far out of the view; another is in it.
+  const FAR: GraphNode[] = [
+    { id: 'far', label: 'Far', x: 5000, y: 100 },
+    { id: 'near', label: 'Near', x: 100, y: 100 },
+    { id: 'other', label: 'Other', x: 6000, y: 100 },
+  ]
+  const tabStops = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot="graph-node"]')).filter((el) => el.tabIndex === 0).map((el) => el.getAttribute('aria-label'))
+  const panned = () => act(() => handed.props!.onMoveEnd!(null as never, { x: 0, y: 0, zoom: 1 }))
+
+  test('a thing in the view stands in for a stop that is out of it, by its tabindex alone: no focus, no choice, no view moves', async () => {
+    const restore = sized()
+    try {
+      const onSelect = vi.fn()
+      const { rerender } = render(<GraphCanvas aria-label="Map" model="graph" layoutKey="a" nodes={FAR} edges={[]} selected="far" onSelect={onSelect} editable onChange={vi.fn()} />)
+      await act(async () => {})
+      expect(tabStops()).toEqual(['Far'])
+      act(() => thing('Far').focus())
+      view.setViewport.mockClear()
+      panned()
+      expect(tabStops()).toEqual(['Near'])
+      // Nothing else: the focus is where it was, the chosen thing is the chosen thing, the view is the person's.
+      expect(document.activeElement).toBe(thing('Far'))
+      expect(thing('Far').getAttribute('aria-current')).toBe('true')
+      expect(onSelect).not.toHaveBeenCalled()
+      expect(view.setViewport).not.toHaveBeenCalled()
+      expect(view.setCenter).not.toHaveBeenCalled()
+      // The stop still follows the focus and the choice, as it always did: the stand-in was for that stop only.
+      act(() => thing('Far').blur())
+      rerender(<GraphCanvas aria-label="Map" model="graph" layoutKey="a" nodes={FAR} edges={[]} selected="far" onSelect={onSelect} editable onChange={vi.fn()} />)
+      expect(tabStops()).toEqual(['Near'])
+      act(() => thing('Other').focus())
+      expect(tabStops()).toEqual(['Other'])
+    } finally {
+      restore()
+    }
+  })
+
+  test('nothing of it runs while a thing is dragged, and without a pan the stop is the choice', async () => {
+    const restore = sized()
+    try {
+      render(<GraphCanvas aria-label="Map" model="graph" layoutKey="a" nodes={FAR} edges={[]} selected="far" movable />)
+      await act(async () => {})
+      expect(tabStops()).toEqual(['Far'])
+      act(() => handed.props!.onNodeDragStart!({} as never, node('near') as never, [node('near')] as never))
+      panned()
+      expect(tabStops()).toEqual(['Far'])
+    } finally {
+      restore()
+    }
+  })
+
+  test('standInFor: the first thing in the view, only when the stop is out of it', () => {
+    const boxes: Record<string, { x: number; y: number; width: number; height: number }> = { a: { x: 5000, y: 0, width: 208, height: 44 }, b: { x: -300, y: 0, width: 208, height: 44 }, c: { x: 100, y: 100, width: 208, height: 44 }, d: { x: 400, y: 100, width: 208, height: 44 } }
+    const boxOf = (id: string) => boxes[id]
+    const room = { width: 1280, height: 800 }
+    const order = ['a', 'b', 'c', 'd']
+    expect(standInFor('a', order, boxOf, { x: 0, y: 0, zoom: 1 }, room)).toBe('c')
+    // In the view, even in part: it needs no stand-in.
+    expect(standInFor('c', order, boxOf, { x: 0, y: 0, zoom: 1 }, room)).toBeNull()
+    expect(standInFor('c', order, boxOf, { x: -200, y: 0, zoom: 1 }, room)).toBeNull()
+    // The view on the far thing: it is the stop again.
+    expect(standInFor('a', order, boxOf, { x: -4800, y: 0, zoom: 1 }, room)).toBeNull()
+    // No thing in the view: none stands in.
+    expect(standInFor('a', order, boxOf, { x: -20000, y: 0, zoom: 1 }, room)).toBeNull()
+  })
+
+  test('viewKeeping: the view moves by what keeps the box whole, and not at all when it is', () => {
+    const room = { width: 1280, height: 800 }
+    const view = { x: 0, y: 0, zoom: 1 }
+    expect(viewKeeping(view, { x: 100, y: 100, width: 208, height: 44 }, room, 8)).toBe(view)
+    expect(viewKeeping(view, { x: 1080, y: 100, width: 208, height: 44 }, room, 8)).toEqual({ x: -16, y: 0, zoom: 1 })
+    expect(viewKeeping(view, { x: -10, y: 790, width: 208, height: 44 }, room, 8)).toEqual({ x: 18, y: -42, zoom: 1 })
+    expect(viewKeeping({ x: 0, y: 0, zoom: 2 }, { x: 600, y: 0, width: 208, height: 44 }, room, 0)).toEqual({ x: -336, y: 0, zoom: 2 })
   })
 })

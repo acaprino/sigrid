@@ -148,6 +148,23 @@ describe('Logo', () => {
     expect(classes(logo(container))).toContain('size-4')
   })
 
+  test('a picture that was seen is there at once when it is drawn again, and one that failed is not asked for again', () => {
+    const first = render(<Logo src="/logos/seen.svg" icon="layers" />)
+    fireEvent.load(logo(first.container).querySelector('img')!)
+    first.unmount()
+    const again = render(<Logo src="/logos/seen.svg" icon="layers" />)
+    expect(logo(again.container).dataset.state).toBe('shown')
+    expect(logo(again.container).querySelector('svg')).toBeNull()
+    expect(classes(logo(again.container).querySelector('img'))).not.toContain('opacity-0')
+    again.unmount()
+    const broken = render(<Logo src="/logos/broken.svg" icon="layers" />)
+    fireEvent.error(logo(broken.container).querySelector('img')!)
+    broken.unmount()
+    const still = render(<Logo src="/logos/broken.svg" icon="layers" />)
+    expect(logo(still.container).dataset.state).toBe('failed')
+    expect(logo(still.container).querySelector('img')).toBeNull()
+  })
+
   test('it goes where an icon goes: the leading of a row, the icon of a navigation row', () => {
     const { container } = render(
       <>

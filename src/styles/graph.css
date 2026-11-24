@@ -88,4 +88,15 @@
   [data-slot="graph"][data-gliding] .react-flow__edges {
     visibility: hidden;
   }
+  /* What is drawn during the glide (a group just opened and what it holds) is shown at its end, with the lines: the
+     things a frame holds are never there before the frame. Not `visibility`: such a thing may take the focus. */
+  [data-slot="graph"][data-gliding] .react-flow__node[data-arriving] {
+    opacity: 0;
+  }
+}
+
+/* On the small map an open group is its outline, so the things it holds are told from it. */
+.react-flow__minimap-node.sigrid-graph-map-group {
+  fill: transparent;
+  stroke: var(--color-ink-mute);
 }

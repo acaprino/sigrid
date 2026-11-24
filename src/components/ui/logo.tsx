@@ -17,6 +17,17 @@ const SIZES = {
   md: "size-5",
 } as const
 
+/**
+ * What became of each address, so a picture drawn again (a row that scrolls back, a thing of a graph that comes into
+ * view) is there at once, without its icon first, and one that failed is not asked for again. Kept for the page's
+ * life, a few hundred addresses at most.
+ */
+const SEEN = new Map<string, "shown" | "failed">()
+const remember = (src: string, is: "shown" | "failed") => {
+  if (SEEN.size >= 500) SEEN.clear()
+  SEEN.set(src, is)
+}
+
 export type LogoProps = {
   /** The address of the picture: an SVG or a PNG the app serves. */
   src: string
@@ -35,8 +46,12 @@ export type LogoProps = {
 
 function Logo({ src, name, decorative = false, size = "sm", icon, children, className }: LogoProps) {
   const [seen, setSeen] = React.useState<{ src: string; is: "shown" | "failed" } | null>(null)
-  // Another address starts again.
-  const state = seen !== null && seen.src === src ? seen.is : "loading"
+  // Another address starts again, from what is known of it.
+  const state = seen !== null && seen.src === src ? seen.is : (SEEN.get(src) ?? "loading")
+  const settle = (is: "shown" | "failed") => {
+    remember(src, is)
+    setSeen({ src, is })
+  }
   const named = name !== undefined && name !== "" && !decorative
   return (
     <span
@@ -52,8 +67,8 @@ function Logo({ src, name, decorative = false, size = "sm", icon, children, clas
           // The box says the name, or the text beside it does.
           alt=""
           draggable={false}
-          onLoad={() => setSeen({ src, is: "shown" })}
-          onError={() => setSeen({ src, is: "failed" })}
+          onLoad={() => settle("shown")}
+          onError={() => settle("failed")}
           className={cn("absolute inset-0 size-full object-contain", state === "loading" && "opacity-0")}
         />
       )}
