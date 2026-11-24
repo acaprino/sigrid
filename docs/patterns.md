@@ -168,7 +168,14 @@ list whose order is the user's (the columns of a board, a queue) is a `ReorderLi
 Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). Things
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
 (`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
-relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. A canvas
+relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. There a
+group of things opens in one of two ways, and an app gives a thing one of them. In place (`open` on the node,
+`onToggle`): the group becomes a frame with its things in it and the rest of the graph stays in sight; for a group the
+person looks into while reading what is around it (the parts of a module among the modules that call it). Or the app
+goes into it (`openLabel`, `onOpen`): the canvas then shows only what the thing holds, and the app gives the way back
+(a row of the places above it, a command); for a thing too large to read among the others, or one the person works in
+for a while. Where the places are the app's and the person may want another arrangement, the things move (`movable`),
+and the layout is put back with the canvas's own button. A canvas
 that is the content takes its height (`fill`); under a row of filters, the two in a `Column fill`, what the row leaves
 (a plain `Column` has no height to give). The
 examples use them: the Archive and the composer of the mail client, the Stack of the to-do list. Lines of several

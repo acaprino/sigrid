@@ -495,7 +495,8 @@ the key to what has the focus and to the app's commands.
     places come from (as the app tells one from another: the direction, the things and the lines it laid out): when
     it changes, the view fits the whole graph again once the new places are drawn, and a draw on the same key
     (another choice, new flags, the same places) keeps the view where the user moved it, and so does a change of the
-    box's size (a view nobody moved is fitted again). Pass the new key with the new places.
+    box's size (a view nobody moved is fitted again, unless a thing is chosen: then the view always stays, so the
+    inspector that a first press opens moves nothing under the second press). Pass the new key with the new places.
     Without it the view is fitted at the first paint and whenever the box changes size. `visibleGraph` and
     `layoutGraph` are exported for
     an app that draws the same graph another way (a list, a print).
@@ -515,7 +516,12 @@ the key to what has the focus and to the app's commands.
       since the user chooses one) and, with `editable`, it alone has the plus (one clear action); the others say in
       their description that they are chosen with it («chosen with Ledger», the word `graph.chosenToo`). `onSelect`
       still gets the one thing the user chooses. The ids are read by what they are, so a new list of the same ids at
-      every draw draws nothing again. A node with `external: true` says «external» after its name, 12px in the muted
+      every draw draws nothing again. A node's `image` is a picture of the thing where it has one of its own (the
+      logo of a service, of a framework, of a library): the address of an SVG or a PNG the app serves, drawn before
+      the name in the icon's place, 16px and whole. It is content, not an icon of the interface: the icons of the
+      interface stay Sigrid's one set (`icon`), and an app draws no logo as one. It says nothing to screen readers
+      (the name does), and while it loads or when it fails the `icon` (or the dot) is drawn in the same 16px, so
+      nothing shifts: give both. The title of an open group shows it the same way. A node with `external: true` says «external» after its name, 12px in the muted
       ink (on the selection tint, as the line under the name is; the word `graph.external`), and in its name, never
       with a dashed border (R4); in a narrow box the name keeps 64px and the word is cut first. In the graph mode a
       node's `hiddenCount` (read above 0) is how many things the app keeps out of sight in it (a group it has not
@@ -527,7 +533,7 @@ the key to what has the focus and to the app's commands.
     - Two edges between the same two things. An edge with an `id` is always a line of its own (React Flow's id
       too): two such edges are two lines, each with its words, and with `editable` taking one away takes that edge
       alone. An edge without an `id` is named by its two ends, and a second one by a number after them, unless it is
-      an exact copy (the same ends, `kind`, `label`, `labelShown`, `style`, `tone` and `directed`, and no `points`):
+      an exact copy (the same ends, `kind`, `label`, `labelShown`, `style`, `tone`, `directed` and `path`, and no `points`):
       copies are one line, said once, and taking that line away takes them all. Without the app's routes, two lines
       or more between the same two things are drawn side by side, 20px apart (from three on, within 16px of the
       middle of the sides, so closer), each bending at its own place, so the lines and their words do not lie on each
@@ -539,14 +545,59 @@ the key to what has the focus and to the app's commands.
       `warning` stays a warning); the others between the same two things stay as they are. What is neither on the
       path nor joined to it is dimmed (the field's finds come first, then the chosen thing and the path together).
       When the things on the path change, what hides one of them opens, through `onCollapsedChange` when the app
-      keeps `collapsed`; the user may close it again.
+      keeps `collapsed`; the user may close it again. A thing with more than two steps shows the first and how many
+      more («1 +3», the word `graph.moreSteps`), and all of them in its name. An app that knows which lines are the
+      path's says so: when any edge has `path: true`, those lines alone are the path's and every other line is dimmed
+      as off the path (the first-line rule is then not applied).
     - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size (with
       a `layoutKey`, a view the user moved stays as it is, panned only by what keeps the chosen thing in the box), and
       with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
       whole graph down to 0.2, as it was before there was a floor). A graph too large for that starts at its top left. The edges of the
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
-      (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+      (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, or with `animated` goes
+      there in 200 ms. A map that is read whole first passes `minFitZoom={0}`: the first view and every fit show the
+      whole graph, down to 0.2, and the person zooms in.
+    - The keyboard and what is not drawn. Only the things in the view are drawn, so an arrow towards a thing out of it
+      moves the view to that thing, which takes the focus as it is drawn. The Tab stop is always a thing that is
+      drawn: after the view moved, if the thing that held it is out of the view, the first thing in the view holds
+      it (and has the focus, if the other had it); with no thing in the view the stop stays where it was until one
+      is. When the thing that has the focus leaves the graph, the focus goes to the Tab stop, not to the page.
+    - Groups opened in place (the graph mode). `onOpen` goes into a thing: the app shows something else. `onToggle`
+      opens a group where it is, with the rest of the graph still in sight. A node with `open: false` is a group not
+      opened: a thing as the others, with a button that opens it («Open Orders», the word `graph.open`; a double
+      press does the same when the thing has no `openLabel`). With `open: true` it is a frame: its title (the icon or
+      picture, the name, the second line, the count of what it holds), a button that closes it («Close Orders»,
+      `graph.close`, 44px with a finger), a line around it and a quiet fill, no shadow (R4), under the things and the
+      lines. Both buttons call `onToggle(id)`, and the app passes the node with the other `open`. A node whose `group`
+      is the id of an open group is drawn in that frame and moves with it; a `group` that names no open group is not
+      read. With the app's places, the `x` and `y` of a thing in a group are from the top left corner of the group
+      (what a nested layout such as ELK answers, and what React Flow's `parentId` takes), the group has the `width`
+      and `height` of its frame, whose first 44px are the title, and the routes (`points`) stay in the canvas's own px
+      (add the corners of the groups the route is in). Without the app's places the canvas lays each open group out by
+      itself (dagre, the innermost first) and then the group as one box among the others; a line that crosses a
+      frame is drawn from thing to thing. Give a thing one of the two ways to open; with both, the arrow that opens in
+      place comes before the › that goes in. A screen reader hears the frame as a group named by its name and count
+      («Orders, open, holds 3», `graph.holds`) that owns what it holds, the title as a button that is expanded, and
+      each thing in it described as «in Orders» (`graph.inGroup`). The arrow that follows the lines goes from the
+      title into the group's first thing, and the one that goes back, from a thing no line leads to, goes out to the
+      title; the frame's button is the next Tab stop after its title. The tree mode reads neither `open` nor `group`.
+    - Things that move. With `movable` the person drags a thing (React Flow's own drag, after 4px, so a press or a
+      pan that starts on a thing is not one; with a finger a drag on a thing moves it and a drag on the ground moves
+      the view) or presses Alt and an arrow on the thing that has the focus, 16px a step (said in each thing's
+      description, `graph.moveKeys`, and as it happens, `graph.moved`): a drag is never the only way. The canvas keeps
+      the place by itself until `layoutKey` changes or the person presses «Reset the layout» (`graph.resetLayout`), a
+      button that is among the view's only while something was moved, at their start, so the others stay where they
+      are (R14). `onMove(id, { x, y })` tells an app that keeps the places too, in the terms of the node's `x` and `y`.
+      An open group is dragged by its title and takes what it holds with it (the ground of its frame takes no press:
+      a drag there moves the view, as on the canvas); a thing in a group stays in it, under its title; a line to a
+      moved thing leaves the app's route and goes from side to side.
+    - Motion. With `animated` (or a `MotionProvider animated` around it), and never with reduced motion: after a
+      gesture that changes the places (a group opened or closed, a new `layoutKey`, the reset) the things glide to
+      them in 200 ms on the toolkit's easy-ease curve, the lines are hidden meanwhile and drawn again at the end, and
+      the view goes where a gesture sends it (the buttons, the keys, `fit`, `focus`, `zoomTo`, the fit of a new
+      `layoutKey`) in the same time. Nothing moves at the first paint, while a thing is dragged, at a change of the
+      box's size, or for new places nobody asked for; nothing loops. Without it everything jumps, as before.
     - Its height. The box is 384px tall. With `fill` it is as tall as the region that holds it, as `VirtualList fill`
       is, and gives way with it: the content of the `AppShell`, a pane of a `ContentSplit`, the body of a `Page fit`.
       With other parts over or under it (a row of filters, its key) it takes the height they leave, in the body of a
@@ -625,6 +676,14 @@ the key to what has the focus and to the app's commands.
   <GraphCanvas aria-label="Map" model="graph" selected={entity ? drawnAs(entity) : null} onSelect={choose}
     nodes={parts.map((part) => ({ id: part.id, label: part.name, external: part.outside, hiddenCount: part.closed ? part.count : undefined }))}
     edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, label: call.kind, labelShown: call.flow ? 'always' : 'chosen' }))} fill />
+  // A group opened in place: the app keeps which are open and lays them out nested; what an open group holds is
+  // placed from its corner. The things move, the layout can be put back, and the changes glide.
+  <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key} minFitZoom={0} movable animated fill
+    onToggle={(id) => setOpen((now) => (now.includes(id) ? now.filter((it) => it !== id) : [...now, id]))}
+    nodes={parts.map((part) => ({ id: part.id, label: part.name, icon: part.icon, image: part.logo, ...layout.nodes[part.id],
+      ...(part.holds ? { open: open.includes(part.id), hiddenCount: open.includes(part.id) ? undefined : part.holds } : {}),
+      group: part.parent && open.includes(part.parent) ? part.parent : undefined }))}
+    edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, points: layout.edges[call.id], path: flow.has(call.id) }))} />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

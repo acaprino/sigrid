@@ -269,6 +269,18 @@ export interface Words {
      * way it goes (`to` the other thing, `from` it, or `with` it both ways) and the other thing. Said after the name.
      */
     readonly line: (item: string, way: 'to' | 'from' | 'with', label?: string) => string
+    /** What screen readers hear of a group opened in place (`open` of a node), the name of its frame: its name and how many things it holds («Orders, open, holds 3»). */
+    readonly holds: (item: string, count: number) => string
+    /** What screen readers hear in the description of a thing inside a group opened in place: the group («in Orders»). */
+    readonly inGroup: (group: string) => string
+    /** The name of the button that puts the things the person moved back where the layout had them (`movable`): in the view's buttons only while something was moved. */
+    readonly resetLayout: string
+    /** With `movable`, how a thing is moved from the keyboard: in the description of each thing. */
+    readonly moveKeys: string
+    /** What screen readers hear when a thing was moved with the keys: its name and its new place in px. */
+    readonly moved: (item: string, x: number, y: number) => string
+    /** What a thing of the path with more than two steps shows after its first number: how many more («+3»). They are all in its name. */
+    readonly moreSteps: (count: number) => string
   }
   readonly reorder: {
     /** The name of the handle that moves an item («Move Inbox»). */
@@ -485,6 +497,12 @@ export const DEFAULT_WORDS: Words = {
     roleDescription: 'graph',
     onPath: (item, steps) => `${item}, ${steps.length === 1 ? `step ${steps[0]}` : `steps ${steps.slice(0, -1).join(', ')} and ${steps[steps.length - 1]}`}`,
     line: (item, way, label) => `${label ? `${label}, ` : ''}${way} ${item}`,
+    holds: (item, count) => `${item}, open, holds ${count}`,
+    inGroup: (group) => `in ${group}`,
+    resetLayout: 'Reset the layout',
+    moveKeys: 'Alt and an arrow key move it',
+    moved: (item, x, y) => `${item} moved to ${x}, ${y}`,
+    moreSteps: (count) => `+${count}`,
   },
   reorder: {
     handle: (item) => `Move ${item}`,
