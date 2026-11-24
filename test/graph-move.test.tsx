@@ -8,7 +8,7 @@ import * as React from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { NodeChangeset, type ReactFlowProps } from '@xyflow/react'
 import { MotionProvider } from '../src'
-import { standInFor, viewKeeping } from '../src/components/GraphCanvas'
+import { handOver, standInFor, viewKeeping } from '../src/components/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 import { systemMotion } from './helpers'
 
@@ -281,6 +281,73 @@ describe('things that move', () => {
     expect(node('gateway')).toBe(before)
     expect((node('cart').data as { dim: boolean }).dim).toBe(true)
     expect(node('cart').measured).toEqual({ width: 208, height: 44 })
+  })
+
+  test('what React Flow measured is kept only while it holds: another direction, another part or another size is measured again', () => {
+    const { rerender } = render(<Chart />)
+    const measure = () =>
+      act(() =>
+        handed.props!.onNodesChange!(
+          new NodeChangeset([
+            { id: 'gateway', type: 'dimensions', dimensions: { width: 208, height: 44 } },
+            { id: 'store', type: 'dimensions', dimensions: { width: 208, height: 44 } },
+          ]),
+        ),
+      )
+    measure()
+    expect(node('gateway').measured).toEqual({ width: 208, height: 44 })
+    // The other direction: the handles are on other sides, so every thing is measured again and the lines leave from them.
+    rerender(<Chart direction="down" />)
+    expect((node('gateway').data as { direction: string }).direction).toBe('down')
+    expect(node('gateway').measured).toBeUndefined()
+    expect(node('store').measured).toBeUndefined()
+    measure()
+    // A group opens where the thing was: a frame of another size, which the old 208 by 44 would hide when its corner is out of the view.
+    rerender(<Chart direction="down" nodes={NODES.map((it) => (it.id === 'store' ? { ...it, open: true, width: 300, height: 200 } : it))} />)
+    expect(node('store').type).toBe('frame')
+    expect(node('store').measured).toBeUndefined()
+    // The gateway is as it was: its measure stays.
+    expect(node('gateway').measured).toEqual({ width: 208, height: 44 })
+  })
+
+  test('handOver: the same object where nothing changed, the measure where it holds, the dragged thing where it is', () => {
+    type Things = Parameters<typeof handOver>[0]
+    const thingOf = (over: object = {}, data: object = {}) => ({ id: 'a', type: 'point', position: { x: 0, y: 0 }, width: 208, height: 44, data: { direction: 'right', dim: false, ...data }, ...over })
+    const measured = { width: 208, height: 44 }
+    const none: ReadonlySet<string> = new Set()
+    const has = { ...thingOf(), measured }
+    const pass = (now: object, next: object, held = none) => handOver([now] as unknown as Things, [next] as unknown as Things, held)[0]!
+    // As it was, value by value: the object React Flow has.
+    expect(pass(has, thingOf())).toBe(has)
+    // Changed, but the measure holds (a choice, a place).
+    expect(pass(has, thingOf({ position: { x: 10, y: 0 } })).measured).toBe(measured)
+    expect(pass(has, thingOf({}, { dim: true })).measured).toBe(measured)
+    // The measure does not hold: another direction, another part, another size.
+    expect('measured' in pass(has, thingOf({}, { direction: 'down' }))).toBe(false)
+    expect('measured' in pass(has, thingOf({ type: 'frame' }))).toBe(false)
+    expect('measured' in pass(has, thingOf({ width: 300 }))).toBe(false)
+    expect('measured' in pass(has, thingOf({ height: 200 }))).toBe(false)
+    // Dragged: where React Flow has it, and the same rule for its measure.
+    const dragged = { ...has, position: { x: 50, y: 60 }, dragging: true }
+    expect(pass(dragged, thingOf({}, { dim: true }), new Set(['a']))).toMatchObject({ position: { x: 50, y: 60 }, dragging: true, measured })
+    expect('measured' in pass(dragged, thingOf({}, { direction: 'down' }), new Set(['a']))).toBe(false)
+    // Let go without a word from React Flow: back where the canvas has it.
+    expect(pass(dragged, thingOf())).toMatchObject({ position: { x: 0, y: 0 } })
+    expect(pass(dragged, thingOf()).dragging).toBeUndefined()
+  })
+
+  test('a thing that left the graph while it was dragged is not kept or told', () => {
+    const onMove = vi.fn()
+    const { rerender } = render(<Chart movable onMove={onMove} />)
+    const store = node('store')
+    act(() => handed.props!.onNodeDragStart!({} as never, store as never, [store] as never))
+    rerender(<Chart movable onMove={onMove} nodes={NODES.filter((it) => it.id !== 'store')} edges={[]} />)
+    act(() => {
+      handed.props!.onNodeDragStop!({} as never, { ...store, position: { x: 640, y: 300 } } as never, [{ ...store, position: { x: 640, y: 300 } }] as never)
+      handed.props!.onNodesChange!(new NodeChangeset([{ id: 'store', type: 'position', position: { x: 640, y: 300 }, dragging: false }]))
+    })
+    expect(onMove).not.toHaveBeenCalled()
+    expect(reset()).toBeNull()
   })
 
   test('a thing moved with the keys past the edge of the view takes the view with it, and keeps the focus', async () => {

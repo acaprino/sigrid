@@ -559,6 +559,26 @@ function sameThing(a: Node<Drawn>, b: Node<Drawn>): boolean {
   return true
 }
 
+/**
+ * What React Flow is handed, from what it has (`now`) and the things as they are now drawn (`drawn`). A thing that is
+ * as it was stays the very object React Flow has. One that changed is the new one, with what React Flow measured of
+ * it (`measured`: with it React Flow keeps the thing's size and where its handles are, and does not measure again)
+ * only while that measure still holds: the same part (`type`), the same `width` and `height`, the same direction (the
+ * handles are on other sides in another). Otherwise it is handed without, and React Flow measures it again. A thing
+ * being dragged (`held`) stays where React Flow has it, and dragged.
+ */
+export function handOver(now: readonly Node<Drawn>[], drawn: readonly Node<Drawn>[], held: ReadonlySet<string>): Node<Drawn>[] {
+  const at = new Map(now.map((it) => [it.id, it]))
+  return drawn.map((it) => {
+    const was = at.get(it.id)
+    if (!was || was === it) return it
+    const measured = was.measured && was.type === it.type && was.width === it.width && was.height === it.height && was.data.direction === it.data.direction ? { measured: was.measured } : {}
+    if (held.has(it.id)) return { ...it, position: was.position, dragging: true, ...measured }
+    if (!was.dragging && sameThing(was, it)) return was
+    return 'measured' in measured ? { ...it, ...measured } : it
+  })
+}
+
 /** On the small map an open group is its outline, so the things it holds are told from it. */
 const mapClass = (node: Node) => (node.type === 'frame' ? 'sigrid-graph-map-group' : '')
 
@@ -2017,6 +2037,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const told = React.useRef(new Map<string, { x: number; y: number }>())
   /** A thing was let go at a place: kept and told if it is not where the canvas has it. */
   const settle = (id: string, at: { x: number; y: number }) => {
+    // A thing that left the graph while it was dragged is nowhere: nothing is kept or told for it.
+    if (!rel.has(id)) return
     const to = { x: Math.round(at.x), y: Math.round(at.y) }
     const from = told.current.get(id) ?? rel.get(id)
     if (from && Math.abs(from.x - to.x) < 1 && Math.abs(from.y - to.y) < 1) return
@@ -2112,19 +2134,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(lines)
   React.useEffect(() => {
     const held = draggedNow.current
-    // What React Flow has is kept where nothing changed: a thing that is as it was stays the very object it has, with
-    // what it measured of it (`measured`, without which it would measure the thing and its handles again); one that
-    // changed keeps the measure. A thing being dragged stays where React Flow has it, and dragged.
-    setFlowNodes((now) => {
-      const at = new Map(now.map((it) => [it.id, it]))
-      return drawn.map((it) => {
-        const was = at.get(it.id)
-        if (!was || was === it) return it
-        if (held.has(it.id)) return { ...it, position: was.position, dragging: true, ...(was.measured ? { measured: was.measured } : {}) }
-        if (!was.dragging && sameThing(was, it)) return was
-        return was.measured ? { ...it, measured: was.measured } : it
-      })
-    })
+    // What React Flow has is kept where nothing changed, and what it measured only while the measure holds (`handOver`).
+    setFlowNodes((now) => handOver(now, drawn, held))
   }, [drawn, dragged, setFlowNodes])
   /**
    * React Flow's own changes to the things. One of them is a place told after a drag the canvas had already ended (a
