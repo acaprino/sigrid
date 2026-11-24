@@ -2257,6 +2257,109 @@
      ]
     },
     {
+     "file": "src/components/ui/conversation.tsx",
+     "about": "A conversation with an assistant (or with a person): the thread and its messages. `Conversation` is the column that\nscrolls: it stays at the last message while the reader is there, so an answer being written is followed, and it\nstops following as soon as the reader goes up to read; a button then leads back to the latest message. `Message` is\none turn: what the user wrote is a quiet block at the end of the row, what was answered is plain text on the page\n(the answer is the content, not a bubble), with Markdown when it is a string. Under an answer, in a place that never\nchanges, the quiet actions the app asks for: copy, try again, good or bad answer, and the app's own.\nScreen readers meet the thread as a log: each message says who it is from before its text, and while an answer is\nbeing written (`busy`) the log waits, so the answer is read once, whole, and not word by word.\nNothing moves by itself: no typing dots, no shimmer. That an answer is on its way is said by the stop button of\n`PromptInput` and by the row of `Reasoning`.",
+     "components": [
+      {
+       "name": "Conversation",
+       "doc": "The thread of a conversation: it follows the latest message while the reader is at the end.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the thread for screen readers («Chat with the assistant»). Absent: the toolkit's word."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "An answer is being written: screen readers wait for its end, and read it once."
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode",
+         "doc": "What is shown in place of the thread while it has no message: a greeting, an `Empty`, a `Suggestions`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The messages, oldest first: `Message`, `Reasoning`, `ToolCall`, a `Note` for a failure."
+        }
+       ]
+      },
+      {
+       "name": "Message",
+       "doc": "One turn of a conversation.",
+       "props": [
+        {
+         "name": "from",
+         "type": "\"user\" | \"assistant\"",
+         "required": true,
+         "doc": "Who wrote it: the user (a quiet block at the end of the row) or the assistant (plain text on the page)."
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "doc": "The name read by screen readers before the text («Ada», «Support»). Absent: the toolkit's word for `from`."
+        },
+        {
+         "name": "avatar",
+         "type": "React.ReactNode",
+         "doc": "An `Avatar` at the start of an answer, when the thread has more than one voice. A user's message has none."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The text. A string is read as Markdown in an answer and kept as written (with its line breaks) in a user's message; anything else is drawn as it is (a `Card`, a table, `Reasoning` and `ToolCall` above the text)."
+        },
+        {
+         "name": "time",
+         "type": "React.ReactNode",
+         "doc": "When it was sent, already written out («10:42»): 12px, muted, at the start of the row of actions."
+        },
+        {
+         "name": "copyText",
+         "type": "string",
+         "doc": "The text the copy button puts on the clipboard. Absent: no copy button."
+        },
+        {
+         "name": "onRetry",
+         "type": "(() => void)",
+         "doc": "Ask for the answer again. Absent: no button."
+        },
+        {
+         "name": "vote",
+         "type": "MessageVote | null",
+         "doc": "What the reader said of the answer, when the app keeps it."
+        },
+        {
+         "name": "onVote",
+         "type": "((vote: MessageVote | null) => void)",
+         "doc": "The reader says the answer was good or not; the same button again takes it back (`null`). Absent: no buttons. Only under an answer."
+        },
+        {
+         "name": "actions",
+         "type": "React.ReactNode",
+         "doc": "The app's own quiet actions, after the toolkit's: `Button variant=\"ghost\" size=\"icon-sm\"` with a `Tooltip`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CONVERSATION_NEAR_PX",
+      "ConversationProps",
+      "MessageProps",
+      "MessageVote"
+     ]
+    },
+    {
      "file": "src/components/ui/copy-button.tsx",
      "about": "A button that puts a text on the clipboard and says that it did. After the press the copy icon is a check and the\nword is «Copied» for two seconds, then both go back: the answer is where the eye already is, so no notice is needed\n(a toast is for an action that can be taken back). Nothing moves: the icon keeps its box and the word the room of\nthe wider of its two texts. Screen readers hear «Copied» (a polite status), or that the system refused.\nAlone it is a quiet icon button with a hint; with `showLabel` it shows its word; in an `InputGroup` it takes the\nsize of the group's buttons and is off with the field.",
      "components": [
@@ -3819,6 +3922,93 @@
      ]
     },
     {
+     "file": "src/components/ui/prompt-input.tsx",
+     "about": "The field a message of a conversation is written in: a text box that grows with what is typed, up to eight lines,\nthen scrolls; under it a row with the app's own tools at the start (attach a file, choose a model) and, at the end,\nthe one button that sends. While an answer is being written (`busy`) that same button, in the same place, stops it:\nthe control never moves (R14). Enter sends and Shift+Enter makes a new line; with a finger Enter makes a new line,\nas a phone's keyboard does, and the button sends. An empty message is not sent.\nForm: one field (`lib/field.ts`): the border of a field around the text and its row, and the focus ring on that\nborder while the text has the focus. The send button is the solid action: on a chat screen it is the one primary\n(R3); the stop button is `outline`.",
+     "components": [
+      {
+       "name": "PromptInput",
+       "doc": "The field a message is written in, with the button that sends it or stops the answer.",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "doc": "The text, when the app keeps it. After a message is sent the field asks for an empty one (`onValueChange(\"\")`)."
+        },
+        {
+         "name": "defaultValue",
+         "type": "string",
+         "doc": "The text at first, for a field that keeps its own."
+        },
+        {
+         "name": "onValueChange",
+         "type": "((value: string) => void)"
+        },
+        {
+         "name": "onSubmit",
+         "type": "(text: string) => void",
+         "required": true,
+         "doc": "A message was sent: its text, without the blanks around it. Never called with an empty one, nor while `busy`."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "An answer is being written: the button stops it instead of sending, and Enter keeps the text."
+        },
+        {
+         "name": "onStop",
+         "type": "(() => void)",
+         "doc": "Stop the answer being written. Absent: while `busy` the button is off."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the field for screen readers. Absent: the toolkit's word («Message»)."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "What the field shows while empty («Ask about this project»)."
+        },
+        {
+         "name": "maxLength",
+         "type": "number",
+         "doc": "The most characters a message may have: the count is shown beside the button («120/2000»)."
+        },
+        {
+         "name": "attachments",
+         "type": "React.ReactNode",
+         "doc": "Above the text: what goes with the message (the files attached, as the app's chips)."
+        },
+        {
+         "name": "tools",
+         "type": "React.ReactNode",
+         "doc": "At the start of the row under the text: the app's tools (`Button variant=\"ghost\" size=\"icon-sm\"`, a `Select`)."
+        },
+        {
+         "name": "autoFocus",
+         "type": "boolean"
+        },
+        {
+         "name": "ref",
+         "type": "React.Ref<HTMLTextAreaElement>",
+         "doc": "Reaches the `<textarea>`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "PromptInputProps"
+     ]
+    },
+    {
      "file": "src/components/ui/radio-group.tsx",
      "about": "SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/radio-group.json)\nFrom SmoothUI's RadioGroup we keep: Base UI's Root and Radio (`role=\"radiogroup\"`/`role=\"radio\"` with\n`aria-checked`, a single Tab stop, arrows that move focus and select, wrapping at the ends), the Radio\nrendered as a real `<button type=\"button\">` (`nativeButton`), the Indicator with the filled dot and the optional label.\nAdapted: Base UI does not handle Home and End in the radio group (`enableHomeAndEndKeys: false`), here they go to the first and\nlast enabled radio and select it, like the arrows; `theme.css` tokens (`input` border, dot and selected border\n`ink`, `ring/50` ring), touch area enlarged to 24 px (44 with touch). Removed: all of Motion's animations (cascading\nappearance of the radios, spring on the dot, `useReducedMotion`): the dot is there or it is not, no movement, Motion is not loaded.",
      "components": [
@@ -3907,6 +4097,92 @@
      "also": [
       "RadioGroupItemProps",
       "RadioGroupProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/reasoning.tsx",
+     "about": "What an assistant did on the way to its answer, kept behind a row each so the answer stays the thing to read:\n`Reasoning`, what it thought, and `ToolCall`, a tool it used. Both are rows that open in place (Base UI's\n`Collapsible`, as `Disclosure`).\n`Reasoning` is open while it is being written (`busy`) and closes by itself when it is done, unless the reader\nopened or closed it: the reader's choice stays. Its row says «Thinking», then «Thought for 4 s».\n`ToolCall` says the tool's name and its state three ways, never by colour alone: an icon (a clock while it waits,\nthe bolt while it runs, a check, the circle with an X of a failure), its colour, and a word for screen readers. It\nopens only when there is something to show: what the tool was given and what it gave back.\nNothing loops: no shimmer and no spinner. A state changes once, when the app says so.",
+     "components": [
+      {
+       "name": "Reasoning",
+       "doc": "The reasoning behind an answer, behind a row: open while it is written, closed once done.",
+       "props": [
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "It is being written: the row says so, and it is open unless the reader closed it."
+        },
+        {
+         "name": "seconds",
+         "type": "number",
+         "doc": "How long it took, in seconds, said by the row once it is done («Thought for 4 s»)."
+        },
+        {
+         "name": "open",
+         "type": "boolean",
+         "doc": "Open or closed, when the app keeps it."
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The reasoning: a string is read as Markdown."
+        }
+       ]
+      },
+      {
+       "name": "ToolCall",
+       "doc": "A tool an assistant used: its name and its state, and behind the row what it was given and what it gave back.",
+       "props": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "The tool's name, as the app calls it («Search the web», `read_file`)."
+        },
+        {
+         "name": "status",
+         "type": "ToolCallStatus",
+         "doc": "Where the call is. `success` by default. A value outside the four (from data) is `pending`."
+        },
+        {
+         "name": "summary",
+         "type": "React.ReactNode",
+         "doc": "A few words on what it did, after the name («3 results», the file's path): muted, cut when the row is short."
+        },
+        {
+         "name": "input",
+         "type": "React.ReactNode",
+         "doc": "What the tool was given. A string (JSON, a command) is shown as written, in a block that wraps."
+        },
+        {
+         "name": "output",
+         "type": "React.ReactNode",
+         "doc": "What it gave back, or why it failed. A string is shown as written."
+        },
+        {
+         "name": "defaultOpen",
+         "type": "boolean",
+         "doc": "Open at first. Default closed."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ReasoningProps",
+      "ToolCallProps",
+      "ToolCallStatus"
      ]
     },
     {
@@ -4484,6 +4760,161 @@
      ],
      "also": [
       "StepsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/suggestions.tsx",
+     "about": "A row of ready-made requests, for a conversation that has not started or an answer that can be followed up: quiet\nchips (the neutral fill, never the accent: R2), which wrap to more lines when the row is short. Choosing one tells\nthe app, which usually puts its text in the `PromptInput` for the user to send or change, rather than sending it at\nonce: a suggestion is a start, not a commitment.",
+     "components": [
+      {
+       "name": "Suggestions",
+       "doc": "A row of quiet chips, one per ready-made request. An empty list shows nothing.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly Suggestion[]",
+         "required": true
+        },
+        {
+         "name": "onSelect",
+         "type": "(item: Suggestion) => void",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The name of the row for screen readers. Absent: the toolkit's word («Suggestions»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "Suggestion",
+       "doc": "One ready-made request.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What the chip says, and usually the text put in the field."
+        },
+        {
+         "name": "icon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"more\" | \"notificat…",
+         "doc": "An icon that tells what kind of request it is; none for most."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SuggestionsProps"
+     ]
+    },
+    {
+     "file": "src/components/ui/swipe-deck.tsx",
+     "about": "A deck of cards decided one at a time, each to one of two sides: keep or skip, approve or refuse, now or later.\nOne card, one decision: nothing else on the screen asks for attention while a pile is sorted.\nThree ways to decide, all the same decision: drag the card past a third of the way (or flick it) and let go; press\nthe left or right arrow with the card in focus; or press one of the two buttons under the deck, which are always\nthere and never move (R14), so nothing depends on a gesture. While the card is dragged far enough, the word of the\nside it would go to shows on it: what letting go will do is said before it is done.\nThe deck keeps nothing: the app holds the cards (`items`, the first is on top) and takes the decided one out when\n`onSwipe` tells it; to take a decision back it puts the card first again (an `Undo` in a notice, `Toasts`). A card\nthe app leaves in comes back to its place.\nThe card follows the finger at once (that is the gesture, not an animation); thrown, it leaves with a movement only\nwhen motion is on (`animated`, or `MotionProvider`). The next card lies under the top one, still: the flat page has\nno stack that zooms.",
+     "components": [
+      {
+       "name": "SwipeDeck",
+       "doc": "A deck of cards decided one at a time, to the left or to the right.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly T[]",
+         "required": true,
+         "doc": "The cards still to decide; the first is on top. The app takes a card out when it is decided."
+        },
+        {
+         "name": "getKey",
+         "type": "(item: T) => string",
+         "required": true,
+         "doc": "What tells a card from the others."
+        },
+        {
+         "name": "getLabel",
+         "type": "(item: T) => string",
+         "required": true,
+         "doc": "The card's name for screen readers (its title)."
+        },
+        {
+         "name": "children",
+         "type": "(item: T) => React.ReactNode",
+         "required": true,
+         "doc": "What a card shows: laid out with the toolkit's parts (`Heading`, `Text`, `DescriptionList`)."
+        },
+        {
+         "name": "onSwipe",
+         "type": "(item: T, direction: SwipeDirection) => void",
+         "required": true,
+         "doc": "A card was decided: the app takes it out of `items` (and offers Undo in a notice)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the deck for screen readers («Requests to review»)."
+        },
+        {
+         "name": "leftLabel",
+         "type": "string",
+         "required": true,
+         "doc": "What each side means, in a word or two («Skip», «Keep»): the buttons under the deck, and the word on a dragged card."
+        },
+        {
+         "name": "rightLabel",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "leftIcon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"more\" | \"notificat…",
+         "doc": "The icons of the two buttons. Default the two arrows."
+        },
+        {
+         "name": "rightIcon",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"more\" | \"notificat…"
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode",
+         "doc": "What takes the deck's place when no card is left (an `Empty`). Absent: the toolkit's words."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "No card can be decided (while a decision is being saved)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The thrown card leaves with a movement. Absent: as `MotionProvider` says."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SWIPE_DISTANCE_PX",
+      "SWIPE_FLICK",
+      "SwipeDeckProps",
+      "SwipeDirection"
      ]
     },
     {
@@ -5254,7 +5685,7 @@
         },
         {
          "name": "side",
-         "type": "\"top\" | \"right\" | \"bottom\" | \"left\"",
+         "type": "\"left\" | \"right\" | \"top\" | \"bottom\"",
          "doc": "Where it sits, if there is room. Default below."
         },
         {
@@ -5399,12 +5830,12 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"mo…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"mo…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -5625,7 +6056,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" …",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"mo…",
          "required": true
         },
         {
@@ -6011,6 +6442,12 @@
          "type": "(el: Element) => void",
          "required": true,
          "doc": "The card just placed in a column of the board: it comes down a little into its place, only once."
+        },
+        {
+         "name": "throwCard",
+         "type": "(el: Element, direction: \"left\" | \"right\") => { done: Promise<void>; release: () => void; }",
+         "required": true,
+         "doc": "A card of a deck thrown to the side it was decided to: it goes on from where the finger left it, by its own width, and fades, gathering speed as what leaves does. It stays out (`release` puts it back) until the deck has drawn the next card, so the card thrown is never seen at rest again. `done` always resolves."
         },
         {
          "name": "pressable",
@@ -6848,6 +7285,16 @@
          "required": true
         },
         {
+         "name": "chat",
+         "type": "{ readonly conversation: string; readonly latest: string; readonly user: string; readonly assistant: string; readonly retry: string; readonly good: string; readonly bad: string; readonly message: str…",
+         "required": true
+        },
+        {
+         "name": "deck",
+         "type": "{ readonly left: (count: number) => string; readonly empty: string; }",
+         "required": true
+        },
+        {
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
@@ -6968,6 +7415,14 @@
         {
          "name": "richText",
          "type": "Partial<{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; read…"
+        },
+        {
+         "name": "chat",
+         "type": "Partial<{ readonly conversation: string; readonly latest: string; readonly user: string; readonly assistant: string; readonly retry: string; readonly good: string; readonly bad: string; readonly mess…"
+        },
+        {
+         "name": "deck",
+         "type": "Partial<{ readonly left: (count: number) => string; readonly empty: string; }>"
         },
         {
          "name": "checklist",
@@ -7353,7 +7808,7 @@
         },
         {
          "name": "direction",
-         "type": "\"right\" | \"down\"",
+         "type": "\"down\" | \"right\"",
          "doc": "The ranks go from the start of the line to its end, or from the head to the foot. Default `right`."
         },
         {
@@ -7579,7 +8034,7 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\"…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"graph\" | \"code\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"key\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons before the name."
         },
         {

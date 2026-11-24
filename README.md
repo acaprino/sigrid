@@ -352,6 +352,60 @@ action of its screen (R3).
 </Note>
 ```
 
+## A conversation with an assistant
+
+The parts of a chat, the same in every app: `Conversation` (the thread), `Message` (one turn), `PromptInput` (the
+field a message is written in), `Suggestions` (ready-made requests), and, for what an assistant did on the way to its
+answer, `Reasoning` and `ToolCall`. The app holds the messages and talks to its model; the parts only draw.
+
+- `Conversation` scrolls: it stays at the latest message while the reader is at the end, so an answer being written
+  is followed, and stops following when the reader goes up; a button then leads back. It is a log for screen readers,
+  which wait while `busy` and read the answer once, whole.
+- `Message` with `from="user"` is a quiet block at the end of the row; `from="assistant"` is plain text on the page,
+  Markdown when it is a string. Under it, only the actions asked for: `copyText`, `onRetry`, `onVote` (with `vote`),
+  and the app's own (`actions`).
+- `PromptInput` grows with the text up to eight lines. Enter sends, Shift+Enter makes a new line (with a finger Enter
+  makes a new line and the button sends). Its one button sends; while `busy` it stops the answer (`onStop`), in the
+  same place. On a chat screen it is the one solid button (R3).
+- `Suggestions` are quiet chips: `onSelect` usually puts the text in the field, for the user to send or change.
+- `Reasoning` is open while it is written (`busy`) and closes when it is done, unless the reader chose; `ToolCall`
+  says a tool's name and its state (`pending`, `running`, `success`, `error`) and opens on `input` and `output`.
+- Nothing loops: no typing dots, no shimmer, no spinner. A failure of the answer is a `Note` with `tone="error"`
+  and «Retry», in the thread.
+
+```tsx
+<Column fill gap="md">
+  <Conversation label="Chat with the assistant" busy={busy} empty={<Empty title="Ask about your tasks" />}>
+    {turns.map((turn) => (
+      <Message key={turn.id} from={turn.from} copyText={turn.from === 'assistant' ? turn.text : undefined}>
+        {turn.text}
+      </Message>
+    ))}
+    {busy ? <Reasoning busy>{thinking}</Reasoning> : null}
+  </Conversation>
+  <Suggestions items={ideas} onSelect={(idea) => setDraft(idea.label)} />
+  <PromptInput value={draft} onValueChange={setDraft} onSubmit={send} busy={busy} onStop={stop} placeholder="Ask about your tasks" />
+</Column>
+```
+
+## A pile decided one card at a time
+
+`SwipeDeck` shows the first of `items` as a card to decide to one of two sides (`leftLabel`, `rightLabel`: «Skip» and
+«Keep», «Refuse» and «Approve»). Three ways, one decision: drag the card past the mark or flick it, press the left or
+right arrow with the card in focus, or press one of the two buttons under the deck, which are always there. The deck
+keeps nothing: `onSwipe(item, direction)` tells the app, which takes the card out of `items`, and puts it first again
+to take the decision back (an Undo in a notice, `Toasts`). The card follows the finger at once; thrown, it leaves with
+a movement only with motion on.
+
+```tsx
+<SwipeDeck label="Requests to review" items={requests} getKey={(r) => r.id} getLabel={(r) => r.title}
+  leftLabel="Refuse" rightLabel="Approve" leftIcon="close" rightIcon="check"
+  onSwipe={(request, direction) => decide(request, direction === 'right')}
+  empty={<Empty title="All reviewed" />}>
+  {(request) => (<><Heading level={3}>{request.title}</Heading><Text as="p">{request.reason}</Text></>)}
+</SwipeDeck>
+```
+
 ## The frame of an app
 
 `AppShell` is one layout with seven regions, after Imago's frame: `titleBar`, `status`, `sidebar`, the content (its
@@ -428,7 +482,8 @@ the key to what has the focus and to the app's commands.
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
   `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
-  `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
+  `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), the parts of a conversation
+  (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
 - Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are

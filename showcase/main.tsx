@@ -20,6 +20,13 @@ import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import {
   AttachmentMarks,
+  Conversation,
+  Message,
+  PromptInput,
+  Reasoning,
+  Suggestions,
+  SwipeDeck,
+  ToolCall,
   AttachmentViewer,
   AttachmentsSection,
   BACKDROP,
@@ -2272,6 +2279,137 @@ function Empties() {
   )
 }
 
+const CHAT_SUGGESTIONS = [
+  { id: 'sum', label: 'Summarise the open tasks' },
+  { id: 'late', label: 'What is late this week?' },
+  { id: 'plan', label: 'Plan tomorrow in three steps', icon: 'tasks' as const },
+]
+
+type Turn = { id: number; from: 'user' | 'assistant'; text: string }
+
+function Chat() {
+  const [turns, setTurns] = React.useState<Turn[]>([
+    { id: 1, from: 'user', text: 'What is late this week?' },
+    { id: 2, from: 'assistant', text: 'Two tasks are past their date:\n\n- **Send the invoice** to Acme, due Monday\n- **Book the room** for the review, due yesterday\n\nThe rest of the week is on time.' },
+  ])
+  const [draft, setDraft] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  const [vote, setVote] = React.useState<'up' | 'down' | null>(null)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  React.useEffect(() => () => clearTimeout(timer.current), [])
+  const send = (text: string) => {
+    setTurns((all) => [...all, { id: Date.now(), from: 'user', text }])
+    setBusy(true)
+    timer.current = setTimeout(() => {
+      setTurns((all) => [...all, { id: Date.now(), from: 'assistant', text: `You asked: «${text}». This answer is a sample: the app writes the real one.` }])
+      setBusy(false)
+    }, 1500)
+  }
+  const stop = () => {
+    clearTimeout(timer.current)
+    setBusy(false)
+  }
+  return (
+    <Section id="chat" title="Conversation, Message, PromptInput, Suggestions, Reasoning, ToolCall" note="The parts of a conversation with an assistant. The thread follows the latest message while the reader is at its end, and shows a button back to it when the reader goes up. What the user wrote is a quiet block at the end of the row; an answer is plain text on the page, with Markdown, and under it quiet actions that never change place. The field grows with the text up to eight lines; Enter sends and Shift+Enter makes a new line; its one button sends and, while an answer is written, stops it in the same place (R14). Suggestions are quiet chips that fill the field. A reasoning and a tool's call stay behind a row each. Nothing loops: no typing dots, no shimmer, no spinner.">
+      <Row label="a conversation">
+        <div className="flex h-96 w-full max-w-2xl flex-col gap-3">
+          <Conversation label="Chat with the assistant" busy={busy}>
+            {turns.map((turn, index) =>
+              turn.from === 'user' ? (
+                <Message key={turn.id} from="user">
+                  {turn.text}
+                </Message>
+              ) : (
+                <Message key={turn.id} from="assistant" time="10:42" copyText={turn.text} onRetry={() => {}} vote={index === 1 ? vote : undefined} onVote={index === 1 ? setVote : undefined}>
+                  {index === 1 ? (
+                    <>
+                      <Reasoning seconds={4}>The user asks for what is late. I compare each due date with today and keep the ones before it.</Reasoning>
+                      <ToolCall name="Search tasks" summary="2 results" input={'{ "due": "before:today", "done": false }'} output={'[{ "title": "Send the invoice" }, { "title": "Book the room" }]'} />
+                      <MarkdownBlocks text={turn.text} />
+                    </>
+                  ) : (
+                    turn.text
+                  )}
+                </Message>
+              ),
+            )}
+            {busy ? <Reasoning busy>Reading the request…</Reasoning> : null}
+          </Conversation>
+          <Suggestions items={CHAT_SUGGESTIONS} onSelect={(item) => setDraft(item.label)} />
+          <PromptInput
+            value={draft}
+            onValueChange={setDraft}
+            onSubmit={send}
+            busy={busy}
+            onStop={stop}
+            placeholder="Ask about your tasks"
+            maxLength={2000}
+            tools={
+              <Tooltip label="Attach a file">
+                <Button variant="ghost" size="icon-sm" aria-label="Attach a file">
+                  <Icon name="attach" />
+                </Button>
+              </Tooltip>
+            }
+          />
+        </div>
+      </Row>
+      <Row label="a tool's call, its four states">
+        <div className="flex w-full max-w-xl flex-col gap-1">
+          <ToolCall name="Read the calendar" status="pending" />
+          <ToolCall name="Search the web" status="running" summary="sigrid design tokens" />
+          <ToolCall name="Read file" status="success" summary="src/app.ts" input="src/app.ts" output={'export function App() {\n  return null\n}'} />
+          <ToolCall name="Send the email" status="error" summary="no connection" output="The server did not answer in 30 s." />
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+type Request = { id: string; who: string; what: string; when: string }
+const REQUESTS: Request[] = [
+  { id: 'r1', who: 'Ada Lovelace', what: 'Access to the billing project', when: 'Asked today' },
+  { id: 'r2', who: 'Grace Hopper', what: 'A seat in the design tool', when: 'Asked yesterday' },
+  { id: 'r3', who: 'Alan Turing', what: 'Two days of leave next week', when: 'Asked on Monday' },
+]
+
+function Deck() {
+  const [left, setLeft] = React.useState(REQUESTS)
+  const [last, setLast] = React.useState('')
+  return (
+    <Section id="swipe-deck" title="SwipeDeck" note="A pile decided one card at a time, each to one of two sides. Drag the card past the mark (or flick it), press the left or right arrow with the card in focus, or press one of the two buttons, which are always there: nothing depends on a gesture. The word of the side shows on the card when letting go would decide it. The app holds the cards and takes the decided one out; to take a decision back it puts the card first again. The card follows the finger at once; thrown, it leaves with a movement only with motion on.">
+      <Row label="requests to review">
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <SwipeDeck
+            label="Requests to review"
+            items={left}
+            getKey={(item) => item.id}
+            getLabel={(item) => `${item.who}: ${item.what}`}
+            leftLabel="Refuse"
+            rightLabel="Approve"
+            leftIcon="close"
+            rightIcon="check"
+            onSwipe={(item, direction) => {
+              setLeft((all) => all.filter((other) => other.id !== item.id))
+              setLast(`${item.who}: ${direction === 'left' ? 'refused' : 'approved'}`)
+            }}
+            empty={<Empty title="All reviewed" action={<Button variant="outline" onClick={() => setLeft(REQUESTS)}>Start again</Button>} />}
+          >
+            {(item) => (
+              <>
+                <Text variant="note">{item.when}</Text>
+                <Heading level={3}>{item.who}</Heading>
+                <Text as="p">{item.what}</Text>
+              </>
+            )}
+          </SwipeDeck>
+          <Text variant="note">{last || 'Nothing decided yet.'}</Text>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
 function Notes() {
   const [shown, setShown] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
@@ -2879,6 +3017,8 @@ function App() {
       <ProgressSection />
       <Empties />
       <Notes />
+      <Chat />
+      <Deck />
       <Tables />
       <LongLists />
       <OverflowLists />

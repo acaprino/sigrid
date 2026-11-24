@@ -305,6 +305,23 @@ export function landCard(el: Element): void {
   enterStyle(el, 'translate', `0px ${-TRAVEL_PX.card}px`, DURATION_MS.land)
 }
 
+/**
+ * A card of a deck thrown to the side it was decided to: it goes on from where the finger left it, by its own width,
+ * and fades, gathering speed as what leaves does. It stays out (`release` puts it back) until the deck has drawn the
+ * next card, so the card thrown is never seen at rest again. `done` always resolves.
+ */
+export function throwCard(el: Element, direction: 'left' | 'right'): { done: Promise<void>; release: () => void } {
+  if (typeof el.animate !== 'function') return { done: Promise.resolve(), release: () => {} }
+  const node = el as HTMLElement
+  const from = node.style.getPropertyValue('translate') || '0px 0px'
+  const far = (direction === 'left' ? -1 : 1) * Math.max(node.offsetWidth, TRAVEL_PX.sheet)
+  const run = node.animate(
+    { opacity: [1, 0], translate: [from, `${far}px 0px`] },
+    { duration: DURATION_MS.row, easing: `cubic-bezier(${FLUENT_CURVES.accelerateMin.join(',')})`, fill: 'forwards' },
+  )
+  return { done: run.finished.then(() => {}, () => {}), release: () => run.cancel() }
+}
+
 // --- Gestures on an element that already exists (no remount when the chunk arrives). ---
 
 /**
