@@ -23,7 +23,7 @@ import { useMotion } from "../internal/motion"
 import { useReveal } from "../internal/reveal"
 import { useWords } from "../words"
 import { AppShellContext } from "./app-shell"
-import { NavContext, ToneContext } from "./nav-list"
+import { COUNT_PILL, COUNT_PILL_ON_SIDEBAR, NavContext, ToneContext } from "./nav-list"
 import { SearchField } from "../components/search-field"
 import { Sheet, SheetContent, SheetTitle } from "../primitives/sheet"
 import { Tooltip } from "../primitives/tooltip"
@@ -120,7 +120,9 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
       {toggle && place === "head" ? (
         // The header's row: what the app put in `header`, then the button at its end. On the rail the header is gone,
         // as without the button, and the button is alone in the middle; with no header it is alone at the end.
-        <div data-slot="sidebar-head" className={cn("flex shrink-0 items-center gap-1", rail ? "justify-center" : "justify-end")}>
+        // In this row the name of the list (a `SidebarRow`) has a title's weight, and its `Count` is the pill a count is
+        // on a row of the navigation (`COUNT_PILL`, the sidebar's neutral colours): no part of its own.
+        <div data-slot="sidebar-head" className={cn("flex shrink-0 items-center gap-1 [&_[data-slot=sidebar-row]]:font-semibold", COUNT_PILL, COUNT_PILL_ON_SIDEBAR, rail ? "justify-center" : "justify-end")}>
           {header && !rail ? <div data-slot="sidebar-header" className="min-w-0 flex-1">{header}</div> : null}
           {toggle}
         </div>

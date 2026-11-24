@@ -567,6 +567,13 @@ Each is off unless asked, or a new choice of a prop; `test/theme-details.test.ts
 |---|---|---|
 | `Sidebar toggle` | `toggle="head"` (the default is `foot`), with `onCollapsedChange` | The button that shrinks and widens the sidebar is at the end of the header's row, beside `header`, in place of a line of its own at the foot: the name of the list, its count and the button on one row. With no `header` the row holds the button alone, at its end; on the rail the header is gone as before and the button is at the top, in the middle. Its name, `aria-expanded`, its hint, its 44px with a finger and the easing of the width are the same; where there is no button (the drawer, a rail the frame forces) nothing changes. The title row is not a new part: a `SidebarRow` with a `Count` at its `end` |
 
+## Added on 2026-11-24: the line of a bold tab clear of the sheet; the sidebar's head row
+
+| Part | When | What changes, and only then |
+|---|---|---|
+| `ToolbarTab`, `TitleBar` | Under `ThemeDef.tabs: 'bold'` | The line of the chosen view stops 3px short of the edge it is near (the bar's lower edge; the upper one for a bar at the foot, `edge="top"`), in the bar, in the row of views under it and at the foot, at every density: clear ground is always seen between the line and the hairline of the sheet. The bar (not the compact one) is 2px taller, 46px at compact density; what it holds stays in its middle |
+| `Sidebar toggle="head"` | In the head row (`sidebar-head`) | A `SidebarRow` there has weight 600, and a `Count` there is the pill a count is on a row of the navigation, in the sidebar's neutral colours (`COUNT_PILL`, shared with `NavItem`). No new part |
+
 ## Off-scale values (with locations, before the polish pass)
 
 | Value | Where |

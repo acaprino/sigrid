@@ -119,6 +119,12 @@ describe('build output', () => {
     expect(rule).toBeGreaterThan(-1)
     expect(c.slice(rule, c.indexOf('}', rule))).toMatch(/transition:\s*scale /)
     expect(enclosingAtRules(c, rule).some((at) => at.includes('prefers-reduced-motion: no-preference') || at.includes('prefers-reduced-motion:no-preference'))).toBe(true)
+    // The line keeps clear of the edge it is near (3px of the spacing scale), and the bar is 2px taller for it.
+    expect(c).toMatch(/bottom:\s*calc\(var\(--spacing\)\s*\*\s*0?\.75\)/)
+    expect(c).toMatch(/top:\s*calc\(var\(--spacing\)\s*\*\s*0?\.75\)/)
+    const bar = c.search(/\[data-tabs=["']?bold["']?\]\s+\[data-slot=["']?title-bar["']?\]:not\(/)
+    expect(bar).toBeGreaterThan(-1)
+    expect(c.slice(bar, c.indexOf('}', bar))).toMatch(/min-height:\s*calc\(var\(--titlebar-height\)\s*\+\s*\.?0?\.?125rem\)/)
     // The system font: its monospace follows `data-font`, outside the layers; no face is shipped for either.
     const font = c.search(/\[data-font=["']?system["']?\]/)
     expect(font).toBeGreaterThan(-1)

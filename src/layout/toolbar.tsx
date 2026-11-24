@@ -219,11 +219,17 @@ const TAB = cn(
 const TAB_BOLD =
   "[[data-tabs=bold]_&]:not-aria-[current=page]:font-medium [[data-tabs=bold]_&]:not-aria-[current=page]:text-ink-mute [[data-tabs=bold]_&]:not-aria-[current=page]:hover:bg-transparent [[data-tabs=bold]_&]:not-aria-[current=page]:hover:text-ink [[data-tabs=bold]_&]:aria-[current=page]:font-bold [[data-tabs=bold]_&]:aria-[current=page]:text-ink [[data-tabs=bold]_&]:after:scale-x-0 [[data-tabs=bold]_&]:after:rounded-none [[data-tabs=bold]_&]:after:bg-primary [[data-tabs=bold]_&]:aria-[current=page]:after:scale-x-100"
 
+const TAB_BOLD_CLEAR_BOTTOM = "[[data-tabs=bold]_&]:after:bottom-0.75"
+const TAB_BOLD_CLEAR_TOP = "[[data-tabs=bold]_&]:after:top-0.75"
+
 function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabProps) {
   const tabs = React.useContext(TabsContext)
   const current = tabs?.value === value
   const look = cn(
     tabs?.edge === "top" ? "after:top-0" : "after:bottom-0",
+    // Under bold tabs the line stops 3px short of the edge it is near, so clear ground is always seen between it and
+    // the hairline of what lies beyond that edge (the sheet under the bar, the page above a bar at the foot).
+    tabs?.edge === "top" ? TAB_BOLD_CLEAR_TOP : TAB_BOLD_CLEAR_BOTTOM,
     // Stacked, under 500px of height (a phone lying down) the word goes beside the icon: the bar stays 44px.
     tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs short:flex-row short:gap-1.5 short:py-0" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
   )

@@ -148,6 +148,8 @@ test('by default the button is a line of its own at the foot, and the header is 
   expect(order()).toEqual(['sidebar-header', 'sidebar-nav', 'sidebar-footer', 'sidebar-collapse'])
   expect(document.querySelector('[data-slot="sidebar-head"]')).toBeNull()
   expect(document.querySelector('[data-slot="sidebar-header"]')!.className).toBe('shrink-0')
+  // No pill and no heavier name where the button is at the foot.
+  expect(document.querySelector('[data-slot="sidebar"]')!.className).not.toContain('data-slot=count')
   expect(screen.getByRole('button', { name: 'Collapse the sidebar' }).className).toContain('self-end')
 })
 
@@ -157,6 +159,11 @@ test('at the head the button is at the end of the header\'s row: the name, its c
   const head = document.querySelector('[data-slot="sidebar-head"]')!
   expect([...head.children].map((el) => el.getAttribute('data-slot'))).toEqual(['sidebar-header', 'sidebar-collapse'])
   expect(head.className.split(' ')).toEqual(expect.arrayContaining(['flex', 'items-center']))
+  // In the head row the name has a title's weight and its count is the pill of a navigation row, in the sidebar's
+  // neutral colours: the same classes `NavItem` has, not a copy.
+  const pill = '[&_[data-slot=count]]' + ':'
+  for (const cls of ['min-w-5', 'rounded-full', 'px-1.5', 'py-0.5', 'text-center', 'font-semibold', 'bg-sidebar-ink' + '/12', 'text-sidebar-ink']) expect(head.className.split(' '), cls).toContain(pill + cls)
+  expect(head.className.split(' ')).toContain('[&_[data-slot=sidebar-row]]' + ':' + 'font-semibold')
   // The header takes the room the button leaves; the title row is a `SidebarRow` with a `Count` at its end.
   const header = head.querySelector('[data-slot="sidebar-header"]')!
   expect(header.className.split(' ')).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
