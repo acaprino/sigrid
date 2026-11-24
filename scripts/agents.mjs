@@ -198,7 +198,24 @@ async function examples() {
   }))
 }
 
-const files = [{ path: 'agents/catalog.json', text: `${JSON.stringify(catalog(), null, 1)}\n` }, ...(await examples())]
+/**
+ * The example apps written by hand (showcase/written), which the showcase runs as they are: whole apps made of parts
+ * the editor does not draw yet (a form to sign in, a path of steps). They import the package as an app does, so they
+ * go out unchanged, with a line that says where they come from. Their first line is what they are, as the editor's.
+ */
+function written() {
+  const dir = `${root}showcase/written/`
+  if (!existsSync(dir)) return []
+  return readdirSync(dir).filter((name) => name.endsWith('.tsx')).sort().map((name) => {
+    const [about, ...rest] = readFileSync(`${dir}${name}`, 'utf8').replace(/\r\n/g, '\n').split('\n')
+    return {
+      path: `agents/examples/${name}`,
+      text: `${about}\n// A whole app in the toolkit's frame, written by hand (showcase/written/${name}) and run in the showcase. It is \`src/App.tsx\`\n// of a project; where it runs and its window come from \`@acaprino/sigrid/tauri\`.\n${rest.join('\n')}`,
+    }
+  })
+}
+
+const files = [{ path: 'agents/catalog.json', text: `${JSON.stringify(catalog(), null, 1)}\n` }, ...(await examples()), ...written()]
 const stale = files.filter((file) => !existsSync(`${root}${file.path}`) || readFileSync(`${root}${file.path}`, 'utf8').replace(/\r\n/g, '\n') !== file.text)
 const kept = new Set(files.map((file) => file.path))
 const gone = existsSync(`${root}agents/examples`) ? readdirSync(`${root}agents/examples`).map((name) => `agents/examples/${name}`).filter((path) => !kept.has(path)) : []

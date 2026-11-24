@@ -16,6 +16,8 @@ export interface Words {
   readonly common: {
     /** The name of the button that closes a dialog or a sheet. */
     readonly close: string
+    /** The button that leaves a question unanswered and closes it (a confirmation). */
+    readonly cancel: string
     /** The button of a notice that takes the action back. */
     readonly undo: string
     /** The name of the region that holds the notices. */
@@ -362,6 +364,45 @@ export interface Words {
     readonly noRecipient: string
     readonly badAddress: string
   }
+  readonly wizard: {
+    /** The two buttons of a path of steps, and the one of its last step. */
+    readonly back: string
+    readonly next: string
+    readonly finish: string
+  }
+  readonly auth: {
+    /** The titles of the form and the words of its one button, for each of its three forms. */
+    readonly signIn: string
+    readonly signUp: string
+    readonly link: string
+    readonly sendLink: string
+    /** The names of its fields, and of the switch that shows the password. */
+    readonly name: string
+    readonly email: string
+    readonly password: string
+    readonly show: string
+    /** A button that goes on with an account kept elsewhere («Continue with Acme»), and the word between those and the form. */
+    readonly continueWith: (provider: string) => string
+    readonly or: string
+    /** The way to the other form, as a question and the link that answers it. */
+    readonly haveAccount: string
+    readonly noAccount: string
+    readonly forgot: string
+    /** What is wrong with what was written. */
+    readonly missingName: string
+    readonly invalidEmail: string
+    readonly shortPassword: (least: number) => string
+    /** After the link was sent: where to look, and the way back. */
+    readonly sentTitle: string
+    readonly sentText: (email: string) => string
+    readonly another: string
+  }
+  readonly lightbox: {
+    /** The names of the two buttons, and where the picture is among the others («2 of 5»). */
+    readonly previous: string
+    readonly next: string
+    readonly count: (position: number, total: number) => string
+  }
   readonly checklist: {
     /** Read before an item of a checklist, with its colon and space. */
     readonly done: string
@@ -375,6 +416,7 @@ const plural = (count: number, one: string, many: string) => (count === 1 ? `1 $
 export const DEFAULT_WORDS: Words = {
   common: {
     close: 'Close',
+    cancel: 'Cancel',
     undo: 'Undo',
     notices: 'Notices',
     closeNotice: (text) => `Close the notice: ${text}`,
@@ -618,6 +660,37 @@ export const DEFAULT_WORDS: Words = {
     discard: 'Discard',
     noRecipient: 'Add at least one address to send it to.',
     badAddress: 'One of the addresses is not valid.',
+  },
+  wizard: {
+    back: 'Back',
+    next: 'Continue',
+    finish: 'Finish',
+  },
+  auth: {
+    signIn: 'Sign in',
+    signUp: 'Create your account',
+    link: 'Sign in with a link',
+    sendLink: 'Send me a link',
+    name: 'Name',
+    email: 'Email',
+    password: 'Password',
+    show: 'Show',
+    continueWith: (provider) => `Continue with ${provider}`,
+    or: 'or',
+    haveAccount: 'Already have an account?',
+    noAccount: 'New here?',
+    forgot: 'Forgot your password?',
+    missingName: 'Write your name.',
+    invalidEmail: 'Write an address like name@example.com.',
+    shortPassword: (least) => `Use at least ${least} characters.`,
+    sentTitle: 'Check your inbox',
+    sentText: (email) => `We sent a link to ${email}. It opens your account.`,
+    another: 'Use another address',
+  },
+  lightbox: {
+    previous: 'Previous picture',
+    next: 'Next picture',
+    count: (position, total) => `${position} of ${total}`,
   },
   checklist: { done: 'Done: ', todo: 'To do: ' },
 }

@@ -689,12 +689,20 @@ svg.lucide[stroke-width="2"] {
     margin-inline-end: -18.75rem;
     opacity: 0;
   }
-  /* A panel the person changed to (a tab's) fades in; the one it takes the place of is gone at once. */
+  /* A panel the person changed to (a tab's) fades in, from the side of its tab; the one it takes the place of is gone
+     at once. */
   :where(:root[data-motion]) [data-reveal="fade"] {
-    transition: opacity var(--motion-fast) var(--motion-ease-enter);
+    transition:
+      opacity var(--motion-fast) var(--motion-ease-enter),
+      translate var(--motion-fast) var(--motion-ease-enter);
     @starting-style {
       opacity: 0;
     }
+    /* From the side of the tab pressed, by the short way of a card (8px). */
+    &[data-from="end"] { @starting-style { translate: 8px 0; } }
+    &[data-from="start"] { @starting-style { translate: -8px 0; } }
+    &:dir(rtl)[data-from="end"] { @starting-style { translate: -8px 0; } }
+    &:dir(rtl)[data-from="start"] { @starting-style { translate: 8px 0; } }
   }
 
   /* A surface that closes leaves as it came, in the short time of what leaves: it fades, and a sheet goes back

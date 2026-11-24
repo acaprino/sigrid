@@ -17,6 +17,7 @@ import * as React from 'react'
 import { cn, isEmptyNode } from '../lib/utils'
 import { useWords } from '../words'
 import { useReveal } from '../internal/reveal'
+import { isEmailAddress } from '../internal/email'
 import { Icon } from '../icons'
 import { Button } from '../primitives/button'
 import { Input } from '../primitives/input'
@@ -35,11 +36,6 @@ export type EmailDraft = {
 
 /** A draft with nothing in it, to start from. */
 export const EMPTY_EMAIL: EmailDraft = { to: [], cc: [], bcc: [], subject: '', html: '' }
-
-/** True for a text shaped as an address (`name@domain.tld`); whether the address exists is the server's to say. */
-export function isEmailAddress(value: string): boolean {
-  return /^[^\s@<>(),;]+@[^\s@<>(),;]+\.[^\s@<>(),;.]+$/.test(value.trim())
-}
 
 /** Why a draft cannot be sent: it has nobody to go to, or one of its addresses is not one. `null` when it can. */
 export function emailProblem(draft: EmailDraft): 'noRecipient' | 'badAddress' | null {
@@ -215,4 +211,5 @@ function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, la
   )
 }
 
-export { EmailComposer }
+// Handed out from this entry since 6.0.0: the check itself is shared with the form to sign in (internal/email.ts).
+export { EmailComposer, isEmailAddress }

@@ -1165,7 +1165,7 @@
        "fields": [
         {
          "name": "common",
-         "type": "{ readonly close: string; readonly undo: string; readonly notices: string; readonly closeNotice: (text: string) => string; readonly error: string; readonly keysTogether: (keys: readonly string[]) => …",
+         "type": "{ readonly close: string; readonly cancel: string; readonly undo: string; readonly notices: string; readonly closeNotice: (text: string) => string; readonly error: string; readonly keysTogether: (key…",
          "required": true
         },
         {
@@ -1316,6 +1316,21 @@
          "required": true
         },
         {
+         "name": "wizard",
+         "type": "{ readonly back: string; readonly next: string; readonly finish: string; }",
+         "required": true
+        },
+        {
+         "name": "auth",
+         "type": "{ readonly signIn: string; readonly signUp: string; readonly link: string; readonly sendLink: string; readonly name: string; readonly email: string; readonly password: string; readonly show: string; …",
+         "required": true
+        },
+        {
+         "name": "lightbox",
+         "type": "{ readonly previous: string; readonly next: string; readonly count: (position: number, total: number) => string; }",
+         "required": true
+        },
+        {
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
@@ -1328,7 +1343,7 @@
        "fields": [
         {
          "name": "common",
-         "type": "Partial<{ readonly close: string; readonly undo: string; readonly notices: string; readonly closeNotice: (text: string) => string; readonly error: string; readonly keysTogether: (keys: readonly strin…"
+         "type": "Partial<{ readonly close: string; readonly cancel: string; readonly undo: string; readonly notices: string; readonly closeNotice: (text: string) => string; readonly error: string; readonly keysTogeth…"
         },
         {
          "name": "colors",
@@ -1448,6 +1463,18 @@
         {
          "name": "mail",
          "type": "Partial<{ readonly compose: string; readonly from: string; readonly to: string; readonly cc: string; readonly bcc: string; readonly subject: string; readonly body: string; readonly copies: string; re…"
+        },
+        {
+         "name": "wizard",
+         "type": "Partial<{ readonly back: string; readonly next: string; readonly finish: string; }>"
+        },
+        {
+         "name": "auth",
+         "type": "Partial<{ readonly signIn: string; readonly signUp: string; readonly link: string; readonly sendLink: string; readonly name: string; readonly email: string; readonly password: string; readonly show: …"
+        },
+        {
+         "name": "lightbox",
+         "type": "Partial<{ readonly previous: string; readonly next: string; readonly count: (position: number, total: number) => string; }>"
         },
         {
          "name": "checklist",
@@ -2868,7 +2895,7 @@
     },
     {
      "file": "src/primitives/sheet.tsx",
-     "about": "SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)\nPark UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)\nFrom Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the\nbackdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).\nFrom SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the\ndrag direction per side and the content marked `Drawer.Content` (a mouse drag that starts\nthere does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the\nstaggering of the children with Motion, the handle of the bottom side. The entrance (32 px from the panel edge, 200 ms) follows\nthe shared Motion preference and respects reduced motion.",
+     "about": "SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)\nPark UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)\nFrom Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the\nbackdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).\nFrom SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the\ndrag direction per side and the content marked `Drawer.Content` (a mouse drag that starts\nthere does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the\nstaggering of the children with Motion. The entrance (32 px from the panel edge, 200 ms) follows\nthe shared Motion preference and respects reduced motion.",
      "components": [
       {
        "name": "Sheet",
@@ -3232,6 +3259,11 @@
          "type": "string",
          "required": true,
          "doc": "Name of the group of tabs for screen readers."
+        },
+        {
+         "name": "scroll",
+         "type": "boolean",
+         "doc": "More tabs than fit in a row (the filters of a list, on a phone): the row scrolls sideways under the finger, its edges fade where there is more, and the chosen tab is brought into sight. Absent: the row is as wide as its tabs."
         },
         {
          "name": "className",
@@ -3716,6 +3748,79 @@
      ],
      "also": [
       "ComboboxProps"
+     ]
+    },
+    {
+     "file": "src/components/confirm-dialog.tsx",
+     "about": "The question asked before an action that cannot be taken back: deleting for good, sending what cannot be recalled.\nOne look for it in every app: a small window with what will happen as its title, what is lost under it, «Cancel»\nand the one button that does it, named by its verb («Delete the project», never «OK» or «Yes»).\nOnly for what cannot be undone. An action that can be taken back is done at once and offers Undo in a notice\n(`Toasts`): asking first is one question too many, every time.\nThe focus starts on «Cancel», so Enter pressed out of habit does nothing lost; Esc and a press outside cancel too.\nThe button that does it is red when what it does destroys something (`destructive`, the default), and the solid\none otherwise; while the app does it (`busy`) it waits in its place and the window stays.",
+     "components": [
+      {
+       "name": "ConfirmDialog",
+       "doc": "The question before an action that cannot be taken back.",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "What will happen, as a question or a plain statement («Delete \"Budget 2026\"?»)."
+        },
+        {
+         "name": "description",
+         "type": "string",
+         "doc": "What is lost, and that it cannot be taken back («Its 14 tasks are deleted too. This cannot be undone.»)."
+        },
+        {
+         "name": "confirmLabel",
+         "type": "string",
+         "required": true,
+         "doc": "The verb of the action, on its button («Delete the project»): never «OK» or «Yes»."
+        },
+        {
+         "name": "cancelLabel",
+         "type": "string",
+         "doc": "The word of the button that cancels. Absent: the toolkit's word («Cancel»)."
+        },
+        {
+         "name": "onConfirm",
+         "type": "() => void",
+         "required": true,
+         "doc": "Do it. The app closes the window when it is done (at once, or after `busy`)."
+        },
+        {
+         "name": "destructive",
+         "type": "boolean",
+         "doc": "The action destroys something: its button is red (the default). `false` for one that only cannot be recalled (sending)."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "It is being done: the button waits in its place, and neither button acts again."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The window enters with a movement. Absent: as `MotionProvider` says."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "More about what is lost, under the description (a list of what goes with it)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ConfirmDialogProps"
      ]
     },
     {
@@ -6444,6 +6549,145 @@
      ]
     },
     {
+     "file": "src/assemblies/auth-form.tsx",
+     "about": "The form a person signs in or signs up with, the same in every app, in three forms: `signIn` (an address and a\npassword), `signUp` (the same, and a name when the app asks for one) and `link` (an address alone: the app sends a\nlink that opens the account, and the form then says to look in the inbox).\nIt asks for as little as it can: every field more costs people who would have signed up; what else the app needs\nis asked after, when they are in (a `Wizard`).\nAbove the fields, when the app offers them, the accounts kept elsewhere («Continue with Acme»), each with its logo;\nthen the word «or», then the fields. One solid button (R3): the form's own. The way to the other form, and to a\nforgotten password, are links under it.\nWhat is wrong is said under the field it is about, when the form is sent, and the focus goes to the first such\nfield; a failure the server reports (`error`) is a note above the fields. While the app works (`busy`) the button\nwaits in its place. The form knows no server: it gives the app what was written and the app answers.",
+     "components": [
+      {
+       "name": "AuthForm",
+       "doc": "The form a person signs in or signs up with.",
+       "props": [
+        {
+         "name": "mode",
+         "type": "AuthMode",
+         "required": true
+        },
+        {
+         "name": "onModeChange",
+         "type": "((mode: AuthMode) => void)",
+         "doc": "The person asks for another form (the links under the button). Absent: no such links."
+        },
+        {
+         "name": "onSubmit",
+         "type": "(values: AuthValues, mode: AuthMode) => void",
+         "required": true,
+         "doc": "The form was sent with nothing wrong in it."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "The app is working on it: the button waits in its place."
+        },
+        {
+         "name": "error",
+         "type": "string",
+         "doc": "What the server answered when it refused («That address and password do not match»): a note above the fields."
+        },
+        {
+         "name": "sentTo",
+         "type": "string",
+         "doc": "In the `link` form, the address the link was sent to: the form then says where to look. Absent: the field."
+        },
+        {
+         "name": "askName",
+         "type": "boolean",
+         "doc": "Signing up, also ask for a name."
+        },
+        {
+         "name": "providers",
+         "type": "readonly AuthProvider[]",
+         "doc": "The accounts kept elsewhere, above the fields."
+        },
+        {
+         "name": "onProvider",
+         "type": "((id: string) => void)"
+        },
+        {
+         "name": "onForgot",
+         "type": "(() => void)",
+         "doc": "«Forgot your password?», under the password of the `signIn` form. Absent: no link."
+        },
+        {
+         "name": "passwordMin",
+         "type": "number",
+         "doc": "The least characters of a new password. Default 8."
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "doc": "The title of the form. Absent: the toolkit's words for its `mode`."
+        },
+        {
+         "name": "description",
+         "type": "string",
+         "doc": "A line under the title: what signing up gives."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Its buttons answer the press. Absent: as `MotionProvider` says."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "AuthProvider",
+       "doc": "An account kept elsewhere that the app lets a person go on with.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "Its name («Acme»), said by its button («Continue with Acme»)."
+        },
+        {
+         "name": "logo",
+         "type": "string",
+         "doc": "The address of its logo (an SVG or a PNG the app serves)."
+        },
+        {
+         "name": "icon",
+         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "doc": "One of Sigrid's icons, drawn while the logo loads, or in its place."
+        }
+       ]
+      },
+      {
+       "name": "AuthValues",
+       "doc": "What the person wrote. `name` only when asked for; no `password` in the `link` form.",
+       "fields": [
+        {
+         "name": "email",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "password",
+         "type": "string"
+        },
+        {
+         "name": "name",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AUTH_PASSWORD_MIN",
+      "AuthFormProps",
+      "AuthMode"
+     ]
+    },
+    {
      "file": "src/assemblies/chat.tsx",
      "about": "A whole chat with an assistant, ready to wire to a model: the thread, what the assistant did on the way to each\nanswer, the ready-made requests and the field, put together the one way they go together. The app holds the\nmessages as data and talks to its model; the chat draws them and tells the app what the user did: sent a message,\nstopped the answer, asked for it again, said it was good or not.\nIt is the parts of a conversation and nothing more (`Conversation`, `Message`, `Reasoning`, `ToolCall`,\n`Suggestions`, `PromptInput`): an app whose chat needs another arrangement composes those itself.\nWhat it decides, so every app's chat behaves alike: an answer still being written (`busy`, the last message) shows\nno actions yet, and its reasoning is open until the text starts; «try again» is offered on the last answer only; a\nfailed answer is a `Note` with `tone=\"error\"` in the thread, with «Try again»; a suggestion fills the field and\ngives it the focus, for the user to send or change; the field keeps its text while an answer is written.",
      "components": [
@@ -7000,6 +7244,87 @@
      ]
     },
     {
+     "file": "src/assemblies/lightbox.tsx",
+     "about": "Pictures looked at one at a time, large: the photos of a message, the screens of a report, the pages of a scan\nthat are images. A window that takes most of the screen, the picture whole in it (never cropped), its caption under\nit, where it is among the others («2 of 5»), and two buttons to the one before and the one after, which stay in\ntheir places and are off at the two ends (R14). The left and right arrows do the same; Esc and the close button\nclose it. The app holds which picture is on (`index`) and whether the window is open.\nA file with pages, zoom and «open the original» is an `AttachmentViewer`; this is for pictures that are just looked at.",
+     "components": [
+      {
+       "name": "Lightbox",
+       "doc": "Pictures looked at one at a time, large, with the way to the one before and the one after.",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the set for screen readers and the title of the window («Photos of the site»)."
+        },
+        {
+         "name": "images",
+         "type": "readonly LightboxImage[]",
+         "required": true
+        },
+        {
+         "name": "index",
+         "type": "number",
+         "required": true,
+         "doc": "The picture on show, counting from 0, which the app holds."
+        },
+        {
+         "name": "onIndexChange",
+         "type": "(index: number) => void",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The window enters with a movement. Absent: as `MotionProvider` says."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "LightboxImage",
+       "doc": "One picture.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "src",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "alt",
+         "type": "string",
+         "required": true,
+         "doc": "What the picture shows, for who cannot see it."
+        },
+        {
+         "name": "caption",
+         "type": "string",
+         "doc": "A line under the picture."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "LightboxProps"
+     ]
+    },
+    {
      "file": "src/assemblies/LookSettings.tsx",
      "about": "The look settings of an app (owner, 2026-11-20): one base colour makes the palette, three combinations share it out,\nthree tones set how lively it is. Every choice is a card with a preview of what it does; the app passes its own words.\nThe icons are not a choice: Sigrid has one set, the same in every app (2026-11-23). The ready-made themes are the finer choice, for the app's «Advanced» fold.\nThe density (compact, normal, large, or an app's own) is a choice of the same family: each card draws three rows to scale.",
      "components": [
@@ -7055,6 +7380,10 @@
         },
         {
          "name": "preview",
+         "type": "ReactNode"
+        },
+        {
+         "name": "detail",
          "type": "ReactNode"
         }
        ]
@@ -7835,6 +8164,108 @@
      "also": [
       "TreeProps"
      ]
+    },
+    {
+     "file": "src/assemblies/wizard.tsx",
+     "about": "A path of steps taken one at a time: a form too long for one screen, a setup, a signup. One question on the\nscreen, the path above it (`Steps`: where one is, what is done, what is left), and two buttons at its foot that\nnever move (R14): «Back» at the start, off on the first step, and the one solid button at the end, «Continue»\nuntil the last step and then the app's own word («Create the account»).\nThe app holds where the person is (`current`) and what they answered; the wizard draws the step and asks to move.\nA step that is not answered yet keeps the person there: its button is off (`canContinue: false`), and the app says\nwhat is missing in the step itself. A step already done is a button of the path: going back never loses an answer,\nsince the answers are the app's. Enter in a field of the step goes on, as in any form.\nWhen the step changes, its title takes the focus, so a screen reader reads where it now is; with motion on the\nstep comes in from the side it was asked from.",
+     "components": [
+      {
+       "name": "Wizard",
+       "doc": "A path of steps taken one at a time, with the path above the step and two buttons at its foot.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the path for screen readers («Signup»)."
+        },
+        {
+         "name": "steps",
+         "type": "readonly WizardStep[]",
+         "required": true
+        },
+        {
+         "name": "current",
+         "type": "number",
+         "required": true,
+         "doc": "The step on the screen, counting from 0, which the app holds."
+        },
+        {
+         "name": "onCurrentChange",
+         "type": "(index: number) => void",
+         "required": true
+        },
+        {
+         "name": "onFinish",
+         "type": "() => void",
+         "required": true,
+         "doc": "The last step was confirmed."
+        },
+        {
+         "name": "finishLabel",
+         "type": "string",
+         "doc": "The word of the button of the last step («Create the account»). Absent: the toolkit's word («Finish»)."
+        },
+        {
+         "name": "busy",
+         "type": "boolean",
+         "doc": "The last step is being saved: its button waits in its place."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The step comes in with a movement, and the buttons answer the press. Absent: as `MotionProvider` says."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "(step: WizardStep, index: number) => React.ReactNode",
+         "required": true,
+         "doc": "What the step on the screen asks: its fields, drawn by the app for that step."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "WizardStep",
+       "doc": "One step of a path.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the step in the path («Account», «Plan»): short."
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "doc": "The question of the step, as its title when it is the one on the screen. Absent: its `label`."
+        },
+        {
+         "name": "description",
+         "type": "string",
+         "doc": "A line under the title: what is asked, and why."
+        },
+        {
+         "name": "canContinue",
+         "type": "boolean",
+         "doc": "`false` while the step is not answered: the button that goes on is off. Default `true`."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "WizardProps"
+     ]
     }
    ]
   },
@@ -8222,8 +8653,7 @@
      "also": [
       "EmailComposerProps",
       "emailProblem",
-      "EMPTY_EMAIL",
-      "isEmailAddress"
+      "EMPTY_EMAIL"
      ]
     },
     {
@@ -8281,6 +8711,13 @@
      ],
      "also": [
       "RichTextFieldProps"
+     ]
+    },
+    {
+     "file": "src/internal/email.ts",
+     "about": "What an address of mail looks like, for the parts that take one (a message being written, a form to sign in).\nOnly its shape: whether the address exists is the server's to say.",
+     "also": [
+      "isEmailAddress"
      ]
     }
    ]

@@ -20,9 +20,9 @@ import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
-import { Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
+import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
-import { AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
+import { AuthForm, type AuthMode, Lightbox, Wizard, AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
@@ -138,9 +138,9 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
-  { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'overflow-list', 'markdown'] },
+  { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
-  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
+  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
 
@@ -206,6 +206,9 @@ function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated:
         const asked = decodeURIComponent(location.hash.slice(1))
         const now = found.find((s) => s.id === asked) ?? found[0]
         for (const s of found) s.hidden = s !== now
+        // The section the person chose comes in (theme.css, `[data-reveal="fade"]`); the one on show at first is just there.
+        for (const s of found) s.removeAttribute('data-reveal')
+        if (!first.current) now?.setAttribute('data-reveal', 'fade')
         setCurrent(now?.id ?? '')
         scroller.scrollTop = 0
       }
@@ -214,7 +217,10 @@ function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated:
       window.addEventListener('hashchange', show)
       return () => {
         window.removeEventListener('hashchange', show)
-        for (const s of found) s.hidden = false
+        for (const s of found) {
+          s.hidden = false
+          s.removeAttribute('data-reveal')
+        }
       }
     }
     // The sections did not exist when the browser looked for the address's anchor.
@@ -261,7 +267,7 @@ function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated:
       {shown.map((g) => {
         const rows = sections.filter((s) => g.ids.includes(s.id))
         return rows.length === 0 ? null : (
-          <SidebarGroup key={g.label} label={g.label} icon={<Icon name={g.icon} />}>
+          <SidebarGroup key={g.label} label={g.label} icon={<Icon name={g.icon} />} collapsible>
             {rows.map((s) => (
               <NavItem key={s.id} href={`#${s.id}`} title={s.title} current={current === s.id} icon={isIconName(s.icon) ? <Icon name={s.icon} /> : null}>
                 {s.title}
@@ -2373,6 +2379,168 @@ function Deck() {
   )
 }
 
+function Confirms({ animated }: { animated: boolean }) {
+  const [open, setOpen] = React.useState(false)
+  const [send, setSend] = React.useState(false)
+  const [busy, setBusy] = React.useState(false)
+  const [done, setDone] = React.useState('Nothing done yet.')
+  return (
+    <Section id="confirm" title="ConfirmDialog" note="The question before an action that cannot be taken back, the same in every app: what will happen as the title, what is lost under it, Cancel (which has the focus, so Enter out of habit loses nothing) and the one button that does it, named by its verb. Red when it destroys something, the solid button otherwise; while the app does it the button waits and the window stays. Only for what cannot be undone: what can is done at once and offers Undo in a notice.">
+      <Row label="it destroys">
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Delete the project…
+        </Button>
+        <ConfirmDialog open={open} onOpenChange={setOpen} animated={animated} title="Delete «Budget 2026»?" description="Its 14 tasks are deleted too. This cannot be undone." confirmLabel="Delete the project" onConfirm={() => { setOpen(false); setDone('The project was deleted.') }} />
+      </Row>
+      <Row label="it cannot be recalled">
+        <Button variant="outline" onClick={() => setSend(true)}>
+          Send to everyone…
+        </Button>
+        <ConfirmDialog
+          open={send}
+          onOpenChange={setSend}
+          animated={animated}
+          destructive={false}
+          busy={busy}
+          title="Send to 240 people?"
+          description="Once sent, the message cannot be taken back."
+          confirmLabel="Send"
+          onConfirm={() => {
+            setBusy(true)
+            setTimeout(() => { setBusy(false); setSend(false); setDone('The message was sent.') }, 1200)
+          }}
+        />
+        <Text variant="note">{done}</Text>
+      </Row>
+    </Section>
+  )
+}
+
+const SETUP_STEPS = [
+  { id: 'who', label: 'You', title: 'What should we call you?', description: 'The name your team sees.' },
+  { id: 'what', label: 'Goal', title: 'What brings you here?' },
+  { id: 'check', label: 'Check', title: 'Check and start' },
+]
+
+function Wizards({ animated }: { animated: boolean }) {
+  const [at, setAt] = React.useState(0)
+  const [name, setName] = React.useState('')
+  const [goal, setGoal] = React.useState('plan')
+  const [busy, setBusy] = React.useState(false)
+  const [done, setDone] = React.useState(false)
+  return (
+    <Section id="wizard" title="Wizard" note="A path of steps taken one at a time: one question on the screen, the path above it, and two buttons at its foot that never move. Back is off on the first step; the solid button says Continue until the last step and then the app's own word. A step not answered yet keeps the person there; a step already done is a button of the path, and going back loses no answer, since the answers are the app's. Enter in a field goes on. When the step changes its title takes the focus, and with motion on the step comes in from the side it was asked from.">
+      <Row label="a first setup">
+        <div className="w-full max-w-xl">
+          {done ? (
+            <Empty title={`Welcome, ${name}`} action={<Button variant="outline" onClick={() => { setDone(false); setAt(0) }}>Start again</Button>} />
+          ) : (
+            <Wizard
+              label="Setup"
+              animated={animated}
+              steps={SETUP_STEPS.map((step) => (step.id === 'who' ? { ...step, canContinue: name.trim() !== '' } : step))}
+              current={at}
+              onCurrentChange={setAt}
+              finishLabel="Start"
+              busy={busy}
+              onFinish={() => {
+                setBusy(true)
+                setTimeout(() => { setBusy(false); setDone(true) }, 900)
+              }}
+            >
+              {(step) =>
+                step.id === 'who' ? (
+                  <FormField label="Name">
+                    <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ada" />
+                  </FormField>
+                ) : step.id === 'what' ? (
+                  <RadioGroup aria-label="Goal" value={goal} onValueChange={setGoal}>
+                    <RadioGroupItem value="plan">Plan my week</RadioGroupItem>
+                    <RadioGroupItem value="team">Work with a team</RadioGroupItem>
+                    <RadioGroupItem value="look">Just looking</RadioGroupItem>
+                  </RadioGroup>
+                ) : (
+                  <DescriptionList aria-label="What you chose" items={[{ name: 'Name', value: name }, { name: 'Goal', value: goal }]} />
+                )
+              }
+            </Wizard>
+          )}
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+function AuthForms({ animated }: { animated: boolean }) {
+  const [mode, setMode] = React.useState<AuthMode>('signUp')
+  const [busy, setBusy] = React.useState(false)
+  const [sentTo, setSentTo] = React.useState<string | undefined>(undefined)
+  const [error, setError] = React.useState<string | undefined>(undefined)
+  const [last, setLast] = React.useState('Nothing sent yet.')
+  return (
+    <Section id="auth-form" title="AuthForm" note="The form a person signs in or signs up with, the same in every app, in three forms: an address and a password, the same with a name, or an address alone for a link that opens the account (the form then says where to look). The accounts kept elsewhere come first, each with its logo, then «or», then the fields. One solid button. What is wrong is said under its field when the form is sent, and the focus goes to the first; a refusal of the server is a note above the fields (sign in with wrong@example.com to see one). It asks for as little as it can: the rest is asked after, in a Wizard.">
+      <Row label="the three forms">
+        <div className="flex w-full flex-col gap-4">
+          <AuthForm
+            mode={mode}
+            animated={animated}
+            onModeChange={(next) => { setMode(next); setSentTo(undefined); setError(undefined) }}
+            busy={busy}
+            error={error}
+            sentTo={sentTo}
+            askName
+            providers={[{ id: 'acme', name: 'Acme', icon: 'key' }, { id: 'globex', name: 'Globex', icon: 'globe' }]}
+            onProvider={(id) => setLast(`Went on with ${id}.`)}
+            onForgot={() => setMode('link')}
+            onSubmit={(values, sent) => {
+              setBusy(true)
+              setError(undefined)
+              setTimeout(() => {
+                setBusy(false)
+                if (sent === 'signIn' && values.email.startsWith('wrong')) setError('That address and password do not match')
+                else if (sent === 'link') setSentTo(values.email)
+                else setLast(`${sent}: ${values.email}${values.name ? `, ${values.name}` : ''}`)
+              }, 900)
+            }}
+          />
+          <Text variant="note">{last}</Text>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+/** A picture drawn here, so the showcase needs no file: a ground, a sun and a hill, in the colours given. */
+const drawn = (ground: string, sun: string, hill: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="${ground}"/><circle cx="600" cy="150" r="60" fill="${sun}"/><path d="M0 400 Q200 250 400 380 T800 340 V500 H0Z" fill="${hill}"/></svg>`)}`
+// design-check-ignore-next-line color-value: the colours of three sample pictures, which are content
+const PICTURES = [
+  // design-check-ignore-next-line color-value: a sample picture
+  { id: 'p1', src: drawn('#cfe3f3', '#f6d98a', '#7fae8b'), alt: 'A hill under a morning sun', caption: 'The site from the north, in the morning.' },
+  // design-check-ignore-next-line color-value: a sample picture
+  { id: 'p2', src: drawn('#f3d9c4', '#e98b5b', '#8c6f5e'), alt: 'The same hill at sunset' },
+  // design-check-ignore-next-line color-value: a sample picture
+  { id: 'p3', src: drawn('#2c3550', '#e8e6da', '#1d2438'), alt: 'The hill at night', caption: 'After the lights were set.' },
+]
+
+function Lightboxes({ animated }: { animated: boolean }) {
+  const [open, setOpen] = React.useState(false)
+  const [at, setAt] = React.useState(0)
+  return (
+    <Section id="lightbox" title="Lightbox" note="Pictures looked at one at a time, large: the picture whole and never cropped, its caption, where it is among the others, and two buttons to the one before and the one after, which stay in their places and are off at the two ends. The left and right arrows do the same; Esc closes. A file with pages, zoom and «open the original» is an AttachmentViewer.">
+      <Row label="three pictures">
+        <div className="flex flex-wrap gap-2">
+          {PICTURES.map((picture, index) => (
+            <button key={picture.id} type="button" aria-label={`Open: ${picture.alt}`} onClick={() => { setAt(index); setOpen(true) }} className="h-20 w-32 overflow-hidden rounded-md shadow-xs outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              <img src={picture.src} alt="" className="size-full object-cover" />
+            </button>
+          ))}
+        </div>
+        <Lightbox open={open} onOpenChange={setOpen} animated={animated} title="Photos of the site" images={PICTURES} index={at} onIndexChange={setAt} />
+      </Row>
+    </Section>
+  )
+}
+
 function Notes() {
   const [shown, setShown] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
@@ -2839,6 +3007,8 @@ function App() {
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
+  // Where the system asks for less motion the toolkit moves nothing: said in the bar, or a still page looks broken.
+  const lessMotion = useMedia('(prefers-reduced-motion: reduce)')
   const [ease, setEase] = React.useState<MotionEase>(DEFAULT_MOTION_FEEL.ease)
   const [pace, setPace] = React.useState(DEFAULT_MOTION_FEEL.pace)
   // `?shape=sharp|soft|round`: how round the corners are (a parameter of the theme).
@@ -2981,6 +3151,7 @@ function App() {
       <Notices animated={animated} />
       <Empties />
       <Notes />
+      <Confirms animated={animated} />
       <OverflowLists />
       <Content />
       {/* The frame */}
@@ -2989,6 +3160,9 @@ function App() {
       <Toolbars animated={animated} />
       {/* Assemblies */}
       <ChatParts />
+      <Wizards animated={animated} />
+      <AuthForms animated={animated} />
+      <Lightboxes animated={animated} />
       <Deck />
       <Trees animated={animated} />
       <Files />
@@ -3079,7 +3253,7 @@ function App() {
                   <span>{themeLabel}</span>
                   <span>{scheme}</span>
                   <span>{DENSITIES.find((d) => d.id === density)?.label}</span>
-                  <span className="ms-auto">{animated ? 'Animations on' : 'Animations off'}</span>
+                  <span className="ms-auto">{!animated ? 'Animations off' : lessMotion ? 'Animations on, but the system asks for less motion: nothing moves' : `Animations on · ${ease} · pace ${pace}`}</span>
                 </>
               )
             }

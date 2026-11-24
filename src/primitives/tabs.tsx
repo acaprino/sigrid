@@ -15,7 +15,7 @@ import { useMotion } from "../internal/motion"
 import { steadyLabel } from "../internal/steady-label"
 
 type Impl = NonNullable<ReturnType<typeof useMotion>>
-const TabsContext = React.createContext<{ value: string; motion: Impl | null; id: string; changed: boolean } | null>(null)
+const TabsContext = React.createContext<{ value: string; motion: Impl | null; id: string; from: "start" | "end" | null } | null>(null)
 
 export type TabsProps<Value extends string> = {
   /** The chosen tab. */
@@ -38,12 +38,19 @@ function Tabs<Value extends string>({ value, onValueChange, activation = "automa
   const motion = useMotion(animated)
   const id = React.useId()
   // A panel fades in when the person changes tab, never the one in the page at first.
-  const first = React.useRef(value)
-  const changed = React.useRef(false)
-  if (first.current !== value) changed.current = true
-  const context = React.useMemo(() => ({ value, motion, id, changed: changed.current }), [value, motion, id, changed.current])
+  // It comes from the side of the tab pressed: from the end for a tab after the one before, from the start otherwise.
+  const root = React.useRef<HTMLDivElement>(null)
+  const before = React.useRef(value)
+  const from = React.useRef<"start" | "end" | null>(null)
+  if (before.current !== value) {
+    const order = Array.from(root.current?.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]') ?? []).map((tab) => tab.getAttribute("data-value"))
+    from.current = order.indexOf(value) >= order.indexOf(before.current) ? "end" : "start"
+    before.current = value
+  }
+  const context = React.useMemo(() => ({ value, motion, id, from: from.current }), [value, motion, id, from.current])
   return (
     <TabsPrimitive.Root
+      ref={root}
       data-slot="tabs"
       value={value}
       onValueChange={(details) => {
@@ -61,13 +68,34 @@ function Tabs<Value extends string>({ value, onValueChange, activation = "automa
 export type TabsListProps = {
   /** Name of the group of tabs for screen readers. */
   "aria-label": string
+  /**
+   * More tabs than fit in a row (the filters of a list, on a phone): the row scrolls sideways under the finger, its
+   * edges fade where there is more, and the chosen tab is brought into sight. Absent: the row is as wide as its tabs.
+   */
+  scroll?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
 }
 
-function TabsList({ className, children, ...props }: TabsListProps) {
+function TabsList({ className, children, scroll = false, ...props }: TabsListProps) {
+  const tabs = React.useContext(TabsContext)
+  const list = React.useRef<HTMLDivElement>(null)
+  const value = tabs?.value
+  // The chosen tab is in sight, whichever way it was chosen (the arrows, the app).
+  React.useEffect(() => {
+    if (!scroll) return
+    const chosen = list.current?.querySelector<HTMLElement>('[data-slot="tabs-trigger"][data-selected]')
+    if (typeof chosen?.scrollIntoView === "function") chosen.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [scroll, value])
   return (
-    <TabsPrimitive.List data-slot="tabs-list" className={cn("relative isolate flex flex-row gap-1", className)} {...props}>
+    <TabsPrimitive.List
+      ref={list}
+      data-slot="tabs-list"
+      {...(scroll ? { "data-scroll-shade": "x" } : {})}
+      // The room of a focus ring drawn outside a tab (2px, offset 2px): a scrolling row would cut it at its edges.
+      className={cn("relative isolate flex flex-row gap-1", scroll && "-m-1 max-w-full overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] *:shrink-0", className)}
+      {...props}
+    >
       {children}
     </TabsPrimitive.List>
   )
@@ -128,9 +156,9 @@ export type TabsContentProps = {
 
 /** The panel of a tab: in the page only while its tab is chosen, and a Tab stop of its own, after the tabs. */
 function TabsContent({ value, className, children }: TabsContentProps) {
-  const changed = React.useContext(TabsContext)?.changed === true
+  const from = React.useContext(TabsContext)?.from ?? null
   return (
-    <TabsPrimitive.Content data-slot="tabs-content" value={value} {...(changed ? { "data-reveal": "fade" } : {})} className={cn("w-full", FOCUS_RING_INSET, className)}>
+    <TabsPrimitive.Content data-slot="tabs-content" value={value} {...(from ? { "data-reveal": "fade", "data-from": from } : {})} className={cn("w-full", FOCUS_RING_INSET, className)}>
       {children}
     </TabsPrimitive.Content>
   )

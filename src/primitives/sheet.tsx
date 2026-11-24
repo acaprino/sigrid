@@ -5,7 +5,7 @@
 // From SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the
 // drag direction per side and the content marked `Drawer.Content` (a mouse drag that starts
 // there does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the
-// staggering of the children with Motion, the handle of the bottom side. The entrance (32 px from the panel edge, 200 ms) follows
+// staggering of the children with Motion. The entrance (32 px from the panel edge, 200 ms) follows
 // the shared Motion preference and respects reduced motion.
 import * as React from "react"
 import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
@@ -238,6 +238,8 @@ function SheetContent({
           )}
           {...props}
         >
+          {/* A sheet at the foot is pulled down to close: the short bar at its top says so, as on a phone. */}
+          {side === "bottom" ? <span aria-hidden="true" data-slot="sheet-handle" className="pointer-events-none absolute inset-x-0 top-2 mx-auto h-1 w-9 rounded-full bg-ink/20" /> : null}
           {children}
           {showCloseButton && (
             <SheetPrimitive.Close

@@ -6,7 +6,7 @@
 // recommendations follows those three files; when one changes, change it here too.
 //
 // The guide pages are themselves the «sidebar and page» pattern of Practices: one column of text no wider than 65
-// characters (`max-w-prose`), with the examples allowed to be wider.
+// characters on a narrow window and the width the page gives on a wide one (`max-w-5xl`), with the examples allowed to be wider.
 import * as React from 'react'
 import { COLORS, DEFAULT_SHAPE, DENSITIES, COARSE, NARROW, SHORT, SHAPE_RADII, THEME_SHAPES, TOUCH_TARGET, cn, densityVariables, densityWith, markHueAttrs } from '../src/index'
 import { Button, Checkbox, Count, Icon, Input, Kbd, Switch, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
@@ -36,7 +36,7 @@ const CARDS = 'grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3'
 /** A list of short sentences with no marker: the divider between them is the structure. */
 function Lines({ items }: { items: readonly React.ReactNode[] }) {
   return (
-    <ul role="list" className="flex max-w-prose flex-col">
+    <ul role="list" className="flex max-w-5xl flex-col">
       {items.map((item, i) => (
         <li key={i} className="border-t border-line py-2 text-sm text-ink-soft first:border-t-0">
           {item}
@@ -151,7 +151,7 @@ export function PhilosophyView() {
               <span className="text-sm text-ink-mute tabular-nums">{i + 1}</span>
               <h3 className="text-sm font-semibold text-ink">{level.name}</h3>
               <div className="min-w-0">
-                <p className="max-w-prose text-sm text-ink-soft">{level.text}</p>
+                <p className="max-w-5xl text-sm text-ink-soft">{level.text}</p>
                 {level.view && level.id ? (
                   <See view={level.view} id={level.id}>
                     See {level.see}
@@ -213,7 +213,7 @@ export function PhilosophyView() {
               <span className="text-sm text-ink-mute tabular-nums">{i + 1}</span>
               <h3 className="text-sm font-semibold text-ink">{layer.name}</h3>
               <div className="min-w-0">
-                <p className="max-w-prose text-sm text-ink-soft">{layer.text}</p>
+                <p className="max-w-5xl text-sm text-ink-soft">{layer.text}</p>
                 <See view="components" id={layer.id}>
                   See {layer.see}
                 </See>
@@ -235,7 +235,7 @@ function Rule({ id, title, example, see, children }: { id: string; title: string
       <span className="text-sm font-semibold text-ink-mute tabular-nums">{id}</span>
       <div className="min-w-0">
         <h3 className="text-sm font-semibold text-ink">{title}</h3>
-        <p className="mt-1 max-w-prose text-sm text-ink-soft">{children}</p>
+        <p className="mt-1 max-w-5xl text-sm text-ink-soft">{children}</p>
         {see}
       </div>
       {example ? <div className="flex min-w-0 flex-wrap items-center gap-3 self-start rounded-lg bg-paper-2 p-3">{example}</div> : null}
