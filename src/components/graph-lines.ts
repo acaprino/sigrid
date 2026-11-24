@@ -55,7 +55,20 @@ export function lineLook(style?: LineStyle, tone?: LineTone, { near = false, pat
   }
 }
 
-/** The look as the custom properties graph.css draws a line with: on a line of the canvas, on a sample of the key. */
+/** The custom properties of each look given so far, by its four values: the few dozen looks `lineLook` makes, at most. */
+const given = new Map<string, CSSProperties>()
+
+/**
+ * The look as the custom properties graph.css draws a line with: on a line of the canvas, on a sample of the key. The
+ * same look is always the same object, so a line whose look a change of choice leaves as it was hands React Flow's
+ * memoised line the `style` it had, and the line is not drawn again. The object is shared: nothing changes it.
+ */
 export function lineVars(look: LineLook): CSSProperties {
-  return { '--sigrid-line-stroke': look.stroke, '--sigrid-line-width': String(look.width), '--sigrid-line-dash': look.dash, '--sigrid-line-cap': look.cap } as CSSProperties
+  const key = [look.stroke, look.width, look.dash, look.cap].join('|')
+  let vars = given.get(key)
+  if (vars === undefined) {
+    vars = { '--sigrid-line-stroke': look.stroke, '--sigrid-line-width': String(look.width), '--sigrid-line-dash': look.dash, '--sigrid-line-cap': look.cap } as CSSProperties
+    given.set(key, vars)
+  }
+  return vars
 }

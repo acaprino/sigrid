@@ -13,6 +13,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Position, type Edge, type EdgeProps, type Node, type ReactFlowProps } from '@xyflow/react'
 import { WordsProvider } from '../src'
 import { linesOf } from '../src/components/GraphCanvas'
+import { LINE_NEAR, LINE_PATH, LINE_STYLES, LINE_TONES } from '../src/components/graph-lines'
 import { GraphCanvas, type Graph, type GraphCanvasProps, type GraphChange, type GraphEdge, type GraphNode } from '../src/graph'
 
 // What the canvas hands React Flow, kept to be read (as in test/graph-places.test.tsx): React Flow draws as ever.
@@ -90,6 +91,8 @@ const between = (from: string, to: string) => flowEdges().filter((edge) => edge.
 /** Places for `linesOf`, which needs only that both ends of a line are in sight. */
 const PLACES = new Map(NODES.map((node, at): [string, { x: number; y: number }] => [node.id, { x: at * 300, y: 0 }]))
 const OPTIONS = { direction: 'right', chosen: null, marked: null, dimmed: null, editable: false } as const
+/** The width a line is drawn with: the custom property of its `style` (`graph-lines.ts`). */
+const widthOf = (line: Edge) => (line.style as unknown as Record<string, string> | undefined)?.['--sigrid-line-width']
 /** How far across its sides a line drawn side by side is moved (`data.offset`), or undefined for a line of its own. */
 const offsetOf = (line: Edge | undefined) => (line?.data as { offset?: number } | undefined)?.offset
 /** The points a path goes through, in order: its moves and its straight pieces (as in test/graph-places.test.tsx). */
@@ -117,8 +120,9 @@ describe('several things chosen', () => {
     expect(classes(thing('Gateway').closest('[data-thing]'))).not.toContain('opacity-40')
     expect(classes(thing('Orders, hides 12').closest('[data-thing]'))).not.toContain('opacity-40')
     expect(classes(thing('Payments, external').closest('[data-thing]'))).toContain('opacity-40')
-    // The lines of each of them are told from the others.
-    expect(between('gateway', 'replica')[0]?.className).toBe('sigrid-graph-near')
+    // The lines of each of them are told from the others: the soft ink, a little thicker (`style`, from `graph-lines.ts`).
+    expect(between('gateway', 'replica')[0]?.style).toMatchObject({ '--sigrid-line-stroke': LINE_NEAR.stroke, '--sigrid-line-width': String(LINE_NEAR.width) })
+    expect(between('orders', 'pay')[0]?.style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.default.stroke, '--sigrid-line-width': String(LINE_TONES.default.width) })
     expect(between('orders', 'pay')[0]?.className).toBeUndefined()
     // The user chooses one thing.
     fireEvent.keyDown(thing('Gateway'), { key: 'Enter' })
@@ -308,7 +312,7 @@ describe('two edges between the same two things are two lines', () => {
     const lines = between('orders', 'ledger')
     expect(lines.map((line) => line.id)).toEqual(['call:orders-ledger', 'data:orders-ledger'])
     expect(lines.map((line) => line.label)).toEqual(['calls', 'writes'])
-    expect(lines[1]?.className).toBe('sigrid-graph-dashed')
+    expect(lines.map((line) => line.style)).toMatchObject([{ '--sigrid-line-dash': LINE_STYLES.solid.dash }, { '--sigrid-line-dash': LINE_STYLES.dashed.dash }])
     expect(lines.map((line) => line.type)).toEqual(['apart', 'apart'])
     expect(lines.map(offsetOf)).toEqual([-10, 10])
     // A line alone between its two things is drawn as before.
@@ -452,21 +456,25 @@ describe('the path has one line between two of its things', () => {
     const marked = new Set(['gateway', 'orders', 'ledger'])
     const { lines } = linesOf(edges, PLACES, { ...OPTIONS, marked, dimmed: new Set(['pay', 'replica']) })
     const line = (id: string) => lines.find((it) => it.id === id)
-    // A warning stays a warning on the path, its arrowhead too.
-    expect(line('gateway→orders')?.className).toBe('sigrid-graph-warning sigrid-graph-path')
+    // A warning stays a warning on the path, its arrowhead too; what draws it (`style`, from `graph-lines.ts`) is thicker.
+    expect(line('gateway→orders')?.style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.warning.stroke, '--sigrid-line-width': String(LINE_PATH.width) })
     expect(line('gateway→orders')?.markerEnd).toMatchObject({ color: 'var(--color-warning)' })
-    // One line of the two between the orders and the ledger takes the accent.
-    expect(line('call')?.className).toBe('sigrid-graph-accent sigrid-graph-path')
-    expect(line('data')?.className).toBe('sigrid-graph-dashed')
-    expect(line('ledger→orders#link')?.className).toBe('sigrid-graph-destructive')
+    // One line of the two between the orders and the ledger takes the accent; the others are drawn as they are.
+    expect(line('call')?.style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.accent.stroke, '--sigrid-line-width': String(LINE_PATH.width) })
+    expect(line('data')?.style).toMatchObject({ '--sigrid-line-dash': LINE_STYLES.dashed.dash, '--sigrid-line-stroke': LINE_TONES.default.stroke, '--sigrid-line-width': String(LINE_STYLES.dashed.width) })
+    expect(line('ledger→orders#link')?.style).toMatchObject({ '--sigrid-line-stroke': LINE_TONES.destructive.stroke, '--sigrid-line-width': String(LINE_TONES.destructive.width) })
     expect(line('ledger→orders#link')?.markerEnd).toMatchObject({ color: 'var(--color-destructive)' })
-    expect(lines.filter((it) => (it.className ?? '').split(' ').includes('sigrid-graph-path')).map((it) => it.id)).toEqual(['gateway→orders', 'call'])
+    // The lines drawn as thick as the path's: one for each two of its things.
+    expect(lines.filter((it) => widthOf(it) === String(LINE_PATH.width)).map((it) => it.id)).toEqual(['gateway→orders', 'call'])
     // Off the path, to a dimmed thing: dimmed.
     expect(line('orders→pay')?.className).toBe('sigrid-graph-dim')
   })
 
   test('on the canvas: with two lines between two things of the path, one has the accent', () => {
     render(<Calls steps={new Map([['orders', [1]], ['ledger', [2]]])} />)
-    expect(between('orders', 'ledger').map((line) => line.className)).toEqual(['sigrid-graph-accent sigrid-graph-path', 'sigrid-graph-dashed'])
+    expect(between('orders', 'ledger').map((line) => line.style)).toMatchObject([
+      { '--sigrid-line-stroke': LINE_TONES.accent.stroke, '--sigrid-line-width': String(LINE_PATH.width) },
+      { '--sigrid-line-dash': LINE_STYLES.dashed.dash, '--sigrid-line-stroke': LINE_TONES.default.stroke, '--sigrid-line-width': String(LINE_STYLES.dashed.width) },
+    ])
   })
 })

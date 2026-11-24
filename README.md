@@ -501,11 +501,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
     - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
       `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
-      many lines of that kind there are (a `Count`: zero shows nothing); `aria-label` names the list. Each entry is a
-      short sample of the line (hidden from screen readers), its word and its count, in a row that wraps on a narrow
-      window. The samples are drawn by the same definitions as the canvas's lines (`src/components/graph-lines.ts` and
-      one rule of `graph.css`), so the key and the lines cannot part. The word is always there: a tone is never said
-      by its colour alone. It keys the lines only, not the things.
+      many lines of that kind there are (a `Count`: zero shows nothing; screen readers hear it with the word, «12
+      calls»); `aria-label` names the list. Each entry is a short sample of the line (hidden from screen readers), its
+      word and its count, in a row that wraps on a narrow window. The samples are drawn by the same definitions as the
+      canvas's lines (`src/components/graph-lines.ts` and one rule of `graph.css`), so the key and the lines cannot
+      part. The word is always there: a tone is never said by its colour alone. It keys the lines only, not the
+      things. A summary beside the key (how many lines are in sight, say) is the app's to write, with `Text`: the key
+      has no prop for it.
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
@@ -548,6 +550,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   // Its key, under it: each kind of line, its word and how many there are.
   <GraphLegend aria-label="Kinds of line" entries={[{ label: 'Hangs from', count: tree.length },
     { label: 'Needs the text', style: 'dashed', tone: 'warning', count: 1 }, { label: 'Not the same week', style: 'dotted', tone: 'destructive', count: 1 }]} />
+  // A summary beside it, if the app wants one, is its own words: <Text variant="caption">8 of 12 lines in sight</Text>.
   <Button variant="outline" onClick={() => view.current?.focus(['copy', 'pages'])}>Show the path</Button>
   // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}

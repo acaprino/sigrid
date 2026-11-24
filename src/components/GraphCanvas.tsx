@@ -605,14 +605,9 @@ export function linesOf(
       ...(route ? { data: { points: route } } : {}),
       focusable: false,
       selectable: editable,
-      className: cn(
-        // What the line is, by name; its look is in `style`, and graph.css dims a dimmed one.
-        near && 'sigrid-graph-near',
-        style !== 'solid' && `sigrid-graph-${style}`,
-        tone !== 'default' && `sigrid-graph-${tone}`,
-        onPath && 'sigrid-graph-path',
-        !onPath && dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)) && 'sigrid-graph-dim',
-      ) || undefined,
+      // Its look is all in `style`; the one class is for graph.css to dim a line to a dimmed thing.
+      className: !onPath && dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)) ? 'sigrid-graph-dim' : undefined,
+      // One object for one look (`lineVars`): a line whose look a change of choice leaves as it was keeps its `style`.
       style: lineVars(look),
       // The arrowheads are drawn apart from the lines, so they take the colour of the line's tone by name.
       ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: lineLook(style, tone).stroke, width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
