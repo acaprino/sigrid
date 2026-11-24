@@ -18,7 +18,7 @@ export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './inter
 export { splitLines } from './internal/lines'
 export { hasMarkdown, parseBlocks, parseInline, plainText } from './internal/markdown'
 export { COARSE, NARROW, SHORT, useMedia, usePhone } from './internal/media'
-export { MotionProvider, loadMotion, preloadMotion, useMotion, type MotionImpl } from './internal/motion'
+export { DEFAULT_MOTION_FEEL, MOTION_EASES, MOTION_EASE_NAMES, MOTION_PACE, MotionProvider, applyMotionFeel, isMotionEase, loadMotion, motionFeel, motionVariables, preloadMotion, useMotion, type MotionEase, type MotionFeel, type MotionImpl } from './internal/motion'
 export { BACKDROP, BOTTOM_BAR_ROOM_VAR, SHEET_TOASTS_ROOM, TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR, ignoreToasts, restoreFocus } from './internal/overlay'
 export { PortalContainerProvider, usePortalContainer } from './internal/portal-container'
 export { TAG_COLOR, TAG_HUES, TAG_PILL, tagColorAttrs, tagHue } from './internal/tag-color'

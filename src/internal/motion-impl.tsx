@@ -12,6 +12,9 @@
 //             background when the pointer leaves.
 //   moving    easy ease (`easyEase`): what stays on the page and changes place starts and ends gently. The pill under
 //             a choice, a list closing up, the notices moving up, the hover background, an arrow turning.
+// The app may choose another feel (`applyMotionFeel`, motion.ts): one of the four curves of CSS for every movement
+// (ease-in-out is the default), or these of Fluent's, and a pace that multiplies the times below. The movements read
+// it when they run (`tr`, `motionCurve`, `motionMs`); the constants here are Fluent's own, at the toolkit's pace.
 // Every duration is under 250 ms, so of Fluent's eight only the first four are used:
 //   100  `faster`  small and near: a press, a hint, the check mark, the hover background, whatever leaves
 //   150  `fast`    a button coming back, an arrow turning, the pill, a menu or popover card, a card landing
@@ -32,6 +35,8 @@ import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import { animate, hover, press } from 'motion'
 import { animate as animateStyle } from 'motion/mini'
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m, useIsPresent, type HTMLMotionProps } from 'motion/react'
+
+import { motionCurve, motionMs, type MotionKind } from './motion'
 
 export { m }
 
@@ -99,6 +104,24 @@ export const MOTION = {
   release: { duration: s(GESTURE_MS.release), ease: FLUENT_CURVES.decelerateMid },
 } as const
 
+/** The kind of each of the toolkit's movements: what arrives, what goes, what changes place while staying. */
+const KIND: Record<keyof typeof MOTION, MotionKind> = { enter: 'enter', list: 'move', leave: 'leave', slide: 'move', follow: 'move', turn: 'move', press: 'enter', release: 'enter' }
+
+/** A movement as Motion takes it. */
+export type Movement = { duration: number; ease: [number, number, number, number] }
+
+/**
+ * A movement of `MOTION` under the feel in use (`applyMotionFeel`): its time at the app's pace, on the app's curve.
+ * With the `fluent` feel at the toolkit's own pace its values are `MOTION`'s own.
+ */
+export function tr(name: keyof typeof MOTION): Movement {
+  const [a, b, c, d] = motionCurve(KIND[name])
+  return { duration: s(motionMs(GESTURE_MS[name])), ease: [a, b, c, d] }
+}
+
+/** A duration of the toolkit, in milliseconds, at the pace in use. */
+export const paced = motionMs
+
 /**
  * How far a thing travels as it enters, in pixels on the 4px grid: the larger the surface, the longer the way, and
  * always a small part of its own size (it settles into place, it does not cross the screen).
@@ -139,7 +162,7 @@ export function NoticeCard({ y, enter, still = false, leaving, beyond, ...props 
   const to = leaving === 'closed' ? { opacity: 0, y: y + NOTICES.close.y } : leaving === 'pushed' ? { opacity: 0, y: beyond + NOTICES.pushed.y } : { opacity: 1, y }
   // Entering until its entrance has ended; from then on it only moves with the column, or leaves.
   const [arrived, setArrived] = useState(!enter)
-  const transition = still ? AT_ONCE : leaving ? NOTICES.leaving : arrived ? NOTICES.transition : NOTICES.entering
+  const transition = still ? AT_ONCE : leaving ? tr('leave') : arrived ? tr('list') : tr('enter')
   return <m.div {...props} initial={enter ? NOTICES.enter : false} animate={to} transition={transition} onAnimationComplete={() => setArrived(true)} />
 }
 
@@ -213,7 +236,7 @@ export function Leaving({ children }: { children: (leaving: boolean) => ReactNod
 function enterStyle(el: Element, property: 'opacity' | 'translate' | 'scale', from: string, ms: number): void {
   if (typeof el.animate !== 'function') return
   const rest = (el as HTMLElement).style.getPropertyValue(property)
-  animateStyle(el, { [property]: [from, rest] }, { duration: s(ms), ease: FLUENT_CURVES.decelerateMid })
+  animateStyle(el, { [property]: [from, rest] }, { duration: s(motionMs(ms)), ease: [...motionCurve('enter')] })
 }
 
 /**
@@ -319,7 +342,7 @@ export function throwCard(el: Element, direction: 'left' | 'right'): { done: Pro
   const node = el as HTMLElement
   const from = node.style.getPropertyValue('translate') || '0px 0px'
   const far = (direction === 'left' ? -1 : 1) * Math.max(node.offsetWidth, TRAVEL_PX.sheet)
-  const run = node.animate({ opacity: [1, 0], translate: [from, `${far}px 0px`] }, { duration: DURATION_MS.throw, easing: bezier(FLUENT_CURVES.accelerateMin), fill: 'forwards' })
+  const run = node.animate({ opacity: [1, 0], translate: [from, `${far}px 0px`] }, { duration: motionMs(DURATION_MS.throw), easing: bezier(motionCurve('leave')), fill: 'forwards' })
   return { done: run.finished.then(() => {}, () => {}), release: () => run.cancel() }
 }
 
@@ -330,7 +353,7 @@ export function throwCard(el: Element, direction: 'left' | 'right'): { done: Pro
 export function settleCard(el: Element, from: { translate: string; rotate: string }): void {
   if (typeof el.animate !== 'function') return
   // Only the start is given: the end is the card's own place, whatever its style says once it is drawn again.
-  el.animate([{ ...from, offset: 0 }], { duration: DURATION_MS.settle, easing: bezier(FLUENT_CURVES.decelerateMid) })
+  el.animate([{ ...from, offset: 0 }], { duration: motionMs(DURATION_MS.settle), easing: bezier(motionCurve('enter')) })
 }
 
 /** A curve of `FLUENT_CURVES` as the Web Animations API takes it. */
@@ -357,7 +380,7 @@ export function pressable(el: HTMLElement, { hoverScale = PRESS_SCALE.hover, tap
   const idle = (target: Element) => target.matches(':disabled, [aria-disabled="true"]')
   let running: { stop: () => void } | null = null
   let previousStyle: { scale: string; transform: string } | undefined
-  const to = (scale: number, transition: (typeof MOTION)['press' | 'release']) => {
+  const to = (scale: number, transition: Movement) => {
     previousStyle ??= { scale: el.style.scale, transform: el.style.transform }
     running = animate(el, { scale }, transition)
   }
@@ -368,18 +391,18 @@ export function pressable(el: HTMLElement, { hoverScale = PRESS_SCALE.hover, tap
       : hover(el, (target) => {
           if (idle(target)) return
           over = true
-          to(hoverScale, MOTION.release)
+          to(hoverScale, tr('release'))
           return () => {
             over = false
-            to(1, MOTION.release)
+            to(1, tr('release'))
           }
         })
   const down = () => {
     // Measure the layout box, unaffected by any unfinished press. Limit travel to 2px at each edge.
     const size = Math.max(el.offsetWidth, el.offsetHeight, 1)
-    to(tapScale ?? Math.max(PRESS_SCALE.tap, 1 - 4 / size), MOTION.press)
+    to(tapScale ?? Math.max(PRESS_SCALE.tap, 1 - 4 / size), tr('press'))
   }
-  const up = () => to(over ? hoverScale : 1, MOTION.release)
+  const up = () => to(over ? hoverScale : 1, tr('release'))
   const stopPress = press(el, (target) => {
     if (idle(target)) return
     down()
@@ -427,7 +450,7 @@ export function enterTooltip(el: Element, anchor?: Element | null): void {
 export function Highlight({ id, className }: { id: string; className?: string }) {
   return (
     <Motion>
-      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} transition={MOTION.slide} className={className} />
+      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} transition={tr('slide')} className={className} />
     </Motion>
   )
 }
@@ -436,7 +459,7 @@ export function Highlight({ id, className }: { id: string; className?: string })
 export function Turn({ open, children }: { open: boolean; children: ReactNode }) {
   return (
     <Motion>
-      <m.span aria-hidden="true" initial={false} animate={{ rotate: open ? 90 : 0 }} transition={MOTION.turn} className="inline-flex">
+      <m.span aria-hidden="true" initial={false} animate={{ rotate: open ? 90 : 0 }} transition={tr('turn')} className="inline-flex">
         {children}
       </m.span>
     </Motion>
@@ -493,8 +516,8 @@ export function HoverHighlight({ container, selector, className }: { container: 
             data-slot="hover-highlight"
             initial={false}
             animate={{ x: box.left, y: box.top, scaleX: box.fromX === 1 ? 1 : [box.fromX, 1], scaleY: box.fromY === 1 ? 1 : [box.fromY, 1], opacity: 1 }}
-            exit={{ opacity: 0, transition: MOTION.leave }}
-            transition={MOTION.follow}
+            exit={{ opacity: 0, transition: tr('leave') }}
+            transition={tr('follow')}
             style={{ top: 0, left: 0, width: box.width, height: box.height, originX: 0, originY: 0, pointerEvents: 'none' }}
             className={className}
           />

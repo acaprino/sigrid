@@ -13,6 +13,14 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [react(), tailwind()],
+  // The example apps written by hand (showcase/written) import the package as an app does: here its entries are the source.
+  resolve: {
+    alias: [
+      ...['primitives', 'components', 'layout', 'assemblies'].map((entry) => ({ find: `@acaprino/sigrid/${entry}`, replacement: fileURLToPath(new URL(`../src/${entry}.ts`, import.meta.url)) })),
+      { find: '@acaprino/sigrid/tauri', replacement: fileURLToPath(new URL('../tauri/index.ts', import.meta.url)) },
+      { find: /^@acaprino\/sigrid$/, replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)) },
+    ],
+  },
   server: { port: 5180, host: '127.0.0.1' },
   preview: { port: 5181, host: '127.0.0.1' },
   // Three pages: the showcase, the app editor (`/builder.html`) and the page that runs the app it edits (`/run.html`).

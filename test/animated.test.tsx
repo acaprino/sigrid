@@ -2,6 +2,7 @@
 // The snapshots in this file pin the DOM without `animated` of the toolkit's animated primitives (the one from before
 // the animations, plus the later fixes: ARIA attributes of the notices). An app's components are pinned in its own package. The `useId` ids are
 // numbered in the order they appear (`stripIds`): they do not depend on the React format or on the cases rendered before.
+import { DEFAULT_MOTION_FEEL, applyMotionFeel } from '../src'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState, type ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
@@ -207,6 +208,8 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
   })
   test('what opens enters once, from the side it was placed on, and ends on its own style', async () => {
     const { CARD_DURATION_MS, FLUENT_CURVES, GESTURE_MS, TRAVEL_PX, enterPopup, enterTooltip, enterSheet, landCard, popCheck } = await import('../src/internal/motion-impl')
+    // Fluent's own curves and times are what this pins: the `fluent` feel, at the toolkit's pace.
+    applyMotionFeel({ ease: 'fluent', pace: 1 })
     type Call = { el: Element; keyframes: Record<string, string[]>; options: KeyframeAnimationOptions }
     const calls: Call[] = []
     const original = Element.prototype.animate
@@ -302,6 +305,7 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
         expect(Number(options.duration)).toBeLessThan(250)
       }
     } finally {
+      applyMotionFeel(DEFAULT_MOTION_FEEL)
       Element.prototype.animate = original
       document.body.replaceChildren()
     }
@@ -398,16 +402,20 @@ describe('state changes ease only where motion is on', () => {
     b.unmount()
   })
 
-  test('the easing is in theme.css under that mark, inside the reduced-motion guard, for colours only and in 100ms', async () => {
+  test('the easing is in theme.css under that mark, inside the reduced-motion guard, for colours only and in the time of a press', async () => {
     const { readFileSync } = await import('node:fs')
     const css = readFileSync(`${process.cwd()}/src/styles/theme.css`, 'utf8')
-    const at = css.indexOf(':where(:root[data-motion])')
+    const property = css.indexOf('transition-property: background-color, border-color, color;')
+    expect(property).toBeGreaterThan(-1)
+    const at = css.lastIndexOf(':where(:root[data-motion])', property)
     expect(at).toBeGreaterThan(-1)
-    const guard = css.lastIndexOf('@media', at)
-    expect(css.slice(guard, at)).toMatch(/^@media \(prefers-reduced-motion: no-preference\) \{\s*$/)
+    // Every rule that moves something is inside the one guard, which nothing closes before the last of them.
+    const guard = css.lastIndexOf('@media (prefers-reduced-motion: no-preference) {', at)
+    expect(guard).toBeGreaterThan(-1)
+    expect(css.slice(guard, at)).not.toMatch(/^\}/m)
     const rule = css.slice(at, css.indexOf('}', at))
-    expect(rule).toMatch(/transition-property:\s*background-color, border-color, color;/)
-    expect(rule).toMatch(/transition-duration:\s*100ms;/)
+    expect(rule).toMatch(/transition-duration:\s*var\(--motion-faster\);/)
+    expect(css).toMatch(/--motion-faster:\s*100ms;/)
     expect(rule).not.toMatch(/transform|opacity|outline|all/)
   })
 })

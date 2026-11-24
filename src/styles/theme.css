@@ -618,15 +618,121 @@ svg.lucide[stroke-width="2"] {
   90% { --shade-right: 28px; }
   to { --shade-left: 28px; --shade-right: 0px; }
 }
-/* State changes ease instead of snapping, but only where the app turned motion on (`MotionProvider` marks the root
-   with `data-motion`) and the system allows motion: the fill, the border and the text of a control take 100ms, the
-   time of a press (Fluent's `faster`, on its easy-ease curve), to reach the state under the pointer or the keyboard.
-   Colours only: nothing moves, and the focus ring is never delayed. Zero specificity (`:where`): any other rule wins. */
+/* How the toolkit moves, for what the stylesheet itself moves: three times (Fluent's `faster`, `fast`, `normal`) and
+   the curve of each kind of movement (what enters, what leaves, what changes place or size while staying). At first
+   every movement eases in and out; an app chooses the curve and the pace with `applyMotionFeel` (or `MotionProvider`'s
+   `ease` and `pace`), which writes these on the root; what moves by script reads the same choice. */
+:root {
+  --motion-faster: 100ms;
+  --motion-fast: 150ms;
+  --motion-normal: 200ms;
+  --motion-ease-enter: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-leave: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-move: cubic-bezier(0.42, 0, 0.58, 1);
+}
+@keyframes surface-leave {
+  to { opacity: 0; }
+}
+/* Everything below moves only where the app turned motion on (`MotionProvider` marks the root with `data-motion`) and
+   the system allows motion. Zero specificity on the gate (`:where`), so a part's own rule still wins. */
 @media (prefers-reduced-motion: no-preference) {
+  /* State changes ease instead of snapping: the fill, the border and the text of a control take the time of a press
+     to reach the state under the pointer or the keyboard. Colours only: the focus ring is never delayed. */
   :where(:root[data-motion]) :where(button, a, input, textarea, [role="option"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="tab"], [data-slot="switch-control"], [data-slot="slider-thumb"], [data-slot="chip"], [data-part="control"]) {
     transition-property: background-color, border-color, color;
-    transition-duration: 100ms;
-    transition-timing-function: cubic-bezier(0.33, 0, 0.67, 1);
+    transition-duration: var(--motion-faster);
+    transition-timing-function: var(--motion-ease-move);
+  }
+
+  /* The sidebar shrinks to its rail and widens again: its width eases, and what is beside it follows. */
+  :where(:root[data-motion]) :where([data-slot="sidebar"]) {
+    transition: width var(--motion-normal) var(--motion-ease-move);
+  }
+
+  /* What opens in place after the reader's press (`data-reveal`: internal/reveal.ts) glides open and shut: its height
+     eases to and from its own, and it fades. Where a height cannot ease to `auto` (`interpolate-size`), it only
+     fades; the element is the same either way. `display` waits for the end, so what closes is seen closing. */
+  /* On the root, and inherited: it has to hold before the element starts to change, not from the change on. */
+  :where(:root[data-motion]) {
+    interpolate-size: allow-keywords;
+  }
+  :where(:root[data-motion]) [data-reveal=""] {
+    overflow: clip;
+    /* In a column of a flex box a part is never shorter than what it holds, unless told so. */
+    min-height: 0;
+    transition:
+      height var(--motion-normal) var(--motion-ease-move),
+      opacity var(--motion-normal) var(--motion-ease-move),
+      display var(--motion-normal) allow-discrete;
+    @starting-style {
+      height: 0;
+      opacity: 0;
+    }
+  }
+  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-closed]) {
+    height: 0;
+    opacity: 0;
+  }
+  /* A region beside the page that the app opens and closes (the inspector, docked) slides in from the end and out to
+     it: it keeps its width, so what is in it does not wrap again on the way, and the page takes the room it leaves. */
+  :where(:root[data-motion]) [data-reveal="side"] {
+    transition:
+      margin-inline-end var(--motion-normal) var(--motion-ease-move),
+      opacity var(--motion-normal) var(--motion-ease-move),
+      display var(--motion-normal) allow-discrete;
+    @starting-style {
+      margin-inline-end: -18.75rem;
+      opacity: 0;
+    }
+  }
+  :where(:root[data-motion]) [data-reveal="side"][hidden] {
+    margin-inline-end: -18.75rem;
+    opacity: 0;
+  }
+  /* A panel the person changed to (a tab's) fades in, from the side of its tab; the one it takes the place of is gone
+     at once. */
+  :where(:root[data-motion]) [data-reveal="fade"] {
+    transition:
+      opacity var(--motion-fast) var(--motion-ease-enter),
+      translate var(--motion-fast) var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+    }
+    /* From the side of the tab pressed, by the short way of a card (8px). */
+    &[data-from="end"] { @starting-style { translate: 8px 0; } }
+    &[data-from="start"] { @starting-style { translate: -8px 0; } }
+    &:dir(rtl)[data-from="end"] { @starting-style { translate: -8px 0; } }
+    &:dir(rtl)[data-from="start"] { @starting-style { translate: 8px 0; } }
+  }
+
+  /* A surface that closes leaves as it came, in the short time of what leaves: it fades, and a sheet goes back
+     towards its edge. (Its entrance is the script's, which knows the side it opens from.) The primitives keep it in
+     the page until this has ended (`data-ending-style`). */
+  :where(:root[data-motion]) :where([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"]) {
+    transition:
+      opacity var(--motion-faster) var(--motion-ease-leave),
+      translate var(--motion-fast) var(--motion-ease-leave);
+  }
+  :where(:root[data-motion]) :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"])[data-ending-style] {
+    opacity: 0;
+  }
+  :where(:root[data-motion]) [data-slot="sheet-content"][data-ending-style] {
+    &[data-side="right"] { translate: 32px 0; }
+    &[data-side="left"] { translate: -32px 0; }
+    &[data-side="top"] { translate: 0 -32px; }
+    &[data-side="bottom"] { translate: 0 32px; }
+  }
+  /* The lists and the card that Ark draws (a combo box's, the suggestions of the labels, the calendar) leave the same
+     way: Ark keeps one in the page while an animation of its closed state runs, so their fade is one, played once. */
+  :where(:root[data-motion]) :is([data-slot="combobox-content"], [data-slot="chips-suggestions"], [data-slot="date-field-content"])[data-state="closed"] {
+    animation: surface-leave var(--motion-faster) var(--motion-ease-leave) forwards;
+  }
+  /* The veil behind a window or a sheet fades in and out with it. */
+  :where(:root[data-motion]) :where([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]) {
+    transition: opacity var(--motion-fast) var(--motion-ease-move);
+  }
+  :where(:root[data-motion]) :is([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]):is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

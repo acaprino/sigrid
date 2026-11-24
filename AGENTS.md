@@ -31,13 +31,16 @@ through `Icon`), the same in every app, and the user does not choose another.
 - Before asking for a new part, look in the catalogue for the one Sigrid already has for the need. A request is
   weighed by the function that is missing, never by how the app looked before: a former look is no reason to change
   Sigrid.
+- The shell in Xiox's style (the window and its title bar, the frame, the commands, the look) is Imago's, which is built
+  with Sigrid: Shinatama, Daodan, Muro, Mukade and Xiox stand on it and bring only their screens. Sigrid knows no app.
+  Ethel and Qamille use Sigrid without Imago and keep its look.
 
 ## Read before you write
 
 | To know | Read |
 |---|---|
 | Which component there is, the entry it is imported from, its props and what each is for | `agents/catalog.json` (written from the source, one list for each entry of the package: file, what it is, components and their props, the object types those props are made of) |
-| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits) |
+| A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/triage.tsx` (a screen that fits), `agents/examples/signup.tsx` (signing in or up, then a path of steps) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
 | How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
 | How to design and review a screen: twenty laws of use, and what is Sigrid's own | `docs/design-laws.md` |
@@ -89,7 +92,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   400, 500 and 600; icons 16 or 14px (R7).
 - No gradient, no blur or glass, no emoji in the interface, no decorative icon, no animation that loops.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
-  with it off.
+  with it off. How it moves is the app's choice, once for the whole page: the curve (`ease-in-out` at first, or
+  `ease`, `ease-in`, `ease-out`, `fluent`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
+  `pace`. No part writes a time or a curve of its own.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
   a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never
@@ -104,6 +109,7 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - Light, dark and the system's look are chosen from the palette, the same in every app: `useSchemeCommands` inside
   `CommandsProvider`, and `applyKeptScheme` in the entry file (`README.md`). No app draws a switch for the scheme.
 - An action that can be taken back is done at once and offers Undo in a notice (`Toasts`); do not ask to confirm it.
+  One that cannot is asked first with a `ConfirmDialog`, never with a window of the app's own.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
   tool a view lacks keeps its place empty (`ToolbarButton absent`), it is not left out.

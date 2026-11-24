@@ -73,3 +73,34 @@ describe('Disclosure', () => {
     expect(row.getAttribute('aria-expanded')).toBe('false')
   })
 })
+
+describe('what opens in place glides only after the reader\'s own press', () => {
+  test('the panel is marked to glide after a press on the row, and not when the app opens or closes it', async () => {
+    const { Reasoning } = await import('../src/components')
+    const { rerender, container } = render(<Reasoning busy>Thinking it over</Reasoning>)
+    const panel = () => container.querySelector('[data-slot="disclosure-panel"]')!
+    // Opened by the app (it is being written): at once.
+    expect(panel().hasAttribute('data-reveal')).toBe(false)
+    // Closed by the app (it is done): at once too.
+    rerender(<Reasoning>Thinking it over</Reasoning>)
+    expect(panel().hasAttribute('data-reveal')).toBe(false)
+    // Opened by the reader: it glides.
+    fireEvent.click(screen.getByRole('button', { name: 'Thought' }))
+    expect(panel().hasAttribute('data-reveal')).toBe(true)
+  })
+
+  test('the stylesheet moves it only with motion on and where the system allows it, and what closes waits for the end', async () => {
+    const { readFileSync } = await import('node:fs')
+    const css = readFileSync(`${process.cwd()}/src/styles/theme.css`, 'utf8')
+    const at = css.indexOf(':where(:root[data-motion]) [data-reveal=""] {')
+    expect(at).toBeGreaterThan(-1)
+    expect(css.lastIndexOf('@media (prefers-reduced-motion: no-preference) {', at)).toBeGreaterThan(-1)
+    const rule = css.slice(at, css.indexOf('\n  }\n', at))
+    expect(rule).toMatch(/height var\(--motion-normal\) var\(--motion-ease-move\)/)
+    expect(rule).toMatch(/display var\(--motion-normal\) allow-discrete/)
+    expect(rule).toMatch(/@starting-style/)
+    // No time and no curve written by hand in what the stylesheet moves: they are the feel's.
+    const moving = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference) {', css.indexOf('--motion-ease-move:')), css.indexOf('[data-scroll-shade]'))
+    expect(moving).not.toMatch(/\d+ms|cubic-bezier|\blinear\b/)
+  })
+})

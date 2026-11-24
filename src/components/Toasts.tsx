@@ -388,7 +388,7 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
   const tall = shown.length === 0 ? 0 : height - GAP
 
   const armed = durationMs !== undefined && durationMs > 0 && onDismiss !== undefined
-  const leaveMs = motion ? motion.DURATION_MS.toast : 0
+  const leaveMs = motion ? motion.paced(motion.DURATION_MS.toast) : 0
   // What the store holds: the id of each notice given to it and still wanted, with the time it was last given.
   const made = useRef(new Map<string, string>())
   const settled = useRef(false)

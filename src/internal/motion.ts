@@ -17,7 +17,7 @@ let marking = 0
  * one provider has motion on, the document root carries `data-motion`: with it (and only where the system allows
  * motion) a control's fill, border and text ease to the state under the pointer instead of snapping (theme.css).
  */
-export function MotionProvider({ animated, children }: { animated: boolean; children: ReactNode }) {
+export function MotionProvider({ animated, ease, pace, children }: { animated: boolean; /** The curve of every movement. Absent: the one in use (ease-in-out at first). */ ease?: MotionEase | undefined; /** How long movements take, as a multiple of the toolkit's times. Absent: the one in use (1 at first). */ pace?: number | undefined; children: ReactNode }) {
   useEffect(() => {
     if (!animated || typeof document === 'undefined') return
     const root = document.documentElement
@@ -28,8 +28,97 @@ export function MotionProvider({ animated, children }: { animated: boolean; chil
       if (marking === 0) root.removeAttribute(MOTION_ATTR)
     }
   }, [animated])
+  useEffect(() => {
+    if (ease === undefined && pace === undefined) return
+    applyMotionFeel({ ...(ease === undefined ? {} : { ease }), ...(pace === undefined ? {} : { pace }) })
+  }, [ease, pace])
   return createElement(MotionPreference.Provider, { value: animated }, children)
 }
+
+// --- The feel of the motion: its curve and its pace, the app's to choose. ---
+
+/**
+ * The curve of a movement: one of the four of CSS, the same for every movement, or `fluent`, where each kind of
+ * movement has its own of Fluent's (what enters decelerates, what leaves accelerates, what moves in place eases).
+ */
+export type MotionEase = 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'fluent'
+
+/** The four curves of CSS as the control points of a cubic Bézier (CSS Easing Functions Level 1). */
+export const MOTION_EASES = {
+  ease: [0.25, 0.1, 0.25, 1],
+  'ease-in': [0.42, 0, 1, 1],
+  'ease-out': [0, 0, 0.58, 1],
+  'ease-in-out': [0.42, 0, 0.58, 1],
+} as const
+
+/** The curves a feel may name, in the order they are offered. */
+export const MOTION_EASE_NAMES: readonly MotionEase[] = ['ease-in-out', 'ease', 'ease-out', 'ease-in', 'fluent']
+
+/** True for a value that names a curve (one kept by the app between visits). */
+export function isMotionEase(value: unknown): value is MotionEase {
+  return typeof value === 'string' && (MOTION_EASE_NAMES as readonly string[]).includes(value)
+}
+
+/** Fluent 2's curves for the three kinds of movement (`@fluentui/tokens`), for the `fluent` feel and for CSS. */
+const FLUENT_BY_KIND = { enter: [0, 0, 0, 1], leave: [0.8, 0, 0.78, 1], move: [0.33, 0, 0.67, 1] } as const
+
+/** The kind of a movement: what arrives, what goes, what changes place or size while staying. */
+export type MotionKind = keyof typeof FLUENT_BY_KIND
+
+/** The limits of the pace: half the toolkit's times to twice them. */
+export const MOTION_PACE = { min: 0.5, max: 2 } as const
+
+/** How the toolkit moves: the curve, and the pace (1: the toolkit's own times; 1.5: half as long again). */
+export type MotionFeel = { ease: MotionEase; pace: number }
+
+/** Movements ease in and out, at the toolkit's own times. */
+export const DEFAULT_MOTION_FEEL: MotionFeel = { ease: 'ease-in-out', pace: 1 }
+
+let feel: MotionFeel = DEFAULT_MOTION_FEEL
+
+/** The feel in use. */
+export function motionFeel(): MotionFeel {
+  return feel
+}
+
+/** The curve of a kind of movement under the feel in use, as the control points of a cubic Bézier. */
+export function motionCurve(kind: MotionKind): readonly [number, number, number, number] {
+  return feel.ease === 'fluent' ? FLUENT_BY_KIND[kind] : MOTION_EASES[feel.ease]
+}
+
+/** A duration of the toolkit, in milliseconds, at the pace in use. */
+export function motionMs(ms: number): number {
+  return Math.round(ms * feel.pace)
+}
+
+/** The CSS variables the stylesheet's own movements read (theme.css), for a feel. */
+export function motionVariables(of: MotionFeel): Record<string, string> {
+  const curve = (kind: MotionKind) => `cubic-bezier(${(of.ease === 'fluent' ? FLUENT_BY_KIND[kind] : MOTION_EASES[of.ease]).join(', ')})`
+  const ms = (value: number) => `${Math.round(value * of.pace)}ms`
+  return {
+    '--motion-faster': ms(100),
+    '--motion-fast': ms(150),
+    '--motion-normal': ms(200),
+    '--motion-ease-enter': curve('enter'),
+    '--motion-ease-leave': curve('leave'),
+    '--motion-ease-move': curve('move'),
+  }
+}
+
+/**
+ * Chooses how the toolkit moves, for the whole page: the curve, the pace, or both (what is not given stays as it is).
+ * What moves by script reads it at each movement, and what moves by the stylesheet reads the variables written on the
+ * document root. It turns nothing on: `MotionProvider animated` (or a part's `animated`) does. An app calls it in
+ * its entry file with what the user chose, as it does `applyTheme`; `MotionProvider` calls it for its `ease` and `pace`.
+ */
+export function applyMotionFeel(next: Partial<MotionFeel>, root: HTMLElement | null = typeof document === 'undefined' ? null : document.documentElement): MotionFeel {
+  const ease = next.ease !== undefined && isMotionEase(next.ease) ? next.ease : feel.ease
+  const pace = typeof next.pace === 'number' && Number.isFinite(next.pace) ? Math.min(MOTION_PACE.max, Math.max(MOTION_PACE.min, next.pace)) : feel.pace
+  feel = { ease, pace }
+  if (root) for (const [name, value] of Object.entries(motionVariables(feel))) root.style.setProperty(name, value)
+  return feel
+}
+
 type Impl = MotionImpl
 let impl: Impl | null = null
 let loading: Promise<Impl | null> | null = null

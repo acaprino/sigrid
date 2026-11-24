@@ -14,6 +14,7 @@ import { Code, Page, Section } from './parts'
 import { Qamille } from './qamille'
 import { Shinatama } from './shinatama'
 import { Xiox } from './xiox'
+import { App as Signup } from './written/signup'
 
 const params = new URLSearchParams(location.search)
 const initialDevice: Device = params.get('device') === 'phone' ? 'phone' : 'desktop'
@@ -87,6 +88,14 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
           <Xiox animated={animated} density={density} look={look} />
         </div>
       </Section>
+      <Section id="examples-signup" icon="account" title="Signup: the form, a path of steps, a question" note="An app written by hand with the assemblies of the flows a person goes through: AuthForm to sign in or up (or to ask for a link), a Wizard for the three questions of a first setup with a plan chosen among ChoiceCards, and a ConfirmDialog before the one thing that cannot be undone. No class of its own. The same file goes out with the package (agents/examples/signup.tsx).">
+        <div className="max-w-full overflow-x-auto p-1 pb-6">
+          {/* A window of its own: the frame is as tall as this box. */}
+          <div style={{ '--app-height': '100%' } as React.CSSProperties} className="relative h-160 w-260 max-w-full overflow-hidden rounded-lg bg-paper text-ink shadow-lg">
+            <Signup />
+          </div>
+        </div>
+      </Section>
       <Section id="examples-hosts"icon="layout" title="Web and native: what changes" note="The app is the same page in the four hosts. What changes is around it, and it is a few switches; the toolkit imports no shell, so the host is passed in from outside.">
         <div className="overflow-x-auto">
           <table className="w-full max-w-4xl text-sm">
@@ -115,7 +124,7 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
         </div>
         <div>
           <h3 className="text-sm font-semibold text-ink">What stays the same</h3>
-          <ul role="list" className="mt-2 flex max-w-prose flex-col">
+          <ul role="list" className="mt-2 flex max-w-5xl flex-col">
             {SAME.map((line) => (
               <li key={line} className="border-t border-line py-2 text-sm text-ink-soft first:border-t-0">
                 {line}

@@ -436,7 +436,7 @@ Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run
 - `surface`: Use for the page, inputs and outline buttons.
 - `on-surface`: Use for body text, checked boxes, the tooltip and the toast surface.
 - `surface-ground`: Use for lanes, the segment track, quiet fills and highlighted items.
-- `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb.
+- `surface-raised`: Use for cards, menus, popovers, dialogs, sheets and the segment thumb. A sheet that covers a narrow window (`cover`) is on `surface` there.
 - `text-soft`: Use for secondary text and the label of the plain button.
 - `text-muted`: Use for placeholders, descriptions, metadata and key hints. It keeps 4.5:1.
 - `divider`: Use for lines and the border of inputs, selects and outline buttons.

@@ -4,6 +4,7 @@
 // before; a short drag decides nothing; an empty deck keeps its buttons in place, off.
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
+import { DEFAULT_MOTION_FEEL, MOTION_EASES, applyMotionFeel } from '../src'
 import { describe, expect, test, vi } from 'vitest'
 import { SWIPE_DISTANCE_PX, SWIPE_FLICK, SwipeDeck, type SwipeDirection } from '../src/assemblies'
 
@@ -159,7 +160,12 @@ describe('the movements of a card', () => {
     expect(frames['translate']![0]).toBe('120px 4px')
     expect(options.duration).toBe(DURATION_MS.throw)
     expect(DURATION_MS.throw).toBeLessThan(250)
-    expect(options.easing).toBe(`cubic-bezier(${FLUENT_CURVES.accelerateMin.join(',')})`)
+    // At first every movement eases in and out; with the `fluent` feel what leaves gathers speed.
+    expect(options.easing).toBe(`cubic-bezier(${MOTION_EASES['ease-in-out'].join(',')})`)
+    applyMotionFeel({ ease: 'fluent' })
+    throwCard(el, 'left')
+    expect((animate.mock.calls[1] as [unknown, KeyframeAnimationOptions])[1].easing).toBe(`cubic-bezier(${FLUENT_CURVES.accelerateMin.join(',')})`)
+    applyMotionFeel(DEFAULT_MOTION_FEEL)
     expect(options.iterations).toBeUndefined()
     expect(options.fill).toBe('forwards')
     await thrown.done
@@ -169,14 +175,14 @@ describe('the movements of a card', () => {
   })
 
   test('let go early, it comes back once from where the finger left it, settling, in under 250 ms', async () => {
-    const { DURATION_MS, FLUENT_CURVES, settleCard } = await import('../src/internal/motion-impl')
+    const { DURATION_MS, settleCard } = await import('../src/internal/motion-impl')
     const { el, animate } = fake()
     settleCard(el, { translate: '40px 2px', rotate: '2deg' })
     const [frames, options] = animate.mock.calls[0] as [Keyframe[], KeyframeAnimationOptions]
     expect(frames).toEqual([{ translate: '40px 2px', rotate: '2deg', offset: 0 }])
     expect(options.duration).toBe(DURATION_MS.settle)
     expect(DURATION_MS.settle).toBeLessThan(250)
-    expect(options.easing).toBe(`cubic-bezier(${FLUENT_CURVES.decelerateMid.join(',')})`)
+    expect(options.easing).toBe(`cubic-bezier(${MOTION_EASES['ease-in-out'].join(',')})`)
     expect(options.iterations).toBeUndefined()
   })
 
