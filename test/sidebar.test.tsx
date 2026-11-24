@@ -3,7 +3,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { NavItem, Sidebar, SidebarGroup } from '../src/layout'
+import { NavItem, Sidebar, SidebarGroup, SidebarRow } from '../src/layout'
+import { AppShellContext } from '../src/layout/app-shell'
+import { Count } from '../src/primitives'
 import { flush } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())
@@ -118,4 +120,103 @@ test('on a narrow window it is a drawer: closed it is not on the page, open it i
   expect(within(dialog).queryByRole('button', { name: /the sidebar$/ })).toBeNull()
   fireEvent.click(within(dialog).getByRole('button', { name: 'Website' }))
   expect(onOpenChange).toHaveBeenCalledWith(false)
+})
+
+/* ———— `toggle="head"`: the button at the end of the header's row ———— */
+
+function Headed({ header = true, startCollapsed = false, toggle = 'head' }: { header?: boolean; startCollapsed?: boolean; toggle?: 'foot' | 'head' }) {
+  const [collapsed, setCollapsed] = useState(startCollapsed)
+  return (
+    <Sidebar
+      aria-label="Main"
+      toggle={toggle}
+      collapsed={collapsed}
+      onCollapsedChange={setCollapsed}
+      header={header ? <SidebarRow end={<Count value={7} label="categories" />}>Categories</SidebarRow> : undefined}
+      footer={<p>Ada</p>}
+    >
+      <SidebarGroup>
+        <NavItem icon={<svg />}>Inbox</NavItem>
+      </SidebarGroup>
+    </Sidebar>
+  )
+}
+const order = () => [...document.querySelector('[data-slot="sidebar"]')!.children].map((el) => el.getAttribute('data-slot'))
+
+test('by default the button is a line of its own at the foot, and the header is as it was', () => {
+  render(<Headed toggle="foot" />)
+  expect(order()).toEqual(['sidebar-header', 'sidebar-nav', 'sidebar-footer', 'sidebar-collapse'])
+  expect(document.querySelector('[data-slot="sidebar-head"]')).toBeNull()
+  expect(document.querySelector('[data-slot="sidebar-header"]')!.className).toBe('shrink-0')
+  expect(screen.getByRole('button', { name: 'Collapse the sidebar' }).className).toContain('self-end')
+})
+
+test('at the head the button is at the end of the header\'s row: the name, its count and the button on one row, and nothing at the foot', () => {
+  render(<Headed />)
+  expect(order()).toEqual(['sidebar-head', 'sidebar-nav', 'sidebar-footer'])
+  const head = document.querySelector('[data-slot="sidebar-head"]')!
+  expect([...head.children].map((el) => el.getAttribute('data-slot'))).toEqual(['sidebar-header', 'sidebar-collapse'])
+  expect(head.className.split(' ')).toEqual(expect.arrayContaining(['flex', 'items-center']))
+  // The header takes the room the button leaves; the title row is a `SidebarRow` with a `Count` at its end.
+  const header = head.querySelector('[data-slot="sidebar-header"]')!
+  expect(header.className.split(' ')).toEqual(expect.arrayContaining(['min-w-0', 'flex-1']))
+  expect(header.querySelector('[data-slot="sidebar-row"]')!.textContent).toBe('Categories7 categories')
+  // The same button: its name, its state, an icon with a hint, 44px with a finger.
+  const toggle = screen.getByRole('button', { name: 'Collapse the sidebar' })
+  expect(toggle.getAttribute('aria-expanded')).toBe('true')
+  expect(toggle.textContent).toBe('')
+  const c = toggle.className.split(' ')
+  expect(c).toEqual(expect.arrayContaining(['size-(--control-xs)', 'shrink-0']))
+  expect(c.some((cls) => cls.endsWith('size-11'))).toBe(true)
+  expect(c.some((cls) => cls.startsWith('self-'))).toBe(false)
+})
+
+test('at the head, on the rail the header is gone and the button is alone at the top, in the middle; it widens the sidebar again', () => {
+  render(<Headed />)
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse the sidebar' }))
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(true)
+  expect(order()).toEqual(['sidebar-head', 'sidebar-nav'])
+  const head = document.querySelector('[data-slot="sidebar-head"]')!
+  expect([...head.children].map((el) => el.getAttribute('data-slot'))).toEqual(['sidebar-collapse'])
+  expect(head.className.split(' ')).toContain('justify-center')
+  expect(screen.queryByText('Categories')).toBeNull()
+  const expand = screen.getByRole('button', { name: 'Expand the sidebar' })
+  expect(expand.getAttribute('aria-expanded')).toBe('false')
+  fireEvent.click(expand)
+  expect(screen.getByText('Categories')).toBeTruthy()
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(false)
+})
+
+test('at the head with no header the row holds the button alone, at its end', () => {
+  render(<Headed header={false} />)
+  const head = document.querySelector('[data-slot="sidebar-head"]')!
+  expect([...head.children].map((el) => el.getAttribute('data-slot'))).toEqual(['sidebar-collapse'])
+  expect(head.className.split(' ')).toContain('justify-end')
+})
+
+test('where there is no button, the head changes nothing: no onCollapsedChange, and a rail the frame forces', () => {
+  const { unmount } = render(
+    <Sidebar aria-label="Main" toggle="head" header={<p>Acme</p>}>
+      <SidebarGroup>
+        <NavItem>Inbox</NavItem>
+      </SidebarGroup>
+    </Sidebar>,
+  )
+  expect(order()).toEqual(['sidebar-header', 'sidebar-nav'])
+  expect(document.querySelector('[data-slot="sidebar-head"]')).toBeNull()
+  expect(document.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
+  unmount()
+  render(
+    <AppShellContext.Provider value={{ sidebar: 'rail', inspector: 'docked' }}>
+      <Sidebar aria-label="Main" toggle="head" onCollapsedChange={() => {}} header={<p>Acme</p>}>
+        <SidebarGroup>
+          <NavItem icon={<svg />}>Inbox</NavItem>
+        </SidebarGroup>
+      </Sidebar>
+    </AppShellContext.Provider>,
+  )
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(true)
+  expect(document.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
+  expect(document.querySelector('[data-slot="sidebar-head"]')).toBeNull()
+  expect(order()).toEqual(['sidebar-nav'])
 })

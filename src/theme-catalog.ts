@@ -170,6 +170,13 @@ export interface Surfaces {
    * `#rrggbb`: the engine derives one from the dividers and holds it on the page, the sidebar and the sheets only.
    */
   readonly input?: string | undefined
+  /**
+   * The muted text (placeholders, descriptions, key hints, what is not chosen), stated by the palette, so it can carry
+   * the palette's own tint. The engine moves it until it holds 4.5:1 on the page, the sidebar, the sheets and the
+   * chosen row, as it does the one it derives. Absent, or not a `#rrggbb`: derived from the ink (its hue, a fixed
+   * lightness). The secondary text stays derived from the ink, and stays 1.5 points of contrast above the muted one.
+   */
+  readonly mute?: string | undefined
 }
 
 

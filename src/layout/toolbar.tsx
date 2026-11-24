@@ -77,8 +77,13 @@ export type ToolbarButtonProps = Omit<React.ComponentProps<"button">, "aria-labe
   icon?: React.ReactNode
   /** The key that does the same («Ctrl K»): plain text in the hint. */
   shortcut?: string | undefined
-  /** `ghost` (the default) for an action among others, `outline` for one that stands out, `default` for the one solid action (R3). */
-  variant?: "ghost" | "outline" | "default" | undefined
+  /**
+   * `ghost` (the default) for an action among others, `outline` for one that stands out, `default` for the one solid
+   * action (R3). `quiet` is an outline that does not ask to be pressed (the way to the commands, with its key): the
+   * hairline of a divider and the muted ink, the ink under the pointer; it keeps the hairline under a theme with
+   * strong control borders (`ThemeDef.controls`), where an `outline` takes the control border.
+   */
+  variant?: "ghost" | "outline" | "quiet" | "default" | undefined
   /** A switch: on or off. Absent: a plain action. */
   pressed?: boolean | undefined
   /** With an icon and a word: the word stays on a narrow bar too (by default it gives way under 448px). */
@@ -99,12 +104,16 @@ const ITEM = "aria-pressed:bg-selected aria-pressed:text-selected-ink data-disab
 /** Gone while the toolbar is under 448px wide. */
 const NARROW_GONE = "@max-md/toolbar:hidden"
 
+// The quiet button of a bar: the outline button with the muted ink, and its hairline kept where a theme's strong
+// control borders would replace it (one attribute heavier than that rule, which sits in `:where()`).
+const QUIET = "text-ink-mute hover:text-ink [[data-controls=strong]_&]:border-line"
+
 function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
   const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className={cn("text-2xs font-medium opacity-70", KEY_CAP)}>{shortcut}</span> : null
-  const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)
+  const look = cn(buttonVariants({ variant: variant === "quiet" ? "outline" : variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), variant === "quiet" && QUIET, ITEM, className)
   const body = (
     <>
       {icon}

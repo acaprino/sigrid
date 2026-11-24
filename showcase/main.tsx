@@ -931,6 +931,7 @@ function FormFields() {
 function SidebarSample({ animated }: { animated: boolean }) {
   const [place, setPlace] = React.useState('all')
   const [collapsed, setCollapsed] = React.useState(false)
+  const [headCollapsed, setHeadCollapsed] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const row = (id: string, icon: React.ComponentProps<typeof Icon>['name'], label: string, count?: number) => (
     <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />} end={count === undefined ? undefined : <Count value={count} label="items" reserve />}>
@@ -938,7 +939,7 @@ function SidebarSample({ animated }: { animated: boolean }) {
     </NavItem>
   )
   return (
-    <Section id="sidebar" title="Sidebar" note="The navigation as groups of rows on the sidebar surface. The button at the foot shrinks it to a rail of icons, each with its name as a hint; a group with an arrow opens and closes; the search box hides the rows that do not hold the text. Below 860px it is a drawer: «Menu» opens it and choosing a row closes it.">
+    <Section id="sidebar" title="Sidebar" note="The navigation as groups of rows on the sidebar surface. The button at the foot (or, with toggle head, at the end of the header's row: the second sample) shrinks it to a rail of icons, each with its name as a hint; a group with an arrow opens and closes; the search box hides the rows that do not hold the text. Below 860px it is a drawer: «Menu» opens it and choosing a row closes it.">
       <Row label="in an app">
         <div data-sample="sidebar" className="flex h-112 w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-paper">
           <Sidebar
@@ -977,6 +978,27 @@ function SidebarSample({ animated }: { animated: boolean }) {
             </Button>
             <p className="text-base font-semibold text-ink">{place}</p>
             <p className="text-sm text-ink-soft">The page of the place chosen in the sidebar.</p>
+          </div>
+        </div>
+      </Row>
+      <Row label="the button at the head">
+        <div data-sample="sidebar-head" className="flex h-64 w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-paper">
+          <Sidebar
+            aria-label="Sample list"
+            toggle="head"
+            collapsed={headCollapsed}
+            onCollapsedChange={setHeadCollapsed}
+            animated={animated}
+            header={<SidebarRow end={<Count value={7} label="categories" />}>Categories</SidebarRow>}
+          >
+            <SidebarGroup>
+              {row('all', 'all', 'All', 3)}
+              {row('notifications', 'notifications', 'Notifications', 12)}
+              {row('settings', 'settings', 'Settings')}
+            </SidebarGroup>
+          </Sidebar>
+          <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
+            <p className="text-sm text-ink-soft">The name of the list, its count and the button on one row; on the rail the button alone, at the top.</p>
           </div>
         </div>
       </Row>
@@ -2177,10 +2199,13 @@ function ThemeHooks({ scheme, animated }: { scheme: ThemeScheme; animated: boole
         </div>
       </Row>
       <Row label="boxed keys, in a bar">
-        <div data-keys="boxed" data-sample="hook-keys-bar" className="w-full max-w-xl">
+        <div data-keys="boxed" data-controls="strong" data-sample="hook-keys-bar" className="w-full max-w-xl">
           <Toolbar aria-label="Sample bar with keys">
-            <ToolbarButton label="Commands" icon={<Icon name="search" />} shortcut="Ctrl K">
+            <ToolbarButton label="Commands" variant="quiet" shortcut="Ctrl K">
               Commands
+            </ToolbarButton>
+            <ToolbarButton label="Export" variant="outline">
+              Export
             </ToolbarButton>
             <ToolbarButton label="Save" variant="default" shortcut="Ctrl S">
               Save

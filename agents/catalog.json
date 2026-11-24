@@ -877,6 +877,11 @@
          "name": "input",
          "type": "string",
          "doc": "The border of the controls (checkbox, radio, and fields under `controls: 'strong'`), stated by the palette. The engine moves it until it holds 3:1 on the page, the sidebar, the sheets and the chosen row. Absent, or not a `#rrggbb`: the engine derives one from the dividers and holds it on the page, the sidebar and the sheets only."
+        },
+        {
+         "name": "mute",
+         "type": "string",
+         "doc": "The muted text (placeholders, descriptions, key hints, what is not chosen), stated by the palette, so it can carry the palette's own tint. The engine moves it until it holds 4.5:1 on the page, the sidebar, the sheets and the chosen row, as it does the one it derives. Absent, or not a `#rrggbb`: derived from the ink (its hue, a fixed lightness). The secondary text stays derived from the ink, and stays 1.5 points of contrast above the muted one."
         }
        ]
       },
@@ -5933,7 +5938,7 @@
     },
     {
      "file": "src/layout/sidebar.tsx",
-     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).",
+     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with\n  `toggle=\"head\"`, the button at the end of the header's row (the name of the list, its count and the button on one\n  row; on the rail the button alone, at the top);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).",
      "components": [
       {
        "name": "Sidebar",
@@ -5953,6 +5958,11 @@
          "name": "onCollapsedChange",
          "type": "((collapsed: boolean) => void)",
          "doc": "With it, a button at the foot shrinks and widens the sidebar."
+        },
+        {
+         "name": "toggle",
+         "type": "\"head\" | \"foot\"",
+         "doc": "Where that button is. `foot` (the default): alone at the foot, under the groups. `head`: at the end of the header's row, beside `header` (a `SidebarRow` with the name of the list and its `Count`); with no `header` the row holds the button alone; on the rail it is at the top, centred. Where there is no button (no `onCollapsedChange`, the drawer, a rail the frame's width forces) it changes nothing."
         },
         {
          "name": "open",
@@ -6184,8 +6194,8 @@
         },
         {
          "name": "variant",
-         "type": "\"default\" | \"outline\" | \"ghost\"",
-         "doc": "`ghost` (the default) for an action among others, `outline` for one that stands out, `default` for the one solid action (R3)."
+         "type": "\"quiet\" | \"default\" | \"outline\" | \"ghost\"",
+         "doc": "`ghost` (the default) for an action among others, `outline` for one that stands out, `default` for the one solid action (R3). `quiet` is an outline that does not ask to be pressed (the way to the commands, with its key): the hairline of a divider and the muted ink, the ink under the pointer; it keeps the hairline under a theme with strong control borders (`ThemeDef.controls`), where an `outline` takes the control border."
         },
         {
          "name": "pressed",

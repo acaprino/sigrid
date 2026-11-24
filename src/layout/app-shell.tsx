@@ -187,6 +187,9 @@ const STRIP = "flex shrink-0 items-center gap-3 px-4 text-2xs text-ink-mute"
 // Under a theme that asks for a tall status strip (`ThemeDef.statusStrip: 'tall'`, `data-status-strip="tall"` on the
 // root): 40px, so a 20px badge sits in its middle with room around it; 44px with a finger, as every dense control.
 const STATUS_TALL = "[[data-status-strip=tall]_&]:min-h-10 [[data-status-strip=tall]_&]:pointer-coarse:min-h-11"
+// Under the same choice the strip speaks at the size of the body (14px) in place of a label's 12px. The footer has the
+// strip's text style (`STRIP`), so it takes the same size; its height stays its own.
+const STRIP_BODY_TEXT = "[[data-status-strip=tall]_&]:text-sm"
 
 function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
@@ -310,7 +313,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
           className={cn("flex min-w-0 flex-1 flex-col", sheet && "overflow-hidden border-t border-line bg-paper", sheet && beside && "rounded-ss-lg border-s")}
         >
           {status ? (
-            <div data-slot="app-shell-status" role="status" className={cn(STRIP, "min-h-(--control-sm)", STATUS_TALL, !sheet && "border-b border-line")}>
+            <div data-slot="app-shell-status" role="status" className={cn(STRIP, "min-h-(--control-sm)", STATUS_TALL, STRIP_BODY_TEXT, !sheet && "border-b border-line")}>
               {status}
             </div>
           ) : null}
@@ -326,7 +329,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
             </div>
           ) : null}
           {footer ? (
-            <footer ref={footerBox} data-slot="app-shell-footer" className={cn(STRIP, "min-h-(--control-xs) border-t border-line")}>
+            <footer ref={footerBox} data-slot="app-shell-footer" className={cn(STRIP, "min-h-(--control-xs) border-t border-line", STRIP_BODY_TEXT)}>
               {footer}
             </footer>
           ) : null}

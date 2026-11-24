@@ -17,6 +17,9 @@ export const SHELL_ACCENTS = [
 /** The control borders the preset states. */
 export const SHELL_INPUT = { dark: '#8791a6', light: '#767e8b' } as const
 
+/** The muted inks the preset states: a trace of the surfaces' blue. */
+export const SHELL_MUTE = { dark: '#9aa5b8', light: '#5b6472' } as const
+
 /** The preset passes the Balanced tone: its accents are the colours as written. */
 export const SHELL_TONE: ThemeTone = { intensity: 'theme', light: 'theme' }
 
@@ -31,8 +34,8 @@ export function shellPreset(accent: (typeof SHELL_ACCENTS)[number], stated = tru
     tabs: 'bold',
     statusStrip: 'tall',
     surfaces: {
-      dark: { paper: '#1a202c', sidebar: '#12161e', raised: '#232834', line: '#2a3240', ink: '#e8ecf3', accent: accent.dark, fill: accent.dark, ...(stated ? { input: SHELL_INPUT.dark } : {}) },
-      light: { paper: '#ffffff', sidebar: '#f6f7f9', raised: '#ffffff', line: '#e3e6ea', ink: '#111827', accent: accent.light, fill: accent.light, ...(stated ? { input: SHELL_INPUT.light } : {}) },
+      dark: { paper: '#1a202c', sidebar: '#12161e', raised: '#232834', line: '#2a3240', ink: '#e8ecf3', accent: accent.dark, fill: accent.dark, mute: SHELL_MUTE.dark, ...(stated ? { input: SHELL_INPUT.dark } : {}) },
+      light: { paper: '#ffffff', sidebar: '#f6f7f9', raised: '#ffffff', line: '#e3e6ea', ink: '#111827', accent: accent.light, fill: accent.light, mute: SHELL_MUTE.light, ...(stated ? { input: SHELL_INPUT.light } : {}) },
     },
   }
 }

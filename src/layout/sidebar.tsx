@@ -1,7 +1,9 @@
 // The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks
 // (`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:
 // - shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its
-//   name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`);
+//   name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with
+//   `toggle="head"`, the button at the end of the header's row (the name of the list, its count and the button on one
+//   row; on the rail the button alone, at the top);
 // - groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;
 //   the rows a user reaches most are simply the first group («Favorites»);
 // - a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the
@@ -34,6 +36,13 @@ export type SidebarProps = {
   /** With it, a button at the foot shrinks and widens the sidebar. */
   onCollapsedChange?: ((collapsed: boolean) => void) | undefined
   /**
+   * Where that button is. `foot` (the default): alone at the foot, under the groups. `head`: at the end of the header's
+   * row, beside `header` (a `SidebarRow` with the name of the list and its `Count`); with no `header` the row holds the
+   * button alone; on the rail it is at the top, centred. Where there is no button (no `onCollapsedChange`, the drawer,
+   * a rail the frame's width forces) it changes nothing.
+   */
+  toggle?: "foot" | "head" | undefined
+  /**
    * Where the sidebar is a drawer, the drawer is open: inside an `AppShell` under 620px of frame, alone under 860px of
    * screen. Where it is a column or a rail, it is always there and this is not read.
    */
@@ -60,7 +69,7 @@ const CONTROL = cn(
   FOCUS_RING_INSET,
 )
 
-function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenChange, header, footer, search = false, animated, className, children, ...props }: SidebarProps) {
+function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot", open = false, onOpenChange, header, footer, search = false, animated, className, children, ...props }: SidebarProps) {
   const words = useWords()
   // Inside an `AppShell` the frame's own width decides (a rail from 620px to 850px, a drawer under 620px); alone, the
   // screen does (a drawer under 860px).
@@ -93,7 +102,8 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
         className={cn(
           "flex size-(--control-xs) shrink-0 items-center justify-center rounded-md text-sidebar-mute pointer-coarse:size-11 hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink",
           FOCUS_RING_INSET,
-          rail ? "self-center" : "self-end",
+          // At the foot it is a line of the column: in its middle on the rail, at its end otherwise. At the head the row places it.
+          place === "head" ? null : rail ? "self-center" : "self-end",
         )}
       >
         {rail ? <Icon name="sidebarOpen" className="size-4" /> : <Icon name="sidebarClose" className="size-4" />}
@@ -107,7 +117,16 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
       // design-check-ignore-next-line dimension-value: the rail is one row wide (the density's row) and the sidebar's own 8px of padding on each side
       className={cn("flex h-full shrink-0 flex-col gap-2 bg-sidebar-paper p-2 text-sm text-sidebar-ink", rail ? "w-[calc(var(--row-height)_+_1rem)]" : "w-64", narrow && "w-full", className)}
     >
-      {header && !rail ? <div data-slot="sidebar-header" className="shrink-0">{header}</div> : null}
+      {toggle && place === "head" ? (
+        // The header's row: what the app put in `header`, then the button at its end. On the rail the header is gone,
+        // as without the button, and the button is alone in the middle; with no header it is alone at the end.
+        <div data-slot="sidebar-head" className={cn("flex shrink-0 items-center gap-1", rail ? "justify-center" : "justify-end")}>
+          {header && !rail ? <div data-slot="sidebar-header" className="min-w-0 flex-1">{header}</div> : null}
+          {toggle}
+        </div>
+      ) : header && !rail ? (
+        <div data-slot="sidebar-header" className="shrink-0">{header}</div>
+      ) : null}
       {search && !rail ? <SearchField value={typed} onValueChange={setTyped} aria-label={words.sidebar.search} placeholder={words.sidebar.search} className="shrink-0" /> : null}
       <nav
         ref={nav}
@@ -131,7 +150,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, open = false, onOpenCha
         ) : null}
       </nav>
       {footer && !rail ? <div data-slot="sidebar-footer" className="shrink-0">{footer}</div> : null}
-      {toggle}
+      {place === "head" ? null : toggle}
     </div>
   )
   if (narrow) {

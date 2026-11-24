@@ -170,12 +170,13 @@ describe('bold tabs: the segment', () => {
   test('a track with 2px inside it and between its items; the chosen item is weight 700 with the accent at 16% as its fill and at 55% as its border, one corner step under the track', () => {
     render(<Segment />)
     const group = classes(screen.getByRole('group', { name: 'Filter' }))
-    for (const cls of ['p-0.5', 'gap-0.5']) expect(group, cls).toContain(BOLD + cls)
+    // A control's corners and a ground a little apart from the sheet (the ink at 3%), from the tokens.
+    for (const cls of ['p-0.5', 'gap-0.5', 'rounded-md', 'bg-ink' + '/3']) expect(group, cls).toContain(BOLD + cls)
     // The hairline of the track and its corners are the group's own.
     expect(group).toEqual(expect.arrayContaining(['inset-ring', 'inset-ring-line', 'rounded-lg']))
     for (const name of ['All', 'Chosen']) {
       const c = classes(screen.getByRole('button', { name }))
-      for (const cls of ['rounded-md', 'border', 'border-transparent', PRESSED + 'font-bold', PRESSED + 'shadow-none', PRESSED + 'border-accent' + '/55', PRESSED + 'bg-accent' + '/16', PRESSED + HOVER + 'bg-accent' + '/16']) expect(c, cls).toContain(BOLD + cls)
+      for (const cls of ['rounded-sm', 'border', 'border-transparent', PRESSED + 'font-bold', PRESSED + 'shadow-none', PRESSED + 'border-accent' + '/55', PRESSED + 'bg-accent' + '/16', PRESSED + HOVER + 'bg-accent' + '/16']) expect(c, cls).toContain(BOLD + cls)
       // Shorter by the track's padding, so the track stays a control tall; 44px with a finger as before.
       expect(c.some((cls) => cls.startsWith(BOLD + 'h-[calc(var(--control-md)'))).toBe(true)
       expect(c).toEqual(expect.arrayContaining(['pointer-coarse' + ':min-h-11', 'font-medium', 'text-ink-mute', 'disabled' + ':opacity-50']))
@@ -215,7 +216,10 @@ describe('a tall status strip', () => {
     expect(c).toEqual(expect.arrayContaining(['min-h-(--control-sm)', 'flex', 'items-center']))
     expect(c).toContain(TALL + 'min-h-10')
     expect(c).toContain(TALL + 'pointer-coarse' + ':min-h-11')
-    expect(c.filter((cls) => cls.includes('data-status-strip'))).toHaveLength(2)
+    // The strip speaks at the size of the body; the footer, which has the strip's text style, with it.
+    expect(c).toContain(TALL + 'text-sm')
+    expect(c).toContain('text-2xs')
+    expect(c.filter((cls) => cls.includes('data-status-strip'))).toHaveLength(3)
   })
 })
 
@@ -261,9 +265,10 @@ describe('bold tabs on the preset, measured', () => {
       const tokens = tokensFor(shellPreset(accent), scheme, SHELL_TONE)
       const c = tokens.colors
       expect(tokens.attributes).toMatchObject({ 'data-tabs': 'bold', 'data-status-strip': 'tall' })
-      // The bar is the window's ground (the sidebar surface); the track of a segment is the lanes' surface.
+      // The bar is the window's ground (the sidebar surface).
       const bar = c['sidebar-paper']!
-      const track = c['paper-2']!
+      // The track's ground is the ink at 3% over the sheet it lies on.
+      const track = mix(c['ink']!, c['paper']!, 0.03)
       const fill = mix(c['accent']!, track, 0.16)
       const border = mix(c['accent']!, track, 0.55)
       const text: [string, number][] = [
