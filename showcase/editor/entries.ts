@@ -29,7 +29,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup', 'DropdownMenuItem', 'DropdownMenuLabel',
     'DropdownMenuPortal', 'DropdownMenuRadioGroup', 'DropdownMenuRadioItem', 'DropdownMenuSeparator',
     'DropdownMenuShortcut', 'DropdownMenuSub', 'DropdownMenuSubContent', 'DropdownMenuSubTrigger',
-    'DropdownMenuTrigger', 'Field', 'Grid', 'Heading', 'Icon', 'ICON_NAMES', 'initials', 'Input', 'isIconName', 'Kbd',
+    'DropdownMenuTrigger', 'Field', 'Grid', 'Heading', 'Icon', 'ICON_NAMES', 'initials', 'Input', 'isIconName', 'Kbd', 'Logo',
     'NeedThumbnail', 'Page', 'Popover', 'PopoverAnchor', 'PopoverContent', 'PopoverDescription', 'PopoverHeader',
     'PopoverPrimitive', 'PopoverTitle', 'PopoverTrigger', 'Progress', 'ProgressRing', 'ProgressSegments',
     'QUIET_CHIP', 'RadioGroup', 'RadioGroupItem', 'safeThumbnail', 'ScrollArea', 'Section', 'Select', 'Separator',

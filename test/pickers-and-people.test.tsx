@@ -3,8 +3,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Avatar, DialogContent, DialogRoot, DialogTitle, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src/primitives'
-import { ChipsInput, Combobox, DateField, DateTimeField, SearchField } from '../src/components'
+import { Logo, Avatar, DialogContent, DialogRoot, DialogTitle, Sheet, SheetContent, SheetTitle, Slider, Tooltip, initials } from '../src/primitives'
+import { ItemRow, ChipsInput, Combobox, DateField, DateTimeField, SearchField } from '../src/components'
+import { NavItem, NavList } from '../src/layout'
 import { contrast } from '../src'
 import { inkOn } from '../src/primitives/avatar'
 import { classes, settle } from './helpers'
@@ -90,6 +91,103 @@ describe('Avatar', () => {
     expect(hidden.getAttribute('aria-hidden')).toBe('true')
     expect(hidden.getAttribute('role')).toBeNull()
     expect(classes(hidden)).toContain('size-(--control-xs)')
+  })
+})
+
+describe('Logo', () => {
+  const logo = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-slot="logo"]')!
+
+  test('a small square box, 16px or 20px, with the picture whole in it: no border, no ground, nothing that recolours it', () => {
+    const small = render(<Logo src="/logos/db.svg" />)
+    expect(classes(logo(small.container))).toContain('size-4')
+    const img = logo(small.container).querySelector('img')!
+    expect(img.getAttribute('src')).toBe('/logos/db.svg')
+    expect(classes(img)).toContain('object-contain')
+    expect(logo(small.container).className + img.className).not.toMatch(/border|bg-|shadow|rounded|invert|filter|grayscale/)
+    small.unmount()
+    const medium = render(<Logo src="/logos/db.svg" size="md" />)
+    expect(classes(logo(medium.container))).toContain('size-5')
+  })
+
+  test('without a name, or decorative, it is hidden from screen readers; with a name it is an image of that name', () => {
+    const plain = render(<Logo src="/logos/db.svg" />)
+    expect(logo(plain.container).getAttribute('aria-hidden')).toBe('true')
+    expect(screen.queryByRole('img')).toBeNull()
+    plain.unmount()
+    const named = render(<Logo src="/logos/db.svg" name="PostgreSQL" />)
+    expect(screen.getByRole('img', { name: 'PostgreSQL' })).toBe(logo(named.container))
+    expect(logo(named.container).hasAttribute('aria-hidden')).toBe(false)
+    // The box says the name once: the picture itself has none.
+    expect(logo(named.container).querySelector('img')!.getAttribute('alt')).toBe('')
+    named.unmount()
+    const beside = render(<Logo src="/logos/db.svg" name="PostgreSQL" decorative />)
+    expect(logo(beside.container).getAttribute('aria-hidden')).toBe('true')
+    expect(logo(beside.container).hasAttribute('aria-label')).toBe(false)
+  })
+
+  test('the icon is in the box while the picture loads and when it fails, and the box keeps its size; without an icon the box is empty', () => {
+    const { container, rerender } = render(<Logo src="/logos/db.svg" icon="layers" />)
+    expect(logo(container).dataset.state).toBe('loading')
+    expect(logo(container).querySelector('svg')).not.toBeNull()
+    // Not seen until it has loaded.
+    expect(classes(logo(container).querySelector('img'))).toContain('opacity-0')
+    fireEvent.load(logo(container).querySelector('img')!)
+    expect(logo(container).dataset.state).toBe('shown')
+    expect(logo(container).querySelector('svg')).toBeNull()
+    expect(classes(logo(container).querySelector('img'))).not.toContain('opacity-0')
+    expect(classes(logo(container))).toContain('size-4')
+    // Another address starts again; it fails: the icon, and no broken picture.
+    rerender(<Logo src="/logos/missing.svg" icon="layers" />)
+    expect(logo(container).dataset.state).toBe('loading')
+    fireEvent.error(logo(container).querySelector('img')!)
+    expect(logo(container).dataset.state).toBe('failed')
+    expect(logo(container).querySelector('img')).toBeNull()
+    expect(logo(container).querySelector('svg')).not.toBeNull()
+    expect(classes(logo(container))).toContain('size-4')
+    rerender(<Logo src="/logos/gone.svg" />)
+    fireEvent.error(logo(container).querySelector('img')!)
+    expect(logo(container).childElementCount).toBe(0)
+    expect(classes(logo(container))).toContain('size-4')
+  })
+
+  test('a picture that was seen is there at once when it is drawn again, and one that failed is not asked for again', () => {
+    const first = render(<Logo src="/logos/seen.svg" icon="layers" />)
+    fireEvent.load(logo(first.container).querySelector('img')!)
+    first.unmount()
+    const again = render(<Logo src="/logos/seen.svg" icon="layers" />)
+    expect(logo(again.container).dataset.state).toBe('shown')
+    expect(logo(again.container).querySelector('svg')).toBeNull()
+    expect(classes(logo(again.container).querySelector('img'))).not.toContain('opacity-0')
+    again.unmount()
+    const broken = render(<Logo src="/logos/broken.svg" icon="layers" />)
+    fireEvent.error(logo(broken.container).querySelector('img')!)
+    broken.unmount()
+    const still = render(<Logo src="/logos/broken.svg" icon="layers" />)
+    expect(logo(still.container).dataset.state).toBe('failed')
+    expect(logo(still.container).querySelector('img')).toBeNull()
+    still.unmount()
+    // A minute later the address may answer: drawn again, the picture is asked for once more.
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 61_000)
+    try {
+      const later = render(<Logo src="/logos/broken.svg" icon="layers" />)
+      expect(logo(later.container).dataset.state).toBe('loading')
+      expect(logo(later.container).querySelector('img')).not.toBeNull()
+    } finally {
+      clock.mockRestore()
+    }
+  })
+
+  test('it goes where an icon goes: the leading of a row, the icon of a navigation row', () => {
+    const { container } = render(
+      <>
+        <ItemRow title="PostgreSQL" leading={<Logo src="/logos/db.svg" icon="layers" />} />
+        <NavList aria-label="Services">
+          <NavItem icon={<Logo src="/logos/queue.svg" icon="layers" />}>Queue</NavItem>
+        </NavList>
+      </>,
+    )
+    expect(container.querySelector('[data-slot="item-row-leading"] [data-slot="logo"]')).not.toBeNull()
+    expect(container.querySelector('[data-slot="nav-item-icon"] [data-slot="logo"]')).not.toBeNull()
   })
 })
 

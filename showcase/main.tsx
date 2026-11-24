@@ -19,7 +19,7 @@ import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
 import { BACKDROP, BASE_THEME, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
-import { Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
+import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
 import { AttachmentMarks, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
@@ -1468,6 +1468,16 @@ function Pickers() {
             Labels
           </label>
           <ChipsInput id="suggested-labels" value={labels} onChange={setLabels} suggestions={['Draft', 'Review', 'Approved', 'Urgent', 'Archived']} placeholder="Add a label" />
+        </div>
+      </Row>
+      <Row label="logo: a small square picture, with the icon it falls back to">
+        <Logo src={PIXEL} name="Sample service" />
+        <Logo src={PIXEL} name="Sample service, larger" size="md" />
+        {/* An address that answers nothing: the icon stays in the box. */}
+        <Logo src="missing-logo.svg" icon="layers" name="A service whose picture is missing" />
+        <div className="flex items-center gap-2">
+          <Logo src={PIXEL} icon="package" decorative />
+          <span className="text-sm">Sample library</span>
         </div>
       </Row>
       <Row label="avatar">

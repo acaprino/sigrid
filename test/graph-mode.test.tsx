@@ -7,6 +7,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
+import { linesOf } from '../src/assemblies/GraphCanvas'
 import { GraphCanvas, type GraphCanvasProps, type GraphEdge, type GraphNode } from '../src/graph'
 
 // What the canvas asks of the view: the rest of React Flow is its own.
@@ -338,5 +339,110 @@ describe('the tree mode is the default and is as it was', () => {
     // Left on an open thing closes it, as a tree's key does.
     fireEvent.keyDown(gateway, { key: 'ArrowLeft' })
     expect(screen.getAllByRole('treeitem')).toHaveLength(1)
+  })
+})
+
+describe('what a map of a program asked of the canvas', () => {
+  test('a thing with more than two steps shows the first and how many more; all of them are in its name', () => {
+    const { container } = render(<Calls steps={new Map([['orders', [1, 3, 5, 7]], ['mail', [2, 4]]])} />)
+    expect(thing('Orders, steps 1, 3, 5 and 7')).toBeTruthy()
+    const dots = (name: string) => thing(name).querySelector('[data-slot="graph-steps"]')!
+    expect(dots('Orders, steps 1, 3, 5 and 7').textContent).toBe('1+3')
+    expect(dots('Orders, steps 1, 3, 5 and 7').getAttribute('aria-hidden')).toBe('true')
+    // One or two are shown as they are.
+    expect(dots('Mail, steps 2 and 4').textContent).toBe('24')
+    expect(container.querySelectorAll('[data-slot="graph-steps-more"]')).toHaveLength(1)
+  })
+
+  test('linesOf: when an edge says it is the path’s, those alone are the path’s lines and every other line is dimmed', () => {
+    const places = new Map(NODES.map((node, at) => [node.id, { x: at * 300, y: 0 }]))
+    const options = { direction: 'right' as const, chosen: null, marked: new Set(['gateway', 'orders', 'store']), dimmed: null, editable: false }
+    const edges: GraphEdge[] = [
+      { from: 'gateway', to: 'orders' },
+      { id: 'flow', from: 'gateway', to: 'orders', path: true, label: 'calls', labelShown: 'chosen' },
+      { from: 'orders', to: 'store' },
+    ]
+    const width = (line: { style?: unknown } | undefined) => (line?.style as Record<string, string>)['--sigrid-line-width']
+    const said = linesOf(edges, places, options).lines
+    const flow = said.find((line) => line.id === 'flow')!
+    expect(flow.className).toBeUndefined()
+    expect(width(flow)).toBe('2')
+    expect(flow.label).toBe('calls')
+    // Not the first line between two things of the path, and not a line between two others of it.
+    for (const id of ['gateway→orders', 'orders→store']) {
+      const other = said.find((line) => line.id === id)!
+      expect(other.className, id).toBe('sigrid-graph-dim')
+      expect(width(other), id).toBe('1')
+    }
+    // With no edge that says so, the first line between two things of the path is the path's, as before.
+    const plain = linesOf(edges.map(({ path: _path, ...edge }) => edge), places, options).lines
+    expect(width(plain.find((line) => line.id === 'gateway→orders'))).toBe('2')
+    expect(width(plain.find((line) => line.id === 'flow'))).toBe('1')
+    expect(plain.every((line) => line.className === undefined)).toBe(true)
+  })
+
+  test('a picture of the thing (a logo) is drawn in the icon’s place, says nothing, and gives way to the icon while it loads and when it fails', () => {
+    const logo = (label: string) => thing(label).querySelector<HTMLElement>('[data-slot="logo"]')!
+    render(<Calls nodes={[{ id: 'db', label: 'Database', icon: 'layers', image: '/logos/database.svg' }, { id: 'queue', label: 'Queue', icon: 'layers', image: '/logos/queue.svg' }, { id: 'plain', label: 'Plain', icon: 'layers' }]} edges={[]} />)
+    // The name of the thing is its own: the picture names nothing.
+    expect(logo('Database').getAttribute('aria-hidden')).toBe('true')
+    expect(logo('Database').querySelector('img')!.getAttribute('alt')).toBe('')
+    expect(logo('Database').querySelector('img')!.getAttribute('src')).toBe('/logos/database.svg')
+    // The same 16px box in every state, so nothing shifts; the icon is in it until the picture is there.
+    expect(logo('Database').className).toContain('size-4')
+    expect(logo('Database').dataset.state).toBe('loading')
+    expect(logo('Database').querySelector('svg')).not.toBeNull()
+    fireEvent.load(logo('Database').querySelector('img')!)
+    expect(logo('Database').dataset.state).toBe('shown')
+    expect(logo('Database').querySelector('svg')).toBeNull()
+    fireEvent.error(logo('Queue').querySelector('img')!)
+    expect(logo('Queue').dataset.state).toBe('failed')
+    expect(logo('Queue').querySelector('img')).toBeNull()
+    expect(logo('Queue').querySelector('svg')).not.toBeNull()
+    expect(thing('Plain').querySelector('[data-slot="logo"]')).toBeNull()
+  })
+
+  test('a focus the person put elsewhere is theirs: a thing that leaves the graph does not take it back', () => {
+    // The thing that had the focus is no longer drawn (it is out of the view) and the canvas heard no blur; the person
+    // types in a field of the app, which filters the graph.
+    const silent = (event: Event) => event.stopPropagation()
+    window.addEventListener('focusout', silent, true)
+    window.addEventListener('focusin', silent, true)
+    try {
+      const { rerender } = render(
+        <>
+          <input aria-label="Filter" />
+          <Calls />
+        </>,
+      )
+      window.removeEventListener('focusin', silent, true)
+      act(() => thing('Mail').focus())
+      window.addEventListener('focusin', silent, true)
+      const field = screen.getByRole('textbox', { name: 'Filter' })
+      act(() => field.focus())
+      expect(document.activeElement).toBe(field)
+      rerender(
+        <>
+          <input aria-label="Filter" />
+          <Calls nodes={NODES.filter((node) => node.id !== 'mail')} edges={EDGES.filter((edge) => edge.to !== 'mail')} />
+        </>,
+      )
+      expect(screen.queryByRole('button', { name: 'Mail' })).toBeNull()
+      expect(document.activeElement).toBe(field)
+      expect(view.setViewport).not.toHaveBeenCalled()
+    } finally {
+      window.removeEventListener('focusout', silent, true)
+      window.removeEventListener('focusin', silent, true)
+    }
+  })
+
+  test('when the thing that has the focus leaves the graph, the focus goes to the Tab stop, not to the page', () => {
+    const { rerender } = render(<Calls />)
+    act(() => thing('Mail').focus())
+    expect(document.activeElement).toBe(thing('Mail'))
+    rerender(<Calls nodes={NODES.filter((node) => node.id !== 'mail')} edges={EDGES.filter((edge) => edge.to !== 'mail')} />)
+    expect(screen.queryByRole('button', { name: 'Mail' })).toBeNull()
+    expect(document.activeElement).toBe(stop())
+    expect(stop()).toBe(thing('Gateway'))
   })
 })

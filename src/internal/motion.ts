@@ -117,6 +117,17 @@ export function useMotion(animated?: boolean): Impl | null {
 }
 
 /**
+ * Whether a part may move: the local or inherited preference is on and the system does not ask for less motion. It
+ * loads nothing: for a part that moves with CSS alone (the things of a `GraphCanvas` gliding to their new places).
+ */
+export function useMotionAllowed(animated?: boolean): boolean {
+  const preference = useContext(MotionPreference)
+  const on = animated ?? preference
+  const noMotion = useSyncExternalStore(on ? subscribe : never, on ? prefersReduced : reduced, reduced)
+  return on && !noMotion
+}
+
+/**
  * The `ref` of a surface that enters when it opens (a menu, a popover, a hint): `enter` is called once per element,
  * when it mounts, which is the user's gesture. The reference is stable and remembers the element it has seen: a later
  * render, a caller's `ref` that changes, or Motion arriving (or the system no longer asking for less motion) with the

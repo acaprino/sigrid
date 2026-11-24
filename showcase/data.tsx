@@ -340,6 +340,35 @@ const PART_LINES: GraphEdge[] = [
   { from: 'next', to: 'client', kind: 'link', style: 'dashed', label: 'changes' },
 ]
 const INSIDE = PARTS.filter((part) => !part.external)
+
+/**
+ * A service whose parts are groups the person opens in place: the orders hold three functions and the store two
+ * tables. The canvas lays them out (the app gives no places); an app with a layout engine of its own gives the places
+ * of what a group holds from the group's corner.
+ */
+const HELD: Record<string, GraphNode[]> = {
+  orders: [
+    { id: 'cart', label: 'cart()', icon: 'code' },
+    { id: 'price', label: 'price()', icon: 'code' },
+    { id: 'pay', label: 'pay()', icon: 'code' },
+  ],
+  store: [
+    { id: 'rows', label: 'Orders table', icon: 'layers' },
+    { id: 'log', label: 'Ledger', icon: 'layers' },
+  ],
+}
+const SERVICE: GraphNode[] = [
+  { id: 'gate', label: 'Gateway', icon: 'gateway' },
+  { id: 'orders', label: 'Orders', detail: 'Module', icon: 'package' },
+  { id: 'store', label: 'Store', detail: 'Database', icon: 'layers' },
+  { id: 'bank', label: 'Bank', icon: 'globe', external: true },
+]
+const SERVICE_LINES: GraphEdge[] = [
+  { from: 'gate', to: 'orders' }, { from: 'orders', to: 'store' }, { from: 'orders', to: 'bank' },
+]
+const HELD_LINES: GraphEdge[] = [
+  { from: 'gate', to: 'cart' }, { from: 'cart', to: 'price' }, { from: 'price', to: 'pay' }, { from: 'pay', to: 'bank' }, { from: 'pay', to: 'rows' }, { from: 'rows', to: 'log' },
+]
 const INSIDE_LINES = PART_LINES.filter((line) => INSIDE.some((part) => part.id === line.from) && INSIDE.some((part) => part.id === line.to))
 
 export function Graphs() {
@@ -354,6 +383,21 @@ export function Graphs() {
   const [outside, setOutside] = React.useState(true)
   const lines = outside ? PART_LINES : INSIDE_LINES
   const chosen = graph.nodes.find((node) => node.id === selected)
+  const [openGroups, setOpenGroups] = React.useState<readonly string[]>(['orders'])
+  const [moves, setMoves] = React.useState(true)
+  const [glides, setGlides] = React.useState(true)
+  const [part, setPart] = React.useState<string | null>(null)
+  // The groups as they are now: open, a frame with its things in it; closed, a thing that says how many it holds.
+  const service = React.useMemo(() => {
+    const nodes = SERVICE.flatMap((node): GraphNode[] => {
+      const held = HELD[node.id]
+      if (!held) return [node]
+      const open = openGroups.includes(node.id)
+      return [{ ...node, open, hiddenCount: open ? undefined : held.length }, ...(open ? held.map((it) => ({ ...it, group: node.id })) : [])]
+    })
+    const there = new Set(nodes.map((node) => node.id))
+    return { nodes, edges: [...SERVICE_LINES, ...HELD_LINES].filter((line) => there.has(line.from) && there.has(line.to)) }
+  }, [openGroups])
   const openedPart = CALLS.find((node) => node.id === opened)
   return (
     <Section
@@ -408,6 +452,31 @@ export function Graphs() {
         <div data-sample="graph-model" className="flex w-full max-w-4xl flex-col gap-3">
           <GraphCanvas aria-label="Calls of the service" model="graph" nodes={CALLS} edges={CALL_LINES} selected={call} onSelect={setCall} onOpen={setOpened} search className="h-80" />
           <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press Orders or Store twice, or its ›.'}</p>
+        </div>
+      </Row>
+      <Row label="groups opened in place, things that move, motion">
+        <div data-sample="graph-in-place" className="flex w-full max-w-4xl flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <Switch checked={moves} onCheckedChange={setMoves}>
+              The things move
+            </Switch>
+            <Switch checked={glides} onCheckedChange={setGlides}>
+              Motion
+            </Switch>
+          </div>
+          <GraphCanvas
+            aria-label="Parts of the service"
+            model="graph"
+            nodes={service.nodes}
+            edges={service.edges}
+            selected={part}
+            onSelect={setPart}
+            onToggle={(id) => setOpenGroups((now) => (now.includes(id) ? now.filter((it) => it !== id) : [...now, id]))}
+            movable={moves}
+            animated={glides}
+            className="h-112"
+          />
+          <p className="text-xs text-ink-mute">Open or close Orders and Store with their arrow: the rest stays in sight. Drag a thing, or press Alt and an arrow on it; «Reset the layout» is among the view's buttons while something was moved.</p>
         </div>
       </Row>
       <Row label="as tall as its region">

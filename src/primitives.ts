@@ -17,6 +17,7 @@ export { Heading, type HeadingProps } from './primitives/heading'
 export { Collapsible, Field, PopoverPrimitive } from './primitives/headless'
 export { Input } from './primitives/input'
 export type InputProps = React.ComponentProps<typeof import('./primitives/input').Input>
+export { Logo, type LogoProps } from './primitives/logo'
 export { Kbd, Shortcut, type KbdProps, type KbdSize, type ShortcutProps } from './primitives/kbd'
 export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type ClusterProps, type ColumnProps, type GridProps, type LayoutAttributes, type LayoutElement, type PageProps, type ScrollAreaProps, type SectionProps, type Space, type SplitProps, type TextProps } from './primitives/layout'
 export { Popover, PopoverAnchor, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from './primitives/popover'
