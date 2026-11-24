@@ -6,6 +6,7 @@ import { act, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { OverflowList, WordsProvider, type OverflowListProps } from '../src'
+import { classes } from './helpers'
 
 const LABELS = ['Today 09:00', 'Every Monday', 'Kitchen', 'Home', 'Calls', 'Errands']
 
@@ -68,9 +69,8 @@ describe('the line', () => {
   test('one row of the caller\'s height that wraps and clips (not a scroll box), the cue after it, outside it', () => {
     lay(fitting(2))
     render(line())
-    const classes = box().className.split(' ')
-    for (const name of ['h-5', 'gap-x-2', 'flex', 'flex-wrap', 'content-start', 'overflow-clip', 'min-w-0', '[&>[data-cut]]:invisible']) expect(classes, name).toContain(name)
-    expect(classes).not.toContain('overflow-hidden')
+    for (const name of ['h-5', 'gap-x-2', 'flex', 'flex-wrap', 'content-start', 'overflow-clip', 'min-w-0', '[&>[data-cut]]:invisible']) expect(classes(box()), name).toContain(name)
+    expect(classes(box())).not.toContain('overflow-hidden')
     expect(box().nextElementSibling).toBe(cue())
     expect(box().contains(cue())).toBe(false)
   })

@@ -5,9 +5,8 @@ import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import { ChipsInput } from '../src/components/ChipsInput'
 import { TAG_HUES, tagHue } from '../src/internal/tag-color'
-import { contrast } from '../src/theme-engine'
 import { palettes, themeCss } from './theme-tokens'
-import { noop } from './helpers'
+import { contrast, noop } from './helpers'
 
 test('the color comes from the name: case, spaces and the at sign do not change it', () => {
   const h = tagHue('meds')

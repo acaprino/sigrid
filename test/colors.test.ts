@@ -2,9 +2,8 @@
 // themes, so they must hold up on both the light and the dark paper and stay distinguishable from each other.
 import { describe, expect, test } from 'vitest'
 import { COLORS, COLOR_NAMES } from '../src/colors'
-import { contrast } from '../src/theme-engine'
 import { palettes, themePalettes } from './theme-tokens'
-import { channel } from './helpers'
+import { channel, contrast } from './helpers'
 
 const LEGACY = ['#e34432', '#ee6449', '#6b9fa0', '#78a271', '#7b68ee', '#297abc', '#f5a623']
 

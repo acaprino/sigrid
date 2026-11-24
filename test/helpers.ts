@@ -1,5 +1,5 @@
 // The small functions the tests share: the repository's folder and its files, the classes of an element, the waits
-// for React and the overlays, a stand-in for the system's motion setting, a fake DataTransfer.
+// for React and the overlays, a stand-in for the system's motion setting, the WCAG contrast, a fake DataTransfer.
 import { readdirSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -44,6 +44,21 @@ export const systemMotion = (reduce: boolean) =>
 
 /** The sRGB transfer of one channel (0 to 1) to linear light, as WCAG 2.x computes it. */
 export const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+
+/**
+ * The relative luminance of a `#rrggbb` (WCAG 2.x). Written here, not taken from `src/theme-engine`: the tests of
+ * contrast check the engine's colours with a formula of their own.
+ */
+export const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** The WCAG contrast ratio between two `#rrggbb`, from 1 to 21, in either order. */
+export const contrast = (a: string, b: string) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
+  return (hi + 0.05) / (lo + 0.05)
+}
 
 /** A fake DataTransfer: jsdom does not implement it. */
 export const dt = (types: Record<string, string>, files: File[] = []) => ({

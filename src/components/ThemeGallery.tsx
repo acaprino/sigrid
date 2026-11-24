@@ -26,6 +26,10 @@ export interface ThemeGalleryProps<T extends ThemeDef> {
 
 const TILE = 'relative min-w-0 overflow-hidden rounded-lg border border-line text-left hover:border-input aria-checked:border-primary aria-checked:ring-1 aria-checked:ring-primary'
 
+/**
+ * The check in a 16px dot of the primary. Its own path, not the toolkit's check: at 12px Lucide's check draws a 1px
+ * line on a 24 grid, this one a 1.5px line on a 16 grid, which the small dot needs to be read.
+ */
 function ChosenMark() {
   return <span aria-hidden="true" className="absolute right-1.5 bottom-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
     <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 8 3 3 7-7" /></svg>

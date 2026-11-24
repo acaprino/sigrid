@@ -7,10 +7,11 @@ import { DEFAULT_FONT, DEFAULT_SHAPE, FONTS, SHAPE_RADII, THEME_SHAPES, isThemeS
 import type { ThemeDef } from '../src/theme-catalog'
 import { DEFAULT_THEME, THEMES, themeTokens } from './fixtures/sample-themes'
 import type { ThemeId } from './fixtures/sample-themes'
-import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, STATUS, contrast, fromHex, isAccentColor, luminance, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
+import { DEFAULT_TONE_INTENSITY, DEFAULT_TONE_LIGHT, FIXED, STATUS, fromHex, isAccentColor, ownTheme, pickTextStep, presetTone, themeTone, toHex, tokensFor } from '../src/theme-engine'
 import { PALETTE_COMBOS, paletteTheme } from '../src/palette'
 import type { OwnTheme, ThemeTone } from '../src/theme-engine'
 import { palettes } from './theme-tokens'
+import { contrast, luminance } from './helpers'
 
 const mix = (fg: string, bg: string, alpha: number) =>
   '#' + [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)).toString(16).padStart(2, '0')).join('')

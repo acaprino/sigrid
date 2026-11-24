@@ -2,11 +2,10 @@
 // Text contrast (WCAG 2.x, AA: 4.5:1 for small text), computed from the token values of `theme.css`, for the
 // light palette and for the dark one (`prefers-color-scheme: dark`). It does not measure the browser: it takes the declared colors and
 // the backgrounds the package draws them on (paper, paper 2, raised).
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
-import { contrast, luminance } from '../src/theme-engine'
 import { palettes, themeCss } from './theme-tokens'
-import { root } from './helpers'
+import { contrast, luminance, root, walk } from './helpers'
 
 const { light, dark } = palettes(themeCss)
 /**
@@ -141,7 +140,6 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
   })
 
   test('no source puts text on a bg-accent fill: the accent is a text color (light in the dark), fills with text use bg-primary', () => {
-    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
     const bad: string[] = []
     for (const f of walk(`${root}src`).filter((x) => x.endsWith('.tsx'))) {
       // The classes of an element sit on one line: a line with the accent fill and a label «on top» is an error.
@@ -171,7 +169,6 @@ describe.each(PALETTES)('accent contrast from the theme tokens, palette %s', (_n
 describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3:1), palette %s', (_name, t) => {
   const NON_TEXT = 3
   const ALL_BACKGROUNDS = [...BACKGROUNDS, ...SEMANTIC_BACKGROUNDS]
-  const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
   const sources = walk(`${root}src`).filter((f) => f.endsWith('.tsx'))
 
   test('the theme declares the tokens of the control border and of the focus ring', () => {
@@ -278,7 +275,6 @@ describe.each(PALETTES)('the sidebar, the light bar of Park UI, palette %s', (_n
 })
 
 describe('text colors in the sources', () => {
-  const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
   const sources = walk(`${root}src`).filter((f) => f.endsWith('.tsx'))
   const classes = (text: string) => text.match(/[A-Za-z0-9_:\-./\[\]#%()]+/g) ?? []
 

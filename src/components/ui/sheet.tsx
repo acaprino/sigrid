@@ -9,7 +9,7 @@
 // the shared Motion preference and respects reduced motion.
 import * as React from "react"
 import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
-import { XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { useWords } from "../../words"
 import { Button, QUIET_ICON } from "./button"
@@ -216,7 +216,7 @@ function SheetContent({
               render={<Button variant="ghost" size="icon-sm" />}
               className={cn("absolute top-3 right-3 pointer-coarse:top-1.5 pointer-coarse:right-1.5", QUIET_ICON)}
             >
-              <XIcon aria-hidden="true" className="size-4" />
+              <Icon name="close" />
               <span className="sr-only">{words.common.close}</span>
             </SheetPrimitive.Close>
           )}

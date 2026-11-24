@@ -16,7 +16,6 @@
 // network.
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { FileUpload } from '@ark-ui/react/file-upload'
-import { Paperclip } from 'lucide-react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Tooltip } from './ui/tooltip'
@@ -26,6 +25,7 @@ import { kindIcon, kindLabel, type AttachmentKind } from '../internal/kinds'
 import { DEFAULT_WORDS, useWords, type Words } from '../words'
 import { NeedThumbnail, Thumbnail } from '../internal/thumbnail'
 import { cn } from '../lib/utils'
+import { Icon } from '../icons'
 import { GROUP_LABEL } from '../lib/rows'
 import { FOCUS_RING } from '../lib/focus'
 
@@ -90,9 +90,9 @@ export function AttachmentMarks(props: AttachmentSummary | { attachments: Attach
 }
 
 function AttachmentIcon({ kind }: { kind: AttachmentKind | undefined }) {
-  if (kind === undefined) return <Paperclip aria-hidden="true" className="size-3.5" />
-  const Icon = kindIcon(kind)
-  return <Icon aria-hidden="true" className="size-3.5" />
+  if (kind === undefined) return <Icon name="attach" className="size-3.5" />
+  const Glyph = kindIcon(kind)
+  return <Glyph aria-hidden="true" className="size-3.5" />
 }
 
 /** The state in calm words; null for a ready attachment (or a text-only one). */
@@ -205,7 +205,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
       {attachments.length ? (
         <ul ref={listRef} aria-label={said.heading} className="space-y-2">
           {attachments.map((a, index) => {
-            const Icon = kindIcon(a.kind)
+            const Glyph = kindIcon(a.kind)
             const state = a.stateLabel !== undefined ? a.stateLabel : stateText(a.state, maxFileBytes, words)
             // Under the title: the detail, or the address. Always text: an `href` never becomes a link.
             const detail = a.detail ?? a.href
@@ -221,7 +221,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                     <Thumbnail src={thumb} kind={a.kind} size="sheet" label={kindLabel(a.kind, words)} onOpen={canOpen && open !== null ? () => onAction(open) : undefined} />
                   </>
                 ) : (
-                  <Icon role="img" aria-label={kindLabel(a.kind, words)} className="size-4 shrink-0 text-ink-mute" />
+                  <Glyph role="img" aria-label={kindLabel(a.kind, words)} className="size-4 shrink-0 text-ink-mute" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-ink" title={a.title}>

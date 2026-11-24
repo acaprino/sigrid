@@ -51,7 +51,7 @@
 // - under 500px of height (`short:`, a phone lying down) the bottom bar is 44px and its views put the word beside the
 //   icon, so the bar does not eat the screen.
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { Icon } from "../../icons"
 import { cn } from "../../lib/utils"
 import { FOCUS_RING, FOCUS_RING_INSET } from "../../lib/focus"
 import { useAppHeight, visibleHeight } from "../../internal/app-height"
@@ -373,7 +373,7 @@ function Inspector({ title, open, onOpenChange, footer, animated, className, chi
       <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{title}</h2>
       {onOpenChange ? (
         <Button variant="ghost" size="icon-xs" data-slot="inspector-close" aria-label={words.common.close} onClick={() => onOpenChange(false)} className={QUIET_ICON}>
-          <XIcon aria-hidden="true" className="size-4" />
+          <Icon name="close" />
         </Button>
       ) : null}
     </div>

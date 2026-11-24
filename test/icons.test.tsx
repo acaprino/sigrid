@@ -6,6 +6,7 @@ import { Check, CircleX, FileIcon, Folder, FolderOpen, Info, Settings, Trash2, T
 import { expect, test } from 'vitest'
 import * as UI from '../src'
 import { ICON_NAMES, Icon, isIconName, type IconName } from '../src'
+import { classes } from './helpers'
 
 /** The drawing an `Icon` of that name makes. */
 const draw = (name: IconName, className?: string) => {
@@ -26,9 +27,8 @@ test('every icon is drawn: an svg sized by the class given, hidden from screen r
     const svg = box.querySelector('svg')
     expect(svg, name).not.toBeNull()
     // The class given sets the box, in place of the default size-4.
-    const classes = (svg!.getAttribute('class') ?? '').split(/\s+/)
-    expect(classes, name).toContain('size-5')
-    expect(classes, name).not.toContain('size-4')
+    expect(classes(svg), name).toContain('size-5')
+    expect(classes(svg), name).not.toContain('size-4')
     unmount()
   }
 })

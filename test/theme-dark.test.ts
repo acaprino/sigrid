@@ -9,16 +9,8 @@ import type { ThemeDark, ThemeDef } from '../src'
 import { fromHex, tokensFor } from '../src/theme-engine'
 import type { ThemeTone } from '../src/theme-engine'
 import { THEMES } from './fixtures/sample-themes'
+import { contrast, luminance } from './helpers'
 
-const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-const lum = (hex: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255)) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const ratio = (a: string, b: string) => {
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]
-  return (hi + 0.05) / (lo + 0.05)
-}
 const mix = (fg: string, bg: string, alpha: number) =>
   '#' + [1, 3, 5].map((i) => Math.round(parseInt(fg.slice(i, i + 2), 16) * alpha + parseInt(bg.slice(i, i + 2), 16) * (1 - alpha)).toString(16).padStart(2, '0')).join('')
 const gray = (hex: string) => hex.slice(1, 3) === hex.slice(3, 5) && hex.slice(3, 5) === hex.slice(5, 7)
@@ -99,10 +91,10 @@ describe('the depth', () => {
     for (const sidebar of ['tenue', 'piena', 'scura'] as const) for (const dark of RANGE) for (const tone of TONES) {
       const c = tokensFor({ ...def(id), sidebar, dark }, 'dark', tone).colors
       const where = `${sidebar} ${named(dark)} ${JSON.stringify(tone)}`
-      expect(lum(c['sidebar-paper']!), where).toBeLessThan(lum(c['paper']!))
-      expect(lum(c['paper-2']!), where).toBeLessThan(lum(c['paper']!))
-      expect(lum(c['raised']!), where).toBeGreaterThan(lum(c['paper']!))
-      expect(lum(c['line']!), where).toBeGreaterThan(lum(c['raised']!))
+      expect(luminance(c['sidebar-paper']!), where).toBeLessThan(luminance(c['paper']!))
+      expect(luminance(c['paper-2']!), where).toBeLessThan(luminance(c['paper']!))
+      expect(luminance(c['raised']!), where).toBeGreaterThan(luminance(c['paper']!))
+      expect(luminance(c['line']!), where).toBeGreaterThan(luminance(c['raised']!))
     }
   }, 30_000)
 
@@ -110,26 +102,26 @@ describe('the depth', () => {
     const at = (depth: ThemeDark['depth']) => tokensFor({ ...def('notte'), dark: { depth } }, 'dark', AS_CHOSEN).colors
     const [deep, standard, soft] = [at('deep'), at('standard'), at('soft')]
     for (const c of [deep, standard, soft]) {
-      const side = ratio(c['sidebar-paper']!, c['paper']!)
+      const side = contrast(c['sidebar-paper']!, c['paper']!)
       expect(side).toBeGreaterThanOrEqual(1.06)
       expect(side).toBeLessThanOrEqual(1.09)
-      const line = ratio(c['line']!, c['paper']!)
+      const line = contrast(c['line']!, c['paper']!)
       expect(line).toBeGreaterThanOrEqual(1.3)
       expect(line).toBeLessThanOrEqual(1.4)
-      expect(ratio(c['line']!, c['raised']!)).toBeGreaterThanOrEqual(1.15)
+      expect(contrast(c['line']!, c['raised']!)).toBeGreaterThanOrEqual(1.15)
     }
-    expect(lum(deep['paper']!)).toBeLessThan(lum(standard['paper']!))
-    expect(lum(standard['paper']!)).toBeLessThan(lum(soft['paper']!))
+    expect(luminance(deep['paper']!)).toBeLessThan(luminance(standard['paper']!))
+    expect(luminance(standard['paper']!)).toBeLessThan(luminance(soft['paper']!))
     // The same ratio is a wider step of lightness on a darker page.
     const step = (c: Readonly<Record<string, string>>) => fromHex(c['paper']!).L - fromHex(c['sidebar-paper']!).L
     expect(step(deep)).toBeGreaterThan(step(standard))
     expect(step(standard)).toBeGreaterThan(step(soft))
     // Deep keeps the sheets' ratio; soft keeps the sheets themselves, which have no room to rise (the fill's 3:1).
-    expect(Math.abs(ratio(deep['raised']!, deep['paper']!) - ratio(standard['raised']!, standard['paper']!))).toBeLessThan(0.02)
+    expect(Math.abs(contrast(deep['raised']!, deep['paper']!) - contrast(standard['raised']!, standard['paper']!))).toBeLessThan(0.02)
     expect(soft['raised']).toBe(standard['raised'])
-    expect(ratio(soft['raised']!, soft['paper']!)).toBeGreaterThanOrEqual(1.1)
+    expect(contrast(soft['raised']!, soft['paper']!)).toBeGreaterThanOrEqual(1.1)
     // With the tone as designed the selected item stays apart from the page at every depth, by its lightness too.
-    for (const c of [deep, standard, soft]) expect(ratio(c['selected']!, c['paper']!)).toBeGreaterThanOrEqual(1.02)
+    for (const c of [deep, standard, soft]) expect(contrast(c['selected']!, c['paper']!)).toBeGreaterThanOrEqual(1.02)
   })
 
   test.each(GENERATED.map((t) => t.id))('%s: the depth leaves the text where it was designed, no level is moved that the standard ladder does not move', (id) => {
@@ -184,7 +176,7 @@ describe('the tint', () => {
       for (const name of ['paper', 'raised', 'line']) {
         expect(Math.abs(fromHex(tinted[name]!).L - fromHex(neutral[name]!).L), `${depth} ${name}`).toBeLessThan(0.008)
         // The ladder sits at thresholds measured on the grays (the fill at 3:1 on the sheets): a hue must not weigh more.
-        expect(lum(tinted[name]!), `${depth} ${name}`).toBeLessThanOrEqual(lum(neutral[name]!))
+        expect(luminance(tinted[name]!), `${depth} ${name}`).toBeLessThanOrEqual(luminance(neutral[name]!))
       }
     }
   }, 30_000)
@@ -218,44 +210,44 @@ describe('the thresholds hold on the whole range', () => {
       const own = tk.attributes['data-sidebar'] === 'own'
       const BG = ['paper', 'paper-2', 'raised', ...(own ? [] : ['sidebar-paper'])].map((k) => t[k]!)
       // The text, from the faintest to the strongest, and the selected item under the faintest.
-      for (const bg of [...BG, t['selected']!]) expect(ratio(t['ink-mute']!, bg), `ink-mute ${where}`).toBeGreaterThanOrEqual(4.5)
+      for (const bg of [...BG, t['selected']!]) expect(contrast(t['ink-mute']!, bg), `ink-mute ${where}`).toBeGreaterThanOrEqual(4.5)
       for (const bg of BG) {
-        expect(ratio(t['ink']!, bg), `ink ${where}`).toBeGreaterThanOrEqual(7)
-        expect(ratio(t['ink-soft']!, bg) - ratio(t['ink-mute']!, bg), `ink-soft ${where}`).toBeGreaterThanOrEqual(1.5)
-        expect(ratio(t['ink']!, bg) - ratio(t['ink-soft']!, bg), `ink ${where}`).toBeGreaterThanOrEqual(3)
+        expect(contrast(t['ink']!, bg), `ink ${where}`).toBeGreaterThanOrEqual(7)
+        expect(contrast(t['ink-soft']!, bg) - contrast(t['ink-mute']!, bg), `ink-soft ${where}`).toBeGreaterThanOrEqual(1.5)
+        expect(contrast(t['ink']!, bg) - contrast(t['ink-soft']!, bg), `ink ${where}`).toBeGreaterThanOrEqual(3)
       }
-      expect(ratio(t['selected-ink']!, t['selected']!), `selected ink ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['selected-ink']!, t['selected']!), `selected ink ${where}`).toBeGreaterThanOrEqual(4.5)
       // The accent as text and as the focus ring; the fill with its label, and seen without one.
-      for (const bg of [...BG, t['accent-soft']!]) expect(ratio(t['accent']!, bg), `accent ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['ring']!, t['selected']!), `ring ${where}`).toBeGreaterThanOrEqual(3)
-      expect(ratio(t['primary-foreground']!, t['primary']!), `label ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['primary-foreground']!, t['accent-hover']!), `label on hover ${where}`).toBeGreaterThanOrEqual(4.5)
+      for (const bg of [...BG, t['accent-soft']!]) expect(contrast(t['accent']!, bg), `accent ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['ring']!, t['selected']!), `ring ${where}`).toBeGreaterThanOrEqual(3)
+      expect(contrast(t['primary-foreground']!, t['primary']!), `label ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['primary-foreground']!, t['accent-hover']!), `label on hover ${where}`).toBeGreaterThanOrEqual(4.5)
       for (const bg of BG) {
-        expect(ratio(t['primary']!, bg), `fill ${where}`).toBeGreaterThanOrEqual(3)
-        expect(ratio(t['input']!, bg), `control border ${where}`).toBeGreaterThanOrEqual(3)
-        expect(ratio(t['line']!, bg), `divider ${where}`).toBeLessThan(3)
-        expect(ratio(t['spot']!, bg), `spot ${where}`).toBeGreaterThanOrEqual(3)
+        expect(contrast(t['primary']!, bg), `fill ${where}`).toBeGreaterThanOrEqual(3)
+        expect(contrast(t['input']!, bg), `control border ${where}`).toBeGreaterThanOrEqual(3)
+        expect(contrast(t['line']!, bg), `divider ${where}`).toBeLessThan(3)
+        expect(contrast(t['spot']!, bg), `spot ${where}`).toBeGreaterThanOrEqual(3)
       }
-      expect(ratio(t['spot-foreground']!, t['spot']!), `label on spot ${where}`).toBeGreaterThanOrEqual(4.5)
-      for (const bg of [...BG, t['spot-soft']!]) expect(ratio(t['spot-ink']!, bg), `spot ink ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['spot-foreground']!, t['spot']!), `label on spot ${where}`).toBeGreaterThanOrEqual(4.5)
+      for (const bg of [...BG, t['spot-soft']!]) expect(contrast(t['spot-ink']!, bg), `spot ink ${where}`).toBeGreaterThanOrEqual(4.5)
       // The red holds on every ladder (the engine would move it, as on a curated palette); the status colours as in every theme.
-      expect(ratio(t['destructive']!, t['destructive-soft']!), `red on its soft ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['destructive-foreground']!, t['destructive']!), `text on red ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['destructive']!, t['destructive-soft']!), `red on its soft ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['destructive-foreground']!, t['destructive']!), `text on red ${where}`).toBeGreaterThanOrEqual(4.5)
       for (const bg of BG) {
-        expect(ratio(t['destructive']!, bg), `red ${where}`).toBeGreaterThanOrEqual(4.5)
-        expect(ratio(t['destructive']!, mix(t['destructive-soft']!, bg, 0.8)), `red on hover ${where}`).toBeGreaterThanOrEqual(4.5)
-        expect(ratio(t['destructive']!, mix(t['destructive']!, bg, 0.1)), `red menu item ${where}`).toBeGreaterThanOrEqual(4.5)
-        for (const name of ['success', 'warning']) expect(ratio(t[name]!, bg), `${name} ${where}`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(t['destructive']!, bg), `red ${where}`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(t['destructive']!, mix(t['destructive-soft']!, bg, 0.8)), `red on hover ${where}`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(t['destructive']!, mix(t['destructive']!, bg, 0.1)), `red menu item ${where}`).toBeGreaterThanOrEqual(4.5)
+        for (const name of ['success', 'warning']) expect(contrast(t[name]!, bg), `${name} ${where}`).toBeGreaterThanOrEqual(4.5)
       }
-      expect(ratio(t['ink']!, t['highlight']!), `ink on highlight ${where}`).toBeGreaterThanOrEqual(7)
+      expect(contrast(t['ink']!, t['highlight']!), `ink on highlight ${where}`).toBeGreaterThanOrEqual(7)
       // The sidebar, with the content's inks or its own.
-      expect(ratio(t['sidebar-ink']!, t['sidebar-paper']!), `sidebar ink ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['sidebar-mute']!, t['sidebar-paper']!), `sidebar mute ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['sidebar-selected-ink']!, t['sidebar-selected']!), `sidebar selected ink ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['sidebar-accent']!, t['sidebar-paper']!), `sidebar accent ${where}`).toBeGreaterThanOrEqual(4.5)
-      expect(ratio(t['sidebar-accent-ink']!, t['sidebar-accent']!), `sidebar accent ink ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['sidebar-ink']!, t['sidebar-paper']!), `sidebar ink ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['sidebar-mute']!, t['sidebar-paper']!), `sidebar mute ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['sidebar-selected-ink']!, t['sidebar-selected']!), `sidebar selected ink ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['sidebar-accent']!, t['sidebar-paper']!), `sidebar accent ${where}`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t['sidebar-accent-ink']!, t['sidebar-accent']!), `sidebar accent ink ${where}`).toBeGreaterThanOrEqual(4.5)
       // The user's colours: a dot at 3:1 on the content (the icon and the sidebar's own shades left with 5.0.0: nothing drew them).
-      for (let n = 1; n <= 18; n++) for (const bg of BG) expect(ratio(t[`mark-${n}`]!, bg), `mark-${n} ${where}`).toBeGreaterThanOrEqual(3)
+      for (let n = 1; n <= 18; n++) for (const bg of BG) expect(contrast(t[`mark-${n}`]!, bg), `mark-${n} ${where}`).toBeGreaterThanOrEqual(3)
     }
   }, 30_000)
 })

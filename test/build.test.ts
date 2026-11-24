@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { themeTokens } from '../src/theme-engine'
 import { BASE_THEME } from '../src/themes'
-import { root } from './helpers'
+import { root, walk } from './helpers'
 
 // RULE FOR WHOEVER WRITES TESTS HERE: Tailwind also scans `test/` (the automatic scan starts from the package
 // folder). A class name with a variant written out in full in a test (for example a breakpoint or container
@@ -232,7 +232,6 @@ describe('package invariants', () => {
     const product = ['FocusStrip', 'Gate', 'Kanban', 'Shell', 'SortCard', 'Stack', 'TaskList', 'TaskSheet', 'ViewHeader']
     expect(Object.keys(UI).filter((k) => product.includes(k))).toEqual([])
     // And no app concept in the sources' names.
-    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
     expect(walk(`${root}src`).map((f) => f.slice(root.length)).filter((f) => /(^|[/._-])(task|stack|sort|kanban|area|project|inbox|section)/i.test(f))).toEqual([])
   })
 
@@ -244,7 +243,6 @@ describe('package invariants', () => {
   })
 
   test('no emoji in component sources', () => {
-    const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => (statSync(`${dir}/${f}`).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]))
     for (const f of walk(`${root}src/components`)) {
       expect(readFileSync(f, 'utf8'), f).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u)
     }

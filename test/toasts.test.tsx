@@ -281,7 +281,7 @@ for (const [name, modal] of modals) {
         <Toasts items={[{ id: 'x', text: 'Deleted.', undo: { onClick: noop } }]} />
       </>,
     )
-    await act(async () => void (await new Promise((r) => setTimeout(r, 10)))) // Radix starts listening after a tick
+    await settle(10) // Radix starts listening after a tick
     const toast = await screen.findByRole('button', { name: 'Undo' })
     click(toast)
     expect(close).not.toHaveBeenCalled()
