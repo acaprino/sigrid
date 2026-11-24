@@ -358,7 +358,7 @@ describe('the quiet search field of a bar', () => {
     for (const c of quiet) expect(classes(box()), c).not.toContain(c)
   })
 
-  test('quiet, it has a fill, a clear border and the rounder corners, is as tall as every field and has the same focus ring', () => {
+  test('quiet, it is a well with round ends: a fill and a clear border, as tall as every field, with the same focus ring', () => {
     render(<SearchField aria-label="Search" variant="quiet" value="invoice" onValueChange={() => {}} />)
     expect(document.querySelector('[data-slot="search-field"]')!.getAttribute('data-variant')).toBe('quiet')
     expect(classes(box())).toEqual(expect.arrayContaining(quiet))
@@ -367,8 +367,11 @@ describe('the quiet search field of a bar', () => {
     expect(classes(box()).filter((c) => c.endsWith('border-input'))).toEqual([])
     // The border is still drawn, clear: the field keeps its size, and forced colours show it.
     expect(classes(box())).toEqual(expect.arrayContaining(['border', 'border-transparent', FIELD_QUIET_RADIUS]))
-    // The corners are a step of the toolkit's radii, said in one place.
-    expect(FIELD_QUIET_RADIUS).toMatch(/^rounded-(sm|md|lg)$/)
+    // How round it is is said in one place, and the button that empties it is as round.
+    expect(quiet).toContain(FIELD_QUIET_RADIUS)
+    expect(classes(screen.getByRole('button', { name: 'Clear the search' }))).toContain(FIELD_QUIET_RADIUS)
+    // No elevation on it (R4): the shade inside its top edge is not one.
+    expect(classes(box()).filter((c) => /^shadow-/.test(c))).toEqual([])
     // The height, the ring and the invalid colour are the field's own.
     const plain = render(<SearchField aria-label="Plain" value="" onValueChange={() => {}} />)
     const kept = classes(plain.getByRole('searchbox', { name: 'Plain' })).filter((c) => /control-md|outline|aria-invalid:border-destructive|min-h-11/.test(c) && !c.includes('hover'))

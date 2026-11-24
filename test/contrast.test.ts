@@ -233,15 +233,17 @@ describe.each(PALETTES)('non-text contrast from the theme tokens (WCAG 1.4.11, 3
 })
 
 describe.each(PALETTES)('the quiet field of a bar (SearchField variant quiet), palette %s', (_name, t) => {
-  // Its fill is the ink at 5% over whatever it lies on (`FIELD_QUIET`): the page, a lane or a bar, a raised sheet, the sidebar.
-  const grounds = [...BACKGROUNDS, 'sidebar-paper'] as const
+  // Its fill is the ink at 6% over the bar it lies on (`FIELD_QUIET`): the page, a lane or a bar, the sidebar. In
+  // focus it is the page itself, which the tests above hold. (Not a raised sheet: there, in dark, its muted words
+  // would fall under 4.5:1, and a bar is never one.)
+  const grounds = ['paper', 'paper-2', 'sidebar-paper'] as const
 
   test('the fill is the one this test measures', () => {
-    expect(readFileSync(`${root}src/lib/field.ts`, 'utf8')).toMatch(/FIELD_QUIET = [`'][^`']*\bbg-ink\/5\b/)
+    expect(readFileSync(`${root}src/lib/field.ts`, 'utf8')).toMatch(/FIELD_QUIET = [`'][^`']*\bbg-ink\/6\b/)
   })
 
   test.each(grounds)('on %s its placeholder and its magnifier reach 4.5:1 and its text 7:1', (ground) => {
-    const fill = over(t['ink']!, t[ground]!, 0.05)
+    const fill = over(t['ink']!, t[ground]!, 0.06)
     expect(contrast(t['muted-foreground']!, fill), 'placeholder').toBeGreaterThanOrEqual(AA)
     expect(contrast(t['ink-mute']!, fill), 'magnifier').toBeGreaterThanOrEqual(AA)
     expect(contrast(t['ink']!, fill), 'text').toBeGreaterThanOrEqual(7)

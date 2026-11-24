@@ -3,16 +3,16 @@
 // browser's own clear button is hidden, so there is one, with a name and the toolkit's focus ring. The field has no
 // label of its own: the caller names it (`aria-label`, or a `FormField` around it).
 // `variant="quiet"` is the same field for a bar (a header, a toolbar), where the search is always there and must not
-// weigh as much as the fields of the page: a quiet fill in place of the border and corners one step rounder
-// (`FIELD_QUIET`, lib/field.ts), the light divider only under the pointer, and the focus ring of every field. Its
-// height, its text and its parts are the same; what tells it from the bar is the fill, and what says it is a search
-// is the magnifier and its words.
+// weigh as much as the fields of the page: a well with round ends, a quiet fill in place of the border (`FIELD_QUIET`,
+// lib/field.ts), the light divider only under the pointer; in focus it is the page's ground with the focus ring of
+// every field. Its height, its text and its parts are the same; what tells it from the bar is the fill, and what says
+// it is a search is the magnifier and its words. The button that empties it is round as well.
 import * as React from "react"
 import { Search } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { Input } from "../primitives/input"
 import { cn } from "../lib/utils"
-import { FIELD_QUIET } from "../lib/field"
+import { FIELD_QUIET, FIELD_QUIET_RADIUS } from "../lib/field"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "../primitives/button"
 import { useMergedRef } from "../lib/refs"
@@ -25,7 +25,7 @@ export type SearchFieldProps = Omit<React.ComponentProps<"input">, "type" | "val
   clearLabel?: string | undefined
   /**
    * `outline` (the default): the field of every form, with its border. `quiet`: for a search in a bar, a
-   * quiet fill, rounder corners and no border at rest, so it does not stand out from the bar; the border shows under the pointer.
+   * well with round ends, a quiet fill and no border at rest, so it does not stand out from the bar; the border shows under the pointer.
    */
   variant?: "outline" | "quiet" | undefined
 }
@@ -57,7 +57,7 @@ function SearchField({ value, onValueChange, clearLabel, variant = "outline", cl
             onValueChange("")
             own.current?.focus()
           }}
-          className={cn("absolute end-1 pointer-coarse:end-0", QUIET_ICON)}
+          className={cn("absolute end-1 pointer-coarse:end-0", QUIET_ICON, variant === "quiet" && FIELD_QUIET_RADIUS)}
         >
           <Icon name="close" className="size-4" />
         </Button>
