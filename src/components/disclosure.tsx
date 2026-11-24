@@ -8,12 +8,14 @@
 // The arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,
 // a quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row
 // the app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.
+// The panel glides open and shut the same way (`internal/reveal.ts`, theme.css).
 import * as React from "react"
 import { Collapsible } from "@base-ui/react/collapsible"
 import { Icon } from "../icons"
 import { cn, isEmptyNode } from "../lib/utils"
 import { FOCUS_RING } from "../lib/focus"
 import { useMotion } from "../internal/motion"
+import { useReveal } from "../internal/reveal"
 
 export type DisclosureProps = {
   /** What the row holds, in the words people would look for («Add a coupon», «Advanced»). */
@@ -42,22 +44,16 @@ function Disclosure({ label, summary, defaultOpen = false, open, onOpenChange, d
   const motion = useMotion(animated)
   const [own, setOwn] = React.useState(defaultOpen)
   const isOpen = open ?? own
-  // Whether the last change was the reader's press: a change that was not is drawn at once (a new arrow, with no turn).
-  const pressed = React.useRef(false)
-  const before = React.useRef(isOpen)
-  const jumps = React.useRef(0)
-  if (before.current !== isOpen) {
-    if (!pressed.current) jumps.current += 1
-    before.current = isOpen
-    pressed.current = false
-  }
+  // Whether the last change was the reader's press: a change that was not is drawn at once (a new arrow, with no
+  // turn; a panel that does not glide).
+  const reveal = useReveal(isOpen)
   const arrow = <Icon name="chevron" className="size-3.5" />
   return (
     <Collapsible.Root
       data-slot="disclosure"
       open={isOpen}
       onOpenChange={(next: boolean) => {
-        pressed.current = true
+        reveal.pressed()
         setOwn(next)
         onOpenChange?.(next)
       }}
@@ -70,7 +66,7 @@ function Disclosure({ label, summary, defaultOpen = false, open, onOpenChange, d
       >
         <span aria-hidden="true" data-slot="disclosure-chevron" className={DISCLOSURE_SLOT}>
           {motion ? (
-            <motion.Turn key={jumps.current} open={isOpen}>
+            <motion.Turn key={reveal.changes} open={isOpen}>
               {arrow}
             </motion.Turn>
           ) : (
@@ -86,7 +82,7 @@ function Disclosure({ label, summary, defaultOpen = false, open, onOpenChange, d
           </span>
         )}
       </Collapsible.Trigger>
-      <Collapsible.Panel data-slot="disclosure-panel" keepMounted className="pt-2 data-closed:hidden">
+      <Collapsible.Panel data-slot="disclosure-panel" keepMounted {...reveal.attrs} className="pt-2 data-closed:hidden">
         {children}
       </Collapsible.Panel>
     </Collapsible.Root>

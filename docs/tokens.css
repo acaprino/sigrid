@@ -379,6 +379,14 @@
   --mark-dot: var(--color-mark-18);
 }
 :root {
+  --motion-faster: 100ms;
+  --motion-fast: 150ms;
+  --motion-normal: 200ms;
+  --motion-ease-enter: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-leave: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-move: cubic-bezier(0.42, 0, 0.58, 1);
+}
+:root {
   --grid-columns-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
   --grid-columns-md: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
   --grid-columns-lg: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));

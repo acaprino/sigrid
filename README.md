@@ -139,6 +139,39 @@ default, a 4px step under Park UI's md form (Park's md is `large` here).
   (a density that asks for more gets more on touch too).
 - `DensityChoice` is the settings control, of the same family as the other look settings; the app stores the choice.
 
+## Motion
+
+Nothing moves unless the app turns motion on (`<MotionProvider animated>`, or a part's own `animated`), and never
+where the system asks for less motion. A movement answers a gesture: it shows where a thing came from, where it
+went, or that a press was felt. What moves:
+
+- a surface that opens comes from the side of what opened it, and one that closes fades out (a sheet goes back
+  towards its edge), with the veil behind it;
+- the sidebar's width eases between its column and its rail;
+- what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar) glides open
+  and shut, and its arrow turns, after the reader's press; opened or closed by the app, it changes at once;
+- the pill under a tab or a choice, the thumb of a switch, the mark of a check, a button under the finger, the
+  notices, a card of a deck thrown or let go, the things of a graph;
+- the fill, the border and the text of a control ease to the state under the pointer.
+
+How it moves is the app's to choose, once for the whole page, as the theme is:
+
+```tsx
+import { MotionProvider, applyMotionFeel } from '@acaprino/sigrid'
+
+<MotionProvider animated={settings.motion} ease="ease-in-out" pace={1}>…</MotionProvider>
+// or, in the entry file, with what the user chose:
+applyMotionFeel({ ease: 'ease-out', pace: 1.5 })
+```
+
+`ease` is the curve of every movement: `ease-in-out` (the default), `ease`, `ease-out`, `ease-in` (the four of CSS;
+`MOTION_EASE_NAMES` lists them for a settings page), or `fluent`, where each kind of movement has its own of Fluent
+2's (what enters decelerates, what leaves accelerates, what moves in place eases). No movement is linear. `pace`
+multiplies the toolkit's times (100, 150 and 200ms): 1 at first, from 0.5 to 2. What moves by script reads the
+choice at each movement; what the stylesheet moves reads it from variables on the root (`--motion-fast`,
+`--motion-ease-move`…: `motionVariables`). A part added to the toolkit takes its time and its curve from there and
+writes none of its own. Where a browser cannot ease a height to and from `auto`, what opens in place only fades.
+
 ## Toolbar and title bar
 
 `Toolbar` is one row of actions and a single Tab stop (Base UI's `Toolbar`: the arrows move among the items).

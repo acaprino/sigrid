@@ -18,7 +18,7 @@ import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
-import { BACKDROP, BASE_THEME, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
+import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
@@ -144,6 +144,48 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
 ]
 
+/** At the foot of the one section on show: the way to the one before it and to the one after it, in the order of the index. */
+function Pager() {
+  const [around, setAround] = React.useState<{ before?: { id: string; title: string }; after?: { id: string; title: string } }>({})
+  React.useEffect(() => {
+    const read = () => {
+      const all = Array.from(document.querySelectorAll<HTMLElement>('section[data-showcase]'))
+      const order = COMPONENT_GROUPS.flatMap((g) => g.ids).filter((id) => all.some((s) => s.id === id))
+      const asked = decodeURIComponent(location.hash.slice(1))
+      const at = Math.max(0, order.indexOf(asked))
+      const named = (id: string | undefined) => (id === undefined ? undefined : { id, title: all.find((s) => s.id === id)?.querySelector('h2')?.textContent ?? id })
+      setAround({ before: named(order[at - 1]), after: named(order[at + 1]) })
+    }
+    read()
+    window.addEventListener('hashchange', read)
+    return () => window.removeEventListener('hashchange', read)
+  }, [])
+  return (
+    <nav aria-label="Sections before and after" className="flex items-center justify-between gap-4 border-t border-line py-6">
+      {around.before ? (
+        <Button variant="outline" asChild>
+          <a href={`#${around.before.id}`}>
+            <Icon name="moveLeft" />
+            <span className="max-w-48 truncate">{around.before.title}</span>
+          </a>
+        </Button>
+      ) : (
+        <span />
+      )}
+      {around.after ? (
+        <Button variant="outline" asChild>
+          <a href={`#${around.after.id}`}>
+            <span className="max-w-48 truncate">{around.after.title}</span>
+            <Icon name="moveRight" />
+          </a>
+        </Button>
+      ) : (
+        <span />
+      )}
+    </nav>
+  )
+}
+
 /**
  * The sidebar of the frame: one row per section of the view on show, read from the page itself so it cannot fall behind
  * it, with the toolkit's own search box to filter them. The row of the section being read is the current one.
@@ -158,6 +200,23 @@ function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated:
     setSections(found.map((s) => ({ id: s.id, title: s.querySelector('h2')?.textContent ?? s.id, icon: s.dataset.icon })))
     const scroller = shellContent()
     if (!scroller) return
+    // The components are shown one section at a time: the one the address names, or the first. The index chooses.
+    if (view === 'components') {
+      const show = () => {
+        const asked = decodeURIComponent(location.hash.slice(1))
+        const now = found.find((s) => s.id === asked) ?? found[0]
+        for (const s of found) s.hidden = s !== now
+        setCurrent(now?.id ?? '')
+        scroller.scrollTop = 0
+      }
+      show()
+      first.current = false
+      window.addEventListener('hashchange', show)
+      return () => {
+        window.removeEventListener('hashchange', show)
+        for (const s of found) s.hidden = false
+      }
+    }
     // The sections did not exist when the browser looked for the address's anchor.
     const asked = () => document.getElementById(decodeURIComponent(location.hash.slice(1)))
     if (first.current && location.hash) asked()?.scrollIntoView()
@@ -2780,6 +2839,8 @@ function App() {
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
+  const [ease, setEase] = React.useState<MotionEase>(DEFAULT_MOTION_FEEL.ease)
+  const [pace, setPace] = React.useState(DEFAULT_MOTION_FEEL.pace)
   // `?shape=sharp|soft|round`: how round the corners are (a parameter of the theme).
   const [shape, setShape] = React.useState<ThemeShape>(isThemeShape(params.get('shape')) ? (params.get('shape') as ThemeShape) : DEFAULT_SHAPE)
   const [tone, setTone] = React.useState(() => {
@@ -2862,7 +2923,7 @@ function App() {
       title="Components"
       lead={
         <>
-          Every part in its variants, sizes and states, by level (the ground, the primitives, the components, the frame, the assemblies), under the theme, shape and density chosen in Look. Hover, pressed and focus are forced with <Code>data-force</Code>, so they can be seen at once. What opens on a gesture opens from the address: <Code>?open=menu</Code>, <Code>popover</Code>, <Code>select</Code>, <Code>dialog</Code>, <Code>sheet</Code> and more.
+          One section at a time, chosen in the index (by level: the ground, the primitives, the components, the frame, the assemblies) or with the two buttons at its foot, under the theme, shape, density and motion chosen in Look. Hover, pressed and focus are forced with <Code>data-force</Code>, so they can be seen at once. What opens on a gesture opens from the address: <Code>?open=menu</Code>, <Code>popover</Code>, <Code>select</Code>, <Code>dialog</Code>, <Code>sheet</Code> and more.
         </>
       }
     >
@@ -2938,10 +2999,11 @@ function App() {
       {/* Motion */}
       <HoverRows animated={animated} />
       <MotionPieces animated={animated} />
+      <Pager />
     </Page>
   )
   return (
-    <MotionProvider animated={animated}>
+    <MotionProvider animated={animated} ease={ease} pace={pace}>
       <Go.Provider value={go}>
         <div className="h-dvh overflow-hidden bg-paper text-ink">
           <AppShell
@@ -2994,6 +3056,18 @@ function App() {
                   <Switch checked={animated} onCheckedChange={setAnimated} animated={animated}>
                     Animations
                   </Switch>
+                  <LookField label="Curve of the movements">
+                    <Select aria-label="Curve of the movements" value={ease} onValueChange={(v) => isMotionEase(v) && setEase(v)} options={MOTION_EASE_NAMES.map((name) => ({ value: name, label: name === 'fluent' ? 'Fluent (one per kind of movement)' : name }))} />
+                  </LookField>
+                  <LookField label="Pace">
+                    <ToggleGroup aria-label="Pace" value={String(pace)} onValueChange={(v) => setPace(Number(v))} animated={animated} className="self-start">
+                      {[['0.75', 'Quick'], ['1', 'Normal'], ['1.5', 'Slow'], ['2', 'Slower']].map(([value, label]) => (
+                        <ToggleGroupItem key={value} value={value!}>
+                          {label}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </LookField>
                 </div>
               </Inspector>
             }

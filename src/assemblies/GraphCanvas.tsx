@@ -119,7 +119,7 @@ import { markHueAttrs } from '../colors'
 import { FOCUS_RING } from '../lib/focus'
 import { cn } from '../lib/utils'
 import { FIELDS } from '../internal/desktop-guard'
-import { useMotionAllowed } from '../internal/motion'
+import { motionMs, useMotionAllowed } from '../internal/motion'
 import { useWords, type Words } from '../words'
 import { Count } from '../primitives/count'
 import { Logo } from '../primitives/logo'
@@ -1480,7 +1480,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // A group opens in place only where the app can be asked to.
   const groups = !tree && onToggle !== undefined
   // The time of what moves after a gesture: none unless the app turned motion on and the system allows it.
-  const glide = useMotionAllowed(animated) ? GLIDE_MS : 0
+  // At the app's pace (`applyMotionFeel`): the stylesheet's glide reads the same time from its variable.
+  const glide = useMotionAllowed(animated) ? motionMs(GLIDE_MS) : 0
   const graph = React.useMemo<Graph>(() => ({ nodes, edges }), [nodes, edges])
   // Each thing by its id, once for the graph; the first of two with the same id, as the layout reads them.
   const byId = React.useMemo(() => {

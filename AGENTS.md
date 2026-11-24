@@ -89,7 +89,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   400, 500 and 600; icons 16 or 14px (R7).
 - No gradient, no blur or glass, no emoji in the interface, no decorative icon, no animation that loops.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
-  with it off.
+  with it off. How it moves is the app's choice, once for the whole page: the curve (`ease-in-out` at first, or
+  `ease`, `ease-in`, `ease-out`, `fluent`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
+  `pace`. No part writes a time or a curve of its own.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
   a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never

@@ -402,6 +402,14 @@
          "required": true
         },
         {
+         "name": "ease",
+         "type": "MotionEase"
+        },
+        {
+         "name": "pace",
+         "type": "number"
+        },
+        {
          "name": "children",
          "type": "ReactNode",
          "required": true
@@ -411,9 +419,31 @@
      ],
      "types": [
       {
+       "name": "MotionFeel",
+       "doc": "How the toolkit moves: the curve, and the pace (1: the toolkit's own times; 1.5: half as long again).",
+       "fields": [
+        {
+         "name": "ease",
+         "type": "MotionEase",
+         "required": true
+        },
+        {
+         "name": "pace",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
        "name": "MotionImpl",
        "doc": "The Motion chunk's module: what `useMotion` returns when a component animates.",
        "fields": [
+        {
+         "name": "tr",
+         "type": "(name: keyof typeof MOTION) => Movement",
+         "required": true,
+         "doc": "A movement of `MOTION` under the feel in use (`applyMotionFeel`): its time at the app's pace, on the app's curve. With the `fluent` feel at the toolkit's own pace its values are `MOTION`'s own."
+        },
         {
          "name": "NoticeCard",
          "type": "({ y, enter, still, leaving, beyond, ...props }: Omit<HTMLMotionProps<\"div\">, \"initial\" | \"animate\" | \"exit\" | \"transition\"> & { y: number; enter: boolean; still?: boolean; leaving: NoticeLeaving; be…",
@@ -551,6 +581,12 @@
          "doc": "The transitions of the toolkit's motion, one per kind of movement: what enters decelerates, what leaves accelerates, what moves in place eases at both ends."
         },
         {
+         "name": "paced",
+         "type": "(ms: number) => number",
+         "required": true,
+         "doc": "A duration of the toolkit, in milliseconds, at the pace in use."
+        },
+        {
          "name": "TRAVEL_PX",
          "type": "{ readonly hint: 4; readonly card: 8; readonly row: 8; readonly notice: 24; readonly sheet: 32; }",
          "required": true,
@@ -590,7 +626,16 @@
       }
      ],
      "also": [
+      "applyMotionFeel",
+      "DEFAULT_MOTION_FEEL",
+      "isMotionEase",
       "loadMotion",
+      "MOTION_EASE_NAMES",
+      "MOTION_EASES",
+      "MOTION_PACE",
+      "MotionEase",
+      "motionFeel",
+      "motionVariables",
       "preloadMotion",
       "useMotion"
      ]
@@ -4088,7 +4133,7 @@
     },
     {
      "file": "src/components/disclosure.tsx",
-     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.\nThe arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,\na quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row\nthe app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.",
+     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.\nThe arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,\na quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row\nthe app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.\nThe panel glides open and shut the same way (`internal/reveal.ts`, theme.css).",
      "components": [
       {
        "name": "Disclosure",

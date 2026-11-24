@@ -18,6 +18,7 @@ import { FOCUS_RING_INSET } from "../lib/focus"
 import { GROUP_LABEL } from "../lib/rows"
 import { NARROW, useMedia } from "../internal/media"
 import { useMotion } from "../internal/motion"
+import { useReveal } from "../internal/reveal"
 import { useWords } from "../words"
 import { AppShellContext } from "./app-shell"
 import { NavContext, ToneContext } from "./nav-list"
@@ -168,6 +169,8 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
   const motion = useMotion(animated)
   const [open, setOpen] = React.useState(defaultOpen)
   const shown = !collapsible || open || rail || query !== ""
+  // The rows glide open and shut after a press on the heading; a search or the rail opens them at once.
+  const reveal = useReveal(shown)
   const list = React.useRef<HTMLUListElement>(null)
   const id = React.useId()
   const [none, setNone] = React.useState(false)
@@ -186,16 +189,16 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
   return (
     <div data-slot="sidebar-group" hidden={none} className={cn("flex flex-col gap-0.5", className)}>
       {label === undefined || rail ? null : collapsible ? (
-        <button type="button" data-slot="sidebar-group-heading" aria-expanded={shown} aria-controls={id} onClick={() => setOpen(!shown)} className={CONTROL}>
+        <button type="button" data-slot="sidebar-group-heading" aria-expanded={shown} aria-controls={id} onClick={() => { reveal.pressed(); setOpen(!shown) }} className={CONTROL}>
           {heading}
-          {motion ? <motion.Turn open={shown}>{arrow}</motion.Turn> : <span aria-hidden="true" className={cn("inline-flex", shown && "rotate-90")}>{arrow}</span>}
+          {motion ? <motion.Turn key={reveal.changes} open={shown}>{arrow}</motion.Turn> : <span aria-hidden="true" className={cn("inline-flex", shown && "rotate-90")}>{arrow}</span>}
         </button>
       ) : (
         <div data-slot="sidebar-group-heading" className={cn("flex min-h-(--control-xs) items-center gap-2 px-(--row-pad) text-sidebar-mute", GROUP_LABEL)}>
           {heading}
         </div>
       )}
-      <ul ref={list} id={id} role="list" aria-label={label} hidden={!shown} className="flex flex-col gap-0.5">
+      <ul ref={list} id={id} role="list" aria-label={label} hidden={!shown} {...reveal.attrs} className="flex flex-col gap-0.5">
         {children}
       </ul>
     </div>
