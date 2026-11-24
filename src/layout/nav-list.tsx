@@ -48,14 +48,20 @@ function NavList({ tone = "page", className, children, ...props }: NavListProps)
 // The chosen row has, with the tint, a short bar in the accent at its left edge; a count at the end of a row is a pill,
 // in the accent on the chosen row and neutral on the others (the owner's design of 2026-11-22: before it, no bar and
 // plain numbers).
+/** A `Count` inside is a pill: its form. Its colours are the tone's (`COUNT_PILL_ON_SIDEBAR` on the sidebar). */
+export const COUNT_PILL =
+  "[&_[data-slot=count]]:min-w-5 [&_[data-slot=count]]:rounded-full [&_[data-slot=count]]:px-1.5 [&_[data-slot=count]]:py-0.5 [&_[data-slot=count]]:text-center [&_[data-slot=count]]:font-semibold"
+/** The colours of that pill on the sidebar's surface, where the row is not the chosen one. */
+export const COUNT_PILL_ON_SIDEBAR = "[&_[data-slot=count]]:bg-sidebar-ink/12 [&_[data-slot=count]]:text-sidebar-ink"
+
 const ROW = cn(
   "relative flex min-h-(--row-height) w-full items-center gap-2 rounded-md px-(--row-pad) text-start text-sm pointer-coarse:min-h-11",
   "aria-[current=page]:before:absolute aria-[current=page]:before:top-1/2 aria-[current=page]:before:start-0 aria-[current=page]:before:h-4 aria-[current=page]:before:w-0.75 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:rounded-full aria-[current=page]:before:content-['']",
-  "[&_[data-slot=count]]:min-w-5 [&_[data-slot=count]]:rounded-full [&_[data-slot=count]]:px-1.5 [&_[data-slot=count]]:py-0.5 [&_[data-slot=count]]:text-center [&_[data-slot=count]]:font-semibold",
+  COUNT_PILL,
 )
 const TONES: Record<Tone, string> = {
   page: "text-ink-soft hover:bg-selected/60 hover:text-ink aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink aria-[current=page]:before:bg-primary [&_[data-slot=count]]:bg-ink/9 [&_[data-slot=count]]:text-ink-soft aria-[current=page]:[&_[data-slot=count]]:bg-primary aria-[current=page]:[&_[data-slot=count]]:text-primary-foreground",
-  sidebar: "text-sidebar-ink hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink aria-[current=page]:before:bg-sidebar-accent [&_[data-slot=count]]:bg-sidebar-ink/12 [&_[data-slot=count]]:text-sidebar-ink aria-[current=page]:[&_[data-slot=count]]:bg-sidebar-accent aria-[current=page]:[&_[data-slot=count]]:text-sidebar-accent-ink",
+  sidebar: `text-sidebar-ink hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink aria-[current=page]:before:bg-sidebar-accent ${COUNT_PILL_ON_SIDEBAR} aria-[current=page]:[&_[data-slot=count]]:bg-sidebar-accent aria-[current=page]:[&_[data-slot=count]]:text-sidebar-accent-ink`,
 }
 // The second line of a row: the muted ink of its tone; on the chosen row, the row's own ink a step quieter (as in `ItemRow`).
 const MUTE: Record<Tone, string> = { page: "text-ink-mute", sidebar: "text-sidebar-mute" }

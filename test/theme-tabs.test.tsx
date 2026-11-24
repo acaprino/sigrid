@@ -6,7 +6,8 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { preloadMotion } from '../src/internal/motion'
-import { AppShell, Toolbar, ToolbarTab, ToolbarTabs } from '../src/layout'
+import { densityVariables } from '../src/density'
+import { AppShell, TitleBar, Toolbar, ToolbarTab, ToolbarTabs, WindowControls } from '../src/layout'
 import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { DEFAULT_FONT, FONTS, SYSTEM_FONT } from '../src/theme-catalog'
 import type { ThemeDef } from '../src/theme-catalog'
@@ -298,5 +299,60 @@ describe('bold tabs on the preset, measured', () => {
     console.log(`[theme-tabs] ${scheme} pairs under their threshold: ${short.length ? short.join(' | ') : 'none'}`)
     // Only the border may be short: anything else would have failed above.
     expect(short.every((s) => s.includes('the border of the chosen item'))).toBe(true)
+  })
+})
+
+/* ———— The line of a bold tab and the edge it is near: clear ground between the line and the sheet ———— */
+
+describe('bold tabs: the line keeps clear of the edge it is near', () => {
+  // No layout engine runs here (jsdom), so the two boxes are read from what places them: the view is as tall as the
+  // bar (`self-stretch` all the way down), and the line is at a distance of the spacing scale from the view's edge.
+  const SPACING_PX = 4
+  const CLEAR = 0.75
+
+  test('in the bar and in the row under it the line stops 3px above the lower edge; at the foot, 3px under the upper one; without the look it is on the edge as before', () => {
+    render(
+      <>
+        <Bar />
+        <Toolbar aria-label="Foot">
+          <ToolbarTabs aria-label="Places" value="a" onValueChange={() => {}} edge="top" layout="stacked">
+            <ToolbarTab value="a">Home</ToolbarTab>
+          </ToolbarTabs>
+        </Toolbar>
+      </>,
+    )
+    const below = classes(screen.getByRole('button', { name: 'One' }))
+    expect(below).toContain(AFTER + 'bottom-0')
+    expect(below).toContain(BOLD + AFTER + 'bottom-' + CLEAR)
+    expect(below.some((c) => c.includes('top-'))).toBe(false)
+    const above = classes(screen.getByRole('button', { name: 'Home' }))
+    expect(above).toContain(AFTER + 'top-0')
+    expect(above).toContain(BOLD + AFTER + 'top-' + CLEAR)
+    expect(above.some((c) => c.includes('bottom-'))).toBe(false)
+    // The distance between the line and the edge, and so the hairline of what lies beyond it: at least 2px, here 3.
+    expect(CLEAR * SPACING_PX).toBe(3)
+    expect(CLEAR * SPACING_PX).toBeGreaterThanOrEqual(2)
+    // The view fills the height of what holds it, so its edge is the bar's edge: the group and the views stretch.
+    const group = screen.getByRole('group', { name: 'Views' })
+    expect(classes(group)).toEqual(expect.arrayContaining(['items-stretch', 'self-stretch']))
+    expect(classes(group.closest('[data-slot="toolbar"]'))).toContain('self-stretch')
+    // The line is 2px thick, so the views' words keep at least the room they had: the bar is 2px taller (below).
+    expect(below).toContain(AFTER + 'h-0.5')
+  })
+
+  test('the bar is 2px taller under the look, 46px at compact density; the compact bar and a bar without the look keep their height', () => {
+    const at = themeCss.indexOf('[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]) {')
+    expect(at).toBeGreaterThan(-1)
+    expect(themeCss.slice(at, themeCss.indexOf('}', at))).toContain('min-height: calc(var(--titlebar-height) + 0.125rem);')
+    expect(themeCss).toContain('--titlebar-height: calc(var(--control-sm) + 1rem);')
+    // A dense control, 8px above and below it, and the 2px of the look.
+    const px = (id: 'compact' | 'normal' | 'large') => Number.parseFloat(densityVariables(id)['--density-control-sm']!) + 16 + 0.125 * 16
+    expect(px('compact')).toBe(46)
+    expect(px('normal')).toBe(50)
+    expect(px('large')).toBe(54)
+    // What the bar holds stays in its middle: the bar centres its items, and the window's buttons fill its height.
+    render(<TitleBar windowControls={<WindowControls onClose={() => {}} />}>Name</TitleBar>)
+    expect(classes(document.querySelector('[data-slot="title-bar"]'))).toContain('items-center')
+    expect(classes(document.querySelector('[data-slot="window-controls"]'))).toContain('self-stretch')
   })
 })

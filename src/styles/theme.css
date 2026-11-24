@@ -288,6 +288,12 @@
 [data-slot="title-bar"][data-size="compact"] {
   min-height: calc(var(--control-xs) + 0.25rem);
 }
+/* Under a theme with bold tabs (`data-tabs="bold"`) the bar is 2px taller (46px at compact density): the line of the
+   chosen view stops 3px short of the bar's edge (toolbar.tsx), and the views keep their room above it. A compact bar
+   holds no views of that kind and keeps its height. What is in the bar stays in its middle: the bar centres it. */
+[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]) {
+  min-height: calc(var(--titlebar-height) + 0.125rem);
+}
 [data-slot="title-bar"][data-window-controls] {
   padding-inline-end: var(--titlebar-end);
 }
