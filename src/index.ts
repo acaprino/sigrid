@@ -9,6 +9,7 @@
 export { SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, type ColorThemePick, type SpotKind } from './color-theme'
 export { COLORS, COLOR_NAMES, colorHue, markHueAttrs } from './colors'
 export { DEFAULT_DENSITY, DENSITIES, DENSITY_LIMITS, DENSITY_VARIABLES, TOUCH_TARGET, applyDensity, densityById, densityOf, densityVariables, densityWith, isDensityId, type Density, type DensityDef, type DensityId, type DensityOverride } from './density'
+export { HUE_NAMES, grayScale, hueColor, hueScale, isHueName, namedTheme, type HueName, type HueScale, type NamedThemePick } from './hues'
 export { HARMONIES, accentSuggestions, duoTheme, pageTint, type AccentSuggestion, type DuoPick, type Harmony } from './harmony'
 export { APP_HEIGHT_VAR, useAppHeight } from './internal/app-height'
 export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions } from './internal/desktop-guard'

@@ -18,7 +18,7 @@ import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
-import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
+import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
@@ -136,7 +136,7 @@ type Group = { label: string; icon: IconName; ids: readonly string[] }
  * shows parts of two levels is in the group of the first part of its title. A section in no group goes under «More».
  */
 const COMPONENT_GROUPS: readonly Group[] = [
-  { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
+  { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'hue-scales', 'theme-gallery'] },
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
@@ -396,6 +396,51 @@ function Tokens() {
           <span key={c} title={COLOR_NAMES[c]} {...markHueAttrs(c)} data-mark-dot="" className="size-2 rounded-full bg-(--mark-dot)" />
         ))}
       </Row>
+    </Section>
+  )
+}
+
+const SCALE_TONES = [...TONE_PRESETS, 'gray'] as const
+const SCALE_TONE_NAMES: Readonly<Record<(typeof SCALE_TONES)[number], string>> = { calm: 'Calm', balanced: 'Balanced', vivid: 'Vivid', gray: 'Gray' }
+
+/** The eighteen tints as scales of twelve steps, in the tone chosen here and the scheme chosen above (`src/hues.ts`). */
+function HueScales({ scheme, animated }: { scheme: ThemeScheme; animated: boolean }) {
+  const [tone, setTone] = React.useState<TonePreset | 'gray'>('vivid')
+  const columns = 'grid grid-cols-[4.5rem_1fr] items-center gap-2'
+  return (
+    <Section id="hue-scales" title="Tints and their scales" note="The eighteen tints by name, each in twelve steps: 1 and 2 backgrounds, 3 to 5 the backgrounds of a component, 6 to 8 borders, 9 and 10 the fill and its hover (with the label that reads on them), 11 and 12 text. In the three tones, and as the gray of the tint. A board to look at: the theme engine does not read its roles from these scales, and no part offers their steps as classes.">
+      <ToggleGroup aria-label="Tone of the scales" value={tone} onValueChange={(v) => v && setTone(v as TonePreset | 'gray')} animated={animated}>
+        {SCALE_TONES.map((id) => (
+          <ToggleGroupItem key={id} value={id}>
+            {SCALE_TONE_NAMES[id]}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <div data-sample="hue-scales" data-tone={tone} className="flex max-w-4xl flex-col gap-1">
+        <div className={columns}>
+          <span />
+          <div className="grid grid-cols-12 gap-0.5 text-center text-2xs text-ink-mute tabular-nums">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span key={i}>{i + 1}</span>
+            ))}
+          </div>
+        </div>
+        {HUE_NAMES.map((hue, at) => {
+          const scale = tone === 'gray' ? grayScale(hue, scheme) : hueScale(hue, tone, scheme)
+          return (
+            <div key={hue} data-hue={hue} className={columns}>
+              <span className="truncate text-2xs text-ink-soft">{COLOR_NAMES[COLORS[at]!]}</span>
+              <div className="grid grid-cols-12 gap-0.5">
+                {scale.steps.map((hex, i) => (
+                  <span key={i} data-step={i + 1} title={`${i + 1}: ${hex}`} style={{ background: hex, color: scale.on }} className="grid h-6 place-items-center rounded-sm text-2xs font-medium">
+                    {i === 8 ? 'Aa' : null}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </Section>
   )
 }
@@ -3099,6 +3144,7 @@ function App() {
     >
       <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
       <Tokens />
+      <HueScales scheme={scheme} animated={animated} />
       <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
         <Row label="match colours">
           <div className="w-full max-w-xl">
