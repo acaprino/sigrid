@@ -5752,6 +5752,13 @@
      ]
     },
     {
+     "file": "src/internal/edge-scroll.ts",
+     "about": "A row that scrolls sideways by itself while something is dragged near its left or right edge.",
+     "also": [
+      "useEdgeAutoScroll"
+     ]
+    },
+    {
      "file": "src/internal/file-drop.tsx",
      "about": "Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)\n\nA zone that takes a file: dropped on it, or chosen with the system picker, so dragging is never the only way (WCAG\n2.5.7). The look is the attachments zone's (Park's `file-upload` recipe): the raised sheet with l3 corners and a 2px\ndashed border in the control colour that turns solid ink while a file is dragged over it (the accent is not for this,\nR2), two lines of text and no upload icon (the words say it, R6), 96px tall so it is an easy target with a mouse and a\nfinger. Ark UI's FileUpload gives the real button that opens the picker, the input behind it (outside the\naccessibility tree and the tab order, emptied before each choice so the same file can be chosen again) and the checks\nof type, size and count; the drop is the toolkit's `useDropTarget` (a drag that starts in the page is left alone).\nThe words are the app's: the label (the button's name, the same while dragging or busy), the hint (its description),\nthe line while dragging and while busy, and the error under the zone. Busy, the button keeps its focus and ignores\nclicks and drops, like a loading Button. No animation.",
      "components": [
@@ -5857,6 +5864,13 @@
       "ItemKind",
       "kindIcon",
       "kindLabel"
+     ]
+    },
+    {
+     "file": "src/internal/lines.ts",
+     "about": "The text of a capture input as lines: a non-empty line is a thing, spaces at the edges do not count.",
+     "also": [
+      "splitLines"
      ]
     },
     {
