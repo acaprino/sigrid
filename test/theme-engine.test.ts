@@ -367,12 +367,12 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     const apart = tokensFor({ ...base, radii: { sm: 4, md: 6, lg: 8, xl: 12, button: 8, chip: 999 } }, 'light')
     expect(apart.shape).toMatchObject({ '--radius-button': '8px', '--radius-chip': '999px' })
     for (const bad of [{ sm: 4, md: 6, lg: 8 }, { sm: 4, md: 6, lg: 8, xl: 12.5 }, { sm: 4, md: 6, lg: 8, xl: -1 }, { sm: 4, md: 6, lg: 8, xl: 99 }, [4, 6, 8, 12]] as unknown as ThemeDef['radii'][]) {
-      expect(tokensFor({ ...base, radii: bad }, 'light').shape).toMatchObject({ '--radius-sm': '4px', '--radius-lg': '10px', '--radius-xl': '10px' })
+      expect(tokensFor({ ...base, radii: bad }, 'light').shape).toMatchObject({ '--radius-sm': '2px', '--radius-lg': '6px', '--radius-xl': '6px' })
     }
   })
 
-  test('the shape: Park UI\'s l1/l2/l3 corners a step rounder, 4/6/10px, round checkboxes, stroke 1.75', () => {
-    expect(tk.shape).toMatchObject({ '--radius-sm': '4px', '--radius-md': '6px', '--radius-lg': '10px', '--radius-xl': '10px', '--radius-button': '6px', '--radius-chip': '6px' })
+  test('the shape: Park UI\'s l1/l2/l3 corners as it ships them, 2/4/6px, round checkboxes, stroke 1.75', () => {
+    expect(tk.shape).toMatchObject({ '--radius-sm': '2px', '--radius-md': '4px', '--radius-lg': '6px', '--radius-xl': '6px', '--radius-button': '4px', '--radius-chip': '4px' })
     expect(tk.shape['--radius-check']).toBe('9999px')
     expect(tk.shape['--icon-stroke']).toBe('1.75')
   })
@@ -621,10 +621,11 @@ describe('the shape is a parameter of the theme (2026-11-22)', () => {
     expect(radii({ ...base, shape: 'round' })).toEqual(['6px', '10px', '14px', '14px', '10px', '10px', '9999px'])
   })
 
-  test('without a shape, or with a value that is not one, the theme is soft', () => {
-    expect(radii(base)).toEqual(radii({ ...base, shape: 'soft' }))
-    expect(radii({ ...base, shape: 'pill' as never })).toEqual(radii({ ...base, shape: 'soft' }))
-    expect(DEFAULT_SHAPE).toBe('soft')
+  test('without a shape, or with a value that is not one, the theme is sharp (2/4/6px); soft and round stay a choice', () => {
+    expect(radii(base)).toEqual(radii({ ...base, shape: 'sharp' }))
+    expect(radii({ ...base, shape: 'pill' as never })).toEqual(radii({ ...base, shape: 'sharp' }))
+    expect(radii({ ...base, shape: 'soft' })).toEqual(['4px', '6px', '10px', '10px', '6px', '6px', '9999px'])
+    expect(DEFAULT_SHAPE).toBe('sharp')
     expect(THEME_SHAPES).toEqual(['sharp', 'soft', 'round'])
     expect(isThemeShape('round')).toBe(true)
     expect(isThemeShape('pill')).toBe(false)

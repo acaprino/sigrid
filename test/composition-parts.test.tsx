@@ -180,7 +180,7 @@ test('the button that opens the drawer is there only where the sidebar is a draw
 describe('the props that spare a class', () => {
   test('an empty state fills its region with a page\'s margins', () => {
     render(<Empty fill title="Nothing here" />)
-    expect(classes(slot('empty'))).toEqual(expect.arrayContaining(['h-full', 'p-6']))
+    expect(classes(slot('empty'))).toEqual(expect.arrayContaining(['h-full', 'flex-1', 'p-6']))
   })
 
   test('a segment control is as wide as its items, or fills its place with items of one width', () => {

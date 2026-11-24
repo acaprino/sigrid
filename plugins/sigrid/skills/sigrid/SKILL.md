@@ -46,6 +46,13 @@ of `AGENTS.md`). The app's icon is its own mark; the icons of its interface are 
   `CommandsProvider`, and `applyKeptScheme` in the entry file. Draw no switch for the scheme.
 - The words a component says by itself are English placeholders: an app in another language passes its own with
   `WordsProvider`.
+- To design a screen or a flow, or to review one, walk the eight steps of `docs/design-laws.md` in order, at 390px
+  first and then at the width most people use. It is Sigrid's adaptation of Charles Liu's `charles-design-laws`: the
+  same twenty laws, with what the toolkit already does for each and the three places where Sigrid chooses otherwise.
+  If that skill is installed too, follow `docs/design-laws.md`, which wins where they differ. A review changes
+  nothing: it ends in the table of the doc (severity, law, where, before, after).
+- The corners are the theme's (`sharp` 2/4/6px by default; `soft` and `round` are the theme's choice). Never write a
+  radius of your own to make a screen rounder or squarer.
 
 ## 4. Check
 
@@ -64,4 +71,4 @@ app on this machine (some projects build and test only in CI), look at the scree
 ## 5. Report
 
 Say which components you used, what the check found and what you could not verify (what you did not see in a
-browser).
+browser). For a review, give what `docs/design-laws.md` asks for: the job and the tasks, what is missing, then its table.

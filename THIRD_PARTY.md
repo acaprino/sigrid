@@ -90,7 +90,7 @@ Notes:
   of Park's code is copied, only the values of its recipes, written as Tailwind classes on our tokens
 
 What is taken: Park's `md` size as the default (controls 40px, text 14px/20px, labels 14px medium; `sm` 36px and `xs`
-32px only inside dense rows), its nested corners l1/l2/l3 = 4/6/10px (Park ships 2/4/6px: each level is a step rounder here) (`--radius-sm/md/lg` in `src/theme-engine.ts`),
+32px only inside dense rows), its nested corners l1/l2/l3 = 2/4/6px, as Park ships them and the default here since 2026-11-24 (`--radius-sm/md/lg` in `src/theme-engine.ts`; `soft` 4/6/10px, a step rounder, and `round` 6/10/14px are a theme's choice),
 its button and badge variants under our names (solid → `default`, subtle in the neutral gray → `secondary` and
 `QUIET_CHIP`, outline, plain → `ghost`; neutral, never the accent, by the owner's rules of 2026-11-20 in
 `DESIGN.md`), its `kbd` plain variant, and its layered shadows (xs/sm/md/lg/xl, a drop and a 1px ring) as the
@@ -391,6 +391,42 @@ copyright and the licence below are the ones written in the files' own name tabl
 - **Inter** 4.001 (**SIL Open Font License 1.1**, Copyright 2016 The Inter Project Authors, https://github.com/rsms/inter):
   `inter-0.woff2` to `inter-6.woff2`, at the same three weights. The fallback in every stack, for the glyphs outside
   Latin.
+
+## charles-design-laws
+
+- Project: `charles-design-laws`, a skill of https://github.com/LemonFace0309/charles-skills
+  (`skills/drops/charles-design-laws`)
+- Copy read: commit **`37692481effc68b1f66597e23d88900a35495970`** of the repository (read on 2026-11-24)
+- License: **MIT** (Copyright (c) 2026 Charles Liu, full text below)
+- **Adapted, not installed or copied**: `docs/design-laws.md` follows the skill's procedure (eight steps, twenty laws
+  in its order, the form of a written review) and says, for each law, what the toolkit does and what the app does;
+  where the toolkit chooses otherwise it says so. The skill's own text is not in the package. The laws are Jon
+  Yablonski's Laws of UX (https://lawsofux.com), with progressive disclosure, recognition over recall and the default
+  effect, as the skill credits them.
+
+```text
+MIT License
+
+Copyright (c) 2026 Charles Liu
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## zero-slop-design
 

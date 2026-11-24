@@ -79,7 +79,7 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   one element (R4).
 - No colour written by hand, no Tailwind palette class (`bg-red-500`, `text-gray-600`): colours come from the theme
   engine through the tokens. A colour the user gave to a thing (a project, a label) is an 8px dot, never a fill (R10).
-- Radii 4, 6 and 10px through the tokens; a 4px spacing grid; text sizes 12, 13, 14, 16, 18, 20 and 24px; weights
+- Radii 2, 4 and 6px through the tokens (a theme may choose the rounder `soft` 4/6/10 or `round` 6/10/14); a 4px spacing grid; text sizes 12, 13, 14, 16, 18, 20 and 24px; weights
   400, 500 and 600; icons 16 or 14px (R7).
 - No gradient, no blur or glass, no emoji in the interface, no decorative icon, no animation that loops.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works

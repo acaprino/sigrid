@@ -140,13 +140,13 @@
 
 /* ———— Shape: themeTokens(BASE_THEME, …).shape, written on the root by applyTheme; in dark only what differs ———— */
 :root {
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 10px;
-  --radius-button: 6px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-button: 4px;
   --radius-check: 9999px;
-  --radius-chip: 6px;
+  --radius-chip: 4px;
   --icon-stroke: 1.75;
   --icon-cap: round;
   --icon-join: round;

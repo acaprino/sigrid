@@ -47,7 +47,7 @@ x-zsd:
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R14: controls every page shares keep their place, above all on a phone."
-      - "R7: radii 4, 6 and 10px, or a theme's `sharp` 2/4/6 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 2, 4 and 6px, or a theme's `soft` 4/6/10 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour, 2px away (a field: on its border), 3:1 or more in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
@@ -267,9 +267,9 @@ spacing:
   row-height: 40px
   row-pad: 8px
 rounded:
-  l1: 4px
-  l2: 6px
-  l3: 10px
+  l1: 2px
+  l2: 4px
+  l3: 6px
   full: 9999px
 components:
   button-primary:

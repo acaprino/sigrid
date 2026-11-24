@@ -8,8 +8,8 @@
 // - For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,
 //   `aria-posinset`): what is not drawn is still counted.
 // The box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),
-// as `Empty fill` and `Page fit` are, so an app writes no class for it; `pad` is the room inside the box, around the
-// rows, a step of the scale.
+// as `Empty fill` and `Page fit` are, so an app writes no class for it; beside other parts in a `Column fill` it takes
+// what they leave. `pad` is the room inside the box, around the rows, a step of the scale.
 import * as React from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { cn } from "../../lib/utils"
@@ -66,7 +66,7 @@ function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8,
   const first = drawn[0]
   const last = drawn[drawn.length - 1]
   return (
-    <div ref={box} data-slot="virtual-list" data-fill={fill || undefined} className={cn("overflow-y-auto", fill && "h-full min-h-0", pad && PAD[pad], className)}>
+    <div ref={box} data-slot="virtual-list" data-fill={fill || undefined} className={cn("overflow-y-auto", fill && "h-full min-h-0 flex-1", pad && PAD[pad], className)}>
       <ul ref={list} role="list" {...props} className="flex flex-col gap-0.5" style={{ paddingTop: first ? first.start : 0, paddingBottom: last ? Math.max(0, virtualizer.getTotalSize() - last.end) : 0 }}>
         {drawn.map((item) => (
           <React.Fragment key={rowKey ? rowKey(item.index) : item.index}>{children(item.index)}</React.Fragment>

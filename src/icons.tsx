@@ -32,11 +32,13 @@ import {
   Clapperboard,
   Clock,
   Cloud,
+  CodeXml,
   Columns3,
   Copy,
   Database,
   Download,
   Ellipsis,
+  ExternalLink,
   FileIcon,
   Folder,
   FolderInput,
@@ -44,10 +46,14 @@ import {
   FolderPlus,
   FolderTree,
   FunnelX,
+  GitBranch,
+  Globe,
   History,
   Inbox,
   Info,
   Italic,
+  Key,
+  Layers,
   Link,
   List,
   ListFilter,
@@ -58,7 +64,9 @@ import {
   MessagesSquare,
   Mic,
   Minus,
+  MonitorSmartphone,
   Moon,
+  Package,
   Palette,
   PanelLeftClose,
   PanelLeftOpen,
@@ -74,6 +82,7 @@ import {
   RefreshCw,
   Reply,
   ReplyAll,
+  Router,
   Search,
   Send,
   Settings,
@@ -95,6 +104,7 @@ import {
   UserPen,
   Users,
   Video,
+  Waypoints,
   X,
   Zap,
   type LucideIcon,
@@ -106,9 +116,18 @@ import { cn } from './lib/utils'
 /**
  * What an icon can mean: the main views, the sidebar's groups, the settings sections, the entries of the menus
  * (the «…» actions, the profile menu, the «Move to…» places, the view bar's filter and sort), the rows of a tree of
- * files (`folder`, `folderOpen` for a folder shown open, `file`), and the four tones of a message (`info`, `check`,
- * `alert` for a warning, `error` for a failure). `error` is the one look of a failure, the circle with an X, wherever
- * one is shown: a `Note`, a toast, a progress and a step that failed; it is never `info` (the circle with an «i»).
+ * files (`folder`, `folderOpen` for a folder shown open, `file`), the four tones of a message (`info`, `check`,
+ * `alert` for a warning, `error` for a failure), and the parts of a project and of a system. `error` is the one look of
+ * a failure, the circle with an X, wherever one is shown: a `Note`, a toast, a progress and a step that failed; it is
+ * never `info` (the circle with an «i»).
+ * The parts of a project and of a system, each a meaning no other name has: `code` (source code, a symbol of it),
+ * `branch` (a line of work that leaves another), `package` (a unit that is built or shipped), `layers` (things one over
+ * the other, a group that opens in place), `graph` (things joined by relations; what holds what is `structure`),
+ * `gateway` (the way in to a system; what answers behind it is a `service`), `device` (a computer, a phone), `key` (what
+ * proves who one is; the person is `account`), `globe` (the web, and a thing that is out there) and `external`, a press
+ * that leaves the app (a page opened in the browser; `link` is the address). `globe` says what a thing is, `external`
+ * what a press does: a thing outside what a graph is about is neither, it says so with the word «external»
+ * (`GraphNode.external`).
  */
 export const ICON_NAMES = [
   'all',
@@ -198,6 +217,16 @@ export const ICON_NAMES = [
   'video',
   'alert',
   'error',
+  'code',
+  'branch',
+  'package',
+  'layers',
+  'graph',
+  'gateway',
+  'device',
+  'key',
+  'globe',
+  'external',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
@@ -302,6 +331,16 @@ const GLYPHS: Readonly<Record<IconName, LucideIcon>> = {
   video: Video,
   alert: TriangleAlert,
   error: CircleX,
+  code: CodeXml,
+  branch: GitBranch,
+  package: Package,
+  layers: Layers,
+  graph: Waypoints,
+  gateway: Router,
+  device: MonitorSmartphone,
+  key: Key,
+  globe: Globe,
+  external: ExternalLink,
 }
 
 /**
