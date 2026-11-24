@@ -2121,8 +2121,39 @@
     },
     {
      "file": "src/primitives/layout.tsx",
-     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,\n`Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a part's own place among the others, a named section, an area that scrolls, the body of a\npage (or a page of exactly one screen, `Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px for a screen that is worked in; 2xl 32,\n3xl 48, 4xl 64px for a page of a few large parts, such as a welcome). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.\n`Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),\ntakes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).",
      "components": [
+      {
+       "name": "Cell",
+       "doc": "One part's own place in a `Cluster`, a `Column` or a `Grid`, where the row, the pile or the grid decides for all its parts: it lines up by itself, takes the room the others leave, or is wider than a column of the grid. A part that sits as the others do needs none.",
+       "props": [
+        {
+         "name": "align",
+         "type": "\"center\" | \"stretch\" | \"start\" | \"end\"",
+         "doc": "How this part alone lines up across its row or pile, whatever the others do: at the start, the centre or the end, or stretched. In a `Cluster` that is up and down (an avatar at the top of a message that runs to four lines); in a `Column`, side to side; in a `Grid`, up and down in its cell. Absent: as the row, the pile or the grid says."
+        },
+        {
+         "name": "grow",
+         "type": "boolean",
+         "doc": "It takes the room the other parts leave: the width in a `Cluster`, the height in a `Column fill`. `Spacer` leaves that room empty; this fills it with a part. With two in one row they share it evenly."
+        },
+        {
+         "name": "span",
+         "type": "2 | \"full\"",
+         "doc": "In a `Grid`: `2`, two columns wide where the grid has two, and one where it has one (a chart among numbers); `\"full\"`, the whole row at any width (a heading or a note between the rows of cells). Absent: one column."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list item, a section, an aside, a navigation, a list. A list keeps `role=\"list\"`."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
       {
        "name": "Cluster",
        "doc": "A row of parts side by side that wraps to the next line when the room runs out: buttons, fields, chips.",
@@ -2144,7 +2175,7 @@
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"center\" | \"stretch\" | \"start\" | \"end\"",
          "doc": "How they line up across the row (default `center`)."
         },
         {
@@ -2180,7 +2211,7 @@
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"center\" | \"stretch\" | \"start\" | \"end\"",
          "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
         },
         {
@@ -2207,7 +2238,7 @@
       },
       {
        "name": "Grid",
-       "doc": "Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window.",
+       "doc": "Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window. Every part is one cell; one that asks for more room than the others (a chart among numbers) is a `Cell` with `span`.",
        "props": [
         {
          "name": "min",
@@ -2380,6 +2411,7 @@
       }
      ],
      "also": [
+      "CellProps",
       "ClusterProps",
       "ColumnProps",
       "GridProps",

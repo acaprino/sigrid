@@ -134,7 +134,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "palettes": "Palettes",
   "tokens": "Tokens",
   "theme-gallery": "Theme gallery",
-  "layout": "Column, Cluster, Split, Grid, Section, ScrollArea, Page and Text",
+  "layout": "Column, Cluster, Split, Grid, Cell, Section, ScrollArea, Page and Text",
   "button": "Button",
   "toggle-group": "ToggleGroup",
   "badge": "Badge",

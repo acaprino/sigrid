@@ -16,7 +16,7 @@ import { cn } from "../lib/utils"
 import type { Space } from "../primitives/layout"
 
 // Whole class names, so that Tailwind finds them in this file.
-const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6" }
+const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6", "2xl": "p-8", "3xl": "p-12", "4xl": "p-16" }
 
 export type VirtualListProps = {
   /** Name of the list for screen readers («Messages»). */

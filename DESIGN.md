@@ -263,7 +263,9 @@ spacing:
   md: 12px
   lg: 16px
   xl: 24px
-  section: 32px
+  2xl: 32px
+  3xl: 48px
+  4xl: 64px
   control-xs: 28px
   control-sm: 32px
   control-md: 36px

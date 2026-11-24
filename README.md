@@ -627,7 +627,7 @@ list below goes by what a part is for, and names parts of every level):
 - `/primitives`: `Button`, `Input`, `Textarea`, `Checkbox`, `Select`, `Switch`, `Slider`, `RadioGroup*`,
   `ToggleGroup*`, `Tabs*`, `Sheet*`, `DialogRoot`/`Dialog*` parts, `DropdownMenu*`, `Popover*`, `Tooltip`, `Kbd`,
   `Badge`, `Count`, `Avatar`, `Logo`, `Progress*`, `Table*`, `Card`, `Heading`, `Dot`, `Separator`, `Thumbnail`, `Icon`, and
-  the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
+  the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
 - `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
   `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
   `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,

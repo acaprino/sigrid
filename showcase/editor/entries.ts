@@ -25,7 +25,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'withinLimit', 'withWords', 'WordsProvider',
   ],
   '@acaprino/sigrid/primitives': [
-    'Avatar', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Checkbox', 'Cluster', 'Collapsible',
+    'Avatar', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Cell', 'Checkbox', 'Cluster', 'Collapsible',
     'Column', 'Count', 'DialogClose', 'DialogContent', 'DialogDescription', 'DialogFooter', 'DialogHeader',
     'DialogOverlay', 'DialogPortal', 'DialogRoot', 'DialogTitle', 'DialogTrigger', 'Dot', 'DropdownMenu',
     'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup', 'DropdownMenuItem', 'DropdownMenuLabel',
