@@ -57,8 +57,353 @@
      ]
     },
     {
+     "file": "src/components/Attachments.tsx",
+     "about": "Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)\n\n«Attachments» (a section of an entry's details): the list of the attachments and the zone to add one. From Park's `file-upload`\nrecipe comes the look: the zone on the raised sheet with l3 corners and a 2px dashed border that turns solid (in the\nink, R2) while something is dragged over it, two lines of text (no upload icon: the words say it, R6), and each\nattachment a raised item with l3 corners and the xs shadow in place of Park's hairline (R4: file tiles get a shadow). The control rests on Ark UI's\nFileUpload (`@ark-ui/react/file-upload`).\nArk gives: the button that opens the system picker and the `<input type=\"file\">` behind it (outside the\naccessibility tree and the Tab order, emptied before each choice so the same file can be chosen again), and the\ncheck of every file against the limit (`maxFileSize`): the ones within it are accepted, the others rejected with\ntheir reason. Its list of chosen files is kept empty: a file goes to `onAttach` at once and the list is the caller's\n(`AttachmentView`), with thumbnail, state, «Open» and «Remove» that hand the actions back to `onAction`.\nOurs: the drop (`useDropTarget`: Ark's dropzone takes files only and keeps every other drag for itself, while here a\nlink is an attachment too and dropped text is refused with a message; a dropped file goes through Ark's check like a\nchosen one); the words, in English; the field for a typed link; focus after «Remove». No animation, no preview, no\nnetwork.",
+     "components": [
+      {
+       "name": "AttachmentMarks",
+       "doc": "Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero.",
+       "props": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]"
+        },
+        {
+         "name": "count",
+         "type": "number"
+        },
+        {
+         "name": "attachments",
+         "type": "AttachmentMarksInput"
+        }
+       ]
+      },
+      {
+       "name": "AttachmentsSection",
+       "doc": "«Attachments»: the list and the zone to add (drop, «Add a file», a typed link).",
+       "props": [
+        {
+         "name": "attachments",
+         "type": "AttachmentView<A>[]",
+         "required": true
+        },
+        {
+         "name": "onAction",
+         "type": "(action: A) => void",
+         "required": true
+        },
+        {
+         "name": "onAttach",
+         "type": "(payload: AttachPayload) => void",
+         "required": true
+        },
+        {
+         "name": "maxFileBytes",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "thumbnails",
+         "type": "Record<string, string | null | undefined>",
+         "required": true
+        },
+        {
+         "name": "onNeedThumbnail",
+         "type": "((id: string) => void)",
+         "required": true
+        },
+        {
+         "name": "textNotice",
+         "type": "string",
+         "doc": "What the section says when text is dropped on it (text is not an attachment): the app says where text goes instead. Absent: the toolkit's words, a neutral sentence."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "AttachmentMarksInput",
+       "doc": "The summary `{ kinds, count }`, or the attachments themselves (`AttachmentView[]`): the `kind` of each is enough.",
+       "fields": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]"
+        },
+        {
+         "name": "count",
+         "type": "number"
+        }
+       ]
+      },
+      {
+       "name": "AttachmentSummary",
+       "fields": [
+        {
+         "name": "kinds",
+         "type": "AttachmentKind[]",
+         "required": true
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "AttachmentView",
+       "parameters": [
+        "A = unknown"
+       ],
+       "doc": "An attachment in the details. `A` is the app's action type: the sheet does not read it, it hands it back to `onAction`. `open` null: no «Open». `href` is shown as text, never as a clickable link: it is opened only with `open`.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "kind",
+         "type": "AttachmentKind",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "detail",
+         "type": "string | null",
+         "required": true,
+         "doc": "A line under the title («2.4 MB», the sender of an email). Null: none."
+        },
+        {
+         "name": "href",
+         "type": "string | null",
+         "required": true
+        },
+        {
+         "name": "state",
+         "type": "AttachmentState",
+         "required": true
+        },
+        {
+         "name": "stateLabel",
+         "type": "string | null",
+         "doc": "The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»)."
+        },
+        {
+         "name": "thumbnail",
+         "type": "boolean",
+         "doc": "An image with its thumbnail ready: the row shows a 64px thumbnail in place of the type mark, taken from `the section's `thumbnails[id]``. Absent or false: the row as before."
+        },
+        {
+         "name": "open",
+         "type": "A | null",
+         "required": true
+        },
+        {
+         "name": "remove",
+         "type": "A",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AttachmentsSectionProps",
+      "AttachmentState",
+      "stateText",
+      "summarize",
+      "typedUrl"
+     ]
+    },
+    {
+     "file": "src/components/AttachmentViewer.tsx",
+     "about": "The attachment viewer: a document or a picture opened over the page, in a sheet from the right, with its name, its\npages one under the other (each keeps its place before its image arrives, and asks for it with `onNeedPage`), the\nzoom in steps (`VIEWER_ZOOMS`) and «Open the original»; it says when it is loading and when the file cannot be shown.\nThe pages and what the buttons do are the app's.",
+     "components": [
+      {
+       "name": "AttachmentViewer",
+       "doc": "The preview of an attachment (the app's details sheet opens it with the `preview` prop, the package always exports sixteen components): pages one below the other in a sheet on the right (full width on the phone, a sheet inside the page like a details sheet everywhere else). Only the drawing is here: whoever uses the package opens and draws the document, provides the pages with their measures, provides the image when `onNeedPage` asks for it and chooses the zoom. A page asks for its image only when it is close to entering the view.",
+       "props": [
+        {
+         "name": "open",
+         "type": "boolean",
+         "required": true
+        },
+        {
+         "name": "onOpenChange",
+         "type": "(open: boolean) => void",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the file."
+        },
+        {
+         "name": "status",
+         "type": "AttachmentViewerStatus",
+         "required": true
+        },
+        {
+         "name": "pages",
+         "type": "ViewerPage[]",
+         "doc": "The pages, in order. They are only looked at when `status.kind === 'ready'`."
+        },
+        {
+         "name": "zoom",
+         "type": "number",
+         "doc": "Zoom: 1 is the width of the column. Chosen by whoever uses the package (also to draw sharp)."
+        },
+        {
+         "name": "onZoomChange",
+         "type": "((zoom: number) => void)"
+        },
+        {
+         "name": "onNeedPage",
+         "type": "((index: number) => void)",
+         "doc": "A page has entered (or is about to enter) the view: whoever uses the package draws it and provides `src`."
+        },
+        {
+         "name": "onOpenOriginal",
+         "type": "(() => void)",
+         "doc": "«Open the original»: downloads the file or opens it in the program. Absent: no button."
+        },
+        {
+         "name": "originalLabel",
+         "type": "string",
+         "doc": "The name of the `onOpenOriginal` action."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The sheet enters from the right (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "AttachmentViewerStatus",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"loading\""
+        },
+        {
+         "name": "label",
+         "type": "string"
+        },
+        {
+         "name": "message",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ViewerPage",
+       "doc": "A page of the document: the measures reserve its place before the image arrives.",
+       "fields": [
+        {
+         "name": "width",
+         "type": "number",
+         "required": true,
+         "doc": "Width and height of the page, in any unit (only the ratio matters)."
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "src",
+         "type": "string | null",
+         "doc": "The image of the page (a `blob:` or `data:` address). Absent: the page is not drawn yet."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "AttachmentViewerProps",
+      "VIEWER_ZOOMS"
+     ]
+    },
+    {
+     "file": "src/components/ChipsInput.tsx",
+     "about": "Park UI (MIT) tags-input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts)\n\nFrom Park's `tags-input` recipe (md) comes the look: the field 40px tall with l2 corners and 6px of side padding,\n6px between the chips, each chip 28px tall with l1 corners and its own 20px remove button. What the field does rests\non Ark UI's TagsInput (`@ark-ui/react/tags-input`).\nArk gives: Enter and the comma that close a label, a pasted «a, b, c» split into labels, the text left in the box\nadded when the field is left, the arrows that walk the chips from the box (Delete or Backspace removes the one\nreached), the remove button of each chip with its name, the announcements to screen readers, one Tab stop for the\nwhole field. Ours: the chip is the neutral `Badge` with a dot in the color of its name (`tag-color.ts`, R10); the words are about\n«labels», in English; a label already there is not added again whatever its case; Backspace in the empty box removes\nthe last label at once (Ark would first select it and remove it at the second press); a chip is not edited in place;\na comma that arrives with other text in one go (an autocorrection, a keyboard's suggestion) closes the labels before\nit and leaves the rest in the box (Ark would add the text it had before that event).\nWith `suggestions` the box is also a combobox (Ark UI's Combobox, on the same text box): while the user writes, the\nlabels that match and are not in the field yet are listed under it; the arrows move, Enter or a click adds the one\nreached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).\nNo animation.",
+     "components": [
+      {
+       "name": "ChipsInput",
+       "doc": "A list of labels as chips with an input: add with Enter or comma (also by pasting «a, b, c» or by leaving the input), remove with the chip's button, and with Backspace on an empty input the last one is removed.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "The id of the writing input, for the field's label."
+        },
+        {
+         "name": "value",
+         "type": "string[]",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(next: string[]) => void",
+         "required": true
+        },
+        {
+         "name": "placeholder",
+         "type": "string"
+        },
+        {
+         "name": "suggestions",
+         "type": "readonly string[]",
+         "doc": "Labels to offer while the user writes (the ones used elsewhere, people from an address book). The ones already in the field are left out. Filtered here by the text typed, ignoring case, unless `onQuery` is given."
+        },
+        {
+         "name": "onQuery",
+         "type": "((text: string) => void)",
+         "doc": "The text being typed: with it the caller filters (and may fetch) and passes the new `suggestions`."
+        },
+        {
+         "name": "suggestionsLabel",
+         "type": "string",
+         "doc": "The name of the list of suggestions for screen readers. Absent: the toolkit's words («Suggestions»)."
+        },
+        {
+         "name": "display",
+         "type": "((value: string) => string)",
+         "doc": "What a chip shows in place of its value (a person's name in place of the whole address). The value stays what the caller holds and what a chip is told apart by; a suggestion shows the name and, after it, the value in the muted ink, and is found by either."
+        },
+        {
+         "name": "invalid",
+         "type": "((value: string) => boolean)",
+         "doc": "True for a value that is not valid (an address without its domain): its chip has the destructive border and text, and screen readers hear so after its name. The field does not refuse it: the caller decides what to do with it."
+        },
+        {
+         "name": "separators",
+         "type": "readonly string[]",
+         "doc": "The characters that close a label, each one a single character. Default: the comma. Enter always closes one. A separator typed, pasted or arriving with other text splits it the same way (`[',', ';', ' ']` for addresses)."
+        },
+        {
+         "name": "dot",
+         "type": "boolean",
+         "doc": "The 8px dot in the colour of the label's name (R10), on by default. Off for chips that are not coloured labels (people, addresses)."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ChipsInputProps"
+     ]
+    },
+    {
      "file": "src/components/ColorMatch.tsx",
-     "about": "",
+     "about": "Two colours for a theme of the person's own: the theme colour, picked among the app's swatches or with the system's\ncolour field, and the spot colour that goes with it, chosen among three proposals matched to the theme colour (from\nquiet to loud), none, or a colour of the person's own. Both are radio groups (the swatches are the toolkit's\n`RadioGroup`; the spot's choices are buttons with `radioArrows`, as the look settings' cards). Under them a sample of\na window drawn in the theme the two colours make (`colorTheme`, with the colours as chosen): a chosen row with its\ncount, something due, something running and a button, so the person sees what each colour will be used for.",
      "components": [
       {
        "name": "ColorMatch",
@@ -107,6 +452,246 @@
      ],
      "also": [
       "ColorMatchProps"
+     ]
+    },
+    {
+     "file": "src/components/DateField.tsx",
+     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)\nFrom Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of\nside padding); the card is Park's date-picker content (l3 corners, the lg elevation).\nThe date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker\n(`@ark-ui/react/date-picker`). Two variants (a form can use both), with the same contract as the native fields they\nreplace: `DateField` gives and receives `YYYY-MM-DD` (or null), `DateTimeField` `YYYY-MM-DDTHH:mm` in local time\n(or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time\nzones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).\nArk gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the\nbutton), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).\nThe card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its\nfocus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.",
+     "components": [
+      {
+       "name": "DateField",
+       "doc": "A local date (a due date, a birthday): a click or Enter on a day chooses it and closes.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "`YYYY-MM-DD` or empty/null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: string | null) => void",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "words",
+         "type": "{ time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
+         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`)."
+        },
+        {
+         "name": "picks",
+         "type": "readonly DatePick[]",
+         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
+        }
+       ]
+      },
+      {
+       "name": "DateRangeField",
+       "doc": "A range of local days (a stay, a leave, a filter): a click chooses the first day, a second one the last and closes; the days between take the selection tint. The two clicks may come in either order, and on the same day for a range of one day. The caller hears of a range only when it has both ends.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "value",
+         "type": "DateRange | null",
+         "required": true,
+         "doc": "The two ends as `YYYY-MM-DD`, or null. A value whose ends are not real dates, or are the wrong way round, reads as null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: DateRange | null) => void",
+         "required": true
+        },
+        {
+         "name": "picks",
+         "type": "readonly DateRangePick[]",
+         "doc": "Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days."
+        }
+       ]
+      },
+      {
+       "name": "DateTimeField",
+       "doc": "A local day and, if needed, a local time (the reminder). Without a date there is no reminder. A click on a day chooses it and immediately gives `YYYY-MM-DDTHH:mm`; a click on the day already chosen removes it (no «Clear the date» button). The time is off by default: the «Time» checkbox turns it on, and when off it is 09:00. With a date already set the checkbox starts on if the time is not the default one. A half-typed time (the empty field while writing) never enters the value: the last valid one stays. «Done» or Esc closes.",
+       "props": [
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "`YYYY-MM-DD` or empty/null."
+        },
+        {
+         "name": "onChange",
+         "type": "(value: string | null) => void",
+         "required": true
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "placeholder",
+         "type": "string",
+         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The field cannot be opened: half opacity, out of the Tab order."
+        },
+        {
+         "name": "locale",
+         "type": "string",
+         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
+        },
+        {
+         "name": "words",
+         "type": "{ time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
+         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`)."
+        },
+        {
+         "name": "picks",
+         "type": "readonly DatePick[]",
+         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "DatePick",
+       "doc": "A quick choice of a date field: its name and the day it sets, as `YYYY-MM-DD`.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DateRange",
+       "doc": "A range of local days, both ends included: `start` is never after `end`.",
+       "fields": [
+        {
+         "name": "start",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "DateRangePick",
+       "doc": "A quick choice of a range field: its name and the two ends it sets, as `YYYY-MM-DD`.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "start",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "string",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DateFieldProps",
+      "DateRangeFieldProps",
+      "DateTimeFieldProps",
+      "dayPicks",
+      "rangePicks"
      ]
     },
     {
@@ -169,6 +754,47 @@
      ],
      "also": [
       "DialogProps"
+     ]
+    },
+    {
+     "file": "src/components/DurationField.tsx",
+     "about": "A duration field: hours and minutes in two number inputs, four shortcuts and\n«None». The field does not add, convert or check the total: it sends hours and minutes as they are and the app decides\n(up to 24 hours, minutes from 0 to 59; zero and zero means «None»). Two inputs have no syntax to get wrong, and the\nshortcuts cover the frequent cases with one click.",
+     "components": [
+      {
+       "name": "DurationField",
+       "props": [
+        {
+         "name": "value",
+         "type": "DurationParts | null",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(value: DurationParts | null) => void",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "DurationParts",
+       "fields": [
+        {
+         "name": "hours",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "minutes",
+         "type": "number",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DurationFieldProps"
      ]
     },
     {
@@ -593,33 +1219,41 @@
      ]
     },
     {
-     "file": "src/components/PortalContainer.tsx",
-     "about": "",
+     "file": "src/components/Swatches.tsx",
+     "about": "A choice among the user's colours: the toolkit's radio group of swatches, each named by its colour (the words' names,\nor «Color 8» for one that has none, never the hexadecimal).",
      "components": [
       {
-       "name": "PortalContainerProvider",
-       "doc": "Where the overlays of this subtree mount: menus, popovers, selects, tooltips and dialogs. By default the page's `document.body`. An app that draws part of its React tree into another document (a popup window, an iframe) wraps that part with the other document's body, so its overlays open there and not in the page that owns the tree. `null` is the page's body: a provider whose element is not there yet (a layer that mounts with its children) keeps its place in the tree, so nothing under it is mounted twice when the element arrives.",
+       "name": "Swatches",
+       "doc": "Color choice for what the user colours (a folder, a group): the SmoothUI/Base UI RadioGroup (`components/ui/radio-group`) with solid swatches. Like any radio group: a single Tab stop (the chosen color, or the first), the arrows move and choose wrapping around the ends, Home and End go to the first and the last.",
        "props": [
         {
-         "name": "container",
-         "type": "HTMLElement | null",
+         "name": "colors",
+         "type": "readonly string[]"
+        },
+        {
+         "name": "value",
+         "type": "string",
          "required": true
         },
         {
-         "name": "children",
-         "type": "ReactNode",
+         "name": "onChange",
+         "type": "(color: string) => void",
          "required": true
+        },
+        {
+         "name": "label",
+         "type": "string"
         }
        ]
       }
      ],
      "also": [
-      "usePortalContainer"
+      "SwatchesProps"
      ]
     },
     {
      "file": "src/components/ThemeGallery.tsx",
-     "about": "",
+     "about": "The theme gallery: a compact picker of the app's themes, one tile each. A tile is drawn in its own theme, in the\nscheme and tone the app shows now (`themeVariables` on the tile alone): its name on the theme's primary fill, then a\nsmall sketch of a window (the sidebar with a chosen row, two rows, a button), so the person sees the theme before\nchoosing it. The tiles are one radio group: one Tab stop, the arrows, Home and End move and choose (`radioArrows`, as\nthe look settings' cards), and the chosen tile has the accent edge and a check in a dot (the choice is not shown by\nthe edge alone). An optional last tile, dashed, stands for a theme of the person's own: choosing it calls the app,\nwhich opens its own editor; it is the chosen one when `selected` is null. Two columns, three from 352px of its own\nwidth (a container query: it fits a narrow settings panel).",
      "components": [
       {
        "name": "ThemeGallery",
@@ -1069,7 +1703,7 @@
     },
     {
      "file": "src/components/ui/calendar.tsx",
-     "about": "Park UI (MIT) date-picker 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts)\n\nFrom Park's `date-picker` recipe (and its component, which draws each day as a plain icon button) comes the look: the\ntitle between two plain arrows, the weekday row in semibold muted text, the days as 36px plain buttons (Park's sm)\nwith l2 corners and a quiet fill under the pointer, the chosen day solid in the accent (Park's solid variant), today\nmarked by a short accent dash under the number, 16px of padding. The grid itself is not written here: it is the day,\nmonth and year views of Ark UI's DatePicker (`@ark-ui/react/date-picker`). It lives inside a `DatePicker.Root` (see\n`internal/date-field.tsx`), which holds the value.\nArk gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,\nHome and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the\ntitle that opens the months and then the years, and the announcement of the month when it changes.\nOurs: the sizes (`--cell-size` is the density token `--control-sm`, 2.25rem at `normal`, 2.75rem with a finger; the days outside the month softer), the names in English (see `CALENDAR_WORDS`), a real `<button>` for each day (Space\nchooses too), the weekday headers left readable by screen readers, with the full name in `abbr`, and Home and End\nfor the start and the end of the week, as in the APG date grid (Ark's go to the start and the end of the month).",
+     "about": "Park UI (MIT) date-picker 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/date-picker.ts)\n\nFrom Park's `date-picker` recipe (and its component, which draws each day as a plain icon button) comes the look: the\ntitle between two plain arrows, the weekday row in semibold muted text, the days as 36px plain buttons (Park's sm)\nwith l2 corners and a quiet fill under the pointer, the chosen day solid in the accent (Park's solid variant), today\nmarked by a short accent dash under the number, 16px of padding. The grid itself is not written here: it is the day,\nmonth and year views of Ark UI's DatePicker (`@ark-ui/react/date-picker`). It lives inside a `DatePicker.Root` (see\n`components/DateField.tsx`), which holds the value.\nArk gives the grid and its keyboard (arrows between days, PageUp and PageDown for the month, with Shift for the year,\nHome and End for the week, Enter chooses; one day only has `tabIndex` 0), the days outside the month, today, the\ntitle that opens the months and then the years, and the announcement of the month when it changes.\nOurs: the sizes (`--cell-size` is the density token `--control-sm`, 2.25rem at `normal`, 2.75rem with a finger; the days outside the month softer), the names in English (see `CALENDAR_WORDS`), a real `<button>` for each day (Space\nchooses too), the weekday headers left readable by screen readers, with the full name in `abbr`, and Home and End\nfor the start and the end of the week, as in the APG date grid (Ark's go to the start and the end of the month).",
      "components": [
       {
        "name": "Calendar",
@@ -3644,7 +4278,7 @@
         {
          "name": "open",
          "type": "boolean",
-         "doc": "Below 860px: the drawer is open. Above, the sidebar is always there and this is not read."
+         "doc": "Where the sidebar is a drawer, the drawer is open: inside an `AppShell` under 620px of frame, alone under 860px of screen. Where it is a column or a rail, it is always there and this is not read."
         },
         {
          "name": "onOpenChange",
@@ -4755,12 +5389,12 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" |…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" |…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -4973,7 +5607,7 @@
     },
     {
      "file": "src/icons.tsx",
-     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
+     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThat binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the\nmeaning; a part draws a Lucide glyph directly only where `Icon` cannot give the same thing: a glyph no name means\n(the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the kinds\nof an item, which `kindIcon` hands out as Lucide's components), or a glyph that holds what `Icon`'s wrapping `<span>`\nwould take from it (its own place, `ml-auto` or `absolute`: the submenu's chevron, the search field's magnifier; the\nbar's drag attribute; a `data-slot`; its place in a box that is not a flex box, where the wrapper moves it by a pixel:\nthe chevron of a select, the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check\non a card of the look settings).\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
      "components": [
       {
        "name": "Icon",
@@ -4981,7 +5615,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | (string & {}) | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" |…",
          "required": true
         },
         {
@@ -5012,591 +5646,6 @@
      "also": [
       "APP_HEIGHT_VAR",
       "useAppHeight"
-     ]
-    },
-    {
-     "file": "src/internal/attachment-viewer.tsx",
-     "about": "A page of the document: the measures reserve its place before the image arrives.",
-     "components": [
-      {
-       "name": "AttachmentViewer",
-       "doc": "The preview of an attachment (the app's details sheet opens it with the `preview` prop, the package always exports sixteen components): pages one below the other in a sheet on the right (full width on the phone, a sheet inside the page like a details sheet everywhere else). Only the drawing is here: whoever uses the package opens and draws the document, provides the pages with their measures, provides the image when `onNeedPage` asks for it and chooses the zoom. A page asks for its image only when it is close to entering the view.",
-       "props": [
-        {
-         "name": "open",
-         "type": "boolean",
-         "required": true
-        },
-        {
-         "name": "onOpenChange",
-         "type": "(open: boolean) => void",
-         "required": true
-        },
-        {
-         "name": "title",
-         "type": "string",
-         "required": true,
-         "doc": "The name of the file."
-        },
-        {
-         "name": "status",
-         "type": "AttachmentViewerStatus",
-         "required": true
-        },
-        {
-         "name": "pages",
-         "type": "ViewerPage[]",
-         "doc": "The pages, in order. They are only looked at when `status.kind === 'ready'`."
-        },
-        {
-         "name": "zoom",
-         "type": "number",
-         "doc": "Zoom: 1 is the width of the column. Chosen by whoever uses the package (also to draw sharp)."
-        },
-        {
-         "name": "onZoomChange",
-         "type": "((zoom: number) => void)"
-        },
-        {
-         "name": "onNeedPage",
-         "type": "((index: number) => void)",
-         "doc": "A page has entered (or is about to enter) the view: whoever uses the package draws it and provides `src`."
-        },
-        {
-         "name": "onOpenOriginal",
-         "type": "(() => void)",
-         "doc": "«Open the original»: downloads the file or opens it in the program. Absent: no button."
-        },
-        {
-         "name": "originalLabel",
-         "type": "string",
-         "doc": "The name of the `onOpenOriginal` action."
-        },
-        {
-         "name": "animated",
-         "type": "boolean",
-         "doc": "The sheet enters from the right (off by default, never with prefers-reduced-motion)."
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "AttachmentViewerStatus",
-       "fields": [
-        {
-         "name": "kind",
-         "type": "\"loading\""
-        },
-        {
-         "name": "label",
-         "type": "string"
-        },
-        {
-         "name": "message",
-         "type": "string"
-        }
-       ]
-      },
-      {
-       "name": "ViewerPage",
-       "doc": "A page of the document: the measures reserve its place before the image arrives.",
-       "fields": [
-        {
-         "name": "width",
-         "type": "number",
-         "required": true,
-         "doc": "Width and height of the page, in any unit (only the ratio matters)."
-        },
-        {
-         "name": "height",
-         "type": "number",
-         "required": true
-        },
-        {
-         "name": "src",
-         "type": "string | null",
-         "doc": "The image of the page (a `blob:` or `data:` address). Absent: the page is not drawn yet."
-        }
-       ]
-      }
-     ],
-     "also": [
-      "AttachmentViewerProps",
-      "VIEWER_ZOOMS"
-     ]
-    },
-    {
-     "file": "src/internal/attachments.tsx",
-     "about": "Park UI (MIT) file-upload 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/file-upload.ts)\n\n«Attachments» (a section of an entry's details): the list of the attachments and the zone to add one. From Park's `file-upload`\nrecipe comes the look: the zone on the raised sheet with l3 corners and a 2px dashed border that turns solid (in the\nink, R2) while something is dragged over it, two lines of text (no upload icon: the words say it, R6), and each\nattachment a raised item with l3 corners and the xs shadow in place of Park's hairline (R4: file tiles get a shadow). The control rests on Ark UI's\nFileUpload (`@ark-ui/react/file-upload`).\nArk gives: the button that opens the system picker and the `<input type=\"file\">` behind it (outside the\naccessibility tree and the Tab order, emptied before each choice so the same file can be chosen again), and the\ncheck of every file against the limit (`maxFileSize`): the ones within it are accepted, the others rejected with\ntheir reason. Its list of chosen files is kept empty: a file goes to `onAttach` at once and the list is the caller's\n(`AttachmentView`), with thumbnail, state, «Open» and «Remove» that hand the actions back to `onAction`.\nOurs: the drop (`useDropTarget`: Ark's dropzone takes files only and keeps every other drag for itself, while here a\nlink is an attachment too and dropped text is refused with a message; a dropped file goes through Ark's check like a\nchosen one); the words, in English; the field for a typed link; focus after «Remove». No animation, no preview, no\nnetwork.",
-     "components": [
-      {
-       "name": "AttachmentMarks",
-       "doc": "Indicator of the attachments on a row or a details sheet: one mark per kind and the number. Nothing at zero.",
-       "props": [
-        {
-         "name": "kinds",
-         "type": "AttachmentKind[]"
-        },
-        {
-         "name": "count",
-         "type": "number"
-        },
-        {
-         "name": "attachments",
-         "type": "AttachmentMarksInput"
-        }
-       ]
-      },
-      {
-       "name": "AttachmentsSection",
-       "doc": "«Attachments»: the list and the zone to add (drop, «Add a file», a typed link).",
-       "props": [
-        {
-         "name": "attachments",
-         "type": "AttachmentView<A>[]",
-         "required": true
-        },
-        {
-         "name": "onAction",
-         "type": "(action: A) => void",
-         "required": true
-        },
-        {
-         "name": "onAttach",
-         "type": "(payload: AttachPayload) => void",
-         "required": true
-        },
-        {
-         "name": "maxFileBytes",
-         "type": "number",
-         "required": true
-        },
-        {
-         "name": "thumbnails",
-         "type": "Record<string, string | null | undefined>",
-         "required": true
-        },
-        {
-         "name": "onNeedThumbnail",
-         "type": "((id: string) => void)",
-         "required": true
-        },
-        {
-         "name": "textNotice",
-         "type": "string",
-         "doc": "What the section says when text is dropped on it (text is not an attachment): the app says where text goes instead. Absent: the toolkit's words, a neutral sentence."
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "AttachmentMarksInput",
-       "doc": "The summary `{ kinds, count }`, or the attachments themselves (`AttachmentView[]`): the `kind` of each is enough.",
-       "fields": [
-        {
-         "name": "kinds",
-         "type": "AttachmentKind[]"
-        },
-        {
-         "name": "count",
-         "type": "number"
-        }
-       ]
-      },
-      {
-       "name": "AttachmentSummary",
-       "fields": [
-        {
-         "name": "kinds",
-         "type": "AttachmentKind[]",
-         "required": true
-        },
-        {
-         "name": "count",
-         "type": "number",
-         "required": true
-        }
-       ]
-      },
-      {
-       "name": "AttachmentView",
-       "parameters": [
-        "A = unknown"
-       ],
-       "doc": "An attachment in the details. `A` is the app's action type: the sheet does not read it, it hands it back to `onAction`. `open` null: no «Open». `href` is shown as text, never as a clickable link: it is opened only with `open`.",
-       "fields": [
-        {
-         "name": "id",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "kind",
-         "type": "AttachmentKind",
-         "required": true
-        },
-        {
-         "name": "title",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "detail",
-         "type": "string | null",
-         "required": true,
-         "doc": "A line under the title («2.4 MB», the sender of an email). Null: none."
-        },
-        {
-         "name": "href",
-         "type": "string | null",
-         "required": true
-        },
-        {
-         "name": "state",
-         "type": "AttachmentState",
-         "required": true
-        },
-        {
-         "name": "stateLabel",
-         "type": "string | null",
-         "doc": "The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»)."
-        },
-        {
-         "name": "thumbnail",
-         "type": "boolean",
-         "doc": "An image with its thumbnail ready: the row shows a 64px thumbnail in place of the type mark, taken from `the section's `thumbnails[id]``. Absent or false: the row as before."
-        },
-        {
-         "name": "open",
-         "type": "A | null",
-         "required": true
-        },
-        {
-         "name": "remove",
-         "type": "A",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "also": [
-      "AttachmentsSectionProps",
-      "AttachmentState",
-      "stateText",
-      "summarize",
-      "typedUrl"
-     ]
-    },
-    {
-     "file": "src/internal/chips.tsx",
-     "about": "Park UI (MIT) tags-input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tags-input.ts)\n\nFrom Park's `tags-input` recipe (md) comes the look: the field 40px tall with l2 corners and 6px of side padding,\n6px between the chips, each chip 28px tall with l1 corners and its own 20px remove button. What the field does rests\non Ark UI's TagsInput (`@ark-ui/react/tags-input`).\nArk gives: Enter and the comma that close a label, a pasted «a, b, c» split into labels, the text left in the box\nadded when the field is left, the arrows that walk the chips from the box (Delete or Backspace removes the one\nreached), the remove button of each chip with its name, the announcements to screen readers, one Tab stop for the\nwhole field. Ours: the chip is the neutral `Badge` with a dot in the color of its name (`tag-color.ts`, R10); the words are about\n«labels», in English; a label already there is not added again whatever its case; Backspace in the empty box removes\nthe last label at once (Ark would first select it and remove it at the second press); a chip is not edited in place;\na comma that arrives with other text in one go (an autocorrection, a keyboard's suggestion) closes the labels before\nit and leaves the rest in the box (Ark would add the text it had before that event).\nWith `suggestions` the box is also a combobox (Ark UI's Combobox, on the same text box): while the user writes, the\nlabels that match and are not in the field yet are listed under it; the arrows move, Enter or a click adds the one\nreached, Esc closes the list only. Any other text is still a label of its own (Enter, the comma, leaving the box).\nNo animation.",
-     "components": [
-      {
-       "name": "ChipsInput",
-       "doc": "A list of labels as chips with an input: add with Enter or comma (also by pasting «a, b, c» or by leaving the input), remove with the chip's button, and with Backspace on an empty input the last one is removed.",
-       "props": [
-        {
-         "name": "id",
-         "type": "string",
-         "required": true,
-         "doc": "The id of the writing input, for the field's label."
-        },
-        {
-         "name": "value",
-         "type": "string[]",
-         "required": true
-        },
-        {
-         "name": "onChange",
-         "type": "(next: string[]) => void",
-         "required": true
-        },
-        {
-         "name": "placeholder",
-         "type": "string"
-        },
-        {
-         "name": "suggestions",
-         "type": "readonly string[]",
-         "doc": "Labels to offer while the user writes (the ones used elsewhere, people from an address book). The ones already in the field are left out. Filtered here by the text typed, ignoring case, unless `onQuery` is given."
-        },
-        {
-         "name": "onQuery",
-         "type": "((text: string) => void)",
-         "doc": "The text being typed: with it the caller filters (and may fetch) and passes the new `suggestions`."
-        },
-        {
-         "name": "suggestionsLabel",
-         "type": "string",
-         "doc": "The name of the list of suggestions for screen readers. Absent: the toolkit's words («Suggestions»)."
-        },
-        {
-         "name": "display",
-         "type": "((value: string) => string)",
-         "doc": "What a chip shows in place of its value (a person's name in place of the whole address). The value stays what the caller holds and what a chip is told apart by; a suggestion shows the name and, after it, the value in the muted ink, and is found by either."
-        },
-        {
-         "name": "invalid",
-         "type": "((value: string) => boolean)",
-         "doc": "True for a value that is not valid (an address without its domain): its chip has the destructive border and text, and screen readers hear so after its name. The field does not refuse it: the caller decides what to do with it."
-        },
-        {
-         "name": "separators",
-         "type": "readonly string[]",
-         "doc": "The characters that close a label, each one a single character. Default: the comma. Enter always closes one. A separator typed, pasted or arriving with other text splits it the same way (`[',', ';', ' ']` for addresses)."
-        },
-        {
-         "name": "dot",
-         "type": "boolean",
-         "doc": "The 8px dot in the colour of the label's name (R10), on by default. Off for chips that are not coloured labels (people, addresses)."
-        }
-       ]
-      }
-     ],
-     "also": [
-      "ChipsInputProps"
-     ]
-    },
-    {
-     "file": "src/internal/date-field.tsx",
-     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)\nFrom Park's `input` recipe (md): the button that opens the calendar has the field's form (40px, l2 corners, 12px of\nside padding); the card is Park's date-picker content (l3 corners, the lg elevation).\nThe date field: a button that shows the date and opens the calendar, on Ark UI's DatePicker\n(`@ark-ui/react/date-picker`). Two variants (a form can use both), with the same contract as the native fields they\nreplace: `DateField` gives and receives `YYYY-MM-DD` (or null), `DateTimeField` `YYYY-MM-DDTHH:mm` in local time\n(or null; the time is switched on with the «Time» checkbox, otherwise 09:00). Only formatting of local dates: no time\nzones, no «tomorrow». The button takes the `id` of the field's `<label>` (accessible name «Due date», «Reminder»).\nArk gives: the open state and its dismissal (Esc or a click outside close without choosing, and focus returns to the\nbutton), the position of the card, focus on the chosen day when it opens, the grid (see `ui/calendar.tsx`).\nThe card is not moved to a portal: it stays inside the field, so it is part of the modal sheet that holds it (its\nfocus trap, its Esc), and `fixed` keeps the scrolling body of the sheet from clipping it.",
-     "components": [
-      {
-       "name": "DateField",
-       "doc": "A local date (a due date, a birthday): a click or Enter on a day chooses it and closes.",
-       "props": [
-        {
-         "name": "id",
-         "type": "string"
-        },
-        {
-         "name": "value",
-         "type": "string | null",
-         "required": true,
-         "doc": "`YYYY-MM-DD` or empty/null."
-        },
-        {
-         "name": "onChange",
-         "type": "(value: string | null) => void",
-         "required": true
-        },
-        {
-         "name": "animated",
-         "type": "boolean"
-        },
-        {
-         "name": "placeholder",
-         "type": "string",
-         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
-        },
-        {
-         "name": "min",
-         "type": "string",
-         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
-        },
-        {
-         "name": "max",
-         "type": "string"
-        },
-        {
-         "name": "disabled",
-         "type": "boolean",
-         "doc": "The field cannot be opened: half opacity, out of the Tab order."
-        },
-        {
-         "name": "locale",
-         "type": "string",
-         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
-        },
-        {
-         "name": "words",
-         "type": "{ clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
-         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22)."
-        },
-        {
-         "name": "picks",
-         "type": "readonly DatePick[]",
-         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
-        }
-       ]
-      },
-      {
-       "name": "DateRangeField",
-       "doc": "A range of local days (a stay, a leave, a filter): a click chooses the first day, a second one the last and closes; the days between take the selection tint. The two clicks may come in either order, and on the same day for a range of one day. The caller hears of a range only when it has both ends.",
-       "props": [
-        {
-         "name": "id",
-         "type": "string"
-        },
-        {
-         "name": "animated",
-         "type": "boolean"
-        },
-        {
-         "name": "disabled",
-         "type": "boolean",
-         "doc": "The field cannot be opened: half opacity, out of the Tab order."
-        },
-        {
-         "name": "max",
-         "type": "string"
-        },
-        {
-         "name": "min",
-         "type": "string",
-         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
-        },
-        {
-         "name": "placeholder",
-         "type": "string",
-         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
-        },
-        {
-         "name": "locale",
-         "type": "string",
-         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
-        },
-        {
-         "name": "value",
-         "type": "DateRange | null",
-         "required": true,
-         "doc": "The two ends as `YYYY-MM-DD`, or null. A value whose ends are not real dates, or are the wrong way round, reads as null."
-        },
-        {
-         "name": "onChange",
-         "type": "(value: DateRange | null) => void",
-         "required": true
-        },
-        {
-         "name": "picks",
-         "type": "readonly DateRangePick[]",
-         "doc": "Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days."
-        }
-       ]
-      },
-      {
-       "name": "DateTimeField",
-       "doc": "A local day and, if needed, a local time (the reminder). Without a date there is no reminder. A click on a day chooses it and immediately gives `YYYY-MM-DDTHH:mm`; a click on the day already chosen removes it (no «Clear the date» button). The time is off by default: the «Time» checkbox turns it on, and when off it is 09:00. With a date already set the checkbox starts on if the time is not the default one. A half-typed time (the empty field while writing) never enters the value: the last valid one stays. «Done» or Esc closes.",
-       "props": [
-        {
-         "name": "id",
-         "type": "string"
-        },
-        {
-         "name": "value",
-         "type": "string | null",
-         "required": true,
-         "doc": "`YYYY-MM-DD` or empty/null."
-        },
-        {
-         "name": "onChange",
-         "type": "(value: string | null) => void",
-         "required": true
-        },
-        {
-         "name": "animated",
-         "type": "boolean"
-        },
-        {
-         "name": "placeholder",
-         "type": "string",
-         "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
-        },
-        {
-         "name": "min",
-         "type": "string",
-         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
-        },
-        {
-         "name": "max",
-         "type": "string"
-        },
-        {
-         "name": "disabled",
-         "type": "boolean",
-         "doc": "The field cannot be opened: half opacity, out of the Tab order."
-        },
-        {
-         "name": "locale",
-         "type": "string",
-         "doc": "The locale of the date on the button and of the month and weekday names (a BCP 47 tag). Default `en-US`."
-        },
-        {
-         "name": "words",
-         "type": "{ clear?: string | undefined; time?: string | undefined; timeOfDay?: string | undefined; done?: string | undefined; }",
-         "doc": "The words of the reminder's foot, for this field only: otherwise the toolkit's words (`WordsProvider`). `clear` is no longer shown (2026-11-22)."
-        },
-        {
-         "name": "picks",
-         "type": "readonly DatePick[]",
-         "doc": "Quick choices in a row above the calendar: `dayPicks()` gives today, tomorrow and this weekend."
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "DatePick",
-       "doc": "A quick choice of a date field: its name and the day it sets, as `YYYY-MM-DD`.",
-       "fields": [
-        {
-         "name": "label",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "value",
-         "type": "string",
-         "required": true
-        }
-       ]
-      },
-      {
-       "name": "DateRange",
-       "doc": "A range of local days, both ends included: `start` is never after `end`.",
-       "fields": [
-        {
-         "name": "start",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "end",
-         "type": "string",
-         "required": true
-        }
-       ]
-      },
-      {
-       "name": "DateRangePick",
-       "doc": "A quick choice of a range field: its name and the two ends it sets, as `YYYY-MM-DD`.",
-       "fields": [
-        {
-         "name": "label",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "start",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "end",
-         "type": "string",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "also": [
-      "DateFieldProps",
-      "DateRangeFieldProps",
-      "DateTimeFieldProps",
-      "dayPicks",
-      "rangePicks"
      ]
     },
     {
@@ -5695,47 +5744,6 @@
       "payloadFromDataTransfer",
       "useDropTarget",
       "withinLimit"
-     ]
-    },
-    {
-     "file": "src/internal/duration-field.tsx",
-     "about": "A duration field: hours and minutes in two number inputs, four shortcuts and\n«None». The field does not add, convert or check the total: it sends hours and minutes as they are and the app decides\n(up to 24 hours, minutes from 0 to 59; zero and zero means «None»). Two inputs have no syntax to get wrong, and the\nshortcuts cover the frequent cases with one click.",
-     "components": [
-      {
-       "name": "DurationField",
-       "props": [
-        {
-         "name": "value",
-         "type": "DurationParts | null",
-         "required": true
-        },
-        {
-         "name": "onChange",
-         "type": "(value: DurationParts | null) => void",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "types": [
-      {
-       "name": "DurationParts",
-       "fields": [
-        {
-         "name": "hours",
-         "type": "number",
-         "required": true
-        },
-        {
-         "name": "minutes",
-         "type": "number",
-         "required": true
-        }
-       ]
-      }
-     ],
-     "also": [
-      "DurationFieldProps"
      ]
     },
     {
@@ -6105,41 +6113,33 @@
      ]
     },
     {
-     "file": "src/internal/swatches.tsx",
-     "about": "",
+     "file": "src/internal/portal-container.tsx",
+     "about": "Where the overlays of a subtree mount (menus, popovers, selects, tooltips, dialogs, sheets): the page's body, or the\nelement a `PortalContainerProvider` names. Below the primitives: they read it, and it imports none of them.",
      "components": [
       {
-       "name": "Swatches",
-       "doc": "Color choice for what the user colours (a folder, a group): the SmoothUI/Base UI RadioGroup (`components/ui/radio-group`) with solid swatches. Like any radio group: a single Tab stop (the chosen color, or the first), the arrows move and choose wrapping around the ends, Home and End go to the first and the last.",
+       "name": "PortalContainerProvider",
+       "doc": "Where the overlays of this subtree mount: menus, popovers, selects, tooltips and dialogs. By default the page's `document.body`. An app that draws part of its React tree into another document (a popup window, an iframe) wraps that part with the other document's body, so its overlays open there and not in the page that owns the tree. `null` is the page's body: a provider whose element is not there yet (a layer that mounts with its children) keeps its place in the tree, so nothing under it is mounted twice when the element arrives.",
        "props": [
         {
-         "name": "colors",
-         "type": "readonly string[]"
-        },
-        {
-         "name": "value",
-         "type": "string",
+         "name": "container",
+         "type": "HTMLElement | null",
          "required": true
         },
         {
-         "name": "onChange",
-         "type": "(color: string) => void",
+         "name": "children",
+         "type": "ReactNode",
          "required": true
-        },
-        {
-         "name": "label",
-         "type": "string"
         }
        ]
       }
      ],
      "also": [
-      "SwatchesProps"
+      "usePortalContainer"
      ]
     },
     {
      "file": "src/internal/tag-color.ts",
-     "about": "The colors of a user's labels (tags): eight background/ink pairs per scheme in `theme.css` (`--tag-1-*` …\n`--tag-8-*`), picked from the label's name, so the same name has the same color everywhere and on every device,\nwithout an extra datum. The chips of the labels field (`chips.tsx`) use them, and so can an app's own label pills.",
+     "about": "The colors of a user's labels (tags): eight background/ink pairs per scheme in `theme.css` (`--tag-1-*` …\n`--tag-8-*`), picked from the label's name, so the same name has the same color everywhere and on every device,\nwithout an extra datum. The chips of the labels field (`ChipsInput.tsx`) use them, and so can an app's own label pills.",
      "also": [
       "TAG_COLOR",
       "TAG_HUES",
@@ -7550,7 +7550,7 @@
         },
         {
          "name": "icon",
-         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notifications\" | \"setting…",
+         "type": "\"colors\" | \"date\" | \"search\" | \"copy\" | \"labels\" | \"data\" | \"link\" | \"video\" | \"filter\" | \"stop\" | \"send\" | \"alert\" | \"move\" | \"all\" | \"error\" | \"download\" | \"info\" | \"tag\" | \"more\" | \"notifications\"…",
          "doc": "One of Sigrid's icons before the name."
         },
         {
