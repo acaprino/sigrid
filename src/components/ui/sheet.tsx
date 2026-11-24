@@ -63,6 +63,11 @@ export type SheetCloseReason = "escape" | "outside" | "other"
 type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpenChange" | "swipeDirection"> & {
   /** `reason` is told when it closes: an app that keeps a form in the sheet may answer a press outside differently from the Esc. */
   onOpenChange?: ((open: boolean, reason: SheetCloseReason) => void) | undefined
+  /**
+   * Asked at each Esc: false leaves the sheet open and the key to what has the focus and to the app's commands (the
+   * `Inspector` beside the page answers it so, when the focus is not in it). Absent: Esc always closes the sheet.
+   */
+  closesOnEscape?: (() => boolean) | undefined
 }
 
 /**
@@ -72,7 +77,7 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
  * A click on the notifications (which sit above, outside the sheet) does not close it: Base UI closes a modal only on what
  * is behind it, and here a second safeguard also cancels the closing caused by focus moving to the notifications.
  */
-function Sheet({ onOpenChange, ...props }: SheetProps) {
+function Sheet({ onOpenChange, closesOnEscape, ...props }: SheetProps) {
   const [side, setSide] = React.useState<SheetSide>("right")
   return (
     <ModalContext.Provider value={props.modal !== false}>
@@ -84,6 +89,12 @@ function Sheet({ onOpenChange, ...props }: SheetProps) {
           // gives focus elsewhere, is not a way to dismiss it (a form in it would be lost). Esc and a click outside are.
           if (!open && details.reason === "focus-out" && props.modal === false) {
             details.cancel()
+            return
+          }
+          // An Esc that is not the sheet's: it stays open, and the key goes on to whoever else listens for it.
+          if (!open && details.reason === "escape-key" && closesOnEscape && !closesOnEscape()) {
+            details.cancel()
+            details.allowPropagation()
             return
           }
           const outside = details.reason === "outside-press" || details.reason === "focus-out"

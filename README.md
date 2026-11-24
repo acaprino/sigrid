@@ -367,10 +367,36 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 The `Inspector` lets the rest of the window work beside it, in both forms. A press outside it does not close it (the
 person keeps choosing in the list or on the canvas, and typing in the search field, while it shows what is chosen);
-its button closes it, Escape pressed with the focus in it, and as a panel also a swipe towards its edge and Escape
-from anywhere. Opening it does not move the focus: a selection opened it, and the person goes in with Tab, F6 or a
-press. Closed with the focus in it, it gives the focus back to what had it before the focus went in, or to the content
-when that is gone or hidden; closed with the focus elsewhere (an app's command closed it), it moves nothing.
+opening it does not move the focus: a selection opened it, and the person goes in with Tab, F6 or a press.
+
+| | Docked (1000px or more) | A panel (under 1000px) |
+|---|---|---|
+| Its button | closes it | closes it |
+| Escape, the focus in it | closes it | closes it |
+| Escape, the focus in it on a field that holds text, or with a list or a menu open | the field's, the list's | the field's, the list's |
+| Escape, the focus elsewhere | not the inspector's: the field's, the app's command | the same |
+| A press outside it | nothing | nothing |
+| A swipe towards its edge | nothing | closes it |
+
+Closed with the focus in it (a menu or a list it opened counts), it gives the focus back to what last had it outside
+the inspector (a dialog or a menu does not count: the row under it does), or to the content when that is gone or
+hidden; closed with the focus elsewhere (an app's command closed it), it moves nothing. It gives the focus back in
+the same way when it is taken out of the page while open, and when the control that had the focus in it is removed
+and leaves the focus nowhere (seen when the inspector is drawn again).
+
+An app that used the `Inspector` before 2026-11-24 meets four changes:
+
+- Escape in a docked inspector's field that holds text (a `SearchField` with a search, an inline edit) stays the
+  field's; on an empty field, a button or the inspector's text it closes the inspector, which it did not do docked.
+- Escape with the focus outside the panel (a search field of the content, a row) no longer closes the panel. An app
+  that wants Escape to close the details from anywhere declares it:
+  `useCommand({ id: 'close', label: 'Close the details', keys: 'Escape', when: open, run: () => setOpen(false) })`.
+- A control of the inspector removed while it has the focus (a «Remove» button) sends the focus back outside, where
+  it was; an app that wants it on the next control of the inspector focuses that control itself.
+- An inspector taken out of the page (`inspector={undefined}`) with the focus in it gives the focus back as on closing.
+
+`Sheet` has `closesOnEscape` for the same need: a function asked at each Esc, whose `false` leaves the sheet open and
+the key to what has the focus and to the app's commands.
 
 ```tsx
 <AppShell
