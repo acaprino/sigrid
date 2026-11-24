@@ -7131,6 +7131,62 @@
       "layoutGraph",
       "visibleGraph"
      ]
+    },
+    {
+     "file": "src/components/GraphLegend.tsx",
+     "about": "The key of a graph's lines, under a `GraphCanvas`: each kind of line the app draws (its dash and its tone, as a\n`GraphEdge` takes them), its word and, when the app gives it, how many there are (a `Count`, R5). Each sample is\ndrawn by the same definitions the canvas draws its lines with (`graph-lines.ts`, and one rule of graph.css), so a\nchange to a line changes its key. What a kind of line means is said by its word, never by its colour alone. A list\nnamed by the app for screen readers, which hide the samples; a row that wraps on a narrow window. It keys the lines\nonly, not the things.",
+     "components": [
+      {
+       "name": "GraphLegend",
+       "doc": "The key of a graph's lines: a sample of each kind, its word and its count, in a row that wraps. Nothing to key, nothing drawn.",
+       "props": [
+        {
+         "name": "entries",
+         "type": "readonly GraphLegendEntry[]",
+         "required": true,
+         "doc": "The kinds of line, in the order given."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the list for screen readers («Kinds of line»)."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "GraphLegendEntry",
+       "doc": "One kind of line in the key.",
+       "fields": [
+        {
+         "name": "style",
+         "type": "\"solid\" | \"dashed\" | \"dotted\"",
+         "doc": "The dash of the line, as a `GraphEdge` takes it. Default `solid`."
+        },
+        {
+         "name": "tone",
+         "type": "\"accent\" | \"default\" | \"destructive\" | \"warning\"",
+         "doc": "The colour of the line, as a `GraphEdge` takes it. Default the muted ink."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What a line of this kind means («calls», «waits for»): always written, so the colour is never alone."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "doc": "How many lines of this kind the graph has: a `Count` after the word, which screen readers hear with the word («12 calls»). Zero, or none, shows nothing."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "GraphLegendProps"
+     ]
     }
    ]
   },
