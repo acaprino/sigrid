@@ -264,23 +264,24 @@ describe('things that move', () => {
   })
 
   test('a thing that is as it was is handed to React Flow as the object it has, and one that changed keeps what React Flow measured', () => {
-    const { rerender } = render(<Chart />)
+    const { rerender } = render(<Chart selected="store" />)
     act(() =>
       handed.props!.onNodesChange!(
         new NodeChangeset([
           { id: 'gateway', type: 'dimensions', dimensions: { width: 208, height: 44 } },
-          { id: 'cart', type: 'dimensions', dimensions: { width: 208, height: 44 } },
+          { id: 'store', type: 'dimensions', dimensions: { width: 208, height: 44 } },
         ]),
       ),
     )
     const before = node('gateway')
     expect(before.measured).toEqual({ width: 208, height: 44 })
-    // The store is chosen: the gateway, joined to it, is as it was; the cart is dimmed.
-    rerender(<Chart selected="store" />)
-    expect((node('store').data as { chosen: boolean }).chosen).toBe(true)
+    // The orders are chosen in place of the store (the Tab stop goes with them): the gateway, joined to both, is as it was;
+    // the store is dimmed.
+    rerender(<Chart selected="orders" />)
+    expect((node('orders').data as { chosen: boolean }).chosen).toBe(true)
     expect(node('gateway')).toBe(before)
-    expect((node('cart').data as { dim: boolean }).dim).toBe(true)
-    expect(node('cart').measured).toEqual({ width: 208, height: 44 })
+    expect((node('store').data as { dim: boolean }).dim).toBe(true)
+    expect(node('store').measured).toEqual({ width: 208, height: 44 })
   })
 
   test('what React Flow measured is kept only while it holds: another direction, another part or another size is measured again', () => {
