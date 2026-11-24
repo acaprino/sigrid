@@ -21,7 +21,7 @@
 import * as React from 'react'
 import { createSortedRowModel, rowSortingFeature, tableFeatures, useTable, type RowData, type SortingState } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp } from '../internal/sigrid-icons'
 import { FOCUS_RING } from '../lib/focus'
 import { cn } from '../lib/utils'
 import { useWords } from '../words'

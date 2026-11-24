@@ -10,7 +10,7 @@
 // that holds it, and `fixed` keeps a scrolling body from clipping it). No animation.
 import * as React from "react"
 import { Combobox as ComboboxPrimitive, createListCollection } from "@ark-ui/react/combobox"
-import { Check } from "lucide-react"
+import { Check } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { useEntrance } from "../internal/motion"

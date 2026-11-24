@@ -28,6 +28,8 @@ export function shellPreset(accent: (typeof SHELL_ACCENTS)[number], stated = tru
     radii: { sm: 4, md: 6, lg: 10, xl: 10, chip: 4 },
     keys: 'boxed',
     controls: 'strong',
+    tabs: 'bold',
+    statusStrip: 'tall',
     surfaces: {
       dark: { paper: '#1a202c', sidebar: '#12161e', raised: '#232834', line: '#2a3240', ink: '#e8ecf3', accent: accent.dark, fill: accent.dark, ...(stated ? { input: SHELL_INPUT.dark } : {}) },
       light: { paper: '#ffffff', sidebar: '#f6f7f9', raised: '#ffffff', line: '#e3e6ea', ink: '#111827', accent: accent.light, fill: accent.light, ...(stated ? { input: SHELL_INPUT.light } : {}) },

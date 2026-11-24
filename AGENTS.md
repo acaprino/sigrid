@@ -18,7 +18,7 @@ window, on a computer and on a phone.
 Every app of the suite that uses Sigrid looks and behaves the same: the same surfaces, shadows, spacing, type, icons
 and motion, and the same component for the same need (a file tree is the same component in every app). What differs
 from one app to the next is the layout, which follows what the app does, its accent and its icon. An app's icon is its
-own mark (the picture of the app, its window and its brand); the icons of its interface are Sigrid's one set (Lucide,
+own mark (the picture of the app, its window and its brand); the icons of its interface are Sigrid's one set (Sigrid Icons,
 through `Icon`), the same in every app, and the user does not choose another.
 
 - An app uses only Sigrid's components. It never makes a component of its own that draws: no stylesheet, no class,

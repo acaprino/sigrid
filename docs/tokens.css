@@ -405,6 +405,9 @@
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
   --fit-height: calc(var(--app-height) - var(--bottom-bar-room, 0px));
 }
+[data-font="system"] {
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+}
 
 /* ———— Motion (src/internal/motion-impl.tsx; only with `animated`, never with prefers-reduced-motion) ————
    Curves: decelerateMid cubic-bezier(0, 0, 0, 1); accelerateMin cubic-bezier(0.8, 0, 0.78, 1); easyEase cubic-bezier(0.33, 0, 0.67, 1).

@@ -5,7 +5,7 @@
  * choice (`test/first-paint.test.ts` keeps them equal to the computation); an app paints its own default over them.
  */
 import { DENSITY_VARIABLES } from './density'
-import { DEFAULT_FONT, FONTS } from './theme-catalog'
+import { DEFAULT_FONT, FONTS, SYSTEM_FONT } from './theme-catalog'
 import type { FontDef, FontId, ThemeDef } from './theme-catalog'
 import { themeTokens, tokensFor } from './theme-engine'
 import type { OwnTheme, ThemeScheme, ThemeTokens, ThemeTone } from './theme-engine'
@@ -29,17 +29,17 @@ export interface ThemePick {
 /** The tokens of a pick: the palette from one colour when there is one, otherwise the theme with its own colours. */
 function tokensOf(pick: ThemePick): ThemeTokens {
   // A palette replaces the theme's colours, not how the app draws its keys and its control borders.
-  return pick.palette ? tokensFor({ ...paletteTheme(pick.palette), keys: pick.theme.keys, controls: pick.theme.controls }, pick.scheme, pick.tone) : themeTokens(pick.theme, pick.scheme, pick.own, pick.tone)
+  return pick.palette ? tokensFor({ ...paletteTheme(pick.palette), keys: pick.theme.keys, controls: pick.theme.controls, tabs: pick.theme.tabs, statusStrip: pick.theme.statusStrip }, pick.scheme, pick.tone) : themeTokens(pick.theme, pick.scheme, pick.own, pick.tone)
 }
 
 /** A plain gray theme with no accent: the toolkit's baseline for the first paint and the names of the variables. */
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
 /** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-font', 'data-density'] as const
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-font', 'data-density'] as const
 
-/** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `ThemeDef.controls`): the next theme takes them away. */
-const ASKED_ATTRIBUTES = ['data-keys', 'data-controls'] as const
+/** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`): the next theme takes them away. */
+const ASKED_ATTRIBUTES = ['data-keys', 'data-controls', 'data-tabs', 'data-status-strip'] as const
 
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
@@ -51,9 +51,10 @@ export const THEME_VARIABLES: readonly string[] = (() => {
 })()
 
 export function isFontId(value: unknown): value is FontId {
-  return FONTS.some((f) => f.id === value)
+  return value === SYSTEM_FONT.id || FONTS.some((f) => f.id === value)
 }
 export function fontById(id: FontId): FontDef {
+  if (id === SYSTEM_FONT.id) return SYSTEM_FONT
   return (FONTS as readonly FontDef[]).find((f) => f.id === id) ?? FONTS[0]
 }
 

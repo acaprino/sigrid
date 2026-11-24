@@ -1,6 +1,6 @@
 {
   "name": "@acaprino/sigrid",
-  "version": "6.2.1",
+  "version": "6.3.0",
   "private": true,
   "license": "MIT",
   "repository": "github:acaprino/sigrid",
@@ -143,7 +143,6 @@
     "@xyflow/react": "13.0.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "lucide-react": "1.70.0",
     "motion": "14.6.0",
     "tailwind-merge": "3.7.0"
   }

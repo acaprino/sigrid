@@ -29,7 +29,7 @@ installed, say so and stop: do not write from memory.
 
 The project's own instructions (its `CLAUDE.md` or `AGENTS.md`) come first where they speak, but never for a look of
 its own: every app of the suite has Sigrid's look, and only its layout, accent and icon are its own (the first section
-of `AGENTS.md`). The app's icon is its own mark; the icons of its interface are Sigrid's one set (Lucide, through
+of `AGENTS.md`). The app's icon is its own mark; the icons of its interface are Sigrid's one set (Sigrid Icons, through
 `Icon`), the same in every app.
 
 ## 3. Write

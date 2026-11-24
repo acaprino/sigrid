@@ -19,7 +19,7 @@
 // «Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should
 // announce the end and the failure only, in a live region of its own, not every percent.
 import * as React from "react"
-import { CheckIcon } from "lucide-react"
+import { Check as CheckIcon } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { useWords } from "../words"

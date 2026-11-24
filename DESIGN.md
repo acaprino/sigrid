@@ -28,14 +28,14 @@ x-zsd:
     primary-task: Find, read and act on the items of an app, with one clear action at a time.
     character: ADHD first. Two mood colours (the page and the bar in the theme's tint) and one guiding accent; icons as visual anchors; Park UI controls; calm motion only on a gesture.
     density: "configurable: compact, normal (default), large"
-    theme: light and dark; each app passes its own themes (the toolkit ships only the engine and a gray baseline); each theme has two mood colours and one accent; the user can make a palette from one base colour
+    theme: light and dark; each app passes its own themes (the toolkit ships only the engine and a gray baseline); the user can make a palette from one base colour
     references:
-      - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved reference for behaviour)."
-      - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved reference for form)."
+      - "Ark UI 5.39.3: part anatomy, data attributes and keyboard (approved for behaviour)."
+      - "Park UI preset 102769c: recipes for sizes, variants, states, radius level and shadow level (approved for form)."
       - "Approved previews of 2026-11-20 after their review: one for each app and the catalogue toolkit-catalogo.html."
       - "Owner rules since 2026-11-20 (R1 to R14)."
-      - "Owner revision of 2026-11-20: the neutral look read as monochrome and dull, with no accent to guide the ADHD eye; R1, R2 and R6 changed, the default tone, the toast stack and the undo order added."
-      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; the tone presets also tint the sidebar; the icons are one set, Lucide (owner, 2026-11-23)."
+      - "Owner revision of 2026-11-20: the neutral look read as dull, with no accent to guide the ADHD eye; R1, R2 and R6 changed; default tone, toast stack and undo order added."
+      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; tone presets also tint the sidebar; icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
       - "Identity: calm neutral surfaces and one accent that means «act here» or «this is on»; one row highlight and one group heading in every list; red only for danger. Elegant and modern, made for an ADHD eye: what matters first, one primary action, state always in sight."
@@ -44,12 +44,12 @@ x-zsd:
       - "R3: one solid primary button on each screen, and a solid red one to delete; other actions are outline or text buttons."
       - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
       - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text (caps if `keys` is boxed), hidden at phone widths."
-      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from the one set, Lucide; an empty slot keeps alignment."
+      - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from Sigrid Icons; an empty slot keeps alignment."
       - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R14: controls every page shares keep their place, above all on a phone."
-      - "R7: radii 2, 4 and 6px, or a theme's `soft` 4/6/10 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600; text sizes from tokens."
+      - "R7: radii 2, 4 and 6px, or a theme's `soft` 4/6/10 or `round` 6/10/14; round shapes only for avatars, dots and switches; 4px spacing grid; heights 36/32/28px (compact 32/28/24; large 40/36/32); icons 16 or 14px; weights 400, 500 and 600 (700 for the choice if `tabs` is bold); text sizes from tokens."
       - "R8: the focus ring is 2px in the accent text colour, 2px away (a field: on its border), 3:1 or more in every theme, on every control."
       - "R9: accent text keeps 4.5:1 on both page surfaces in every theme; the theme rule takes step 12 where step 11 falls short."
       - "R10: data colours (what the user colours, labels, events) appear as 8px dots."
@@ -90,7 +90,7 @@ x-zsd:
       - src/styles/fonts.css
     image-assets: []
     icon-assets:
-      - lucide-react
+      - src/internal/sigrid-icons.tsx
     checks: design-check.config.json
   unresolved:
     - "The 12-step Park and Radix palettes are the target; the engine computes roles in OKLCH, with no step names."
@@ -263,9 +263,7 @@ spacing:
   md: 12px
   lg: 16px
   xl: 24px
-  2xl: 32px
-  3xl: 48px
-  4xl: 64px
+  section: 32px
   control-xs: 28px
   control-sm: 32px
   control-md: 36px
@@ -521,7 +519,7 @@ Use `checkbox-checked` for the checked and indeterminate boxes, the radio dot an
 
 ### Segment
 
-Use `segment-thumb` for the chosen item of a single-choice group. The thumb slides only with `animated`.
+Use `segment-thumb` for the chosen item of a single-choice group. The thumb slides only with `animated`. If `tabs` is bold the chosen item and the chosen view take weight 700 and the accent.
 
 ### Label
 
@@ -589,7 +587,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Iconography
 
-Use the one icon set, Lucide (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button an accessible name and a tooltip. A row without an icon keeps an empty slot.
+Use the one set, Sigrid Icons (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button a name and a tooltip. A row with no icon keeps an empty slot.
 
 ## Imagery
 
