@@ -100,10 +100,11 @@ describe('build output', () => {
     // The tone of a badge: the `info` status colour and its soft ground, as tokens and as utilities.
     for (const scheme of ['light', 'dark'] as const) {
       const t = themeTokens(BASE_THEME, scheme).colors
-      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info:\s*${t['info']}`))
-      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info-soft:\s*${t['info-soft']}`))
+      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info:\\s*${t['info']}`))
+      expect(c.toLowerCase()).toMatch(new RegExp(`--color-info-soft:\\s*${t['info-soft']}`))
     }
-    for (const cls of ['.bg-info-soft', '.text-info', '.bg-success-soft', '.bg-warning-soft', '.bg-destructive-soft']) expect(c, cls).toMatch(new RegExp(`${cls.replace(/[.-]/g, '\$&')}\s*\{`))
+    // Joined with `+`, so these names are not classes Tailwind reads from this file.
+    for (const cls of ['.bg-' + 'info-soft', '.text-' + 'info', '.bg-' + 'success-soft', '.bg-' + 'warning-soft', '.bg-' + 'destructive-soft']) expect(c, cls).toMatch(new RegExp(`${cls.replace(/[.-]/g, '\\$&')}\\s*\\{`))
   })
 
   test('styles.css carries the muted text colors of theme.css, not an old copy', () => {

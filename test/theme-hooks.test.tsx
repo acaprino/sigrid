@@ -26,6 +26,7 @@ const nord = THEMES.find((t) => t.id === 'nord')! as ThemeDef
 // source had lost it (test/build.test.ts). So a variant and its class are joined with `+`, never one literal.
 const KEYS = '[[data-keys=boxed]_&]' + ':'
 const IN_BUTTON = '[[data-slot=button]_&]' + ':'
+const DOT = 'before' + ':'
 const STRONG = '[:where([data-controls=strong])_&]' + ':' + 'border-input'
 
 describe('off by default', () => {
@@ -142,7 +143,7 @@ describe('H2: the tone of a badge', () => {
       expect(badge.textContent).toBe('Running')
       expect(c).toEqual(expect.arrayContaining([`bg-${ground[tone]}-soft`, `text-${ground[tone]}`]))
       // The dot: 6px (1.5 units of 4px), round, the tone's colour, drawn by the badge.
-      expect(c).toEqual(expect.arrayContaining(['before:size-1.5', 'before:rounded-full', 'before:bg-current', "before:content-['']"]))
+      expect(c).toEqual(expect.arrayContaining([DOT + 'size-1.5', DOT + 'rounded-full', DOT + 'bg-current', DOT + "content-['']"]))
       // The form is the badge's; the colours of the default variant are gone.
       expect(c).toEqual(expect.arrayContaining(['h-5', 'rounded-md', 'text-2xs', 'font-medium', 'gap-1']))
       for (const cls of ['bg-ink', 'text-paper', 'bg-accent', 'text-accent', 'bg-primary']) expect(c).not.toContain(cls)
@@ -158,7 +159,7 @@ describe('H2: the tone of a badge', () => {
     )
     const link = screen.getByRole('link', { name: 'Queued' })
     expect(link.getAttribute('data-tone')).toBe('info')
-    expect(classes(link)).toEqual(expect.arrayContaining(['bg-info-soft', 'text-info', 'before:size-1.5']))
+    expect(classes(link)).toEqual(expect.arrayContaining(['bg-' + 'info-soft', 'text-' + 'info', DOT + 'size-1.5']))
   })
 
   test('the word of each tone reads on its ground (4.5:1) in every theme and scheme', () => {
