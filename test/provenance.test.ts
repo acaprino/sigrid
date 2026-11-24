@@ -196,11 +196,14 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     expect(section).toContain('https://aka.ms/fluentui-assets-license')
     // Values, not code: no package of Fluent is a dependency (its colour icons left with the other packs, 2026-11-23).
     expect(allDeps.filter((d) => d.startsWith('@fluentui/'))).toEqual([])
-    // The icons are one set, Lucide, listed under «Icons».
+    // The icons are one set, Sigrid's own, listed under «Icons» with the notice of the drawings it copies.
     const iconsAt = text.indexOf('\n## Icons\n')
     const icons = text.slice(iconsAt, text.indexOf('\n## ', iconsAt + 1))
     expect(iconsAt).toBeGreaterThan(-1)
-    expect(icons).toContain('`lucide-react` (ISC')
+    expect(icons).toContain('`@mynaui/icons` 0.4.12')
+    expect(icons).toContain('Copyright (c) Praveen Juge')
+    expect(icons).toContain('The above copyright notice and this permission notice shall be included in all')
+    expect(allDeps.filter((d) => /lucide|mynaui/.test(d))).toEqual([])
     expect(icons).not.toContain('@fluentui/react-icons')
     expect(text).not.toContain('\n## Icon packs\n')
     // The token values as they are in Fluent's two files at that commit; the toolkit declares only the ones it uses.

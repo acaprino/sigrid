@@ -18,7 +18,7 @@
 // A value that is not among the options leaves the button empty (like the previous `<option hidden>`) and cannot be chosen.
 import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW } from "../lib/rows"

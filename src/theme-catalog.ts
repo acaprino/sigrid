@@ -108,6 +108,21 @@ export interface ThemeDef {
    */
   readonly controls?: 'divider' | 'strong' | undefined
   /**
+   * How the chosen view of a bar (`ToolbarTab`) and the chosen item of a segment (`ToggleGroup`) are marked. Absent,
+   * `plain` or any other value: as the toolkit draws them (weight 600; a round line under the view; a raised thumb in
+   * the segment). `bold`: the mark is the weight and the accent, an exception to R7 a theme asks for: the chosen one is
+   * weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle
+   * (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill
+   * and at 55% as its border. The engine writes `data-tabs="bold"` on the root. The toolkit's own fonts stop at 600:
+   * a theme that asks for this takes a font with a 700 (`SYSTEM_FONT`).
+   */
+  readonly tabs?: 'plain' | 'bold' | undefined
+  /**
+   * The height of the status strip of `AppShell`. Absent, `slim` or any other value: a dense control tall (28px at
+   * compact). `tall`: 40px, so a 20px badge has room above and below it. The engine writes `data-status-strip="tall"`.
+   */
+  readonly statusStrip?: 'slim' | 'tall' | undefined
+  /**
    * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
    * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
    */
@@ -187,7 +202,16 @@ export const FONTS = [
   { id: 'mono', label: 'JetBrains Mono', stack: '"JetBrains Mono", ui-monospace, Consolas, monospace' },
 ] as const satisfies readonly FontDef[]
 
-export type FontId = (typeof FONTS)[number]['id']
+/**
+ * The system's own interface font (Segoe UI on Windows): nothing is shipped or fetched for it, and it has a 700. It is
+ * not one of `FONTS`, so no list of fonts an app shows to a person has it: an app sets it by name
+ * (`applyFont(el, 'system')`). With it the monospace of keys and code is the system's too (`[data-font="system"]` in
+ * styles/theme.css).
+ */
+export const SYSTEM_FONT = { id: 'system', label: 'System', stack: '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif' } as const satisfies FontDef
+
+/** A font `applyFont` can set: one of `FONTS`, or the system's own (`SYSTEM_FONT`). */
+export type FontId = (typeof FONTS)[number]['id'] | (typeof SYSTEM_FONT)['id']
 
 /** The font before any choice (the default). */
 export const DEFAULT_FONT: FontId = 'plex'

@@ -124,7 +124,11 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    hints as 20px caps with a hairline in place of plain text (R5), `controls: 'strong'` gives fields and the outline
    button the 3:1 control border in place of the light divider, `surfaces.<scheme>.input` states the control border
    of a curated palette (the engine holds it at 3:1 on the chosen row too), and `Badge tone` (`success`, `warning`,
-   `danger`, `info`) draws a status as a label with a 6px dot.
+   `danger`, `info`) draws a status as a label with a 6px dot. Three more, the same day: `tabs: 'bold'` marks the
+   chosen view of a bar and the chosen item of a segment by weight 700 and the accent (a square line that grows from
+   its middle; a track whose chosen item has an accent tint and border), `statusStrip: 'tall'` makes the status strip
+   of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and
+   the system's monospace); nothing is shipped for it and it is never the default.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 
@@ -634,7 +638,7 @@ list below goes by what a part is for, and names parts of every level):
 - `/primitives`: `Button`, `Input`, `Textarea`, `Checkbox`, `Select`, `Switch`, `Slider`, `RadioGroup*`,
   `ToggleGroup*`, `Tabs*`, `Sheet*`, `DialogRoot`/`Dialog*` parts, `DropdownMenu*`, `Popover*`, `Tooltip`, `Kbd`,
   `Badge`, `Count`, `Avatar`, `Logo`, `Progress*`, `Table*`, `Card`, `Heading`, `Dot`, `Separator`, `Thumbnail`, `Icon`, and
-  the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
+  the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
 - `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
   `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
   `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
@@ -934,9 +938,11 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   total) => …`), so each language orders it as it needs. A component's own prop (`placeholder`, `clearLabel`) still
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
-- Icons: Sigrid has one icon set of its own, Lucide, the same in every app (the owner, 2026-11-23); the user does not
+- Icons: Sigrid has one icon set of its own, Sigrid Icons, the same in every app (the owner, 2026-11-23; since
+  2026-11-24 the set is MynaUI's drawings with fifteen of Sigrid's own beside them, in place of Lucide, and no package
+  of icons is a dependency); the user does not
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
-  never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
+  never the name of a drawing: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
   `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
   of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
@@ -950,7 +956,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
 - Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
   `IconPackChoice` and `IconPackText` are gone: drop the choice of a pack from the app's settings and stop saving it (a
   pack saved before is ignored). `IconPackProvider`, `useIconPack`, `IconSet`, `IconDrawing`, `IconArt` and `Icon`'s
-  `pack` prop are gone: remove the provider around the app (`Icon` draws Lucide without it), and ask for a meaning of
+  `pack` prop are gone: remove the provider around the app (`Icon` draws the set without it), and ask for a meaning of
   the app's own to be added to Sigrid's names (until then it is an empty slot). `Icon` no longer writes
   `data-icon-pack`. No name is kept as an alias.
 - Status colours, beside the red: `success` and `warning` (text, each with a `-soft` fill) and `highlight` (behind a

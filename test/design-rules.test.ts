@@ -168,17 +168,25 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
     })
   })
 
-  test('weights are 400, 500 and 600 (R7)', () => {
-    check('weight', ({ base }) => {
+  test('weights are 400, 500 and 600 (R7); 700 only under a theme with bold tabs (`data-tabs="bold"`), for what is chosen', () => {
+    const boldTabs = '[[data-tabs=bold]'
+    check('weight', ({ cls, base }) => {
       const m = /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/.exec(base)
-      return m !== null && !WEIGHTS.has(TW_WEIGHT[m[1]!]!)
+      if (m === null) return false
+      // The one exception: weight 700 in a class that starts with the variant of the attribute.
+      if (m[1] === 'bold') return !cls.startsWith(boldTabs)
+      return !WEIGHTS.has(TW_WEIGHT[m[1]!]!)
     })
+    // The exception is used where it was approved and nowhere else: the view of a bar, the item of a segment and the
+    // label that keeps their width.
+    const users = sources.filter((s) => code(s.text).includes(boldTabs)).map((s) => s.file.split(String.fromCharCode(92)).join('/')).sort()
+    expect(users).toEqual(['internal/steady-label.tsx', 'layout/toolbar.tsx', 'primitives/toggle-group.tsx'])
   })
 
   test('icons are 16 or 14px, dots 8px (R7, R10)', () => {
     const iconPx = (n: string) => Number.parseFloat(n) * 4
     for (const s of sources) {
-      const icons = new Set(['Icon', ...[...s.text.matchAll(/import \{([^}]+)\} from ['"]lucide-react['"]/g)].flatMap((m) => m[1]!.split(',').map((x) => x.trim().split(/\s+as\s+/).pop()!))])
+      const icons = new Set(['Icon', ...[...s.text.matchAll(/import \{([^}]+)\} from ['"][./]+(?:internal\/)?sigrid-icons['"]/g)].flatMap((m) => m[1]!.split(',').map((x) => x.trim().split(/\s+as\s+/).pop()!))])
       const bad: string[] = []
       for (const m of code(s.text).matchAll(/<([A-Z]\w*)\b[^>]*?className=(?:"([^"]*)"|\{[^}]*?['"`]([^'"`]*)['"`])/g)) {
         if (!icons.has(m[1]!)) continue

@@ -17,7 +17,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'OWN_SECONDS', 'OWN_SIDEBARS', 'OWN_TINTS', 'ownTheme', 'pageTint', 'PALETTE_COMBOS', 'palettePick',
     'paletteTheme', 'parseBlocks', 'parseInline', 'payloadFromDataTransfer', 'plainText', 'PortalContainerProvider',
     'preloadMotion', 'presetTone', 'restoreFocus', 'SHAPE_RADII', 'SHEET_TOASTS_ROOM', 'SHORT', 'splitLines',
-    'SPOT_KINDS', 'spotOf', 'spotSuggestions', 'STATUS', 'TAG_COLOR', 'TAG_HUES', 'TAG_PILL', 'tagColorAttrs',
+    'SPOT_KINDS', 'spotOf', 'spotSuggestions', 'STATUS', 'SYSTEM_FONT', 'TAG_COLOR', 'TAG_HUES', 'TAG_PILL', 'tagColorAttrs',
     'tagHue', 'THEME_ATTRIBUTES', 'THEME_SHAPES', 'THEME_VARIABLES', 'themeDark', 'themeTokens', 'themeTone',
     'themeVariables', 'TOASTS_ATTR', 'TOASTS_LAYER', 'TOASTS_ROOM_VAR', 'toHex', 'tokensFor', 'TONE_INTENSITIES',
     'TONE_LIGHTS', 'TONE_PRESETS', 'toneHasEffect', 'tonePresetOf', 'TOUCH_TARGET', 'useAppHeight', 'useDesktopGuard',
@@ -25,7 +25,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'withinLimit', 'withWords', 'WordsProvider',
   ],
   '@acaprino/sigrid/primitives': [
-    'Avatar', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Checkbox', 'Cluster', 'Collapsible',
+    'Avatar', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Cell', 'Checkbox', 'Cluster', 'Collapsible',
     'Column', 'Count', 'DialogClose', 'DialogContent', 'DialogDescription', 'DialogFooter', 'DialogHeader',
     'DialogOverlay', 'DialogPortal', 'DialogRoot', 'DialogTitle', 'DialogTrigger', 'Dot', 'DropdownMenu',
     'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup', 'DropdownMenuItem', 'DropdownMenuLabel',

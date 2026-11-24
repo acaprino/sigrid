@@ -1,4 +1,4 @@
-import { AlignLeft, FileText, Link, Mail, type LucideIcon } from 'lucide-react'
+import { FileText, Link, Mail, TextAlignLeft, type Glyph } from './sigrid-icons'
 import { DEFAULT_WORDS, type Words } from '../words'
 
 /** Kind of an item of the stack. */
@@ -6,9 +6,9 @@ export type ItemKind = 'text' | 'file' | 'email' | 'link'
 /** Kind of an attachment. */
 export type AttachmentKind = Exclude<ItemKind, 'text'>
 
-const ICONS: Record<ItemKind, LucideIcon> = { text: AlignLeft, file: FileText, email: Mail, link: Link }
+const ICONS: Record<ItemKind, Glyph> = { text: TextAlignLeft, file: FileText, email: Mail, link: Link }
 
-export function kindIcon(kind: ItemKind): LucideIcon {
+export function kindIcon(kind: ItemKind): Glyph {
   return ICONS[kind]
 }
 

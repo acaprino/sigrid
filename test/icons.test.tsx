@@ -1,12 +1,15 @@
-// Sigrid's icons (R6 of the toolkit's rules): one set, Lucide, the same in every app (the owner, 2026-11-23). Every
-// meaning is drawn, with Lucide's own drawing; a value read back is checked; a name Sigrid does not draw is an empty
-// slot; the packs, the choice of a pack and an app's own icons are gone, with no name left behind for them.
+// Sigrid's icons (R6 of the toolkit's rules): one set, Sigrid Icons, the same in every app (the owner, 2026-11-23 and
+// 2026-11-24). Every meaning is drawn, with the set's own drawing: a glyph on a 24px grid, stroked, with no fill; a
+// value read back is checked; a name Sigrid does not draw is an empty slot; the packs, the choice of a pack, an app's
+// own icons and the package of icons are gone, with no name left behind for them.
 import { render } from '@testing-library/react'
-import { Check, CircleX, CodeXml, ExternalLink, FileIcon, Folder, FolderOpen, GitBranch, Globe, Info, Key, Layers, MonitorSmartphone, Package, Router, Settings, Trash2, TriangleAlert, Waypoints, type LucideIcon } from 'lucide-react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { Check, Code, CogFour, DangerTriangle, Devices, ExternalLink, File, Folder, FolderOpen, GitBranch, Globe, Graph, InfoCircle, Key, LayersThree, Package, Router, Trash, XCircle, type Glyph } from '../src/internal/sigrid-icons'
 import { expect, test } from 'vitest'
 import * as UI from './all'
 import { ICON_NAMES, Icon, isIconName, type IconName } from '../src/primitives'
-import { classes } from './helpers'
+import { classes, root } from './helpers'
 
 /** The drawing an `Icon` of that name makes. */
 const draw = (name: IconName, className?: string) => {
@@ -33,39 +36,81 @@ test('every icon is drawn: an svg sized by the class given, hidden from screen r
   }
 })
 
-test("an icon is Lucide's own drawing for its meaning", () => {
-  const lucide = (Glyph: LucideIcon, className = 'size-4') => {
+test("an icon is the set's own drawing for its meaning", () => {
+  const glyph = (Glyph: Glyph, className = 'size-4') => {
     const { container, unmount } = render(<Glyph className={className} />)
     const html = container.querySelector('svg')!.outerHTML
     unmount()
     return html
   }
-  const MEANINGS: readonly (readonly [IconName, LucideIcon])[] = [
-    ['settings', Settings],
-    ['delete', Trash2],
+  const MEANINGS: readonly (readonly [IconName, Glyph])[] = [
+    ['settings', CogFour],
+    ['delete', Trash],
     ['folder', Folder],
     ['folderOpen', FolderOpen],
-    ['file', FileIcon],
-    ['info', Info],
+    ['file', File],
+    ['info', InfoCircle],
     ['check', Check],
-    ['alert', TriangleAlert],
-    ['error', CircleX],
-    ['code', CodeXml],
+    ['alert', DangerTriangle],
+    ['error', XCircle],
+    ['code', Code],
     ['branch', GitBranch],
     ['package', Package],
-    ['layers', Layers],
-    ['graph', Waypoints],
+    ['layers', LayersThree],
+    ['graph', Graph],
     ['gateway', Router],
-    ['device', MonitorSmartphone],
+    ['device', Devices],
     ['key', Key],
     ['globe', Globe],
     ['external', ExternalLink],
   ]
   for (const [name, Glyph] of MEANINGS) {
-    expect(draw(name), name).toBe(lucide(Glyph))
-    expect(draw(name, 'size-5'), name).toBe(lucide(Glyph, 'size-5'))
+    expect(draw(name), name).toBe(glyph(Glyph))
+    expect(draw(name, 'size-5'), name).toBe(glyph(Glyph, 'size-5'))
   }
   expect(draw('settings')).not.toBe(draw('delete'))
+})
+
+test('every glyph is one kind of drawing: marked for the theme, on a 24px grid, stroked at 2 with round ends, with no fill', () => {
+  for (const name of ICON_NAMES) {
+    const { container, unmount } = render(<Icon name={name} />)
+    const svg = container.querySelector('svg')!
+    // The mark and the stroke of 2 are what the theme's rule looks for (`svg[data-glyph][stroke-width="2"]`).
+    expect(svg.hasAttribute('data-glyph'), name).toBe(true)
+    expect(svg.getAttribute('viewBox'), name).toBe('0 0 24 24')
+    expect(svg.getAttribute('fill'), name).toBe('none')
+    expect(svg.getAttribute('stroke'), name).toBe('currentColor')
+    expect(svg.getAttribute('stroke-width'), name).toBe('2')
+    expect(svg.getAttribute('stroke-linecap'), name).toBe('round')
+    expect(svg.getAttribute('stroke-linejoin'), name).toBe('round')
+    const parts = [...svg.children]
+    expect(parts.length, name).toBeGreaterThan(0)
+    for (const part of parts) {
+      expect(part.tagName.toLowerCase(), name).toBe('path')
+      expect(part.getAttribute('d'), name).toMatch(/^[Mm]/)
+    }
+    unmount()
+  }
+})
+
+test('every meaning has a drawing of its own, but for the ones that share one on purpose', () => {
+  const SHARED: readonly (readonly IconName[])[] = [['all', 'bulletList'], ['minus', 'windowMinimize']]
+  const byDrawing = new Map<string, IconName[]>()
+  for (const name of ICON_NAMES) byDrawing.set(draw(name), [...(byDrawing.get(draw(name)) ?? []), name])
+  expect([...byDrawing.values()].filter((names) => names.length > 1)).toEqual(SHARED)
+})
+
+test('a stroke chosen on purpose is kept: the theme replaces only the stroke of 2', () => {
+  const { container, unmount } = render(<Check strokeWidth={2.5} />)
+  expect(container.querySelector('svg')!.getAttribute('stroke-width')).toBe('2.5')
+  unmount()
+  expect(readFileSync(join(root, 'src/styles/theme.css'), 'utf8')).toContain('svg[data-glyph][stroke-width="2"]')
+})
+
+test('no package of icons is a dependency, and no part imports one', () => {
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, Record<string, string> | undefined>
+  const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies, ...pkg.peerDependencies })
+  expect(deps.filter((d) => /lucide|mynaui|icons?-react|react-icons/.test(d))).toEqual([])
 })
 
 test('the rows of a tree of files: a folder, a folder shown open and a file, three meanings drawn apart', () => {

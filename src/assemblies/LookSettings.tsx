@@ -1,6 +1,6 @@
 import { createContext, memo, useContext, useId } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
-import { Check as LucideCheck } from 'lucide-react'
+import { Check as CheckGlyph } from '../internal/sigrid-icons'
 import { COLORS, COLOR_NAMES } from '../colors'
 import { densityOf, type DensityDef } from '../density'
 import { FOCUS_RING, FOCUS_RING_SWATCH } from '../lib/focus'
@@ -25,11 +25,11 @@ export interface ChoiceText {
 }
 
 /**
- * The mark on the chosen option: the choice is not shown by the border alone. The toolkit's check (Lucide's, as
+ * The mark on the chosen option: the choice is not shown by the border alone. The toolkit's check (the set's, as
  * `Icon name="check"` draws it) with a heavier stroke, which `Icon` does not take: it sits alone at the corner of a card.
  */
 function Check({ className }: { className: string }) {
-  return <LucideCheck aria-hidden="true" strokeWidth={2.5} className={className} />
+  return <CheckGlyph aria-hidden="true" strokeWidth={2.5} className={className} />
 }
 
 /**

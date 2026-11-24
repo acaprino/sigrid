@@ -13,7 +13,7 @@
 // open" rules of the rows (`data-[state=open]:`) read it.
 import * as React from "react"
 import { Menu } from "@base-ui/react/menu"
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+import { Check as CheckIcon, ChevronRight as ChevronRightIcon, Circle as CircleIcon } from "../internal/sigrid-icons"
 import { cn } from "../lib/utils"
 import { KEY_CAP } from "./kbd"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../lib/rows"

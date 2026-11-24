@@ -1,14 +1,14 @@
-// The layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`): a screen
+// The layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`): a screen
 // laid out with no class of the app's own. Every space is a step of the scale, and a class or a style passed in spite of
 // the types never reaches the page.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src/primitives'
+import { Cell, Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src/primitives'
 import { classes } from './helpers'
 
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)!
-// The steps of the scale and the gap each one is (4, 8, 12, 16 and 24px on Tailwind's 4px unit).
-const SCALE: [Space, string][] = [['xs', 'gap-1'], ['sm', 'gap-2'], ['md', 'gap-3'], ['lg', 'gap-4'], ['xl', 'gap-6']]
+// The steps of the scale and the gap each one is (4, 8, 12, 16 and 24px, then 32, 48 and 64px, on Tailwind's 4px unit).
+const SCALE: [Space, string][] = [['xs', 'gap-1'], ['sm', 'gap-2'], ['md', 'gap-3'], ['lg', 'gap-4'], ['xl', 'gap-6'], ['2xl', 'gap-8'], ['3xl', 'gap-12'], ['4xl', 'gap-16']]
 
 describe('piles and rows', () => {
   test('a pile is a column with the gap of its step; its padding is a step too; it can be a list', () => {
@@ -60,6 +60,43 @@ describe('piles and rows', () => {
     expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid', 'grid-cols-(--grid-columns-md)', 'gap-3']))
     rerender(<Grid min="lg" gap="xl">x</Grid>)
     expect(classes(slot('grid'))).toEqual(expect.arrayContaining(['grid-cols-(--grid-columns-lg)', 'gap-6']))
+  })
+
+  test('a part lines up by itself, or takes the room the others leave; without either it is a plain place', () => {
+    const { rerender } = render(<Cell>a</Cell>)
+    expect(classes(slot('cell'))).toEqual(['min-w-0'])
+    expect(slot('cell').hasAttribute('data-span')).toBe(false)
+    for (const [align, self] of [['start', 'self-start'], ['center', 'self-center'], ['end', 'self-end'], ['stretch', 'self-stretch']] as const) {
+      rerender(<Cell align={align}>a</Cell>)
+      expect(classes(slot('cell')), align).toEqual(['min-w-0', self])
+    }
+    rerender(<Cell grow as="li">a</Cell>)
+    expect(slot('cell').tagName).toBe('LI')
+    // It grows and gives way both ways: a long word in it wraps, a list in it scrolls.
+    expect(classes(slot('cell'))).toEqual(expect.arrayContaining(['min-w-0', 'min-h-0', 'flex-1']))
+    expect(slot('cell').hasAttribute('grow')).toBe(false)
+  })
+
+  test('a cell of a grid is two columns wide only where the grid has two, or a whole row; the grid measures itself only then', () => {
+    // jsdom lays nothing out: the classes that make the grid a container and the cell read its width.
+    const TWO = { sm: '28rem', md: '38rem', lg: '52rem' } as const
+    for (const min of ['sm', 'md', 'lg'] as const) {
+      const { unmount } = render(
+        <Grid min={min}>
+          <Cell span={2}>chart</Cell>
+          <Cell span="full">note</Cell>
+          <p>number</p>
+        </Grid>,
+      )
+      const [two, full] = [...document.querySelectorAll('[data-slot="cell"]')]
+      expect(two!.getAttribute('data-span')).toBe('2')
+      // Not on the cell: alone it would be two columns wide in a grid of one, and push the grid out of its place.
+      expect(classes(two!)).toEqual(['min-w-0'])
+      expect(classes(slot('grid')), min).toEqual(expect.arrayContaining(['has-[>[data-span]]:@container', `@[${TWO[min]}]:[&>[data-span='2']]:col-span-2`]))
+      expect(full!.getAttribute('data-span')).toBe('full')
+      expect(classes(full!)).toContain('col-span-full')
+      unmount()
+    }
   })
 
   test('a spacer is room and nothing a screen reader meets', () => {
@@ -139,13 +176,14 @@ test('a class or a style passed in spite of the types never reaches the page: a 
       <Cluster {...sneaky}>b</Cluster>
       <Split {...sneaky}>c</Split>
       <Grid {...sneaky}>d</Grid>
+      <Cell {...sneaky}>i</Cell>
       <Section title="S" {...sneaky}>e</Section>
       <ScrollArea aria-label="A" {...sneaky}>f</ScrollArea>
       <Page {...sneaky}>g</Page>
       <Text {...sneaky}>h</Text>
     </>,
   )
-  for (const name of ['column', 'cluster', 'split', 'grid', 'section', 'scroll-area', 'page', 'text']) {
+  for (const name of ['column', 'cluster', 'split', 'grid', 'cell', 'section', 'scroll-area', 'page', 'text']) {
     const el = slot(name)
     expect(el.getAttribute('class') ?? '', name).not.toContain(palette)
     expect(el.getAttribute('style'), name).toBeNull()
@@ -153,7 +191,7 @@ test('a class or a style passed in spite of the types never reaches the page: a 
 })
 
 test('every gap and every padding of every part is a step of the scale', () => {
-  const PADS: [Space, string][] = [['xs', 'p-1'], ['sm', 'p-2'], ['md', 'p-3'], ['lg', 'p-4'], ['xl', 'p-6']]
+  const PADS: [Space, string][] = [['xs', 'p-1'], ['sm', 'p-2'], ['md', 'p-3'], ['lg', 'p-4'], ['xl', 'p-6'], ['2xl', 'p-8'], ['3xl', 'p-12'], ['4xl', 'p-16']]
   for (const [space, gap] of SCALE) {
     const { unmount } = render(
       <>

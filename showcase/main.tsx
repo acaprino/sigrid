@@ -17,8 +17,8 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
-import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
-import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
+import { Archive, ArrowUpDown as ArrowDownUp, Bell, ChevronRight, CogFour as Settings, CornerUpLeft as Reply, Dots as Ellipsis, Inbox, PanelLeft, Plus, Search, Terminal, Trash as Trash2 } from '../src/internal/sigrid-icons'
+import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyFont, DEFAULT_FONT, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
@@ -135,7 +135,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "tokens": "Tokens",
   "hue-scales": "Tints and their scales",
   "theme-gallery": "Theme gallery",
-  "layout": "Column, Cluster, Split, Grid, Section, ScrollArea, Page and Text",
+  "layout": "Column, Cluster, Split, Grid, Cell, Section, ScrollArea, Page and Text",
   "button": "Button",
   "toggle-group": "ToggleGroup",
   "badge": "Badge",
@@ -2124,10 +2124,40 @@ function ControlBorderFrame({ stated, scheme }: { stated: boolean; scheme: Theme
   )
 }
 
-/** The four looks a theme asks for by name (2026-11-24), each drawn under its own attribute so it shows whatever Look says. */
-function ThemeHooks({ scheme }: { scheme: ThemeScheme }) {
+/** The views of a bar and a segment under bold tabs, with a choice that moves, so the line and the pill are seen moving. */
+function BoldTabsSample({ animated }: { animated: boolean }) {
+  const [view, setView] = React.useState('cleanup')
+  const [filter, setFilter] = React.useState('all')
   return (
-    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page.">
+    <div data-tabs="bold" data-sample="hook-tabs" className="flex w-full max-w-xl flex-col gap-4">
+      <div className="rounded-lg bg-sidebar-paper">
+        <Toolbar aria-label="Sample bar with bold tabs">
+          <ToolbarTabs aria-label="Views" value={view} onValueChange={setView}>
+            <ToolbarTab value="cleanup">Cleanup</ToolbarTab>
+            <ToolbarTab value="registry">Registry</ToolbarTab>
+            <ToolbarTab value="services">Services and memory</ToolbarTab>
+            <ToolbarTab value="off" disabled>
+              Developers
+            </ToolbarTab>
+          </ToolbarTabs>
+        </Toolbar>
+      </div>
+      <ToggleGroup aria-label="Filter" value={filter} onValueChange={setFilter} animated={animated}>
+        <ToggleGroupItem value="all">All</ToggleGroupItem>
+        <ToggleGroupItem value="chosen">Chosen</ToggleGroupItem>
+        <ToggleGroupItem value="attention">Attention</ToggleGroupItem>
+      </ToggleGroup>
+    </div>
+  )
+}
+
+/** The looks a theme asks for by name (2026-11-24), each drawn under its own attribute so it shows whatever Look says. */
+function ThemeHooks({ scheme, animated }: { scheme: ThemeScheme; animated: boolean }) {
+  return (
+    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page. Also bold tabs (tabs), a tall status strip (statusStrip) and the system's font, each with its switch in «Look»; the strip is seen in the frames of «Layout patterns».">
+      <Row label="bold tabs">
+        <BoldTabsSample animated={animated} />
+      </Row>
       <Row label="boxed keys">
         <div data-keys="boxed" data-sample="hook-keys" className="flex flex-wrap items-center gap-4">
           <Kbd>Ctrl K</Kbd>
@@ -3439,6 +3469,10 @@ function App() {
   // `?keys=boxed` and `?controls=strong`: the two looks a theme asks for by name, off unless asked (`ThemeDef.keys`, `ThemeDef.controls`).
   const [boxedKeys, setBoxedKeys] = React.useState(params.get('keys') === 'boxed')
   const [strongControls, setStrongControls] = React.useState(params.get('controls') === 'strong')
+  // `?tabs=bold`, `?strip=tall` and `?font=system`: bold tabs, a tall status strip (`ThemeDef.tabs`, `statusStrip`) and the system's font.
+  const [boldTabs, setBoldTabs] = React.useState(params.get('tabs') === 'bold')
+  const [tallStrip, setTallStrip] = React.useState(params.get('strip') === 'tall')
+  const [systemFont, setSystemFont] = React.useState(params.get('font') === 'system')
   const [tone, setTone] = React.useState(() => {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
@@ -3472,7 +3506,7 @@ function App() {
     history.replaceState(null, '', `${location.search}${nav.id ? `#${nav.id}` : ''}`)
   }, [nav])
   React.useLayoutEffect(() => {
-    const asked = { shape, keys: boxedKeys ? 'boxed' : 'plain', controls: strongControls ? 'strong' : 'divider' } as const
+    const asked = { shape, keys: boxedKeys ? 'boxed' : 'plain', controls: strongControls ? 'strong' : 'divider', tabs: boldTabs ? 'bold' : 'plain', statusStrip: tallStrip ? 'tall' : 'slim' } as const
     applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), ...asked }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), ...asked }, scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
@@ -3483,6 +3517,10 @@ function App() {
     else next.delete('keys')
     if (strongControls) next.set('controls', 'strong')
     else next.delete('controls')
+    if (boldTabs) next.set('tabs', 'bold')
+    else next.delete('tabs')
+    if (tallStrip) next.set('strip', 'tall')
+    else next.delete('strip')
     if (yours) {
       next.set('color', color.slice(1))
       next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
@@ -3491,7 +3529,14 @@ function App() {
       next.delete('spot')
     }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone, yours, color, spot, shape, boxedKeys, strongControls])
+  }, [theme, scheme, tone, yours, color, spot, shape, boxedKeys, strongControls, boldTabs, tallStrip])
+  React.useLayoutEffect(() => {
+    applyFont(document.documentElement, systemFont ? 'system' : DEFAULT_FONT)
+    const next = new URLSearchParams(location.search)
+    if (systemFont) next.set('font', 'system')
+    else next.delete('font')
+    history.replaceState(null, '', `?${next.toString()}${location.hash}`)
+  }, [systemFont])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -3556,7 +3601,7 @@ function App() {
     'toggle-group': <Toggles animated={animated} />,
     badge: <Badges />,
     kbd: <Keys />,
-    'theme-hooks': <ThemeHooks scheme={scheme} />,
+    'theme-hooks': <ThemeHooks scheme={scheme} animated={animated} />,
     input: <Fields />,
     select: <Selects />,
     checkbox: <Checkboxes animated={animated} />,
@@ -3665,6 +3710,15 @@ function App() {
                   </Switch>
                   <Switch checked={strongControls} onCheckedChange={setStrongControls} animated={animated}>
                     Strong control borders
+                  </Switch>
+                  <Switch checked={boldTabs} onCheckedChange={setBoldTabs} animated={animated}>
+                    Bold tabs
+                  </Switch>
+                  <Switch checked={tallStrip} onCheckedChange={setTallStrip} animated={animated}>
+                    Tall status strip
+                  </Switch>
+                  <Switch checked={systemFont} onCheckedChange={setSystemFont} animated={animated}>
+                    System font
                   </Switch>
                   <LookField label="Density">
                     <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)} className="self-start">

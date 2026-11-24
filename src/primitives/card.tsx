@@ -10,8 +10,8 @@ import type * as React from "react"
 import { cn } from "../lib/utils"
 import type { LayoutAttributes, Space } from "./layout"
 
-const GAP: Record<Space, string> = { xs: "gap-1", sm: "gap-2", md: "gap-3", lg: "gap-4", xl: "gap-6" }
-const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6" }
+const GAP: Record<Space, string> = { xs: "gap-1", sm: "gap-2", md: "gap-3", lg: "gap-4", xl: "gap-6", "2xl": "gap-8", "3xl": "gap-12", "4xl": "gap-16" }
+const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6", "2xl": "p-8", "3xl": "p-12", "4xl": "p-16" }
 const LOOK = { raised: "bg-raised shadow-xs", quiet: "bg-paper-2" } as const
 
 export type CardProps = LayoutAttributes & {

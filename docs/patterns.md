@@ -195,6 +195,33 @@ actions with the main one first. It is the screen where the accent has the least
 must fit one screen with no scrolling (sort, triage) is a `Page fit`: the head (a switch, a count) and the foot (the
 answers) keep their height and the body between them gives way and scrolls inside itself, never the document.
 
+## Inside a region: piles, rows, grids, and one part's own place
+
+A region is laid out with the layout parts, each named by what it is for: `Column` a pile, `Cluster` a row that
+wraps, `Split` two groups at the two ends of a row, `Grid` cells in as many columns as the width holds, `Spacer` the
+empty room that pushes what follows to the end. None has a breakpoint: each measures the room it has, so the same
+screen holds beside an open inspector and on a phone.
+
+The pile, the row and the grid decide for all their parts. Where one part must sit differently it is a `Cell`:
+
+- **It lines up by itself** (`align`). A row that lines its parts up at the top keeps a picture beside the first line
+  of a long message; the one button of that row sits at its foot with `<Cell align="end">`.
+- **It takes the room the others leave** (`grow`). `Spacer` leaves that room empty; `<Cell grow>` gives it to a part:
+  the words between a picture and a button, the field beside its button, the list between the filters and the foot of
+  a `Column fill`.
+- **It is wider than a column of the grid** (`span`). In a board of numbers the chart is `<Cell span={2}>`: two
+  columns where the grid has two, one where it has one, so nothing is pushed out on a phone. `span="full"` is a whole
+  row at any width: a note or a heading between the rows of cells.
+
+A part that sits as the others do needs no `Cell`. One `Cell` in a row is a choice; a `Cell` round every part means
+the row, the pile or the grid was the wrong one.
+
+Space is a step of one scale. `xs` to `xl` (4 to 24px) is the whole of it for a screen that is worked in: a list, a
+form, a panel, a board. `2xl`, `3xl` and `4xl` (32, 48 and 64px) are for a page of a few large parts that is read
+once, such as a welcome or a first run, where the room is what tells the parts apart. More room on a working screen
+only spreads out what the eye has to gather; and a region with nothing in it yet is an `Empty`, not a pile with a
+large gap.
+
 ## Narrow windows and phones
 
 - Do not design a second app. The same regions give way in order: the inspector becomes a panel, the sidebar a rail

@@ -17,7 +17,7 @@
 //   the showcase is opened on a phone, or in the browser's device mode.
 // The overlays of the frame (the capture sheet, the drawer) mount into a layer of the frame, so they open inside it.
 import * as React from 'react'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from '../src/internal/sigrid-icons'
 import { PortalContainerProvider, TOUCH_TARGET, cn, densityOf, densityVariables, densityWith, type Density, type DensityDef, type DensityId } from '../src/index'
 import { Button, Count, Icon, Input, Page, Progress, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Switch, Textarea, ToggleGroup, ToggleGroupItem, type IconName } from '../src/primitives'
 import { Empty, FormField, ItemList, ItemRow, Toasts } from '../src/components'

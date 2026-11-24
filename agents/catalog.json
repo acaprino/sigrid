@@ -750,6 +750,14 @@
      ]
     },
     {
+     "file": "src/internal/sigrid-icons.tsx",
+     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Fifteen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
+     "also": [
+      "Glyph",
+      "GlyphProps"
+     ]
+    },
+    {
      "file": "src/internal/tag-color.ts",
      "about": "The colors of a user's labels (tags): eight background/ink pairs per scheme in `theme.css` (`--tag-1-*` …\n`--tag-8-*`), picked from the label's name, so the same name has the same color everywhere and on every device,\nwithout an extra datum. The chips of the labels field (`ChipsInput.tsx`) use them, and so can an app's own label pills.",
      "also": [
@@ -950,6 +958,16 @@
          "doc": "The border of fields and of the outline button. Absent, `divider` or any other value: the light divider (`line`; the owner, 2026-11-22). `strong`: the control border (`input`, 3:1), an exception a theme asks for; the engine writes `data-controls=\"strong\"` on the root."
         },
         {
+         "name": "tabs",
+         "type": "\"bold\" | \"plain\"",
+         "doc": "How the chosen view of a bar (`ToolbarTab`) and the chosen item of a segment (`ToggleGroup`) are marked. Absent, `plain` or any other value: as the toolkit draws them (weight 600; a round line under the view; a raised thumb in the segment). `bold`: the mark is the weight and the accent, an exception to R7 a theme asks for: the chosen one is weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill and at 55% as its border. The engine writes `data-tabs=\"bold\"` on the root. The toolkit's own fonts stop at 600: a theme that asks for this takes a font with a 700 (`SYSTEM_FONT`)."
+        },
+        {
+         "name": "statusStrip",
+         "type": "\"slim\" | \"tall\"",
+         "doc": "The height of the status strip of `AppShell`. Absent, `slim` or any other value: a dense control tall (28px at compact). `tall`: 40px, so a 20px badge has room above and below it. The engine writes `data-status-strip=\"tall\"`."
+        },
+        {
          "name": "dark",
          "type": "ThemeDark",
          "doc": "The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value: the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here."
@@ -1027,6 +1045,7 @@
       "PaletteProfile",
       "SHAPE_RADII",
       "SidebarKind",
+      "SYSTEM_FONT",
       "THEME_SHAPES",
       "themeDark",
       "ThemeShape"
@@ -1118,7 +1137,7 @@
          "name": "attributes",
          "type": "Readonly<Record<string, string>>",
          "required": true,
-         "doc": "The root attributes that state the choices that are not numbers: `data-sidebar` always, `data-keys=\"boxed\"` and `data-controls=\"strong\"` only when the theme asks for them (`ThemeDef.keys`, `ThemeDef.controls`)."
+         "doc": "The root attributes that state the choices that are not numbers: `data-sidebar` always; `data-keys=\"boxed\"`, `data-controls=\"strong\"`, `data-tabs=\"bold\"` and `data-status-strip=\"tall\"` only when the theme asks for them (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`)."
         },
         {
          "name": "corrected",
@@ -1582,7 +1601,7 @@
    "files": [
     {
      "file": "src/icons.tsx",
-     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own,\nLucide (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app. A component asks\nfor an icon by what it means (`settings`, `delete`), never by Lucide's own name, so a meaning keeps its drawing in\nevery app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThat binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the\nmeaning; a part draws a Lucide glyph directly only where `Icon` cannot give the same thing: a glyph no name means\n(the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the kinds\nof an item, which `kindIcon` hands out as Lucide's components), or a glyph that holds what `Icon`'s wrapping `<span>`\nwould take from it (its own place, `ml-auto` or `absolute`: the submenu's chevron, the search field's magnifier; the\nbar's drag attribute; a `data-slot`; its place in a box that is not a flex box, where the wrapper moves it by a pixel:\nthe chevron of a select, the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check\non a card of the look settings).\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23.",
+     "about": "Sigrid's icons (R6 of the toolkit's rules): icons are visual anchors for the eye, and Sigrid has one set of its own\n(the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»), the same in every app: Sigrid Icons, MynaUI's\ndrawings and Sigrid's own beside them (the owner, 2026-11-24; `src/internal/sigrid-icons.tsx`), in place of Lucide. A\ncomponent asks for an icon by what it means (`settings`, `delete`), never by the name of a drawing, so a meaning\nkeeps its drawing in every app. An icon a function needs that is not among the names is added here, to Sigrid's names, never by an app.\nThat binds every app: an app imports no icon. The toolkit's own parts take `Icon` too wherever a name has the\nmeaning; a part draws a glyph of the set directly only where `Icon` cannot give the same thing: a glyph no name means\n(the sort arrows of a table, the grip of a row moved by hand, the dot of a radio item, the fit of the graph, the kinds\nof an item, which `kindIcon` hands out as glyphs), or a glyph that holds what `Icon`'s wrapping `<span>`\nwould take from it (its own place, `ml-auto` or `absolute`: the submenu's chevron, the search field's magnifier; the\nbar's drag attribute; a `data-slot`; its place in a box that is not a flex box, where the wrapper moves it by a pixel:\nthe chevron of a select, the check of a ring, a menu or a list), or a stroke `Icon` does not take (the heavier check\non a card of the look settings).\nThe other packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the user's choice of a\npack and an app's own icons left on 2026-11-23; Lucide left on 2026-11-24.",
      "components": [
       {
        "name": "Icon",
@@ -1590,7 +1609,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "required": true
         },
         {
@@ -2191,8 +2210,39 @@
     },
     {
      "file": "src/primitives/layout.tsx",
-     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,\n`Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a part's own place among the others, a named section, an area that scrolls, the body of a\npage (or a page of exactly one screen, `Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px for a screen that is worked in; 2xl 32,\n3xl 48, 4xl 64px for a page of a few large parts, such as a welcome). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.\n`Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),\ntakes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).",
      "components": [
+      {
+       "name": "Cell",
+       "doc": "One part's own place in a `Cluster`, a `Column` or a `Grid`, where the row, the pile or the grid decides for all its parts: it lines up by itself, takes the room the others leave, or is wider than a column of the grid. A part that sits as the others do needs none.",
+       "props": [
+        {
+         "name": "align",
+         "type": "\"end\" | \"center\" | \"stretch\" | \"start\"",
+         "doc": "How this part alone lines up across its row or pile, whatever the others do: at the start, the centre or the end, or stretched. In a `Cluster` that is up and down (an avatar at the top of a message that runs to four lines); in a `Column`, side to side; in a `Grid`, up and down in its cell. Absent: as the row, the pile or the grid says."
+        },
+        {
+         "name": "grow",
+         "type": "boolean",
+         "doc": "It takes the room the other parts leave: the width in a `Cluster`, the height in a `Column fill`. `Spacer` leaves that room empty; this fills it with a part. With two in one row they share it evenly."
+        },
+        {
+         "name": "span",
+         "type": "2 | \"full\"",
+         "doc": "In a `Grid`: `2`, two columns wide where the grid has two, and one where it has one (a chart among numbers); `\"full\"`, the whole row at any width (a heading or a note between the rows of cells). Absent: one column."
+        },
+        {
+         "name": "as",
+         "type": "LayoutElement",
+         "doc": "The element it is: a `div` (the default), or a list item, a section, an aside, a navigation, a list. A list keeps `role=\"list\"`."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
       {
        "name": "Cluster",
        "doc": "A row of parts side by side that wraps to the next line when the room runs out: buttons, fields, chips.",
@@ -2209,12 +2259,12 @@
         },
         {
          "name": "justify",
-         "type": "\"center\" | \"start\" | \"end\" | \"between\"",
+         "type": "\"end\" | \"center\" | \"start\" | \"between\"",
          "doc": "Where the parts gather along the row (default `start`)."
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"end\" | \"center\" | \"stretch\" | \"start\"",
          "doc": "How they line up across the row (default `center`)."
         },
         {
@@ -2250,7 +2300,7 @@
         },
         {
          "name": "align",
-         "type": "\"center\" | \"start\" | \"end\" | \"stretch\"",
+         "type": "\"end\" | \"center\" | \"stretch\" | \"start\"",
          "doc": "How its parts sit across it: stretched to its width (the default), or at its start, centre or end."
         },
         {
@@ -2277,7 +2327,7 @@
       },
       {
        "name": "Grid",
-       "doc": "Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window.",
+       "doc": "Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window. Every part is one cell; one that asks for more room than the others (a chart among numbers) is a `Cell` with `span`.",
        "props": [
         {
          "name": "min",
@@ -2450,6 +2500,7 @@
       }
      ],
      "also": [
+      "CellProps",
       "ClusterProps",
       "ColumnProps",
       "GridProps",
@@ -2493,7 +2544,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons, drawn in the box while the picture loads and when it fails. Without it the box is empty, at the same size."
         },
         {
@@ -4051,6 +4102,15 @@
          "type": "string"
         },
         {
+         "name": "max",
+         "type": "string"
+        },
+        {
+         "name": "min",
+         "type": "string",
+         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
+        },
+        {
          "name": "animated",
          "type": "boolean"
         },
@@ -4063,15 +4123,6 @@
          "name": "placeholder",
          "type": "string",
          "doc": "The button text without a value. Absent: the toolkit's words («No date», «No date and time»)."
-        },
-        {
-         "name": "min",
-         "type": "string",
-         "doc": "The first and the last day that can be chosen, as `YYYY-MM-DD`: the days outside are not chosen."
-        },
-        {
-         "name": "max",
-         "type": "string"
         },
         {
          "name": "locale",
@@ -4765,7 +4816,7 @@
         },
         {
          "name": "controlSide",
-         "type": "\"start\" | \"end\"",
+         "type": "\"end\" | \"start\"",
          "doc": "Where the control is: at the `start` of the row (the default: a box to tick) or at its `end`."
         },
         {
@@ -5273,7 +5324,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "An icon that tells what kind of request it is; none for most."
         }
        ]
@@ -6747,7 +6798,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons, drawn while the logo loads, or in its place."
         }
        ]
@@ -8017,12 +8068,12 @@
         },
         {
          "name": "leftIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icons of the two buttons. Default the two arrows."
         },
         {
          "name": "rightIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
         },
         {
          "name": "empty",
@@ -8216,12 +8267,12 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -9098,7 +9149,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"code\" | \"data\" | \"search\" | \"video\" | \"filter\" | \"stop\" | \"layout\" | \"key\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
          "doc": "One of Sigrid's icons before the name."
         },
         {

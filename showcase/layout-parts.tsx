@@ -1,7 +1,9 @@
 // The layout parts in the showcase (Components view): a piece of a page laid out with `Column`, `Cluster`, `Split`,
-// `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` and `Text` and no class of its own, as an app writes it. The frame
-// around it (the showcase's `Section`, `Row`) is the showcase's.
-import { Badge, Button, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text } from '../src/primitives'
+// `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page` and `Text` and no class of its own, as an app writes it.
+// The frame around it (the showcase's `Section`, `Row`) is the showcase's. Under the page, the three things one part
+// asks for itself (`Cell`): two columns of a grid, its own line in a row and the room the others leave; and a page of
+// a few large parts, told apart by the large steps of the scale.
+import { Avatar, Badge, Button, Card, Cell, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text } from '../src/primitives'
 import { Code, Row, Section } from './parts'
 
 const FILES = ['src/retry.ts', 'src/charge.ts', 'src/webhooks.ts', 'src/dunning.ts', 'test/retry.spec.ts', 'test/charge.spec.ts', 'test/webhooks.spec.ts', 'README.md']
@@ -10,11 +12,11 @@ export function LayoutParts() {
   return (
     <Section
       id="layout"
-      title="Column, Cluster, Split, Grid, Section, ScrollArea, Page and Text"
+      title="Column, Cluster, Split, Grid, Cell, Section, ScrollArea, Page and Text"
       note={
         <>
-          A screen laid out with no class of the app's own. Every space is a step of the scale (<Code>xs</Code> to <Code>xl</Code>); the parts take no
-          class and no style.
+          A screen laid out with no class of the app's own. Every space is a step of the scale (<Code>xs</Code> to <Code>xl</Code> where the work is,{' '}
+          <Code>2xl</Code> to <Code>4xl</Code> between the few large parts of a page read once); the parts take no class and no style.
         </>
       }
     >
@@ -62,6 +64,91 @@ export function LayoutParts() {
               </LayoutSection>
             </Grid>
           </LayoutPage>
+        </div>
+      </Row>
+      <Row label="a cell of two columns">
+        <div data-sample="layout-span" className="w-full max-w-4xl rounded-lg bg-paper shadow-xs">
+          <LayoutPage>
+            <Grid min="sm">
+              <Cell span={2}>
+                <Card variant="quiet">
+                  <Text variant="kicker">Retries by day</Text>
+                  <Text as="p" variant="soft">
+                    A chart asks for more room than a number: this cell is two columns wide where the grid has two, and one where it has one.
+                  </Text>
+                </Card>
+              </Cell>
+              <Card variant="quiet">
+                <Text variant="kicker">Charged</Text>
+                <Text variant="strong">1 284</Text>
+              </Card>
+              <Card variant="quiet">
+                <Text variant="kicker">Retried</Text>
+                <Text variant="strong">112</Text>
+              </Card>
+              <Card variant="quiet">
+                <Text variant="kicker">Failed</Text>
+                <Text variant="strong">37</Text>
+              </Card>
+              <Cell span="full">
+                <Text variant="note">Counted on the last 30 days. This line is a whole row of the grid at any width.</Text>
+              </Cell>
+            </Grid>
+          </LayoutPage>
+        </div>
+      </Row>
+      <Row label="a part's own place">
+        <div data-sample="layout-cell" className="w-full max-w-4xl rounded-lg bg-paper shadow-xs">
+          <LayoutPage>
+            <Cluster align="start" wrap={false} gap="md">
+              <Avatar name="Ada Moretti" decorative />
+              <Cell grow>
+                <Column gap="xs">
+                  <Text variant="strong">Ada Moretti</Text>
+                  <Text as="p" variant="soft">
+                    The row lines its parts up at the top, so the picture stays beside the name however long the message runs. The words take the room
+                    the picture and the button leave, and the button alone sits at the foot of the row.
+                  </Text>
+                </Column>
+              </Cell>
+              <Cell align="end">
+                <Button variant="outline" size="sm">
+                  Reply
+                </Button>
+              </Cell>
+            </Cluster>
+          </LayoutPage>
+        </div>
+      </Row>
+      <Row label="a few large parts">
+        <div data-sample="layout-room" className="w-full max-w-4xl rounded-lg bg-paper shadow-xs">
+          <Column gap="3xl" pad="2xl">
+            <Column gap="xs">
+              <Text variant="kicker">Welcome</Text>
+              <Text variant="strong">Billing is connected</Text>
+              <Text variant="muted">Two things to set before the first charge.</Text>
+            </Column>
+            <Grid min="sm" gap="2xl">
+              <Column align="start">
+                <Text variant="strong">Retry rules</Text>
+                <Text as="p" variant="soft">
+                  When a failed charge is tried again, and how many times.
+                </Text>
+                <Button variant="outline" size="sm">
+                  Set the rules
+                </Button>
+              </Column>
+              <Column align="start">
+                <Text variant="strong">Receipts</Text>
+                <Text as="p" variant="soft">
+                  What a customer is sent after each charge.
+                </Text>
+                <Button variant="outline" size="sm">
+                  Choose a template
+                </Button>
+              </Column>
+            </Grid>
+          </Column>
         </div>
       </Row>
     </Section>

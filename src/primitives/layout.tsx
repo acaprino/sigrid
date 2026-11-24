@@ -1,7 +1,8 @@
 // The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an
-// automatic grid, a spacer, a named section, an area that scrolls, the body of a page (or a page of exactly one screen,
-// `Page fit`), and the weight of a line of text.
-// Every space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px). No part takes a class or a style, and
+// automatic grid, a spacer, a part's own place among the others, a named section, an area that scrolls, the body of a
+// page (or a page of exactly one screen, `Page fit`), and the weight of a line of text.
+// Every space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px for a screen that is worked in; 2xl 32,
+// 3xl 48, 4xl 64px for a page of a few large parts, such as a welcome). No part takes a class or a style, and
 // one passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's
 // rule of 2026-11-23: an app has no interface code of its own).
 // After Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,
@@ -13,16 +14,23 @@
 // `Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a
 // row on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line
 // and the 13px note beside a title.
+// `Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),
+// takes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).
 import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { AppShellContext } from "../internal/frame"
 
-/** A step of the spacing scale: 4, 8, 12, 16 or 24px. */
-export type Space = "xs" | "sm" | "md" | "lg" | "xl"
+/**
+ * A step of the spacing scale: 4, 8, 12, 16 or 24px (`xs` to `xl`) between the parts of a screen that is worked in, and
+ * 32, 48 or 64px (`2xl`, `3xl`, `4xl`) between the few large parts of a page that is read once (a welcome, a first
+ * run), where the room is what tells them apart. A list, a form or a panel stays within `xl`, and a region with
+ * nothing in it yet is an `Empty`, which has its own room.
+ */
+export type Space = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"
 // Whole class names, so that Tailwind finds them in this file.
-const GAP: Record<Space, string> = { xs: "gap-1", sm: "gap-2", md: "gap-3", lg: "gap-4", xl: "gap-6" }
-const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6" }
+const GAP: Record<Space, string> = { xs: "gap-1", sm: "gap-2", md: "gap-3", lg: "gap-4", xl: "gap-6", "2xl": "gap-8", "3xl": "gap-12", "4xl": "gap-16" }
+const PAD: Record<Space, string> = { xs: "p-1", sm: "p-2", md: "p-3", lg: "p-4", xl: "p-6", "2xl": "p-8", "3xl": "p-12", "4xl": "p-16" }
 
 /** What a part of the layout hands to its element: its id, its role, its `aria-*` and `data-*`; never a class or a style. */
 export type LayoutAttributes = Omit<React.HTMLAttributes<HTMLElement>, "className" | "style" | "children">
@@ -138,6 +146,17 @@ function Split({ gap = "md", pad, as = "div", children, ...props }: SplitProps) 
 
 // The column tracks are custom properties of theme.css: `repeat(auto-fit, minmax(min(<width>, 100%), 1fr))`.
 const COLUMNS = { sm: "grid-cols-(--grid-columns-sm)", md: "grid-cols-(--grid-columns-md)", lg: "grid-cols-(--grid-columns-lg)" } as const
+// A cell two columns wide (`Cell span={2}`). A span wider than the grid would make a column of its own and push the
+// grid out of its place, so the cell is two columns wide only where the grid has two: the grid measures itself (a
+// container, and only when it holds such a cell, so every other grid is as it was) and the cell reads that width. The
+// widths are two columns of the grid's minimum and the widest gap of the scale (4rem): with a narrower gap the grid
+// has its second column a little before the cell takes it, never after.
+const MEASURED = "has-[>[data-span]]:@container"
+const SPAN_TWO = {
+  sm: "@[28rem]:[&>[data-span='2']]:col-span-2",
+  md: "@[38rem]:[&>[data-span='2']]:col-span-2",
+  lg: "@[52rem]:[&>[data-span='2']]:col-span-2",
+} as const
 
 export type GridProps = LayoutAttributes & {
   /** The narrowest a column may be before the grid takes one column fewer: `sm` 12rem, `md` 17rem (the default), `lg` 24rem. */
@@ -149,11 +168,14 @@ export type GridProps = LayoutAttributes & {
   children?: React.ReactNode
 }
 
-/** Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window. */
+/**
+ * Cells in as many columns as the width holds, each at least `min` wide: tiles and panels that reflow with the window.
+ * Every part is one cell; one that asks for more room than the others (a chart among numbers) is a `Cell` with `span`.
+ */
 function Grid({ min = "md", gap = "md", as = "div", children, ...props }: GridProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="grid" className={cn("grid min-w-0", COLUMNS[min], GAP[gap])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="grid" className={cn("grid min-w-0", COLUMNS[min], GAP[gap], MEASURED, SPAN_TWO[min])}>
       {children}
     </Tag>
   )
@@ -162,6 +184,47 @@ function Grid({ min = "md", gap = "md", as = "div", children, ...props }: GridPr
 /** The empty room that pushes what follows it to the end of a row. */
 function Spacer() {
   return <span aria-hidden="true" data-slot="spacer" className="flex-auto" />
+}
+
+const SELF = { stretch: "self-stretch", start: "self-start", center: "self-center", end: "self-end" } as const
+// It takes the room the others leave, along the row or down the pile, and gives way (a long word in it wraps, a list
+// in it scrolls) instead of pushing the others out.
+const GROW = "min-h-0 flex-1"
+
+export type CellProps = LayoutAttributes & {
+  /**
+   * How this part alone lines up across its row or pile, whatever the others do: at the start, the centre or the end, or
+   * stretched. In a `Cluster` that is up and down (an avatar at the top of a message that runs to four lines); in a
+   * `Column`, side to side; in a `Grid`, up and down in its cell. Absent: as the row, the pile or the grid says.
+   */
+  align?: keyof typeof SELF | undefined
+  /**
+   * It takes the room the other parts leave: the width in a `Cluster`, the height in a `Column fill`. `Spacer` leaves
+   * that room empty; this fills it with a part. With two in one row they share it evenly.
+   */
+  grow?: boolean | undefined
+  /**
+   * In a `Grid`: `2`, two columns wide where the grid has two, and one where it has one (a chart among numbers);
+   * `"full"`, the whole row at any width (a heading or a note between the rows of cells). Absent: one column.
+   */
+  span?: 2 | "full" | undefined
+  /** The element it is: a `div` (the default), or a list item, a section, an aside, a navigation, a list. A list keeps `role="list"`. */
+  as?: LayoutElement | undefined
+  children?: React.ReactNode
+}
+
+/**
+ * One part's own place in a `Cluster`, a `Column` or a `Grid`, where the row, the pile or the grid decides for all
+ * its parts: it lines up by itself, takes the room the others leave, or is wider than a column of the grid. A part
+ * that sits as the others do needs none.
+ */
+function Cell({ align, grow = false, span, as = "div", children, ...props }: CellProps) {
+  const Tag = as
+  return (
+    <Tag role={listRole(as)} {...own(props)} data-slot="cell" data-span={span} className={cn("min-w-0", align && SELF[align], grow && GROW, span === "full" && "col-span-full")}>
+      {children}
+    </Tag>
+  )
 }
 
 // `title` is the heading here, not the HTML attribute of a hint.
@@ -306,4 +369,4 @@ function Text({ variant = "body", as = "span", pre = false, children, ...props }
   )
 }
 
-export { Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text }
+export { Cell, Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text }
