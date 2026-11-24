@@ -382,7 +382,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
 
 - `.`: the theme engine and catalog, the colour palette, `cn`, the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
@@ -501,6 +501,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
       wherever the layout leaves such a gap (a dense graph in a small box may still have one thing cut). The canvas is not shown until its first view is fitted. A `ref` gives the app `focus(ids, { padding })`
       (onto some things, opening what hides them), `fit()` and `zoomTo(scale)`; the view jumps, nothing moves by itself.
+    - Its height. The box is 384px tall. With `fill` it is as tall as the region that holds it, as `VirtualList fill`
+      is, and gives way with it: the content of the `AppShell`, a pane of a `ContentSplit`, the body of a `Page fit`.
+      With other parts over or under it (a row of filters, its key) it takes the height they leave, in the body of a
+      `Page fit` or in a `Column fill`, the pile that is as tall as its region (a plain `Column` is as tall as its
+      parts, so it has no height to give). It is never under 192px, room for the small map whole, or for the buttons of
+      the view over a thing of two lines: in a region shorter than that the region scrolls, and in one that grows with
+      what it holds (a `Page` that does not fit) the canvas is 192px, so leave `fill` out there.
     - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
       `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
       many lines of that kind there are (a `Count`: zero shows nothing; screen readers hear it with the word, «12
@@ -525,7 +532,7 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   ]
   <DataTable aria-label="Files" columns={columns} rows={files} rowId={(file) => file.id} virtual className="h-96" />
 
-  <VirtualList aria-label="Messages" count={mail.length} className="h-full">
+  <VirtualList aria-label="Messages" count={mail.length} fill>
     {(index) => <ItemRow title={mail[index].from} description={mail[index].subject} />}
   </VirtualList>
 
@@ -538,14 +545,20 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   // In the app's CSS, after theme.css: @import "@acaprino/sigrid/graph.css";
   import { GraphCanvas, GraphLegend } from '@acaprino/sigrid/graph'
   <GraphCanvas aria-label="Plan" nodes={[{ id: 'a', label: 'Launch' }, { id: 'b', label: 'Design', detail: '2 of 4 done' }]} edges={[{ from: 'a', to: 'b' }]}
-    selected={chosen} onSelect={setChosen} search minimap className="h-full" />
+    selected={chosen} onSelect={setChosen} search minimap fill />
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
   <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
-    onOpen={(id) => setScope(id)} className="h-full" />
+    onOpen={(id) => setScope(id)} fill />
+  // Under a row of filters and over its key, it takes the height they leave.
+  <Column fill pad="md">
+    <Cluster>{filters}</Cluster>
+    <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} fill />
+    <GraphLegend aria-label="Kinds of line" entries={kinds} />
+  </Column>
 
   // A path of two steps, a line that waits and one that never goes together; the view moved by the app.
   const view = useRef<GraphCanvasHandle>(null)
-  <GraphCanvas ref={view} aria-label="Plan" nodes={nodes} className="h-full"
+  <GraphCanvas ref={view} aria-label="Plan" nodes={nodes} fill
     edges={[...tree, { from: 'copy', to: 'pages', kind: 'link', style: 'dashed', tone: 'warning', label: 'needs the text' },
       { from: 'review', to: 'host', kind: 'link', style: 'dotted', tone: 'destructive', directed: false, label: 'not the same week' }]}
     steps={path} />  // const path = useMemo(() => new Map([['copy', [1]], ['pages', [2]]]), []): one Map while the path is the same
@@ -557,12 +570,12 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   // Laid out by the app (ELK in a worker answers each box and each route): its places, sizes and routes, and its key.
   <GraphCanvas aria-label="Map" model="graph" layoutKey={layout.key}
     nodes={parts.map((part) => ({ ...part, ...layout.nodes[part.id] }))}
-    edges={calls.map((call) => ({ ...call, points: layout.edges[call.id] }))} className="h-full" />
+    edges={calls.map((call) => ({ ...call, points: layout.edges[call.id] }))} fill />
   // One of the app's things drawn in several places, another's service, a group not opened, words on a choice, and
   // two lines between the same two parts (each with its own id, drawn side by side).
   <GraphCanvas aria-label="Map" model="graph" selected={entity ? drawnAs(entity) : null} onSelect={choose}
     nodes={parts.map((part) => ({ id: part.id, label: part.name, external: part.outside, hiddenCount: part.closed ? part.count : undefined }))}
-    edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, label: call.kind, labelShown: call.flow ? 'always' : 'chosen' }))} className="h-full" />
+    edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, label: call.kind, labelShown: call.flow ? 'always' : 'chosen' }))} fill />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
@@ -580,9 +593,10 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
   never Lucide's own name: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
-  `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`) and the
-  four tones of a message (`info`, `check`, `alert`, and `error`, the circle with an X of every failure). An icon
-  a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
+  `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
+  of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
+  with `external` for what leaves this place) and the four tones of a message (`info`, `check`, `alert`, and `error`,
+  the circle with an X of every failure). An icon a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
   (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
   not part of this: it stays the app's.
 - Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,
@@ -607,8 +621,10 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   The tokens: `--app-height` (`100dvh` until measured), `--fit-height` (it less the bottom bar's room),
   `--safe-area-max-inset-bottom` (the foot's room at its maximum, never the live inset) and
   `--safe-area-inset-top|left|right`; the variant `short:` and the query `SHORT` for a window under 500px tall.
-  `Page fit` is a page of exactly one screen whose body gives way. A tool a view lacks keeps its place with
-  `absent` (`ToolbarButton`, `ToolbarSearch`), and the words of a segment, a tab or a view are as wide chosen as not.
+  `Page fit` is a page of exactly one screen whose body gives way; `Column fill` is a pile as tall as its region, where
+  a part that fills (`GraphCanvas`, `VirtualList`, `Empty`) takes what the others leave. A tool a view lacks keeps its
+  place with `absent` (`ToolbarButton`, `ToolbarSearch`), and the words of a segment, a tab or a view are as wide chosen
+  as not.
 
 ## Design rules, showcase and checks
 

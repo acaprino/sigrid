@@ -579,6 +579,15 @@ describe('the canvas with a path and with lines that do not hang', () => {
       for (const box of boxes) expect(cut(box, after, 860, 620), box.id).toBe(false)
     })
 
+    test('a canvas that fills is fitted again when its region gives height up', async () => {
+      const { container } = render(<GraphCanvas aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} fill />)
+      await act(async () => {})
+      const first = viewOf(container)
+      // A row of filters wraps above it, or its key comes under it: the graph, centred, is higher in the box.
+      resize(1280, 600)
+      expect(viewOf(container).y).toBeLessThan(first.y)
+    })
+
     test('a graph that fits is centred in its box, and again in the box after a change of size', async () => {
       const { container } = render(<GraphCanvas aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} />)
       await act(async () => {})

@@ -28,6 +28,17 @@ describe('piles and rows', () => {
     unmount()
   })
 
+  test('a pile that fills is as tall as its region, in a block or in another pile; without it, as tall as its parts', () => {
+    // jsdom lays nothing out: the classes that give the pile that height, as in test/fit-screen.test.tsx.
+    const { rerender } = render(<Column>a</Column>)
+    expect(slot('column').hasAttribute('data-fill')).toBe(false)
+    expect(classes(slot('column'))).toEqual(['flex', 'min-w-0', 'flex-col', 'gap-2', 'items-stretch'])
+    rerender(<Column fill pad="md">a</Column>)
+    expect(slot('column').hasAttribute('data-fill')).toBe(true)
+    expect(slot('column').hasAttribute('fill')).toBe(false)
+    expect(classes(slot('column'))).toEqual(expect.arrayContaining(['flex-col', 'p-3', 'h-full', 'min-h-0', 'flex-1']))
+  })
+
   test('a row wraps, with its parts at the start, the end or apart; two groups go to the two ends of a row', () => {
     render(
       <>

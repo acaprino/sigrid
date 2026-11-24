@@ -2,7 +2,7 @@
 // meaning is drawn, with Lucide's own drawing; a value read back is checked; a name Sigrid does not draw is an empty
 // slot; the packs, the choice of a pack and an app's own icons are gone, with no name left behind for them.
 import { render } from '@testing-library/react'
-import { Check, CircleX, FileIcon, Folder, FolderOpen, Info, Settings, Trash2, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { Check, CircleX, CodeXml, ExternalLink, FileIcon, Folder, FolderOpen, GitBranch, Globe, Info, Key, Layers, MonitorSmartphone, Package, Router, Settings, Trash2, TriangleAlert, Waypoints, type LucideIcon } from 'lucide-react'
 import { expect, test } from 'vitest'
 import * as UI from '../src'
 import { ICON_NAMES, Icon, isIconName, type IconName } from '../src'
@@ -50,6 +50,16 @@ test("an icon is Lucide's own drawing for its meaning", () => {
     ['check', Check],
     ['alert', TriangleAlert],
     ['error', CircleX],
+    ['code', CodeXml],
+    ['branch', GitBranch],
+    ['package', Package],
+    ['layers', Layers],
+    ['graph', Waypoints],
+    ['gateway', Router],
+    ['device', MonitorSmartphone],
+    ['key', Key],
+    ['globe', Globe],
+    ['external', ExternalLink],
   ]
   for (const [name, Glyph] of MEANINGS) {
     expect(draw(name), name).toBe(lucide(Glyph))
@@ -72,6 +82,16 @@ test("the four tones of a message, four meanings drawn apart: a failure is the c
   // One look for a failure: the same drawing in a `Note`, a toast, a progress and a step (their own tests).
   expect(draw('error')).not.toBe(draw('info'))
   expect(draw('error')).not.toBe(draw('close'))
+})
+
+test('the parts of a project and of a system: each meaning has a drawing that no other name has', () => {
+  const parts = ['code', 'branch', 'package', 'layers', 'graph', 'gateway', 'device', 'key', 'globe', 'external'] as const
+  const drawn = ICON_NAMES.map((name) => [name, draw(name)] as const)
+  for (const part of parts) {
+    expect(isIconName(part), part).toBe(true)
+    const own = draw(part)
+    expect(drawn.filter(([, drawing]) => drawing === own).map(([name]) => name), part).toEqual([part])
+  }
 })
 
 test('a value read back is checked: only the names Sigrid draws pass', () => {

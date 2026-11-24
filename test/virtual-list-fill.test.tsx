@@ -15,7 +15,8 @@ test('fill makes the box as tall as its region, and the box scrolls; pad is the 
   )
   expect(box().getAttribute('data-slot')).toBe('virtual-list')
   expect(box().hasAttribute('data-fill')).toBe(true)
-  for (const part of ['h-full', 'min-h-0', 'overflow-y-auto', 'p-2']) expect(box().className).toContain(part)
+  // In a block its whole height (`h-full`), in a pile what the other parts leave (`flex-1`).
+  for (const part of ['h-full', 'min-h-0', 'flex-1', 'overflow-y-auto', 'p-2']) expect(box().className).toContain(part)
 })
 
 test('without them the box has no height and no room of its own: the app gives one, as before', () => {

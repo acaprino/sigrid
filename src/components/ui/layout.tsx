@@ -7,6 +7,8 @@
 // After Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,
 // `im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view
 // of an app, which the toolkit does not carry (test/build.test.ts).
+// `Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a
+// `VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's.
 // `Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a
 // row on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line
 // and the 13px note beside a title.
@@ -52,14 +54,20 @@ export type ColumnProps = LayoutAttributes & {
   as?: LayoutElement | undefined
   /** The widest it grows, centred in its place: `prose` a column of text (about 65 characters), `page` a column of content that reads as one (768px). Absent: as wide as its place. */
   width?: keyof typeof WIDTH | undefined
+  /**
+   * As tall as the region that holds it, which gives it its height (the content of the frame, a pane, the body of a
+   * `Page fit`, another `Column fill`): a part of it that fills (`GraphCanvas`, `VirtualList`, `Empty`, a `Column`)
+   * takes the height its other parts leave. Absent: as tall as its parts.
+   */
+  fill?: boolean | undefined
   children?: React.ReactNode
 }
 
 /** A pile of parts, one under the other. */
-function Column({ gap = "sm", pad, align = "stretch", as = "div", width, children, ...props }: ColumnProps) {
+function Column({ gap = "sm", pad, align = "stretch", as = "div", width, fill = false, children, ...props }: ColumnProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="column" className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align], width && WIDTH[width])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="column" data-fill={fill || undefined} className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align], width && WIDTH[width], fill && "h-full min-h-0 flex-1")}>
       {children}
     </Tag>
   )

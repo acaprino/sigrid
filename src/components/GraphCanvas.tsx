@@ -70,6 +70,12 @@
 //   moves the view through a `ref`: `focus` (onto some things, opening what hides them), `fit`, `zoomTo`.
 // - With `search` a field finds things by name; the others are dimmed, and Enter goes to the first one found,
 //   opening what hides it.
+// - The box is 384px tall, or with `fill` as tall as the region that holds it (the content of the frame, a pane, the
+//   body of a `Page fit`, a `Column fill`), as `VirtualList fill` is: an app writes no class for it. Beside other parts
+//   in a pile (a row of filters above it, its key under it) it takes what they leave, and gives way when the region
+//   does; the view is fitted again. Never under 192px: the small map (150px, 15px from the edges) is whole, and so are
+//   the buttons of the view over a thing of two lines. In less than that the region scrolls; in a region with no
+//   height of its own (a page that grows with what it holds) the box is that tall.
 // - With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the
 //   chosen thing (the first of several, alone) to hang a new one from it (in the graph mode, to add one after it).
 //   Every change is asked of the app with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here
@@ -252,7 +258,13 @@ export type GraphCanvasProps = {
   onChange?: ((next: Graph, change: GraphChange) => void) | undefined
   /** What the app can do to the view: `focus`, `fit`, `zoomTo`. */
   ref?: React.Ref<GraphCanvasHandle> | undefined
-  /** Classes of the box: its height (`h-96`, or a place in a column that gives it one). */
+  /**
+   * As tall as the region that holds it, which gives it its height (the content of the frame, a pane, the body of a
+   * `Page fit`, a `Column fill`): it takes what the parts beside it leave and gives way with it, never under 192px.
+   * Absent: 384px.
+   */
+  fill?: boolean | undefined
+  /** Classes of the box: its height, where it is neither 384px nor `fill`. */
   className?: string | undefined
 }
 
@@ -1006,7 +1018,7 @@ const NO_NAMES: readonly string[] = []
 let made = 0
 const freshId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `node-${Date.now()}-${++made}`)
 
-function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, className, ...props }: GraphCanvasProps) {
+function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, fill = false, className, ...props }: GraphCanvasProps) {
   const words = useWords().graph
   const flow = useReactFlow()
   // The library's helpers, as they are now: the view's own helpers below are made once.
@@ -1403,16 +1415,20 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       aria-roledescription={tree ? undefined : words.roleDescription}
       {...props}
       data-slot="graph"
+      data-fill={fill || undefined}
       onKeyDown={onKeyDown}
       onFocus={(event) => setHeld(event.target instanceof Element ? (event.target.closest<HTMLElement>('[data-thing]')?.dataset.thing ?? null) : null)}
       onBlur={(event) => {
         if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(null)
       }}
-      className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', className)}
+      // Filling: the whole height of a region that is a block, what the other parts leave of one that is a pile.
+      className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', fill && 'h-full min-h-48 flex-1', className)}
     >
       <ReactFlow
+        // Filling, the library's box is laid over this one: its own height (100%, inline) is nothing in a box that has
+        // no height but its floor.
         // Not shown until the first view is fitted to the measured box; an empty graph has nothing to fit.
-        className={cn(!shown && !empty && size.width > 0 && size.height > 0 && 'invisible')}
+        className={cn(fill && 'absolute! inset-0', !shown && !empty && size.width > 0 && size.height > 0 && 'invisible')}
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={NODE_TYPES}

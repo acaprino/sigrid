@@ -3,7 +3,7 @@
 // (`./virtual`), a list put in order by its handles (`./reorder`) and a field for text with a little form
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
-import { Avatar, Badge, Button, FormField, Input, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
+import { Avatar, Badge, Button, Cluster, Column, FormField, Input, ItemRow, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/index'
 import { DataTable, type DataColumn, type DataSort } from '../src/table'
 import { VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
@@ -316,6 +316,27 @@ const CALL_LINES: GraphEdge[] = [
   { from: 'queue', to: 'worker' }, { from: 'worker', to: 'queue' }, { from: 'worker', to: 'store' }, { from: 'billing', to: 'store' }, { from: 'auth', to: 'store' },
 ]
 
+/** The parts of a shop's system, each with the icon of what it is; three of them are outside it. */
+const PARTS: GraphNode[] = [
+  { id: 'web', label: 'Browsers', icon: 'globe', external: true },
+  { id: 'phone', label: 'Phone app', icon: 'device' },
+  { id: 'gate', label: 'Gateway', icon: 'gateway' },
+  { id: 'sign-in', label: 'Sign-in', icon: 'key' },
+  { id: 'orders', label: 'Orders', icon: 'layers', hiddenCount: 12 },
+  { id: 'charge', label: 'charge()', detail: 'src/charge.ts', icon: 'code' },
+  { id: 'client', label: 'Bank client', icon: 'package' },
+  { id: 'next', label: 'Next release', icon: 'branch' },
+  { id: 'sample', label: 'Suggestions', detail: 'What is bought together', icon: 'graph', external: true },
+  { id: 'bank', label: 'Page of the bank', icon: 'external', external: true },
+]
+const PART_LINES: GraphEdge[] = [
+  { from: 'web', to: 'gate' }, { from: 'phone', to: 'gate' }, { from: 'gate', to: 'sign-in' }, { from: 'gate', to: 'orders' }, { from: 'orders', to: 'charge' },
+  { from: 'charge', to: 'client' }, { from: 'client', to: 'bank' }, { from: 'orders', to: 'sample' },
+  { from: 'next', to: 'client', kind: 'link', style: 'dashed', label: 'changes' },
+]
+const INSIDE = PARTS.filter((part) => !part.external)
+const INSIDE_LINES = PART_LINES.filter((line) => INSIDE.some((part) => part.id === line.from) && INSIDE.some((part) => part.id === line.to))
+
 export function Graphs() {
   const [graph, setGraph] = React.useState({ nodes: PLAN, edges: JOINS })
   const [selected, setSelected] = React.useState<string | null>('design')
@@ -324,6 +345,9 @@ export function Graphs() {
   const groups = React.useRef<GraphCanvasHandle>(null)
   const [call, setCall] = React.useState<string | null>(null)
   const [opened, setOpened] = React.useState<string | null>(null)
+  const [short, setShort] = React.useState(false)
+  const [outside, setOutside] = React.useState(true)
+  const lines = outside ? PART_LINES : INSIDE_LINES
   const chosen = graph.nodes.find((node) => node.id === selected)
   const openedPart = CALLS.find((node) => node.id === opened)
   return (
@@ -332,7 +356,7 @@ export function Graphs() {
       title="GraphCanvas"
       note={
         <>
-          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing the app opens (one with an <Code>openLabel</Code>) asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>. Under a graph, <Code>GraphLegend</Code> is the key of its lines: each kind, its word and how many there are, each sample drawn by the same definitions as the lines.
+          A canvas for a graph of things and what joins them, from the entry <Code>@acaprino/sigrid/graph</Code> (React Flow for the canvas, dagre for the places), with its stylesheet <Code>@acaprino/sigrid/graph.css</Code>. The graph lays itself out in ranks. A thing is a raised surface; the chosen one has the selection tint, what is joined to it stays and the rest is dimmed. A thing with others hanging from it opens and closes, and closed it says how many it hides. The keyboard is the one of a tree: Down and Up, Right to open or go in, Left to close or go back, Enter to choose. With <Code>editable</Code> the plus hangs a new thing, a drag between two handles joins them, Delete takes one away. With <Code>model="graph"</Code> the lines are relations: nothing closes, the arrows follow the lines, and a double press or the › of a thing the app opens (one with an <Code>openLabel</Code>) asks the app to open it (<Code>onOpen</Code>). In both, +, − and 0 zoom in, out and fit. A line of kind <Code>link</Code> joins two things without hanging: it has its words, its dash (<Code>dashed</Code>, <Code>dotted</Code>), its tone and an arrowhead unless it goes both ways, and screen readers hear it in the description of its two things. With <Code>steps</Code> the app numbers a path: its things have the selection tint and their numbers, the lines between them take the accent, the rest is dimmed and what hides them opens. The view is fitted at the first paint and at every change of size, never smaller than a name can be read (<Code>minFitZoom</Code>): a large graph starts at its top left, and the edges fall between things wherever the layout leaves a gap. The app moves it through a <Code>ref</Code>: <Code>focus</Code>, <Code>fit</Code>, <Code>zoomTo</Code>. Under a graph, <Code>GraphLegend</Code> is the key of its lines: each kind, its word and how many there are, each sample drawn by the same definitions as the lines. The box is 384px tall; with <Code>fill</Code> it is as tall as the region that holds it, or in a <Code>Column fill</Code> as what the other parts leave, and gives way with it, never under 192px.
         </>
       }
     >
@@ -379,6 +403,31 @@ export function Graphs() {
         <div data-sample="graph-model" className="flex w-full max-w-4xl flex-col gap-3">
           <GraphCanvas aria-label="Calls of the service" model="graph" nodes={CALLS} edges={CALL_LINES} selected={call} onSelect={setCall} onOpen={setOpened} search className="h-80" />
           <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press Orders or Store twice, or its ›.'}</p>
+        </div>
+      </Row>
+      <Row label="as tall as its region">
+        <div data-sample="graph-fill" className="flex w-full max-w-4xl flex-col gap-3">
+          <Switch checked={short} onCheckedChange={setShort}>
+            A shorter region
+          </Switch>
+          {/* The region is the gallery's box; what is in it is written as an app writes it. */}
+          <div className={`overflow-y-auto rounded-lg border border-line ${short ? 'h-72' : 'h-128'}`}>
+            <Column fill pad="md">
+              <Cluster>
+                <Switch checked={outside} onCheckedChange={setOutside}>
+                  Show what is outside
+                </Switch>
+              </Cluster>
+              <GraphCanvas aria-label="Parts of the shop" model="graph" nodes={outside ? PARTS : INSIDE} edges={lines} fill />
+              <GraphLegend
+                aria-label="Kinds of line of the shop"
+                entries={[
+                  { label: 'Calls', count: lines.filter((line) => line.style === undefined).length },
+                  { label: 'Changes', style: 'dashed', count: lines.filter((line) => line.style === 'dashed').length },
+                ]}
+              />
+            </Column>
+          </div>
         </div>
       </Row>
       <Row label="1,000 things">
