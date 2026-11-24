@@ -579,13 +579,76 @@ describe('the canvas with a path and with lines that do not hang', () => {
       for (const box of boxes) expect(cut(box, after, 860, 620), box.id).toBe(false)
     })
 
-    test('a canvas that fills is fitted again when its region gives height up', async () => {
-      const { container } = render(<GraphCanvas aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} fill />)
+    test('a canvas that fills is fitted again when its region gives height up; one that does not keeps its height, and its view', async () => {
+      const canvas = (fill: boolean) => <GraphCanvas aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} fill={fill} />
+      const { container, rerender } = render(canvas(true))
+      await act(async () => {})
+      // jsdom lays nothing out: this box is as tall as its classes make it, its region (`h-full`) or 384px (`h-96`).
+      const box = container.querySelector<HTMLElement>('[data-slot="graph"]')!
+      Object.defineProperty(box, 'clientHeight', { configurable: true, get: () => (box.classList.contains('h-full') ? height : 384) })
+      const yIn = (region: number) => {
+        resize(1280, region)
+        return viewOf(container).y
+      }
+      const tall = yIn(800)
+      // A row of filters wraps above it, or its key comes under it: the graph, centred, is higher in the box.
+      expect(yIn(600)).toBeLessThan(tall)
+      rerender(canvas(false))
+      const own = yIn(800)
+      expect(own).not.toBe(tall)
+      expect(yIn(600)).toBe(own)
+    })
+
+    test('with a `layoutKey`, a view that was moved stays when the box changes size, until it is fitted; one nobody moved is fitted again', async () => {
+      const view = React.createRef<GraphCanvasHandle>()
+      const { container, unmount } = render(<GraphCanvas ref={view} aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} layoutKey="right" />)
       await act(async () => {})
       const first = viewOf(container)
-      // A row of filters wraps above it, or its key comes under it: the graph, centred, is higher in the box.
-      resize(1280, 600)
-      expect(viewOf(container).y).toBeLessThan(first.y)
+      resize(1100, 600)
+      const second = viewOf(container)
+      expect(second).not.toEqual(first)
+      act(() => view.current!.zoomTo(1.3))
+      const moved = viewOf(container)
+      expect(moved.zoom).toBeCloseTo(1.3, 3)
+      resize(1280, 700)
+      expect(viewOf(container)).toEqual(moved)
+      resize(900, 500)
+      expect(viewOf(container)).toEqual(moved)
+      // Fitted, it follows the box again.
+      act(() => view.current!.fit())
+      const fitted = viewOf(container)
+      expect(fitted).not.toEqual(moved)
+      resize(1280, 800)
+      expect(viewOf(container)).not.toEqual(fitted)
+      unmount()
+      // Without a key the view is fitted at every change of size, as it was.
+      const plain = React.createRef<GraphCanvasHandle>()
+      const other = render(<GraphCanvas ref={plain} aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} />)
+      await act(async () => {})
+      act(() => plain.current!.zoomTo(1.3))
+      resize(1100, 600)
+      expect(viewOf(other.container).zoom).not.toBeCloseTo(1.3, 3)
+    })
+
+    test('a view that stays is panned by what keeps the chosen thing in a smaller box, at its own scale', async () => {
+      const view = React.createRef<GraphCanvasHandle>()
+      const { container } = render(<GraphCanvas ref={view} aria-label="Plan" nodes={GRAPH.nodes} edges={GRAPH.edges} layoutKey="right" selected="shared" />)
+      await act(async () => {})
+      act(() => view.current!.zoomTo(1.2))
+      const moved = viewOf(container)
+      const chosen = drawnBoxes(container, GRAPH).find((box) => box.id === 'shared')!
+      const right = moved.x + (chosen.x + chosen.width) * moved.zoom
+      const bottom = moved.y + (chosen.y + chosen.height) * moved.zoom
+      // Just whole in the box: the view stays. Then an inspector opens beside it, and cuts it.
+      const w = Math.ceil(right) + 1
+      const h = Math.ceil(bottom) + 1
+      resize(w, h)
+      expect(viewOf(container)).toEqual(moved)
+      resize(w - 100, h)
+      const panned = viewOf(container)
+      expect(panned.zoom).toBeCloseTo(moved.zoom, 3)
+      expect(panned.x).toBeCloseTo(moved.x - (right + 24 - (w - 100)), 1)
+      expect(panned.y).toBeCloseTo(moved.y, 1)
     })
 
     test('a graph that fits is centred in its box, and again in the box after a change of size', async () => {

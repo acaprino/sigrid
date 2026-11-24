@@ -164,7 +164,8 @@ Text with a little form (a message, a note) is written in a `RichTextField` (`@a
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
 (`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by
 relations that are not «hangs from» (calls, imports, data) are one with `model="graph"`, where nothing closes. A canvas
-that is the content takes its height (`fill`); under a row of filters, the two in a `Column fill`, what the row leaves. The
+that is the content takes its height (`fill`); under a row of filters, the two in a `Column fill`, what the row leaves
+(a plain `Column` has no height to give). The
 examples use them: the Archive and the composer of the mail client, the Stack of the to-do list. Lines of several
 kinds have their key under the canvas: a `GraphLegend`, from the same entry.
 

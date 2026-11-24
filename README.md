@@ -450,8 +450,9 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     all, at the sizes given, and no line follows a route, until the app places it. `layoutKey` names the layout the
     places come from (as the app tells one from another: the direction, the things and the lines it laid out): when
     it changes, the view fits the whole graph again once the new places are drawn, and a draw on the same key
-    (another choice, new flags, the same places) keeps the view where the user moved it. Pass the new key with the new
-    places. Without it the view is fitted at the first paint and whenever the box changes size. `visibleGraph` and
+    (another choice, new flags, the same places) keeps the view where the user moved it, and so does a change of the
+    box's size (a view nobody moved is fitted again). Pass the new key with the new places.
+    Without it the view is fitted at the first paint and whenever the box changes size. `visibleGraph` and
     `layoutGraph` are exported for
     an app that draws the same graph another way (a list, a print).
     - Two kinds of line. A `GraphEdge` is `{ from, to }` and `to` hangs from `from` (`kind: 'child'`, the default):
@@ -495,7 +496,8 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
       path nor joined to it is dimmed (the field's finds come first, then the chosen thing and the path together).
       When the things on the path change, what hides one of them opens, through `onCollapsedChange` when the app
       keeps `collapsed`; the user may close it again.
-    - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size, and
+    - The view is fitted at the first paint (on the path when there is one), again whenever the box changes size (with
+      a `layoutKey`, a view the user moved stays as it is, panned only by what keeps the chosen thing in the box), and
       with the button, never smaller than `minFitZoom` (default 0.8: names of 14 px stay about 11 px; `0` fits the
       whole graph down to 0.2, as it was before there was a floor). A graph too large for that starts at its top left. The edges of the
       canvas fall between things: the view moves a little, or is a little smaller or larger (up to 1.5), until they do,
@@ -504,10 +506,13 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
     - Its height. The box is 384px tall. With `fill` it is as tall as the region that holds it, as `VirtualList fill`
       is, and gives way with it: the content of the `AppShell`, a pane of a `ContentSplit`, the body of a `Page fit`.
       With other parts over or under it (a row of filters, its key) it takes the height they leave, in the body of a
-      `Page fit` or in a `Column fill`, the pile that is as tall as its region (a plain `Column` is as tall as its
-      parts, so it has no height to give). It is never under 192px, room for the small map whole, or for the buttons of
-      the view over a thing of two lines: in a region shorter than that the region scrolls, and in one that grows with
-      what it holds (a `Page` that does not fit) the canvas is 192px, so leave `fill` out there.
+      `Page fit` or in a `Column fill`, the pile that is as tall as its region. It is never under 224px (232px with a
+      finger; a control and 188px, so it follows the density), where the field and the small map are both whole. A
+      region too short for that and for the parts beside it scrolls, and the canvas covers nothing that follows: a
+      `Column fill` with a canvas in it is never shorter than what its parts need (unless one of them scrolls by itself,
+      a list, a tree, a split, a panel, a `ScrollArea`: it gives way as ever). In a plain `Column`, as tall as its
+      parts, and in a `Page` that does not fit, there is no height to take and `fill` gives the floor alone: use a
+      `Column fill` or a `Page fit`, or leave `fill` out (384px).
     - The key of the lines. `GraphLegend`, under the canvas, says what each kind of line means: `entries` are
       `{ style, tone, label, count }`, `style` and `tone` as a `GraphEdge` takes them, `label` its word, `count` how
       many lines of that kind there are (a `Count`: zero shows nothing; screen readers hear it with the word, «12
@@ -595,8 +600,11 @@ Shift+F6 to the one before, skipping a closed one: the frame does it, with nothi
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
   `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
   of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
-  with `external` for what leaves this place) and the four tones of a message (`info`, `check`, `alert`, and `error`,
-  the circle with an X of every failure). An icon a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
+  with `external` for what leaves the app) and the four tones of a message (`info`, `check`, `alert`, and `error`,
+  the circle with an X of every failure). `globe` says what a thing is (the web, a site, a browser); `external` says
+  what a press does (it opens a page outside the app), so it goes on a button, a row or a menu entry, not on a thing
+  for being outside: on a `GraphCanvas` that is the word «external» (`GraphNode.external`), beside whatever icon the
+  thing has. An icon a function needs that is not among them is added to Sigrid's names, never by the app. A name Sigrid does not draw
   (one read from data: check it with `isIconName`) is an empty slot of the same size. An app's own icon, its mark, is
   not part of this: it stays the app's.
 - Upgrading from 4.x: the icon packs are gone from the source, and leave the package with 5.0.0, the next major release. `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`,

@@ -124,8 +124,10 @@ import { cn } from './lib/utils'
  * `branch` (a line of work that leaves another), `package` (a unit that is built or shipped), `layers` (things one over
  * the other, a group that opens in place), `graph` (things joined by relations; what holds what is `structure`),
  * `gateway` (the way in to a system; what answers behind it is a `service`), `device` (a computer, a phone), `key` (what
- * proves who one is; the person is `account`), `globe` (the internet, what is outside) and `external`, which leaves this
- * place for another one (`link` is the address).
+ * proves who one is; the person is `account`), `globe` (the web, and a thing that is out there) and `external`, a press
+ * that leaves the app (a page opened in the browser; `link` is the address). `globe` says what a thing is, `external`
+ * what a press does: a thing outside what a graph is about is neither, it says so with the word «external»
+ * (`GraphNode.external`).
  */
 export const ICON_NAMES = [
   'all',

@@ -8,7 +8,8 @@
 // `im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view
 // of an app, which the toolkit does not carry (test/build.test.ts).
 // `Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a
-// `VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's.
+// `VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in
+// it, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.
 // `Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a
 // row on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line
 // and the 13px note beside a title.
@@ -41,6 +42,20 @@ const ALIGN = { stretch: "items-stretch", start: "items-start", center: "items-c
 // The widest a pile grows, centred in its place: a column of text (65 characters) or a column of content that reads as
 // one (a list with a field over it, a message), 768px.
 const WIDTH = { prose: "mx-auto w-full max-w-prose", page: "mx-auto w-full max-w-3xl" } as const
+// A pile that fills: the whole height of a region that is a block (`h-full`), what the other parts leave of one that is
+// a pile (`flex-1`), and it gives way (`min-h-0`), so a list in it scrolls instead of pushing.
+const FILL = "h-full min-h-0 flex-1"
+// With a canvas that fills in it, however deep, it gives way only down to what its parts need (`min-h-min`), and the
+// region scrolls. With `min-h-0` alone a pile in a pile (or in the body of a `Page fit`) shrinks below the canvas's floor:
+// the canvas overflows it and is painted over what follows the pile, which is laid out from the pile's own end, so no
+// scrolling uncovers it; and in a block the pile ends before its parts do, so its padding at the foot is lost. `:has`
+// reads every depth because each pile around the canvas must hold it.
+// Not on every pile that fills, nor beside a part that scrolls by itself: a min-content counts that part whole, so the
+// pile would be as tall as the list, and the list would draw every row and never scroll. Such a pile gives way as ever.
+const HOLDS_CANVAS =
+  "[&:has([data-slot=graph][data-fill]):not(:has([data-slot=virtual-list],[data-slot=scroll-area],[data-slot=content-split],[data-slot=tree],[data-slot=panel]))]:min-h-min"
+// A field that is a part of the pile itself keeps its height: a height that is set is one a pile short of room takes from.
+const FIELDS_KEEP = "[&>:is([data-slot=input],[data-slot=input-group],[data-slot=select-trigger],[data-slot=date-field])]:shrink-0"
 const JUSTIFY = { start: "justify-start", center: "justify-center", end: "justify-end", between: "justify-between" } as const
 
 export type ColumnProps = LayoutAttributes & {
@@ -57,7 +72,8 @@ export type ColumnProps = LayoutAttributes & {
   /**
    * As tall as the region that holds it, which gives it its height (the content of the frame, a pane, the body of a
    * `Page fit`, another `Column fill`): a part of it that fills (`GraphCanvas`, `VirtualList`, `Empty`, a `Column`)
-   * takes the height its other parts leave. Absent: as tall as its parts.
+   * takes the height its other parts leave. With a `GraphCanvas` that fills in it, it is never shorter than what its
+   * parts need: the region scrolls, and the canvas covers nothing that follows. Absent: as tall as its parts.
    */
   fill?: boolean | undefined
   children?: React.ReactNode
@@ -67,7 +83,7 @@ export type ColumnProps = LayoutAttributes & {
 function Column({ gap = "sm", pad, align = "stretch", as = "div", width, fill = false, children, ...props }: ColumnProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="column" data-fill={fill || undefined} className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align], width && WIDTH[width], fill && "h-full min-h-0 flex-1")}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="column" data-fill={fill || undefined} className={cn("flex min-w-0 flex-col", GAP[gap], pad && PAD[pad], ALIGN[align], width && WIDTH[width], fill && [FILL, HOLDS_CANVAS, FIELDS_KEEP])}>
       {children}
     </Tag>
   )

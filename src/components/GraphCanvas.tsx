@@ -13,10 +13,12 @@
 //   thing's `width` and `height` are its size in both cases (dagre lays out with them); without them it is 208px
 //   wide and 44px tall, 56px with a second line.
 // - After a new layout of the app's (a new `layoutKey`) the view is fitted to the whole graph again; a draw on the
-//   same key (another choice, new flags, the same places) keeps the view where the user moved it.
+//   same key (another choice, new flags, the same places) keeps the view where the user moved it, and so does a change
+//   of the box's size.
 // - A thing is a raised surface with a shadow and no border (R4): an icon or a dot of its colour (R10), a name, a
 //   line under it, and on a thing outside what the graph is about (`external`) the word «external», 12px in the muted
-//   ink, never a dashed border; the name keeps some room and the word gives way first. The chosen one has the selection
+//   ink, never a dashed border; the name keeps some room and the word gives way first (the word, not the icon of that
+//   name, which leaves the app: `icons.tsx`). The chosen one has the selection
 //   tint (R1), or each of the several the app marks when it draws one of its things in several places; what is joined
 //   to them stays as it is and the rest is dimmed, so the eye finds the neighbourhood. Of the several, one is the
 //   choice: the first in the order of the things, which holds the Tab stop and is the one screen readers hear chosen;
@@ -64,7 +66,9 @@
 //   (the first in the order of the edges) is the path's, in the accent or in a tone of its own and thicker, what is
 //   neither on the path nor joined to it is dimmed, and what hides a thing of the path opens.
 // - The view is fitted at the first paint (on the path, when there is one), again whenever the box changes size, and
-//   with the button or the key: never smaller than a name can be read (`minFitZoom`, about 11px names). A graph too
+//   with the button or the key: never smaller than a name can be read (`minFitZoom`, about 11px names). With a
+//   `layoutKey`, a view the user moved is not fitted again when the box changes size: it stays, panned only by what
+//   brings the chosen thing back into it. A graph too
 //   large for that starts at its top left, and the edges of the view fall between things wherever the layout leaves
 //   a gap between the floor and 1.5 (a dense graph in a small box may still have one cut). The app
 //   moves the view through a `ref`: `focus` (onto some things, opening what hides them), `fit`, `zoomTo`.
@@ -73,9 +77,10 @@
 // - The box is 384px tall, or with `fill` as tall as the region that holds it (the content of the frame, a pane, the
 //   body of a `Page fit`, a `Column fill`), as `VirtualList fill` is: an app writes no class for it. Beside other parts
 //   in a pile (a row of filters above it, its key under it) it takes what they leave, and gives way when the region
-//   does; the view is fitted again. Never under 192px: the small map (150px, 15px from the edges) is whole, and so are
-//   the buttons of the view over a thing of two lines. In less than that the region scrolls; in a region with no
-//   height of its own (a page that grows with what it holds) the box is that tall.
+//   does; the view is fitted again. Never under 224px (232px with a finger): the field and the small map, one over the
+//   other at the start, are both whole (`FILL`). In less than that the region scrolls, and the canvas covers nothing
+//   that follows it (`Column fill`); in a region with no height of its own (a plain `Column`, a page that grows with
+//   what it holds) the box is that tall.
 // - With `editable` a thing shows its handles: drag from one to another thing to join them, press the plus on the
 //   chosen thing (the first of several, alone) to hang a new one from it (in the graph mode, to add one after it).
 //   Every change is asked of the app with `onChange`, which keeps the graph (and its undo, R12): nothing is kept here
@@ -122,7 +127,8 @@ export type GraphNode = {
   /**
    * The thing is outside what the graph is about (another's service, a library): the word «external» after its name,
    * 12px in the muted ink (`graph.external`), also in its name for screen readers. Never a dashed border (R4). In a
-   * narrow box the name keeps some room and the word is cut first.
+   * narrow box the name keeps some room and the word is cut first. It is a word and draws no icon: `icon` says what the
+   * thing is (`globe` for the web), and the icon `external` is for a press that leaves the app.
    */
   external?: boolean | undefined
   /**
@@ -215,7 +221,9 @@ export type GraphCanvasProps = {
    * The name of the layout the places come from, as the app tells one layout from another (the direction, the things
    * and the lines it laid out). When it changes the view fits the whole graph again, once the new places are drawn;
    * while it stays, a new draw (another choice, new flags, the same places) keeps the view where the user moved it.
-   * Pass the new key with the new places. Without it the view is fitted at the first paint and at a change of size.
+   * Pass the new key with the new places. A change of the box's size keeps a view the user moved, with the chosen thing
+   * still in it, and fits again one nobody moved. Without a key the view is fitted at the first paint and at every
+   * change of size.
    */
   layoutKey?: string | undefined
   /**
@@ -260,8 +268,9 @@ export type GraphCanvasProps = {
   ref?: React.Ref<GraphCanvasHandle> | undefined
   /**
    * As tall as the region that holds it, which gives it its height (the content of the frame, a pane, the body of a
-   * `Page fit`, a `Column fill`): it takes what the parts beside it leave and gives way with it, never under 192px.
-   * Absent: 384px.
+   * `Page fit`, a `Column fill`): it takes what the parts beside it leave and gives way with it, never under 224px
+   * (232px with a finger), where the field and the small map are both whole. In a plain `Column`, which has no height to
+   * give, it is that tall and no more. Absent: 384px.
    */
   fill?: boolean | undefined
   /** Classes of the box: its height, where it is neither 384px nor `fill`. */
@@ -1011,6 +1020,15 @@ const NODE_TYPES = { thing: Thing, point: Point }
 const EDGE_TYPES = { route: Route, apart: Apart }
 /** Room around what is fitted, and at the head for the field and the buttons. */
 const PAD = { top: 64, right: 24, bottom: 24, left: 24 }
+/**
+ * The box with `fill`: the whole height of a region that is a block (`h-full`), what the other parts leave of one that
+ * is a pile (`flex-1`), and the whole width of either (nothing in the box has a width of its own, so a pile that does
+ * not stretch its parts would give it none). Its floor is what the field and the small map need, one over the other at
+ * the start: the 15px the library keeps at the head, the field (`--control-md`: 36px, 44px with a finger, the density's),
+ * 8px between the two, the map's 150px, and 15px at the foot. The map has no better corner: the buttons of the view and
+ * the library's name have the other two. It is one floor, with the field and the map or without.
+ */
+const FILL = 'h-full min-h-[calc(var(--control-md)_+_188px)] w-full flex-1'
 /** Nothing closed: the graph mode's, the same list at every draw. */
 const NOTHING: readonly string[] = []
 /** No names: the relations of a thing in the tree mode, which does not say them. */
@@ -1135,8 +1153,10 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   latest.current = { graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onChange, setClosed, focus, editable, tree }
 
   // What the view was last brought to, fitted again when the box changes size: the path (the first view), the whole
-  // graph (the button, `fit`), or some things (`focus`).
+  // graph (the button, `fit`), or some things (`focus`). And the view that fit gave: while it is still that one, nobody
+  // has moved it.
   const target = React.useRef<{ ids: readonly string[] | 'path' | 'all'; padding: number }>({ ids: 'path', padding: PAD.right })
+  const brought = React.useRef<{ x: number; y: number; zoom: number } | null>(null)
   const view = React.useMemo(() => {
     /**
      * Fits the view onto the target. With `opening`, on the layout it will have once what hides the things is opened
@@ -1165,11 +1185,38 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         const top = fitted.y + kept.y * fitted.zoom
         if (left < 0 || top < 0 || left + kept.width * fitted.zoom > now.size.width || top + kept.height * fitted.zoom > now.size.height) fitted = viewFor([kept], { ...now.size, ...PAD }, floor, 1, all)
       }
+      brought.current = fitted
       void flowNow.current.setViewport(fitted, { duration: 0 })
       return next
     }
+    /** The view is not the one it was last brought to: the user moved it (a drag, the wheel, the buttons, a key), or the app (`zoomTo`). */
+    const moved = () => {
+      const from = brought.current
+      const now = flowNow.current.getViewport()
+      return from !== null && (Math.abs(now.x - from.x) > 0.5 || Math.abs(now.y - from.y) > 0.5 || Math.abs(now.zoom - from.zoom) > 0.001)
+    }
+    /** Keeps the view in a box that was of another size: panned only if the chosen thing was whole in that one and is not in this one, by what brings it back. */
+    const hold = (was: { width: number; height: number }) => {
+      const now = latest.current
+      const at = now.chosen === null ? undefined : now.places.get(now.chosen)
+      const node = now.chosen === null ? undefined : now.byId.get(now.chosen)
+      if (!at || !node) return
+      const { x, y, zoom } = flowNow.current.getViewport()
+      const left = x + at.x * zoom
+      const top = y + at.y * zoom
+      const right = left + widthOf(node) * zoom
+      const bottom = top + heightOf(node) * zoom
+      const inside = (room: { width: number; height: number }) => left >= 0 && top >= 0 && right <= room.width && bottom <= room.height
+      if (!inside(was) || inside(now.size)) return
+      // It was whole, so only the end or the foot of the box, which came nearer, cuts it.
+      const overX = right > now.size.width ? right + PAD.right - now.size.width : 0
+      const overY = bottom > now.size.height ? bottom + PAD.bottom - now.size.height : 0
+      void flowNow.current.setViewport({ x: x - overX, y: y - overY, zoom }, { duration: 0 })
+    }
     return {
       apply,
+      moved,
+      hold,
       handle: {
         focus: (ids, options) => {
           target.current = { ids: [...ids], padding: options?.padding ?? PAD.right }
@@ -1190,12 +1237,19 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // first one the canvas is not shown, so no thing is ever painted cut by its edge.
   const [shown, setShown] = React.useState(false)
   const empty = sight.order.length === 0
-  const first = React.useRef(true)
+  // The size of the box at the last view; null before the first.
+  const seenIn = React.useRef<typeof size | null>(null)
   React.useEffect(() => {
     if (size.width === 0 || size.height === 0 || !flow.viewportInitialized || empty) return
+    const was = seenIn.current
+    seenIn.current = size
+    // At a change of size, a view moved over a layout of the app's (`layoutKey`) stays.
+    if (was !== null && was !== size && layoutKey !== undefined && view.moved()) {
+      view.hold(was)
+      return
+    }
     // At the first view on the path; after it, at a change of size, with the chosen thing kept in sight.
-    view.apply(first.current, first.current ? null : latest.current.chosen)
-    first.current = false
+    view.apply(was === null, was === null ? null : latest.current.chosen)
     setShown(true)
   }, [size, flow.viewportInitialized, empty, view])
 
@@ -1421,8 +1475,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       onBlur={(event) => {
         if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(null)
       }}
-      // Filling: the whole height of a region that is a block, what the other parts leave of one that is a pile.
-      className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', fill && 'h-full min-h-48 flex-1', className)}
+      className={cn('relative h-96 min-h-0 overflow-hidden rounded-md bg-paper-2', fill && FILL, className)}
     >
       <ReactFlow
         // Filling, the library's box is laid over this one: its own height (100%, inline) is nothing in a box that has
