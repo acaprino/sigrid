@@ -880,6 +880,16 @@
          "doc": "The border of fields and of the outline button. Absent, `divider` or any other value: the light divider (`line`; the owner, 2026-11-22). `strong`: the control border (`input`, 3:1), an exception a theme asks for; the engine writes `data-controls=\"strong\"` on the root."
         },
         {
+         "name": "tabs",
+         "type": "\"bold\" | \"plain\"",
+         "doc": "How the chosen view of a bar (`ToolbarTab`) and the chosen item of a segment (`ToggleGroup`) are marked. Absent, `plain` or any other value: as the toolkit draws them (weight 600; a round line under the view; a raised thumb in the segment). `bold`: the mark is the weight and the accent, an exception to R7 a theme asks for: the chosen one is weight 700 on the ink and the others 500 and muted; the view has a square 2px line that grows from its middle (with motion on); the segment is a track with 2px inside it and the chosen item has the accent at 16% as its fill and at 55% as its border. The engine writes `data-tabs=\"bold\"` on the root. The toolkit's own fonts stop at 600: a theme that asks for this takes a font with a 700 (`FONTS`: `system`)."
+        },
+        {
+         "name": "statusStrip",
+         "type": "\"slim\" | \"tall\"",
+         "doc": "The height of the status strip of `AppShell`. Absent, `slim` or any other value: a dense control tall (28px at compact). `tall`: 40px, so a 20px badge has room above and below it. The engine writes `data-status-strip=\"tall\"`."
+        },
+        {
          "name": "dark",
          "type": "ThemeDark",
          "doc": "The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value: the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here."
@@ -1048,7 +1058,7 @@
          "name": "attributes",
          "type": "Readonly<Record<string, string>>",
          "required": true,
-         "doc": "The root attributes that state the choices that are not numbers: `data-sidebar` always, `data-keys=\"boxed\"` and `data-controls=\"strong\"` only when the theme asks for them (`ThemeDef.keys`, `ThemeDef.controls`)."
+         "doc": "The root attributes that state the choices that are not numbers: `data-sidebar` always; `data-keys=\"boxed\"`, `data-controls=\"strong\"`, `data-tabs=\"bold\"` and `data-status-strip=\"tall\"` only when the theme asks for them (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`)."
         },
         {
          "name": "corrected",
