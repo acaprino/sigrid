@@ -129,6 +129,62 @@ const shellContent = () => document.querySelector<HTMLElement>('[data-slot="app-
 
 type Group = { label: string; icon: IconName; ids: readonly string[] }
 
+/** The title of each section of the components view, by its id: the index is drawn from these, with nothing of the sections in the page. */
+const COMPONENT_TITLES: Readonly<Record<string, string>> = {
+  "palettes": "Palettes",
+  "tokens": "Tokens",
+  "theme-gallery": "Theme gallery",
+  "layout": "Column, Cluster, Split, Grid, Section, ScrollArea, Page and Text",
+  "button": "Button",
+  "toggle-group": "ToggleGroup",
+  "badge": "Badge",
+  "kbd": "Kbd and Shortcut",
+  "input": "Input and Textarea",
+  "select": "Select",
+  "checkbox": "Checkbox",
+  "radio": "RadioGroup and Swatches",
+  "switch": "Switch",
+  "tabs": "Tabs",
+  "menu": "DropdownMenu",
+  "popover": "Popover and Tooltip",
+  "overlays": "Dialog, Sheet and AttachmentViewer",
+  "progress": "Progress",
+  "table": "Table and DataTable",
+  "composition": "Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton",
+  "composition-panes": "ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width",
+  "form-field": "FormField",
+  "pickers": "Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar",
+  "date": "Calendar, DateField, DateTimeField and DateRangeField",
+  "fields": "ChipsInput and DurationField",
+  "steps": "Steps",
+  "toasts": "Toasts",
+  "empty": "Empty",
+  "note": "Note",
+  "confirm": "ConfirmDialog",
+  "overflow-list": "OverflowList",
+  "markdown": "Markdown and label colours",
+  "nav-list": "NavList and Count",
+  "sidebar": "Sidebar",
+  "toolbar": "Toolbar, TitleBar and WindowControls",
+  "chat": "Chat, Conversation, Message, PromptInput, Suggestions, Reasoning, ToolCall",
+  "wizard": "Wizard",
+  "auth-form": "AuthForm",
+  "lightbox": "Lightbox",
+  "swipe-deck": "SwipeDeck",
+  "tree": "Tree",
+  "attachments": "AttachmentsSection, AttachmentMarks and Thumbnail",
+  "virtual-list": "VirtualList",
+  "reorder": "ReorderList",
+  "rich-text": "RichTextField",
+  "graph": "GraphCanvas",
+  "motion-feel": "The feel: curve and pace",
+  "motion-open": "What opens in place",
+  "motion-surfaces": "Surfaces: in and out",
+  "motion-choices": "Choosing and pressing",
+  "hover": "Hover background",
+  "motion-pieces": "List, row, arrow and card motion",
+}
+
 /**
  * The sections of the component gallery in the groups of the index, in the order of the page: the page follows the
  * index, so scrolling reads down it. The groups are the levels of the toolkit, each made of the ones before it: the
@@ -141,19 +197,43 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
   { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
-  { label: 'Motion', icon: 'animations', ids: ['hover', 'motion-pieces'] },
+  { label: 'Motion', icon: 'animations', ids: ['motion-feel', 'motion-open', 'motion-surfaces', 'motion-choices', 'hover', 'motion-pieces'] },
 ]
+
+/** The ids of the sections of the components view, in the order of the index. */
+const componentOrder = (): string[] => COMPONENT_GROUPS.flatMap((g) => g.ids).filter((id) => id in COMPONENT_TITLES)
+
+/** The section of the components view the address names (`#button`), or the first; `moved` once the person has chosen another. */
+function useComponentSection(): { section: string; moved: boolean } {
+  const read = () => {
+    const asked = decodeURIComponent(location.hash.slice(1))
+    return asked in COMPONENT_TITLES ? asked : (componentOrder()[0] ?? '')
+  }
+  const [section, setSection] = React.useState(read)
+  const moved = React.useRef(false)
+  React.useEffect(() => {
+    const changed = () => {
+      const next = read()
+      setSection((now) => {
+        if (now !== next) moved.current = true
+        return next
+      })
+    }
+    window.addEventListener('hashchange', changed)
+    return () => window.removeEventListener('hashchange', changed)
+  }, [])
+  return { section, moved: moved.current }
+}
 
 /** At the foot of the one section on show: the way to the one before it and to the one after it, in the order of the index. */
 function Pager() {
   const [around, setAround] = React.useState<{ before?: { id: string; title: string }; after?: { id: string; title: string } }>({})
   React.useEffect(() => {
     const read = () => {
-      const all = Array.from(document.querySelectorAll<HTMLElement>('section[data-showcase]'))
-      const order = COMPONENT_GROUPS.flatMap((g) => g.ids).filter((id) => all.some((s) => s.id === id))
+      const order = componentOrder()
       const asked = decodeURIComponent(location.hash.slice(1))
       const at = Math.max(0, order.indexOf(asked))
-      const named = (id: string | undefined) => (id === undefined ? undefined : { id, title: all.find((s) => s.id === id)?.querySelector('h2')?.textContent ?? id })
+      const named = (id: string | undefined) => (id === undefined ? undefined : { id, title: COMPONENT_TITLES[id] ?? id })
       setAround({ before: named(order[at - 1]), after: named(order[at + 1]) })
     }
     read()
@@ -200,28 +280,20 @@ function Index({ view, animated, open, onOpenChange }: { view: ViewId; animated:
     setSections(found.map((s) => ({ id: s.id, title: s.querySelector('h2')?.textContent ?? s.id, icon: s.dataset.icon })))
     const scroller = shellContent()
     if (!scroller) return
-    // The components are shown one section at a time: the one the address names, or the first. The index chooses.
+    // The components are shown one section at a time, and only that one is in the page: the index is drawn from the
+    // table of titles, and the address says which is on show.
     if (view === 'components') {
+      const order = componentOrder()
+      setSections(order.map((id) => ({ id, title: COMPONENT_TITLES[id] ?? id, icon: undefined })))
       const show = () => {
         const asked = decodeURIComponent(location.hash.slice(1))
-        const now = found.find((s) => s.id === asked) ?? found[0]
-        for (const s of found) s.hidden = s !== now
-        // The section the person chose comes in (theme.css, `[data-reveal="fade"]`); the one on show at first is just there.
-        for (const s of found) s.removeAttribute('data-reveal')
-        if (!first.current) now?.setAttribute('data-reveal', 'fade')
-        setCurrent(now?.id ?? '')
+        setCurrent(order.includes(asked) ? asked : (order[0] ?? ''))
         scroller.scrollTop = 0
       }
       show()
       first.current = false
       window.addEventListener('hashchange', show)
-      return () => {
-        window.removeEventListener('hashchange', show)
-        for (const s of found) {
-          s.hidden = false
-          s.removeAttribute('data-reveal')
-        }
-      }
+      return () => window.removeEventListener('hashchange', show)
     }
     // The sections did not exist when the browser looked for the address's anchor.
     const asked = () => document.getElementById(decodeURIComponent(location.hash.slice(1)))
@@ -2541,6 +2613,203 @@ function Lightboxes({ animated }: { animated: boolean }) {
   )
 }
 
+/** The curve and the pace, where the movements are shown: the same two choices as in Look. */
+function MotionFeelSection({ animated, ease, onEase, pace, onPace }: { animated: boolean; ease: MotionEase; onEase: (ease: MotionEase) => void; pace: number; onPace: (pace: number) => void }) {
+  const [far, setFar] = React.useState(false)
+  return (
+    <Section id="motion-feel" title="The feel: curve and pace" note="How the toolkit moves is the app's choice, once for the whole page: the curve of every movement (one of the four of CSS, ease-in-out at first, or Fluent's own, one for each kind of movement) and the pace, a multiple of the toolkit's times (100, 150 and 200ms). Choose here, or in Look, and try the sections below: every movement follows. Nothing moves with animations off, or where the system asks for less motion.">
+      <Row label="the curve">
+        <ToggleGroup aria-label="Curve of the movements" value={ease} onValueChange={(v) => isMotionEase(v) && onEase(v)} animated={animated}>
+          {MOTION_EASE_NAMES.map((name) => (
+            <ToggleGroupItem key={name} value={name}>
+              {name}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </Row>
+      <Row label="the pace">
+        <ToggleGroup aria-label="Pace" value={String(pace)} onValueChange={(v) => onPace(Number(v))} animated={animated}>
+          {[['0.5', 'Twice as quick'], ['0.75', 'Quick'], ['1', 'Normal'], ['1.5', 'Slow'], ['2', 'Slower']].map(([value, label]) => (
+            <ToggleGroupItem key={value} value={value!}>
+              {label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </Row>
+      <Row label="one movement, to see it">
+        <div className="flex w-full max-w-xl flex-col gap-3">
+          <Button variant="outline" className="self-start" animated={animated} onClick={() => setFar(!far)}>
+            Move it
+          </Button>
+          {/* The block crosses its track on the curve and in the time chosen (the variables the toolkit's own movements read). */}
+          <div className="rounded-md bg-paper-2 p-1">
+            <div data-sample="motion-block" style={{ marginInlineStart: far ? 'calc(100% - 3rem)' : '0', transition: animated ? 'margin-inline-start var(--motion-normal) var(--motion-ease-move)' : 'none' }} className="size-12 rounded-md bg-primary" />
+          </div>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+function MotionOpens({ animated }: { animated: boolean }) {
+  const [busy, setBusy] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [place, setPlace] = React.useState('inbox')
+  return (
+    <Section id="motion-open" title="What opens in place" note="A row that opens, a branch, a group of the sidebar and the sidebar itself glide open and shut, and their arrow turns, after the person's own press. Opened or closed by the app (the reasoning below, with its button), the same parts change at once: nothing moves by itself. Where a browser cannot ease a height to and from its own, they only fade.">
+      <Row label="a row that opens">
+        <div className="flex w-full max-w-md flex-col gap-2">
+          <Disclosure label="Advanced" summary="2 set" animated={animated}>
+            <Text as="p">What most people do not need on most visits stays behind the row.</Text>
+          </Disclosure>
+          <ToolCall name="Search tasks" summary="2 results" input={'{ "done": false }'} output={'[{ "title": "Send the invoice" }]'} animated={animated} />
+        </div>
+      </Row>
+      <Row label="opened by the app: at once">
+        <div className="flex w-full max-w-md flex-col gap-2">
+          <Button variant="outline" className="self-start" onClick={() => setBusy(!busy)}>
+            {busy ? 'End the reasoning' : 'Start a reasoning'}
+          </Button>
+          <Reasoning busy={busy} seconds={3} animated={animated}>
+            It opens while it is written and closes when it ends, with no movement: the app did it. Press its row and it glides.
+          </Reasoning>
+        </div>
+      </Row>
+      <Row label="a branch of a tree">
+        <div className="h-64 w-full max-w-md">
+          <Tree aria-label="An outline" nodes={TREE_OUTLINE} animated={animated} className="h-full" />
+        </div>
+      </Row>
+      <Row label="the sidebar: its groups, and its width">
+        <div className="flex h-80 w-full max-w-3xl overflow-hidden rounded-lg border border-line bg-paper">
+          <Sidebar aria-label="A sample sidebar" collapsed={collapsed} onCollapsedChange={setCollapsed} animated={animated}>
+            <SidebarGroup label="Mail" icon={<Icon name="mail" />} collapsible>
+              {([['inbox', 'Inbox', 'inbox'], ['sent', 'Sent', 'send'], ['archive', 'Archive', 'archive']] as const).map(([id, name, icon]) => (
+                <NavItem key={id} current={place === id} onClick={() => setPlace(id)} icon={<Icon name={icon} />}>
+                  {name}
+                </NavItem>
+              ))}
+            </SidebarGroup>
+            <SidebarGroup label="Settings" icon={<Icon name="settings" />} collapsible defaultOpen={false}>
+              <NavItem icon={<Icon name="account" />}>Account</NavItem>
+              <NavItem icon={<Icon name="appearance" />}>Look</NavItem>
+            </SidebarGroup>
+          </Sidebar>
+          <div className="flex min-w-0 flex-1 items-center justify-center p-4 text-sm text-ink-mute">The button at the foot of the sidebar shrinks it to its rail; the page takes the room.</div>
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+function MotionSurfaces({ animated }: { animated: boolean }) {
+  const [dialog, setDialog] = React.useState(false)
+  const [sheet, setSheet] = React.useState<'right' | 'bottom' | null>(null)
+  const [choice, setChoice] = React.useState('week')
+  const [person, setPerson] = React.useState<string | null>(null)
+  const [day, setDay] = React.useState<string | null>(null)
+  return (
+    <Section id="motion-surfaces" title="Surfaces: in and out" note="A surface that opens comes from the side of what opened it; closing, it fades out in the short time of what leaves, and a sheet goes back towards its edge, with the veil behind it. Open each and close it with Esc, a press outside or its own button.">
+      <Row label="a window and two sheets">
+        <Button variant="outline" onClick={() => setDialog(true)}>
+          A window
+        </Button>
+        <Dialog open={dialog} onOpenChange={setDialog} title="A window" description="It fades in, and out when it closes." animated={animated} footer={<Button onClick={() => setDialog(false)}>Done</Button>} />
+        <Button variant="outline" onClick={() => setSheet('right')}>
+          A sheet at the side
+        </Button>
+        <Button variant="outline" onClick={() => setSheet('bottom')}>
+          A sheet at the foot
+        </Button>
+        <Sheet open={sheet !== null} onOpenChange={(open) => (open ? undefined : setSheet(null))}>
+          <SheetContent side={sheet ?? 'right'} animated={animated}>
+            <SheetHeader>
+              <SheetTitle>A sheet</SheetTitle>
+              <SheetDescription>It comes from its edge and goes back to it.</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      </Row>
+      <Row label="a menu, a card, a hint">
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">A menu</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" animated={animated}>
+            <DropdownMenuItem>Rename</DropdownMenuItem>
+            <DropdownMenuItem>Move</DropdownMenuItem>
+            <DropdownMenuItem>Archive</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline">A card</Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" animated={animated}>
+            <PopoverHeader>
+              <PopoverTitle>A card</PopoverTitle>
+              <PopoverDescription>It comes from the side of its button.</PopoverDescription>
+            </PopoverHeader>
+          </PopoverContent>
+        </Popover>
+        <Tooltip label="A hint, from the side it is placed on" animated={animated}>
+          <Button variant="outline">A hint (rest on it)</Button>
+        </Tooltip>
+      </Row>
+      <Row label="the lists of the fields">
+        <div className="w-48">
+          <Select aria-label="When" value={choice} onValueChange={setChoice} animated={animated} options={[{ value: 'day', label: 'Today' }, { value: 'week', label: 'This week' }, { value: 'month', label: 'This month' }]} />
+        </div>
+        <div className="w-56">
+          <Combobox aria-label="Person" options={PEOPLE} value={person} onValueChange={setPerson} placeholder="A person" animated={animated} />
+        </div>
+        <div className="w-56">
+          <DateField value={day} onChange={setDay} animated={animated} />
+        </div>
+      </Row>
+    </Section>
+  )
+}
+
+function MotionChoices({ animated }: { animated: boolean }) {
+  const [tab, setTab] = React.useState('one')
+  const [view, setView] = React.useState('list')
+  return (
+    <Section id="motion-choices" title="Choosing and pressing" note="A button goes down a little under the finger and comes back; the mark of a check is stamped, the thumb of a switch slides, the pill under a choice or a tab glides to the new one, and the panel of the tab chosen comes in from the side of its tab. The fill, the border and the text of every control ease to the state under the pointer.">
+      <Row label="a press, a check, a switch">
+        <Button animated={animated}>Press me</Button>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox animated={animated} /> Stamped when checked
+        </label>
+        <Switch animated={animated}>It slides</Switch>
+      </Row>
+      <Row label="one of a few">
+        <ToggleGroup aria-label="View" value={view} onValueChange={setView} animated={animated}>
+          <ToggleGroupItem value="list">List</ToggleGroupItem>
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="calendar">Calendar</ToggleGroupItem>
+        </ToggleGroup>
+      </Row>
+      <Row label="tabs and their panels">
+        <Tabs value={tab} onValueChange={setTab} animated={animated} className="w-full max-w-md">
+          <TabsList aria-label="Sample tabs">
+            <TabsTrigger value="one">First</TabsTrigger>
+            <TabsTrigger value="two">Second</TabsTrigger>
+            <TabsTrigger value="three">Third</TabsTrigger>
+          </TabsList>
+          {(['one', 'two', 'three'] as const).map((id) => (
+            <TabsContent key={id} value={id}>
+              <SampleCard variant="quiet">
+                <Text as="p">The panel of the {id === 'one' ? 'first' : id === 'two' ? 'second' : 'third'} tab. It comes in from the side of the tab pressed.</Text>
+              </SampleCard>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </Row>
+    </Section>
+  )
+}
+
 function Notes() {
   const [shown, setShown] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
@@ -3006,6 +3275,7 @@ function App() {
   const yours = theme === YOURS
   const [scheme, setScheme] = React.useState<ThemeScheme>(initialScheme)
   const [density, setDensity] = React.useState<DensityId>(initialDensity)
+  const { section, moved } = useComponentSection()
   const [animated, setAnimated] = React.useState(params.get('animated') !== '0')
   // Where the system asks for less motion the toolkit moves nothing: said in the bar, or a still page looks broken.
   const lessMotion = useMedia('(prefers-reduced-motion: reduce)')
@@ -3088,6 +3358,87 @@ function App() {
     </ToolbarTabs>
   )
   // The component gallery, in the order of the index (COMPONENT_GROUPS).
+  // One section of the components view at a time: every one is written here, and only the one chosen is drawn (the
+  // graph, the long lists and the rest of the fifty are not in the page until asked for).
+  const parts: Record<string, React.ReactNode> = {
+    palettes: <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />,
+    tokens: <Tokens />,
+    'theme-gallery': (
+          <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
+          <Row label="match colours">
+            <div className="w-full max-w-xl">
+              <ColorMatch
+                colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] }))}
+                color={color}
+                spot={spot}
+                scheme={scheme}
+                onColor={(next) => { setColor(next); setTheme(YOURS) }}
+                onSpot={(next) => { setSpot(next); setTheme(YOURS) }}
+                text={{
+                  color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
+                  kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
+                  sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
+                }}
+              />
+            </div>
+          </Row>
+          <Row label="gallery">
+            <div className="w-full">
+              <ThemeGallery themes={THEMES} selected={yours ? null : theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
+            </div>
+          </Row>
+        </Section>
+    ),
+    layout: <LayoutParts />,
+    button: <Buttons animated={animated} />,
+    'toggle-group': <Toggles animated={animated} />,
+    badge: <Badges />,
+    kbd: <Keys />,
+    input: <Fields />,
+    select: <Selects />,
+    checkbox: <Checkboxes animated={animated} />,
+    radio: <Radios />,
+    switch: <Switches animated={animated} />,
+    tabs: <TabSets animated={animated} />,
+    menu: <Menus animated={animated} />,
+    popover: <Popovers animated={animated} />,
+    overlays: <Overlays animated={animated} />,
+    progress: <ProgressSection />,
+    table: <Tables />,
+    composition: <Composition animated={animated} />,
+    'composition-panes': <CompositionPanes animated={animated} />,
+    'form-field': <FormFields />,
+    pickers: <Pickers />,
+    date: <Dates animated={animated} />,
+    fields: <OtherFields />,
+    steps: <StepsSection />,
+    toasts: <Notices animated={animated} />,
+    empty: <Empties />,
+    note: <Notes />,
+    confirm: <Confirms animated={animated} />,
+    'overflow-list': <OverflowLists />,
+    markdown: <Content />,
+    'nav-list': <Navigation />,
+    sidebar: <SidebarSample animated={animated} />,
+    toolbar: <Toolbars animated={animated} />,
+    chat: <ChatParts />,
+    wizard: <Wizards animated={animated} />,
+    'auth-form': <AuthForms animated={animated} />,
+    lightbox: <Lightboxes animated={animated} />,
+    'swipe-deck': <Deck />,
+    tree: <Trees animated={animated} />,
+    attachments: <Files />,
+    'virtual-list': <LongLists />,
+    reorder: <Reorders animated={animated} />,
+    'rich-text': <RichTexts />,
+    graph: <Graphs />,
+    'motion-feel': <MotionFeelSection animated={animated} ease={ease} onEase={setEase} pace={pace} onPace={setPace} />,
+    'motion-open': <MotionOpens animated={animated} />,
+    'motion-surfaces': <MotionSurfaces animated={animated} />,
+    'motion-choices': <MotionChoices animated={animated} />,
+    hover: <HoverRows animated={animated} />,
+    'motion-pieces': <MotionPieces animated={animated} />,
+  }
   const components = (
     <Page
       title="Components"
@@ -3097,82 +3448,10 @@ function App() {
         </>
       }
     >
-      <Strip theme={theme} scheme={scheme} tone={tone} onTone={setTone} />
-      <Tokens />
-      <Section id="theme-gallery" title="Theme gallery" note="A theme from the gallery, or one made from two colours: the theme colour, and a spot colour matched to it for the few things that ask for attention. Picking a colour puts the theme on the whole page.">
-        <Row label="match colours">
-          <div className="w-full max-w-xl">
-            <ColorMatch
-              colors={SEEDS.map((seed) => ({ color: seed, label: COLOR_NAMES[seed] }))}
-              color={color}
-              spot={spot}
-              scheme={scheme}
-              onColor={(next) => { setColor(next); setTheme(YOURS) }}
-              onSpot={(next) => { setSpot(next); setTheme(YOURS) }}
-              text={{
-                color: 'Theme colour', spot: 'Spot colour', own: 'Your own colour', none: 'None',
-                kinds: { quiet: 'Quiet', balanced: 'Balanced', loud: 'Loud' },
-                sample: { action: 'Save', chosen: 'Today', row: 'Upcoming', due: 'Due now', running: 'Running' },
-              }}
-            />
-          </div>
-        </Row>
-        <Row label="gallery">
-          <div className="w-full">
-            <ThemeGallery themes={THEMES} selected={yours ? null : theme} label="Choose a theme" scheme={scheme} tone={tone} onTheme={(next) => setTheme(next.id)} />
-          </div>
-        </Row>
-      </Section>
-      {/* Primitives */}
-      <LayoutParts />
-      <Buttons animated={animated} />
-      <Toggles animated={animated} />
-      <Badges />
-      <Keys />
-      <Fields />
-      <Selects />
-      <Checkboxes animated={animated} />
-      <Radios />
-      <Switches animated={animated} />
-      <TabSets animated={animated} />
-      <Menus animated={animated} />
-      <Popovers animated={animated} />
-      <Overlays animated={animated} />
-      <ProgressSection />
-      <Tables />
-      {/* Components */}
-      <Composition animated={animated} />
-      <CompositionPanes animated={animated} />
-      <FormFields />
-      <Pickers />
-      <Dates animated={animated} />
-      <OtherFields />
-      <StepsSection />
-      <Notices animated={animated} />
-      <Empties />
-      <Notes />
-      <Confirms animated={animated} />
-      <OverflowLists />
-      <Content />
-      {/* The frame */}
-      <Navigation />
-      <SidebarSample animated={animated} />
-      <Toolbars animated={animated} />
-      {/* Assemblies */}
-      <ChatParts />
-      <Wizards animated={animated} />
-      <AuthForms animated={animated} />
-      <Lightboxes animated={animated} />
-      <Deck />
-      <Trees animated={animated} />
-      <Files />
-      <LongLists />
-      <Reorders animated={animated} />
-      <RichTexts />
-      <Graphs />
-      {/* Motion */}
-      <HoverRows animated={animated} />
-      <MotionPieces animated={animated} />
+      {/* A new element for each section, so that it is the section that comes in (theme.css, `[data-reveal="fade"]`). */}
+      <div key={section} {...(moved ? { 'data-reveal': 'fade' } : {})}>
+        {parts[section]}
+      </div>
       <Pager />
     </Page>
   )
