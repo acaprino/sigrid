@@ -16,6 +16,7 @@
 import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import { cn } from "../lib/utils"
+import { KEY_CAP, KEY_CAP_IN_TEXT } from "./kbd"
 import { useEntrance } from "../internal/motion"
 import { usePortalContainer } from "../internal/portal-container"
 
@@ -69,7 +70,7 @@ function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, d
           >
             {label}
             {shortcut ? (
-              <span data-slot="tooltip-shortcut" className="ms-2 font-medium opacity-80">
+              <span data-slot="tooltip-shortcut" className={cn("ms-2 font-medium opacity-80", KEY_CAP, KEY_CAP_IN_TEXT)}>
                 {shortcut}
               </span>
             ) : null}

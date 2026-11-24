@@ -18,7 +18,7 @@ import { createRoot } from 'react-dom/client'
 import { DatePicker } from '@ark-ui/react/date-picker'
 import { parseDate } from '@internationalized/date'
 import { Archive, ArrowDownUp, Bell, ChevronRight, Ellipsis, Inbox, PanelLeft, Plus, Reply, Search, Settings, Terminal, Trash2 } from 'lucide-react'
-import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
+import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
@@ -139,6 +139,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "toggle-group": "ToggleGroup",
   "badge": "Badge",
   "kbd": "Kbd and Shortcut",
+  "theme-hooks": "Looks a theme asks for",
   "input": "Input and Textarea",
   "select": "Select",
   "checkbox": "Checkbox",
@@ -193,7 +194,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
  */
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'theme-gallery'] },
-  { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
+  { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'theme-hooks', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
   { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
@@ -575,10 +576,13 @@ function Buttons({ animated }: { animated: boolean }) {
   )
 }
 
+/** The four tones of a badge, each with the word it is never without. */
+const TONE_SAMPLES = [['success', 'Running'], ['warning', 'Waiting'], ['danger', 'Failed'], ['info', 'Queued']] as const
+
 function Badges() {
   const variants = ['default', 'secondary', 'destructive', 'outline', 'ghost', 'link'] as const
   return (
-    <Section id="badge" title="Badge" note="Six variants; as a link it has a hover state.">
+    <Section id="badge" title="Badge" note="Six variants; as a link it has a hover state. A tone is a status as a label: its colour on its soft ground, a 6px dot and always a word.">
       <Row label="variants">
         {variants.map((variant) => (
           <Cell key={variant} label={variant}>
@@ -595,6 +599,15 @@ function Badges() {
               <a href="#badge" data-force="hover">
                 Label
               </a>
+            </Badge>
+          </Cell>
+        ))}
+      </Row>
+      <Row label="tone">
+        {TONE_SAMPLES.map(([tone, word]) => (
+          <Cell key={tone} label={tone}>
+            <Badge tone={tone} data-sample={`badge-tone-${tone}`}>
+              {word}
             </Badge>
           </Cell>
         ))}
@@ -1396,6 +1409,7 @@ function Navigation() {
       <Row label="status colours">
         <span className="rounded-md bg-success-soft px-2 py-1 text-sm text-success">Saved</span>
         <span className="rounded-md bg-warning-soft px-2 py-1 text-sm text-warning">Expires soon</span>
+        <span className="rounded-md bg-info-soft px-2 py-1 text-sm text-info">Queued</span>
         <span className="text-sm">
           A <mark className="bg-highlight text-ink">match</mark> inside a text
         </span>
@@ -2025,6 +2039,99 @@ function Keys() {
         <p className="text-sm text-ink-soft">
           Press <Kbd>N</Kbd> to add an item, <Kbd>Z</Kbd> to undo.
         </p>
+      </Row>
+    </Section>
+  )
+}
+
+/**
+ * A curated palette for the sample of the stated control border: cool gray surfaces with a blue accent. `stated` adds
+ * the control border the palette states (`Surfaces.input`); without it the engine derives one from the dividers.
+ */
+function samplePalette(stated: boolean): ThemeDef {
+  return {
+    id: stated ? 'sample-stated' : 'sample-derived', label: stated ? 'Stated' : 'Derived', hue: 255, chroma: 0.012, accent: [0.07, 230], sidebar: 'tenue', palette: 'soft',
+    surfaces: {
+      light: { paper: '#f2f4f8', sidebar: '#e9ecf2', raised: '#ffffff', line: '#d8dee9', ink: '#2e3440', accent: '#5e81ac', fill: '#5e81ac', ...(stated ? { input: '#7b8494' } : {}) },
+      dark: { paper: '#2e3440', sidebar: '#272c36', raised: '#373e4c', line: '#434c5e', ink: '#eceff4', accent: '#88c0d0', fill: '#88c0d0', ...(stated ? { input: '#9aa3b5' } : {}) },
+    },
+  }
+}
+
+/** One palette on a frame of its own, with a box to tick on a chosen row and the contrast of its border there, as the engine computed it. */
+function ControlBorderFrame({ stated, scheme }: { stated: boolean; scheme: ThemeScheme }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    if (ref.current) applyTheme(ref.current, { theme: samplePalette(stated), scheme, tone: AS_CHOSEN })
+  }, [stated, scheme])
+  const colors = tokensFor(samplePalette(stated), scheme, AS_CHOSEN).colors
+  const ratio = contrast(colors['input']!, colors['selected']!).toFixed(2)
+  return (
+    <Cell label={`${stated ? 'stated' : 'derived'}: ${ratio}:1 on the chosen row`}>
+      <div ref={ref} data-sample={`control-border-${stated ? 'stated' : 'derived'}`} className="w-72 rounded-lg bg-paper p-2 text-ink shadow-xs">
+        <ItemList aria-label={stated ? 'Stated control border' : 'Derived control border'}>
+          <ItemRow title="Pay the rent" current control={<Checkbox aria-label="Complete «Pay the rent»" />} />
+          <ItemRow title="Call the plumber" control={<Checkbox aria-label="Complete «Call the plumber»" />} />
+        </ItemList>
+      </div>
+    </Cell>
+  )
+}
+
+/** The four looks a theme asks for by name (2026-11-24), each drawn under its own attribute so it shows whatever Look says. */
+function ThemeHooks({ scheme }: { scheme: ThemeScheme }) {
+  return (
+    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page.">
+      <Row label="boxed keys">
+        <div data-keys="boxed" data-sample="hook-keys" className="flex flex-wrap items-center gap-4">
+          <Kbd>Ctrl K</Kbd>
+          <Shortcut keys={['Ctrl', 'Enter']} />
+          <Shortcut keys={['G', 'T']} separator="then" />
+          <Button>
+            Send
+            <Kbd>Enter</Kbd>
+          </Button>
+          <Button variant="outline">
+            Save
+            <Kbd>S</Kbd>
+          </Button>
+          <p className="text-sm text-ink-soft">
+            Press <Kbd>N</Kbd> to add an item, <Kbd>Z</Kbd> to undo.
+          </p>
+        </div>
+      </Row>
+      <Row label="boxed keys, in a bar">
+        <div data-keys="boxed" data-sample="hook-keys-bar" className="w-full max-w-xl">
+          <Toolbar aria-label="Sample bar with keys">
+            <ToolbarButton label="Commands" icon={<Icon name="search" />} shortcut="Ctrl K">
+              Commands
+            </ToolbarButton>
+            <ToolbarButton label="Save" variant="default" shortcut="Ctrl S">
+              Save
+            </ToolbarButton>
+            <ToolbarSpacer />
+            <ToolbarSearch closed="field" label="Search" shortcut="Ctrl F" value="" onValueChange={() => {}} />
+          </Toolbar>
+        </div>
+      </Row>
+      <Row label="badge tone">
+        {TONE_SAMPLES.map(([tone, word]) => (
+          <Badge key={tone} tone={tone}>
+            {word}
+          </Badge>
+        ))}
+        <Badge variant="secondary">Draft</Badge>
+      </Row>
+      <Row label="strong control borders">
+        <div data-controls="strong" data-sample="hook-controls" className="flex flex-wrap items-start gap-4">
+          <Input aria-label="Sample strong border" defaultValue="Quarterly report" className="w-56" />
+          <Input aria-label="Sample strong border, invalid" defaultValue="Quarterly report" aria-invalid className="w-56" />
+          <Button variant="outline">Reply</Button>
+        </div>
+      </Row>
+      <Row label="stated control border">
+        <ControlBorderFrame stated={false} scheme={scheme} />
+        <ControlBorderFrame stated scheme={scheme} />
       </Row>
     </Section>
   )
@@ -3283,6 +3390,9 @@ function App() {
   const [pace, setPace] = React.useState(DEFAULT_MOTION_FEEL.pace)
   // `?shape=sharp|soft|round`: how round the corners are (a parameter of the theme).
   const [shape, setShape] = React.useState<ThemeShape>(isThemeShape(params.get('shape')) ? (params.get('shape') as ThemeShape) : DEFAULT_SHAPE)
+  // `?keys=boxed` and `?controls=strong`: the two looks a theme asks for by name, off unless asked (`ThemeDef.keys`, `ThemeDef.controls`).
+  const [boxedKeys, setBoxedKeys] = React.useState(params.get('keys') === 'boxed')
+  const [strongControls, setStrongControls] = React.useState(params.get('controls') === 'strong')
   const [tone, setTone] = React.useState(() => {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
@@ -3316,12 +3426,17 @@ function App() {
     history.replaceState(null, '', `${location.search}${nav.id ? `#${nav.id}` : ''}`)
   }, [nav])
   React.useLayoutEffect(() => {
-    applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), shape }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), shape }, scheme, tone })
+    const asked = { shape, keys: boxedKeys ? 'boxed' : 'plain', controls: strongControls ? 'strong' : 'divider' } as const
+    applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), ...asked }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), ...asked }, scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
     next.set('scheme', scheme)
     next.set('tone', tonePresetOf(tone))
     next.set('shape', shape)
+    if (boxedKeys) next.set('keys', 'boxed')
+    else next.delete('keys')
+    if (strongControls) next.set('controls', 'strong')
+    else next.delete('controls')
     if (yours) {
       next.set('color', color.slice(1))
       next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
@@ -3330,7 +3445,7 @@ function App() {
       next.delete('spot')
     }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone, yours, color, spot, shape])
+  }, [theme, scheme, tone, yours, color, spot, shape, boxedKeys, strongControls])
   React.useLayoutEffect(() => {
     applyDensity(document.documentElement, density)
     const next = new URLSearchParams(location.search)
@@ -3394,6 +3509,7 @@ function App() {
     'toggle-group': <Toggles animated={animated} />,
     badge: <Badges />,
     kbd: <Keys />,
+    'theme-hooks': <ThemeHooks scheme={scheme} />,
     input: <Fields />,
     select: <Selects />,
     checkbox: <Checkboxes animated={animated} />,
@@ -3497,6 +3613,12 @@ function App() {
                       ))}
                     </ToggleGroup>
                   </LookField>
+                  <Switch checked={boxedKeys} onCheckedChange={setBoxedKeys} animated={animated}>
+                    Boxed keys
+                  </Switch>
+                  <Switch checked={strongControls} onCheckedChange={setStrongControls} animated={animated}>
+                    Strong control borders
+                  </Switch>
                   <LookField label="Density">
                     <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)} className="self-start">
                       {DENSITIES.map((d) => (

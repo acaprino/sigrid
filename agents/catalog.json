@@ -794,6 +794,11 @@
          "type": "string",
          "required": true,
          "doc": "The filled button, \"today\", the bars."
+        },
+        {
+         "name": "input",
+         "type": "string",
+         "doc": "The border of the controls (checkbox, radio, and fields under `controls: 'strong'`), stated by the palette. The engine moves it until it holds 3:1 on the page, the sidebar, the sheets and the chosen row. Absent, or not a `#rrggbb`: the engine derives one from the dividers and holds it on the page, the sidebar and the sheets only."
         }
        ]
       },
@@ -863,6 +868,16 @@
          "name": "radii",
          "type": "ThemeRadii",
          "doc": "The corner radii in px, for an app whose corners are none of the three shapes (for example 4/6/8/12): `sm`, `md`, `lg` and `xl` go to `--radius-sm`, `-md`, `-lg` and `-xl`; `button` and `chip` default to `md`. Absent, or not whole numbers (0 to 64; `button` and `chip` to 9999, a pill): the radii of `shape`."
+        },
+        {
+         "name": "keys",
+         "type": "\"plain\" | \"boxed\"",
+         "doc": "How a key hint is drawn (`Kbd`, `Shortcut`). Absent, `plain` or any other value: plain 12px text (R5). `boxed`: a 20px cap with a hairline, an exception to R5 a theme asks for; the engine writes `data-keys=\"boxed\"` on the root."
+        },
+        {
+         "name": "controls",
+         "type": "\"strong\" | \"divider\"",
+         "doc": "The border of fields and of the outline button. Absent, `divider` or any other value: the light divider (`line`; the owner, 2026-11-22). `strong`: the control border (`input`, 3:1), an exception a theme asks for; the engine writes `data-controls=\"strong\"` on the root."
         },
         {
          "name": "dark",
@@ -1033,7 +1048,7 @@
          "name": "attributes",
          "type": "Readonly<Record<string, string>>",
          "required": true,
-         "doc": "The root attributes that state the shape choices that are not numbers (`data-sidebar`, …)."
+         "doc": "The root attributes that state the choices that are not numbers: `data-sidebar` always, `data-keys=\"boxed\"` and `data-controls=\"strong\"` only when the theme asks for them (`ThemeDef.keys`, `ThemeDef.controls`)."
         },
         {
          "name": "corrected",
@@ -1581,7 +1596,7 @@
     },
     {
      "file": "src/primitives/badge.tsx",
-     "about": "SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/badge.json)\nPark UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)\nFrom Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,\ntabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its\noutline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).\nIcons are 14px (R7).\nFrom SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with\nBase UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its\nlooping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.",
+     "about": "SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/badge.json)\nPark UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)\nFrom Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,\ntabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its\noutline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).\nIcons are 14px (R7).\nFrom SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with\nBase UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its\nlooping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.\n`tone` (the owner, 2026-11-24) is a status as a label: the status colour on its soft ground, with a 6px dot before the\nword. It is a meaning, not a colour the user gave (R10's 8px dots), and not the accent (R2); the word is always there.",
      "components": [
       {
        "name": "Badge",
@@ -1593,12 +1608,18 @@
         {
          "name": "asChild",
          "type": "boolean"
+        },
+        {
+         "name": "tone",
+         "type": "BadgeTone",
+         "doc": "A status as a label: its colour on its soft ground, and a 6px dot before the word. It takes the place of the variant's colours. Always with a word: the colour is never the only signal. Absent: the variant as it is."
         }
        ],
        "passesOn": true
       }
      ],
      "also": [
+      "BadgeTone",
       "badgeVariants"
      ]
     },
@@ -2056,11 +2077,11 @@
     },
     {
      "file": "src/primitives/kbd.tsx",
-     "about": "Park UI (MIT) kbd 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts)\nThe form is Park's `kbd` recipe, its plain variant (R5): a key hint is 12px text in medium weight, muted, with no box,\nhidden on a phone (narrow and with a finger), where there is no keyboard to press it on. Inside a button it takes\nthe button's own text colour, so it stays readable on a fill. `size` is kept for callers: every size draws the same.",
+     "about": "Park UI (MIT) kbd 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/kbd.ts)\nThe form is Park's `kbd` recipe, its plain variant (R5): a key hint is 12px text in medium weight, muted, with no box,\nhidden on a phone (narrow and with a finger), where there is no keyboard to press it on. Inside a button it takes\nthe button's own text colour, so it stays readable on a fill. `size` is kept for callers: every size draws the same.\nA theme may ask for boxed keys instead (`ThemeDef.keys: 'boxed'`, which the engine writes as `data-keys=\"boxed\"` on\nthe root): the one approved exception to R5 (the owner, 2026-11-24), off unless the theme asks. Then a key is a 20px\ncap with a hairline, in the monospace face; the cap is decoration, the key is still read by its letter.",
      "components": [
       {
        "name": "Kbd",
-       "doc": "One key or a combination written as text (\"Ctrl+Enter\", \"Z\", \"Esc\").",
+       "doc": "One key or a combination written as text (\"Ctrl+Enter\", \"Z\", \"Esc\"); a 20px cap under a theme with boxed keys (`ThemeDef.keys`).",
        "props": [
         {
          "name": "size",

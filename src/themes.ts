@@ -28,14 +28,18 @@ export interface ThemePick {
 
 /** The tokens of a pick: the palette from one colour when there is one, otherwise the theme with its own colours. */
 function tokensOf(pick: ThemePick): ThemeTokens {
-  return pick.palette ? tokensFor(paletteTheme(pick.palette), pick.scheme, pick.tone) : themeTokens(pick.theme, pick.scheme, pick.own, pick.tone)
+  // A palette replaces the theme's colours, not how the app draws its keys and its control borders.
+  return pick.palette ? tokensFor({ ...paletteTheme(pick.palette), keys: pick.theme.keys, controls: pick.theme.controls }, pick.scheme, pick.tone) : themeTokens(pick.theme, pick.scheme, pick.own, pick.tone)
 }
 
 /** A plain gray theme with no accent: the toolkit's baseline for the first paint and the names of the variables. */
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
 /** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-font', 'data-density'] as const
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-font', 'data-density'] as const
+
+/** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `ThemeDef.controls`): the next theme takes them away. */
+const ASKED_ATTRIBUTES = ['data-keys', 'data-controls'] as const
 
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
@@ -92,6 +96,7 @@ export function applyTheme(el: HTMLElement, pick: ThemePick): void {
   el.setAttribute('data-theme', t.theme)
   el.setAttribute('data-scheme', t.scheme)
   for (const [k, v] of Object.entries(t.attributes)) el.setAttribute(k, v)
+  for (const name of ASKED_ATTRIBUTES) if (!(name in t.attributes)) el.removeAttribute(name)
   if (el === el.ownerDocument.documentElement) {
     for (const meta of el.ownerDocument.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) meta.content = t.colors['paper']!
   }

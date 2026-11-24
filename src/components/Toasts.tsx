@@ -28,6 +28,7 @@ import { Button } from '../primitives/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
 import { cn } from '../lib/utils'
+import { KEY_CAP } from '../primitives/kbd'
 import { useWords } from '../words'
 import { Icon } from '../icons'
 import { FOCUS_RING } from '../lib/focus'
@@ -230,8 +231,9 @@ function Notice({ id }: { id: string }) {
           >
             {item.undo.label ?? words.common.undo}
             {item.undo.hint ? (
-              // A key hint (R5): plain 12px text in the toast's own colour, only with a fine pointer.
-              <kbd aria-hidden="true" data-slot="toast-hint" className="hidden font-sans text-2xs leading-none font-medium any-pointer-fine:inline">
+              // A key hint (R5): plain 12px text in the toast's own colour, only with a fine pointer; the cap of `Kbd`
+              // under a theme with boxed keys, its hairline in the toast's text colour (the hint is inside a button).
+              <kbd aria-hidden="true" data-slot="toast-hint" className={cn("hidden font-sans text-2xs leading-none font-medium any-pointer-fine:inline", KEY_CAP)}>
                 {item.undo.hint}
               </kbd>
             ) : null}

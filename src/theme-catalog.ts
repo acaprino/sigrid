@@ -97,6 +97,17 @@ export interface ThemeDef {
    */
   readonly radii?: ThemeRadii | undefined
   /**
+   * How a key hint is drawn (`Kbd`, `Shortcut`). Absent, `plain` or any other value: plain 12px text (R5). `boxed`: a
+   * 20px cap with a hairline, an exception to R5 a theme asks for; the engine writes `data-keys="boxed"` on the root.
+   */
+  readonly keys?: 'plain' | 'boxed' | undefined
+  /**
+   * The border of fields and of the outline button. Absent, `divider` or any other value: the light divider (`line`;
+   * the owner, 2026-11-22). `strong`: the control border (`input`, 3:1), an exception a theme asks for; the engine
+   * writes `data-controls="strong"` on the root.
+   */
+  readonly controls?: 'divider' | 'strong' | undefined
+  /**
    * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
    * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
    */
@@ -138,6 +149,12 @@ export interface Surfaces {
   readonly accent: string
   /** The filled button, "today", the bars. */
   readonly fill: string
+  /**
+   * The border of the controls (checkbox, radio, and fields under `controls: 'strong'`), stated by the palette. The
+   * engine moves it until it holds 3:1 on the page, the sidebar, the sheets and the chosen row. Absent, or not a
+   * `#rrggbb`: the engine derives one from the dividers and holds it on the page, the sidebar and the sheets only.
+   */
+  readonly input?: string | undefined
 }
 
 

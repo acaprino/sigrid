@@ -135,7 +135,7 @@ describe('DESIGN.md and the zero-slop-design code check', () => {
     expect([...SIZES].sort((a, b) => a - b)).toEqual([12, 13, 14, 16, 18, 20, 24]) // 18, 20 and 24: the titles of an app's pages (2026-11-22)
     expect([...WEIGHTS].sort()).toEqual([400, 500, 600])
     expect(SHADOWS).toEqual(new Set(['xs', 'sm', 'md', 'lg', 'float']))
-    expect([...ICONS].sort((a, b) => a - b)).toEqual([8, 14, 16])
+    expect([...ICONS].sort((a, b) => a - b)).toEqual([6, 8, 14, 16]) // 6: the dot of a badge's tone (2026-11-24)
     expect([...FAMILIES].sort()).toEqual(['mono', 'sans'])
   })
 })
@@ -207,6 +207,37 @@ describe('the scale classes against DESIGN.md (what check-code does not read)', 
     const bad: string[] = []
     for (const s of sources) for (const m of code(s.text).matchAll(/<kbd\b[^>]*className=["'{`]([^"'`}]*)/g)) if (/(?:^|\s)(bg-|border|rounded|shadow-)/.test(m[1]!)) bad.push(`${s.file}: ${m[1]}`)
     expect(bad).toEqual([])
+  })
+
+  test('the one exception to R5: the cap of a key is drawn only under a theme that asks for boxed keys (`data-keys="boxed"`)', () => {
+    // Every class of kbd.tsx that draws a box (a fill, a border, a corner, a shadow) carries the variant of the attribute.
+    const kbd = sources.find((s) => /^primitives.kbd\.tsx$/.test(s.file))!
+    const box = classes(kbd.text).filter((c) => /^(bg-|border|rounded|shadow-)/.test(c.base))
+    expect(box.map((c) => c.base)).toEqual(expect.arrayContaining(['border', 'border-line', 'rounded-sm']))
+    expect(box.filter((c) => !c.cls.startsWith('[[data-keys=boxed]_&]' + ':')).map((c) => c.cls)).toEqual([])
+    // And no other source draws on that attribute: a key is the only thing it changes.
+    const elsewhere = sources.filter((s) => s !== kbd && /\[data-keys[=\]]/.test(code(s.text))).map((s) => s.file)
+    expect(elsewhere).toEqual([])
+  })
+
+  test('every key hint a part draws by itself takes the cap of `Kbd` (`KEY_CAP`), so boxed keys reach them all', () => {
+    // A hint is a `<kbd>`, or an element whose slot ends in `shortcut` or `hint`. `Shortcut` is a row of `Kbd`s.
+    const missing: string[] = []
+    let found = 0
+    for (const s of sources) {
+      if (/^primitives.kbd\.tsx$/.test(s.file)) continue
+      const text = code(s.text)
+      for (const m of text.matchAll(/<kbd\b|data-slot="[a-z-]*(?:shortcut|-hint)"/g)) {
+        found++
+        // The tag it is in: from its `<` to the `>` that ends its attributes (no hint has a `>` inside them).
+        const start = text.lastIndexOf('<', m.index)
+        const tag = text.slice(start, text.indexOf('>', m.index) + 1)
+        if (!/\bKEY_CAP\b/.test(tag)) missing.push(`${s.file}: ${m[0]}`)
+      }
+    }
+    // The toolbar's button and its search, a row of the palette, a menu's shortcut, a toast's hint, a tooltip's key.
+    expect(found).toBeGreaterThanOrEqual(6)
+    expect(missing).toEqual([])
   })
 
   test('no loops, gradients or blur (motion rules; must-avoid)', () => {

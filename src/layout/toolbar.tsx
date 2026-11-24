@@ -36,6 +36,7 @@ import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight } from "lucide-react"
 import { Icon } from "../icons"
 import { cn, isEmptyNode } from "../lib/utils"
+import { KEY_CAP } from "../primitives/kbd"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { steadyLabel } from "../internal/steady-label"
 import { buttonVariants } from "../primitives/button"
@@ -102,7 +103,7 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
-  const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className="text-2xs font-medium opacity-70">{shortcut}</span> : null
+  const key = shortcut && !iconOnly ? <span data-slot="toolbar-button-shortcut" className={cn("text-2xs font-medium opacity-70", KEY_CAP)}>{shortcut}</span> : null
   const look = cn(buttonVariants({ variant, size: iconOnly ? (small ? "icon-xs" : "icon-sm") : small ? "xs" : "sm" }), ITEM, className)
   const body = (
     <>
@@ -367,14 +368,14 @@ function ToolbarSearch({ label, value, onValueChange, open, defaultOpen = false,
         variant="outline"
         aria-expanded={false}
         icon={<Icon name="search" className="text-ink-mute" />}
-        className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @md/toolbar:w-48"
+        className="justify-start font-normal text-ink-mute @max-md/toolbar:border-transparent @max-md/toolbar:[[data-controls=strong]_&]:border-transparent @md/toolbar:w-48"
         onClick={() => {
           want.current = "input"
           set(true)
         }}
       >
         <span className="flex-1 truncate text-start">{placeholder ?? label}</span>
-        {shortcut ? <span data-slot="toolbar-search-shortcut" className="text-2xs font-medium">{shortcut}</span> : null}
+        {shortcut ? <span data-slot="toolbar-search-shortcut" className={cn("text-2xs font-medium", KEY_CAP)}>{shortcut}</span> : null}
       </ToolbarButton>
     )
   }
