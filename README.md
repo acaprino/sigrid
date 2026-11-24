@@ -113,7 +113,11 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    The app editor's «Look» panel has it: choosing a base suggests its accents. The corners are `ThemeDef.shape`:
    `sharp` (2/4/6px) is the default, `soft` (4/6/10px, the corners before 2026-11-24) and `round` (6/10/14px) are
    the choices; an app keeps the rounder look with `shape: 'soft'` on its theme, and `ThemeDef.radii` sets numbers
-   of its own.
+   of its own. Four more looks are off unless a theme asks for them by name (2026-11-24): `keys: 'boxed'` draws key
+   hints as 20px caps with a hairline in place of plain text (R5), `controls: 'strong'` gives fields and the outline
+   button the 3:1 control border in place of the light divider, `surfaces.<scheme>.input` states the control border
+   of a curated palette (the engine holds it at 3:1 on the chosen row too), and `Badge tone` (`success`, `warning`,
+   `danger`, `info`) draws a status as a label with a 6px dot.
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

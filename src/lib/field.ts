@@ -3,8 +3,16 @@
 // these parts and add what is their own. The focus ring is in `focus.ts` (`FOCUS_FIELD` and its forms). Tailwind reads
 // the classes as they are written here, so a part with a variant is a constant of its own, in each form it is used.
 
-/** The surface: l2 corners, the light divider border (as an outline button) and no fill. */
-export const FIELD_SURFACE = 'rounded-md border border-line bg-transparent'
+/**
+ * Under a theme that asks for strong control borders (`ThemeDef.controls: 'strong'`, `data-controls="strong"` on the
+ * root): the control border (`input`, 3:1) in place of the light divider, on fields and on the outline button. The
+ * one approved exception to the light divider of 2026-11-22 (the owner, 2026-11-24), off unless the theme asks.
+ * `:where()` keeps it as weak as the divider it replaces, so the invalid red and every state still win over it.
+ */
+export const STRONG_BORDER = '[:where([data-controls=strong])_&]:border-input'
+
+/** The surface: l2 corners, the light divider border (as an outline button) and no fill; the control border under `controls: 'strong'`. */
+export const FIELD_SURFACE = `rounded-md border border-line bg-transparent ${STRONG_BORDER}`
 
 /** The height of a one-line field: a control tall (`--control-md`), 44px with a finger. */
 export const FIELD_HEIGHT = 'h-(--control-md) pointer-coarse:min-h-11'

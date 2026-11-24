@@ -36,6 +36,8 @@
   --color-success-soft: #eef8f1;
   --color-warning: #855000;
   --color-warning-soft: #fdf4e3;
+  --color-info: #2b4a80;
+  --color-info-soft: #e1e6ed;
   --color-highlight: #ffe38a; /* behind a match inside a text, with the ink on it */
   --color-border: #dcdcdc;
   --color-input: #878787; /* control borders, at least 3:1 */
@@ -101,6 +103,8 @@
     --color-success-soft: #1c3326;
     --color-warning: #f0b85a;
     --color-warning-soft: #3a2c12;
+    --color-info: #9db8ea;
+    --color-info-soft: #2c3547;
     --color-highlight: #4f3f08;
     --color-border: #353535;
     --color-input: #747474;

@@ -208,9 +208,9 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     else expect(luminance(t['primary']!)).toBeLessThan(luminance(t['accent']!))
   })
 
-  test('status: success and warning read on every background and on their soft one; the ink reads on the highlight', () => {
+  test('status: success, warning and info read on every background and on their soft one; the ink reads on the highlight', () => {
     const fixed = tk.scheme === 'light' ? STATUS.light : STATUS.dark
-    for (const name of ['success', 'warning'] as const) {
+    for (const name of ['success', 'warning', 'info'] as const) {
       expect(t[`${name}-soft`]).toBe(fixed[`${name}-soft`])
       // A theme may move the colour just enough to hold on its own surfaces: the lightness only.
       if (!(THEMES.find((x) => x.id === themeId)! as ThemeDef).surfaces) expect(t[name]).toBe(fixed[name])

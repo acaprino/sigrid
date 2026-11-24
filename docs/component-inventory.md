@@ -133,6 +133,9 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - **Park parity**: md: 20px tall, 12px medium, px 8, l2, tabular — same. Park's default variant is `subtle`; ours `default` is solid accent (F07).
 - **Findings**: F07, F16.
 - **Do**: `secondary` for a label. **Don't**: a badge for a count, or an accent badge.
+- **Tone** (added 2026-11-24, hook H2 below): `tone` = `success`, `warning`, `danger`, `info` draws a status as a label:
+  the status colour on its soft ground and a 6px dot before the word, in place of the variant's colours. Absent, the
+  badge is as above.
 
 ### Kbd and Shortcut
 
@@ -145,6 +148,8 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - **Ark parity**: none. **Park parity**: Park `kbd` sizes 18/20/22, default `subtle` md. R5 picks Park's `plain` variant at 12px (F05).
 - **Findings**: F02, F05, F20.
 - **Do**: plain 12px text after the label. **Don't**: a boxed key, or a hint on a phone.
+- **Boxed** (added 2026-11-24, hook H1 below): under a theme with `keys: 'boxed'` a key is a 20px cap with a hairline.
+  The theme asks for it; a caller never draws a box on a `Kbd`. Every other key hint of the toolkit takes the same cap.
 
 ### Input
 
@@ -158,6 +163,8 @@ attributes, keyboard); Park parity (recipe, sizes, variants, states, radius leve
 - **Park parity**: md: 40px, px 12, l2, outline; text 16px in Park (F37 approved); border colour (F36 approved); focus ring inside the border in Park, outside with 2px offset under R8 (approved by R8).
 - **Findings**: F01, F36, F37.
 - **Do**: pair with a visible label. **Don't**: a fill and a shadow on a field.
+- **Border** (2026-11-22, then 2026-11-24): the light divider (`line`) at rest and `input` under the pointer; under a
+  theme with `controls: 'strong'` (hook H3 below) the control border (`input`, 3:1) at rest.
 
 ### Textarea
 
@@ -515,6 +522,19 @@ app's, and is in the gallery (Components, «Card, Heading, Dot, …»).
 | `Column fill` | A pile as tall as the region that holds it, so that a part that fills (`GraphCanvas`, `VirtualList`, `Empty`, a `Column`) takes the height its other parts leave. With a `GraphCanvas` that fills in it, it is never shorter than what its parts need: the region scrolls, the canvas covers nothing that follows the pile and the padding at its foot stays (not beside a part that scrolls by itself, a list, a tree, a split, a panel, a scroll area: that one gives way as ever). Without it a pile is as tall as its parts and has no height to give | `h-full`, `min-h-0`, `flex-1`; with a canvas `min-h-min`; a field that is a part of it keeps its height | Tokens only | The same app; before it only the body of a `Page fit` gave what was left, with a page's margins and width (2026-11-24) |
 | Icons `code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`, `external` | Sigrid's names for the parts of a project and of a system, and for a press that leaves the app. `globe` says what a thing is (the web, a site, a browser), `external` what a press does (a page opened outside the app); a thing outside what a graph is about says the word «external» (`GraphNode.external`), beside whatever icon it has. Not `structure` (what holds what), `service` (what answers), `account` (the person), `data`, `archive` nor `link` (the address) | Lucide's `CodeXml`, `GitBranch`, `Package`, `Layers`, `Waypoints`, `Router`, `MonitorSmartphone`, `Key`, `Globe`, `ExternalLink` | R6: an icon a function needs is added to Sigrid's names; no drawing has two of these meanings | The same app (2026-11-24) |
 | `SheetContent width` | The widest a sheet at the side grows: `sm` (the default), `md`, `lg`; at the top or the foot it is as wide as the window | 384, 448, 512px from the `sm` width of the window; three quarters of it under | R7: steps of the scale, named with the toolkit's words for a size | Qamille (the composer beside the mail, 1 class) |
+
+## Added on 2026-11-24: four looks a theme asks for by name
+
+The owner approved them on 2026-11-24 for a shell that stands on Sigrid. Each is off unless a theme asks: with none
+asked, no colour, class, attribute or measure of the toolkit changes, and an app that does not ask keeps the rule as it
+is written. `test/theme-hooks.test.tsx` holds each one and measures the contrast of the preset they were approved for.
+
+| Hook | What a theme writes | What changes, and only then | Rule it is an exception to |
+|---|---|---|---|
+| H1 Boxed keys | `ThemeDef.keys: 'boxed'` (the default is `plain`); the engine writes `data-keys="boxed"` on the root, `copyTheme` carries it | Every key hint the toolkit draws takes the one cap (`KEY_CAP` in `primitives/kbd.tsx`) beside its own text style: `Kbd`, each key of a `Shortcut`, `KeyHints`, the `shortcut` of `ToolbarButton` and `ToolbarSearch`, a row of `CommandPalette`, `DropdownMenuShortcut`, the hint of a toast, the key of a `Tooltip`. The cap is 20px tall and at least 20px wide, a 1px `line` hairline, l1 corners, 4px at the sides, the monospace face on an 18px line; each hint keeps its own size, weight, colour and opacity. On a fill (in a button, so in a toast's action; in the inverted tooltip) the hairline is the text's colour at 35%. Hidden where it was hidden before. A tooltip with a key is 2px taller. The hairline is decoration (under 3:1): the key is read by its letter | R5, the must-avoid «Key hints drawn as boxes», the law «Keys as words» |
+| H2 Badge tone | `Badge tone="success" \| "warning" \| "danger" \| "info"` (no tone by default), and the tokens `info` and `info-soft` in both schemes (`STATUS`) | The badge is the status text colour on its soft ground (`success`, `warning`, `destructive`, `info` on their `-soft`), with a 6px dot before the word, in the same colour. Each word holds 4.5:1 on its ground in every theme | None: a status is a meaning with a word (R2 keeps the accent out of it; R10's 8px dots are the colours a person gave). The 6px dot is new |
+| H3 Strong control borders | `ThemeDef.controls: 'strong'` (the default is `divider`); the engine writes `data-controls="strong"` on the root | Fields (`FIELD_SURFACE`: input, textarea, select, combo box, date, labels, input group, prompt, formatted text) and the outline button take `input` (3:1) in place of `line`. The rule sits in `:where()`, so the invalid red, the focus ring and every state win over it as they do over the divider. A field then has no step left under the pointer: its border is already `input` | The light divider on fields and outline buttons (the owner, 2026-11-22) |
+| H4 Stated control border | `Surfaces.input` (`#rrggbb`) on a curated palette (absent by default) | The engine starts from that colour and moves it until it holds 3:1 on the page, the sidebar, the sheets **and the chosen row**. Without it the border is derived from the dividers and held on the page, the sidebar and the sheets only, as before: on a chosen row it can fall under 3:1 | None: it lets a palette reach a threshold the derived border misses |
 
 ## Off-scale values (with locations, before the polish pass)
 
