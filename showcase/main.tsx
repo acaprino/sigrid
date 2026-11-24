@@ -28,7 +28,7 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
-import { type SheetWidth } from '../src/primitives'
+import { HoverFollow, PopoverAnchor, type SheetWidth } from '../src/primitives'
 import { ContentSplit } from '../src/layout'
 import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
@@ -1631,6 +1631,12 @@ function Pickers() {
         <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
         <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
       </Row>
+      <Row label="search, quiet (in a bar)">
+        <div data-sample="search-quiet" className="flex items-center gap-2 rounded-md bg-paper-2 p-2">
+          <SearchField variant="quiet" aria-label="Sample quiet search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
+        </div>
+        <SearchField variant="quiet" aria-label="Sample empty quiet search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
       <Row label="field with parts">
         <FormField label="Site" className="w-64">
           <InputGroup start={<InputGroupText>https://</InputGroupText>} end={<CopyButton value={`https://${site}`} label="Copy the address" />} value={site} onChange={(event) => setSite(event.target.value)} />
@@ -1942,23 +1948,49 @@ function Menus({ animated }: { animated: boolean }) {
   )
 }
 
-/** The hover background that glides from row to row, over rows of two heights (with animations only). */
+/** The hover background that glides from row to row: over an app's own rows of two heights (`HoverFollow`), and in an `ItemList`. */
 function HoverRows({ animated }: { animated: boolean }) {
-  const motion = useMotion(animated)
   const [list, setList] = React.useState<HTMLUListElement | null>(null)
+  const [chosen, setChosen] = React.useState('Receipt')
   return (
-    <Section id="hover" title="Hover background" note="With animations one background follows the mouse from row to row, also between rows of different heights; without, each row has its own.">
-      <Row label="rows">
-        <ul ref={setList} data-sample="hover-rows" className="relative flex w-64 flex-col gap-0.5">
-          {motion ? <motion.HoverHighlight container={list} selector="[data-hover-row]" className="absolute rounded-md bg-ink/5" /> : null}
+    <Section id="hover" title="Hover background" note="With animations one background follows the mouse from row to row, also between rows of different heights; without, each row has its own. ItemList has it by itself; HoverFollow gives it to rows of an app's own.">
+      <Row label="rows of an app's own">
+        <ul ref={setList} data-sample="hover-rows" className="flex w-64 flex-col gap-0.5">
           {['Overview', 'Documents', 'Shared with me', 'Quarterly report', 'Archive'].map((name, i) => (
-            <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm ${i === 2 || i === 3 ? 'h-7 pl-6' : 'h-9'} ${motion ? '' : 'hover:bg-ink/5'}`}>
+            <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm hover:bg-selected/60 [[data-hover-follow]_&]:hover:bg-transparent ${i === 2 || i === 3 ? 'h-7 ps-6' : 'h-9'}`}>
               {name}
             </li>
           ))}
+          <HoverFollow container={list} rows="[data-hover-row]" as="li" animated={animated} />
         </ul>
       </Row>
+      <Row label="a list of things">
+        <ItemList aria-label="Sample messages" animated={animated} className="w-80">
+          {['Kitchen quote', 'Receipt', 'Invoice for March'].map((name) => (
+            <ItemRow key={name} title={name} description={name === 'Receipt' ? 'City parking' : undefined} current={chosen === name} onClick={() => setChosen(name)} />
+          ))}
+        </ItemList>
+      </Row>
     </Section>
+  )
+}
+
+/** A card that hangs from a search field, not from a button: the field keeps the focus, and a press on it keeps the card. */
+function FieldPopover({ animated }: { animated: boolean }) {
+  const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState('')
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor className="w-64">
+        <SearchField aria-label="Sample search with filters" placeholder="Search, then choose a filter" value={query} onValueChange={setQuery} onFocus={() => setOpen(true)} />
+      </PopoverAnchor>
+      <PopoverContent initialFocus={false} width="md" data-sample="popover-field" animated={animated}>
+        <PopoverHeader>
+          <PopoverTitle>Filters</PopoverTitle>
+          <PopoverDescription>The field keeps the focus while this is open; Esc or a press elsewhere closes it, with a fade.</PopoverDescription>
+        </PopoverHeader>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -1983,6 +2015,9 @@ function Popovers({ animated }: { animated: boolean }) {
             </PopoverContent>
           </Popover>
         </div>
+      </Row>
+      <Row label="under a field">
+        <FieldPopover animated={animated} />
       </Row>
       <Row label="tooltip">
         <Tooltip label="Search" animated={animated}>

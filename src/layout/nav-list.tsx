@@ -8,9 +8,15 @@
 // neither.
 // Two tones: `page` (the default) for a list on the page or on a raised sheet, `sidebar` for a list on the app's
 // sidebar, where the theme has its own ink and its own selection (`sidebar-*`, the solid sidebar among them).
+// With motion on (`animated` on the `NavList` or the `Sidebar`, or `MotionProvider`) the tint and the bar of the chosen
+// row are one mark for the whole navigation, which slides from the row the user left to the row they chose, as the
+// tint of `Tabs` does (`Highlight` in `motion-impl`): one place is current, so there is one mark, and it crosses the
+// groups. It moves only when the current row changes; a row that is not shown (a closed group, a search) has no mark,
+// so the mark never comes from, or goes to, a place that is not seen.
 import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
+import { useMotion, type MotionImpl } from "../internal/motion"
 import { Tooltip } from "../primitives/tooltip"
 
 type Tone = "page" | "sidebar"
@@ -21,21 +27,36 @@ export const ToneContext = React.createContext<Tone>("page")
  * What a `Sidebar` tells its rows: `rail` when it is shrunk to its icons (a row then shows its icon alone, with its
  * name as a hint), and what is typed in its search box, in lower case (a row whose name does not hold it is hidden).
  */
-export const NavContext = React.createContext<{ rail: boolean; query: string }>({ rail: false, query: "" })
+export const NavContext = React.createContext<NavRows>({ rail: false, query: "" })
+
+/**
+ * The mark of the chosen row, where motion is on: the part that slides (`Highlight`) and the name the rows of one
+ * navigation share, so it goes from one of them to another. Absent or `null`: the chosen row draws its own tint.
+ */
+export type NavMark = { Highlight: MotionImpl["Highlight"]; id: string }
+type NavRows = { rail: boolean; query: string; mark?: NavMark | null | undefined }
 
 export type NavListProps = {
   /** Name of the navigation for screen readers («Mail folders»). */
   "aria-label": string
   tone?: Tone | undefined
+  /** The tint of the chosen row slides to the row chosen next (off by default, never with prefers-reduced-motion). */
+  animated?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
 }
 
-function NavList({ tone = "page", className, children, ...props }: NavListProps) {
+function NavList({ tone = "page", animated, className, children, ...props }: NavListProps) {
+  const motion = useMotion(animated)
+  const id = React.useId()
+  const around = React.useContext(NavContext)
+  const rows = React.useMemo(() => ({ ...around, mark: motion ? { Highlight: motion.Highlight, id } : null }), [around, motion, id])
   return (
     <nav data-slot="nav-list" data-tone={tone} {...props}>
       <ul role="list" className={cn("flex flex-col gap-0.5", className)}>
-        <ToneContext.Provider value={tone}>{children}</ToneContext.Provider>
+        <NavContext.Provider value={rows}>
+          <ToneContext.Provider value={tone}>{children}</ToneContext.Provider>
+        </NavContext.Provider>
       </ul>
     </nav>
   )
@@ -56,6 +77,15 @@ const ROW = cn(
 const TONES: Record<Tone, string> = {
   page: "text-ink-soft hover:bg-selected/60 hover:text-ink aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-ink aria-[current=page]:before:bg-primary [&_[data-slot=count]]:bg-ink/9 [&_[data-slot=count]]:text-ink-soft aria-[current=page]:[&_[data-slot=count]]:bg-primary aria-[current=page]:[&_[data-slot=count]]:text-primary-foreground",
   sidebar: "text-sidebar-ink hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink aria-[current=page]:bg-sidebar-selected aria-[current=page]:font-semibold aria-[current=page]:text-sidebar-selected-ink aria-[current=page]:before:bg-sidebar-accent [&_[data-slot=count]]:bg-sidebar-ink/12 [&_[data-slot=count]]:text-sidebar-ink aria-[current=page]:[&_[data-slot=count]]:bg-sidebar-accent aria-[current=page]:[&_[data-slot=count]]:text-sidebar-accent-ink",
+}
+// With the mark that slides, the chosen row leaves its tint and its bar to it: the mark is a layer of the row, under
+// its icon and its words.
+const MARKED = "isolate aria-[current=page]:bg-transparent aria-[current=page]:before:content-none"
+// The mark: the row's tint and corners, and the short bar in the accent at its start, in the tone of the row.
+const MARK = "absolute inset-0 -z-10 rounded-[inherit] before:absolute before:top-1/2 before:start-0 before:h-4 before:w-0.75 before:-translate-y-1/2 before:rounded-full before:content-['']"
+const MARKS: Record<Tone, string> = {
+  page: cn(MARK, "bg-selected before:bg-primary"),
+  sidebar: cn(MARK, "bg-sidebar-selected before:bg-sidebar-accent"),
 }
 // The second line of a row: the muted ink of its tone; on the chosen row, the row's own ink a step quieter (as in `ItemRow`).
 const MUTE: Record<Tone, string> = { page: "text-ink-mute", sidebar: "text-sidebar-mute" }
@@ -84,19 +114,23 @@ export type NavItemProps = NavItemOwnProps &
 
 function NavItem({ current = false, icon, end, description, actions, className, children, ...props }: NavItemProps) {
   const tone = React.useContext(ToneContext)
-  const { rail, query } = React.useContext(NavContext)
+  const { rail, query, mark } = React.useContext(NavContext)
   // The name of the row as text, for the search and for the hint of the rail: a row whose name is not plain text is
   // never hidden by a search, and has no hint.
   const name = typeof children === "string" ? children : undefined
   const twoLines = description !== undefined && !rail
   const withActions = actions !== undefined && !rail
+  const hidden = query !== "" && name !== undefined && !name.toLowerCase().includes(query)
+  // The mark is in the chosen row alone, and only while that row is shown.
+  const marked = current && !hidden ? (mark ?? null) : null
   const shared = {
     "data-slot": "nav-item",
     "aria-current": current ? ("page" as const) : undefined,
-    className: cn(ROW, TONES[tone], FOCUS_RING_INSET, "disabled:pointer-events-none disabled:opacity-50", rail && "justify-center px-0", twoLines && "py-1", withActions && "min-w-0 flex-1", className),
+    className: cn(ROW, TONES[tone], FOCUS_RING_INSET, "disabled:pointer-events-none disabled:opacity-50", rail && "justify-center px-0", twoLines && "py-1", withActions && "min-w-0 flex-1", marked && MARKED, className),
   }
   const content = (
     <>
+      {marked ? <marked.Highlight key={marked.id} id={marked.id} className={MARKS[tone]} /> : null}
       <span data-slot="nav-item-icon" aria-hidden="true" className="inline-flex size-4 shrink-0 items-center justify-center">
         {icon}
       </span>
@@ -129,7 +163,7 @@ function NavItem({ current = false, icon, end, description, actions, className, 
       </button>
     )
   return (
-    <li data-slot="nav-item-row" hidden={query !== "" && name !== undefined && !name.toLowerCase().includes(query)}>
+    <li data-slot="nav-item-row" hidden={hidden}>
       {withActions ? (
         // The controls are beside the row, not in it: a button cannot hold a button.
         <div className="flex items-center gap-1">

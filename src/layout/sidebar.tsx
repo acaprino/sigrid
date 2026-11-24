@@ -13,6 +13,9 @@
 // Inside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.
 // What sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:
 // `header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).
+// With `animated` that tint is one mark for the whole sidebar, which slides to the row chosen next, across the groups
+// (`NavItem`, nav-list.tsx). It is drawn anew, without a slide, when the sidebar shrinks to its rail or widens, and a
+// row in a closed group or hidden by the search has none.
 import * as React from "react"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
@@ -54,7 +57,10 @@ export type SidebarProps = {
   footer?: React.ReactNode
   /** A search box at the top that filters the rows as the user types. */
   search?: boolean | undefined
-  /** The drawer slides in and the arrows of the groups turn (off by default, never with prefers-reduced-motion). */
+  /**
+   * The drawer slides in, the arrows of the groups turn and the tint of the chosen row slides to the row chosen next
+   * (off by default, never with prefers-reduced-motion).
+   */
   animated?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
@@ -88,7 +94,11 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
     setNone(query !== "" && nav.current !== null && nav.current.querySelector('[data-slot="nav-item-row"]:not([hidden])') === null)
   }, [query, children])
   const context = React.useMemo(() => ({ rail, query, animated }), [rail, query, animated])
-  const rows = React.useMemo(() => ({ rail, query }), [rail, query])
+  // One mark for the whole sidebar. Its name changes with the form of the sidebar: a row of the rail and a row of the
+  // column are not two places, so the mark does not travel from one to the other.
+  const motion = useMotion(animated)
+  const markId = React.useId()
+  const rows = React.useMemo(() => ({ rail, query, mark: motion ? { Highlight: motion.Highlight, id: `${markId}-${rail ? "rail" : "column"}` } : null }), [rail, query, motion, markId])
   // One icon at the foot, at its end on the column and in the middle of the rail: the name is a hint and the button's name, not
   // a line of text that takes a row of the sidebar.
   const toggle = onCollapsedChange && !narrow && !forced ? (
@@ -192,6 +202,9 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
   const reveal = useReveal(shown)
   const list = React.useRef<HTMLUListElement>(null)
   const id = React.useId()
+  // The rows of a group that is shut are not seen: the chosen one among them keeps its own tint and has no mark.
+  const rows = React.useContext(NavContext)
+  const unseen = React.useMemo(() => ({ ...rows, mark: null }), [rows])
   const [none, setNone] = React.useState(false)
   React.useLayoutEffect(() => {
     setNone(query !== "" && list.current !== null && list.current.querySelector('[data-slot="nav-item-row"]:not([hidden])') === null)
@@ -218,7 +231,7 @@ function SidebarGroup({ label, icon, collapsible = false, defaultOpen = true, cl
         </div>
       )}
       <ul ref={list} id={id} role="list" aria-label={label} hidden={!shown} {...reveal.attrs} className="flex flex-col gap-0.5">
-        {children}
+        <NavContext.Provider value={shown ? rows : unseen}>{children}</NavContext.Provider>
       </ul>
     </div>
   )

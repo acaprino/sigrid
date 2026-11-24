@@ -7,6 +7,9 @@
 // - a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the
 //   accent's places); the dot's slot stays when empty, so the titles line up;
 // - a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.
+// With `animated` the share of the tint under the pointer is one background for the whole list, which follows the
+// pointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring
+// is the row's own, as without it.
 // The second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,
 // the day, a count of steps), which wrap rather than cut.
 // A row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one
@@ -17,21 +20,32 @@
 import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
-import { ROW_CHOSEN, ROW_HOVER } from "../lib/rows"
+import { ROW_CHOSEN, ROW_HOVER, ROW_HOVER_FOLLOWED } from "../lib/rows"
+import { useMotion } from "../internal/motion"
 import { useWords } from "../words"
 import { Dot } from "../primitives/dot"
+import { HoverFollow } from "../primitives/hover-follow"
 
 export type ItemListProps = {
   /** Name of the list for screen readers («Messages»). */
   "aria-label": string
+  /** One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion). */
+  animated?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
 }
 
-function ItemList({ className, children, ...props }: ItemListProps) {
+/** True for the rows of a list whose hover is the one background that follows the pointer: they leave the fill to it. */
+const FollowedContext = React.createContext(false)
+
+function ItemList({ animated, className, children, ...props }: ItemListProps) {
+  // The same answer `HoverFollow` gets: the rows give up their own hover fill only while it draws the shared one.
+  const followed = useMotion(animated) !== null
+  const [list, setList] = React.useState<HTMLUListElement | null>(null)
   return (
-    <ul role="list" data-slot="item-list" {...props} className={cn("flex flex-col gap-0.5", className)}>
-      {children}
+    <ul ref={setList} role="list" data-slot="item-list" {...props} className={cn("flex flex-col gap-0.5", className)}>
+      <FollowedContext.Provider value={followed}>{children}</FollowedContext.Provider>
+      {followed ? <HoverFollow container={list} rows='[data-slot="item-row"]' as="li" animated={animated} /> : null}
     </ul>
   )
 }
@@ -84,24 +98,22 @@ export type ItemRowProps = {
   className?: string | undefined
 }
 
-const ROW = cn(
-  "relative flex min-h-(--row-height) w-full cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start text-sm text-ink-soft pointer-coarse:min-h-11",
-  // The one look of a row of things, shared with `Tree` (`lib/rows.ts`).
-  ROW_HOVER,
-  ROW_CHOSEN,
-  "disabled:pointer-events-none disabled:opacity-50",
-  FOCUS_RING_INSET,
-)
+const ROW_SHAPE = "relative flex min-h-(--row-height) w-full cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start text-sm text-ink-soft pointer-coarse:min-h-11"
+const ROW_STATES = cn(ROW_CHOSEN, "disabled:pointer-events-none disabled:opacity-50", FOCUS_RING_INSET)
+// The one look of a row of things, shared with `Tree` (`lib/rows.ts`).
+const ROW = cn(ROW_SHAPE, ROW_HOVER, ROW_STATES)
+// In a list whose hover background follows the pointer, the fill under the pointer is that background's.
+const ROW_FOLLOWED = cn(ROW_SHAPE, ROW_HOVER_FOLLOWED, ROW_STATES)
 
 // A row with a control: the list item is the row. It has the row's height and hover, and the chosen look of
 // `ROW_CHOSEN` (the tint, its ink, the accent bar at its start), said here by `data-current`: what is current is the
 // button inside, which says it with `aria-current`. The button takes the rest of the width with its own focus ring; the
 // 12px between the control and the words are the button's, so a press there opens the row.
-const ROW_BOX = cn(
-  "relative flex min-h-(--row-height) w-full cursor-default items-stretch rounded-md text-sm text-ink-soft pointer-coarse:min-h-11",
-  ROW_HOVER,
-  "data-current:bg-selected data-current:text-selected-ink data-current:before:absolute data-current:before:top-1/2 data-current:before:start-0 data-current:before:h-4 data-current:before:w-0.75 data-current:before:-translate-y-1/2 data-current:before:rounded-full data-current:before:bg-primary data-current:before:content-['']",
-)
+const ROW_BOX_SHAPE = "relative flex min-h-(--row-height) w-full cursor-default items-stretch rounded-md text-sm text-ink-soft pointer-coarse:min-h-11"
+const ROW_BOX_CHOSEN =
+  "data-current:bg-selected data-current:text-selected-ink data-current:before:absolute data-current:before:top-1/2 data-current:before:start-0 data-current:before:h-4 data-current:before:w-0.75 data-current:before:-translate-y-1/2 data-current:before:rounded-full data-current:before:bg-primary data-current:before:content-['']"
+const ROW_BOX = cn(ROW_BOX_SHAPE, ROW_HOVER, ROW_BOX_CHOSEN)
+const ROW_BOX_FOLLOWED = cn(ROW_BOX_SHAPE, ROW_HOVER_FOLLOWED, ROW_BOX_CHOSEN)
 const ROW_BUTTON = cn(
   "flex min-w-0 flex-1 cursor-default items-center gap-3 rounded-md px-3 py-1.5 text-start",
   "disabled:pointer-events-none disabled:opacity-50",
@@ -110,6 +122,7 @@ const ROW_BUTTON = cn(
 
 function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, end, control, controlSide = "start", current = false, unread, href, onClick, disabled, className }: ItemRowProps) {
   const words = useWords()
+  const followed = React.useContext(FollowedContext)
   // On the chosen row the muted ink would not keep its contrast on the tint: the row's own ink, a step quieter.
   const quiet = current ? "opacity-80" : "text-ink-mute"
   const body = (
@@ -183,14 +196,14 @@ function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, 
       </span>
     )
     return (
-      <li data-slot="item-row" data-control={controlSide} data-current={current ? "" : undefined} className={cn(ROW_BOX, className)}>
+      <li data-slot="item-row" data-control={controlSide} data-current={current ? "" : undefined} className={cn(followed ? ROW_BOX_FOLLOWED : ROW_BOX, className)}>
         {start ? held : null}
         {pressable}
         {start ? null : held}
       </li>
     )
   }
-  const shared = { "data-slot": "item-row", "aria-current": currentAttr, className: cn(ROW, className) }
+  const shared = { "data-slot": "item-row", "aria-current": currentAttr, className: cn(followed ? ROW_FOLLOWED : ROW, className) }
   return (
     <li>
       {href !== undefined && !disabled ? (

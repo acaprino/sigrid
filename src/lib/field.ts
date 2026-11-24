@@ -37,3 +37,22 @@ export const FIELD_OFF = 'disabled:pointer-events-none disabled:cursor-not-allow
 
 /** The same, written out for a field that the caller's prop turns off (a select's button, whose primitive decides). */
 export const FIELD_OFF_NOW = 'pointer-events-none cursor-not-allowed opacity-50'
+
+/**
+ * The corners of the quiet field (`FIELD_QUIET`): the one place that says how round it is. A step of the toolkit's
+ * radii, so it follows the theme's shape (6px; 10px under `soft`, 14px under `round`): one step rounder than a
+ * control's l2, softer without being a pill.
+ */
+export const FIELD_QUIET_RADIUS = 'rounded-lg'
+
+/**
+ * A field that does not ask to be looked at, for a search in a bar, where a full frame would weigh as much as the
+ * page's own fields: Park's `subtle` variant of the same `input` recipe (a clear 1px border, a quiet fill, the ring
+ * inside). Laid over the classes of `Input`, each written on the same chain as the one it replaces, so only these are
+ * left. The surface is a quiet fill, the ink at 5% over whatever it lies on (a well: darker than the bar in light, a
+ * step apart from it in dark, where a bar is too near black to go darker), in place of a border: the border is still
+ * there, clear, so the field is as tall as every field and Windows' forced colours draw it. Under the pointer the
+ * light divider shows; a theme's strong control border does not apply to it. Invalid it is the destructive colour,
+ * and in focus it has the ring of every field (`FOCUS_FIELD`), which follows its corners. No shadow (R4).
+ */
+export const FIELD_QUIET = `${FIELD_QUIET_RADIUS} border-transparent bg-ink/5 [:where([data-controls=strong])_&]:border-transparent not-aria-invalid:hover:border-line`
