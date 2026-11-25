@@ -775,3 +775,50 @@ test('it draws without a layout (no measure): the panes by percent, the keys on 
   // act() so no warning of an update outside it is left over from the draws above.
   act(() => {})
 })
+
+test('an app\'s own fields on a tab come back typed in renderTab, onCloseTab and tabMenu', () => {
+  type Terminal = WorkspaceTab & { kind: 'terminal'; cwd: string }
+  const tree: WorkspaceNode<Terminal> = { kind: 'tabs', id: 'g1', tabs: [{ id: 'a', title: 'A', kind: 'terminal', cwd: '/work' }], activeId: 'a' }
+  const closed: string[] = []
+  render(
+    <Workspace<Terminal>
+      tree={tree}
+      onChange={() => {}}
+      label="Terminals"
+      renderTab={(t) => <p data-testid="cwd">{t.cwd}</p>}
+      onCloseTab={(t) => closed.push(t.cwd)}
+      tabMenu={(t) => [{ label: `In ${t.cwd}`, onSelect: () => {} }]}
+    />,
+  )
+  expect(screen.getByTestId('cwd').textContent).toBe('/work')
+  fireEvent.click(screen.getByRole('button', { name: 'Close A' }))
+  expect(closed).toEqual(['/work'])
+})
+
+test('the content of the tabs is not drawn again while the area itself moves: a divider dragged, a tab dragged', () => {
+  boxes()
+  const drawn = vi.fn()
+  render(
+    <Host
+      start={row([1, 1], group('g1', ['a', 'b']), group('g2', ['c']))}
+      renderTab={(t) => {
+        drawn(t.id)
+        return <p>{t.id}</p>
+      }}
+    />,
+  )
+  const first = drawn.mock.calls.length
+  expect(first).toBe(3)
+  fireEvent.pointerDown(sashes()[0]!, { button: 0, clientX: 500, pointerId: 1 })
+  for (const x of [520, 540, 560, 580]) fireEvent.pointerMove(sashes()[0]!, { clientX: x, pointerId: 1 })
+  expect(now(sashes()[0]!)).toBe(58)
+  expect(drawn.mock.calls.length).toBe(first)
+  fireEvent.pointerUp(sashes()[0]!, { pointerId: 1 })
+  // A tab dragged across the area: the ghost and the box move with the pointer, the contents stay as they are.
+  const before = drawn.mock.calls.length
+  press(tabOf('A'), 50)
+  for (const x of [200, 300, 700]) slide(x, 300)
+  expect(ghost()).not.toBeNull()
+  expect(drawn.mock.calls.length).toBe(before)
+  fireEvent.keyDown(window, { key: 'Escape' })
+})

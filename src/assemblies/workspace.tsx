@@ -108,6 +108,18 @@ type Preview = { x: number; y: number; width: number; height: number; label: str
 type Drag = { title: string; x: number; y: number; preview: Preview | null }
 type Gesture = { tabId: string; title: string; groupId: string; pointerId: number; x: number; y: number; started: boolean; drop: WorkspaceDrop | null }
 
+type TabContentProps<T extends WorkspaceTab> = WorkspaceTabState & { tab: T; render: (tab: T, state: WorkspaceTabState) => React.ReactNode }
+
+/**
+ * The app's content of a tab. It is drawn again only when the app's tree, its `renderTab` or the tab's state change, not
+ * when the area itself moves (a divider being dragged, a tab being dragged, the ghost): the content of every tab is on the
+ * page, and a terminal should not be asked to draw at the rate of the pointer.
+ */
+function TabContentImpl<T extends WorkspaceTab>({ tab, render, active, visible, focused, groupId }: TabContentProps<T>) {
+  return <>{render(tab, { active, visible, focused, groupId })}</>
+}
+const TabContent = React.memo(TabContentImpl) as typeof TabContentImpl
+
 /** The box of a node as the variables the classes read: a percent of the area. */
 function place(rect: WorkspaceRect): React.CSSProperties {
   const pc = (n: number) => `${Math.round(n * 1e6) / 1e4}%`
@@ -196,6 +208,13 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
 
   // After a change made with a key the person is still on the tab: the button comes back with it.
   const refocus = React.useRef<string | null>(null)
+  /** The tab to put the focus on after the change that is being made. It lasts for the event: a change the app does not make leaves the focus alone. */
+  const wantFocus = (id: string | null) => {
+    refocus.current = id
+    setTimeout(() => {
+      if (refocus.current === id) refocus.current = null
+    }, 0)
+  }
   React.useEffect(() => {
     const id = refocus.current
     if (id === null) return
@@ -211,13 +230,16 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
 
   const closeTab = (tab: T, group: WorkspaceTabs<T>, byKey = false) => {
     if (tab.closable === false) return
+    if (onCloseTab) {
+      onCloseTab(tab, group.id)
+      return
+    }
     if (byKey) {
       // The tab that takes its place has the focus.
       const at = group.tabs.findIndex((t) => t.id === tab.id)
-      refocus.current = (group.tabs[at + 1] ?? group.tabs[at - 1])?.id ?? null
+      wantFocus((group.tabs[at + 1] ?? group.tabs[at - 1])?.id ?? null)
     }
-    if (onCloseTab) onCloseTab(tab, group.id)
-    else changed(closeWorkspaceTab(latest.current.normal, tab.id))
+    changed(closeWorkspaceTab(latest.current.normal, tab.id))
   }
 
   const placeOf = (groupId: string) => workspaceGroups(latest.current.normal).findIndex((g) => g.id === groupId) + 1
@@ -229,7 +251,7 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
     if (to < 0 || to >= group.tabs.length) return
     const next = moveWorkspaceTab(latest.current.normal, tab.id, { groupId: group.id, index: step < 0 ? to : to + 1 })
     if (next === latest.current.normal) return
-    refocus.current = tab.id
+    wantFocus(tab.id)
     setSaid(words.reordered(tab.title, to + 1, group.tabs.length))
     changed(next)
   }
@@ -244,7 +266,7 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
     if (!drop) return
     const next = moveWorkspaceTab(now, tab.id, drop)
     if (next === now) return
-    refocus.current = tab.id
+    wantFocus(tab.id)
     const home = findWorkspaceTab(next, tab.id)
     if (home) setSaid(words.moved(tab.title, workspaceGroups(next).findIndex((g) => g.id === home.group.id) + 1))
     changed(next)
@@ -340,7 +362,15 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
 
   const gesture = React.useRef<Gesture | null>(null)
   const stop = React.useRef<(() => void) | null>(null)
-  React.useEffect(() => () => stop.current?.(), [])
+  // The listener that swallows the click after a drag, until it has or its moment has passed.
+  const unswallow = React.useRef<(() => void) | null>(null)
+  React.useEffect(
+    () => () => {
+      stop.current?.()
+      unswallow.current?.()
+    },
+    [],
+  )
 
   const startDrag = (event: React.PointerEvent<HTMLElement>, tab: T, group: WorkspaceTabs<T>) => {
     // A pen and a mouse drag; a finger scrolls the strip (the tab's menu does the rest).
@@ -377,12 +407,17 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
         click.preventDefault()
       }
       window.addEventListener("click", swallow, { capture: true, once: true })
-      setTimeout(() => window.removeEventListener("click", swallow, true), 0)
+      const lift = () => {
+        window.removeEventListener("click", swallow, true)
+        unswallow.current = null
+      }
+      unswallow.current = lift
+      setTimeout(lift, 0)
       if (!drop) return
       const now = latest.current.normal
       const next = moveWorkspaceTab(now, g.tabId, drop)
       if (next === now) return
-      refocus.current = g.tabId
+      wantFocus(g.tabId)
       const home = findWorkspaceTab(next, g.tabId)
       if (home && home.group.id !== g.groupId) setSaid(words.moved(g.title, workspaceGroups(next).findIndex((x) => x.id === home.group.id) + 1))
       changed(next)
@@ -627,7 +662,6 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
           const isActive = group.activeId === tab.id
           if (keepMounted === "active" && !isActive) return null
           const visible = isActive && (maximized === null || maximized === group.id)
-          const state: WorkspaceTabState = { active: isActive, visible, focused: focused === group.id, groupId: group.id }
           return (
             <div
               key={id}
@@ -645,7 +679,7 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
                 onFocusCapture={() => focusGroup(group.id)}
                 className="pointer-events-auto size-full min-h-0 min-w-0 overflow-auto bg-paper"
               >
-                {renderTab(tab, state)}
+                <TabContent tab={tab} render={renderTab} active={isActive} visible={visible} focused={focused === group.id} groupId={group.id} />
               </div>
             </div>
           )
