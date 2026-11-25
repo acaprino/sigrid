@@ -123,6 +123,16 @@ export interface ThemeDef {
    */
   readonly statusStrip?: 'slim' | 'tall' | undefined
   /**
+   * What the page's ground is made of. Absent, `solid` or any other value: every surface is opaque. `glass`: the
+   * window's own material (Windows' acrylic, which the host gives a transparent window) shows through the ground of
+   * the page and of the frame (the title bar, the bars, a sidebar in the content's colours); the work area, a sidebar
+   * with colours of its own and everything that opens over the page stay opaque. The toolkit draws no blur. The engine
+   * writes `data-material="glass"` on the root and the ground as `--glass-ground`, as opaque as its text needs (see
+   * `glassGround` in theme-engine.ts). It is drawn only when the attribute is on the document's root, and opaque again
+   * under forced colours and where the person asked for less transparency.
+   */
+  readonly material?: 'solid' | 'glass' | undefined
+  /**
    * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
    * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
    */

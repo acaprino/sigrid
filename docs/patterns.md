@@ -66,7 +66,8 @@ The frame has two forms with the same regions and the same steps; `frame` choose
   its top and, where a sidebar lies beside it, at its start, with the large corner there. The ground is the sidebar's
   surface, so a light sidebar and the ground are one; a theme whose sidebar has colours of its own (a dark or solid
   column) keeps its column, and the ground is the lanes' surface. Where the sidebar is a drawer, or there is none, the
-  sheet has no corner. No glass: the toolkit draws no blur.
+  sheet has no corner. The toolkit draws no blur: under a theme with `material: 'glass'` the ground lets the window's
+  own material through, and the sheet stays opaque (`docs/component-inventory.md`).
 
 Recommended for the sheet, as Xiox does it: the views as tabs in the bar, «Commands» with its shortcut before the
 window's buttons (`ToolbarButton variant="outline"` with `shortcut="Ctrl K"`), the status row at the head of the

@@ -2193,7 +2193,7 @@ function BoldTabsSample({ animated }: { animated: boolean }) {
 /** The looks a theme asks for by name (2026-11-24), each drawn under its own attribute so it shows whatever Look says. */
 function ThemeHooks({ scheme, animated }: { scheme: ThemeScheme; animated: boolean }) {
   return (
-    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page. Also bold tabs (tabs), a tall status strip (statusStrip) and the system's font, each with its switch in «Look»; the strip is seen in the frames of «Layout patterns».">
+    <Section id="theme-hooks" title="Looks a theme asks for" note="Four looks that are off unless a theme asks for them by name: boxed keys (keys), a status tone on a badge, strong control borders (controls) and a control border the palette states (surfaces.input). «Look» turns the first and the third on for the whole page. Also bold tabs (tabs), a tall status strip (statusStrip) and the system's font, each with its switch in «Look»; the strip is seen in the frames of «Layout patterns». «Glass» (material) lets what is behind the window show through the ground of this page's frame: in a browser tab that is the browser's canvas, in a transparent window the system's material.">
       <Row label="bold tabs">
         <BoldTabsSample animated={animated} />
       </Row>
@@ -3515,6 +3515,8 @@ function App() {
   const [boldTabs, setBoldTabs] = React.useState(params.get('tabs') === 'bold')
   const [tallStrip, setTallStrip] = React.useState(params.get('strip') === 'tall')
   const [systemFont, setSystemFont] = React.useState(params.get('font') === 'system')
+  // `?material=glass`: the ground lets the window's own material through (`ThemeDef.material`). In a browser tab that is the browser's canvas.
+  const [glass, setGlass] = React.useState(params.get('material') === 'glass')
   const [tone, setTone] = React.useState(() => {
     const initial = params.get('tone')
     return presetTone(initial === 'calm' || initial === 'balanced' ? initial : 'vivid')
@@ -3548,7 +3550,7 @@ function App() {
     history.replaceState(null, '', `${location.search}${nav.id ? `#${nav.id}` : ''}`)
   }, [nav])
   React.useLayoutEffect(() => {
-    const asked = { shape, keys: boxedKeys ? 'boxed' : 'plain', controls: strongControls ? 'strong' : 'divider', tabs: boldTabs ? 'bold' : 'plain', statusStrip: tallStrip ? 'tall' : 'slim' } as const
+    const asked = { shape, keys: boxedKeys ? 'boxed' : 'plain', controls: strongControls ? 'strong' : 'divider', tabs: boldTabs ? 'bold' : 'plain', statusStrip: tallStrip ? 'tall' : 'slim', material: glass ? 'glass' : 'solid' } as const
     applyTheme(document.documentElement, yours ? { theme: { ...colorTheme({ id: YOURS, label: 'Your colours', color, spot }), ...asked }, scheme, tone: AS_CHOSEN } : { theme: { ...themeById(theme), ...asked }, scheme, tone })
     const next = new URLSearchParams(location.search)
     next.set('theme', theme)
@@ -3563,6 +3565,8 @@ function App() {
     else next.delete('tabs')
     if (tallStrip) next.set('strip', 'tall')
     else next.delete('strip')
+    if (glass) next.set('material', 'glass')
+    else next.delete('material')
     if (yours) {
       next.set('color', color.slice(1))
       next.set('spot', spot === null ? 'none' : spot.replace('#', ''))
@@ -3571,7 +3575,7 @@ function App() {
       next.delete('spot')
     }
     history.replaceState(null, '', `?${next.toString()}${location.hash}`)
-  }, [theme, scheme, tone, yours, color, spot, shape, boxedKeys, strongControls, boldTabs, tallStrip])
+  }, [theme, scheme, tone, yours, color, spot, shape, boxedKeys, strongControls, boldTabs, tallStrip, glass])
   React.useLayoutEffect(() => {
     applyFont(document.documentElement, systemFont ? 'system' : DEFAULT_FONT)
     const next = new URLSearchParams(location.search)
@@ -3761,6 +3765,9 @@ function App() {
                   </Switch>
                   <Switch checked={systemFont} onCheckedChange={setSystemFont} animated={animated}>
                     System font
+                  </Switch>
+                  <Switch checked={glass} onCheckedChange={setGlass} animated={animated}>
+                    Glass
                   </Switch>
                   <LookField label="Density">
                     <ToggleGroup aria-label="Density" value={density} onValueChange={(v) => isDensityId(v) && setDensity(v)} className="self-start">

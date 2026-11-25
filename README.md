@@ -130,7 +130,11 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and
    the system's monospace); nothing is shipped for it and it is never the default. A curated palette can also state
    its muted text (`surfaces.<scheme>.mute`, held at 4.5:1 by the engine), and a `ToolbarButton variant="quiet"` is
-   an outline with the muted ink that keeps its hairline under strong control borders.
+   an outline with the muted ink that keeps its hairline under strong control borders. One more on 2026-11-25:
+   `material: 'glass'` lets the window's own material (Windows' acrylic behind a transparent window, which the host
+   gives) show through the ground of the page and of the frame, as thin as the engine measures its text allows; the
+   work area and what opens over the page stay opaque, the toolkit draws no blur, and with forced colours or less
+   transparency asked every surface is opaque again (`docs/component-inventory.md`).
 
 Third-party provenance is in `THIRD_PARTY.md`, checked by `test/provenance.test.ts`.
 

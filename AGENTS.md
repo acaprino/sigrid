@@ -91,7 +91,8 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   engine through the tokens. A colour the user gave to a thing (a project, a label) is an 8px dot, never a fill (R10).
 - Radii 2, 4 and 6px through the tokens (a theme may choose the rounder `soft` 4/6/10 or `round` 6/10/14); a 4px spacing grid; text sizes 12, 13, 14, 16, 18, 20 and 24px; weights
   400, 500 and 600; icons 16 or 14px (R7).
-- No gradient, no blur or glass, no emoji in the interface, no decorative icon, no animation that loops.
+- No gradient, no blur, no emoji in the interface, no decorative icon, no animation that loops. Glass is only a
+  theme's `material: 'glass'` (the window's own material behind the page's ground), never drawn by a part.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
   with it off. How it moves is the app's choice, once for the whole page: the curve (`ease-in-out` at first, or
   `ease`, `ease-in`, `ease-out`, `fluent`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and

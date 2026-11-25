@@ -155,8 +155,8 @@ export interface ThemeTokens {
   readonly shape: Readonly<Record<string, string>>
   /**
    * The root attributes that state the choices that are not numbers: `data-sidebar` always; `data-keys="boxed"`,
-   * `data-controls="strong"`, `data-tabs="bold"` and `data-status-strip="tall"` only when the theme asks for them
-   * (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`).
+   * `data-controls="strong"`, `data-tabs="bold"`, `data-status-strip="tall"` and `data-material="glass"` only when
+   * the theme asks for them (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`, `material`).
    */
   readonly attributes: Readonly<Record<string, string>>
   /** The roles that the computation had to move to reach the contrast. */
@@ -635,7 +635,7 @@ function withOwn(t: ThemeDef, own: OwnTheme): ThemeDef {
   return {
     id: t.id, label: t.label, hue: lightPaper.h, chroma: lightPaper.C, accent: [c, a.h], sidebar, palette: t.palette, ...(second ? { second } : {}),
     // How keys and control borders are drawn is the app's choice, not a colour: it stays with the user's own page.
-    ...(t.keys ? { keys: t.keys } : {}), ...(t.controls ? { controls: t.controls } : {}), ...(t.tabs ? { tabs: t.tabs } : {}), ...(t.statusStrip ? { statusStrip: t.statusStrip } : {}),
+    ...(t.keys ? { keys: t.keys } : {}), ...(t.controls ? { controls: t.controls } : {}), ...(t.tabs ? { tabs: t.tabs } : {}), ...(t.statusStrip ? { statusStrip: t.statusStrip } : {}), ...(t.material ? { material: t.material } : {}),
     surfaces: { light: surfacesFrom(lightPaper, 'light', color), dark: surfacesFrom(darkPaper, 'dark', color) },
   }
 }
@@ -849,5 +849,54 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   if (theme.controls === 'strong') attributes['data-controls'] = 'strong'
   if (theme.tabs === 'bold') attributes['data-tabs'] = 'bold'
   if (theme.statusStrip === 'tall') attributes['data-status-strip'] = 'tall'
-  return { theme: theme.id, scheme, colors, shape: shapeOf(theme, scheme), attributes, corrected: [...corrected] }
+  const shape = shapeOf(theme, scheme)
+  if (theme.material === 'glass') {
+    attributes['data-material'] = 'glass'
+    shape[GLASS_GROUND] = glassGround(colors, backgrounds)
+  }
+  return { theme: theme.id, scheme, colors, shape, attributes, corrected: [...corrected] }
+}
+
+/* ———— Glass ———— */
+
+/** The variable that carries the ground of a glass page (`ThemeDef.material`): written only under glass. */
+export const GLASS_GROUND = '--glass-ground'
+/** The share of the desktop a window's acrylic lets through, in the worst case the glass is measured for. */
+export const ACRYLIC_KEEPS = 0.5
+/** The text colours that may sit on the ground of the frame: each holds 4.5:1 there. */
+export const GLASS_TEXT = ['ink', 'ink-soft', 'ink-mute', 'accent', 'destructive', 'success', 'warning', 'info'] as const
+
+/**
+ * What is behind a glass page at its worst: a white desktop and a black one, each through an acrylic that keeps
+ * `ACRYLIC_KEEPS` of it and gives the rest its own colour, the theme's paper.
+ */
+export function glassBackdrops(paper: string): readonly string[] {
+  return ['#ffffff', '#000000'].map((desktop) => over(desktop, paper, ACRYLIC_KEEPS))
+}
+
+/** The colours that must hold on the ground of a glass page, each with its ratio: the text, then the control border and the user's colours (marks, 3:1). */
+export function glassHeld(colors: Readonly<Record<string, string>>): readonly (readonly [name: string, min: number])[] {
+  return [...GLASS_TEXT.map((name) => [name, 4.5] as const), ['input', 3] as const, ...Object.keys(colors).filter((name) => name.startsWith('mark-')).map((name) => [name, 3] as const)]
+}
+
+/**
+ * The ground of a glass page, as `#rrggbbaa`: one of the theme's backgrounds (`grounds`), as thin as it can be while
+ * every colour of `glassHeld` keeps its ratio on it over both of `glassBackdrops`. A colour that falls short on the
+ * opaque background itself (a theme at the end of its scale) is held where it was: glass never lowers it. Measured on
+ * the final values, like every contrast of the engine; the background that can be thinnest is taken.
+ */
+export function glassGround(colors: Readonly<Record<string, string>>, grounds: readonly string[]): string {
+  const backdrops = glassBackdrops(colors['paper']!)
+  const held = glassHeld(colors).map(([name, min]) => [colors[name]!, min] as const)
+  let best = { tint: grounds[0]!, byte: 255 }
+  for (const tint of grounds) {
+    const holds = (byte: number) => backdrops.every((backdrop) => {
+      const ground = over(tint, backdrop, byte / 255)
+      return held.every(([color, min]) => contrast(color, ground) >= Math.min(min, contrast(color, tint)))
+    })
+    let byte = 255
+    while (byte > 0 && holds(byte - 1)) byte--
+    if (byte < best.byte) best = { tint, byte }
+  }
+  return best.tint + best.byte.toString(16).padStart(2, '0')
 }

@@ -550,6 +550,27 @@ bold tabs on the preset they were approved for.
 | Tall status strip | `ThemeDef.statusStrip: 'tall'` (the default is `slim`); `data-status-strip="tall"` on the root | The status strip of `AppShell` is 40px (44px with a finger) in place of a dense control's height, so a 20px badge is centred with room around it. Nothing else of the frame moves | None |
 | The system's font | `applyFont(el, 'system')`: `SYSTEM_FONT`, apart from `FONTS` (no list of fonts shows it), never the default | The interface is in the system's own font (Segoe UI on Windows), which has a 700; under `data-font="system"` the monospace of keys and code is the system's too (Cascadia Mono, then Consolas). No file is shipped or fetched | None |
 
+## Added on 2026-11-25: glass, a theme's material
+
+The owner asked for it on 2026-11-25: a glass effect each app turns on or off. Off unless asked; without it every
+surface is opaque as before. `test/glass.test.ts` holds it and prints what the engine measured (`[glass]` lines).
+
+| Look | What a theme writes | What changes, and only then | Rule it is an exception to |
+|---|---|---|---|
+| Glass | `ThemeDef.material: 'glass'` (the default is `solid`); the engine writes `data-material="glass"` on the root and the ground as `--glass-ground` (`#rrggbbaa`), and the next theme takes both away | The page (`html`) paints nothing and `body` is the ground; the frame paints no ground of its own, so the title bar, the tabs, the bottom bar and a sidebar in the content's colours sit on that one ground, through which the window's own material shows. The work area of `AppShell` (the sheet, or the content with its status strip, inspector, actions and footer) is the paper, opaque: parts inside it paint the paper to cover what scrolls under them. A sidebar with colours of its own, and everything that opens over the page (menus, dialogs, popovers, sheets, the sidebar as a drawer, notices), stay opaque. Only on the document's root; a frame inside a work area is a sample and draws as without glass | The must-avoid list banned glass; it now bans blur, and glass without `material`. The toolkit still draws no blur |
+
+- **How thin the ground is** is computed, not chosen (`glassGround` in `src/theme-engine.ts`): one of the theme's own
+  backgrounds, as thin as it can be while every text colour that may sit on it (`ink`, `ink-soft`, `ink-mute`, the
+  accent, the red and the status colours) keeps 4.5:1 and the control border and the user's colours keep 3:1, over the
+  worst backdrops: a white desktop and a black one behind an acrylic that keeps half of it and gives the rest the
+  theme's paper. With the muted ink at 4.5:1 that leaves a ground about 85 to 90% opaque: the glass is a trace, as in
+  the look it comes from. A colour that falls short on the opaque background itself is held where it was.
+- **The host** gives the window: transparent, with the system's material behind it and that material's colour the
+  theme's paper (the value `applyTheme` writes in `<meta name="theme-color">`). In a browser tab an app can still set
+  the choice: what shows through is the browser's canvas.
+- **Opaque again** with forced colours and with `prefers-reduced-transparency: reduce`, by the stylesheet alone; an
+  engine that does not know that query draws opaque too.
+
 ## Added on 2026-11-24: four details of those looks
 
 Each is off unless asked, or a new choice of a prop; `test/theme-details.test.tsx` holds them and measures the preset.
