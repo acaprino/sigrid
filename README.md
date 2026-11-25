@@ -10,7 +10,7 @@ Sigrid is the UI system shared by a suite of React apps, ADHD first, in four lev
 3. **Assemblies** (`@acaprino/sigrid/assemblies`). Components that do a whole function together, with a state of
    their own: the command palette, a conversation and its field, a deck decided one card at a time, a tree, the
    attachments and their viewer, the look settings. Those that rest on a library an app may not need have entries of
-   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
+   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`, `/terminal`, `/code`), so an app loads only what it uses.
 4. **Applications, as examples** (`agents/examples`, and the showcase). Whole apps made of the three levels above and
    nothing else: a to-do app, a mail client, a workspace, a screen that fits. They are there to start from and to
    read; no app is part of the package's code.
@@ -673,7 +673,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
-- Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+- Seven entries of their own, each on a library that an app loads only if it imports the entry (the versions are
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
     value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
@@ -900,6 +900,63 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
+  - `./terminal`: `Terminal`, on xterm.js (and its fit addon), and `OverviewStrip`, the lines of a terminal in miniature.
+    xterm's own stylesheet is carried by the part and put in the page once, so the app imports no CSS. The colours are
+    read from the tokens as they resolve where the terminal is (xterm cannot take `var()`): the ground (`paper`), the
+    ink, the cursor (the accent), the selection (`selected`), black and white (the page's `paper-2` and `ink-soft`, so a
+    program that writes black on a coloured cell or white text is readable in either scheme) and the six colours of ANSI
+    from the twelve steps of a tint (`hueScale`: red, green, amber for yellow, blue, magenta and teal for cyan, at the
+    text step, so each holds 4.5:1 on the ground; bright is the pale step in dark and the livelier one in light; `tone`
+    moves them, Vivid by default); all of it is read again when the page's look changes (the root's variables and its
+    theme, scheme, density and font attributes, or the system's scheme), and the font is `--font-mono` at the size of
+    code (`--text-xs`). `readOnly` takes no input and draws no cursor; `transparent` leaves the ground clear for a
+    glass window. The program is the app's: `ref.write(data, done)`, `focus`, `blur`, `fit()` (at once; the size, or
+    null while the box has none), `clear`, `reset`, `scrollToBottom`, `scrollToLine`, `scrollLines`, `getSelection`,
+    `select`, `clearSelection`, `paste`, `size`, `buffer` (the lines, live: `length`, `viewportY`, `rows`, `cols`,
+    `line(i)`) and `terminal` (xterm's own, for what the toolkit does not cover). `onData(data)` is what the person typed
+    or pasted; `onResize(cols, rows)` comes at the first fit and at every change (never twice for the same size), so
+    the app can size the pseudo-terminal. The box is fitted by itself (a `ResizeObserver`, once a frame). A `ref` is
+    read, a callback is never a reason to make the terminal again: they are read when they are needed.
+    - Keys. The terminal keeps every key that can go to the program and stops it there, even with the screen reader's
+      view on, which would let it through to the page. The keys the app keeps for its commands are named by
+      `appKeys(event)`: for those the terminal does nothing and does not stop the key, so it reaches the document and
+      `CommandsProvider` runs it. Do not name the terminal in `ownKeysIn` for that: `ownKeysIn` makes the app's commands
+      stand aside there, those of `appKeys` too. The paste keys (Ctrl or Command V, Shift Insert) are always the
+      browser's, so the text comes as a paste and not as a key.
+    - Links. An address of the text (`findWebLinks`: `http://` and `https://`, without the punctuation of the
+      sentence, and an address cut by the right edge is one link) or a hyperlink the program wrote (OSC 8, of any
+      scheme) calls `onLinkOpen(target, event)` on a press of the main button; the app decides what it opens.
+      `onLinkHover(target | null)` is where the app shows what the link really opens. `linkFinder(line)` replaces
+      what is a link (a local file, an issue number): it gives `{ start, end, target }` for each, in characters.
+    - `onBufferChange(buffer)` comes when output was parsed, the view scrolled or the terminal was resized, for what
+      follows the lines. `OverviewStrip` is a scroll bar by another face: `count` and `extent(index)` (the bar of a
+      line, `[start, end]` in cells, or null for a blank one; `textExtent(text)` makes one from text) say the lines,
+      `viewport={{ start, size }}` the frame, `marks` the lines to see at a glance (`{ line, tone }`, the status tones or
+      the accent), `archive={{ count, extent }}` older lines kept elsewhere (dimmer, at most 30% of the strip, and a
+      press on it is `onArchiveSeek(line)`), `columns` how many cells fill the width (80), `revision` changes when
+      the text did. `onSeek(line)` is the first line in sight that a press, a drag (the frame is held where it was
+      taken, with no jump), the wheel (three lines) or a key asks for. It is a `scrollbar` for screen readers and the
+      keyboard (Up, Down, Page Up, Page Down, Home, End) with its position said in words (`words.terminal`). It
+      paints at most every 200ms. `overviewGeometry`, `lineAt`, `holdAt` and `archivedLineAt` are its pure geometry.
+  - `./code`: `CodeView`, on CodeMirror 6, read-only or editable. `value` in, `onChange(value)` out at every change the
+    person makes; a `value` that is not the one last given back (another file, a visual edit) replaces the text and is
+    not a step of the undo. `fileName` (or a path) picks the language, `language` says it when the name does not; the
+    language is loaded when it is first shown, each its own chunk (CSS, HTML, JavaScript, JSX, TypeScript, TSX, JSON,
+    Markdown, Python, Rust; `codeLanguageOf` gives a name's language and its label for a status line, `loadCodeLanguage`
+    its CodeMirror support); a name with no language is plain text, and `extensions` carries the app's own (YAML, a key
+    map) into the editor. `docId` (the file name by default) keeps a state for each text while the view lives: going back
+    to a file brings back its undo steps and its selection, unless its text changed while it was away; `ref.forget(id)`
+    lets one go. `readOnly` can be selected and searched (Ctrl F) and says it is read-only to screen readers;
+    `lineNumbers` (with the fold arrows, on by default), `wrap` (prose wraps and code scrolls by default), `tabSize`,
+    `tabIndents` (Tab moves the focus on, as on every page, unless it is set), `phrases` (the words of CodeMirror's search
+    panel, by its phrases), `autoFocus`, and a `ref` with `focus`, `forget` and `view` (CodeMirror's own). The theme is
+    made from the tokens as they resolve where the view is (`codeColors`, `codeTheme`): the ground, the ink, the muted ink
+    for the gutter, the comments and the punctuation, the lines, the selection (`selected`), the accent for the caret
+    and for functions and tags, and the status colours for the syntax (info for keywords, success for strings, warning
+    for numbers and meta, destructive for what is wrong); it is made again when the page's look changes (the scheme
+    included: CodeMirror is told whether it is dark). The font and the size are the page's, written as variables, so a
+    font or a density change moves the code. The focus ring is inside the edge.
+
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
   import { VirtualList } from '@acaprino/sigrid/virtual'
@@ -964,6 +1021,22 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
       ...(part.holds ? { open: open.includes(part.id), hiddenCount: open.includes(part.id) ? undefined : part.holds } : {}),
       group: part.parent && open.includes(part.parent) ? part.parent : undefined }))}
     edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, points: layout.edges[call.id], path: flow.has(call.id) }))} />
+  // The terminal and the code view (no CSS to import: the terminal brings xterm's)
+  import { Terminal, OverviewStrip, textExtent, type TerminalHandle, type TerminalBufferView } from '@acaprino/sigrid/terminal'
+  import { CodeView } from '@acaprino/sigrid/code'
+  const shell = useRef<TerminalHandle>(null)
+  const [lines, setLines] = useState<TerminalBufferView | null>(null)
+  <div className="flex h-96">
+    <Terminal ref={shell} aria-label="Shell" className="min-w-0 flex-1"
+      onData={(data) => session.write(data)} onResize={(cols, rows) => session.resize(cols, rows)}
+      onLinkOpen={(target) => openInBrowser(target)} appKeys={(event) => event.ctrlKey && event.shiftKey && event.key === 'T'}
+      onBufferChange={setLines} />
+    {lines ? <OverviewStrip count={lines.length} extent={(i) => textExtent(lines.line(i))}
+      viewport={{ start: lines.viewportY, size: lines.rows }} onSeek={(line) => shell.current?.scrollToLine(line)} /> : null}
+  </div>
+  // session.onOutput((bytes) => shell.current?.write(bytes))
+  <CodeView value={text} onChange={setText} fileName="src/main.rs" aria-label="Source" className="h-full" />
+  <CodeView value={text} fileName={file.path} readOnly />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and

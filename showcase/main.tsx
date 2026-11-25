@@ -27,6 +27,7 @@ import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
+import { CodeViews, Terminals } from './terminal-code'
 import { LayoutParts } from './layout-parts'
 import { type DialogWidth, type SheetWidth } from '../src/primitives'
 import { ContentSplit, SplitPane } from '../src/layout'
@@ -179,6 +180,8 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "reorder": "ReorderList",
   "rich-text": "RichTextField",
   "graph": "GraphCanvas",
+  "terminal": "Terminal and OverviewStrip",
+  "code": "CodeView",
   "motion-feel": "The feel: curve and pace",
   "motion-open": "What opens in place",
   "motion-surfaces": "Surfaces: in and out",
@@ -198,7 +201,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'theme-hooks', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
-  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
+  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph', 'terminal', 'code'] },
   { label: 'Motion', icon: 'animations', ids: ['motion-feel', 'motion-open', 'motion-surfaces', 'motion-choices', 'hover', 'motion-pieces'] },
 ]
 
@@ -3746,6 +3749,8 @@ function App() {
     reorder: <Reorders animated={animated} />,
     'rich-text': <RichTexts />,
     graph: <Graphs />,
+    terminal: <Terminals />,
+    code: <CodeViews />,
     'motion-feel': <MotionFeelSection animated={animated} ease={ease} onEase={setEase} pace={pace} onPace={setPace} />,
     'motion-open': <MotionOpens animated={animated} />,
     'motion-surfaces': <MotionSurfaces animated={animated} />,
