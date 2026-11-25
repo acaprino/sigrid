@@ -42,8 +42,8 @@
 // the rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn. The
 // row with the focus stays in the page when it is scrolled out of sight, while the focus is in the tree, so the keys do not
 // fall to the page after a turn of the wheel.
-// The rows are all as tall as the first one, which is read where it is drawn. The box needs a height (`className`). This
-// is its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.
+// The rows are all as tall as the first one, which is read where it is drawn. The box needs a height: `fill` takes the one of the region that holds it
+// (a pane, a `Panel`'s body), so an app writes no class for it. This is its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.
 // It is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and
 // the two share no code.
 import * as React from "react"
@@ -105,8 +105,10 @@ export type TreeProps = {
   onKeyDown?: ((event: React.KeyboardEvent<HTMLElement>, id: string) => void) | undefined
   /** The first letters typed reach a row by its name. Default on; `false` leaves the letters to the app (`onKeyDown`). */
   typeahead?: boolean | undefined
-  /** Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`). */
+  /** Only the rows in sight are in the page: for thousands of rows. The box needs a height: `fill`, or `className`. */
   virtual?: boolean | undefined
+  /** As tall as the region that holds it, which gives it its height (the content of the frame, a pane, a `Panel`'s body, a `Column fill`): the rows scroll inside it, and a field of the filter keeps its place above them. The height `virtual` needs. */
+  fill?: boolean | undefined
   /** The branches the person opened, by id. With it they are the app's: pass the list `onExpandedChange` gives. The branches the filter opens are not in it. A branch still to load stays closed until the person opens it. */
   expanded?: readonly string[] | undefined
   /** The branches open at first, when they are the tree's own. */
@@ -426,6 +428,7 @@ function Tree({
   onKeyDown,
   typeahead = true,
   virtual = false,
+  fill = false,
   expanded,
   defaultExpanded,
   onExpandedChange,
@@ -719,6 +722,7 @@ function Tree({
   return (
     <TreeViewPrimitive.Root
       data-slot="tree"
+      data-fill={fill || undefined}
       collection={collection}
       selectedValue={chosen === null ? [] : [chosen]}
       expandedValue={view}
@@ -766,7 +770,7 @@ function Tree({
         if (followFocus) choose(id)
       }}
       translations={{ treeLabel: label }}
-      className={cn("flex min-h-0 flex-col gap-2", className)}
+      className={cn("flex min-h-0 flex-col gap-2", fill && "h-full flex-1", className)}
     >
       {/* The tree's name: Ark names the tree by its label. Hidden, it is read as the name and nowhere else. */}
       <TreeViewPrimitive.Label asChild>

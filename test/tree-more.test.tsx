@@ -257,6 +257,14 @@ describe('virtual', () => {
     expect(window_().style.paddingBottom).toBe(`${(5000 - drawn().length) * step_}px`)
   })
 
+  test('`fill` makes the tree as tall as its region, so virtual needs no class of the app\'s', () => {
+    render(<Tree aria-label="Files" nodes={MANY} virtual fill />)
+    const root = document.querySelector<HTMLElement>('[data-slot="tree"]')!
+    expect(root.hasAttribute('data-fill')).toBe(true)
+    expect(root.className).toContain('h-full')
+    expect(root.className).toContain('flex-1')
+  })
+
   test('scrolling draws the rows then in sight', async () => {
     layOut()
     render(<Tree aria-label="Files" nodes={MANY} virtual />)
