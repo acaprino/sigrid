@@ -14,11 +14,13 @@
 //   the nearest group in a direction, so the drawing, the drop targets and the keyboard read one source.
 import type { IconName } from '../icons'
 
-/** A tab: what its title says, an icon if it has one, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need). */
+/** A tab: what its title says, an icon if it has one, a colour if the person gave one to what it holds, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need). */
 export type WorkspaceTab = {
   id: string
   title: string
   icon?: IconName | undefined
+  /** A colour the person gave to what the tab holds (a thread, a project), one of the palette's (`COLORS`): a `Dot` before the title, so the tabs of one thing are told apart in the panes they share. */
+  color?: string | undefined
   closable?: boolean | undefined
 }
 

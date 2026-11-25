@@ -9149,7 +9149,7 @@
       },
       {
        "name": "WorkspaceTab",
-       "doc": "A tab: what its title says, an icon if it has one, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need).",
+       "doc": "A tab: what its title says, an icon if it has one, a colour if the person gave one to what it holds, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need).",
        "fields": [
         {
          "name": "id",
@@ -9164,6 +9164,11 @@
         {
          "name": "icon",
          "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…"
+        },
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "A colour the person gave to what the tab holds (a thread, a project), one of the palette's (`COLORS`): a `Dot` before the title, so the tabs of one thing are told apart in the panes they share."
         },
         {
          "name": "closable",
