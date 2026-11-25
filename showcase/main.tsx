@@ -1561,6 +1561,23 @@ const TREE_FILES: readonly TreeNode[] = [
   { id: 'README.md', name: 'README.md', icon: 'file', meta: '30 KB' },
 ]
 
+/** The same files with one that cannot be touched, for the tree that follows the focus. */
+const TREE_FILES_DISABLED: readonly TreeNode[] = [
+  { id: 'notes.md', name: 'notes.md', icon: 'file', meta: '2 KB' },
+  { id: 'plan.md', name: 'plan.md', icon: 'file', meta: '5 KB' },
+  { id: 'secret.env', name: 'secret.env', icon: 'file', meta: '1 KB', disabled: true },
+  { id: 'report.md', name: 'report.md', icon: 'file', meta: '12 KB' },
+]
+
+/** Five thousand files in fifty folders of a hundred, for the tree that draws only the rows in sight. */
+const TREE_MANY: readonly TreeNode[] = Array.from({ length: 50 }, (_, folder): TreeNode => ({
+  id: `folder-${folder}`,
+  name: `folder ${folder + 1}`,
+  icon: 'folder',
+  openIcon: 'folderOpen',
+  children: Array.from({ length: 100 }, (_, file): TreeNode => ({ id: `folder-${folder}/file-${file}`, name: `file ${folder + 1}.${file + 1}`, icon: 'file' })),
+}))
+
 /** An outline: no icons, and a count of what each part holds (R5). */
 const TREE_OUTLINE: readonly TreeNode[] = [
   { id: 'intro', name: 'Introduction', children: [{ id: 'intro/why', name: 'Why a toolkit' }, { id: 'intro/how', name: 'How to read it' }] },
@@ -1589,6 +1606,7 @@ const treeNodes = (list: readonly TreeNode[]): TreeNode[] => list.flatMap((node)
 function Trees({ animated }: { animated: boolean }) {
   const [chosen, setChosen] = React.useState<string | null>('src/components/tree.tsx')
   const [path, setPath] = React.useState('src/comp')
+  const [opened, setOpened] = React.useState<string | null>(null)
   const load = React.useMemo(remoteRows, [])
   const finds = path.trim() === '' ? null : treeNodes(TREE_FILES).filter((node) => byPath(node, path)).length
   return (
@@ -1607,6 +1625,17 @@ function Trees({ animated }: { animated: boolean }) {
           <SearchField value={path} onValueChange={setPath} aria-label="Find a file by path" placeholder="Find a file by path" className="shrink-0" />
           <p role="status" className="px-(--row-pad) text-xs text-ink-mute tabular-nums">{finds === null ? 'Every file' : `${finds} found`}</p>
           <Tree aria-label="Sample files by path" nodes={TREE_FILES} query={path} match={byPath} loadChildren={load} animated={animated} className="min-h-0 flex-1" />
+        </div>
+      </Row>
+      <Row label="a list and its details: the choice follows the focus, Enter opens, a row is disabled">
+        <div data-sample="tree-follow" className="flex h-64 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Sample files that follow the focus" nodes={TREE_FILES_DISABLED} followFocus onOpen={(id) => setOpened(id)} animated={animated} className="h-full" />
+        </div>
+        <Text as="p" variant="note">{opened === null ? 'Press Enter on a file to open it' : `Opened ${opened}`}</Text>
+      </Row>
+      <Row label="five thousand rows (virtual)">
+        <div data-sample="tree-virtual" className="flex h-64 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Five thousand rows" nodes={TREE_MANY} virtual defaultExpanded={TREE_MANY.map((node) => node.id)} animated={animated} className="h-full" />
         </div>
       </Row>
       <Row label="no icons">
