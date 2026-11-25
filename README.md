@@ -176,6 +176,9 @@ went, or that a press was felt. What moves:
   reader's press; opened or closed by the app, it changes at once;
 - the `Inspector`, docked, slides in from the end and out to it, and the page takes the room it leaves; the panel
   of a tab the person changed to fades in;
+- the tint of the chosen row of a `Sidebar` or a `NavList` slides to the row chosen next, as one mark for the whole
+  navigation; the hover background of an `ItemList` follows the pointer from row to row, and `HoverFollow` gives the
+  same to a list whose rows are the app's own (it gets the element that holds them and a selector of a row);
 - the pill under a tab or a choice, the thumb of a switch, the mark of a check, a button under the finger, the
   notices, a card of a deck thrown or let go, the things of a graph;
 - the fill, the border and the text of a control ease to the state under the pointer.
