@@ -470,7 +470,7 @@ test('taken out of the page while open with the focus in it, the inspector gives
   expect(document.activeElement).toBe(button('First message'))
 })
 
-test('a closing inspector keeps what it showed while it slides out, then is the app's again; opened again it shows the new thing at once', () => {
+test('a closing inspector keeps what it showed while it slides out, then is the app’s again; opened again it shows the new thing at once', () => {
   vi.useFakeTimers()
   try {
     // An app that shows the chosen thing, and closes the inspector with nothing to show once nothing is chosen.
