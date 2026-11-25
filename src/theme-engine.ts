@@ -11,7 +11,7 @@
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import { DEFAULT_DARK_DEPTH, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
+import { DEFAULT_DARK_DEPTH, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type GlassLevels, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -852,7 +852,15 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const shape = shapeOf(theme, scheme)
   if (theme.material === 'glass') {
     attributes['data-material'] = 'glass'
-    shape[GLASS_GROUND] = glassGround(colors, backgrounds)
+    const levels = glassLevels(colors, backgrounds, theme.surfaces?.[scheme].glass)
+    shape[GLASS_GROUND] = levels.ground
+    if (levels.sheet) shape[GLASS_SHEET] = levels.sheet
+    if (levels.float) {
+      shape[GLASS_FLOAT] = levels.float
+      // What opens over the page takes its glass only under this attribute: without it no rule names a menu or a dialog.
+      attributes['data-float'] = 'glass'
+    }
+    for (const name of levels.raised) corrected.add(name)
   }
   return { theme: theme.id, scheme, colors, shape, attributes, corrected: [...corrected] }
 }
@@ -861,6 +869,12 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
 
 /** The variable that carries the ground of a glass page (`ThemeDef.material`): written only under glass. */
 export const GLASS_GROUND = '--glass-ground'
+/** The work area of a glass page, written only when the palette states it (`Surfaces.glass.sheet`). */
+export const GLASS_SHEET = '--glass-sheet'
+/** What opens over a glass page (menus, popovers, dialogs), written only when the palette states it (`Surfaces.glass.float`). */
+export const GLASS_FLOAT = '--glass-float'
+/** The variables only a glass theme writes: the ground always, the other two when stated. */
+export const GLASS_VARIABLES = [GLASS_GROUND, GLASS_SHEET, GLASS_FLOAT] as const
 /** The share of the desktop a window's acrylic lets through, in the worst case the glass is measured for. */
 export const ACRYLIC_KEEPS = 0.5
 /** The text colours that may sit on the ground of the frame: each holds 4.5:1 there. */
@@ -887,16 +901,86 @@ export function glassHeld(colors: Readonly<Record<string, string>>): readonly (r
  */
 export function glassGround(colors: Readonly<Record<string, string>>, grounds: readonly string[]): string {
   const backdrops = glassBackdrops(colors['paper']!)
-  const held = glassHeld(colors).map(([name, min]) => [colors[name]!, min] as const)
   let best = { tint: grounds[0]!, byte: 255 }
   for (const tint of grounds) {
-    const holds = (byte: number) => backdrops.every((backdrop) => {
-      const ground = over(tint, backdrop, byte / 255)
-      return held.every(([color, min]) => contrast(color, ground) >= Math.min(min, contrast(color, tint)))
-    })
+    const holds = glassHolds(colors, tint, backdrops)
     let byte = 255
     while (byte > 0 && holds(byte - 1)) byte--
     if (byte < best.byte) best = { tint, byte }
   }
   return best.tint + best.byte.toString(16).padStart(2, '0')
+}
+
+/** Whether every colour of `glassHeld` keeps its ratio on `tint` at an opacity (a byte), over each of `backdrops`. */
+function glassHolds(colors: Readonly<Record<string, string>>, tint: string, backdrops: readonly string[]): (byte: number) => boolean {
+  const held = glassHeld(colors).map(([name, min]) => [colors[name]!, Math.min(min, contrast(colors[name]!, tint))] as const)
+  return (byte) => backdrops.every((backdrop) => {
+    const ground = over(tint, backdrop, byte / 255)
+    return held.every(([color, min]) => contrast(color, ground) >= min)
+  })
+}
+
+/** A glass level a palette may state: `#rrggbbaa`. Anything else counts as absent. */
+export function isGlassColor(value: unknown): value is string {
+  return typeof value === 'string' && /^#[0-9a-f]{8}$/i.test(value)
+}
+
+/** A glass level (`#rrggbbaa`) drawn over each of `backdrops`: what is really behind the next surface, as `#rrggbb`. */
+export function glassOver(level: string, backdrops: readonly string[]): readonly string[] {
+  return backdrops.map((backdrop) => over(level.slice(0, 7), backdrop, parseInt(level.slice(7, 9), 16) / 255))
+}
+
+/**
+ * A level the palette states (`#rrggbbaa`), kept as stated when every colour of `glassHeld` keeps its ratio on it over
+ * each of `backdrops`; otherwise only its opacity is raised, a byte at a time, until they do. The colour never moves,
+ * and a colour that falls short on the opaque colour itself is held where it is there (as in `glassGround`).
+ */
+export function glassLevel(colors: Readonly<Record<string, string>>, stated: string, backdrops: readonly string[]): string {
+  const tint = stated.slice(0, 7).toLowerCase()
+  const holds = glassHolds(colors, tint, backdrops)
+  let byte = parseInt(stated.slice(7, 9), 16)
+  while (byte < 255 && !holds(byte)) byte++
+  return tint + byte.toString(16).padStart(2, '0')
+}
+
+/** What `glassLevels` gives: the three surfaces of a glass page, what is behind each at its worst, and what was raised. */
+export interface GlassResult {
+  /** The ground (`--glass-ground`): the palette's, or the computed one (`glassGround`). */
+  readonly ground: string
+  /** The work area (`--glass-sheet`): only when the palette states it. Absent: the paper, opaque. */
+  readonly sheet?: string
+  /** What opens over the page (`--glass-float`): only when the palette states it. Absent: opaque. */
+  readonly float?: string
+  /** The worst backdrops each surface was measured over. */
+  readonly behind: { readonly ground: readonly string[]; readonly sheet: readonly string[]; readonly float: readonly string[] }
+  /** The stated levels whose opacity was raised: `glass-ground`, `glass-sheet`, `glass-float`. The engine adds them to `corrected`. */
+  readonly raised: readonly string[]
+}
+
+/**
+ * The surfaces of a glass page. With nothing stated (`Surfaces.glass` absent): the computed ground, and the work area
+ * and what opens over the page opaque. A stated level is kept, or raised in opacity only (`glassLevel`), over the worst
+ * that can be behind it:
+ * - the ground: `glassBackdrops` (a white and a black desktop through the acrylic);
+ * - the sheet: the ground as written, over each of those;
+ * - what floats: the work area as written over each of those, the ground over each of those, and the ink (a notice or
+ *   a hint under a menu is a block of it).
+ */
+export function glassLevels(colors: Readonly<Record<string, string>>, grounds: readonly string[], stated?: GlassLevels | undefined): GlassResult {
+  const raised: string[] = []
+  const level = (name: string, value: string, backdrops: readonly string[]) => {
+    const out = glassLevel(colors, value, backdrops)
+    if (out !== value.toLowerCase()) raised.push(name)
+    return out
+  }
+  const desktop = glassBackdrops(colors['paper']!)
+  const statedGround = stated?.ground
+  const statedSheet = stated?.sheet
+  const statedFloat = stated?.float
+  const ground = isGlassColor(statedGround) ? level('glass-ground', statedGround, desktop) : glassGround(colors, grounds)
+  const underSheet = glassOver(ground, desktop)
+  const sheet = isGlassColor(statedSheet) ? level('glass-sheet', statedSheet, underSheet) : undefined
+  const underFloat = [...glassOver(sheet ?? colors['paper']! + 'ff', underSheet), ...underSheet, colors['ink']!]
+  const float = isGlassColor(statedFloat) ? level('glass-float', statedFloat, underFloat) : undefined
+  return { ground, ...(sheet ? { sheet } : {}), ...(float ? { float } : {}), behind: { ground: desktop, sheet: underSheet, float: underFloat }, raised }
 }

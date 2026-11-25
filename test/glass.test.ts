@@ -3,15 +3,17 @@
 // Then the measurement, by the engine: on the ground it computes, over a white and a black desktop behind an acrylic
 // that keeps half of it, the text holds 4.5:1 and the control border and the user's colours 3:1, in every sample theme
 // and for the five accents of the shell's preset, in both schemes (`[glass]` lines print what was measured). Last: the
-// rules of `theme.css` draw glass only under the attribute on the root, never on what opens over the page, and not at
-// all with forced colours or where the person asked for less transparency.
+// rules of `theme.css` draw glass only under the attribute on the root, on what opens over the page only when the
+// palette states it, and not at all with forced colours or where the person asked for less transparency. And the glass
+// a palette states (`Surfaces.glass`: the ground, the work area, what floats) is kept as stated, or raised in opacity
+// only (`[glass-levels]` lines print the worst pair on each surface).
 import { describe, expect, test } from 'vitest'
 import { PALETTE_COMBOS } from '../src/palette'
 import type { ThemeDef } from '../src/theme-catalog'
-import { ACRYLIC_KEEPS, GLASS_GROUND, GLASS_TEXT, contrast, glassBackdrops, glassGround, glassHeld, over, themeTokens, tokensFor } from '../src/theme-engine'
+import { ACRYLIC_KEEPS, GLASS_FLOAT, GLASS_GROUND, GLASS_SHEET, GLASS_TEXT, GLASS_VARIABLES, contrast, glassBackdrops, glassGround, glassHeld, glassLevel, glassLevels, glassOver, isGlassColor, over, themeTokens, tokensFor } from '../src/theme-engine'
 import { BASE_THEME, THEME_ATTRIBUTES, THEME_VARIABLES, applyTheme, copyTheme, themeVariables } from '../src/themes'
 import { THEMES } from './fixtures/sample-themes'
-import { SHELL_ACCENTS, SHELL_TONE, shellPreset } from './fixtures/shell-preset'
+import { SHELL_ACCENTS, SHELL_GLASS, SHELL_TONE, shellGlass, shellPreset } from './fixtures/shell-preset'
 import { themeCss } from './theme-tokens'
 
 const SCHEMES = ['light', 'dark'] as const
@@ -160,6 +162,170 @@ describe('the ground of a glass page, measured by the engine', () => {
   })
 })
 
+describe('the glass a palette states (`Surfaces.glass`)', () => {
+  const SURFACES = [['ground', GLASS_GROUND, 'glass-ground'], ['sheet', GLASS_SHEET, 'glass-sheet'], ['float', GLASS_FLOAT, 'glass-float']] as const
+  type Scheme = (typeof SCHEMES)[number]
+  type Stated = { readonly [S in Scheme]: { readonly ground: string; readonly sheet: string; readonly float: string } }
+
+  /** What is behind each surface at its worst, computed here from the levels the engine wrote. */
+  function behind(colors: Readonly<Record<string, string>>, shape: Readonly<Record<string, string>>) {
+    const ground = glassBackdrops(colors['paper']!)
+    const sheet = glassOver(shape[GLASS_GROUND]!, ground)
+    const float = [...glassOver(shape[GLASS_SHEET] ?? colors['paper']! + 'ff', sheet), ...sheet, colors['ink']!]
+    return { ground, sheet, float }
+  }
+
+  /** The worst text and the worst border or mark on a level over its backdrops, and whether everything holds. */
+  function measure(colors: Readonly<Record<string, string>>, level: string, backdrops: readonly string[]) {
+    const { tint } = parts(level)
+    let ok = true
+    let text = { ratio: Infinity, at: '' }
+    let border = { ratio: Infinity, at: '' }
+    for (const surface of glassOver(level, backdrops)) {
+      for (const [name, min] of glassHeld(colors)) {
+        const ratio = contrast(colors[name]!, surface)
+        const solid = contrast(colors[name]!, tint)
+        if (ratio < Math.min(min, solid)) ok = false
+        // A colour short on the opaque colour itself is not glass's doing: it is counted apart.
+        if (solid < min) continue
+        const at = `${name} ${colors[name]} on ${surface}`
+        if (min === 4.5 && ratio < text.ratio) text = { ratio, at }
+        if (min === 3 && ratio < border.ratio) border = { ratio, at }
+      }
+    }
+    return { ok, text, border }
+  }
+
+  /** One theme in one scheme: each stated level keeps its colour, is never thinner than stated, holds, and is named when raised. */
+  function check(stated: Stated, accent: (typeof SHELL_ACCENTS)[number], scheme: Scheme, lines?: string[]): readonly string[] {
+    const t = tokensFor(shellGlass(accent, stated), scheme, SHELL_TONE)
+    const where = `${accent.id} ${scheme}`
+    expect(t.attributes, where).toMatchObject({ 'data-material': 'glass', 'data-float': 'glass' })
+    const under = behind(t.colors, t.shape)
+    const raised: string[] = []
+    for (const [key, variable, name] of SURFACES) {
+      const asked = stated[scheme][key]
+      const written = t.shape[variable]!
+      expect(written, `${where} ${key}`).toMatch(/^#[0-9a-f]{8}$/)
+      // The colour is the palette's; only the opacity may differ, and only upward.
+      expect(parts(written).tint, `${where} ${key}`).toBe(parts(asked).tint)
+      expect(parts(written).byte, `${where} ${key}`).toBeGreaterThanOrEqual(parts(asked).byte)
+      expect(written, `${where} ${key}`).toBe(glassLevel(t.colors, asked, under[key]))
+      const now = measure(t.colors, written, under[key])
+      expect(now.ok, `${where} ${key}: ${now.text.at} ${now.text.ratio.toFixed(2)}; ${now.border.at} ${now.border.ratio.toFixed(2)}`).toBe(true)
+      const moved = written !== asked
+      expect(t.corrected.includes(name), `${where} ${key} in corrected`).toBe(moved)
+      // Raised no further than needed: one step thinner and something falls short.
+      if (moved) {
+        raised.push(name)
+        expect(measure(t.colors, parts(written).tint + (parts(written).byte - 1).toString(16).padStart(2, '0'), under[key]).ok, `${where} ${key} one step thinner`).toBe(false)
+      }
+      lines?.push(`[glass-levels] ${where} ${key}: stated ${asked} (${(parts(asked).alpha * 100).toFixed(1)}%), written ${written} (${(parts(written).alpha * 100).toFixed(1)}%)${moved ? ' RAISED' : ''}; text ${now.text.ratio.toFixed(2)} (${now.text.at}), border or mark ${now.border.ratio.toFixed(2)} (${now.border.at})`)
+    }
+    // The engine measured over the same backdrops.
+    expect(glassLevels(t.colors, [t.colors['paper']!], stated[scheme]).behind).toEqual(under)
+    return raised
+  }
+
+  const lines: string[] = []
+  const raisedAt: string[] = []
+
+  test.each(SCHEMES)('in %s the three levels of the old Smooth look are written for each accent: the colour as stated, the opacity as stated or raised', (scheme) => {
+    for (const accent of SHELL_ACCENTS) for (const name of check(SHELL_GLASS, accent, scheme, lines)) raisedAt.push(`${name} ${accent.id} ${scheme}`)
+  })
+
+  test('what was measured is printed', () => {
+    for (const line of lines) console.log(line)
+    console.log(`[glass-levels] raised: ${raisedAt.length === 0 ? 'none, the six values are as stated in every accent' : raisedAt.join(', ')}`)
+    expect(lines).toHaveLength(SHELL_ACCENTS.length * SCHEMES.length * SURFACES.length)
+  })
+
+  // The work area may stay as thin as stated: what is behind it is the ground, which already holds every colour.
+  test('a level stated too thin keeps its colour and takes the opacity its text needs, and is named in `corrected`', () => {
+    const thin: Stated = {
+      dark: { ground: '#0c111d00', sheet: '#1a202c00', float: '#24293500' },
+      light: { ground: '#f6f7f900', sheet: '#ffffff00', float: '#ffffff00' },
+    }
+    for (const scheme of SCHEMES) {
+      for (const accent of SHELL_ACCENTS) {
+        expect(check(thin, accent, scheme), `${accent.id} ${scheme}`).toEqual(expect.arrayContaining(['glass-ground', 'glass-float']))
+      }
+    }
+  })
+
+  test('a level is `#rrggbbaa`: anything else, or a level left out, is as without it', () => {
+    expect(['#0c111dcc', '#0C111DCC'].every(isGlassColor)).toBe(true)
+    expect(['#0c111d', 'rgba(12, 17, 29, 0.8)', '0c111dcc', '#0c111dcg', 42, null, undefined].some(isGlassColor)).toBe(false)
+    const accent = SHELL_ACCENTS[0]
+    for (const scheme of SCHEMES) {
+      const unstated = tokensFor({ ...shellPreset(accent), material: 'glass' }, scheme, SHELL_TONE)
+      const bad = { ground: '#0c111d', sheet: 'rgba(26, 32, 44, 0.94)', float: 42 }
+      expect(tokensFor(shellGlass(accent, { dark: bad, light: bad }), scheme, SHELL_TONE)).toEqual(unstated)
+      expect(tokensFor(shellGlass(accent, { dark: {}, light: {} }), scheme, SHELL_TONE)).toEqual(unstated)
+      // Each level alone: only its own variable is added, and what opens over the page is named only with the float.
+      const only = (key: 'ground' | 'sheet' | 'float') => tokensFor(shellGlass(accent, { dark: { [key]: SHELL_GLASS.dark[key] }, light: { [key]: SHELL_GLASS.light[key] } }), scheme, SHELL_TONE)
+      expect(Object.keys(only('ground').shape).filter((k) => k.startsWith('--glass'))).toEqual([GLASS_GROUND])
+      expect(parts(only('ground').shape[GLASS_GROUND]!).tint).toBe(parts(SHELL_GLASS[scheme].ground).tint)
+      expect(only('sheet').shape[GLASS_GROUND]).toBe(unstated.shape[GLASS_GROUND])
+      expect(Object.keys(only('sheet').shape).filter((k) => k.startsWith('--glass')).sort()).toEqual([GLASS_GROUND, GLASS_SHEET].sort())
+      expect(only('sheet').attributes).not.toHaveProperty('data-float')
+      expect(Object.keys(only('float').shape).filter((k) => k.startsWith('--glass')).sort()).toEqual([GLASS_FLOAT, GLASS_GROUND].sort())
+      expect(only('float').attributes).toMatchObject({ 'data-float': 'glass' })
+    }
+  })
+
+  test('stated glass is read only under `material: glass`, and changes no colour', () => {
+    for (const scheme of SCHEMES) {
+      for (const accent of SHELL_ACCENTS) {
+        const plain = tokensFor(shellPreset(accent), scheme, SHELL_TONE)
+        const { material: _material, ...solid } = shellGlass(accent)
+        expect(tokensFor(solid, scheme, SHELL_TONE), accent.id).toEqual(plain)
+        expect(tokensFor({ ...solid, material: 'solid' }, scheme, SHELL_TONE), accent.id).toEqual(plain)
+        expect(tokensFor(shellGlass(accent), scheme, SHELL_TONE).colors, accent.id).toEqual(plain.colors)
+      }
+    }
+  })
+
+  test('it stays with the user\'s own accent, and goes with the user\'s own page: the engine computes the ground of that one', () => {
+    const theme = shellGlass(SHELL_ACCENTS[0])
+    for (const scheme of SCHEMES) {
+      const accent = themeTokens(theme, scheme, { accent: '#4452c4' })
+      for (const [key, variable] of SURFACES) expect(parts(accent.shape[variable]!).tint, `${scheme} ${key}`).toBe(parts(SHELL_GLASS[scheme][key]).tint)
+      const page = themeTokens(theme, scheme, { accent: '#4452c4', background: 'match' })
+      expect(page.attributes).toMatchObject({ 'data-material': 'glass' })
+      expect(page.attributes).not.toHaveProperty('data-float')
+      expect(Object.keys(page.shape).filter((k) => k.startsWith('--glass'))).toEqual([GLASS_GROUND])
+    }
+  })
+
+  test('applyTheme writes the three variables and the attribute, the next theme takes them away, and another window copies them', () => {
+    expect(GLASS_VARIABLES).toEqual([GLASS_GROUND, GLASS_SHEET, GLASS_FLOAT])
+    for (const name of GLASS_VARIABLES) expect(THEME_VARIABLES).toContain(name)
+    expect(THEME_ATTRIBUTES).toContain('data-float')
+    const el = document.createElement('div')
+    const other = document.createElement('div')
+    const stated = shellGlass(SHELL_ACCENTS[0])
+    applyTheme(el, { theme: stated, scheme: 'dark' })
+    const tokens = tokensFor(stated, 'dark')
+    expect(el.getAttribute('data-float')).toBe('glass')
+    for (const name of GLASS_VARIABLES) expect(el.style.getPropertyValue(name), name).toBe(tokens.shape[name])
+    copyTheme(el, other)
+    expect(other.getAttribute('data-float')).toBe('glass')
+    for (const name of GLASS_VARIABLES) expect(other.style.getPropertyValue(name), name).toBe(tokens.shape[name])
+    // A glass theme that states nothing keeps the ground only; a solid one keeps none.
+    applyTheme(el, { theme: { ...shellPreset(SHELL_ACCENTS[0]), material: 'glass' }, scheme: 'dark' })
+    expect(el.hasAttribute('data-float')).toBe(false)
+    expect(el.style.getPropertyValue(GLASS_GROUND)).not.toBe('')
+    expect(el.style.getPropertyValue(GLASS_SHEET)).toBe('')
+    expect(el.style.getPropertyValue(GLASS_FLOAT)).toBe('')
+    applyTheme(el, { theme: shellPreset(SHELL_ACCENTS[0]), scheme: 'dark' })
+    for (const name of GLASS_VARIABLES) expect(el.style.getPropertyValue(name), name).toBe('')
+    copyTheme(el, other)
+    expect(other.hasAttribute('data-float')).toBe(false)
+    for (const name of GLASS_VARIABLES) expect(other.style.getPropertyValue(name), name).toBe('')
+  })
+})
+
 /** The text of `theme.css` without comments and outside every `@layer`: only there does a rule beat the utilities. */
 function unlayered(css: string): string {
   const clean = css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -220,12 +386,23 @@ describe('the rules of theme.css', () => {
     expect(of(':root[data-material="glass"] :is([data-slot="app-shell"], [data-slot="title-bar"]):not([data-slot="app-shell-work"] *)')).toBe('background-color: transparent;')
     // A sidebar with colours of its own keeps its column: its inks are held on its colour only.
     expect(of(':root[data-material="glass"]:not([data-sidebar="own"]) [data-slot="sidebar"]:not([data-slot="app-shell-work"] *)')).toBe('background-color: transparent;')
-    expect(of(':root[data-material="glass"] [data-slot="app-shell-work"]')).toBe('background-color: var(--color-paper);')
+    // The work area is the paper unless the palette states its glass.
+    expect(of(':root[data-material="glass"] [data-slot="app-shell-work"]')).toBe(`background-color: var(${GLASS_SHEET}, var(--color-paper));`)
   })
 
-  test('what opens over the page stays as it is: no rule names a slot but the frame\'s, and the toolkit draws no blur', () => {
-    const slots = new Set([...block.matchAll(/data-slot="([a-z-]+)"/g)].map((m) => m[1]))
-    expect([...slots].sort()).toEqual(['app-shell', 'app-shell-work', 'sidebar', 'title-bar'])
+  test('what opens over the page stays as it is unless the palette states its glass: one rule, under `data-float`, and the toolkit draws no blur', () => {
+    const FRAME = ['app-shell', 'app-shell-work', 'sidebar', 'title-bar']
+    // Menus, lists, popovers and dialogs: each paints the raised sheet. Sheets, the drawer, notices and hints are not here.
+    const FLOAT = ['combobox-content', 'date-field-content', 'dialog-content', 'dropdown-menu-content', 'dropdown-menu-sub-content', 'popover-content', 'select-content']
+    const slotsOf = (text: string) => [...new Set([...text.matchAll(/data-slot="([a-z-]+)"/g)].map((m) => m[1]!))].sort()
+    const floating = rules.filter((rule) => rule.selectors.some((selector) => selector.includes('data-float')))
+    expect(floating).toHaveLength(1)
+    expect(floating[0]!.selectors).toHaveLength(1)
+    expect(floating[0]!.selectors[0]).toMatch(/^:root\[data-material="glass"\]\[data-float="glass"\] :is\(/)
+    expect(floating[0]!.body).toBe(`background-color: var(${GLASS_FLOAT}, var(--color-raised));`)
+    expect(slotsOf(floating[0]!.selectors[0]!)).toEqual(FLOAT)
+    // Every other rule names the frame's slots only: without `data-float` nothing that opens over the page is touched.
+    expect(slotsOf(rules.filter((rule) => !floating.includes(rule)).map((rule) => rule.selectors.join(' ')).join(' '))).toEqual(FRAME)
     expect(themeCss.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/backdrop-filter|blur\(/)
   })
 })
