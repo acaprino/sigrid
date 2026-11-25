@@ -5,7 +5,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import * as React from 'react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { WordsProvider } from '../src'
+import { COLORS, WordsProvider } from '../src'
 import { settle } from './helpers'
 import { DEFAULT_WORDS } from '../src/words'
 import {
@@ -131,6 +131,12 @@ test('renderTab is told whether the tab is shown, on screen and in the pane in f
     b: { active: false, visible: false, focused: true, groupId: 'g1' },
     c: { active: true, visible: true, focused: false, groupId: 'g2' },
   })
+})
+
+test('a tab with a colour has its dot before its title; one without has none', () => {
+  render(<Host start={row([1, 1], { kind: 'tabs', id: 'g1', tabs: [tab('a', { color: COLORS[3] }), tab('b')], activeId: 'a' }, group('g2', ['c']))} />)
+  expect(tabOf('A').querySelector('[data-slot="dot"]')).not.toBeNull()
+  expect(tabOf('B').querySelector('[data-slot="dot"]')).toBeNull()
 })
 
 test('the panes are boxes in percent of the area from the weights, one flat list of contents above them; a tab icon and a title that is cut', () => {
