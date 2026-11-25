@@ -864,7 +864,7 @@ export const GLASS_GROUND = '--glass-ground'
 /** The share of the desktop a window's acrylic lets through, in the worst case the glass is measured for. */
 export const ACRYLIC_KEEPS = 0.5
 /** The text colours that may sit on the ground of the frame: each holds 4.5:1 there. */
-export const GLASS_TEXT = ['ink', 'ink-soft', 'ink-mute', 'accent', 'destructive', 'success', 'warning', 'info'] as const
+export const GLASS_TEXT = ['ink', 'ink-soft', 'ink-mute', 'accent', 'spot-ink', 'destructive', 'success', 'warning', 'info'] as const
 
 /**
  * What is behind a glass page at its worst: a white desktop and a black one, each through an acrylic that keeps
