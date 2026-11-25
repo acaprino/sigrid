@@ -1467,6 +1467,7 @@ function apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetP
  * canvas places the words before anything is drawn, and a line 20px from another (`APART`) keeps its words clear of
  * the other's.
  */
+// shortcut: 6px a letter is the mean of lower-case words in the interface face; capitals, digits and wide scripts are wider, so such words may be kept on a line and reach a thing: measure the text (a canvas's `measureText`) when an app draws those.
 const WORD = { letter: 6, pad: 4, lead: 2, height: 20 }
 const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
@@ -1542,7 +1543,7 @@ type WordRow = { id: string; look: React.CSSProperties | undefined; from: string
  */
 function LineWords({ rows }: { rows: readonly WordRow[] }) {
   return (
-    <ul data-slot="graph-words" aria-hidden="true" className="nowheel nodrag nopan flex max-h-36 w-64 max-w-full flex-col gap-1 overflow-y-auto rounded-md bg-raised p-2 text-2xs text-ink-soft shadow-sm">
+    <ul data-slot="graph-words" aria-hidden="true" className="nowheel nodrag nopan pointer-events-auto flex max-h-36 w-64 max-w-full flex-col gap-1 overflow-y-auto rounded-md bg-raised p-2 text-2xs text-ink-soft shadow-sm">
       {rows.map((row) => (
         <li key={row.id} className="flex items-start gap-2">
           {/* The sample of the key (`GraphLegend`), in the look the line has on the canvas. */}
@@ -2465,8 +2466,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
             />
           </Panel>
         ) : null}
-        <Panel position="top-right" className="flex flex-col items-end gap-2">
-          <div ref={viewRow} role="group" aria-label={words.view} className="flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
+        {/* The box of the two takes no press: beside the buttons, over the list's width, a press or a pan reaches the canvas. */}
+        <Panel position="top-right" className="pointer-events-none flex flex-col items-end gap-2">
+          <div ref={viewRow} role="group" aria-label={words.view} className="pointer-events-auto flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
             {/* Only while something was moved, and at the start of the row, which is held at its end: the other buttons stay where they are (R14). */}
             {moved.size > 0 ? (
               <Tooltip label={words.resetLayout}>

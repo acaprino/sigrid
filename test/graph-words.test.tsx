@@ -191,6 +191,9 @@ describe('on the canvas', () => {
     expect(group.parentElement).toBe(list()!.parentElement)
     expect(group.compareDocumentPosition(list()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     for (const name of ['nowheel', 'max-h-36', 'w-64', 'overflow-y-auto', 'bg-raised', 'shadow-sm']) expect(list()!.className.split(' '), name).toContain(name)
+    // The box that holds the two is as wide as the list: it takes no press, so the canvas beside the buttons still does.
+    expect(group.parentElement!.className.split(' ')).toContain('pointer-events-none')
+    for (const part of [group, list()!]) expect(part.className.split(' ')).toContain('pointer-events-auto')
     // Another thing chosen: its own lines, and no others.
     rerender(<Calls selected="pay" />)
     expect(placed()).toEqual(before)
