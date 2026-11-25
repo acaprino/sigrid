@@ -445,12 +445,14 @@ export function enterTooltip(el: Element, anchor?: Element | null): void {
 
 /**
  * The pill under the chosen item of a group. Rendered inside the chosen item only; when the choice changes Motion
- * carries it from the old item to the new one (`layoutId`). On mount it is simply there.
+ * carries it from the old item to the new one (`layoutId`). On mount it is simply there. It moves for that alone
+ * (`layoutDependency` never changes): when its item changes place or size because another came or went, or the group
+ * was resized, it is drawn where the item is, at once, and never trails it.
  */
 export function Highlight({ id, className }: { id: string; className?: string }) {
   return (
     <Motion>
-      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} transition={tr('slide')} className={className} />
+      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} layoutDependency={id} transition={tr('slide')} className={className} />
     </Motion>
   )
 }
@@ -466,59 +468,96 @@ export function Turn({ open, children }: { open: boolean; children: ReactNode })
   )
 }
 
-type Box = { top: number; left: number; width: number; height: number; fromX: number; fromY: number }
+type Box = { top: number; left: number; width: number; height: number; fromX: number; fromY: number; radius: string }
 
 /** A size ratio to start from, or 1 when there is nothing to start from or the difference is not worth a movement. */
 const ratio = (from: number | undefined, to: number) => (from && to && Math.abs(from / to - 1) > 0.001 ? from / to : 1)
 
+/** The same place and size: nothing to draw again. */
+const sameBox = (a: Box, b: Box) => a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height && a.radius === b.radius
+
 /**
- * One hover background for the whole container: it appears at once on the first row, glides with the mouse from row to
- * row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size of
- * the new row at once, and is carried there from where and how large it was seen (a translation from the container's
- * corner, a scale from its own). So it also glides between rows of different heights, without animating a size. The
- * rows are found by `selector` (delegation: no handler per row); `container` must be positioned. Mouse only: a finger
- * has no hover. It never takes the pointer from the rows under it.
+ * One hover background for the whole container: it appears at once on the first row, glides with the pointer from row
+ * to row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size
+ * of the new row at once, and is carried there from where and how large it was seen (a translation from the container's
+ * corner, a scale from its own). So it also glides between rows of different heights, without animating a size, and it
+ * has the corners of the row it is under. The rows are found by `selector` (delegation: no handler per row);
+ * `container` must be positioned. A mouse or a pen: a finger has no hover. It never takes the pointer from the rows
+ * under it. It follows its row: when rows come or go, or the list is resized, it is measured again, and it is gone
+ * with a row that left; when anything scrolls the list under a still pointer it fades, since the row is no longer
+ * under the pointer. `as` is the element it is drawn as: `li` inside a `<ul>` or an `<ol>`, which may hold nothing else.
  */
-export function HoverHighlight({ container, selector, className }: { container: HTMLElement | null; selector: string; className?: string }) {
+export function HoverHighlight({ container, selector, className, as = 'div' }: { container: HTMLElement | null; selector: string; className?: string; as?: 'div' | 'li' }) {
   const [box, setBox] = useState<Box | null>(null)
   const mark = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     if (!container) return
-    const over = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return
-      const row = e.target instanceof Element ? e.target.closest(selector) : null
-      if (!row || !container.contains(row)) return setBox(null)
+    // The row the background is under, while there is one.
+    let under: Element | null = null
+    const measure = (row: Element): Box => {
       const r = row.getBoundingClientRect()
       const c = container.getBoundingClientRect()
       // How large it is seen right now (mid-glide too): the scale starts from there.
       const seen = mark.current?.getBoundingClientRect()
-      setBox({ top: r.top - c.top + container.scrollTop, left: r.left - c.left + container.scrollLeft, width: r.width, height: r.height, fromX: ratio(seen?.width, r.width), fromY: ratio(seen?.height, r.height) })
+      return { top: r.top - c.top + container.scrollTop, left: r.left - c.left + container.scrollLeft, width: r.width, height: r.height, fromX: ratio(seen?.width, r.width), fromY: ratio(seen?.height, r.height), radius: getComputedStyle(row).borderRadius }
     }
-    const leave = () => setBox(null)
+    const leave = () => {
+      under = null
+      setBox(null)
+    }
+    const over = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      const row = e.target instanceof Element ? e.target.closest(selector) : null
+      if (!row || !container.contains(row)) return leave()
+      under = row
+      setBox(measure(row))
+    }
+    // Rows came or went, or the list changed size, under a still pointer: the background stays on its row.
+    const follow = () => {
+      if (!under) return
+      if (!under.isConnected || !container.contains(under)) return leave()
+      const next = measure(under)
+      setBox((was) => (was && sameBox(was, next) ? was : next))
+    }
+    // A list scrolling under a still pointer (by itself, or with whatever holds it): the row is no longer where the
+    // pointer is. Scrolling does not bubble, so it is heard on its way down from the document.
+    const scrolled = (e: Event) => {
+      const target = e.target
+      if (target instanceof Node && (target.contains(container) || container.contains(target))) leave()
+    }
+    const page = container.ownerDocument
     container.addEventListener('pointerover', over)
     container.addEventListener('pointerleave', leave)
-    // A list scrolling under a still pointer: the row is no longer where the background sits.
-    container.addEventListener('scroll', leave, true)
+    page.addEventListener('scroll', scrolled, true)
+    const rows = typeof MutationObserver === 'function' ? new MutationObserver(follow) : null
+    rows?.observe(container, { childList: true, subtree: true })
+    const size = typeof ResizeObserver === 'function' ? new ResizeObserver(follow) : null
+    size?.observe(container)
     return () => {
       container.removeEventListener('pointerover', over)
       container.removeEventListener('pointerleave', leave)
-      container.removeEventListener('scroll', leave, true)
+      page.removeEventListener('scroll', scrolled, true)
+      rows?.disconnect()
+      size?.disconnect()
     }
   }, [container, selector])
+  // One element or the other, with the same props: the list item is told apart only by its name and its role.
+  const Mark = (as === 'li' ? m.li : m.div) as typeof m.div
   return (
     <Motion>
       <AnimatePresence>
         {box ? (
-          <m.div
+          <Mark
             key="hover"
             ref={mark}
             aria-hidden="true"
+            {...(as === 'li' ? { role: 'presentation' } : {})}
             data-slot="hover-highlight"
             initial={false}
             animate={{ x: box.left, y: box.top, scaleX: box.fromX === 1 ? 1 : [box.fromX, 1], scaleY: box.fromY === 1 ? 1 : [box.fromY, 1], opacity: 1 }}
             exit={{ opacity: 0, transition: tr('leave') }}
             transition={tr('follow')}
-            style={{ top: 0, left: 0, width: box.width, height: box.height, originX: 0, originY: 0, pointerEvents: 'none' }}
+            style={{ top: 0, left: 0, width: box.width, height: box.height, originX: 0, originY: 0, pointerEvents: 'none', ...(box.radius ? { borderRadius: box.radius } : {}) }}
             className={className}
           />
         ) : null}

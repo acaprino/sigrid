@@ -90,17 +90,29 @@ function focusFirst(el: HTMLDivElement | null) {
   ;(first ?? el).focus({ preventScroll: first === undefined })
 }
 
+/**
+ * The widest a centred dialog grows, from the `sm` width of the window up (under it, the window less a margin):
+ * `md` 512px, a name or a confirmation (the default); `lg` 672px, a form of several fields; `xl` 896px, a list or a
+ * table to choose from. Steps of the scale, named with the toolkit's words for a size.
+ */
+export type DialogWidth = "md" | "lg" | "xl"
+// Whole class names, so that Tailwind finds them in this file.
+const WIDTH_CLASS: Record<DialogWidth, string> = { md: "sm:max-w-lg", lg: "sm:max-w-2xl", xl: "sm:max-w-4xl" }
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
   ref,
   animated,
+  width = "md",
   ...props
 }: Omit<React.ComponentProps<typeof DialogPrimitive.Popup>, "className"> & {
   className?: string
   showCloseButton?: boolean
   animated?: boolean | undefined
+  /** How wide the window grows on a wide screen: `md` by default (see `DialogWidth`). */
+  width?: DialogWidth | undefined
 }) {
   // Inside part of the app drawn in another document (`PortalContainerProvider`) the dialog opens in that document.
   const container = usePortalContainer()
@@ -123,7 +135,8 @@ function DialogContent({
         aria-modal="true"
         className={cn(
           // Centred with auto margins, not a translation: a translated window would be the containing block of what is `fixed` inside it (the date card), and its scrolling would clip it.
-          "fixed inset-0 z-50 m-auto grid h-fit max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none sm:max-w-lg md:p-6",
+          "fixed inset-0 z-50 m-auto grid h-fit max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none md:p-6",
+          WIDTH_CLASS[width],
           className
         )}
         {...props}

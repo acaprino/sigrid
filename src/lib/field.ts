@@ -37,3 +37,27 @@ export const FIELD_OFF = 'disabled:pointer-events-none disabled:cursor-not-allow
 
 /** The same, written out for a field that the caller's prop turns off (a select's button, whose primitive decides). */
 export const FIELD_OFF_NOW = 'pointer-events-none cursor-not-allowed opacity-50'
+
+/**
+ * The corners of the quiet field (`FIELD_QUIET`): the one place that says how round it is. Round ends, half its
+ * height at every density (the owner, 2026-11-24, after trying it in an app beside 8px and 12px): the one field off
+ * the radii of R7, because in a bar the shape is what says «search».
+ */
+export const FIELD_QUIET_RADIUS = 'rounded-full'
+
+/**
+ * A field that does not ask to be looked at, for a search in a bar, where a full frame would weigh as much as the
+ * page's own fields: Park's `subtle` variant of the same `input` recipe (a clear 1px border, a quiet fill, the ring
+ * inside), as a well (the owner's design of 2026-11-24). Laid over the classes of `Input`, each written on the same
+ * chain as the one it replaces, so only these are left.
+ * - The surface is the toolkit's quiet fill, the ink at 6% over whatever it lies on (darker than the bar in light, a
+ *   step apart from it in dark, where a bar is too near black to go darker), in place of a border: the border is
+ *   still there, clear, so the field is as tall as every field and Windows' forced colours draw it.
+ * - A faint line of shade inside its top edge sets it into the bar: 1px down, 1px soft, the `drop` colour at 7%. It
+ *   is not an elevation (R4 keeps those for what is raised), and in dark it is next to nothing, as the drop is there.
+ * - In focus the fill gives way to the page and the shade goes: the field is where the user writes, with the ring
+ *   of every field (`FOCUS_FIELD`), which follows its round ends.
+ * - Under the pointer the light divider shows; a theme's strong control border does not apply to it; invalid, it is
+ *   the destructive colour.
+ */
+export const FIELD_QUIET = `${FIELD_QUIET_RADIUS} border-transparent bg-ink/6 inset-shadow-xs inset-shadow-drop/7 focus:bg-paper focus:inset-shadow-none [:where([data-controls=strong])_&]:border-transparent not-aria-invalid:hover:border-line`

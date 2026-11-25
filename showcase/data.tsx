@@ -4,9 +4,9 @@
 // (`./rich-text`). The data are made up and made here once, so the ten thousand rows are the same at every paint.
 import * as React from 'react'
 import { Avatar, Badge, Button, Column, Icon, Input, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/primitives'
-import { FormField, ItemRow } from '../src/components'
-import { DataTable, type DataColumn, type DataSort } from '../src/table'
-import { VirtualList } from '../src/virtual'
+import { FormField, ItemRow, Message } from '../src/components'
+import { DataTable, type DataColumn, type DataSelection, type DataSort } from '../src/table'
+import { VirtualConversation, VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
 import { EMPTY_EMAIL, EmailComposer, RichTextField, type EmailDraft } from '../src/rich-text'
 import { GraphCanvas, GraphLegend, type GraphCanvasHandle, type GraphEdge, type GraphLegendEntry, type GraphNode } from '../src/graph'
@@ -40,6 +40,84 @@ const COLUMNS: readonly DataColumn<FileRow>[] = [
   { id: 'size', header: 'Size', cell: (file) => size(file.size), sortValue: (file) => file.size, align: 'end', className: 'w-28' },
   { id: 'changed', header: 'Changed', cell: (file) => day.format(file.changed), sortValue: (file) => file.changed, align: 'end', className: 'w-36 whitespace-nowrap' },
 ]
+
+type Cleanup = { id: string; name: string; level: number; group: boolean; size: number; parent?: string }
+
+const CLEANUP: readonly Cleanup[] = [
+  { id: 'caches', name: 'Caches', level: 1, group: true, size: 1800 },
+  { id: 'caches/browser', name: 'Browser cache', level: 2, group: false, size: 1200, parent: 'caches' },
+  { id: 'caches/thumbs', name: 'Thumbnails', level: 2, group: false, size: 600, parent: 'caches' },
+  { id: 'logs', name: 'Logs', level: 1, group: true, size: 340 },
+  { id: 'logs/app', name: 'App logs', level: 2, group: false, size: 300, parent: 'logs' },
+  { id: 'logs/old', name: 'Rotated logs', level: 2, group: false, size: 40, parent: 'logs' },
+  { id: 'logs/old/2025', name: '2025', level: 3, group: false, size: 25, parent: 'logs/old' },
+  { id: 'logs/old/2024', name: '2024', level: 3, group: false, size: 15, parent: 'logs/old' },
+]
+/** The rows that hold others, with the rows under each. */
+const HOLDS = new Map<string, string[]>()
+for (const entry of CLEANUP) if (entry.parent) HOLDS.set(entry.parent, [...(HOLDS.get(entry.parent) ?? []), entry.id])
+const BELOW = (id: string): string[] => (HOLDS.get(id) ?? []).flatMap((child) => [child, ...BELOW(child)])
+const LEAVES = CLEANUP.filter((entry) => !HOLDS.has(entry.id)).map((entry) => entry.id)
+
+function CleanupTable() {
+  const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(['caches/browser']))
+  const [shut, setShut] = React.useState<ReadonlySet<string>>(() => new Set(['logs/old']))
+  const rows = React.useMemo(() => {
+    const hidden = new Set<string>()
+    for (const id of shut) for (const below of BELOW(id)) hidden.add(below)
+    return CLEANUP.filter((entry) => !hidden.has(entry.id))
+  }, [shut])
+  const leaves = (id: string) => (HOLDS.has(id) ? BELOW(id).filter((below) => LEAVES.includes(below)) : [id])
+  const state = (id: string): boolean | 'mixed' => {
+    const ids = leaves(id)
+    const on = ids.filter((leaf) => ticked.has(leaf)).length
+    return on === 0 ? false : on === ids.length ? true : 'mixed'
+  }
+  const set = (id: string, checked: boolean) =>
+    setTicked((before) => {
+      const next = new Set(before)
+      for (const leaf of leaves(id)) checked ? next.add(leaf) : next.delete(leaf)
+      return next
+    })
+  const selection: DataSelection<Cleanup> = {
+    isSelected: (entry) => state(entry.id),
+    onSelectedChange: (entry, checked) => set(entry.id, checked),
+    selectAll: LEAVES.every((leaf) => ticked.has(leaf)) ? true : LEAVES.some((leaf) => ticked.has(leaf)) ? 'mixed' : false,
+    onSelectAll: (checked) => setTicked(checked ? new Set(LEAVES) : new Set()),
+    label: (entry) => `Select ${entry.name}`,
+  }
+  const columns: readonly DataColumn<Cleanup>[] = [
+    { id: 'name', header: 'What', cell: (entry) => entry.name },
+    { id: 'size', header: 'Size', cell: (entry) => size(entry.size), align: 'end', className: 'w-28' },
+  ]
+  return (
+    <DataTable
+      aria-label="Things to clean up"
+      columns={columns}
+      rows={rows}
+      rowId={(entry) => entry.id}
+      rowLevel={(entry) => entry.level}
+      rowOpen={(entry) => (HOLDS.has(entry.id) ? !shut.has(entry.id) : undefined)}
+      onRowOpenChange={(entry, open) =>
+        setShut((before) => {
+          const next = new Set(before)
+          if (open) next.delete(entry.id)
+          else next.add(entry.id)
+          return next
+        })
+      }
+      isGroupRow={(entry) => entry.group}
+      groupCell={(entry) => (
+        <span className="flex w-full items-center justify-between gap-3">
+          <span>{entry.name}</span>
+          <span className="text-ink-mute tabular-nums">{size(entry.size)}</span>
+        </span>
+      )}
+      selection={selection}
+      className="max-h-80 rounded-md border border-line"
+    />
+  )
+}
 
 export function Tables() {
   const [current, setCurrent] = React.useState<string | null>('f2')
@@ -106,6 +184,34 @@ export function Tables() {
           <DataTable aria-label="All files" columns={COLUMNS} rows={MANY} rowId={(file) => file.id} current={chosen} onRowPress={(file) => setChosen(file.id)} virtual className="h-96 rounded-md border border-line" />
         </div>
       </Row>
+      <Row label="a tree with a choice and groups">
+        <div data-sample="data-table-tree" className="w-full max-w-3xl">
+          <CleanupTable />
+        </div>
+      </Row>
+      <Row label="a heading that is a part">
+        <div className="w-full max-w-3xl">
+          <DataTable
+            aria-label="Files with an icon in the heading"
+            columns={[
+              {
+                id: 'name',
+                header: (
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name="file" />
+                    Name
+                  </span>
+                ),
+                cell: (file: FileRow) => file.name,
+                sortValue: (file: FileRow) => file.name,
+              },
+              COLUMNS[2]!,
+            ]}
+            rows={FEW.slice(0, 4)}
+            rowId={(file) => file.id}
+          />
+        </div>
+      </Row>
       <Row label="no rows">
         <div className="w-full max-w-3xl">
           <DataTable aria-label="Shared files" columns={COLUMNS} rows={[]} rowId={(file) => file.id} empty="Nothing is shared with you yet." />
@@ -126,7 +232,7 @@ export function LongLists() {
       title="VirtualList"
       note={
         <>
-          A long list of which only the rows in sight are in the page, from the entry <Code>@acaprino/sigrid/virtual</Code> (TanStack Virtual). The rows are the toolkit's own <Code>ItemRow</Code>: one is measured as it is drawn, so any density and a finger's 44px hold. Screen readers still hear how many items the list holds and where each one is.
+          A long list of which only the rows in sight are in the page, from the entry <Code>@acaprino/sigrid/virtual</Code> (TanStack Virtual). The rows are the toolkit's own <Code>ItemRow</Code>: one is measured as it is drawn, so any density and a finger's 44px hold; with <Code>variable</Code> every row is measured, for rows of different heights. Screen readers still hear how many items the list holds and where each one is. <Code>VirtualConversation</Code> is <Code>Conversation</Code> for a long thread: it opens at the end, follows the newest message while the reader is there, and shows the button back to it when the reader goes up.
         </>
       }
     >
@@ -145,6 +251,26 @@ export function LongLists() {
               />
             )}
           </VirtualList>
+        </div>
+      </Row>
+      <Row label="rows of different heights">
+        <div data-sample="virtual-list-variable" className="w-full max-w-md">
+          <VirtualList aria-label="Notes" count={10_000} estimateSize={64} variable className="h-96 rounded-md border border-line p-1">
+            {(index) => (
+              <ItemRow key={index} title={`Note ${index + 1}`} description={SUBJECTS.slice(0, 1 + (index % 4)).join('. ')} />
+            )}
+          </VirtualList>
+        </div>
+      </Row>
+      <Row label="a conversation of 10,000 turns">
+        <div data-sample="virtual-conversation" className="flex h-96 w-full max-w-2xl flex-col">
+          <VirtualConversation label="A long conversation" count={10_000} rowKey={(index) => `turn-${index}`}>
+            {(index) => (
+              <Message from={index % 2 === 0 ? 'user' : 'assistant'}>
+                {index % 2 === 0 ? `Question ${index / 2 + 1}` : `Answer ${(index - 1) / 2 + 1}. ${SUBJECTS.slice(0, 1 + (index % 5)).join('. ')}.`}
+              </Message>
+            )}
+          </VirtualConversation>
         </div>
       </Row>
     </Section>

@@ -31,7 +31,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup', 'DropdownMenuItem', 'DropdownMenuLabel',
     'DropdownMenuPortal', 'DropdownMenuRadioGroup', 'DropdownMenuRadioItem', 'DropdownMenuSeparator',
     'DropdownMenuShortcut', 'DropdownMenuSub', 'DropdownMenuSubContent', 'DropdownMenuSubTrigger',
-    'DropdownMenuTrigger', 'Field', 'Grid', 'Heading', 'Icon', 'ICON_NAMES', 'initials', 'Input', 'isIconName', 'Kbd', 'Logo',
+    'DropdownMenuTrigger', 'Field', 'Grid', 'Heading', 'HoverFollow', 'Icon', 'ICON_NAMES', 'initials', 'Input', 'isIconName', 'Kbd', 'Logo',
     'NeedThumbnail', 'Page', 'Popover', 'PopoverAnchor', 'PopoverContent', 'PopoverDescription', 'PopoverHeader',
     'PopoverPrimitive', 'PopoverTitle', 'PopoverTrigger', 'Progress', 'ProgressRing', 'ProgressSegments',
     'QUIET_CHIP', 'RadioGroup', 'RadioGroupItem', 'safeThumbnail', 'ScrollArea', 'Section', 'Select', 'Separator',
@@ -49,7 +49,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
   ],
   '@acaprino/sigrid/layout': [
     'APP_SHELL_STEPS', 'AppShell', 'AppShellContext', 'appShellLayout', 'brandInitial', 'ContentSplit',
-    'DrawerButton', 'Inspector', 'NavItem', 'NavList', 'Panel', 'Sidebar', 'SidebarGroup', 'SidebarRow', 'TitleBar',
+    'DrawerButton', 'Inspector', 'NavItem', 'NavList', 'Panel', 'Sidebar', 'SidebarGroup', 'SidebarRow', 'SplitPane', 'TitleBar',
     'TitleBarDragContext', 'TitleBarSizeContext', 'Toolbar', 'ToolbarBrand', 'ToolbarButton', 'ToolbarGroup',
     'ToolbarSearch', 'ToolbarSeparator', 'ToolbarSpacer', 'ToolbarTab', 'ToolbarTabs', 'ToolbarTitle', 'useAppShell',
     'WindowControls',

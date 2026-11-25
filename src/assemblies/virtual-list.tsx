@@ -5,6 +5,14 @@
 // - The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:
 //   any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.
 // - The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.
+// - With `variable` the rows are not all as tall (messages of a thread, a few lines or a screenful): each row is
+//   measured as it is drawn and watched, so a row that grows (an answer being written, an image that arrives) moves
+//   the ones after it. `estimateSize` is then the height of a row not yet seen, and the scrollbar is as honest as the
+//   rows seen so far allow.
+// - A row measured keeps its height where it moves: by its `rowKey` (its id), not its place. The library is given one
+//   function for the keys and not a new one at every paint (a new one makes it read the key of every row again, ten
+//   thousand of them, at each paint), and a new one only when the keys changed where the list can see them (its ends and
+//   the rows drawn).
 // - For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,
 //   `aria-posinset`): what is not drawn is still counted.
 // The box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),
@@ -29,6 +37,8 @@ export type VirtualListProps = {
   rowKey?: ((index: number) => React.Key) | undefined
   /** The height of a row in px before one is measured. Default 44. */
   estimateSize?: number | undefined
+  /** The rows are of different heights, so each one is measured, not just the first (a thread of messages). Default: all as tall as the first. */
+  variable?: boolean | undefined
   /** How many rows are drawn beyond the ones in sight, on each side. Default 8. */
   overscan?: number | undefined
   /** As tall as the region that holds it, which gives it its height (the content of the frame, a pane): the box scrolls, not the region. */
@@ -42,14 +52,88 @@ export type VirtualListProps = {
 /** The gap between two rows of a list, in px: `gap-0.5`, as `ItemList`. */
 const GAP = 2
 
-function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8, fill = false, pad, className, ...props }: VirtualListProps) {
+export type VirtualRowsOptions = {
+  count: number
+  rowKey?: ((index: number) => React.Key) | undefined
+  estimateSize: number
+  overscan: number
+  variable: boolean
+  /** The room in px between two rows, which the element holding them lays out (`gap-*`). */
+  gap?: number | undefined
+  /** The room in px before the first row and after the last one, which the box keeps (the padding of the rows' holder is only at the sides). */
+  edge?: number | undefined
+  /** The box opens at the end (a thread): the first paint is of the rows there, not of the first ones, so nothing blank is seen before it scrolls. */
+  openAtEnd?: boolean | undefined
+  /**
+   * The place the reader is at is kept when rows come in before it or the rows change (a thread re-read, older messages
+   * loaded): the library anchors on the row (by its `rowKey`) at the top of the box, and a box at its end stays at its end
+   * while the rows there are measured. Needs `rowKey` and `variable`.
+   */
+  keepPlace?: boolean | undefined
+}
+
+/**
+ * The choice of rows that are drawn, shared by the list and by a thread of messages (`VirtualConversation`): the
+ * box that scrolls, the element that holds the rows, and the room kept for the rows not drawn. The rows of a holder
+ * are all as tall as the first one, which is read where it is drawn (any density holds, so do a finger's 44px), or,
+ * with `variable`, each one is measured and watched.
+ */
+export function useVirtualRows<Holder extends HTMLElement = HTMLElement>({ count, rowKey, estimateSize, overscan, variable, gap = GAP, edge = 0, openAtEnd = false, keepPlace = false }: VirtualRowsOptions) {
   const box = React.useRef<HTMLDivElement>(null)
-  const list = React.useRef<HTMLUListElement>(null)
+  const list = React.useRef<Holder>(null)
   const [size, setSize] = React.useState(estimateSize)
-  const virtualizer = useVirtualizer({ count, getScrollElement: () => box.current, estimateSize: () => size + GAP, overscan })
+  // One function for the keys, which reads the app's as it is now. The library is given a new one only when the keys changed
+  // where we can see them: a new function at every paint makes it ask the key of every row again.
+  const latestKey = React.useRef(rowKey)
+  latestKey.current = rowKey
+  const seen = React.useRef<number[]>([])
+  const signature = rowKey && variable ? [count, ...[0, count - 1, ...seen.current].filter((at) => at >= 0 && at < count).map((at) => String(rowKey(at)))].join("\u0000") : ""
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getItemKey = React.useMemo(() => (at: number): React.Key => latestKey.current?.(at) ?? at, [signature])
+  const virtualizer = useVirtualizer({
+    count,
+    getScrollElement: () => box.current,
+    estimateSize: () => (variable ? estimateSize : size + gap),
+    overscan,
+    ...(variable ? { gap } : {}),
+    ...(edge > 0 ? { paddingStart: edge, paddingEnd: edge } : {}),
+    // A row measured keeps its height where it moves: by its id, not its place.
+    ...(variable && rowKey ? { getItemKey } : {}),
+    // The first paint is of the end: the whole height as estimated is further than the box can go, and the library holds it at the end.
+    ...(openAtEnd ? { initialOffset: () => edge * 2 + count * (estimateSize + (variable ? gap : 0)) } : {}),
+    ...(keepPlace && variable && rowKey ? { anchorTo: "end" as const } : {}),
+  })
   const drawn = virtualizer.getVirtualItems()
-  // A row is measured where it is: with another density, or a finger, every row is as tall as the one found there.
-  // And each row is told its place in the whole list: written on the `<li>` itself, whatever component drew it.
+  seen.current = drawn.map((item) => item.index)
+  React.useLayoutEffect(() => {
+    const rows = Array.from(list.current?.children ?? []) as HTMLElement[]
+    if (variable) {
+      // Each row is told its place and is measured where it is, and watched: the library keeps what it measured.
+      virtualizer.measureElement(null)
+      rows.forEach((row, at) => {
+        const item = drawn[at]
+        if (!item) return
+        row.setAttribute("data-index", String(item.index))
+        virtualizer.measureElement(row)
+      })
+      return
+    }
+    // The height of the layout, not the one drawn: a list in a preview that is scaled down has rows as tall as ever.
+    const height = rows[0]?.offsetHeight ?? 0
+    if (height > 0 && height !== size) setSize(height)
+  })
+  React.useLayoutEffect(() => {
+    if (!variable) virtualizer.measure()
+  }, [size, variable, virtualizer])
+  const first = drawn[0]
+  const last = drawn[drawn.length - 1]
+  const room = { paddingTop: first ? first.start : 0, paddingBottom: last ? Math.max(0, virtualizer.getTotalSize() - last.end) : 0 }
+  return { box, list, virtualizer, drawn, room }
+}
+
+function VirtualList({ count, children, rowKey, estimateSize = 44, variable = false, overscan = 8, fill = false, pad, className, ...props }: VirtualListProps) {
+  const { box, list, drawn, room } = useVirtualRows<HTMLUListElement>({ count, rowKey, estimateSize, overscan, variable })
+  // Each row is told its place in the whole list: written on the `<li>` itself, whatever component drew it.
   React.useLayoutEffect(() => {
     const rows = Array.from(list.current?.children ?? []) as HTMLElement[]
     rows.forEach((row, at) => {
@@ -58,16 +142,10 @@ function VirtualList({ count, children, rowKey, estimateSize = 44, overscan = 8,
       row.setAttribute("aria-setsize", String(count))
       row.setAttribute("aria-posinset", String(item.index + 1))
     })
-    // The height of the layout, not the one drawn: a list in a preview that is scaled down has rows as tall as ever.
-    const height = rows[0]?.offsetHeight ?? 0
-    if (height > 0 && height !== size) setSize(height)
   })
-  React.useLayoutEffect(() => virtualizer.measure(), [size, virtualizer])
-  const first = drawn[0]
-  const last = drawn[drawn.length - 1]
   return (
-    <div ref={box} data-slot="virtual-list" data-fill={fill || undefined} className={cn("overflow-y-auto", fill && "h-full min-h-0 flex-1", pad && PAD[pad], className)}>
-      <ul ref={list} role="list" {...props} className="flex flex-col gap-0.5" style={{ paddingTop: first ? first.start : 0, paddingBottom: last ? Math.max(0, virtualizer.getTotalSize() - last.end) : 0 }}>
+    <div ref={box} data-slot="virtual-list" data-fill={fill || undefined} data-variable={variable || undefined} className={cn("overflow-y-auto", fill && "h-full min-h-0 flex-1", pad && PAD[pad], className)}>
+      <ul ref={list} role="list" {...props} className="flex flex-col gap-0.5" style={room}>
         {drawn.map((item) => (
           <React.Fragment key={rowKey ? rowKey(item.index) : item.index}>{children(item.index)}</React.Fragment>
         ))}

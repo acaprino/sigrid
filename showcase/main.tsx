@@ -28,8 +28,8 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
-import { type SheetWidth } from '../src/primitives'
-import { ContentSplit } from '../src/layout'
+import { HoverFollow, PopoverAnchor, type DialogWidth, type SheetWidth } from '../src/primitives'
+import { ContentSplit, SplitPane } from '../src/layout'
 import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
@@ -153,7 +153,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "progress": "Progress",
   "table": "Table and DataTable",
   "composition": "Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton",
-  "composition-panes": "ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width",
+  "composition-panes": "ItemRow with a control, ContentSplit, SplitPane, VirtualList fill and SheetContent width",
   "form-field": "FormField",
   "pickers": "Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar",
   "date": "Calendar, DateField, DateTimeField and DateRangeField",
@@ -1561,6 +1561,23 @@ const TREE_FILES: readonly TreeNode[] = [
   { id: 'README.md', name: 'README.md', icon: 'file', meta: '30 KB' },
 ]
 
+/** The same files with one that cannot be touched, for the tree that follows the focus. */
+const TREE_FILES_DISABLED: readonly TreeNode[] = [
+  { id: 'notes.md', name: 'notes.md', icon: 'file', meta: '2 KB' },
+  { id: 'plan.md', name: 'plan.md', icon: 'file', meta: '5 KB' },
+  { id: 'secret.env', name: 'secret.env', icon: 'file', meta: '1 KB', disabled: true },
+  { id: 'report.md', name: 'report.md', icon: 'file', meta: '12 KB' },
+]
+
+/** Five thousand files in fifty folders of a hundred, for the tree that draws only the rows in sight. */
+const TREE_MANY: readonly TreeNode[] = Array.from({ length: 50 }, (_, folder): TreeNode => ({
+  id: `folder-${folder}`,
+  name: `folder ${folder + 1}`,
+  icon: 'folder',
+  openIcon: 'folderOpen',
+  children: Array.from({ length: 100 }, (_, file): TreeNode => ({ id: `folder-${folder}/file-${file}`, name: `file ${folder + 1}.${file + 1}`, icon: 'file' })),
+}))
+
 /** An outline: no icons, and a count of what each part holds (R5). */
 const TREE_OUTLINE: readonly TreeNode[] = [
   { id: 'intro', name: 'Introduction', children: [{ id: 'intro/why', name: 'Why a toolkit' }, { id: 'intro/how', name: 'How to read it' }] },
@@ -1589,6 +1606,7 @@ const treeNodes = (list: readonly TreeNode[]): TreeNode[] => list.flatMap((node)
 function Trees({ animated }: { animated: boolean }) {
   const [chosen, setChosen] = React.useState<string | null>('src/components/tree.tsx')
   const [path, setPath] = React.useState('src/comp')
+  const [opened, setOpened] = React.useState<string | null>(null)
   const load = React.useMemo(remoteRows, [])
   const finds = path.trim() === '' ? null : treeNodes(TREE_FILES).filter((node) => byPath(node, path)).length
   return (
@@ -1607,6 +1625,17 @@ function Trees({ animated }: { animated: boolean }) {
           <SearchField value={path} onValueChange={setPath} aria-label="Find a file by path" placeholder="Find a file by path" className="shrink-0" />
           <p role="status" className="px-(--row-pad) text-xs text-ink-mute tabular-nums">{finds === null ? 'Every file' : `${finds} found`}</p>
           <Tree aria-label="Sample files by path" nodes={TREE_FILES} query={path} match={byPath} loadChildren={load} animated={animated} className="min-h-0 flex-1" />
+        </div>
+      </Row>
+      <Row label="a list and its details: the choice follows the focus, Enter opens, a row is disabled">
+        <div data-sample="tree-follow" className="flex h-64 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Sample files that follow the focus" nodes={TREE_FILES_DISABLED} followFocus onOpen={(id) => setOpened(id)} animated={animated} className="h-full" />
+        </div>
+        <Text as="p" variant="note">{opened === null ? 'Press Enter on a file to open it' : `Opened ${opened}`}</Text>
+      </Row>
+      <Row label="five thousand rows (virtual)">
+        <div data-sample="tree-virtual" className="flex h-64 w-72 max-w-full flex-col rounded-lg bg-raised p-2 shadow-sm">
+          <Tree aria-label="Five thousand rows" nodes={TREE_MANY} virtual defaultExpanded={TREE_MANY.map((node) => node.id)} animated={animated} className="h-full" />
         </div>
       </Row>
       <Row label="no icons">
@@ -1647,6 +1676,12 @@ function Pickers() {
       <Row label="search">
         <SearchField aria-label="Sample search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
         <SearchField aria-label="Sample empty search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
+      </Row>
+      <Row label="search, quiet (in a bar)">
+        <div data-sample="search-quiet" className="flex items-center gap-2 rounded-md bg-paper-2 p-2">
+          <SearchField variant="quiet" aria-label="Sample quiet search" placeholder="Search" value={query} onValueChange={setQuery} className="w-64" />
+        </div>
+        <SearchField variant="quiet" aria-label="Sample empty quiet search" placeholder="Search" value="" onValueChange={() => {}} className="w-64" />
       </Row>
       <Row label="field with parts">
         <FormField label="Site" className="w-64">
@@ -1959,23 +1994,49 @@ function Menus({ animated }: { animated: boolean }) {
   )
 }
 
-/** The hover background that glides from row to row, over rows of two heights (with animations only). */
+/** The hover background that glides from row to row: over an app's own rows of two heights (`HoverFollow`), and in an `ItemList`. */
 function HoverRows({ animated }: { animated: boolean }) {
-  const motion = useMotion(animated)
   const [list, setList] = React.useState<HTMLUListElement | null>(null)
+  const [chosen, setChosen] = React.useState('Receipt')
   return (
-    <Section id="hover" title="Hover background" note="With animations one background follows the mouse from row to row, also between rows of different heights; without, each row has its own.">
-      <Row label="rows">
-        <ul ref={setList} data-sample="hover-rows" className="relative flex w-64 flex-col gap-0.5">
-          {motion ? <motion.HoverHighlight container={list} selector="[data-hover-row]" className="absolute rounded-md bg-ink/5" /> : null}
+    <Section id="hover" title="Hover background" note="With animations one background follows the mouse from row to row, also between rows of different heights; without, each row has its own. ItemList has it by itself; HoverFollow gives it to rows of an app's own.">
+      <Row label="rows of an app's own">
+        <ul ref={setList} data-sample="hover-rows" className="flex w-64 flex-col gap-0.5">
           {['Overview', 'Documents', 'Shared with me', 'Quarterly report', 'Archive'].map((name, i) => (
-            <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm ${i === 2 || i === 3 ? 'h-7 pl-6' : 'h-9'} ${motion ? '' : 'hover:bg-ink/5'}`}>
+            <li key={name} data-hover-row="" className={`relative flex items-center rounded-md px-2 text-sm hover:bg-selected/60 [[data-hover-follow]_&]:hover:bg-transparent ${i === 2 || i === 3 ? 'h-7 ps-6' : 'h-9'}`}>
               {name}
             </li>
           ))}
+          <HoverFollow container={list} rows="[data-hover-row]" as="li" animated={animated} />
         </ul>
       </Row>
+      <Row label="a list of things">
+        <ItemList aria-label="Sample messages" animated={animated} className="w-80">
+          {['Kitchen quote', 'Receipt', 'Invoice for March'].map((name) => (
+            <ItemRow key={name} title={name} description={name === 'Receipt' ? 'City parking' : undefined} current={chosen === name} onClick={() => setChosen(name)} />
+          ))}
+        </ItemList>
+      </Row>
     </Section>
+  )
+}
+
+/** A card that hangs from a search field, not from a button: the field keeps the focus, and a press on it keeps the card. */
+function FieldPopover({ animated }: { animated: boolean }) {
+  const [open, setOpen] = React.useState(false)
+  const [query, setQuery] = React.useState('')
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor className="w-64">
+        <SearchField aria-label="Sample search with filters" placeholder="Search, then choose a filter" value={query} onValueChange={setQuery} onFocus={() => setOpen(true)} />
+      </PopoverAnchor>
+      <PopoverContent initialFocus={false} width="md" data-sample="popover-field" animated={animated}>
+        <PopoverHeader>
+          <PopoverTitle>Filters</PopoverTitle>
+          <PopoverDescription>The field keeps the focus while this is open; Esc or a press elsewhere closes it, with a fade.</PopoverDescription>
+        </PopoverHeader>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -2000,6 +2061,9 @@ function Popovers({ animated }: { animated: boolean }) {
             </PopoverContent>
           </Popover>
         </div>
+      </Row>
+      <Row label="under a field">
+        <FieldPopover animated={animated} />
       </Row>
       <Row label="tooltip">
         <Tooltip label="Search" animated={animated}>
@@ -2412,8 +2476,8 @@ function CompositionPanes({ animated }: { animated: boolean }) {
   return (
     <Section
       id="composition-panes"
-      title="ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width"
-      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A long list as tall as its region, and a sheet at the side of a named width."
+      title="ItemRow with a control, ContentSplit, SplitPane, VirtualList fill and SheetContent width"
+      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A `SplitPane` is the same two panes with a divider the person moves (pointer, arrow keys, a double press to put it back). A long list as tall as its region, and a sheet at the side of a named width."
     >
       <Row label="a row with a control">
         <div data-sample="item-row-control" className="w-full max-w-md">
@@ -2440,6 +2504,20 @@ function CompositionPanes({ animated }: { animated: boolean }) {
               </Text>
             </Column>
           </ContentSplit>
+        </div>
+      </Row>
+      <Row label="two panes that move">
+        <div data-sample="split-pane" className="h-56 w-full max-w-3xl overflow-hidden rounded-lg border border-line">
+          <SplitPane start={<Column pad="sm">{rows}</Column>} startLabel="Tasks" endLabel="Task" label="Resize the task list" defaultSize={280}>
+            <Column gap="md" pad="lg">
+              <Heading size="card" level={3}>
+                {task?.title ?? 'Nothing chosen'}
+              </Heading>
+              <Text as="p" variant="soft">
+                Drag the line, or press an arrow key on it; a double press puts it back.
+              </Text>
+            </Column>
+          </SplitPane>
         </div>
       </Row>
       <Row label="a long list that fills">
@@ -3320,6 +3398,7 @@ function Notices({ animated }: { animated: boolean }) {
 function Overlays({ animated }: { animated: boolean }) {
   const [dialog, setDialog] = React.useState(OPEN.has('dialog'))
   const [drawer, setDrawer] = React.useState(OPEN.has('drawer'))
+  const [wide, setWide] = React.useState<DialogWidth | null>(null)
   const [sheet, setSheet] = React.useState<'right' | 'left' | null>(OPEN.has('sheet') ? 'right' : OPEN.has('sheet-left') ? 'left' : null)
   const viewerKind = OPEN.has('viewer') ? 'ready' : OPEN.has('viewer-loading') ? 'loading' : OPEN.has('viewer-error') ? 'error' : null
   const [viewer, setViewer] = React.useState(viewerKind !== null)
@@ -3343,6 +3422,12 @@ function Overlays({ animated }: { animated: boolean }) {
         <Button variant="outline" onClick={() => setDrawer(true)}>
           Dialog as a drawer
         </Button>
+        <Button variant="outline" onClick={() => setWide('lg')}>
+          Dialog lg
+        </Button>
+        <Button variant="outline" onClick={() => setWide('xl')}>
+          Dialog xl
+        </Button>
         <Button variant="outline" onClick={() => setSheet('right')}>
           Sheet
         </Button>
@@ -3365,6 +3450,16 @@ function Overlays({ animated }: { animated: boolean }) {
         }
       >
         <Input defaultValue="Contracts" aria-label="Name" />
+      </Dialog>
+      <Dialog
+        open={wide !== null}
+        onOpenChange={(open) => setWide(open ? wide : null)}
+        width={wide ?? 'md'}
+        title="Choose a folder"
+        description="A wider window for a form of several fields or a list to choose from."
+        footer={<Button onClick={() => setWide(null)}>Done</Button>}
+      >
+        <Input placeholder="Search folders" aria-label="Search folders" />
       </Dialog>
       <Dialog
         open={drawer}
