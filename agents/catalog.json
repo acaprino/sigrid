@@ -1337,7 +1337,7 @@
         },
         {
          "name": "steps",
-         "type": "{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly summary: (position: number, total: number) => string; }",
+         "type": "{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly running: string; readonly skipped: string; readonly summary: (position: number, total: n…",
          "required": true,
          "doc": "What a step of `Steps` is, read after its name."
         },
@@ -1503,7 +1503,7 @@
         },
         {
          "name": "steps",
-         "type": "Partial<{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly summary: (position: number, total: number) => string; }>",
+         "type": "Partial<{ readonly done: string; readonly current: string; readonly upcoming: string; readonly error: string; readonly running: string; readonly skipped: string; readonly summary: (position: number, …",
          "doc": "What a step of `Steps` is, read after its name."
         },
         {
@@ -5206,7 +5206,7 @@
     },
     {
      "file": "src/components/steps.tsx",
-     "about": "The steps of a task as a path (a signup, an import, a lesson): numbered dots joined by a line, that light up one by one\nas the user goes. It shows what is done, where the user is and what is left, and the next step by its name: people\nfinish when they know what remains. The accent is progress (R2): a step done is a check on the accent tint, the step\nthe user is on is the one solid dot, the steps to come are a quiet fill with their number, and the line is the accent\nas far as the steps done. Round, as a dot may be (R7). Nothing moves: the state is always on the screen, which\nis what an ADHD eye needs. Steps done can be buttons that go back to them (`onStepSelect`), never the ones to come.\nFor screen readers it is an ordered list; the step the user is on has `aria-current=\"step\"`, and each step says whether it\nis done, current or not started (`words.steps`, in any language).\nA step that failed has the one look of a failure: Sigrid's `error` icon (the circle with an X) in its dot, in red.",
+     "about": "The steps of a task as a path (a signup, an import, a lesson, a pipeline): numbered dots joined by a line. It shows\nwhat is done, where the user is and what is left, and the next step by its name: people finish when they know what\nremains. Two facts are kept apart: what became of a step (`status`: done, running, to do, skipped, failed; without\nit, what comes before `current` is done) and which step is on the screen (`current`). The accent is progress (R2):\na step done is a check on the accent tint, a running one a clock on it, the step on the screen is the one solid dot\n(with its number, or the mark of its status: a done step looked at keeps its check), the steps to come and the\nskipped ones (a dash) are a quiet fill, and the line is the accent after each step done. Round, as a dot may be (R7).\nNothing moves: the toolkit has no loop to reuse (a progress that does not know how far it is stands still too), so a\nrunning step is told by its mark and its word («in progress», shown at the end of its row in a column).\nWith `onStepSelect` a step that is done, running, skipped or failed is a button that goes to it; one to come only when\nthe app gave it a `status` itself; a `disabled` one never, and it shows why (`reason`). In a column the whole row is\nthe target and takes the focus ring.\nFor screen readers it is an ordered list; the step on the screen has `aria-current=\"step\"`, and each step says what\nbecame of it (`words.steps`, in any language).\nA step that failed has the one look of a failure: Sigrid's `error` icon (the circle with an X) in its dot, in red.",
      "components": [
       {
        "name": "Steps",
@@ -5226,12 +5226,12 @@
          "name": "current",
          "type": "number",
          "required": true,
-         "doc": "The step the user is on, counting from 0. The ones before it are done; `steps.length` means all are done."
+         "doc": "The step on the screen, counting from 0: it has `aria-current` and the one solid dot, whatever its status. Steps without a `status` are done before it and to come after it; `steps.length` means all are done, -1 that none is on the screen."
         },
         {
          "name": "onStepSelect",
          "type": "((index: number) => void)",
-         "doc": "With it, each step already done is a button that goes back to it. The step the user is on and those to come are not."
+         "doc": "With it, each step that is done, running, skipped or failed is a button that goes to it; a step to come only when its `status` is given, and a `disabled` one never. In a column the whole row is the target."
         },
         {
          "name": "orientation",
@@ -5262,8 +5262,23 @@
         },
         {
          "name": "status",
-         "type": "\"error\"",
-         "doc": "`error`: this step failed (a processing that stopped here). It is shown in red with Sigrid's `error` icon and says so in words; the line before it stays the accent."
+         "type": "\"error\" | \"done\" | \"running\" | \"todo\" | \"skipped\"",
+         "doc": "What became of the step, whatever its place: `done`, `running` (a clock, and the words «in progress»), `todo`, `skipped` (a dash) or `error` (it failed: red, with Sigrid's `error` icon). Absent: the steps before `current` are done and the others are to come."
+        },
+        {
+         "name": "meta",
+         "type": "string",
+         "doc": "A short fact at the end of the row («2 min», «3 of 6»), in figures of one width. In a column only."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "The step cannot be gone to yet: it is never a button. Say why in `reason`."
+        },
+        {
+         "name": "reason",
+         "type": "string",
+         "doc": "Why a `disabled` step cannot be gone to yet («Run the analysis first»): shown under its name, so read by everyone."
         }
        ]
       }
