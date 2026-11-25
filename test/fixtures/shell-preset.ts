@@ -2,7 +2,7 @@
 // control border (`Surfaces.input`), boxed keys, strong control borders, and one accent hue for each app. Test data
 // only: the toolkit ships no themes. It is the preset the hooks were approved for (the owner, 2026-11-24), so the
 // contrast of its pairs is measured here by the engine, not by hand (test/theme-hooks.test.tsx).
-import type { ThemeDef } from '../../src/theme-catalog'
+import type { GlassLevels, ThemeDef } from '../../src/theme-catalog'
 import type { ThemeTone } from '../../src/theme-engine'
 
 /** The accent of each app: its hue, and the accent as written for the dark and the light scheme. */
@@ -19,6 +19,22 @@ export const SHELL_INPUT = { dark: '#8791a6', light: '#767e8b' } as const
 
 /** The muted inks the preset states: a trace of the surfaces' blue. */
 export const SHELL_MUTE = { dark: '#9aa5b8', light: '#5b6472' } as const
+
+/**
+ * The glass the preset states: the three levels of the old Smooth look (Imago 0.4.1, `css/tokens.css`), each `rgba()`
+ * written as `#rrggbbaa`. Dark: 0.80, 0.94, 0.96; light: 0.88, 0.95, 0.97.
+ */
+export const SHELL_GLASS = {
+  dark: { ground: '#0c111dcc', sheet: '#1a202cf0', float: '#242935f5' },
+  light: { ground: '#f6f7f9e0', sheet: '#fffffff2', float: '#fffffff7' },
+} as const
+
+/** The preset as a glass page that states its three levels (`Surfaces.glass`), or what is given instead (a saved value may be anything). */
+export function shellGlass(accent: (typeof SHELL_ACCENTS)[number], glass: { readonly dark: unknown; readonly light: unknown } = SHELL_GLASS): ThemeDef {
+  const preset = shellPreset(accent)
+  const surfaces = preset.surfaces!
+  return { ...preset, material: 'glass', surfaces: { dark: { ...surfaces.dark, glass: glass.dark as GlassLevels }, light: { ...surfaces.light, glass: glass.light as GlassLevels } } }
+}
 
 /** The preset passes the Balanced tone: its accents are the colours as written. */
 export const SHELL_TONE: ThemeTone = { intensity: 'theme', light: 'theme' }
