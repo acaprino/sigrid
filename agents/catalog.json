@@ -1339,6 +1339,12 @@
          "required": true
         },
         {
+         "name": "workspace",
+         "type": "{ readonly pane: (place: number) => string; readonly tabs: string; readonly close: (title: string) => string; readonly newTab: string; readonly empty: string; readonly resize: string; readonly maximi…",
+         "required": true,
+         "doc": "What a `Workspace` says by itself."
+        },
+        {
          "name": "search",
          "type": "{ readonly clear: string; }",
          "required": true
@@ -1518,6 +1524,11 @@
         {
          "name": "splitPane",
          "type": "Partial<{ readonly hint: string; }>"
+        },
+        {
+         "name": "workspace",
+         "type": "Partial<{ readonly pane: (place: number) => string; readonly tabs: string; readonly close: (title: string) => string; readonly newTab: string; readonly empty: string; readonly resize: string; readonl…",
+         "doc": "What a `Workspace` says by itself."
         },
         {
          "name": "search",
@@ -4102,16 +4113,16 @@
     },
     {
      "file": "src/components/context-menu.tsx",
-     "about": "A menu on a thing, opened with the right button or with the Menu key (Shift+F10): the actions of a row, a tab, a\nfile, listed once and found where the pointer is. It wraps what it is for (a row, a pane, a tab) and lays no box of its\nown around it (`display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its\nkey as a hint, `destructive` for the one that deletes), a submenu, a heading, a separator. The card and the rows are\n`DropdownMenu`'s, so the menu is the one of every other: the arrows, Home and End, a letter, Enter, Escape, which brings\nthe focus back to where it was.\n- The pointer's menu opens at the point pressed; the keyboard's, under the thing that has the focus. A text field and\n  its kin keep the system's own menu (copy, paste). A menu inside a menu is the inner one's: the outer one leaves a\n  press that was taken.\n- The entries are read when the menu opens (`items` may be a function), so a menu always says what the thing is now.\n- An action is also a button somewhere the person can reach without the menu: a menu is a shortcut, never the only\n  way (a touch screen has no right button).",
+     "about": "A menu on a thing, opened with the right button or with the Menu key (Shift+F10): the actions of a row, a tab, a\nfile, listed once and found where the pointer is. It wraps what it is for (a row, a list, a pane, a tab) and lays no box\nof its own around it (a `div` with `display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its\nkey as a hint, `destructive` for the one that deletes), a submenu, a heading, a separator. The card and the rows are\n`DropdownMenu`'s, so the menu is the one of every other: the arrows, Home and End, a letter, Enter, Escape, which brings\nthe focus back to where it was.\n- The pointer's menu opens at the point pressed; the keyboard's, under the thing that has the focus. A text field and\n  its kin keep the system's own menu (copy, paste). A menu inside a menu is the inner one's: the outer one leaves a\n  press that was taken.\n- The entries are read when the menu opens (`items` may be a function, given the element pressed or in focus), so a menu\n  always says what the thing is now; and one menu around a whole list can read which row it is on from that element.\n- An action is also a button somewhere the person can reach without the menu: a menu is a shortcut, never the only\n  way (a touch screen has no right button).",
      "components": [
       {
        "name": "ContextMenu",
        "props": [
         {
          "name": "items",
-         "type": "readonly ContextMenuEntry[] | (() => readonly ContextMenuEntry[])",
+         "type": "readonly ContextMenuEntry[] | ((target: Element) => readonly ContextMenuEntry[])",
          "required": true,
-         "doc": "The entries, or a function that gives them when the menu opens. An empty list opens nothing."
+         "doc": "The entries, or a function that gives them when the menu opens, told the element that was pressed (or has the focus): around a whole list it says which row the menu is for. An empty list opens nothing."
         },
         {
          "name": "label",
@@ -8860,6 +8871,397 @@
      ],
      "also": [
       "WizardProps"
+     ]
+    },
+    {
+     "file": "src/assemblies/workspace-model.ts",
+     "about": "The tree of a workspace and what is done to it (`Workspace` draws it): panes in a split tree, each leaf a group of\ntabs. Plain data, so an app keeps it, saves it as JSON and restores it; every function here is pure and gives back a\nnew tree, or the very same one when there is nothing to change, so an app can tell by `===` whether to save.\n- A `split` puts its children side by side (`horizontal`: the first at the start of the line) or one under the other\n  (`vertical`), each as wide or as tall as its `weight` is of all of them. Weights are ratios, not pixels.\n- A `tabs` is a group: its tabs in order and the one chosen (`activeId`, null with no tabs). The ids of the groups and\n  of the tabs are the app's, and each is unique in the tree.\n- The tree is always normal (`normalizeWorkspace`): no group is empty unless it is the only one, no split has a single\n  child or a child that splits the same way (it is folded in), every weight is a positive number, every group names a\n  tab that is in it. Each function that changes the tree gives it back normal.\n- Where a tab goes is a `WorkspaceDrop`: into a group at a slot, or to an edge of a group, which divides that group\n  and puts the tab in a new one beside it. The same value is what a drop of the pointer and a key of the keyboard say.\n- Geometry is in fractions of the whole workspace (`layoutWorkspace`): the groups' boxes, the sashes between them and\n  the nearest group in a direction, so the drawing, the drop targets and the keyboard read one source.",
+     "types": [
+      {
+       "name": "WorkspaceDrop",
+       "doc": "Where a tab is put. In a group, at a slot of its strip (`index`: before the tab now at that place, the end when absent). Or at an edge of a group: the group is divided there and the tab goes into a new group, named `newId`.",
+       "fields": [
+        {
+         "name": "groupId",
+         "type": "string"
+        },
+        {
+         "name": "index",
+         "type": "number"
+        },
+        {
+         "name": "edge",
+         "type": "WorkspaceEdge"
+        },
+        {
+         "name": "newId",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceLayout",
+       "doc": "What the geometry of a tree says: the box of each group (by id) and the sashes.",
+       "fields": [
+        {
+         "name": "groups",
+         "type": "ReadonlyMap<string, WorkspaceRect>",
+         "required": true
+        },
+        {
+         "name": "sashes",
+         "type": "readonly WorkspaceSash[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceNode",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A pane (a group of tabs) or a division of panes.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"tabs\""
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "tabs",
+         "type": "readonly T[]"
+        },
+        {
+         "name": "activeId",
+         "type": "string | null"
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection"
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]"
+        },
+        {
+         "name": "children",
+         "type": "readonly WorkspaceNode<T>[]"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceRect",
+       "doc": "A box in fractions (0 to 1) of the workspace: `x` and `y` from its start and top.",
+       "fields": [
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "y",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "width",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceSash",
+       "doc": "A line between two children of a split, in the same fractions.",
+       "fields": [
+        {
+         "name": "path",
+         "type": "WorkspacePath",
+         "required": true,
+         "doc": "The split it divides."
+        },
+        {
+         "name": "boundary",
+         "type": "number",
+         "required": true,
+         "doc": "Between the children `boundary` and `boundary + 1`."
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection",
+         "required": true
+        },
+        {
+         "name": "at",
+         "type": "number",
+         "required": true,
+         "doc": "Where the line is: `x` for a `horizontal` split (a vertical line), `y` for a `vertical` one."
+        },
+        {
+         "name": "from",
+         "type": "number",
+         "required": true,
+         "doc": "Where it starts and how long it is across the split."
+        },
+        {
+         "name": "length",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "span",
+         "type": "number",
+         "required": true,
+         "doc": "How much of the workspace the split takes along its direction: what a distance moved is a fraction of."
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "The split's weights now."
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceSplit",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A division: `children` in a line, each with its `weights` share. There are at least two children and as many weights.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"split\"",
+         "required": true
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection",
+         "required": true
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "readonly WorkspaceNode<T>[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceTab",
+       "doc": "A tab: what its title says, an icon if it has one, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need).",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …"
+        },
+        {
+         "name": "closable",
+         "type": "boolean"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceTabs",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A group of tabs: a pane. `activeId` is the tab shown, `null` when the group has none.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"tabs\"",
+         "required": true
+        },
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "tabs",
+         "type": "readonly T[]",
+         "required": true
+        },
+        {
+         "name": "activeId",
+         "type": "string | null",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "activateWorkspaceTab",
+      "addWorkspaceTab",
+      "closeWorkspaceTab",
+      "emptyWorkspace",
+      "findWorkspaceGroup",
+      "findWorkspaceTab",
+      "layoutWorkspace",
+      "moveWorkspaceTab",
+      "normalizeWorkspace",
+      "resizeWorkspace",
+      "shiftWorkspaceWeights",
+      "splitWorkspaceGroup",
+      "WorkspaceDirection",
+      "WorkspaceEdge",
+      "workspaceGroups",
+      "workspaceMinimum",
+      "workspaceNeighbor",
+      "workspaceNodeAt",
+      "WorkspacePath",
+      "workspaceZone"
+     ]
+    },
+    {
+     "file": "src/assemblies/workspace.tsx",
+     "about": "A tiling area: panes in a split tree, each pane a group of tabs, the person making the layout (a terminal beside the\ncode, the code over a log). The app owns the tree, plain data (`WorkspaceNode`, `workspace-model.ts`), and is told of\nevery change (`onChange`); the area draws it and what is in each tab is the app's (`renderTab`).\n- Nothing in a tab is lost by moving things: the content of every tab is drawn once, in one flat list keyed by the\n  tab, and placed over the box of its pane; so a tab dragged to another pane, a pane divided or closed around it, keeps\n  its content mounted (a terminal keeps running, a page keeps its state). The tabs that are not shown stay mounted,\n  hidden (`keepMounted=\"active\"` unmounts them). The panes are laid out by percent, from the weights, with no\n  measuring; only a drag of a divider measures.\n- A divider is a window splitter like `SplitPane`'s: one tab stop, `role=\"separator\"` with the share of its first\n  neighbour (`aria-valuenow`), the pointer moves it and the pane follows, the arrows move it 16px (Shift, 64px), Home and\n  End take it to the least each neighbour keeps (`minSize`), a double press shares the two alike. The arrows follow\n  the panes in a language written from the right. The weights are told once, when the pointer is let go.\n- A tab is chosen with a press or the arrows (the strip is `Tabs`, so one tab stop and Home/End), closed with its ×,\n  Delete or a middle press (`onCloseTab` lets the app ask first), and put in order or in another pane by hand: a\n  drag shows where it will go (a mark in a strip to put it in that place, the middle of a pane to join it, a side of a\n  pane to divide it there, with a box that says so; Escape drops it). The same is done without a pointer: Shift+←/→ puts\n  it earlier or later, Alt+Shift+arrow divides the pane in that direction (a pane's only tab joins the pane there),\n  and the tab's menu (right button, Menu key) lists them with Close; a polite status says where it went. A strip that\n  is longer than the pane scrolls and brings the chosen tab into sight.\n- A pane is the focused one while the person works in it (`focusedId`, told with `onFocusedChange`); with\n  `onMaximizedChange` its bar has a button that fills the whole area with it, the others stay mounted.",
+     "components": [
+      {
+       "name": "Workspace",
+       "props": [
+        {
+         "name": "tree",
+         "type": "WorkspaceNode<T>",
+         "required": true,
+         "doc": "The layout: panes and their tabs. The app keeps it and passes what `onChange` gives."
+        },
+        {
+         "name": "onChange",
+         "type": "(tree: WorkspaceNode<T>) => void",
+         "required": true,
+         "doc": "The person changed the layout: a tab chosen, closed, moved or divided off, a divider moved. Not told for what the app itself did to the tree."
+        },
+        {
+         "name": "renderTab",
+         "type": "(tab: T, state: WorkspaceTabState) => React.ReactNode",
+         "required": true,
+         "doc": "The content of a tab. It is called for every tab, shown or not (see `keepMounted`), so keep it light and let the content keep its own state."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the area for screen readers («Terminals»)."
+        },
+        {
+         "name": "keepMounted",
+         "type": "\"all\" | \"active\"",
+         "doc": "`all` (the default): every tab stays mounted, hidden when it is not shown. `active`: only the shown tab of each pane is drawn."
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode | ((groupId: string) => React.ReactNode)",
+         "doc": "What a pane with no tab shows. Default: the toolkit's sentence, and a button when `onAddTab` is given."
+        },
+        {
+         "name": "onAddTab",
+         "type": "((groupId: string) => void)",
+         "doc": "The bar of each pane has a button that adds a tab; this is told which pane. The app makes the tab and puts it in the tree (`addWorkspaceTab`)."
+        },
+        {
+         "name": "onCloseTab",
+         "type": "((tab: T, groupId: string) => void)",
+         "doc": "A tab's close was asked (its ×, Delete, a middle press, the menu). Given, the app decides (it may ask first, and closes with `closeWorkspaceTab`); absent, the tab closes."
+        },
+        {
+         "name": "tabMenu",
+         "type": "((tab: T, groupId: string) => readonly ContextMenuEntry[])",
+         "doc": "The app's own entries of a tab's menu, above the toolkit's."
+        },
+        {
+         "name": "focusedId",
+         "type": "string | null",
+         "doc": "The pane the person works in, when the app keeps it; otherwise the area keeps it (the first at first)."
+        },
+        {
+         "name": "onFocusedChange",
+         "type": "((groupId: string) => void)",
+         "doc": "The person began to work in another pane (a press or the focus went in)."
+        },
+        {
+         "name": "maximizedId",
+         "type": "string | null",
+         "doc": "The pane that fills the whole area, `null` for none, when the app keeps it. With `onMaximizedChange` each bar has the button."
+        },
+        {
+         "name": "onMaximizedChange",
+         "type": "((groupId: string | null) => void)"
+        },
+        {
+         "name": "minSize",
+         "type": "{ width?: number | undefined; height?: number | undefined; }",
+         "doc": "The least width and height of a pane, in px, a divider keeps. Default 160 by 120."
+        },
+        {
+         "name": "newGroupId",
+         "type": "(() => string)",
+         "doc": "Makes the id of a pane the person divides off. Default: `pane-1`, `pane-2`… the first that the tree does not have."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The chosen tab's tint slides to a new tab, and the card of a menu and a hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "WorkspaceTabState",
+       "doc": "What a tab's content is told about its place.",
+       "fields": [
+        {
+         "name": "active",
+         "type": "boolean",
+         "required": true,
+         "doc": "The tab is the one its pane shows."
+        },
+        {
+         "name": "visible",
+         "type": "boolean",
+         "required": true,
+         "doc": "It is on screen: shown by its pane, and its pane is not hidden behind a maximized one. A terminal fits itself when this turns true."
+        },
+        {
+         "name": "focused",
+         "type": "boolean",
+         "required": true,
+         "doc": "Its pane is the one the person works in."
+        },
+        {
+         "name": "groupId",
+         "type": "string",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "WorkspaceProps"
      ]
     }
    ]

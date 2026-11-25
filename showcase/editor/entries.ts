@@ -61,7 +61,11 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'formatKeys', 'KeyHints', 'Lightbox', 'PALETTE_COMMAND', 'PaletteComboChoice', 'PaletteStrip', 'PromptInput',
     'radioArrows', 'stateText', 'summarize', 'SWIPE_DISTANCE_PX', 'SWIPE_FLICK', 'SwipeDeck', 'ThemeCatalogChoice',
     'ThemeGallery', 'TonePresetChoice', 'TonePreview', 'Tree', 'typedUrl', 'useCommand', 'useCommandKey',
-    'useCommandPalette', 'useCommands', 'useSchemeCommands', 'VIEWER_ZOOMS', 'Wizard',
+    'useCommandPalette', 'useCommands', 'useSchemeCommands', 'VIEWER_ZOOMS', 'Wizard', 'Workspace',
+    'activateWorkspaceTab', 'addWorkspaceTab', 'closeWorkspaceTab', 'emptyWorkspace', 'findWorkspaceGroup',
+    'findWorkspaceTab', 'layoutWorkspace', 'moveWorkspaceTab', 'normalizeWorkspace', 'resizeWorkspace',
+    'shiftWorkspaceWeights', 'splitWorkspaceGroup', 'workspaceGroups', 'workspaceMinimum', 'workspaceNeighbor',
+    'workspaceNodeAt', 'workspaceZone',
   ],
 }
 

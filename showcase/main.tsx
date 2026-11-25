@@ -28,6 +28,7 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
+import { Workspaces } from './workspace'
 import { type DialogWidth, type SheetWidth } from '../src/primitives'
 import { ContentSplit, SplitPane } from '../src/layout'
 import { VirtualList } from '../src/virtual'
@@ -179,6 +180,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "reorder": "ReorderList",
   "rich-text": "RichTextField",
   "graph": "GraphCanvas",
+  "workspace": "Workspace and ContextMenu",
   "motion-feel": "The feel: curve and pace",
   "motion-open": "What opens in place",
   "motion-surfaces": "Surfaces: in and out",
@@ -198,7 +200,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'theme-hooks', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
-  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph'] },
+  { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph', 'workspace'] },
   { label: 'Motion', icon: 'animations', ids: ['motion-feel', 'motion-open', 'motion-surfaces', 'motion-choices', 'hover', 'motion-pieces'] },
 ]
 
@@ -389,7 +391,11 @@ const MARKDOWN = `**Before the call**
 > The office opens at 9.
 
 1. Call
-2. Write to [Marco](https://example.com)`
+2. Write to [Marco](https://example.com)
+
+\`\`\`sh
+npm run check -- --fix
+\`\`\``
 
 const SELECT_OPTIONS = [
   { value: 'drafts', label: 'Drafts' },
@@ -3290,7 +3296,7 @@ function Files() {
 
 function Content() {
   return (
-    <Section id="markdown" title="Markdown and label colours" note="Notes as Markdown; a title with inline Markdown; the labels' colour pairs.">
+    <Section id="markdown" title="Markdown and label colours" note="Notes as Markdown, with a fenced block of code (mono, the language, a copy button, no colours); a title with inline Markdown; the labels' colour pairs.">
       <Row label="blocks">
         <div className="w-96">
           <MarkdownBlocks text={MARKDOWN} />
@@ -3746,6 +3752,7 @@ function App() {
     reorder: <Reorders animated={animated} />,
     'rich-text': <RichTexts />,
     graph: <Graphs />,
+    workspace: <Workspaces animated={animated} />,
     'motion-feel': <MotionFeelSection animated={animated} ease={ease} onEase={setEase} pace={pace} onPace={setPace} />,
     'motion-open': <MotionOpens animated={animated} />,
     'motion-surfaces': <MotionSurfaces animated={animated} />,

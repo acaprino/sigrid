@@ -73,7 +73,7 @@ test('choosing an entry runs it and closes the menu; the menu is told it opened 
 
 test('the entries are read when the menu opens, so it says what the thing is now', async () => {
   let state = 'Pin'
-  const items = vi.fn(() => [{ label: state, onSelect: () => {} }] satisfies ContextMenuEntry[])
+  const items = vi.fn((_target: Element) => [{ label: state, onSelect: () => {} }] satisfies ContextMenuEntry[])
   render(
     <ContextMenu items={items}>
       <button type="button">Row</button>
@@ -88,6 +88,33 @@ test('the entries are read when the menu opens, so it says what the thing is now
   state = 'Unpin'
   await open(row)
   expect(screen.getByRole('menuitem').textContent).toBe('Unpin')
+  // It is told the element that was pressed: the row, not the box around it.
+  expect(items).toHaveBeenLastCalledWith(row)
+})
+
+test('one menu around a whole list reads which row it is on from the element pressed, with the mouse or the key', async () => {
+  const items = (target: Element): ContextMenuEntry[] => [{ label: `Open ${target.closest('li')!.textContent}`, onSelect: () => {} }]
+  render(
+    <ContextMenu items={items}>
+      <ul>
+        <li>
+          <button type="button">One</button>
+        </li>
+        <li>
+          <button type="button">Two</button>
+        </li>
+      </ul>
+    </ContextMenu>,
+  )
+  await open(screen.getByRole('button', { name: 'Two' }))
+  expect(screen.getByRole('menuitem').textContent).toBe('Open Two')
+  fireEvent.keyDown(screen.getByRole('menuitem'), { key: 'Escape' })
+  await waitFor(() => expect(menu()).toBeNull())
+  const one = screen.getByRole('button', { name: 'One' })
+  one.focus()
+  fireEvent.keyDown(one, { key: 'ContextMenu' })
+  await waitFor(() => expect(screen.queryByRole('menuitem')).not.toBeNull())
+  expect(screen.getByRole('menuitem').textContent).toBe('Open One')
 })
 
 test('the Menu key and Shift+F10 open it for the thing with the focus; Escape closes it and gives the focus back', async () => {

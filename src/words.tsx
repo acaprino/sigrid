@@ -82,6 +82,41 @@ export interface Words {
     /** The hint of the divider between two panes (`SplitPane`): how it moves and how it goes back. */
     readonly hint: string
   }
+  /** What a `Workspace` says by itself. */
+  readonly workspace: {
+    /** The name of a pane (a group of tabs), from its place in the workspace: «Pane 2». */
+    readonly pane: (place: number) => string
+    /** The name of the strip of a pane's tabs. */
+    readonly tabs: string
+    /** The name of a tab's close button, and of the action in the menu: «Close Build». */
+    readonly close: (title: string) => string
+    /** The name of the button that adds a tab to a pane. */
+    readonly newTab: string
+    /** Said in a pane that has no tab, when the app gives nothing to show there. */
+    readonly empty: string
+    /** The name of the divider between two panes. */
+    readonly resize: string
+    /** The button of a pane that fills the workspace, and the one that puts it back. */
+    readonly maximize: string
+    readonly restore: string
+    /** The entries of a tab's menu. «Split» divides the pane the tab is in and puts the tab in the new one; where it is the pane's only tab it goes to the pane beside it. */
+    readonly moveEarlier: string
+    readonly moveLater: string
+    readonly splitStart: string
+    readonly splitEnd: string
+    readonly splitTop: string
+    readonly splitBottom: string
+    /** Written on the box that shows where a dragged tab will go. */
+    readonly dropHere: string
+    readonly dropStart: string
+    readonly dropEnd: string
+    readonly dropTop: string
+    readonly dropBottom: string
+    /** Said after a tab is moved or split with a key (a polite status). */
+    readonly moved: (title: string, place: number) => string
+    /** Said after a tab is put in another place of its pane with a key. */
+    readonly reordered: (title: string, place: number, total: number) => string
+  }
   readonly search: {
     readonly clear: string
   }
@@ -481,6 +516,29 @@ export const DEFAULT_WORDS: Words = {
   },
   splitPane: {
     hint: 'Drag or use the arrow keys to resize · double press to reset',
+  },
+  workspace: {
+    pane: (place) => `Pane ${place}`,
+    tabs: 'Tabs',
+    close: (title) => `Close ${title}`,
+    newTab: 'New tab',
+    empty: 'Nothing is open in this pane',
+    resize: 'Resize the panes',
+    maximize: 'Fill the workspace with this pane',
+    restore: 'Put the panes back',
+    moveEarlier: 'Move earlier',
+    moveLater: 'Move later',
+    splitStart: 'Split to the start',
+    splitEnd: 'Split to the end',
+    splitTop: 'Split above',
+    splitBottom: 'Split below',
+    dropHere: 'Move to this pane',
+    dropStart: 'New pane at the start',
+    dropEnd: 'New pane at the end',
+    dropTop: 'New pane above',
+    dropBottom: 'New pane below',
+    moved: (title, place) => `${title} is in pane ${place}`,
+    reordered: (title, place, total) => `${title}: ${place} of ${total}`,
   },
   search: {
     clear: 'Clear the search',

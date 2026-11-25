@@ -1,13 +1,14 @@
 // A menu on a thing, opened with the right button or with the Menu key (Shift+F10): the actions of a row, a tab, a
-// file, listed once and found where the pointer is. It wraps what it is for (a row, a pane, a tab) and lays no box of its
-// own around it (`display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its
+// file, listed once and found where the pointer is. It wraps what it is for (a row, a list, a pane, a tab) and lays no box
+// of its own around it (a `div` with `display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its
 // key as a hint, `destructive` for the one that deletes), a submenu, a heading, a separator. The card and the rows are
 // `DropdownMenu`'s, so the menu is the one of every other: the arrows, Home and End, a letter, Enter, Escape, which brings
 // the focus back to where it was.
 // - The pointer's menu opens at the point pressed; the keyboard's, under the thing that has the focus. A text field and
 //   its kin keep the system's own menu (copy, paste). A menu inside a menu is the inner one's: the outer one leaves a
 //   press that was taken.
-// - The entries are read when the menu opens (`items` may be a function), so a menu always says what the thing is now.
+// - The entries are read when the menu opens (`items` may be a function, given the element pressed or in focus), so a menu
+//   always says what the thing is now; and one menu around a whole list can read which row it is on from that element.
 // - An action is also a button somewhere the person can reach without the menu: a menu is a shortcut, never the only
 //   way (a touch screen has no right button).
 import * as React from "react"
@@ -56,8 +57,11 @@ export type ContextMenuHeading = { heading: string }
 export type ContextMenuEntry = ContextMenuAction | ContextMenuSubmenu | ContextMenuHeading | "separator"
 
 export type ContextMenuProps = {
-  /** The entries, or a function that gives them when the menu opens. An empty list opens nothing. */
-  items: readonly ContextMenuEntry[] | (() => readonly ContextMenuEntry[])
+  /**
+   * The entries, or a function that gives them when the menu opens, told the element that was pressed (or has the focus):
+   * around a whole list it says which row the menu is for. An empty list opens nothing.
+   */
+  items: readonly ContextMenuEntry[] | ((target: Element) => readonly ContextMenuEntry[])
   /** The menu's name for screen readers («Actions for the session»). Default: the toolkit's word. */
   label?: string | undefined
   /** No menu: the press and the key go where they would have gone. */
@@ -112,8 +116,8 @@ function ContextMenu({ items, label, disabled = false, onOpenChange, animated, c
   const before = React.useRef<HTMLElement | null>(null)
   const anchor = React.useMemo(() => (opened ? pointAt(opened.x, opened.y) : undefined), [opened?.x, opened?.y])
 
-  const open = (x: number, y: number) => {
-    const entries = typeof items === "function" ? items() : items
+  const open = (x: number, y: number, target: Element) => {
+    const entries = typeof items === "function" ? items(target) : items
     if (entries.length === 0) return
     before.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setOpened({ x, y, entries })
@@ -129,7 +133,7 @@ function ContextMenu({ items, label, disabled = false, onOpenChange, animated, c
   const editable = (event: React.SyntheticEvent<HTMLElement>) => event.target instanceof Element && event.target.closest(EDITABLE) !== null
 
   return (
-    <span
+    <div
       data-slot="context-menu"
       className="contents"
       onContextMenu={(event) => {
@@ -137,15 +141,16 @@ function ContextMenu({ items, label, disabled = false, onOpenChange, animated, c
         event.preventDefault()
         // Open already (a key opened it before the system sent its own event): it stays where it is.
         if (opened) return
+        const target = event.target instanceof Element ? event.target : event.currentTarget
         let x = event.clientX
         let y = event.clientY
         // A key's event comes with no place: the thing under the focus is the place.
-        if (x === 0 && y === 0 && event.target instanceof Element) {
-          const box = event.target.getBoundingClientRect()
+        if (x === 0 && y === 0) {
+          const box = target.getBoundingClientRect()
           x = box.left
           y = box.bottom
         }
-        open(x, y)
+        open(x, y, target)
       }}
       onKeyDown={(event) => {
         const key = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)
@@ -153,7 +158,7 @@ function ContextMenu({ items, label, disabled = false, onOpenChange, animated, c
         event.preventDefault()
         if (opened || !(event.target instanceof Element)) return
         const box = event.target.getBoundingClientRect()
-        open(box.left, box.bottom)
+        open(box.left, box.bottom, event.target)
       }}
     >
       {children}
@@ -169,7 +174,7 @@ function ContextMenu({ items, label, disabled = false, onOpenChange, animated, c
           </DropdownMenuContent>
         ) : null}
       </DropdownMenu>
-    </span>
+    </div>
   )
 }
 

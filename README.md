@@ -387,6 +387,70 @@ const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
 <Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
 ```
 
+## A workspace of panes and tabs
+
+`Workspace` is a tiling area: panes in a split tree, each pane a group of tabs, the person making the layout (a terminal
+beside the code, the code over a log). It is controlled. The app keeps the tree, plain data it can save as JSON and
+restore, and is told of every change with `onChange(tree)`; what is in a tab is the app's, drawn by `renderTab(tab, state)`.
+
+```ts
+type WorkspaceTab = { id: string; title: string; icon?: IconName; closable?: boolean }   // closable: yes unless false
+type WorkspaceTabs = { kind: 'tabs'; id: string; tabs: WorkspaceTab[]; activeId: string | null }
+type WorkspaceSplit = { kind: 'split'; direction: 'horizontal' | 'vertical'; weights: number[]; children: WorkspaceNode[] }
+type WorkspaceNode = WorkspaceTabs | WorkspaceSplit   // `horizontal`: children side by side; `vertical`: one under the other
+```
+
+```tsx
+const [tree, setTree] = useState<WorkspaceNode>(restored ?? emptyWorkspace())
+
+<Workspace tree={tree} onChange={setTree} label="Terminals"
+  renderTab={(tab, { visible }) => <Terminal id={tab.id} fit={visible} />}
+  onAddTab={(groupId) => setTree((t) => addWorkspaceTab(t, groupId, { id: nextId(), title: 'Shell', icon: 'terminal' }))} />
+```
+
+- Nothing in a tab is lost by moving things: the content of every tab is drawn once, in one flat list keyed by the tab,
+  and placed over the box of its pane. A tab dragged to another pane, a pane divided or closed around it keeps its
+  content mounted (a terminal keeps running, a page keeps its state). Tabs that are not shown stay mounted, hidden;
+  `keepMounted="active"` draws only the shown tab of each pane. The panes are laid out by percent from the weights, with no
+  measuring (only a drag of a divider measures); the content is as tall as its pane under a bar of one control's height.
+- A divider is a window splitter like `SplitPane`'s: one Tab stop, `role="separator"` with the share of its first
+  neighbour in `aria-valuenow`; the pointer moves it (the pane follows, the app is told once, when the pointer is let go),
+  the arrows 16px (Shift, 64px), Home and End take it to the least each neighbour keeps (`minSize`, 160 by 120px), a double
+  press shares the two alike. The arrows follow the panes in a language written from the right.
+- A tab is chosen with a press or the arrows (the strip is `Tabs`: one Tab stop, Home and End, and a strip longer than its
+  pane scrolls and brings the chosen tab into sight). It closes with its ×, Delete or a middle press; with `onCloseTab` the
+  app is asked instead (to confirm, and then closes with `closeWorkspaceTab`). It is put in order or in another pane by hand:
+  a drag shows where it will go (a mark in a strip for that place, the middle of a pane to join it, a side of a pane to divide
+  it there, with a box that says which; Escape drops it), and the same is done without a pointer: Shift+←/→ puts it earlier or
+  later, Alt+Shift+arrow divides its pane that way (the only tab of a pane joins the pane there), and the tab's menu, the
+  right button or the Menu key, lists these with Close (`tabMenu` adds the app's own entries first); a polite status says where
+  the tab went. A finger scrolls the strip and does not drag: the menu is its way.
+- The pane the person works in is the focused one (`focusedId`, `onFocusedChange`, or kept by the area), and `renderTab` is told
+  (`state.focused`, and `state.visible` for a terminal that fits itself when it comes on screen). With `onMaximizedChange` each bar
+  has a button that fills the area with its pane (`maximizedId`); the others stay mounted. A pane with no tab shows `empty`.
+  The area has no way to fold itself for a phone: the app shows one pane at a time with `maximizedId`.
+- The tree is always normal (`normalizeWorkspace`, which also repairs saved data): no group is empty unless it is the only one, no
+  split has one child or a child that divides the same way, weights are positive, each group names a tab it has. The operations
+  are pure functions that give a new tree, or the very same one when nothing changes, so an app can drive the tree with its own
+  model: `addWorkspaceTab`, `activateWorkspaceTab`, `closeWorkspaceTab`, `moveWorkspaceTab(tree, tabId, drop)` (`drop` is
+  `{ groupId, index? }` for a slot of a strip or `{ groupId, edge: 'start' | 'end' | 'top' | 'bottom', newId }` to divide
+  a pane), `splitWorkspaceGroup(tree, groupId, edge, group)` (a new group beside a pane: «split with a new terminal»),
+  `resizeWorkspace(tree, path, weights)` and `shiftWorkspaceWeights` (a line moved by px, with minimums), and for reading
+  `workspaceGroups`, `findWorkspaceGroup`, `findWorkspaceTab`, `workspaceNodeAt`, `layoutWorkspace` (the boxes and the dividers
+  in fractions), `workspaceNeighbor` (the pane beside a pane, for a key that moves the focus to it), `workspaceMinimum` and
+  `workspaceZone`. `start` and `end` follow the line of reading; `top` and `bottom` do not.
+
+`ContextMenu` is a menu on any element, opened with the right button, the Menu key or Shift+F10 (a text field keeps the
+system's own menu). It wraps what it is for without a box of its own; the entries are data (an action with its `icon`,
+`shortcut` hint, `disabled` and `destructive`, a submenu with `items`, a `heading`, `"separator"`) and are read when the menu
+opens: `items` may be a function, told the element that was pressed, so one menu around a whole list says which row it is on.
+It is `DropdownMenu`'s card and rows, so it moves with the arrows and gives the focus back when it closes. Its action is also
+a button somewhere the person can reach: a touch screen has no right button.
+
+`MarkdownBlocks` draws a fenced block of code («```ts» to «```», or «~~~»; unclosed it runs to the end, so an answer still
+arriving shows as code from its first line) as a quiet box in the mono face, with the language and a `CopyButton`, and no
+syntax colours.
+
 ## A message that stays in the page
 
 `Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
@@ -656,13 +720,13 @@ list below goes by what a part is for, and names parts of every level):
   the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
 - `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
   `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
-  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
-  and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
+  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `ContextMenu`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`
+  (with fenced code), and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
 - `/layout`: `AppShell`, `Inspector`, `TitleBar`, `WindowControls`, `Toolbar*`, `Sidebar*`, `SidebarRow`,
   `DrawerButton`, `NavList`/`NavItem`, `Panel`, `ContentSplit`, `SplitPane`.
 - `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `AuthForm`, `Wizard`,
   `Lightbox`, `Chat`, `Conversation`,
-  `PromptInput`, `SwipeDeck`, `Tree`, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
+  `PromptInput`, `SwipeDeck`, `Tree`, `Workspace` and its tree operations, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
   `ColorMatch`.
 
 What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Textarea`,

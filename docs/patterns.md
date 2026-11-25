@@ -166,7 +166,7 @@ details. A thing one both ticks and opens (a task) keeps its box beside the row'
 A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList` (`@acaprino/sigrid/virtual`): the
 same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
 invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps two or three columns, or is a list. A
-list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
+list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`). Where the person lays out the work itself, as panes of tabs they divide, move and close (terminals beside code, a log under a file), the content is a `Workspace` (`@acaprino/sigrid/assemblies`): the app keeps its tree and each tab's content stays mounted whatever is moved; on a phone it shows one pane at a time (`maximizedId`). A menu on a row, a tab or a file is a `ContextMenu`, never the only way to its actions.
 Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). A message
 of mail, with its addresses and its subject, is an `EmailComposer`, from the same entry. Things
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
