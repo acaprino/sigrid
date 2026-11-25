@@ -342,7 +342,10 @@ when the branch is first opened. The rows look like every list of things (`ItemR
 selection tint, the chosen row the whole tint and the short accent bar at its start. The rows are one Tab stop (the
 chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
 out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
-Space or a press choose (and open or close a branch). One row is chosen: `selected` and `onSelect` for the app's choice,
+Space or a press choose (and open or close a branch). `onOpen` hears Enter or a double press on a row (open the file,
+enter the folder) besides the choice; `followFocus` makes the choice follow the arrows, for a tree beside its
+details; a node `disabled` stays in the way of the keys but is neither chosen, opened nor asked for; `virtual` draws
+only the rows in sight, for thousands of them (the box needs a height). One row is chosen: `selected` and `onSelect` for the app's choice,
 or `defaultSelected`; the open branches likewise (`expanded`, `onExpandedChange`, called only when the list changes,
 `defaultExpanded`). The chevron is the sidebar's and turns only with `animated`. A closed branch's rows are not in the
 page.
@@ -449,7 +452,8 @@ answer, `Reasoning` and `ToolCall`. The app holds the messages and talks to its 
 
 - `Conversation` scrolls: it stays at the latest message while the reader is at the end, so an answer being written
   is followed, and stops following when the reader goes up; a button then leads back. It is a log for screen readers,
-  which wait while `busy` and read the answer once, whole.
+  which wait while `busy` and read the answer once, whole. For a thread of thousands of turns use
+  `VirtualConversation` (`@acaprino/sigrid/virtual`), which draws only the turns in sight.
 - `Message` with `from="user"` is a quiet block at the end of the row; `from="assistant"` is plain text on the page,
   Markdown when it is a string. Under it, only the actions asked for: `copyText`, `onRetry`, `onVote` (with `vote`),
   and the app's own (`actions`).
@@ -658,7 +662,7 @@ list below goes by what a part is for, and names parts of every level):
 
 What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
-  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Logo` (below), `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, `Toasts`), `PortalContainerProvider`
+  `Tooltip`, `Kbd`, `Empty`, `Badge`, `Logo` (below), `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`), the surfaces (`Dialog`, with `width` `md`, `lg` or `xl` for a centred window that needs more room than a name or a confirmation, `Toasts`), `PortalContainerProvider`
   (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), the parts of a conversation
   (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
@@ -671,13 +675,24 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     be chosen (`current`, `onRowPress`): the rows are one Tab stop, which follows the focus; the arrows, Home and End
     move among them; a press on a control inside a cell (a button, a link, a field) is that control's, not the
     row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
-    Make `columns` once (outside the component, or with `useMemo`): a new array at every paint sorts again. For
-    filters, groups or pinned columns an app drives TanStack Table itself and draws it with `Table` and its parts,
-    which are primitives (`@acaprino/sigrid/primitives`).
+    A tree with a choice, for a list of things to clean up or a folder with what is in it: `rowLevel` (1 is the
+    first) indents the first cell and gives `aria-level`; `rowOpen` and `onRowOpenChange` fold a row that holds
+    others (a caret, `aria-expanded`, Right and Left); `isGroupRow` and `groupCell` make a row a group, one cell across
+    the columns that stays under the headings while its rows scroll; `selection` adds a column of checks
+    (`isSelected` says `true`, `false` or `'mixed'`) and in the heading the one that chooses all. With any of the first
+    three the table is a `treegrid`; the app puts in `rows` only the rows in sight. A column's `header` can be a
+    part (give `label` for its name as text). `onRowKeyDown` is asked first about a key on a row (Space ticks, Enter
+    opens): `preventDefault()` keeps the table from taking it too; PageUp and PageDown move by a page. `containerRef`
+    is the box that scrolls. Make `columns` once (outside the component, or with `useMemo`): a new array at every
+    paint sorts again. For filters or pinned columns an app drives TanStack Table itself and draws it with `Table` and
+    its parts, which are primitives (`@acaprino/sigrid/primitives`).
   - `./virtual`: `VirtualList`, on TanStack Virtual: a long list of `ItemRow`s of which only the ones in sight are
     drawn. It measures a row as it is drawn (any density, a finger's 44px) and still tells screen readers how many
     items there are and where each one is. Each place gives one row, never none. With `fill` it is as tall as the
-    region that holds it, with `pad` the room around its rows.
+    region that holds it, with `pad` the room around its rows. With `variable` every row is measured, for rows of
+    different heights. `VirtualConversation` is `Conversation` for a long thread (ten thousand turns of any height):
+    the same log, opening at the end and following the newest message while the reader is there, with the button
+    back when not; the app gives `count` and a function that draws the turn at a place.
   - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
     pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
     While a row is taken Escape is the list's, so a dialog or a sheet around it stays open.
