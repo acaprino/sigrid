@@ -166,8 +166,8 @@ details. A thing one both ticks and opens (a task) keeps its box beside the row'
 A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList` (`@acaprino/sigrid/virtual`): the
 same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
 invoices) are a `DataTable` (`@acaprino/sigrid/table`); on a phone a table keeps two or three columns, or is a list. A
-list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`).
-Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). A message
+list whose order is the user's (the columns of a board, a queue) is a `ReorderList` (`@acaprino/sigrid/reorder`). Where the person lays out the work itself, as panes of tabs they divide, move and close (terminals beside code, a log under a file), the content is a `Workspace` (`@acaprino/sigrid/assemblies`): the app keeps its tree and each tab's content stays mounted whatever is moved; on a phone it shows one pane at a time (`maximizedId`). A menu on a row, a tab or a file is a `ContextMenu`, never the only way to its actions.
+A program's output and input is a `Terminal` (`@acaprino/sigrid/terminal`), with an `OverviewStrip` beside it for a long scrollback, in the content or a pane; a file's text, to read or to edit, is a `CodeView` (`@acaprino/sigrid/code`). A terminal keeps the keys the program can take; the app's own chords are the ones `appKeys` names. Text with a little form (a message, a note) is written in a `RichTextField` (`@acaprino/sigrid/rich-text`). A message
 of mail, with its addresses and its subject, is an `EmailComposer`, from the same entry. Things
 that hang from one another (tasks and what they wait for, the parts of a project) are a `GraphCanvas`
 (`@acaprino/sigrid/graph`) in the content, with the chosen thing's details in the inspector; things joined by

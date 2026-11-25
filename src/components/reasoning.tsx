@@ -14,7 +14,7 @@ import { cn, isEmptyNode } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { Icon, type IconName } from "../icons"
 import { useWords } from "../words"
-import { MarkdownBlocks } from "../internal/markdown"
+import { MarkdownBlocks } from "./markdown-blocks"
 import { DISCLOSURE_ROW, DISCLOSURE_SLOT, Disclosure } from "./disclosure"
 
 export type ReasoningProps = {

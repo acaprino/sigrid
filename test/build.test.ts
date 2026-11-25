@@ -227,7 +227,7 @@ describe('build output', () => {
       visit(entry)
       return seen
     }
-    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js', 'tauri.js']
+    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js', 'terminal.js', 'code.js', 'tauri.js']
 
     // Since the package has more than one entry, the code that asks for Motion can sit in a chunk the entries share.
     test('what index.js loads reaches that chunk only through one dynamic import(), never a static import', () => {
@@ -249,7 +249,7 @@ describe('build output', () => {
 
     // The libraries of the other entries are for the apps that import those entries: the main one loads none of them.
     test('index.js loads none of the libraries of the other entries', () => {
-      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*|@xyflow|@dagrejs)\//)
+      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*|@xyflow|@dagrejs|@xterm|@codemirror|@lezer)\//)
     })
 
     test('each of the other entries holds its own library, and the table and the lists do not load the text editor', () => {
@@ -260,7 +260,31 @@ describe('build output', () => {
       expect(has('rich-text.js', /node_modules\/@tiptap\//)).toBe(true)
       expect(has('graph.js', /node_modules\/@xyflow\//)).toBe(true)
       expect(has('graph.js', /node_modules\/@dagrejs\//)).toBe(true)
+      expect(has('terminal.js', /node_modules\/@xterm\/xterm\//)).toBe(true)
+      expect(has('terminal.js', /node_modules\/@xterm\/addon-fit\//)).toBe(true)
+      expect(has('code.js', /node_modules\/@codemirror\/view\//)).toBe(true)
+      expect(has('code.js', /node_modules\/@lezer\/highlight\//)).toBe(true)
       for (const entry of ['table.js', 'virtual.js', 'reorder.js', 'graph.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
+      // The terminal and the code view do not load each other's library, nor the others' libraries.
+      expect(has('terminal.js', /node_modules\/(?:@codemirror|@lezer)\//)).toBe(false)
+      expect(has('code.js', /node_modules\/@xterm\//)).toBe(false)
+      for (const entry of ['terminal.js', 'code.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*|@tanstack|@xyflow|@dagrejs|@dnd-kit)\//), entry).toBe(false)
+    })
+
+    // The terminal takes its own stylesheet with it (xterm's, put in the page by the part), so an app imports no CSS for it,
+    // and the languages of the code view are chunks of their own, loaded when a file of them is shown.
+    test('terminal.js carries xterm\'s stylesheet as text, and no entry has a CSS file of its own for it', () => {
+      const all = [...loaded('terminal.js').values()].join('\n')
+      expect(all).toMatch(/\.xterm\s*\{/)
+      expect(all).toContain('sigrid-xterm')
+      expect(existsSync(`${dist}terminal.css`)).toBe(false)
+      expect(existsSync(`${dist}code.css`)).toBe(false)
+    })
+
+    test('code.js loads no language by a static import: each is behind import(), so a view of plain text loads none', () => {
+      const all = [...loaded('code.js').values()].join('\n')
+      for (const lezer of ['@lezer/rust', '@lezer/python', '@lezer/css', '@lezer/html', '@lezer/javascript', '@lezer/json', '@lezer/markdown']) expect(all, lezer).not.toContain(`node_modules/${lezer}/`)
+      expect(readFileSync(`${dist}code.js`, 'utf8').match(/import\(\s*["']\.\/chunks\//g)?.length).toBeGreaterThanOrEqual(7)
     })
 
     // The Tauri entry: its own file with its types, Tauri's API outside the bundle and asked for only with `import()`,

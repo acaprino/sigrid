@@ -1,6 +1,4 @@
 import { Fragment, type ReactNode } from 'react'
-import { cn } from '../lib/utils'
-import { useWords } from '../words'
 
 // A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes
 // React elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the
@@ -8,7 +6,9 @@ import { useWords } from '../words'
 //
 // Inline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).
 // In blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),
-// «# » (heading), «> » (quote); an empty line separates paragraphs. A «\*» stays an asterisk.
+// «# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a
+// text still arriving shows as code from its first line); an empty line separates paragraphs. A «\*» stays an asterisk.
+// The parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.
 
 type Inline = { kind: 'text'; text: string } | { kind: 'strong' | 'em' | 'del'; children: Inline[] } | { kind: 'code'; text: string } | { kind: 'link'; children: Inline[]; href: string }
 
@@ -131,16 +131,38 @@ export function InlineMarkdown({ text }: { text: string }) {
   return <>{renderInline(parseInline(text))}</>
 }
 
-type Block =
+export type MarkdownBlock =
   | { kind: 'p'; lines: string[] }
+  | { kind: 'code'; lang: string; text: string }
   | { kind: 'h'; text: string }
   | { kind: 'quote'; lines: string[] }
   | { kind: 'ul' | 'ol'; items: { text: string; check?: boolean }[] }
 
-export function parseBlocks(src: string): Block[] {
-  const blocks: Block[] = []
+/** The opening of a fenced block: three or more backticks or tildes, then the language (its first word) if any. */
+const FENCE = /^( {0,3})(`{3,}|~{3,})[ \t]*([^\s`]*)[^`]*$/
+
+export function parseBlocks(src: string): MarkdownBlock[] {
+  const blocks: MarkdownBlock[] = []
   const last = () => blocks[blocks.length - 1]
+  // The fence that is open: its text so far, what closes it and how far its lines are indented.
+  let fence: { lang: string; lines: string[]; mark: string; indent: number } | null = null
+  const close = () => {
+    if (fence) blocks.push({ kind: 'code', lang: fence.lang, text: fence.lines.join('\n') })
+    fence = null
+  }
   for (const raw of src.replace(/\r\n?/g, '\n').split('\n')) {
+    if (fence) {
+      // A closing line is the same mark, at least as long, and nothing else.
+      const end = raw.trim()
+      if (end.length >= fence.mark.length && end === fence.mark[0]!.repeat(end.length)) close()
+      else fence.lines.push(raw.replace(new RegExp(`^ {0,${fence.indent}}`), ''))
+      continue
+    }
+    const open = FENCE.exec(raw)
+    if (open) {
+      fence = { lang: open[3]!, lines: [], mark: open[2]!, indent: open[1]!.length }
+      continue
+    }
     const line = raw.trimEnd()
     if (!line.trim()) {
       blocks.push({ kind: 'p', lines: [] })
@@ -167,74 +189,7 @@ export function parseBlocks(src: string): Block[] {
       else blocks.push({ kind: 'p', lines: [line] })
     }
   }
+  // A fence still open at the end runs to the end.
+  close()
   return blocks.filter((b) => b.kind !== 'p' || b.lines.length > 0)
-}
-
-/** The notes: paragraphs, lists, checkboxes (read-only), headings and quotes, with inline Markdown inside. */
-export function MarkdownBlocks({ text, className }: { text: string; className?: string }) {
-  const words = useWords().checklist
-  return (
-    <div data-slot="markdown" className={cn('space-y-2 text-sm break-words', className)}>
-      {parseBlocks(text).map((b, i) => {
-        switch (b.kind) {
-          case 'p':
-            return (
-              <p key={i}>
-                {b.lines.map((l, j) => (
-                  <Fragment key={j}>
-                    {j > 0 ? <br /> : null}
-                    <InlineMarkdown text={l} />
-                  </Fragment>
-                ))}
-              </p>
-            )
-          case 'h':
-            return (
-              <p key={i} className="font-semibold">
-                <InlineMarkdown text={b.text} />
-              </p>
-            )
-          case 'quote':
-            return (
-              <blockquote key={i} className="border-s-2 border-line ps-3 text-ink-soft">
-                {b.lines.map((l, j) => (
-                  <Fragment key={j}>
-                    {j > 0 ? <br /> : null}
-                    <InlineMarkdown text={l} />
-                  </Fragment>
-                ))}
-              </blockquote>
-            )
-          case 'ul':
-          case 'ol': {
-            const List = b.kind === 'ul' ? 'ul' : 'ol'
-            const checklist = b.items.every((it) => it.check !== undefined)
-            return (
-              <List key={i} className={cn('space-y-1 ps-5', checklist ? 'list-none ps-0' : b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
-                {b.items.map((it, j) => (
-                  <li key={j} className={cn(it.check !== undefined && 'flex items-start gap-2')}>
-                    {it.check !== undefined ? (
-                      // The box of a checklist item: as the toolkit's Checkbox, the ink when done (R2: not the accent),
-                      // l1 corners, a 12px stroked mark.
-                      <span aria-hidden="true" className={cn('mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input', it.check && 'border-primary bg-primary text-primary-foreground')}>
-                        {it.check ? (
-                          <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" focusable="false">
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
-                        ) : null}
-                      </span>
-                    ) : null}
-                    {it.check !== undefined ? <span className="sr-only">{it.check ? words.done : words.todo}</span> : null}
-                    <span className={cn(it.check && 'text-ink-mute line-through')}>
-                      <InlineMarkdown text={it.text} />
-                    </span>
-                  </li>
-                ))}
-              </List>
-            )
-          }
-        }
-      })}
-    </div>
-  )
 }

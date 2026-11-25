@@ -10,7 +10,7 @@ Sigrid is the UI system shared by a suite of React apps, ADHD first, in four lev
 3. **Assemblies** (`@acaprino/sigrid/assemblies`). Components that do a whole function together, with a state of
    their own: the command palette, a conversation and its field, a deck decided one card at a time, a tree, the
    attachments and their viewer, the look settings. Those that rest on a library an app may not need have entries of
-   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`), so an app loads only what it uses.
+   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`, `/terminal`, `/code`), so an app loads only what it uses.
 4. **Applications, as examples** (`agents/examples`, and the showcase). Whole apps made of the three levels above and
    nothing else: a to-do app, a mail client, a workspace, a screen that fits. They are there to start from and to
    read; no app is part of the package's code.
@@ -390,6 +390,70 @@ const byPath = (node: TreeNode, query: string) => node.id.includes(query.trim())
 <Tree aria-label="Files" nodes={FILES} query={query} onQueryChange={setQuery} match={byPath} />
 ```
 
+## A workspace of panes and tabs
+
+`Workspace` is a tiling area: panes in a split tree, each pane a group of tabs, the person making the layout (a terminal
+beside the code, the code over a log). It is controlled. The app keeps the tree, plain data it can save as JSON and
+restore, and is told of every change with `onChange(tree)`; what is in a tab is the app's, drawn by `renderTab(tab, state)`.
+
+```ts
+type WorkspaceTab = { id: string; title: string; icon?: IconName; closable?: boolean }   // closable: yes unless false
+type WorkspaceTabs = { kind: 'tabs'; id: string; tabs: WorkspaceTab[]; activeId: string | null }
+type WorkspaceSplit = { kind: 'split'; direction: 'horizontal' | 'vertical'; weights: number[]; children: WorkspaceNode[] }
+type WorkspaceNode = WorkspaceTabs | WorkspaceSplit   // `horizontal`: children side by side; `vertical`: one under the other
+```
+
+```tsx
+const [tree, setTree] = useState<WorkspaceNode>(restored ?? emptyWorkspace())
+
+<Workspace tree={tree} onChange={setTree} label="Terminals"
+  renderTab={(tab, { visible }) => <Terminal id={tab.id} fit={visible} />}
+  onAddTab={(groupId) => setTree((t) => addWorkspaceTab(t, groupId, { id: nextId(), title: 'Shell', icon: 'terminal' }))} />
+```
+
+- Nothing in a tab is lost by moving things: the content of every tab is drawn once, in one flat list keyed by the tab,
+  and placed over the box of its pane. A tab dragged to another pane, a pane divided or closed around it keeps its
+  content mounted (a terminal keeps running, a page keeps its state). Tabs that are not shown stay mounted, hidden;
+  `keepMounted="active"` draws only the shown tab of each pane. The panes are laid out by percent from the weights, with no
+  measuring (only a drag of a divider measures); the content is as tall as its pane under a bar of one control's height.
+- A divider is a window splitter like `SplitPane`'s: one Tab stop, `role="separator"` with the share of its first
+  neighbour in `aria-valuenow`; the pointer moves it (the pane follows, the app is told once, when the pointer is let go),
+  the arrows 16px (Shift, 64px), Home and End take it to the least each neighbour keeps (`minSize`, 160 by 120px), a double
+  press shares the two alike. The arrows follow the panes in a language written from the right.
+- A tab is chosen with a press or the arrows (the strip is `Tabs`: one Tab stop, Home and End, and a strip longer than its
+  pane scrolls and brings the chosen tab into sight). It closes with its ×, Delete or a middle press; with `onCloseTab` the
+  app is asked instead (to confirm, and then closes with `closeWorkspaceTab`). It is put in order or in another pane by hand:
+  a drag shows where it will go (a mark in a strip for that place, the middle of a pane to join it, a side of a pane to divide
+  it there, with a box that says which; Escape drops it), and the same is done without a pointer: Shift+←/→ puts it earlier or
+  later, Alt+Shift+arrow divides its pane that way (the only tab of a pane joins the pane there), and the tab's menu, the
+  right button or the Menu key, lists these with Close (`tabMenu` adds the app's own entries first); a polite status says where
+  the tab went. A finger scrolls the strip and does not drag: the menu is its way.
+- The pane the person works in is the focused one (`focusedId`, `onFocusedChange`, or kept by the area), and `renderTab` is told
+  (`state.focused`, and `state.visible` for a terminal that fits itself when it comes on screen). With `onMaximizedChange` each bar
+  has a button that fills the area with its pane (`maximizedId`); the others stay mounted. A pane with no tab shows `empty`.
+  The area has no way to fold itself for a phone: the app shows one pane at a time with `maximizedId`.
+- The tree is always normal (`normalizeWorkspace`, which also repairs saved data): no group is empty unless it is the only one, no
+  split has one child or a child that divides the same way, weights are positive, each group names a tab it has. The operations
+  are pure functions that give a new tree, or the very same one when nothing changes, so an app can drive the tree with its own
+  model: `addWorkspaceTab`, `activateWorkspaceTab`, `closeWorkspaceTab`, `moveWorkspaceTab(tree, tabId, drop)` (`drop` is
+  `{ groupId, index? }` for a slot of a strip or `{ groupId, edge: 'start' | 'end' | 'top' | 'bottom', newId }` to divide
+  a pane), `splitWorkspaceGroup(tree, groupId, edge, group)` (a new group beside a pane: «split with a new terminal»),
+  `resizeWorkspace(tree, path, weights)` and `shiftWorkspaceWeights` (a line moved by px, with minimums), and for reading
+  `workspaceGroups`, `findWorkspaceGroup`, `findWorkspaceTab`, `workspaceNodeAt`, `layoutWorkspace` (the boxes and the dividers
+  in fractions), `workspaceNeighbor` (the pane beside a pane, for a key that moves the focus to it), `workspaceMinimum` and
+  `workspaceZone`. `start` and `end` follow the line of reading; `top` and `bottom` do not.
+
+`ContextMenu` is a menu on any element, opened with the right button, the Menu key or Shift+F10 (a text field keeps the
+system's own menu). It wraps what it is for without a box of its own; the entries are data (an action with its `icon`,
+`shortcut` hint, `disabled` and `destructive`, a submenu with `items`, a `heading`, `"separator"`) and are read when the menu
+opens: `items` may be a function, told the element that was pressed, so one menu around a whole list says which row it is on.
+It is `DropdownMenu`'s card and rows, so it moves with the arrows and gives the focus back when it closes. Its action is also
+a button somewhere the person can reach: a touch screen has no right button.
+
+`MarkdownBlocks` draws a fenced block of code («```ts» to «```», or «~~~»; unclosed it runs to the end, so an answer still
+arriving shows as code from its first line) as a quiet box in the mono face, with the language and a `CopyButton`, and no
+syntax colours.
+
 ## A message that stays in the page
 
 `Note` is a message that stays where it is until the app removes it: a failure, a warning, a success or a piece of
@@ -659,13 +723,13 @@ list below goes by what a part is for, and names parts of every level):
   the layout parts (`Column`, `Cluster`, `Split`, `Grid`, `Cell`, `Spacer`, `Section`, `ScrollArea`, `Page`, `Text`).
 - `/components`: `FormField`, `InputGroup*`, `SearchField`, `Combobox`, `Calendar`, `DateField` and its kin,
   `DurationField`, `ChipsInput`, `Swatches`, `CopyButton`, `Disclosure`, `Note`, `Empty`, `Steps`, `ItemList`/`ItemRow`,
-  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`,
-  and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
+  `DescriptionList`, `SettingRow`, `OverflowList`, `FileDrop`, `Dialog`, `ConfirmDialog`, `ContextMenu`, `Toasts`, `InlineMarkdown`/`MarkdownBlocks`
+  (with fenced code), and of a conversation `Message`, `Suggestions`, `Reasoning`, `ToolCall`.
 - `/layout`: `AppShell`, `Inspector`, `TitleBar`, `WindowControls`, `Toolbar*`, `Sidebar*`, `SidebarRow`,
   `DrawerButton`, `NavList`/`NavItem`, `Panel`, `ContentSplit`, `SplitPane`.
 - `/assemblies`: `CommandPalette`, `CommandsProvider` and `KeyHints`, `useSchemeCommands`, `AuthForm`, `Wizard`,
   `Lightbox`, `Chat`, `Conversation`,
-  `PromptInput`, `SwipeDeck`, `Tree`, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
+  `PromptInput`, `SwipeDeck`, `Tree`, `Workspace` and its tree operations, `AttachmentsSection`, `AttachmentViewer`, the look settings, `ThemeGallery`,
   `ColorMatch`.
 
 What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Textarea`,
@@ -676,7 +740,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'
   `placeholder`, `AttachmentsSection`'s `textNotice`).
-- Five entries of their own, each on a library that an app loads only if it imports the entry (the versions are
+- Seven entries of their own, each on a library that an app loads only if it imports the entry (the versions are
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
     value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
@@ -903,6 +967,63 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     - The entry needs React 19: React Flow's compiled code takes `react/compiler-runtime` from the app, as every
       entry of `dist` takes `react` (each is an ES module with no `require`).
 
+  - `./terminal`: `Terminal`, on xterm.js (and its fit addon), and `OverviewStrip`, the lines of a terminal in miniature.
+    xterm's own stylesheet is carried by the part and put in the page once, so the app imports no CSS. The colours are
+    read from the tokens as they resolve where the terminal is (xterm cannot take `var()`): the ground (`paper`), the
+    ink, the cursor (the accent), the selection (`selected`), black and white (the page's `paper-2` and `ink-soft`, so a
+    program that writes black on a coloured cell or white text is readable in either scheme) and the six colours of ANSI
+    from the twelve steps of a tint (`hueScale`: red, green, amber for yellow, blue, magenta and teal for cyan, at the
+    text step, so each holds 4.5:1 on the ground; bright is the pale step in dark and the livelier one in light; `tone`
+    moves them, Vivid by default); all of it is read again when the page's look changes (the root's variables and its
+    theme, scheme, density and font attributes, or the system's scheme), and the font is `--font-mono` at the size of
+    code (`--text-xs`). `readOnly` takes no input and draws no cursor; `transparent` leaves the ground clear for a
+    glass window. The program is the app's: `ref.write(data, done)`, `focus`, `blur`, `fit()` (at once; the size, or
+    null while the box has none), `clear`, `reset`, `scrollToBottom`, `scrollToLine`, `scrollLines`, `getSelection`,
+    `select`, `clearSelection`, `paste`, `size`, `buffer` (the lines, live: `length`, `viewportY`, `rows`, `cols`,
+    `line(i)`) and `terminal` (xterm's own, for what the toolkit does not cover). `onData(data)` is what the person typed
+    or pasted; `onResize(cols, rows)` comes at the first fit and at every change (never twice for the same size), so
+    the app can size the pseudo-terminal. The box is fitted by itself (a `ResizeObserver`, once a frame). A `ref` is
+    read, a callback is never a reason to make the terminal again: they are read when they are needed.
+    - Keys. The terminal keeps every key that can go to the program and stops it there, even with the screen reader's
+      view on, which would let it through to the page. The keys the app keeps for its commands are named by
+      `appKeys(event)`: for those the terminal does nothing and does not stop the key, so it reaches the document and
+      `CommandsProvider` runs it. Do not name the terminal in `ownKeysIn` for that: `ownKeysIn` makes the app's commands
+      stand aside there, those of `appKeys` too. The paste keys (Ctrl or Command V, Shift Insert) are always the
+      browser's, so the text comes as a paste and not as a key.
+    - Links. An address of the text (`findWebLinks`: `http://` and `https://`, without the punctuation of the
+      sentence, and an address cut by the right edge is one link) or a hyperlink the program wrote (OSC 8, of any
+      scheme) calls `onLinkOpen(target, event)` on a press of the main button; the app decides what it opens.
+      `onLinkHover(target | null)` is where the app shows what the link really opens. `linkFinder(line)` replaces
+      what is a link (a local file, an issue number): it gives `{ start, end, target }` for each, in characters.
+    - `onBufferChange(buffer)` comes when output was parsed, the view scrolled or the terminal was resized, for what
+      follows the lines. `OverviewStrip` is a scroll bar by another face: `count` and `extent(index)` (the bar of a
+      line, `[start, end]` in cells, or null for a blank one; `textExtent(text)` makes one from text) say the lines,
+      `viewport={{ start, size }}` the frame, `marks` the lines to see at a glance (`{ line, tone }`, the status tones or
+      the accent), `archive={{ count, extent }}` older lines kept elsewhere (dimmer, at most 30% of the strip, and a
+      press on it is `onArchiveSeek(line)`), `columns` how many cells fill the width (80), `revision` changes when
+      the text did. `onSeek(line)` is the first line in sight that a press, a drag (the frame is held where it was
+      taken, with no jump), the wheel (three lines) or a key asks for. It is a `scrollbar` for screen readers and the
+      keyboard (Up, Down, Page Up, Page Down, Home, End) with its position said in words (`words.terminal`). It
+      paints at most every 200ms. `overviewGeometry`, `lineAt`, `holdAt` and `archivedLineAt` are its pure geometry.
+  - `./code`: `CodeView`, on CodeMirror 6, read-only or editable. `value` in, `onChange(value)` out at every change the
+    person makes; a `value` that is not the one last given back (another file, a visual edit) replaces the text and is
+    not a step of the undo. `fileName` (or a path) picks the language, `language` says it when the name does not; the
+    language is loaded when it is first shown, each its own chunk (CSS, HTML, JavaScript, JSX, TypeScript, TSX, JSON,
+    Markdown, Python, Rust; `codeLanguageOf` gives a name's language and its label for a status line, `loadCodeLanguage`
+    its CodeMirror support); a name with no language is plain text, and `extensions` carries the app's own (YAML, a key
+    map) into the editor. `docId` (the file name by default) keeps a state for each text while the view lives: going back
+    to a file brings back its undo steps and its selection, unless its text changed while it was away; `ref.forget(id)`
+    lets one go. `readOnly` can be selected and searched (Ctrl F) and says it is read-only to screen readers;
+    `lineNumbers` (with the fold arrows, on by default), `wrap` (prose wraps and code scrolls by default), `tabSize`,
+    `tabIndents` (Tab moves the focus on, as on every page, unless it is set), `phrases` (the words of CodeMirror's search
+    panel, by its phrases), `autoFocus`, and a `ref` with `focus`, `forget` and `view` (CodeMirror's own). The theme is
+    made from the tokens as they resolve where the view is (`codeColors`, `codeTheme`): the ground, the ink, the muted ink
+    for the gutter, the comments and the punctuation, the lines, the selection (`selected`), the accent for the caret
+    and for functions and tags, and the status colours for the syntax (info for keywords, success for strings, warning
+    for numbers and meta, destructive for what is wrong); it is made again when the page's look changes (the scheme
+    included: CodeMirror is told whether it is dark). The font and the size are the page's, written as variables, so a
+    font or a density change moves the code. The focus ring is inside the edge.
+
   ```tsx
   import { DataTable, type DataColumn } from '@acaprino/sigrid/table'
   import { VirtualList } from '@acaprino/sigrid/virtual'
@@ -967,6 +1088,22 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
       ...(part.holds ? { open: open.includes(part.id), hiddenCount: open.includes(part.id) ? undefined : part.holds } : {}),
       group: part.parent && open.includes(part.parent) ? part.parent : undefined }))}
     edges={calls.map((call) => ({ id: call.id, from: call.from, to: call.to, points: layout.edges[call.id], path: flow.has(call.id) }))} />
+  // The terminal and the code view (no CSS to import: the terminal brings xterm's)
+  import { Terminal, OverviewStrip, textExtent, type TerminalHandle, type TerminalBufferView } from '@acaprino/sigrid/terminal'
+  import { CodeView } from '@acaprino/sigrid/code'
+  const shell = useRef<TerminalHandle>(null)
+  const [lines, setLines] = useState<TerminalBufferView | null>(null)
+  <div className="flex h-96">
+    <Terminal ref={shell} aria-label="Shell" className="min-w-0 flex-1"
+      onData={(data) => session.write(data)} onResize={(cols, rows) => session.resize(cols, rows)}
+      onLinkOpen={(target) => openInBrowser(target)} appKeys={(event) => event.ctrlKey && event.shiftKey && event.key === 'T'}
+      onBufferChange={setLines} />
+    {lines ? <OverviewStrip count={lines.length} extent={(i) => textExtent(lines.line(i))}
+      viewport={{ start: lines.viewportY, size: lines.rows }} onSeek={(line) => shell.current?.scrollToLine(line)} /> : null}
+  </div>
+  // session.onOutput((bytes) => shell.current?.write(bytes))
+  <CodeView value={text} onChange={setText} fileName="src/main.rs" aria-label="Source" className="h-full" />
+  <CodeView value={text} fileName={file.path} readOnly />
   ```
 
   Measured on the showcase's production build: ten thousand rows scroll with about 1.3 ms of script a frame and
@@ -981,14 +1118,15 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
 - Icons: Sigrid has one icon set of its own, Sigrid Icons, the same in every app (the owner, 2026-11-23; since
-  2026-11-24 the set is MynaUI's drawings with fifteen of Sigrid's own beside them, in place of Lucide, and no package
+  2026-11-24 the set is MynaUI's drawings with seventeen of Sigrid's own beside them, in place of Lucide, and no package
   of icons is a dependency); the user does not
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
   never the name of a drawing: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
   `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
   of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
-  with `external` for what leaves the app) and the four tones of a message (`info`, `check`, `alert`, and `error`,
+  with `external` for what leaves the app), the parts of a workspace (`terminal` for a shell, `split` for a pane divided
+  in two and the action that divides one, `sliders` for the settings of one thing, as `settings` is the app's) and the four tones of a message (`info`, `check`, `alert`, and `error`,
   the circle with an X of every failure). `globe` says what a thing is (the web, a site, a browser); `external` says
   what a press does (it opens a page outside the app), so it goes on a button, a row or a menu entry, not on a thing
   for being outside: on a `GraphCanvas` that is the word «external» (`GraphNode.external`), beside whatever icon the

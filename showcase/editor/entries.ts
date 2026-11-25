@@ -41,7 +41,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'TextList', 'Textarea', 'Thumbnail', 'ToggleGroup', 'ToggleGroupItem', 'Tooltip', 'TOOLTIP_DELAY_MS',
   ],
   '@acaprino/sigrid/components': [
-    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'COPIED_MS',
+    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'ContextMenu', 'COPIED_MS',
     'CopyButton', 'DateField', 'DateRangeField', 'DateTimeField', 'dayPicks', 'DescriptionList', 'Dialog',
     'Disclosure', 'DurationField', 'Empty', 'FileDrop', 'FormField', 'InlineMarkdown', 'InputGroup',
     'InputGroupButton', 'InputGroupText', 'ItemList', 'ItemRow', 'MarkdownBlocks', 'Message', 'Note', 'OverflowList',
@@ -61,7 +61,11 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'formatKeys', 'KeyHints', 'Lightbox', 'PALETTE_COMMAND', 'PaletteComboChoice', 'PaletteStrip', 'PromptInput',
     'radioArrows', 'stateText', 'summarize', 'SWIPE_DISTANCE_PX', 'SWIPE_FLICK', 'SwipeDeck', 'ThemeCatalogChoice',
     'ThemeGallery', 'TonePresetChoice', 'TonePreview', 'Tree', 'typedUrl', 'useCommand', 'useCommandKey',
-    'useCommandPalette', 'useCommands', 'useSchemeCommands', 'VIEWER_ZOOMS', 'Wizard',
+    'useCommandPalette', 'useCommands', 'useSchemeCommands', 'VIEWER_ZOOMS', 'Wizard', 'Workspace',
+    'activateWorkspaceTab', 'addWorkspaceTab', 'closeWorkspaceTab', 'emptyWorkspace', 'findWorkspaceGroup',
+    'findWorkspaceTab', 'layoutWorkspace', 'moveWorkspaceTab', 'normalizeWorkspace', 'resizeWorkspace',
+    'shiftWorkspaceWeights', 'splitWorkspaceGroup', 'workspaceGroups', 'workspaceMinimum', 'workspaceNeighbor',
+    'workspaceNodeAt', 'workspaceZone',
   ],
 }
 

@@ -258,9 +258,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-- Fifteen drawings of Sigrid's own, for the meanings MynaUI has no drawing for (`FolderMove`, `FilterX`, `TextQuote`,
+- Seventeen drawings of Sigrid's own, for the meanings MynaUI has no drawing for (`FolderMove`, `FilterX`, `TextQuote`,
   `History`, `ReplyAll`, `Tags`, `CalendarClock`, `Bot`, `Shapes`, `FolderOpen`, `UserPen`, `Tree`, `Graph`, `Router`,
-  `Devices`). Five of them start from a path of MynaUI (`FolderMove` and `FolderOpen` from its folder, `FilterX` from
+  `Devices`, `Split`, `Sliders`). Five of them start from a path of MynaUI (`FolderMove` and `FolderOpen` from its folder, `FilterX` from
   its funnel, `History` from its undo, `ReplyAll` from its corner arrow); the rest are drawn from nothing.
 
 Lucide (`lucide-react`, ISC), the set until 2026-11-24, left with its dependency.
@@ -268,11 +268,12 @@ Lucide (`lucide-react`, ISC), the set until 2026-11-24, left with its dependency
 The other packs (Fluent Color, which was an npm dependency, and Phosphor Duotone, Solar Duotone, Fluent Emoji Flat and
 Twemoji, whose drawings were in the package) left on 2026-11-23, with their dependency and their drawings.
 
-## TanStack Table, TanStack Virtual, dnd-kit and TipTap
+## TanStack Table, TanStack Virtual, dnd-kit, TipTap, React Flow, xterm and CodeMirror
 
-Four more libraries carry behaviour, each under one part and each in its own entry of the package, so an app loads a
+More libraries carry behaviour, each under one part and each in its own entry of the package, so an app loads a
 library only if it uses the part (the owner's decision of 2026-11-23: a table, a long list, a list put in order and
-formatted text are what the apps of the suite need next, and none is worth writing again). They are npm dependencies
+formatted text are what the apps of the suite need next, and none is worth writing again; and of 2026-11-25, for
+Shinatama's migration: a terminal and a code view). They are npm dependencies
 pinned to the exact version, installed and unmodified, never copied into `src/`. As with Ark UI, the form is the
 toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
 
@@ -293,9 +294,25 @@ toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
   name stays in sight at the foot of the canvas, as its makers ask of whoever does not subscribe to React Flow Pro.
 - **dagre**: `@dagrejs/dagre` 3.1.3 (**MIT**, Copyright (c) 2012-2014 Chris Pettitt), with `@dagrejs/graphlib`. The
   places of the things of `GraphCanvas`, by ranks.
+- **xterm.js**: `@xterm/xterm` 6.0.0 and `@xterm/addon-fit` 0.11.0 (**MIT**, Copyright (c) 2017-2019, The xterm.js
+  authors; 2014-2016, SourceLair Private Company; 2012-2013, Christopher Jeffrey). The emulation of `Terminal`, and the
+  fit of its rows and columns to its box. No other addon is used (a search and the links are the toolkit's own). xterm's
+  own stylesheet (`css/xterm.css`) is carried inside `./terminal` as text and put in the page by the part, so an app
+  imports no CSS for it; the colours xterm cannot take as `var()` are read from the tokens.
+- **CodeMirror 6**: `@codemirror/view` 6.43.15, `@codemirror/state` 6.7.6, `@codemirror/language` 6.13.1,
+  `@codemirror/commands` 6.11.1, `@codemirror/search` 6.7.2, and the languages `@codemirror/lang-css` 6.3.1,
+  `@codemirror/lang-html` 6.4.12, `@codemirror/lang-javascript` 6.2.5, `@codemirror/lang-json` 6.0.2,
+  `@codemirror/lang-markdown` 6.5.2, `@codemirror/lang-python` 6.2.1 and `@codemirror/lang-rust` 6.0.2, with
+  `@lezer/highlight` 1.2.5 (**MIT**, Copyright (C) 2018-2021 by Marijn Haverbeke and others), and under them
+  `@codemirror/autocomplete`, `@codemirror/lint`, `@codemirror/streamparser`, the Lezer parsers (`@lezer/common`,
+  `@lezer/lr`, `@lezer/css`, `@lezer/html`, `@lezer/javascript`, `@lezer/json`, `@lezer/markdown`, `@lezer/python`,
+  `@lezer/rust`), `@marijn/find-cluster-break`, `crelt` and `style-mod` (all **MIT**). The editing, the highlighting and the
+  search of `CodeView`. The packages are the versions Shinatama pinned. Each language is its own chunk, loaded when a file of
+  it is shown. The theme is the toolkit's: made from the tokens.
 
 The test `test/provenance.test.ts` checks the pinned versions, that this list and the imports match, and that the main
-entry of the package imports none of them.
+entry of the package imports none of them. (The seven languages of CodeMirror are reached with `import()` in
+`code-languages.ts`, so they are not rows of the table: they are in the list above and pinned in `package.json`.)
 
 | File | Library | Entry of the package |
 |---|---|---|
@@ -304,6 +321,11 @@ entry of the package imports none of them.
 | `src/assemblies/reorder-list.tsx` | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `./reorder` |
 | `src/assemblies/RichTextField.tsx` | `@tiptap/react`, `@tiptap/starter-kit` | `./rich-text` |
 | `src/assemblies/GraphCanvas.tsx` | `@dagrejs/dagre`, `@xyflow/react` | `./graph` |
+| `src/assemblies/Terminal.tsx` | `@xterm/addon-fit`, `@xterm/xterm` | `./terminal` |
+| `src/assemblies/terminal-theme.ts` | `@xterm/xterm` | `./terminal` |
+| `src/assemblies/CodeView.tsx` | `@codemirror/commands`, `@codemirror/language`, `@codemirror/search`, `@codemirror/state`, `@codemirror/view` | `./code` |
+| `src/assemblies/code-theme.ts` | `@codemirror/language`, `@codemirror/state`, `@codemirror/view`, `@lezer/highlight` | `./code` |
+| `src/assemblies/code-languages.ts` | `@codemirror/state` | `./code` |
 
 ## Tauri's API
 

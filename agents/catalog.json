@@ -439,7 +439,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "also": [
       "hasMarkdown",
       "parseBlocks",
@@ -751,7 +751,7 @@
     },
     {
      "file": "src/internal/sigrid-icons.tsx",
-     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Fifteen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
+     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Seventeen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
      "also": [
       "Glyph",
       "GlyphProps"
@@ -1329,9 +1329,20 @@
          "required": true
         },
         {
+         "name": "contextMenu",
+         "type": "{ readonly label: string; }",
+         "required": true
+        },
+        {
          "name": "splitPane",
          "type": "{ readonly hint: string; }",
          "required": true
+        },
+        {
+         "name": "workspace",
+         "type": "{ readonly pane: (place: number) => string; readonly tabs: string; readonly close: (title: string) => string; readonly newTab: string; readonly empty: string; readonly resize: string; readonly maximi…",
+         "required": true,
+         "doc": "What a `Workspace` says by itself."
         },
         {
          "name": "search",
@@ -1441,6 +1452,16 @@
          "required": true
         },
         {
+         "name": "terminal",
+         "type": "{ readonly label: string; readonly overview: string; readonly overviewAt: (line: number, total: number) => string; }",
+         "required": true
+        },
+        {
+         "name": "code",
+         "type": "{ readonly label: string; readonly readOnly: (label: string) => string; }",
+         "required": true
+        },
+        {
          "name": "richText",
          "type": "{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; readonly und…",
          "required": true
@@ -1507,8 +1528,17 @@
          "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; readonly open: string; }>"
         },
         {
+         "name": "contextMenu",
+         "type": "Partial<{ readonly label: string; }>"
+        },
+        {
          "name": "splitPane",
          "type": "Partial<{ readonly hint: string; }>"
+        },
+        {
+         "name": "workspace",
+         "type": "Partial<{ readonly pane: (place: number) => string; readonly tabs: string; readonly close: (title: string) => string; readonly newTab: string; readonly empty: string; readonly resize: string; readonl…",
+         "doc": "What a `Workspace` says by itself."
         },
         {
          "name": "search",
@@ -1598,6 +1628,14 @@
          "type": "Partial<{ readonly handle: (item: string) => string; readonly role: string; readonly instructions: string; readonly taken: (item: string, position: number, total: number) => string; readonly moved: (…"
         },
         {
+         "name": "terminal",
+         "type": "Partial<{ readonly label: string; readonly overview: string; readonly overviewAt: (line: number, total: number) => string; }>"
+        },
+        {
+         "name": "code",
+         "type": "Partial<{ readonly label: string; readonly readOnly: (label: string) => string; }>"
+        },
+        {
          "name": "richText",
          "type": "Partial<{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; read…"
         },
@@ -1654,7 +1692,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "required": true
         },
         {
@@ -2690,7 +2728,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "One of Sigrid's icons, drawn in the box while the picture loads and when it fails. Without it the box is empty, at the same size."
         },
         {
@@ -4142,6 +4180,170 @@
      ]
     },
     {
+     "file": "src/components/context-menu.tsx",
+     "about": "A menu on a thing, opened with the right button or with the Menu key (Shift+F10): the actions of a row, a tab, a\nfile, listed once and found where the pointer is. It wraps what it is for (a row, a list, a pane, a tab) and lays no box\nof its own around it (a `div` with `display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its\nkey as a hint, `destructive` for the one that deletes), a submenu, a heading, a separator. The card and the rows are\n`DropdownMenu`'s, so the menu is the one of every other: the arrows, Home and End, a letter, Enter, Escape, which brings\nthe focus back to where it was.\n- The pointer's menu opens at the point pressed; the keyboard's, under the thing that has the focus. A text field and\n  its kin keep the system's own menu (copy, paste). A menu inside a menu is the inner one's: the outer one leaves a\n  press that was taken.\n- The entries are read when the menu opens (`items` may be a function, given the element pressed or in focus), so a menu\n  always says what the thing is now; and one menu around a whole list can read which row it is on from that element.\n- An action is also a button somewhere the person can reach without the menu: a menu is a shortcut, never the only\n  way (a touch screen has no right button).",
+     "components": [
+      {
+       "name": "ContextMenu",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[] | ((target: Element) => readonly ContextMenuEntry[])",
+         "required": true,
+         "doc": "The entries, or a function that gives them when the menu opens, told the element that was pressed (or has the focus): around a whole list it says which row the menu is for. An empty list opens nothing."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The menu's name for screen readers («Actions for the session»). Default: the toolkit's word."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "No menu: the press and the key go where they would have gone."
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)",
+         "doc": "The menu opened or closed."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The card enters with a short fade (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "What the menu is for: any element or several."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "ContextMenuAction",
+       "doc": "One action of the menu.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it does, in a verb («Rename»)."
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
+         "doc": "Its icon, by one of Sigrid's names; without one the row keeps the empty slot (R6)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same outside the menu, as a hint («F2», «Del»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "Not available now: it stays, dim, so the menu does not change shape."
+        },
+        {
+         "name": "destructive",
+         "type": "boolean",
+         "doc": "The one that deletes: in the red of every delete."
+        },
+        {
+         "name": "onSelect",
+         "type": "() => void",
+         "required": true,
+         "doc": "Chosen (click, Enter or Space); the menu closes."
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuEntry",
+       "doc": "An entry of the menu: an action, a submenu, a heading, or `\"separator\"` between groups.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "What it does, in a verb («Rename»)."
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
+         "doc": "Its icon, by one of Sigrid's names; without one the row keeps the empty slot (R6)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same outside the menu, as a hint («F2», «Del»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "Not available now: it stays, dim, so the menu does not change shape."
+        },
+        {
+         "name": "destructive",
+         "type": "boolean",
+         "doc": "The one that deletes: in the red of every delete."
+        },
+        {
+         "name": "onSelect",
+         "type": "() => void",
+         "doc": "Chosen (click, Enter or Space); the menu closes."
+        },
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[]"
+        },
+        {
+         "name": "heading",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuHeading",
+       "doc": "A heading over the entries that follow («Move to…»).",
+       "fields": [
+        {
+         "name": "heading",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuSubmenu",
+       "doc": "A row that opens a menu of its own beside it.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[]",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ContextMenuProps"
+     ]
+    },
+    {
      "file": "src/components/copy-button.tsx",
      "about": "A button that puts a text on the clipboard and says that it did. After the press the copy icon is a check and the\nword is «Copied» for two seconds, then both go back: the answer is where the eye already is, so no notice is needed\n(a toast is for an action that can be taken back). Nothing moves: the icon keeps its box and the word the room of\nthe wider of its two texts. Screen readers hear «Copied» (a polite status), or that the system refused.\nAlone it is a quiet icon button with a hint; with `showLabel` it shows its word; in an `InputGroup` it takes the\nsize of the group's buttons and is off with the field.",
      "components": [
@@ -5070,6 +5272,31 @@
      ]
     },
     {
+     "file": "src/components/markdown-blocks.tsx",
+     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced\nblocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
+     "components": [
+      {
+       "name": "MarkdownBlocks",
+       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced code, with inline Markdown inside.",
+       "props": [
+        {
+         "name": "text",
+         "type": "string",
+         "required": true,
+         "doc": "The Markdown source."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "MarkdownBlocksProps"
+     ]
+    },
+    {
      "file": "src/components/message.tsx",
      "about": "One turn of a conversation: what the user wrote is a quiet block at the end of the row, what was answered is plain\ntext on the page (the answer is the content, not a bubble), with Markdown when it is a string. Each message says who\nit is from before its text, for screen readers. Under it, in a place that never changes, the quiet actions the app\nasks for: copy, try again, good or bad answer, and the app's own. Nothing is revealed by the pointer: what can be\ndone is there for a finger and for the keyboard too.",
      "components": [
@@ -5530,7 +5757,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "An icon that tells what kind of request it is; none for most."
         }
        ]
@@ -5682,7 +5909,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "components": [
       {
        "name": "InlineMarkdown",
@@ -5692,21 +5919,6 @@
          "name": "text",
          "type": "string",
          "required": true
-        }
-       ]
-      },
-      {
-       "name": "MarkdownBlocks",
-       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings and quotes, with inline Markdown inside.",
-       "props": [
-        {
-         "name": "text",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "className",
-         "type": "string"
         }
        ]
       }
@@ -7098,7 +7310,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "One of Sigrid's icons, drawn while the logo loads, or in its place."
         }
        ]
@@ -8368,12 +8580,12 @@
         },
         {
          "name": "leftIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "The icons of the two buttons. Default the two arrows."
         },
         {
          "name": "rightIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…"
         },
         {
          "name": "empty",
@@ -8597,12 +8809,12 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -8742,6 +8954,397 @@
      ],
      "also": [
       "WizardProps"
+     ]
+    },
+    {
+     "file": "src/assemblies/workspace-model.ts",
+     "about": "The tree of a workspace and what is done to it (`Workspace` draws it): panes in a split tree, each leaf a group of\ntabs. Plain data, so an app keeps it, saves it as JSON and restores it; every function here is pure and gives back a\nnew tree, or the very same one when there is nothing to change, so an app can tell by `===` whether to save.\n- A `split` puts its children side by side (`horizontal`: the first at the start of the line) or one under the other\n  (`vertical`), each as wide or as tall as its `weight` is of all of them. Weights are ratios, not pixels.\n- A `tabs` is a group: its tabs in order and the one chosen (`activeId`, null with no tabs). The ids of the groups and\n  of the tabs are the app's, and each is unique in the tree.\n- The tree is always normal (`normalizeWorkspace`): no group is empty unless it is the only one, no split has a single\n  child or a child that splits the same way (it is folded in), every weight is a positive number, every group names a\n  tab that is in it. Each function that changes the tree gives it back normal.\n- Where a tab goes is a `WorkspaceDrop`: into a group at a slot, or to an edge of a group, which divides that group\n  and puts the tab in a new one beside it. The same value is what a drop of the pointer and a key of the keyboard say.\n- Geometry is in fractions of the whole workspace (`layoutWorkspace`): the groups' boxes, the sashes between them and\n  the nearest group in a direction, so the drawing, the drop targets and the keyboard read one source.",
+     "types": [
+      {
+       "name": "WorkspaceDrop",
+       "doc": "Where a tab is put. In a group, at a slot of its strip (`index`: before the tab now at that place, the end when absent). Or at an edge of a group: the group is divided there and the tab goes into a new group, named `newId`.",
+       "fields": [
+        {
+         "name": "groupId",
+         "type": "string"
+        },
+        {
+         "name": "index",
+         "type": "number"
+        },
+        {
+         "name": "edge",
+         "type": "WorkspaceEdge"
+        },
+        {
+         "name": "newId",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceLayout",
+       "doc": "What the geometry of a tree says: the box of each group (by id) and the sashes.",
+       "fields": [
+        {
+         "name": "groups",
+         "type": "ReadonlyMap<string, WorkspaceRect>",
+         "required": true
+        },
+        {
+         "name": "sashes",
+         "type": "readonly WorkspaceSash[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceNode",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A pane (a group of tabs) or a division of panes.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"tabs\""
+        },
+        {
+         "name": "id",
+         "type": "string"
+        },
+        {
+         "name": "tabs",
+         "type": "readonly T[]"
+        },
+        {
+         "name": "activeId",
+         "type": "string | null"
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection"
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]"
+        },
+        {
+         "name": "children",
+         "type": "readonly WorkspaceNode<T>[]"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceRect",
+       "doc": "A box in fractions (0 to 1) of the workspace: `x` and `y` from its start and top.",
+       "fields": [
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "y",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "width",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceSash",
+       "doc": "A line between two children of a split, in the same fractions.",
+       "fields": [
+        {
+         "name": "path",
+         "type": "WorkspacePath",
+         "required": true,
+         "doc": "The split it divides."
+        },
+        {
+         "name": "boundary",
+         "type": "number",
+         "required": true,
+         "doc": "Between the children `boundary` and `boundary + 1`."
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection",
+         "required": true
+        },
+        {
+         "name": "at",
+         "type": "number",
+         "required": true,
+         "doc": "Where the line is: `x` for a `horizontal` split (a vertical line), `y` for a `vertical` one."
+        },
+        {
+         "name": "from",
+         "type": "number",
+         "required": true,
+         "doc": "Where it starts and how long it is across the split."
+        },
+        {
+         "name": "length",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "span",
+         "type": "number",
+         "required": true,
+         "doc": "How much of the workspace the split takes along its direction: what a distance moved is a fraction of."
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "The split's weights now."
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceSplit",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A division: `children` in a line, each with its `weights` share. There are at least two children and as many weights.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"split\"",
+         "required": true
+        },
+        {
+         "name": "direction",
+         "type": "WorkspaceDirection",
+         "required": true
+        },
+        {
+         "name": "weights",
+         "type": "readonly number[]",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "readonly WorkspaceNode<T>[]",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceTab",
+       "doc": "A tab: what its title says, an icon if it has one, and whether it can be closed (default yes). An app may add its own fields (`WorkspaceTab` is what the parts need).",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…"
+        },
+        {
+         "name": "closable",
+         "type": "boolean"
+        }
+       ]
+      },
+      {
+       "name": "WorkspaceTabs",
+       "parameters": [
+        "T extends WorkspaceTab = WorkspaceTab"
+       ],
+       "doc": "A group of tabs: a pane. `activeId` is the tab shown, `null` when the group has none.",
+       "fields": [
+        {
+         "name": "kind",
+         "type": "\"tabs\"",
+         "required": true
+        },
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "tabs",
+         "type": "readonly T[]",
+         "required": true
+        },
+        {
+         "name": "activeId",
+         "type": "string | null",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "activateWorkspaceTab",
+      "addWorkspaceTab",
+      "closeWorkspaceTab",
+      "emptyWorkspace",
+      "findWorkspaceGroup",
+      "findWorkspaceTab",
+      "layoutWorkspace",
+      "moveWorkspaceTab",
+      "normalizeWorkspace",
+      "resizeWorkspace",
+      "shiftWorkspaceWeights",
+      "splitWorkspaceGroup",
+      "WorkspaceDirection",
+      "WorkspaceEdge",
+      "workspaceGroups",
+      "workspaceMinimum",
+      "workspaceNeighbor",
+      "workspaceNodeAt",
+      "WorkspacePath",
+      "workspaceZone"
+     ]
+    },
+    {
+     "file": "src/assemblies/workspace.tsx",
+     "about": "A tiling area: panes in a split tree, each pane a group of tabs, the person making the layout (a terminal beside the\ncode, the code over a log). The app owns the tree, plain data (`WorkspaceNode`, `workspace-model.ts`), and is told of\nevery change (`onChange`); the area draws it and what is in each tab is the app's (`renderTab`).\n- Nothing in a tab is lost by moving things: the content of every tab is drawn once, in one flat list keyed by the\n  tab, and placed over the box of its pane; so a tab dragged to another pane, a pane divided or closed around it, keeps\n  its content mounted (a terminal keeps running, a page keeps its state). The tabs that are not shown stay mounted,\n  hidden (`keepMounted=\"active\"` unmounts them). The panes are laid out by percent, from the weights, with no\n  measuring; only a drag of a divider measures.\n- A divider is a window splitter like `SplitPane`'s: one tab stop, `role=\"separator\"` with the share of its first\n  neighbour (`aria-valuenow`), the pointer moves it and the pane follows, the arrows move it 16px (Shift, 64px), Home and\n  End take it to the least each neighbour keeps (`minSize`), a double press shares the two alike. The arrows follow\n  the panes in a language written from the right. The weights are told once, when the pointer is let go.\n- A tab is chosen with a press or the arrows (the strip is `Tabs`, so one tab stop and Home/End), closed with its ×,\n  Delete or a middle press (`onCloseTab` lets the app ask first), and put in order or in another pane by hand: a\n  drag shows where it will go (a mark in a strip to put it in that place, the middle of a pane to join it, a side of a\n  pane to divide it there, with a box that says so; Escape drops it). The same is done without a pointer: Shift+←/→ puts\n  it earlier or later, Alt+Shift+arrow divides the pane in that direction (a pane's only tab joins the pane there),\n  and the tab's menu (right button, Menu key) lists them with Close; a polite status says where it went. A strip that\n  is longer than the pane scrolls and brings the chosen tab into sight.\n- A pane is the focused one while the person works in it (`focusedId`, told with `onFocusedChange`); with\n  `onMaximizedChange` its bar has a button that fills the whole area with it, the others stay mounted.",
+     "components": [
+      {
+       "name": "Workspace",
+       "props": [
+        {
+         "name": "tree",
+         "type": "WorkspaceNode<T>",
+         "required": true,
+         "doc": "The layout: panes and their tabs. The app keeps it and passes what `onChange` gives."
+        },
+        {
+         "name": "onChange",
+         "type": "(tree: WorkspaceNode<T>) => void",
+         "required": true,
+         "doc": "The person changed the layout: a tab chosen, closed, moved or divided off, a divider moved. Not told for what the app itself did to the tree."
+        },
+        {
+         "name": "renderTab",
+         "type": "(tab: T, state: WorkspaceTabState) => React.ReactNode",
+         "required": true,
+         "doc": "The content of a tab. It is called for every tab, shown or not (see `keepMounted`), so keep it light and let the content keep its own state."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name of the area for screen readers («Terminals»)."
+        },
+        {
+         "name": "keepMounted",
+         "type": "\"all\" | \"active\"",
+         "doc": "`all` (the default): every tab stays mounted, hidden when it is not shown. `active`: only the shown tab of each pane is drawn."
+        },
+        {
+         "name": "empty",
+         "type": "React.ReactNode | ((groupId: string) => React.ReactNode)",
+         "doc": "What a pane with no tab shows. Default: the toolkit's sentence, and a button when `onAddTab` is given."
+        },
+        {
+         "name": "onAddTab",
+         "type": "((groupId: string) => void)",
+         "doc": "The bar of each pane has a button that adds a tab; this is told which pane. The app makes the tab and puts it in the tree (`addWorkspaceTab`)."
+        },
+        {
+         "name": "onCloseTab",
+         "type": "((tab: T, groupId: string) => void)",
+         "doc": "A tab's close was asked (its ×, Delete, a middle press, the menu). Given, the app decides (it may ask first, and closes with `closeWorkspaceTab`); absent, the tab closes."
+        },
+        {
+         "name": "tabMenu",
+         "type": "((tab: T, groupId: string) => readonly ContextMenuEntry[])",
+         "doc": "The app's own entries of a tab's menu, above the toolkit's."
+        },
+        {
+         "name": "focusedId",
+         "type": "string | null",
+         "doc": "The pane the person works in, when the app keeps it; otherwise the area keeps it (the first at first)."
+        },
+        {
+         "name": "onFocusedChange",
+         "type": "((groupId: string) => void)",
+         "doc": "The person began to work in another pane (a press or the focus went in)."
+        },
+        {
+         "name": "maximizedId",
+         "type": "string | null",
+         "doc": "The pane that fills the whole area, `null` for none, when the app keeps it. With `onMaximizedChange` each bar has the button."
+        },
+        {
+         "name": "onMaximizedChange",
+         "type": "((groupId: string | null) => void)"
+        },
+        {
+         "name": "minSize",
+         "type": "{ width?: number | undefined; height?: number | undefined; }",
+         "doc": "The least width and height of a pane, in px, a divider keeps. Default 160 by 120."
+        },
+        {
+         "name": "newGroupId",
+         "type": "(() => string)",
+         "doc": "Makes the id of a pane the person divides off. Default: `pane-1`, `pane-2`… the first that the tree does not have."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The chosen tab's tint slides to a new tab, and the card of a menu and a hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "WorkspaceTabState",
+       "doc": "What a tab's content is told about its place.",
+       "fields": [
+        {
+         "name": "active",
+         "type": "boolean",
+         "required": true,
+         "doc": "The tab is the one its pane shows."
+        },
+        {
+         "name": "visible",
+         "type": "boolean",
+         "required": true,
+         "doc": "It is on screen: shown by its pane, and its pane is not hidden behind a maximized one. A terminal fits itself when this turns true."
+        },
+        {
+         "name": "focused",
+         "type": "boolean",
+         "required": true,
+         "doc": "Its pane is the one the person works in."
+        },
+        {
+         "name": "groupId",
+         "type": "string",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "WorkspaceProps"
      ]
     }
    ]
@@ -9702,7 +10305,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"terminal\" | \"mail\" | \"all\" | \"tag…",
          "doc": "One of Sigrid's icons before the name."
         },
         {
@@ -9821,6 +10424,671 @@
      ],
      "also": [
       "GraphLegendProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/terminal",
+   "files": [
+    {
+     "file": "src/assemblies/OverviewStrip.tsx",
+     "about": "A strip that shows the lines of a long text in miniature and moves them: each line is a bar from where its text starts\nto where it ends, a frame marks the lines in sight, a mark is a line the app wants seen, and a part above the live\nlines can hold an archive (lines that scrolled out of what the app keeps in memory), dimmer. It is a scroll bar by\nanother face: a press or a drag on it asks for the line it stands for (`onSeek`), a wheel moves by three lines, and\nit is a scroll bar for the keyboard and for screen readers (Up and Down, Page Up and Page Down, Home and End).\nIt is drawn on a canvas in the colours of the toolkit's tokens, read again when the page's look changes. It knows no\nterminal: it is on the `./terminal` entry because that is what it is made for (a terminal's `buffer` gives it its\nlines), and `textExtent` turns a line of text into the bar it is.\n- Few lines are bars a few pixels apart; more than fit are one pixel row for several lines, so the cost of a drawing is\n  the height of the strip and not the length of the text; at most once every 200ms, however fast the lines change.\n- The geometry is pure (`overviewGeometry`, `lineAt`, `holdAt`, `archivedLineAt`) and exported for what draws another way.",
+     "components": [
+      {
+       "name": "OverviewStrip",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the strip for screen readers; «Lines of the terminal» by default (`words.terminal.overview`)."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "required": true,
+         "doc": "How many live lines there are."
+        },
+        {
+         "name": "extent",
+         "type": "OverviewExtent",
+         "required": true,
+         "doc": "The bar of each live line."
+        },
+        {
+         "name": "viewport",
+         "type": "{ start: number; size: number; }",
+         "required": true,
+         "doc": "The lines in sight: the first, and how many."
+        },
+        {
+         "name": "columns",
+         "type": "number",
+         "doc": "How many cells of a line fill the strip's width; 80 by default."
+        },
+        {
+         "name": "marks",
+         "type": "readonly OverviewMark[]",
+         "doc": "Lines to be seen at a glance (an error, a search hit): a tick across the strip."
+        },
+        {
+         "name": "archive",
+         "type": "{ count: number; extent: OverviewExtent; }",
+         "doc": "Lines older than the live ones, kept elsewhere: their part of the strip is dimmer and a press on it is `onArchiveSeek`."
+        },
+        {
+         "name": "revision",
+         "type": "unknown",
+         "doc": "Changes when the text did, so the strip is drawn again (the lines are read through `extent`, which is not a value)."
+        },
+        {
+         "name": "onSeek",
+         "type": "(line: number) => void",
+         "required": true,
+         "doc": "The first line in sight the strip asks for, from a press, a drag, the wheel or a key."
+        },
+        {
+         "name": "onArchiveSeek",
+         "type": "((line: number) => void)",
+         "doc": "The archived line a press on the archive stands for."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "OverviewGeometry",
+       "doc": "Where the parts of the strip lie, in pixels from its top.",
+       "fields": [
+        {
+         "name": "archiveHeight",
+         "type": "number",
+         "required": true,
+         "doc": "The archive takes the top, then the live lines at `pitch` pixels each."
+        },
+        {
+         "name": "liveHeight",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "pitch",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "frameTop",
+         "type": "number",
+         "required": true,
+         "doc": "The frame around the lines in sight."
+        },
+        {
+         "name": "frameHeight",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "OverviewMark",
+       "fields": [
+        {
+         "name": "line",
+         "type": "number",
+         "required": true,
+         "doc": "The line (0-based, in the live lines)."
+        },
+        {
+         "name": "tone",
+         "type": "OverviewTone",
+         "doc": "`accent` by default."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "archivedLineAt",
+      "holdAt",
+      "lineAt",
+      "OVERVIEW_COLUMNS",
+      "OVERVIEW_PITCH",
+      "OverviewExtent",
+      "overviewGeometry",
+      "OverviewStripProps",
+      "OverviewTone",
+      "textExtent"
+     ]
+    },
+    {
+     "file": "src/assemblies/terminal-links.ts",
+     "about": "Links in terminal text, as pure functions: where a web address is in a line, and where in the cells of a line the\nterminal wrapped over several rows (a path or an address cut by the right edge is still one link, its range running\nfrom row to row). The terminal part wires them to xterm's link provider; an app that opens more than web addresses\n(a local file, an issue number) gives the part its own `linkFinder` with the same shape and keeps the rest.",
+     "types": [
+      {
+       "name": "TerminalCell",
+       "doc": "A terminal cell as the link finder reads it: its text and its 1-based column.",
+       "fields": [
+        {
+         "name": "chars",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TerminalCellLink",
+       "doc": "A link as xterm places it: from a cell to a cell, 1-based, rows included.",
+       "fields": [
+        {
+         "name": "target",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "start",
+         "type": "{ x: number; y: number; }",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "{ x: number; y: number; }",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TerminalLinkMatch",
+       "doc": "A link in a line of text: its place (`start` inclusive, `end` exclusive, in characters) and what it opens.",
+       "fields": [
+        {
+         "name": "start",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "target",
+         "type": "string",
+         "doc": "What the app is told to open; the text of the link when it is absent."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "findLinksInRows",
+      "findWebLinks"
+     ]
+    },
+    {
+     "file": "src/assemblies/terminal-theme.ts",
+     "about": "The colours and the font of a terminal, made from the toolkit's tokens. xterm cannot take `var()`: it paints its text\non a canvas or sets inline colours, so it needs concrete values. They are read from the element the terminal is in\n(`readColor`: the resolved token, whatever theme, scheme and tone the page wears) and put in xterm's `ITheme`: the\nground, the ink, the cursor and the selection from the tokens of the page; the sixteen ANSI colours from the twelve\nsteps of a tint (`hueScale`: the text step on the page, so every colour holds 4.5:1) and from the page's own grays\nfor black and white. «Black» is the colour of the ground and «white» the ink, as the page has them, so a program that\nwrites black on a coloured cell or white text stays readable in a light scheme as well as in a dark one.",
+     "types": [
+      {
+       "name": "TerminalLook",
+       "fields": [
+        {
+         "name": "theme",
+         "type": "ITheme",
+         "required": true,
+         "doc": "What xterm takes as its `theme`."
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true,
+         "doc": "The scheme the page is in, read from its ground."
+        },
+        {
+         "name": "fontFamily",
+         "type": "string",
+         "required": true,
+         "doc": "The monospace stack of the page (`--font-mono`)."
+        },
+        {
+         "name": "fontSize",
+         "type": "number",
+         "required": true,
+         "doc": "The size of code on the page (`--text-xs`, the 13px of `code-sm`), in pixels."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "terminalLook"
+     ]
+    },
+    {
+     "file": "src/assemblies/Terminal.tsx",
+     "about": "A terminal: xterm.js on the toolkit's look. The emulation is xterm's (`@xterm/xterm` with its fit addon: npm\ndependencies, pinned, see THIRD_PARTY.md); the look is the toolkit's: the colours of the ground, the ink, the cursor,\nthe selection and the sixteen ANSI colours are made from the tokens as they resolve in the page (`terminalLook`),\nread again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`. xterm's own\nstylesheet is put in the page by the part, so an app imports none. It has its own entry of the package\n(`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.\n- The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)\n  and how big the terminal is (`onResize`, at the first size and at every change: the size of the pseudo-terminal).\n- It fits its box by itself (a `ResizeObserver` and the fit addon); `ref.fit()` does it at once.\n- Keys. The terminal keeps every key that can go to the program, and stops it at itself (not even the screen reader's\n  view lets one through to the page's commands). The keys the app keeps for its own commands are named by `appKeys`:\n  for those the terminal leaves the key alone and does not stop it, so it reaches the document and the app's commands\n  (`CommandsProvider`) run. Do not put the terminal's place in `ownKeysIn` for that: `ownKeysIn` silences the app's\n  commands there, the keys of `appKeys` too. Paste (Ctrl or Command V, Shift Insert) is always left to the browser,\n  so the text arrives as a paste and not as a key.\n- Links: an address of the text, or a hyperlink the program wrote (OSC 8), opens through `onLinkOpen`: the app\n  decides what it opens. `linkFinder` says what in a line is a link (web addresses by default).\n- xterm's stylesheet paints its viewport black, outside the part's own colours: the part makes it clear, so the ground\n  of the terminal is the page's `paper` (or what is behind it, with `transparent`) all the way to the edge.\n- The screen reader's view of the screen is on (`screenReaderMode`), the part is named by `aria-label`.",
+     "components": [
+      {
+       "name": "Terminal",
+       "props": [
+        {
+         "name": "ref",
+         "type": "React.Ref<TerminalHandle>"
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the terminal for screen readers; «Terminal» by default (`words.terminal.label`)."
+        },
+        {
+         "name": "onData",
+         "type": "((data: string) => void)",
+         "doc": "What the person typed or pasted, as the program should receive it."
+        },
+        {
+         "name": "onResize",
+         "type": "((cols: number, rows: number) => void)",
+         "doc": "The size, at the first fit and at every change: the size the pseudo-terminal should be given."
+        },
+        {
+         "name": "onLinkOpen",
+         "type": "((target: string, event: MouseEvent) => void)",
+         "doc": "A link was pressed: its target (the address, or what the program wrote as a hyperlink) and the press."
+        },
+        {
+         "name": "onLinkHover",
+         "type": "((target: string | null) => void)",
+         "doc": "The pointer is over a link (its target) or left it (null): where the app shows what the link really opens."
+        },
+        {
+         "name": "linkFinder",
+         "type": "((line: string) => readonly TerminalLinkMatch[])",
+         "doc": "Where the links are in a line of text; web addresses (`findWebLinks`) by default."
+        },
+        {
+         "name": "onBufferChange",
+         "type": "((buffer: TerminalBufferView) => void)",
+         "doc": "The lines changed: output was parsed, the view scrolled or the terminal was resized. For what follows them (`OverviewStrip`)."
+        },
+        {
+         "name": "appKeys",
+         "type": "((event: KeyboardEvent) => boolean)",
+         "doc": "The keys the app keeps for its own commands: for these the terminal does nothing and does not stop the key."
+        },
+        {
+         "name": "fontSize",
+         "type": "number",
+         "doc": "The size of the text in pixels; the toolkit's size of code (`--text-xs`) by default."
+        },
+        {
+         "name": "lineHeight",
+         "type": "number",
+         "doc": "The height of a row, in times the size of the text."
+        },
+        {
+         "name": "scrollback",
+         "type": "number",
+         "doc": "The lines kept above the screen."
+        },
+        {
+         "name": "cursorStyle",
+         "type": "\"underline\" | \"block\" | \"bar\"",
+         "doc": "The shape of the cursor."
+        },
+        {
+         "name": "readOnly",
+         "type": "boolean",
+         "doc": "The terminal shows output and takes no input: no keys, no cursor."
+        },
+        {
+         "name": "transparent",
+         "type": "boolean",
+         "doc": "The ground is clear, so what is behind the terminal (a glass window) shows through."
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\"",
+         "doc": "The tone of the colours of ANSI; Vivid, the toolkit's own, by default."
+        },
+        {
+         "name": "screenReaderMode",
+         "type": "boolean",
+         "doc": "The view of the screen for screen readers; on by default."
+        },
+        {
+         "name": "autoFocus",
+         "type": "boolean",
+         "doc": "Takes the keyboard when it is drawn."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "TerminalBufferView",
+       "doc": "What the app can read of the lines of the terminal (the screen and what scrolled off it): live, never a copy.",
+       "fields": [
+        {
+         "name": "length",
+         "type": "number",
+         "required": true,
+         "doc": "How many lines there are: the scrollback and the screen."
+        },
+        {
+         "name": "viewportY",
+         "type": "number",
+         "required": true,
+         "doc": "The first line in sight."
+        },
+        {
+         "name": "rows",
+         "type": "number",
+         "required": true,
+         "doc": "How many lines are in sight."
+        },
+        {
+         "name": "cols",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "line",
+         "type": "(index: number) => string",
+         "required": true,
+         "doc": "The text of a line, without the blanks at its end; empty for a line that is not there."
+        }
+       ]
+      },
+      {
+       "name": "TerminalHandle",
+       "doc": "What the app can do to the terminal, through its `ref`.",
+       "fields": [
+        {
+         "name": "write",
+         "type": "(data: string | Uint8Array, done?: () => void) => void",
+         "required": true,
+         "doc": "Writes what the program printed; `done` is called when it has been parsed."
+        },
+        {
+         "name": "focus",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "blur",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "fit",
+         "type": "() => TerminalSize | null",
+         "required": true,
+         "doc": "Fits the terminal to its box now, and gives the size it has (null while the box has none, as when it is hidden)."
+        },
+        {
+         "name": "clear",
+         "type": "() => void",
+         "required": true,
+         "doc": "Clears the lines that scrolled off the screen and the screen but for its last line."
+        },
+        {
+         "name": "reset",
+         "type": "() => void",
+         "required": true,
+         "doc": "Puts the terminal back as it was new: empty, with the cursor at the top."
+        },
+        {
+         "name": "scrollToBottom",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "scrollToLine",
+         "type": "(line: number) => void",
+         "required": true,
+         "doc": "Scrolls so that line `line` is the first in sight."
+        },
+        {
+         "name": "scrollLines",
+         "type": "(amount: number) => void",
+         "required": true
+        },
+        {
+         "name": "getSelection",
+         "type": "() => string",
+         "required": true,
+         "doc": "The text the person selected, empty when nothing is."
+        },
+        {
+         "name": "select",
+         "type": "(column: number, line: number, length: number) => void",
+         "required": true,
+         "doc": "Selects `length` cells of a line, from `column`; the line is a place of the buffer, as `scrollToLine` takes it."
+        },
+        {
+         "name": "clearSelection",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "paste",
+         "type": "(text: string) => void",
+         "required": true,
+         "doc": "Types text in as a paste (bracketed, if the program asked for it)."
+        },
+        {
+         "name": "size",
+         "type": "TerminalSize",
+         "required": true
+        },
+        {
+         "name": "buffer",
+         "type": "TerminalBufferView",
+         "required": true,
+         "doc": "The lines, for what is drawn from them (`OverviewStrip`, a search)."
+        },
+        {
+         "name": "terminal",
+         "type": "XTerm | null",
+         "required": true,
+         "doc": "xterm's own terminal, for what the toolkit does not cover; null before the part is in the page."
+        }
+       ]
+      },
+      {
+       "name": "TerminalSize",
+       "doc": "How many rows and columns the terminal has.",
+       "fields": [
+        {
+         "name": "cols",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "rows",
+         "type": "number",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TerminalProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/code",
+   "files": [
+    {
+     "file": "src/assemblies/code-languages.ts",
+     "about": "The languages a code view knows, found by the name of the file and loaded the first time they are needed. A language\nof CodeMirror is a package of its own (a parser and its rules): each is behind a dynamic `import()`, so a view that\nshows plain text loads none, one that shows a Python file loads Python's, and the bundle splits at each. The names\nare the ones of Shinatama's file view: the extensions below, and the dot files that are JSON. Other languages are the\napp's: `CodeView` takes `extensions`, where its own language support goes (a name no entry here has is plain text).",
+     "types": [
+      {
+       "name": "CodeLanguage",
+       "fields": [
+        {
+         "name": "id",
+         "type": "CodeLanguageId",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name to put in a status line."
+        },
+        {
+         "name": "wraps",
+         "type": "boolean",
+         "required": true,
+         "doc": "Prose wraps at the width of the view; code keeps its lines and scrolls."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "codeLanguageById",
+      "CodeLanguageId",
+      "codeLanguageOf",
+      "loadCodeLanguage"
+     ]
+    },
+    {
+     "file": "src/assemblies/code-theme.ts",
+     "about": "The colours of a code view, made from the toolkit's tokens, as a CodeMirror theme. A CodeMirror theme is a set of\nstyle rules, and the highlighting of the syntax is another (`HighlightStyle`): both are built here from the colours\nthe tokens resolve to where the view is (`readColor`), and built again when the page's look changes (the view\nreconfigures its theme compartment with the new extension). The ink, the ground, the lines, the selection and the\naccent are the page's own; the syntax uses the status colours the page already has: info for keywords, success for\nstrings, warning for numbers, destructive for what is wrong; comments and punctuation are the muted ink.\nThe font and the size are the page's too (`--font-mono`, `--text-xs`), written as the variables, so a font or a\ndensity change moves the code with everything else; the room around the text is the page's (`--pad-sm`).",
+     "also": [
+      "codeColors",
+      "CodeColors",
+      "codeTheme"
+     ]
+    },
+    {
+     "file": "src/assemblies/CodeView.tsx",
+     "about": "A view for code, read-only or editable: CodeMirror 6 (`@codemirror/*` and `@lezer/highlight`: npm dependencies,\npinned, see THIRD_PARTY.md) in the toolkit's colours. The editing, the highlighting and the search are CodeMirror's;\nthe colours are made from the tokens as they resolve in the page and made again when the page's look changes\n(`code-theme.ts`), and the font is `--font-mono`. It has its own entry of the package (`./code`): an app that shows no\ncode does not load CodeMirror, and a language is loaded when a file of it is shown (`code-languages.ts`).\n- The text is the app's: `value` in, `onChange` out at every change the person makes. A `value` that is not the one\n  last given back (another file opened, a visual edit) replaces the text and is not a step of the undo.\n- Each file keeps its own state (the undo steps, the selection) while the view lives: `docId` names the file, and\n  going back to it brings its state back. `ref.forget(docId)` lets one go.\n- The language comes from `fileName` (`src/main.rs`) or is said by `language`; `extensions` carries what the toolkit\n  does not know (another language, a key) into the editor. Prose (Markdown, text with no language) wraps; code\n  scrolls; `wrap` says otherwise.\n- Tab moves the focus on, as on every page, so the keyboard is never trapped in the text; `tabIndents` makes Tab indent.\n- Read-only is a view the person can still select and search in (Ctrl F), and says so to screen readers.",
+     "components": [
+      {
+       "name": "CodeView",
+       "props": [
+        {
+         "name": "ref",
+         "type": "React.Ref<CodeViewHandle>"
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text."
+        },
+        {
+         "name": "onChange",
+         "type": "((value: string) => void)",
+         "doc": "The text changed by what the person did. Absent, the view takes the text but tells nobody."
+        },
+        {
+         "name": "fileName",
+         "type": "string",
+         "doc": "The name or the path of the file the text is from: its extension picks the language, and it names the text for the state kept for it unless `docId` does."
+        },
+        {
+         "name": "language",
+         "type": "CodeLanguageId",
+         "doc": "The language, when the name of the file does not say (or there is no file)."
+        },
+        {
+         "name": "docId",
+         "type": "string",
+         "doc": "Which text this is: a state is kept for each one. The file name by default."
+        },
+        {
+         "name": "readOnly",
+         "type": "boolean",
+         "doc": "The text cannot be changed; it can be selected and searched."
+        },
+        {
+         "name": "lineNumbers",
+         "type": "boolean",
+         "doc": "The numbers of the lines, and the arrows that fold them; on by default."
+        },
+        {
+         "name": "wrap",
+         "type": "boolean",
+         "doc": "Long lines wrap at the width of the view. By default prose wraps and code scrolls."
+        },
+        {
+         "name": "tabIndents",
+         "type": "boolean",
+         "doc": "Tab indents instead of moving the focus on."
+        },
+        {
+         "name": "tabSize",
+         "type": "number",
+         "doc": "The width of a tab, in characters."
+        },
+        {
+         "name": "extensions",
+         "type": "readonly Extension[]",
+         "doc": "More of CodeMirror: another language, another key."
+        },
+        {
+         "name": "phrases",
+         "type": "Readonly<Record<string, string>>",
+         "doc": "The words of CodeMirror's own panels (search), by its phrases: `{ 'Find': 'Cerca' }`."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the view for screen readers; «Code» by default (`words.code.label`)."
+        },
+        {
+         "name": "autoFocus",
+         "type": "boolean",
+         "doc": "Takes the keyboard when it is drawn."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "CodeViewHandle",
+       "doc": "What the app can do to the view, through its `ref`.",
+       "fields": [
+        {
+         "name": "focus",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "forget",
+         "type": "(docId: string) => void",
+         "required": true,
+         "doc": "Lets go of the state (undo steps, selection) kept for a file."
+        },
+        {
+         "name": "view",
+         "type": "EditorView | null",
+         "required": true,
+         "doc": "CodeMirror's own view, for what the toolkit does not cover; null before the part is in the page."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CodeViewProps"
      ]
     }
    ]

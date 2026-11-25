@@ -89,11 +89,14 @@ import {
   Search,
   Send,
   Shapes,
+  Sliders,
+  Split,
   Square,
   Stop,
   Sun,
   Swatches,
   Tags,
+  Terminal,
   TextQuote,
   Trash,
   Tree,
@@ -131,6 +134,8 @@ import { cn } from './lib/utils'
  * that leaves the app (a page opened in the browser; `link` is the address). `globe` says what a thing is, `external`
  * what a press does: a thing outside what a graph is about is neither, it says so with the word «external»
  * (`GraphNode.external`).
+ * And of a workspace: `terminal` (a shell, a command line), `split` (a pane divided in two, the action that divides one)
+ * and `sliders` (the settings of one thing, as `settings` is those of the app).
  */
 export const ICON_NAMES = [
   'all',
@@ -230,6 +235,9 @@ export const ICON_NAMES = [
   'key',
   'globe',
   'external',
+  'terminal',
+  'split',
+  'sliders',
   'thumbUp',
   'thumbDown',
 ] as const
@@ -346,6 +354,9 @@ const GLYPHS: Readonly<Record<IconName, Glyph>> = {
   key: Key,
   globe: Globe,
   external: ExternalLink,
+  terminal: Terminal,
+  split: Split,
+  sliders: Sliders,
   thumbUp: Like,
   thumbDown: Dislike,
 }
