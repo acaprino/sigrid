@@ -1719,7 +1719,7 @@
     },
     {
      "file": "src/primitives/button.tsx",
-     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
+     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
      "components": [
       {
        "name": "Button",
@@ -1730,7 +1730,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
         },
         {
          "name": "asChild",
@@ -2169,7 +2169,19 @@
      "components": [
       {
        "name": "Input",
-       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`.",
+       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.",
+       "props": [
+        {
+         "name": "mono",
+         "type": "boolean",
+         "doc": "What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size."
+        },
+        {
+         "name": "short",
+         "type": "\"md\" | \"sm\" | \"xs\"",
+         "doc": "A short field, no wider than what it holds, at the start of its place: `xs` 96px (a number of three or four figures), `sm` 160px (an amount, a date, a code), `md` 256px (a short name). Absent: as wide as its place."
+        }
+       ],
        "passesOn": true
       }
      ]
@@ -3518,7 +3530,19 @@
      "components": [
       {
        "name": "Textarea",
-       "doc": "A multi-line field. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`). Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "doc": "A multi-line field that grows with its text. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`), and `mono` and `maxRows`. Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "props": [
+        {
+         "name": "mono",
+         "type": "boolean",
+         "doc": "What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size."
+        },
+        {
+         "name": "maxRows",
+         "type": "number",
+         "doc": "The field grows with its text by itself; this is the most lines it shows before it stops growing and scrolls (a whole number, 1 or more). Absent: it grows as far as its text goes."
+        }
+       ],
        "passesOn": true
       }
      ]
@@ -4037,7 +4061,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
         },
         {
          "name": "hoverScale",
