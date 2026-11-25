@@ -3,7 +3,7 @@
 // The frame around it (the showcase's `Section`, `Row`) is the showcase's. Under the page, the three things one part
 // asks for itself (`Cell`): two columns of a grid, its own line in a row and the room the others leave; and a page of
 // a few large parts, told apart by the large steps of the scale.
-import { Avatar, Badge, Button, Card, Cell, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text, TextList } from '../src/primitives'
+import { Avatar, Badge, Button, Card, Cell, Cluster, Grid, Icon, Input, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text, TextList, Textarea } from '../src/primitives'
 import { Code, Row, Section } from './parts'
 
 const FILES = ['src/retry.ts', 'src/charge.ts', 'src/webhooks.ts', 'src/dunning.ts', 'test/retry.spec.ts', 'test/charge.spec.ts', 'test/webhooks.spec.ts', 'README.md']
@@ -106,6 +106,25 @@ export function LayoutParts() {
             <Text as="div" variant="soft">
               <TextList ordered aria-label="Steps" items={['Read the webhook', 'Charge again', 'Tell the owner']} />
             </Text>
+          </Column>
+        </div>
+      </Row>
+      <Row label="a link in a line, fields for code, a short field">
+        <div data-sample="layout-fields" className="w-full max-w-sm rounded-lg bg-paper shadow-xs">
+          <Column pad="lg" gap="md">
+            <Text as="p" variant="soft">
+              Built from{' '}
+              <Button variant="link" size="inline">
+                billing-service
+              </Button>{' '}
+              this morning.
+            </Text>
+            <Button variant="link" size="inline">
+              <Text truncate>a-plugin-with-a-very-long-name-that-does-not-fit-on-one-line-of-this-card</Text>
+            </Button>
+            <Input mono aria-label="Folder" defaultValue="C:/work/billing-service" />
+            <Input short="xs" inputMode="decimal" aria-label="Budget" defaultValue="250" />
+            <Textarea mono maxRows={4} aria-label="Changelog" defaultValue={'1.2.0\n- retries with backoff\n- a webhook for failed charges\n1.1.0\n- dunning\n1.0.0\n- first release'} />
           </Column>
         </div>
       </Row>

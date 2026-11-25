@@ -204,7 +204,9 @@ screen holds beside an open inspector and on a phone.
 
 Words are a `Text`: `truncate` keeps a long name on one line with its whole as a hint (in a table, inside a
 `TableCell grow`), `mono` sets a path or an id in the monospace face, `tone` colours a status beside its word, `srOnly`
-keeps words for screen readers only. Lines with bullets or numbers are a `TextList`.
+keeps words for screen readers only. Lines with bullets or numbers are a `TextList`. A link in a sentence or a cell is
+`<Button variant="link" size="inline">`. A field for a path or code is `Input mono` or `Textarea mono`, a short one
+`Input short`, and a text area stops growing at `maxRows`.
 
 The pile, the row and the grid decide for all their parts. Where one part must sit differently it is a `Cell`:
 

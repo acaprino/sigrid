@@ -26,17 +26,31 @@ const TEXTAREA_CLASS = cn(
 
 type PrimitiveProps = React.ComponentProps<typeof InputPrimitive>
 
+type TextareaOwnProps = React.ComponentProps<'textarea'> & {
+  /** What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size. */
+  mono?: boolean | undefined
+  /**
+   * The field grows with its text by itself; this is the most lines it shows before it stops growing and scrolls
+   * (a whole number, 1 or more). Absent: it grows as far as its text goes.
+   */
+  maxRows?: number | undefined
+}
+
 /**
- * A multi-line field. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`). Base UI's types
- * describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.
+ * A multi-line field that grows with its text. Same API as before: the props of `<textarea>` (`ref` reaches the
+ * `<textarea>`), and `mono` and `maxRows`. Base UI's types describe an `<input>`: with `render` the element is a
+ * `<textarea>`, so the props are passed with a cast.
  */
-function Textarea({ className, ref, ...props }: React.ComponentProps<'textarea'>) {
+function Textarea({ className, ref, mono = false, maxRows, style, ...props }: TextareaOwnProps) {
+  // As many lines of the field's own text (`lh`), and its padding and border above and below (16px, as one line is 40px).
+  const capped = maxRows !== undefined && maxRows >= 1 ? { maxHeight: `calc(${Math.floor(maxRows)}lh + 1rem)`, ...style } : style
   return (
     <InputPrimitive
       render={<textarea />}
       data-slot="textarea"
-      className={cn(TEXTAREA_CLASS, className)}
-      {...(props as unknown as Omit<PrimitiveProps, 'ref' | 'render' | 'className'>)}
+      className={cn(TEXTAREA_CLASS, mono && 'font-mono', className)}
+      {...(capped ? { style: capped } : {})}
+      {...(props as unknown as Omit<PrimitiveProps, 'ref' | 'render' | 'className' | 'style'>)}
       ref={ref as React.Ref<HTMLElement>}
     />
   )

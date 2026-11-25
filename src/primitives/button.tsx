@@ -10,7 +10,7 @@
 // `QUIET_CHIP` below, for an app's chips: it is not a public variant.
 // Sizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36
 // and 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same
-// heights, square. Colors are the theme engine's
+// heights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's
 // tokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).
 // The variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).
 // Motion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed
@@ -72,6 +72,10 @@ const buttonVariants = cva(
         "icon-sm": "size-(--control-sm)",
         // As `icon` (R7): kept for compatibility.
         "icon-lg": "size-(--control-md)",
+        // In a line of text or a cell of a table (a `link`): no side padding and no height of a control, so the line
+        // is as tall as its words (24px at least, the least target; 44px with a finger, from the base classes); its
+        // words start where the line does, and it gives way, so a `Text truncate` in it is cut.
+        inline: "h-auto min-h-6 max-w-full min-w-0 shrink justify-start px-0",
       },
     },
     defaultVariants: {
