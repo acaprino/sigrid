@@ -60,6 +60,8 @@ export type DataColumn<Row> = {
   sortValue?: ((row: Row) => string | number | Date | null | undefined) | undefined
   /** `end`: a column of numbers, set at the end in tabular figures. */
   align?: TableCellAlign | undefined
+  /** The column takes the width the others leave, and no more: a one-line text in it that is too long (`Text truncate`) is cut there instead of widening the table. For the column of the names. */
+  grow?: boolean | undefined
   /** Classes for the heading and the cells of the column: its width (`w-24`), no wrapping. */
   className?: string | undefined
 }
@@ -400,7 +402,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
             >
               {mark}
               {group ? (
-                <TableCell colSpan={columns.length} className={STICKY}>
+                <TableCell colSpan={columns.length} grow className={STICKY}>
                   <div className="flex min-w-0 items-center gap-1">
                     {caret}
                     {groupCell ? groupCell(row) : columns[0]?.cell(row)}
@@ -408,7 +410,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
                 </TableCell>
               ) : (
                 columns.map((column, at) => (
-                  <TableCell key={column.id} align={column.align} style={tree && at === 0 ? ({ '--depth': level } as React.CSSProperties) : undefined} className={cn(tree && at === 0 && INDENT, column.className)}>
+                  <TableCell key={column.id} align={column.align} grow={column.grow} style={tree && at === 0 ? ({ '--depth': level } as React.CSSProperties) : undefined} className={cn(tree && at === 0 && INDENT, column.className)}>
                     {tree && at === 0 ? (
                       <div className="flex min-w-0 items-center gap-1">
                         {caret}

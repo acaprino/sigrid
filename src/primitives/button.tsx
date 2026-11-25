@@ -12,6 +12,8 @@
 // and 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same
 // heights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's
 // tokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).
+// A button that is a switch (Details open or not, in a panel's header) says so with `aria-pressed`: on, it has the selection tint and
+// its ink, as the toolbar's switch has. A button that is not one says nothing and looks as before.
 // The variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).
 // Motion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed
 // (`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is
@@ -33,7 +35,7 @@ import { SwapLabel } from "../internal/swap-label"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
