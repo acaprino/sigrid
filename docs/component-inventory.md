@@ -566,9 +566,10 @@ surface is opaque as before. `test/glass.test.ts` holds it and prints what the e
   theme's paper. Measured in CI (the `[glass]` lines of the test) over the gray baseline, the sample themes and the shell
   preset in its five accents: from 68% to 87% opaque in light and from 66% to 83% in dark (the preset: 68 to 75%, and
   66%); the pairs nearest their ratio are the muted ink (4.51) and the control border (3.00). A colour that falls short on the opaque background itself is held where it was.
-- **The host** gives the window: transparent, with the system's material behind it and that material's colour the
-  theme's paper (the value `applyTheme` writes in `<meta name="theme-color">`): the measurement assumes that colour. In a browser tab an app can still set
-  the choice: what shows through is the browser's canvas.
+- **The host** gives the window: transparent, with the system's material behind it. The measurement does not depend
+  on which: a material that shows less of the desktop than half, or has a colour of the scheme (light in light, dark
+  in dark), lies between the two worst backdrops, where every ratio holds. In a browser tab an app can still set the
+  choice: what shows through is the browser's canvas.
 - **Opaque again** with forced colours and with `prefers-reduced-transparency: reduce`, by the stylesheet alone; an
   engine that does not know that query draws opaque too.
 
