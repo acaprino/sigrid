@@ -52,7 +52,7 @@ const EDGES: GraphEdge[] = [
   { id: 'a', from: 'client', to: 'server', label: SEEN, labelShown: 'chosen' },
   { id: 'b', from: 'client', to: 'server', label: '2 calls · sampled by the profiler', labelShown: 'chosen', style: 'dashed' },
   { id: 'c', from: 'client', to: 'server', label: '1 call · not enough proof', labelShown: 'chosen', style: 'dashed', tone: 'warning' },
-  { id: 'd', from: 'client', to: 'server', label: '3 imports', labelShown: 'chosen' },
+  { id: 'd', from: 'client', to: 'server', label: '3 imports, 1 type', labelShown: 'chosen' },
   { id: 'e', from: 'server', to: 'pay', label: '2 calls, 3 imports', labelShown: 'chosen' },
   { id: 'f', from: 'server', to: 'catalog', label: '4 calls, both ways', labelShown: 'chosen', directed: false },
   // Short words, always drawn: they have room between two ranks.
@@ -65,11 +65,12 @@ type Box = { x: number; y: number; width: number; height: number }
 const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 /** The things as boxes, at these places and of the canvas's own size. */
 const boxesAt = (places: ReadonlyMap<string, { x: number; y: number }>) => new Map(IDS.map((id): [string, Box] => [id, { ...places.get(id)!, width: 208, height: 44 }]))
-/** No words kept on a line lie over a thing, or over the words of another line. */
+/** No words kept on a line lie over a thing (their letters: the 4px and 2px of ground around them may touch one), or over the words of another line. */
 function expectClear(on: ReadonlyMap<string, Box>, boxes: ReadonlyMap<string, Box>) {
   const kept = [...on]
   for (const [id, box] of kept) {
-    for (const [thing, at] of boxes) expect(meets(box, at), `${id} over ${thing}`).toBe(false)
+    const letters = { x: box.x + 4, y: box.y + 2, width: box.width - 8, height: box.height - 4 }
+    for (const [thing, at] of boxes) expect(meets(letters, at), `${id} over ${thing}`).toBe(false)
     for (const [other, at] of kept) if (other !== id) expect(meets(box, at), `${id} over ${other}`).toBe(false)
   }
 }
@@ -172,7 +173,7 @@ describe('on the canvas', () => {
       `Client → Server ${SEEN}`,
       'Client → Server 2 calls · sampled by the profiler',
       'Client → Server 1 call · not enough proof',
-      'Client → Server 3 imports',
+      'Client → Server 3 imports, 1 type',
       'Server → Payments 2 calls, 3 imports',
       // A line that goes both ways says so.
       'Server – Catalog 4 calls, both ways',

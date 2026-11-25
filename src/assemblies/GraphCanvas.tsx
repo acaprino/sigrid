@@ -1462,11 +1462,12 @@ function apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetP
 }
 
 /**
- * The room the words of a line take on the canvas, in the graph's own px: 12px text (about 6.5px a letter), 4px at each
- * side and 2px above and below, as `wordsOn` asks of React Flow. It is reckoned, not measured: the canvas places the
- * words before anything is drawn, and a line 20px from another (`APART`) keeps its words clear of the other's.
+ * The room the words of a line take on the canvas, in the graph's own px: 12px text (about 6px a letter), 4px of their
+ * ground at each side and 2px above and below, as `wordsOn` asks of React Flow. It is reckoned, not measured: the
+ * canvas places the words before anything is drawn, and a line 20px from another (`APART`) keeps its words clear of
+ * the other's.
  */
-const WORD = { letter: 6.5, pad: 4, height: 20 }
+const WORD = { letter: 6, pad: 4, lead: 2, height: 20 }
 const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
 /** The box the words of a line take, their middle at `at`. */
@@ -1494,9 +1495,9 @@ function wordPoint(line: Edge, boxes: ReadonlyMap<string, Box>, direction: 'righ
 
 /**
  * Which lines have room for their words where the words are drawn, and which have not. The words of a line stay on it
- * (`on`: the id of the line and the box they take) when that box lies over no thing and over no words already kept,
- * the lines read in their order (the app gives the path's first); of an open group only the title counts, its ground is
- * free. The others (`off`, in the same order) are not drawn on the canvas: it lists them beside it (`LineWords`), so
+ * (`on`: the id of the line and the box they take) when their letters lie over no thing (the ground around them may
+ * touch one, as two short words side by side between two ranks do) and their box over no words already kept, the lines
+ * read in their order (the app gives the path's first); of an open group only the title counts, its ground is free. The others (`off`, in the same order) are not drawn on the canvas: it lists them beside it (`LineWords`), so
  * no words are ever under a thing or on other words. `boxes` are the things in sight, on the canvas. Nothing is moved
  * to make room: the places are the layout's, the same with a thing chosen or not.
  */
@@ -1510,7 +1511,9 @@ export function wordsOf(lines: readonly Edge[], boxes: ReadonlyMap<string, Box>,
     const things = solid
     const at = wordPoint(line, boxes, direction)
     const box = at ? wordBox(line.label, at) : undefined
-    if (box !== undefined && !things.some((thing) => meets(box, thing)) && ![...on.values()].some((kept) => meets(box, kept))) on.set(line.id, box)
+    // The letters alone, without the ground around them.
+    const letters = box ? { x: box.x + WORD.pad, y: box.y + WORD.lead, width: box.width - 2 * WORD.pad, height: box.height - 2 * WORD.lead } : undefined
+    if (box !== undefined && letters !== undefined && !things.some((thing) => meets(letters, thing)) && ![...on.values()].some((kept) => meets(box, kept))) on.set(line.id, box)
     else off.push(line.id)
   }
   return { on, off }
