@@ -4,7 +4,7 @@
 // something other than its button and fades as it closes. Without motion each of them is the DOM it was before.
 // Tailwind also scans `test/`: a class with a variant is taken from the source's constant, never written out here.
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { MotionProvider } from '../src'
 import { Combobox, ItemList, ItemRow, SearchField } from '../src/components'
@@ -193,6 +193,39 @@ describe('the hover background that follows the pointer over a list', () => {
     expect(row('Receipt').getAttribute('aria-current')).toBe('true')
     act(() => row('Invoice').focus())
     expect(document.activeElement).toBe(row('Invoice'))
+  })
+
+  test('what it draws wider than the list is clipped, so a list that narrows never makes what holds it scroll sideways', async () => {
+    // The background is sized from the last measure and glides from the size it was seen at: a panel that gives room to an
+    // inspector narrows the list under it, and for a while the background is wider than the list. jsdom lays nothing out, so
+    // the property that keeps it from adding to the scroll is what is proved here (and in a browser, in Imago's demo at 1000px).
+    render(<Things animated />)
+    const list = screen.getByRole('list', { name: 'Messages' })
+    expect(list.style.overflowX).toBe('clip')
+    // Clipped sideways only: what sticks out above or below (a focus ring, a shadow) is not.
+    expect(list.style.overflowY).toBe('')
+    expect(list.style.overflow).toBe('')
+  })
+
+  test('a holder that scrolls sideways by itself keeps its own overflow, and every holder gets its own back with the motion', () => {
+    function Own({ animated, style }: { animated: boolean; style?: CSSProperties }) {
+      const [holder, setHolder] = useState<HTMLDivElement | null>(null)
+      return (
+        <div ref={setHolder} data-testid="holder" style={style}>
+          <button type="button" data-row="">First</button>
+          <HoverFollow container={holder} rows="[data-row]" animated={animated} />
+        </div>
+      )
+    }
+    const scrolling = render(<Own animated style={{ overflowX: 'auto' }} />)
+    expect(screen.getByTestId('holder').style.overflowX).toBe('auto')
+    scrolling.rerender(<Own animated={false} style={{ overflowX: 'auto' }} />)
+    expect(screen.getByTestId('holder').style.overflowX).toBe('auto')
+    scrolling.unmount()
+    const plain = render(<Own animated />)
+    expect(screen.getByTestId('holder').style.overflowX).toBe('clip')
+    plain.rerender(<Own animated={false} />)
+    expect(screen.getByTestId('holder').style.overflowX).toBe('')
   })
 
   test('a finger has no hover: no background for a touch', async () => {

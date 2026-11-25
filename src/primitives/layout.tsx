@@ -113,14 +113,18 @@ export type ClusterProps = LayoutAttributes & {
   as?: LayoutElement | undefined
   /** False: one line whatever the width (an avatar and the words beside it); a part that can give way (a `Column`, a `Text`) narrows and wraps its own words. Default true. */
   wrap?: boolean | undefined
+  /** As tall as the region that holds it, which gives it its height (the content of the frame, a pane, a `Column fill`): a row of a part that
+   *  fills (a `Terminal`) and what stands beside it (an `OverviewStrip`), in a `Column fill` with other parts, takes the height they leave.
+   *  The parts line up across it as `align` says, `stretch` for a part that is as tall as the row. Absent: as tall as its parts. */
+  fill?: boolean | undefined
   children?: React.ReactNode
 }
 
 /** A row of parts side by side that wraps to the next line when the room runs out: buttons, fields, chips. */
-function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "div", wrap = true, children, ...props }: ClusterProps) {
+function Cluster({ gap = "sm", pad, justify = "start", align = "center", as = "div", wrap = true, fill = false, children, ...props }: ClusterProps) {
   const Tag = as
   return (
-    <Tag role={listRole(as)} {...own(props)} data-slot="cluster" className={cn("flex min-w-0", wrap ? "flex-wrap" : "flex-nowrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align])}>
+    <Tag role={listRole(as)} {...own(props)} data-slot="cluster" data-fill={fill || undefined} className={cn("flex min-w-0", wrap ? "flex-wrap" : "flex-nowrap", GAP[gap], pad && PAD[pad], JUSTIFY[justify], ALIGN[align], fill && FILL)}>
       {children}
     </Tag>
   )

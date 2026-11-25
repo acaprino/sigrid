@@ -23,6 +23,7 @@ import * as React from "react"
 import { Icon } from "../icons"
 import { Button } from "../primitives/button"
 import { Tabs, TabsList, TabsTrigger } from "../primitives/tabs"
+import { Dot } from "../primitives/dot"
 import { Tooltip } from "../primitives/tooltip"
 import { ContextMenu, type ContextMenuEntry } from "../components/context-menu"
 import { steadyLabel } from "../internal/steady-label"
@@ -618,6 +619,7 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
                             ) : undefined
                           }
                         >
+                          {tab.color ? <Dot color={tab.color} /> : null}
                           {tab.icon ? <Icon name={tab.icon} /> : null}
                           <span className="min-w-0 truncate">{steadyLabel(tab.title)}</span>
                         </TabsTrigger>
