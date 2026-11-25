@@ -7,7 +7,7 @@
 import { DENSITY_VARIABLES } from './density'
 import { DEFAULT_FONT, FONTS, SYSTEM_FONT } from './theme-catalog'
 import type { FontDef, FontId, ThemeDef } from './theme-catalog'
-import { GLASS_GROUND, themeTokens, tokensFor } from './theme-engine'
+import { GLASS_VARIABLES, themeTokens, tokensFor } from './theme-engine'
 import type { OwnTheme, ThemeScheme, ThemeTokens, ThemeTone } from './theme-engine'
 import { paletteTheme } from './palette'
 import type { PalettePick } from './palette'
@@ -36,21 +36,21 @@ function tokensOf(pick: ThemePick): ThemeTokens {
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
 /** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-font', 'data-density'] as const
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-float', 'data-font', 'data-density'] as const
 
-/** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`, `material`): the next theme takes them away. */
-const ASKED_ATTRIBUTES = ['data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material'] as const
+/** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`, `material`, and `data-float` with a stated `Surfaces.glass.float`): the next theme takes them away. */
+const ASKED_ATTRIBUTES = ['data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-float'] as const
 
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
 
 /**
  * The names of the variables that `applyTheme`, `applyFont` and `applyDensity` write: they are the same for every
- * theme, scheme and density, but for the ground of a glass page (`GLASS_GROUND`), which only a glass theme writes.
+ * theme, scheme and density, but for the surfaces of a glass page (`GLASS_VARIABLES`), which only a glass theme writes.
  */
 export const THEME_VARIABLES: readonly string[] = (() => {
   const t = themeTokens(BASE_THEME, 'light')
-  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), GLASS_GROUND, FONT_VARIABLE, ...DENSITY_VARIABLES]
+  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), ...GLASS_VARIABLES, FONT_VARIABLE, ...DENSITY_VARIABLES]
 })()
 
 export function isFontId(value: unknown): value is FontId {
@@ -101,7 +101,7 @@ export function applyTheme(el: HTMLElement, pick: ThemePick): void {
   el.setAttribute('data-scheme', t.scheme)
   for (const [k, v] of Object.entries(t.attributes)) el.setAttribute(k, v)
   for (const name of ASKED_ATTRIBUTES) if (!(name in t.attributes)) el.removeAttribute(name)
-  if (!(GLASS_GROUND in t.shape)) el.style.removeProperty(GLASS_GROUND)
+  for (const name of GLASS_VARIABLES) if (!(name in t.shape)) el.style.removeProperty(name)
   if (el === el.ownerDocument.documentElement) {
     for (const meta of el.ownerDocument.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) meta.content = t.colors['paper']!
   }

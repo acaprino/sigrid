@@ -128,8 +128,9 @@ export interface ThemeDef {
    * the page and of the frame (the title bar, the bars, a sidebar in the content's colours); the work area, a sidebar
    * with colours of its own and everything that opens over the page stay opaque. The toolkit draws no blur. The engine
    * writes `data-material="glass"` on the root and the ground as `--glass-ground`, as opaque as its text needs (see
-   * `glassGround` in theme-engine.ts). It is drawn only when the attribute is on the document's root, and opaque again
-   * under forced colours and where the person asked for less transparency.
+   * `glassGround` in theme-engine.ts). A curated palette may state its glass instead (`Surfaces.glass`): the ground,
+   * and the work area and what opens over the page, which take glass only then. It is drawn only when the attribute
+   * is on the document's root, and opaque again under forced colours and where the person asked for less transparency.
    */
   readonly material?: 'solid' | 'glass' | undefined
   /**
@@ -187,6 +188,27 @@ export interface Surfaces {
    * lightness). The secondary text stays derived from the ink, and stays 1.5 points of contrast above the muted one.
    */
   readonly mute?: string | undefined
+  /**
+   * The glass of this scheme, stated by the palette and read only under `material: 'glass'`. Absent: the engine
+   * computes the ground, and the work area and what opens over the page are opaque.
+   */
+  readonly glass?: GlassLevels | undefined
+}
+
+/**
+ * The three surfaces of a glass page, each as `#rrggbbaa` (the colour, then how opaque it is). The engine keeps each as
+ * stated unless a text colour (4.5:1) or the control border or a user's colour (3:1) falls short on it over the worst
+ * that can be behind it; then it raises its opacity only, never its colour, and names it in `corrected`
+ * (`glass-ground`, `glass-sheet`, `glass-float`; see `glassLevels` in theme-engine.ts). One that is absent, or not a
+ * `#rrggbbaa`, is as without it.
+ */
+export interface GlassLevels {
+  /** The ground: the title bar, the bars and a sidebar in the content's colours sit on it. Absent: computed (`glassGround`). */
+  readonly ground?: string | undefined
+  /** The work area of `AppShell`. Absent: the paper, opaque. */
+  readonly sheet?: string | undefined
+  /** What opens over the page: menus, lists, popovers and dialogs. Absent: opaque. Notices and hints are the ink, always opaque. */
+  readonly float?: string | undefined
 }
 
 

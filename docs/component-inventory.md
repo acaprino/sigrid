@@ -566,9 +566,22 @@ surface is opaque as before. `test/glass.test.ts` holds it and prints what the e
   theme's paper. Measured in CI (the `[glass]` lines of the test) over the gray baseline, the sample themes and the shell
   preset in its five accents: from 68% to 87% opaque in light and from 66% to 83% in dark (the preset: 68 to 75%, and
   66%); the pairs nearest their ratio are the muted ink (4.51) and the control border (3.00). A colour that falls short on the opaque background itself is held where it was.
-- **The host** gives the window: transparent, with the system's material behind it and that material's colour the
-  theme's paper (the value `applyTheme` writes in `<meta name="theme-color">`): the measurement assumes that colour. In a browser tab an app can still set
-  the choice: what shows through is the browser's canvas.
+- **A palette may state its glass** (`Surfaces.glass`, a `GlassLevels` for each scheme, read only under
+  `material: 'glass'`): `ground`, `sheet` and `float`, each a `#rrggbbaa`. The ground is then the palette's colour
+  instead of the computed one; the work area takes `sheet` (`--glass-sheet`), and menus, lists, popovers and dialogs
+  take `float` (`--glass-float`, with `data-float="glass"` on the root). The work area and what opens over the page
+  take glass only when stated; sheets, the sidebar as a drawer, notices and hints (the ink) are always opaque. The
+  engine keeps each level as stated unless a text colour (4.5:1) or the control border or a user's colour (3:1) falls
+  short over the worst behind it: the two desktops for the ground, the ground over them for the sheet, the sheet and
+  the ground over them and the ink for what floats. Then it raises that level's opacity only, never its colour, and
+  names it in `corrected` (`glass-ground`, `glass-sheet`, `glass-float`). A level that is absent or not a `#rrggbbaa`
+  is as without it. With the user's own accent the stated glass stays; with the user's own page or a palette from one
+  colour it goes, and the ground is computed for that page. Parts of the work area that paint the paper to cover what
+  scrolls under them stay opaque on a stated sheet.
+- **The host** gives the window: transparent, with the system's material behind it. The measurement does not depend
+  on which: a material that shows less of the desktop than half, or has a colour of the scheme (light in light, dark
+  in dark), lies between the two worst backdrops, where every ratio holds. In a browser tab an app can still set the
+  choice: what shows through is the browser's canvas.
 - **Opaque again** with forced colours and with `prefers-reduced-transparency: reduce`, by the stylesheet alone; an
   engine that does not know that query draws opaque too.
 

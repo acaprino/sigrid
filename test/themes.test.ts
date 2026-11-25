@@ -63,8 +63,8 @@ describe('applyTheme', () => {
 
   test('always writes the same variables, whatever the theme and the scheme', () => {
     for (const pick of [{ theme: BASE_THEME, scheme: 'light' }, { theme: BASE_THEME, scheme: 'dark' }, { theme: sampleTheme('notte'), scheme: 'dark' }, { theme: sampleTheme('inchiostro'), scheme: 'light' }] as const) {
-      // The ground of a glass page is the one variable only a theme that asks for it writes (test/glass.test.ts).
-      expect([...Object.keys(themeVariables(pick)), '--glass-ground', FONT_VARIABLE, ...DENSITY_VARIABLES].sort()).toEqual([...THEME_VARIABLES].sort())
+      // The surfaces of a glass page are the variables only a theme that asks for them writes (test/glass.test.ts).
+      expect([...Object.keys(themeVariables(pick)), '--glass-ground', '--glass-sheet', '--glass-float', FONT_VARIABLE, ...DENSITY_VARIABLES].sort()).toEqual([...THEME_VARIABLES].sort())
     }
   })
 })
