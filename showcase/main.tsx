@@ -28,7 +28,7 @@ import { PhoneLayouts } from './phone'
 import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
-import { type SheetWidth } from '../src/primitives'
+import { type DialogWidth, type SheetWidth } from '../src/primitives'
 import { ContentSplit } from '../src/layout'
 import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
@@ -3320,6 +3320,7 @@ function Notices({ animated }: { animated: boolean }) {
 function Overlays({ animated }: { animated: boolean }) {
   const [dialog, setDialog] = React.useState(OPEN.has('dialog'))
   const [drawer, setDrawer] = React.useState(OPEN.has('drawer'))
+  const [wide, setWide] = React.useState<DialogWidth | null>(null)
   const [sheet, setSheet] = React.useState<'right' | 'left' | null>(OPEN.has('sheet') ? 'right' : OPEN.has('sheet-left') ? 'left' : null)
   const viewerKind = OPEN.has('viewer') ? 'ready' : OPEN.has('viewer-loading') ? 'loading' : OPEN.has('viewer-error') ? 'error' : null
   const [viewer, setViewer] = React.useState(viewerKind !== null)
@@ -3343,6 +3344,12 @@ function Overlays({ animated }: { animated: boolean }) {
         <Button variant="outline" onClick={() => setDrawer(true)}>
           Dialog as a drawer
         </Button>
+        <Button variant="outline" onClick={() => setWide('lg')}>
+          Dialog lg
+        </Button>
+        <Button variant="outline" onClick={() => setWide('xl')}>
+          Dialog xl
+        </Button>
         <Button variant="outline" onClick={() => setSheet('right')}>
           Sheet
         </Button>
@@ -3365,6 +3372,16 @@ function Overlays({ animated }: { animated: boolean }) {
         }
       >
         <Input defaultValue="Contracts" aria-label="Name" />
+      </Dialog>
+      <Dialog
+        open={wide !== null}
+        onOpenChange={(open) => setWide(open ? wide : null)}
+        width={wide ?? 'md'}
+        title="Choose a folder"
+        description="A wider window for a form of several fields or a list to choose from."
+        footer={<Button onClick={() => setWide(null)}>Done</Button>}
+      >
+        <Input placeholder="Search folders" aria-label="Search folders" />
       </Dialog>
       <Dialog
         open={drawer}
