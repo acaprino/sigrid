@@ -20,7 +20,7 @@ import { parseDate } from '@internationalized/date'
 import { Archive, ArrowUpDown as ArrowDownUp, Bell, ChevronRight, CogFour as Settings, CornerUpLeft as Reply, Dots as Ellipsis, Inbox, PanelLeft, Plus, Search, Terminal, Trash as Trash2 } from '../src/internal/sigrid-icons'
 import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyFont, DEFAULT_FONT, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
-import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, type StepItem, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
+import { FrameSurface, type FrameSurfaceHandle, type FrameSize, ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, type StepItem, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
 import { AuthForm, type AuthMode, Lightbox, Wizard, AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
@@ -156,6 +156,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "table": "Table and DataTable",
   "composition": "Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton",
   "composition-panes": "ItemRow with a control, ContentSplit, SplitPane, VirtualList fill and SheetContent width",
+  "frame-surface": "FrameSurface",
   "form-field": "FormField",
   "pickers": "Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar",
   "date": "Calendar, DateField, DateTimeField and DateRangeField",
@@ -201,7 +202,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
 const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'hue-scales', 'theme-gallery'] },
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'theme-hooks', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
-  { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
+  { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'frame-surface', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
   { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
   { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph', 'workspace', 'terminal', 'code'] },
   { label: 'Motion', icon: 'animations', ids: ['motion-feel', 'motion-open', 'motion-surfaces', 'motion-choices', 'hover', 'motion-pieces'] },
@@ -2557,6 +2558,59 @@ function CompositionPanes({ animated }: { animated: boolean }) {
   )
 }
 
+/** A frame for the sample: the box's size and where the person pressed, drawn with the page's own colours (`--color-*`). */
+async function sampleFrame(size: FrameSize, mark: { x: number; y: number } | null): Promise<ImageBitmap> {
+  const style = getComputedStyle(document.documentElement)
+  const color = (name: string) => style.getPropertyValue(name).trim() || 'CanvasText'
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(size.width * size.dpr))
+  canvas.height = Math.max(1, Math.round(size.height * size.dpr))
+  const context = canvas.getContext('2d')!
+  context.scale(size.dpr, size.dpr)
+  context.fillStyle = color('--color-paper')
+  context.fillRect(0, 0, size.width, size.height)
+  context.strokeStyle = color('--color-border')
+  for (let x = 0; x <= size.width; x += 40) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, size.height); context.stroke() }
+  for (let y = 0; y <= size.height; y += 40) { context.beginPath(); context.moveTo(0, y); context.lineTo(size.width, y); context.stroke() }
+  context.fillStyle = color('--color-ink')
+  context.font = `14px ${color('--font-sans')}`
+  context.fillText(`${Math.round(size.width)} × ${Math.round(size.height)} px`, 12, 24)
+  if (mark) {
+    context.fillStyle = color('--color-accent')
+    context.beginPath()
+    context.arc(mark.x, mark.y, 6, 0, Math.PI * 2)
+    context.fill()
+  }
+  return createImageBitmap(canvas)
+}
+
+/** A surface for pictures an app pushes, and the input it tells back: here a grid at the box's own size and a dot where the person presses. */
+function FrameSurfaces() {
+  const surface = React.useRef<FrameSurfaceHandle>(null)
+  const [last, setLast] = React.useState('Nothing pressed yet')
+  const draw = (size: FrameSize, mark: { x: number; y: number } | null) => { void sampleFrame(size, mark).then((frame) => surface.current?.draw(frame)) }
+  return (
+    <Section id="frame-surface" title="FrameSurface" note="A box that shows pictures the app pushes to it with `draw` (JPEG bytes or a bitmap) and tells the app its size, once it holds still, and what the person does on it: here the app draws a grid at the box's own size and a dot where it is pressed. `fit=contain` keeps a picture whole in the box, with the quiet ground around it.">
+      <Row label="a stream the app draws">
+        <div data-sample="frame-surface" className="h-56 w-full max-w-md overflow-hidden rounded-lg border border-line">
+          <FrameSurface
+            ref={surface}
+            label="Drawing"
+            onSize={(size) => draw(size, null)}
+            onPointer={(event) => {
+              if (event.kind !== 'down') return
+              setLast(`Pressed at ${Math.round(event.x)}, ${Math.round(event.y)}`)
+              const size = surface.current?.size
+              if (size) draw(size, { x: event.x, y: event.y })
+            }}
+          />
+        </div>
+        <Text variant="note">{last}</Text>
+      </Row>
+    </Section>
+  )
+}
+
 function Empties() {
   return (
     <Section id="empty" title="Empty" note="A title alone; a title, a sentence and an action; with the optional icon.">
@@ -3765,6 +3819,7 @@ function App() {
     table: <Tables />,
     composition: <Composition animated={animated} />,
     'composition-panes': <CompositionPanes animated={animated} />,
+    'frame-surface': <FrameSurfaces />,
     'form-field': <FormFields />,
     pickers: <Pickers />,
     date: <Dates animated={animated} />,

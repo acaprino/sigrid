@@ -1000,8 +1000,8 @@
         },
         {
          "name": "material",
-         "type": "\"solid\" | \"glass\"",
-         "doc": "What the page's ground is made of. Absent, `solid` or any other value: every surface is opaque. `glass`: the window's own material (Windows' acrylic, which the host gives a transparent window) shows through the ground of the page and of the frame (the title bar, the bars, a sidebar in the content's colours); the work area, a sidebar with colours of its own and everything that opens over the page stay opaque. The toolkit draws no blur. The engine writes `data-material=\"glass\"` on the root and the ground as `--glass-ground`, as opaque as its text needs (see `glassGround` in theme-engine.ts). A curated palette may state its glass instead (`Surfaces.glass`): the ground, and the work area and what opens over the page, which take glass only then. It is drawn only when the attribute is on the document's root, and opaque again under forced colours and where the person asked for less transparency."
+         "type": "\"solid\" | \"glass\" | \"clear\"",
+         "doc": "What the page's ground is made of. Absent, `solid` or any other value: every surface is opaque. `glass`: the window's own material (Windows' acrylic, which the host gives a transparent window) shows through the ground of the page and of the frame (the title bar, the bars, a sidebar in the content's colours); the work area, a sidebar with colours of its own and everything that opens over the page stay opaque. The toolkit draws no blur. The engine writes `data-material=\"glass\"` on the root and the ground as `--glass-ground`, as opaque as its text needs (see `glassGround` in theme-engine.ts). A curated palette may state its glass instead (`Surfaces.glass`): the ground, and the work area and what opens over the page, which take glass only then. It is drawn only when the attribute is on the document's root, and opaque again under forced colours and where the person asked for less transparency. `clear`: the page paints no ground at all (`html` and `body` are transparent), for a window of its own that is transparent and holds one part that has its own surface, such as a notice card that floats over the desktop. The engine writes `data-material=\"clear\"` and no variable; nothing else changes. A frame (`AppShell`) is not for it."
         },
         {
          "name": "dark",
@@ -5057,6 +5057,149 @@
      ],
      "also": [
       "FormFieldProps"
+     ]
+    },
+    {
+     "file": "src/components/frame-surface.tsx",
+     "about": "A surface that shows pictures the app pushes to it, one after the other, and tells the app what the person does on it: the\nwindow of an embedded browser that streams JPEG frames, a remote screen, a camera, a preview rendered elsewhere. The part\ndraws and listens; what the pictures are and what the input means is the app's.\n- The pictures. The app calls `draw` on the part's `ref` with each one: encoded bytes (`BufferSource` or a `Blob`, JPEG by\n  default, `type` says another) or an `ImageBitmap`, which the part takes over and closes when the next one replaces it. A\n  picture is decoded off the main thread; when one finishes after a newer one was drawn it is dropped, so a stream that\n  decodes slower than it arrives still shows the latest and never stands still. `draw` resolves to whether it was drawn (a\n  picture that is broken, or too late, is skipped; the next one repaints). The last picture is kept and drawn again when\n  the box changes size, until the app sends one made for the new size.\n- The fit. `fill` (the default) stretches the picture over the box, for a stream that is asked for at the box's own size;\n  `contain` shows all of it, centred, with the rest of the box on the quiet ground (letterbox).\n- The size. `onSize` hears the box in CSS pixels and the device's pixel ratio: at the first size at once, and at each change\n  when it has held still for `settleMs` (default 150), so a tile being dragged asks its source once, at its final size. The\n  canvas itself follows the box at every change, at the device's resolution.\n- The input. `onPointer`, `onWheel`, `onKey` and `onPaste` tell what the person did, with the point in the box (`x`, `y`, in\n  CSS pixels) and in the picture (`frame`, in its own pixels, null outside it: the letterbox). A press captures the pointer\n  until it is let go; the surface takes the focus; the input the app listens to is not passed on to the page (no scroll, no\n  context menu, no browser key), except the keys `appKeys` names, which the page's own commands keep. With no callback the\n  surface is a picture.\n- It is one tab stop with the name `label` and the role `application`: the keys inside are the app's.\nTokens only: the ground of the letterbox is `paper-2`; the ring is the toolkit's, inset.",
+     "components": [
+      {
+       "name": "FrameSurface",
+       "props": [
+        {
+         "name": "ref",
+         "type": "React.Ref<FrameSurfaceHandle>"
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name for screen readers («Web page»)."
+        },
+        {
+         "name": "fit",
+         "type": "\"fill\" | \"contain\"",
+         "doc": "`fill`: the picture over the whole box (the default); `contain`: all of it, centred, with a letterbox."
+        },
+        {
+         "name": "type",
+         "type": "string",
+         "doc": "The type of encoded bytes (default `image/jpeg`)."
+        },
+        {
+         "name": "onSize",
+         "type": "((size: FrameSize) => void)",
+         "doc": "The size of the box changed (see above)."
+        },
+        {
+         "name": "settleMs",
+         "type": "number",
+         "doc": "How long the box holds still before a change is told, in ms. Default 150."
+        },
+        {
+         "name": "onPointer",
+         "type": "((event: FramePointerEvent) => void)"
+        },
+        {
+         "name": "onWheel",
+         "type": "((event: FrameWheelEvent) => void)"
+        },
+        {
+         "name": "onKey",
+         "type": "((event: FrameKeyEvent) => void)"
+        },
+        {
+         "name": "onPaste",
+         "type": "((text: string) => void)",
+         "doc": "Text pasted while the surface has the focus."
+        },
+        {
+         "name": "appKeys",
+         "type": "((event: KeyboardEvent) => boolean)",
+         "doc": "The keys the page's commands keep for themselves (`Ctrl+Tab`): not sent to `onKey`, and left alone."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "FramePoint",
+       "doc": "A point, in CSS pixels of the box or in pixels of the picture.",
+       "fields": [
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "y",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "FrameSize",
+       "doc": "The box in CSS pixels and the device's pixels for each of them.",
+       "fields": [
+        {
+         "name": "width",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "dpr",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "FrameSurfaceHandle",
+       "doc": "What the app can do to the surface, through its `ref`.",
+       "fields": [
+        {
+         "name": "draw",
+         "type": "(source: FrameSource) => Promise<boolean>",
+         "required": true,
+         "doc": "Draws a picture; resolves to whether it was drawn (false: broken, or older than one already drawn)."
+        },
+        {
+         "name": "clear",
+         "type": "() => void",
+         "required": true,
+         "doc": "Takes the picture away; the box is the quiet ground again."
+        },
+        {
+         "name": "focus",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "size",
+         "type": "FrameSize | null",
+         "required": true,
+         "doc": "The size last measured, null before the box has one."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "FrameKeyEvent",
+      "FramePointerEvent",
+      "frameRect",
+      "FrameSource",
+      "FrameSurfaceProps",
+      "FrameWheelEvent"
      ]
     },
     {
