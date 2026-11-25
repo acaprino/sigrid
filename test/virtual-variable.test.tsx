@@ -53,9 +53,10 @@ describe('VirtualList variable', () => {
     const { unmount } = render(rows(true))
     const list = screen.getByRole('list', { name: 'Messages' })
     expect(indexes(list)).toEqual([0, 1, 2])
-    // The room of the 997 rows not drawn is their estimate, 40px and the 2px between rows, each.
+    // The room of the 997 rows not drawn is their estimate, 40px and the 2px between rows, each; but the seven below the
+    // three, drawn and measured on the first paint, keep what they measured (680px, not 7 x 40).
     expect(list.style.paddingTop).toBe('0px')
-    expect(list.style.paddingBottom).toBe(`${997 * 42}px`)
+    expect(list.style.paddingBottom).toBe(`${997 * 42 + 400}px`)
     expect(list.parentElement!.hasAttribute('data-variable')).toBe(true)
     unmount()
     // Without it, as before: every row is as tall as the first one.

@@ -580,6 +580,15 @@ function Tree({
   }
   const frozen = (id: string) => tree.index.get(id)?.source?.disabled === true
 
+  /** The row the focus is to go to, if it is drawn now. */
+  const takeFocus = () => {
+    const el = box.current
+    if (wanted.current === null || !el) return
+    const row = Array.from(el.querySelectorAll<HTMLElement>("[role=treeitem]")).find((candidate) => candidate.dataset.value === wanted.current)
+    if (!row) return
+    wanted.current = null
+    if (row !== document.activeElement) row.focus()
+  }
   // `virtual`: the box is as tall as it is, and a row as tall as the first one drawn: read where they are drawn.
   React.useLayoutEffect(() => {
     if (!virtual) return
@@ -589,11 +598,7 @@ function Tree({
     const height = first instanceof HTMLElement ? first.offsetHeight : 0
     if (height > 0 && height !== rowSize) setRowSize(height)
     // A row reached out of sight takes the focus once it is drawn.
-    if (wanted.current === null || !el) return
-    const row = Array.from(el.querySelectorAll<HTMLElement>("[role=treeitem]")).find((candidate) => candidate.dataset.value === wanted.current)
-    if (!row) return
-    wanted.current = null
-    if (row !== document.activeElement) row.focus()
+    takeFocus()
   })
   React.useEffect(() => {
     const el = box.current
@@ -614,6 +619,18 @@ function Tree({
       el.scrollTop = next
       setTop(next)
     }
+    takeFocus()
+  }
+  /** Home and End of a tree with rows out of sight: the first and the last row of all, not of those drawn. */
+  const ends = (event: React.KeyboardEvent) => {
+    if (!virtual || (event.key !== "Home" && event.key !== "End") || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
+    const id = (event.key === "Home" ? flat[0] : flat[flat.length - 1])?.node.id
+    if (id === undefined) return
+    event.preventDefault()
+    event.stopPropagation()
+    setFocus(id)
+    reveal(id)
+    if (followFocus) choose(id)
   }
 
   /** Enter or a double press on a row: the app is asked to open the thing. */
@@ -697,6 +714,7 @@ function Tree({
       <TreeViewPrimitive.Tree
         ref={box}
         data-slot="tree-rows"
+        onKeyDownCapture={virtual ? ends : undefined}
         onScroll={virtual ? (event) => setTop(event.currentTarget.scrollTop) : undefined}
         onDoubleClick={onOpen ? (event) => asked(event.target) : undefined}
         // Where the row that is the Tab stop is not drawn, the box itself is, and hands the focus to that row.
