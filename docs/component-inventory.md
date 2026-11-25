@@ -427,7 +427,7 @@ Also added: the status colours `success`, `warning` and `highlight` (`theme-engi
 left on 2026-11-23 with the packs (below).
 
 Icons (the owner, 2026-11-23: «Sigrid deve avere un suo unico icon set»): one set, the same in every app: Sigrid Icons since
-2026-11-24 (MynaUI's drawings, copied, and fifteen of Sigrid's own: `src/internal/sigrid-icons.tsx`), Lucide before.
+2026-11-24 (MynaUI's drawings, copied, and seventeen of Sigrid's own: `src/internal/sigrid-icons.tsx`), Lucide before.
 `Icon` draws Sigrid's names (`ICON_NAMES`) with the set's drawings; an app's own icon is its mark, never an icon of its
 interface. The other five packs (Phosphor Duotone, Solar Duotone, Fluent Color, Fluent Emoji Flat, Twemoji), the
 user's choice of a pack (`IconPackChoice`, `ICON_PACKS`, `IconPack`, `DEFAULT_ICON_PACK`, `isIconPack`) and

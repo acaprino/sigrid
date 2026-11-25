@@ -41,7 +41,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'TextList', 'Textarea', 'Thumbnail', 'ToggleGroup', 'ToggleGroupItem', 'Tooltip', 'TOOLTIP_DELAY_MS',
   ],
   '@acaprino/sigrid/components': [
-    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'COPIED_MS',
+    'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'ContextMenu', 'COPIED_MS',
     'CopyButton', 'DateField', 'DateRangeField', 'DateTimeField', 'dayPicks', 'DescriptionList', 'Dialog',
     'Disclosure', 'DurationField', 'Empty', 'FileDrop', 'FormField', 'InlineMarkdown', 'InputGroup',
     'InputGroupButton', 'InputGroupText', 'ItemList', 'ItemRow', 'MarkdownBlocks', 'Message', 'Note', 'OverflowList',

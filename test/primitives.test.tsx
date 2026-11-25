@@ -113,7 +113,7 @@ test('what is on or chosen is the accent, in every control: no control keeps the
     'primitives/slider.tsx': /bg-primary/,
     'components/calendar.tsx': /data-selected:bg-primary/,
     'assemblies/ThemeGallery.tsx': /aria-checked:border-primary/,
-    'internal/markdown.tsx': /border-primary bg-primary text-primary-foreground/,
+    'components/markdown-blocks.tsx': /border-primary bg-primary text-primary-foreground/,
   }
   for (const [file, pattern] of Object.entries(on)) {
     expect(source(file), file).toMatch(pattern)

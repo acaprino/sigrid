@@ -3,7 +3,7 @@
 // of open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in
 // `src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken
 // from MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,
-// and no package of icons is a dependency. Fifteen are Sigrid's own, drawn by hand on the same grid for the meanings
+// and no package of icons is a dependency. Seventeen are Sigrid's own, drawn by hand on the same grid for the meanings
 // MynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing
 // the set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an
 // app takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).
@@ -149,3 +149,7 @@ export const Graph = glyph('Graph', ['M14.5 5.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 
 export const Router = glyph('Router', ['M5 13h14a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2', 'M7 16.5h.01m3.49 0h.01', 'M17 13V9.5', 'M14.6 7a3.4 3.4 0 0 1 4.8 0m-6.9-2.1a6.4 6.4 0 0 1 9 0'])
 /** A screen and a phone: a device. */
 export const Devices = glyph('Devices', ['M10.5 17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.5M6.5 20.5h4m-2-3.5v3.5', 'M15.5 11.5h4A1.5 1.5 0 0 1 21 13v6.5a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5V13a1.5 1.5 0 0 1 1.5-1.5'])
+/** A pane with a line down its middle: a place divided in two. */
+export const Split = glyph('Split', ['M3 9.4c0-2.24 0-3.36.436-4.216a4 4 0 0 1 1.748-1.748C6.04 3 7.16 3 9.4 3h5.2c2.24 0 3.36 0 4.216.436a4 4 0 0 1 1.748 1.748C21 6.04 21 7.16 21 9.4v5.2c0 2.24 0 3.36-.436 4.216a4 4 0 0 1-1.748 1.748C17.96 21 16.84 21 14.6 21H9.4c-2.24 0-3.36 0-4.216-.436a4 4 0 0 1-1.748-1.748C3 17.96 3 16.84 3 14.6z', 'M12 3.5v17'])
+/** Two lines with a knob each at a different place: the settings of one thing, adjusted. */
+export const Sliders = glyph('Sliders', ['M4 7h9m4 0h3', 'M17 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0', 'M4 17h3m4 0h9', 'M11 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0'])

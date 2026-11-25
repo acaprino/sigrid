@@ -978,14 +978,15 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   wins; the helpers outside a component (`kindLabel`, `stateText`, `overLimitNotice`, `withinLimit`) take the words
   as their last argument, and `useWords()` gives them to an app's own component.
 - Icons: Sigrid has one icon set of its own, Sigrid Icons, the same in every app (the owner, 2026-11-23; since
-  2026-11-24 the set is MynaUI's drawings with fifteen of Sigrid's own beside them, in place of Lucide, and no package
+  2026-11-24 the set is MynaUI's drawings with seventeen of Sigrid's own beside them, in place of Lucide, and no package
   of icons is a dependency); the user does not
   choose another, and an app draws no icon of its own in its interface. `Icon` draws a meaning (`settings`, `delete`),
   never the name of a drawing: `<Icon name="archive" />`. Sigrid's names (`ICON_NAMES`) are what the apps need: the views
   and settings, the menu entries, the actions of a mail, calendar or editing screen (`mail`, `reply`, `archive`,
   `bold`, `undo`, `attach`, `windowMinimize`…), the rows of a tree of files (`folder`, `folderOpen`, `file`), the parts
   of a project and of a system (`code`, `branch`, `package`, `layers`, `graph`, `gateway`, `device`, `key`, `globe`,
-  with `external` for what leaves the app) and the four tones of a message (`info`, `check`, `alert`, and `error`,
+  with `external` for what leaves the app), the parts of a workspace (`terminal` for a shell, `split` for a pane divided
+  in two and the action that divides one, `sliders` for the settings of one thing, as `settings` is the app's) and the four tones of a message (`info`, `check`, `alert`, and `error`,
   the circle with an X of every failure). `globe` says what a thing is (the web, a site, a browser); `external` says
   what a press does (it opens a page outside the app), so it goes on a button, a row or a menu entry, not on a thing
   for being outside: on a `GraphCanvas` that is the word «external» (`GraphNode.external`), beside whatever icon the

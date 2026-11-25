@@ -101,7 +101,7 @@ function useEnter(animated: boolean | undefined) {
 }
 
 type DropdownMenuContentProps = Menu.Popup.Props &
-  Pick<Menu.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionPadding"> & {
+  Pick<Menu.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionPadding" | "anchor"> & {
     /** The card enters with a short fade (off by default, never with prefers-reduced-motion). */
     animated?: boolean | undefined
   }
@@ -113,6 +113,7 @@ function DropdownMenuContent({
   side = "bottom",
   sideOffset = 4,
   collisionPadding,
+  anchor,
   animated,
   ref,
   ...props
@@ -130,6 +131,7 @@ function DropdownMenuContent({
         side={side}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
+        anchor={anchor}
       >
         <Menu.Popup
           data-slot="dropdown-menu-content"

@@ -258,9 +258,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-- Fifteen drawings of Sigrid's own, for the meanings MynaUI has no drawing for (`FolderMove`, `FilterX`, `TextQuote`,
+- Seventeen drawings of Sigrid's own, for the meanings MynaUI has no drawing for (`FolderMove`, `FilterX`, `TextQuote`,
   `History`, `ReplyAll`, `Tags`, `CalendarClock`, `Bot`, `Shapes`, `FolderOpen`, `UserPen`, `Tree`, `Graph`, `Router`,
-  `Devices`). Five of them start from a path of MynaUI (`FolderMove` and `FolderOpen` from its folder, `FilterX` from
+  `Devices`, `Split`, `Sliders`). Five of them start from a path of MynaUI (`FolderMove` and `FolderOpen` from its folder, `FilterX` from
   its funnel, `History` from its undo, `ReplyAll` from its corner arrow); the rest are drawn from nothing.
 
 Lucide (`lucide-react`, ISC), the set until 2026-11-24, left with its dependency.

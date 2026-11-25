@@ -74,6 +74,10 @@ export interface Words {
     /** The button in the bar that opens the sidebar where the frame has made it a drawer (`DrawerButton`). */
     readonly open: string
   }
+  readonly contextMenu: {
+    /** The name of a menu opened on a thing with the right button or the Menu key (`ContextMenu`), when the app gives none. */
+    readonly label: string
+  }
   readonly splitPane: {
     /** The hint of the divider between two panes (`SplitPane`): how it moves and how it goes back. */
     readonly hint: string
@@ -471,6 +475,9 @@ export const DEFAULT_WORDS: Words = {
     search: 'Search the menu',
     empty: 'No results',
     open: 'Open the menu',
+  },
+  contextMenu: {
+    label: 'Actions',
   },
   splitPane: {
     hint: 'Drag or use the arrow keys to resize · double press to reset',

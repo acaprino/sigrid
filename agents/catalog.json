@@ -439,7 +439,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "also": [
       "hasMarkdown",
       "parseBlocks",
@@ -751,7 +751,7 @@
     },
     {
      "file": "src/internal/sigrid-icons.tsx",
-     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Fifteen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
+     "about": "Sigrid Icons: Sigrid's own icon set (R6 of the toolkit's rules; the owner, 2026-11-24: «crea un nostro set chiamato\nSigridIcons»). Every glyph of the toolkit is one kind of thing: an `<svg>` marked `data-glyph`, on a 24px grid, made\nof open paths with no fill, drawn with the stroke of the theme (`--icon-stroke`, `--icon-cap` and `--icon-join` in\n`src/styles/theme.css`) and in the colour of the text around it. The set has two kinds of drawing. Most are taken\nfrom MynaUI Icons 0.4.12 (MIT, `THIRD_PARTY.md`): their paths are copied here as they are, under MynaUI's own names,\nand no package of icons is a dependency. Seventeen are Sigrid's own, drawn by hand on the same grid for the meanings\nMynaUI has no drawing for, or only one that says something else (the owner, 2026-11-24: «disegnale tu»). A drawing\nthe set lacks is added here, never imported by a part: a part of the toolkit takes its glyphs from this file, and an\napp takes none of them, it asks `Icon` for a meaning (`src/icons.tsx`).",
      "also": [
       "Glyph",
       "GlyphProps"
@@ -1329,6 +1329,11 @@
          "required": true
         },
         {
+         "name": "contextMenu",
+         "type": "{ readonly label: string; }",
+         "required": true
+        },
+        {
          "name": "splitPane",
          "type": "{ readonly hint: string; }",
          "required": true
@@ -1507,6 +1512,10 @@
          "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; readonly open: string; }>"
         },
         {
+         "name": "contextMenu",
+         "type": "Partial<{ readonly label: string; }>"
+        },
+        {
          "name": "splitPane",
          "type": "Partial<{ readonly hint: string; }>"
         },
@@ -1654,7 +1663,7 @@
        "props": [
         {
          "name": "name",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "required": true
         },
         {
@@ -2653,7 +2662,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "One of Sigrid's icons, drawn in the box while the picture loads and when it fails. Without it the box is empty, at the same size."
         },
         {
@@ -4092,6 +4101,170 @@
      ]
     },
     {
+     "file": "src/components/context-menu.tsx",
+     "about": "A menu on a thing, opened with the right button or with the Menu key (Shift+F10): the actions of a row, a tab, a\nfile, listed once and found where the pointer is. It wraps what it is for (a row, a pane, a tab) and lays no box of its\nown around it (`display: contents`), so the thing keeps its place. The entries are data: an action (a label, its icon, its\nkey as a hint, `destructive` for the one that deletes), a submenu, a heading, a separator. The card and the rows are\n`DropdownMenu`'s, so the menu is the one of every other: the arrows, Home and End, a letter, Enter, Escape, which brings\nthe focus back to where it was.\n- The pointer's menu opens at the point pressed; the keyboard's, under the thing that has the focus. A text field and\n  its kin keep the system's own menu (copy, paste). A menu inside a menu is the inner one's: the outer one leaves a\n  press that was taken.\n- The entries are read when the menu opens (`items` may be a function), so a menu always says what the thing is now.\n- An action is also a button somewhere the person can reach without the menu: a menu is a shortcut, never the only\n  way (a touch screen has no right button).",
+     "components": [
+      {
+       "name": "ContextMenu",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[] | (() => readonly ContextMenuEntry[])",
+         "required": true,
+         "doc": "The entries, or a function that gives them when the menu opens. An empty list opens nothing."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "The menu's name for screen readers («Actions for the session»). Default: the toolkit's word."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "No menu: the press and the key go where they would have gone."
+        },
+        {
+         "name": "onOpenChange",
+         "type": "((open: boolean) => void)",
+         "doc": "The menu opened or closed."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The card enters with a short fade (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "What the menu is for: any element or several."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "ContextMenuAction",
+       "doc": "One action of the menu.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it does, in a verb («Rename»)."
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
+         "doc": "Its icon, by one of Sigrid's names; without one the row keeps the empty slot (R6)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same outside the menu, as a hint («F2», «Del»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "Not available now: it stays, dim, so the menu does not change shape."
+        },
+        {
+         "name": "destructive",
+         "type": "boolean",
+         "doc": "The one that deletes: in the red of every delete."
+        },
+        {
+         "name": "onSelect",
+         "type": "() => void",
+         "required": true,
+         "doc": "Chosen (click, Enter or Space); the menu closes."
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuEntry",
+       "doc": "An entry of the menu: an action, a submenu, a heading, or `\"separator\"` between groups.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "doc": "What it does, in a verb («Rename»)."
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
+         "doc": "Its icon, by one of Sigrid's names; without one the row keeps the empty slot (R6)."
+        },
+        {
+         "name": "shortcut",
+         "type": "string",
+         "doc": "The key that does the same outside the menu, as a hint («F2», «Del»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean",
+         "doc": "Not available now: it stays, dim, so the menu does not change shape."
+        },
+        {
+         "name": "destructive",
+         "type": "boolean",
+         "doc": "The one that deletes: in the red of every delete."
+        },
+        {
+         "name": "onSelect",
+         "type": "() => void",
+         "doc": "Chosen (click, Enter or Space); the menu closes."
+        },
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[]"
+        },
+        {
+         "name": "heading",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuHeading",
+       "doc": "A heading over the entries that follow («Move to…»).",
+       "fields": [
+        {
+         "name": "heading",
+         "type": "string",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "ContextMenuSubmenu",
+       "doc": "A row that opens a menu of its own beside it.",
+       "fields": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …"
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "items",
+         "type": "readonly ContextMenuEntry[]",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ContextMenuProps"
+     ]
+    },
+    {
      "file": "src/components/copy-button.tsx",
      "about": "A button that puts a text on the clipboard and says that it did. After the press the copy icon is a check and the\nword is «Copied» for two seconds, then both go back: the answer is where the eye already is, so no notice is needed\n(a toast is for an action that can be taken back). Nothing moves: the icon keeps its box and the word the room of\nthe wider of its two texts. Screen readers hear «Copied» (a polite status), or that the system refused.\nAlone it is a quiet icon button with a hint; with `showLabel` it shows its word; in an `InputGroup` it takes the\nsize of the group's buttons and is off with the field.",
      "components": [
@@ -5015,6 +5188,31 @@
      ]
     },
     {
+     "file": "src/components/markdown-blocks.tsx",
+     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced\nblocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
+     "components": [
+      {
+       "name": "MarkdownBlocks",
+       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced code, with inline Markdown inside.",
+       "props": [
+        {
+         "name": "text",
+         "type": "string",
+         "required": true,
+         "doc": "The Markdown source."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "MarkdownBlocksProps"
+     ]
+    },
+    {
      "file": "src/components/message.tsx",
      "about": "One turn of a conversation: what the user wrote is a quiet block at the end of the row, what was answered is plain\ntext on the page (the answer is the content, not a bubble), with Markdown when it is a string. Each message says who\nit is from before its text, for screen readers. Under it, in a place that never changes, the quiet actions the app\nasks for: copy, try again, good or bad answer, and the app's own. Nothing is revealed by the pointer: what can be\ndone is there for a finger and for the keyboard too.",
      "components": [
@@ -5470,7 +5668,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "An icon that tells what kind of request it is; none for most."
         }
        ]
@@ -5622,7 +5820,7 @@
     },
     {
      "file": "src/internal/markdown.tsx",
-     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote); an empty line separates paragraphs. A «\\*» stays an asterisk.",
+     "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "components": [
       {
        "name": "InlineMarkdown",
@@ -5632,21 +5830,6 @@
          "name": "text",
          "type": "string",
          "required": true
-        }
-       ]
-      },
-      {
-       "name": "MarkdownBlocks",
-       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings and quotes, with inline Markdown inside.",
-       "props": [
-        {
-         "name": "text",
-         "type": "string",
-         "required": true
-        },
-        {
-         "name": "className",
-         "type": "string"
         }
        ]
       }
@@ -7033,7 +7216,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "One of Sigrid's icons, drawn while the logo loads, or in its place."
         }
        ]
@@ -8303,12 +8486,12 @@
         },
         {
          "name": "leftIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "The icons of the two buttons. Default the two arrows."
         },
         {
          "name": "rightIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…"
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …"
         },
         {
          "name": "empty",
@@ -8532,12 +8715,12 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "A meaning of Sigrid's icons (`folder`, `file`…); a name Sigrid does not draw is an empty slot. In a tree where some rows have one, a row without keeps an empty slot (R6)."
         },
         {
          "name": "openIcon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "The icon of a branch while it is open (`folderOpen` for a `folder`). Absent: `icon`, open or closed."
         },
         {
@@ -9637,7 +9820,7 @@
         },
         {
          "name": "icon",
-         "type": "\"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | \"notificat…",
+         "type": "\"split\" | \"link\" | \"file\" | \"filter\" | \"key\" | \"code\" | \"data\" | \"search\" | \"video\" | \"stop\" | \"layout\" | \"bold\" | \"colors\" | \"date\" | \"copy\" | \"labels\" | \"graph\" | \"mail\" | \"all\" | \"tag\" | \"more\" | …",
          "doc": "One of Sigrid's icons before the name."
         },
         {

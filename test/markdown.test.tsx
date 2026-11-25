@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { hasMarkdown, InlineMarkdown, MarkdownBlocks, parseBlocks, plainText } from '../src/internal/markdown'
+import { hasMarkdown, InlineMarkdown, parseBlocks, plainText } from '../src/internal/markdown'
+import { MarkdownBlocks } from '../src/components'
 
 // The small Markdown of the title and the notes: React elements, never HTML; marks that do not close stay text.
 
@@ -54,4 +55,39 @@ test('plainText removes the marks for names and tooltips', () => {
   // The block marks stay: the title shows them like this (InlineMarkdown).
   expect(plainText('1. Call **Marco**')).toBe('1. Call Marco')
   expect(hasMarkdown('1. Call Marco')).toBe(false)
+})
+
+test('a fenced block of code is one block: its text as written, the language named, closed by the same mark or by the end', () => {
+  const blocks = parseBlocks('Run it:\n```ts\nconst a = 1\n\n  const b = *2*\n```\nthen\n~~~\n# not a heading\n- not a list')
+  expect(blocks.map((b) => b.kind)).toEqual(['p', 'code', 'p', 'code'])
+  expect(blocks[1]).toEqual({ kind: 'code', lang: 'ts', text: 'const a = 1\n\n  const b = *2*' })
+  // Unclosed, it runs to the end: an answer still arriving shows as code from its first line. No language: an empty one.
+  expect(blocks[3]).toEqual({ kind: 'code', lang: '', text: '# not a heading\n- not a list' })
+  // A shorter mark inside does not close a longer one; a line of backticks with words is text of the block.
+  expect(parseBlocks('````md\n```\ninner\n```\n````')).toEqual([{ kind: 'code', lang: 'md', text: '```\ninner\n```' }])
+  // Three backticks with code after them on one line are inline code, not a fence.
+  expect(parseBlocks('```not a fence```').map((b) => b.kind)).toEqual(['p'])
+  // The indent of the fence is taken off its lines, the rest of the indent stays.
+  expect(parseBlocks('  ```\n  a\n    b\n  ```')).toEqual([{ kind: 'code', lang: '', text: 'a\n  b' }])
+})
+
+test('a code block is drawn in the mono face with its language and a copy button, no colours, and its text stays text', async () => {
+  const { container } = render(<MarkdownBlocks text={'```sh\nnpm run <b>x</b>\n```'} />)
+  const block = container.querySelector('[data-slot="md-code"]')!
+  expect(block.getAttribute('data-lang')).toBe('sh')
+  expect(block.querySelector('[data-slot="md-code-lang"]')!.textContent).toBe('sh')
+  const code = block.querySelector('pre code')!
+  expect(code.textContent).toBe('npm run <b>x</b>')
+  expect(block.querySelector('pre b')).toBeNull()
+  expect(block.querySelector('pre')!.className).toContain('font-mono')
+  // No syntax colours: the code is one text node.
+  expect(code.children.length).toBe(0)
+  expect(block.querySelector('pre')!.tabIndex).toBe(0)
+  const written: string[] = []
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text: string) => void written.push(text) } })
+  const copy = block.querySelector<HTMLButtonElement>('[data-slot="copy-button"]')!
+  expect(copy.getAttribute('aria-label')).toBe('Copy')
+  copy.click()
+  await Promise.resolve()
+  expect(written).toEqual(['npm run <b>x</b>'])
 })
