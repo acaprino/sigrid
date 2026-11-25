@@ -11,7 +11,7 @@
 import * as React from 'react'
 import { cn, isEmptyNode } from '../lib/utils'
 import { useWords } from '../words'
-import { MarkdownBlocks } from '../internal/markdown'
+import { MarkdownBlocks } from '../components/markdown-blocks'
 import { Button } from '../primitives/button'
 import { Message, type MessageVote } from '../components/message'
 import { Note } from '../components/note'

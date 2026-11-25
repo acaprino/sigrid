@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { build } from 'esbuild'
-import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -38,15 +38,28 @@ const compilerRuntime = {
   },
 }
 
+// A library's own stylesheet that a part puts in the page by itself (xterm's): `import css from 'library/file.css?inline'`
+// is the text of the file, as it is in Vite. The part brings it with its code, so the app imports no CSS for it.
+const inlineCss = {
+  name: 'inline-css',
+  setup(b) {
+    b.onResolve({ filter: /\.css\?inline$/ }, async (args) => {
+      const found = await b.resolve(args.path.replace(/\?inline$/, ''), { resolveDir: args.resolveDir, kind: args.kind })
+      return found.errors.length ? { errors: found.errors } : { path: found.path, namespace: 'css-text' }
+    })
+    b.onLoad({ filter: /.*/, namespace: 'css-text' }, (args) => ({ contents: readFileSync(args.path, 'utf8'), loader: 'text' }))
+  },
+}
+
 await build({
-  plugins: [syncExternalStore, compilerRuntime],
+  plugins: [syncExternalStore, compilerRuntime, inlineCss],
   // The main entry (the ground: themes, words, helpers), one for each level that draws (primitives, components, the
   // frame, assemblies), and one for each assembly that rests on a library an app may not need (a table, a long list, a
   // list put in order by dragging, formatted text, a graph): what they share is in common chunks.
   // The Tauri entry's source is outside `src/` (the toolkit knows no shell): the entries are named, so each one is
   // `dist/<name>.js` wherever its source is.
   entryPoints: {
-    ...Object.fromEntries(['index', 'primitives', 'components', 'layout', 'assemblies', 'table', 'virtual', 'reorder', 'rich-text', 'graph'].map((entry) => [entry, `${root}src/${entry}.ts`])),
+    ...Object.fromEntries(['index', 'primitives', 'components', 'layout', 'assemblies', 'table', 'virtual', 'reorder', 'rich-text', 'graph', 'terminal', 'code'].map((entry) => [entry, `${root}src/${entry}.ts`])),
     tauri: `${root}tauri/index.ts`,
   },
   // `splitting`: Motion (src/internal/motion-impl.tsx) stays in a separate chunk, loaded only with animations on.
@@ -74,4 +87,4 @@ writeFileSync(`${root}dist/tauri.d.ts`, "export * from './tauri/index'\n")
 run('@tailwindcss/cli/dist/index.mjs', ['-i', 'src/styles/entry.css', '-o', 'dist/styles.css'])
 
 for (const f of readdirSync(`${root}src/styles/fonts`)) cpSync(`${root}src/styles/fonts/${f}`, `${root}dist/fonts/${f}`)
-console.log('@acaprino/sigrid: dist/index.js and its ten entries (primitives, components, layout, assemblies, table, virtual, reorder, rich-text, graph, tauri), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')
+console.log('@acaprino/sigrid: dist/index.js and its twelve entries (primitives, components, layout, assemblies, table, virtual, reorder, rich-text, graph, terminal, code, tauri), their .d.ts, dist/styles.css, dist/graph.css, dist/fonts/')

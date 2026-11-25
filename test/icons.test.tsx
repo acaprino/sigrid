@@ -5,7 +5,7 @@
 import { render } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { Check, Code, CogFour, DangerTriangle, Devices, ExternalLink, File, Folder, FolderOpen, GitBranch, Globe, Graph, InfoCircle, Key, LayersThree, Package, Router, Trash, XCircle, type Glyph } from '../src/internal/sigrid-icons'
+import { Check, Code, CogFour, DangerTriangle, Devices, ExternalLink, File, Folder, FolderOpen, GitBranch, Globe, Graph, InfoCircle, Key, LayersThree, Package, Router, Sliders, Split, Terminal, Trash, XCircle, type Glyph } from '../src/internal/sigrid-icons'
 import { expect, test } from 'vitest'
 import * as UI from './all'
 import { ICON_NAMES, Icon, isIconName, type IconName } from '../src/primitives'
@@ -63,6 +63,9 @@ test("an icon is the set's own drawing for its meaning", () => {
     ['key', Key],
     ['globe', Globe],
     ['external', ExternalLink],
+    ['terminal', Terminal],
+    ['split', Split],
+    ['sliders', Sliders],
   ]
   for (const [name, Glyph] of MEANINGS) {
     expect(draw(name), name).toBe(glyph(Glyph))
@@ -137,6 +140,18 @@ test('the parts of a project and of a system: each meaning has a drawing that no
     const own = draw(part)
     expect(drawn.filter(([, drawing]) => drawing === own).map(([name]) => name), part).toEqual([part])
   }
+})
+
+test('the parts of a workspace: a shell, a pane divided and the settings of one thing, each drawn apart from every other name', () => {
+  const parts = ['terminal', 'split', 'sliders'] as const
+  const drawn = ICON_NAMES.map((name) => [name, draw(name)] as const)
+  for (const part of parts) {
+    expect(isIconName(part), part).toBe(true)
+    const own = draw(part)
+    expect(drawn.filter(([, drawing]) => drawing === own).map(([name]) => name), part).toEqual([part])
+  }
+  // `sliders` is one thing's settings, `settings` the app's: two meanings, two drawings.
+  expect(draw('sliders')).not.toBe(draw('settings'))
 })
 
 test('a value read back is checked: only the names Sigrid draws pass', () => {
