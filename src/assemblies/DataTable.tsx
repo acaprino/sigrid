@@ -31,6 +31,9 @@
 //   `preventDefault()` keeps the table from taking it too; without it, and for every key the app leaves, the table does
 //   what it did (Enter and Space press the row, the arrows, Home, End, PageUp and PageDown move). `containerRef` is the
 //   box that scrolls, for an app that reads its scrolling.
+// - A row may have no check (`isSelected` gives `null`: a sub-heading that cannot be chosen) or a check that cannot be
+//   pressed now (`isDisabled`, `selectAllDisabled`: a blocked row, a job that holds the list). `fill` makes the box as tall
+//   as the place that holds it, so that the table is the content of a panel and its headings stay in sight.
 // An app that needs more of a table (filters, pinned columns, groups) drives TanStack Table itself and draws it with
 // `Table`, `TableRow` and `TableCell`: this component is the common case, not a wall around the library.
 import * as React from 'react'
@@ -66,14 +69,18 @@ export type DataSort = { column: string; descending: boolean } | null
 
 /** The choice of rows: a column of checks, and the one in the heading that chooses all. */
 export type DataSelection<Row> = {
-  /** Whether a row is chosen: `'mixed'` for a group of which some rows are. */
-  isSelected: (row: Row) => boolean | 'mixed'
+  /** Whether a row is chosen: `'mixed'` for a group of which some rows are, `null` for a row that has no check (a sub-heading that cannot be chosen). */
+  isSelected: (row: Row) => boolean | 'mixed' | null
+  /** The check of a row cannot be pressed now (a row that is blocked, a job that holds the list). It stays in sight, dimmed. Absent: every check can. */
+  isDisabled?: ((row: Row) => boolean) | undefined
   /** The check of a row was pressed: the state it asks for. */
   onSelectedChange: (row: Row, checked: boolean) => void
   /** Whether all the rows are chosen, for the check in the heading. */
   selectAll?: boolean | 'mixed' | undefined
   /** The check in the heading was pressed. Absent: the heading has no check. */
   onSelectAll?: ((checked: boolean) => void) | undefined
+  /** The check in the heading cannot be pressed now. */
+  selectAllDisabled?: boolean | undefined
   /** The name of the check of a row for screen readers («Select report.pdf»). Absent: the toolkit's words. */
   label?: ((row: Row) => string) | undefined
 }
@@ -111,6 +118,16 @@ export type DataTableProps<Row> = {
   onRowKeyDown?: ((row: Row, event: React.KeyboardEvent<HTMLTableRowElement>) => void) | undefined
   /** The box that scrolls, for an app that reads its scrolling. */
   containerRef?: React.Ref<HTMLDivElement> | undefined
+  /**
+   * The table is the content of its place: the box takes the height of the place that holds it (a `Panel`, a pane) and scrolls
+   * inside it, the headings and the groups staying in sight. The place gives it its height; with `virtual` it is the box's height.
+   */
+  fill?: boolean | undefined
+  /**
+   * The app puts the rows in order, whatever the headings say: a press on a heading still asks `onSortChange` and `sort` still marks
+   * the column (`aria-sort`, the arrow), but the rows are shown as given. A tree is this always.
+   */
+  manualSort?: boolean | undefined
   /** In place of the rows when there are none. Absent: the toolkit's words («Nothing to show»). */
   empty?: React.ReactNode
   /** Classes of the box that scrolls: its height. */
@@ -161,7 +178,7 @@ function Caret({ open, onToggle, label }: { open: boolean | undefined; onToggle:
   )
 }
 
-function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSortChange, current, onRowPress, virtual = false, rowLevel, rowOpen, onRowOpenChange, isGroupRow, groupCell, selection, onRowKeyDown, containerRef, empty, className, ...props }: DataTableProps<Row>) {
+function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSortChange, current, onRowPress, virtual = false, rowLevel, rowOpen, onRowOpenChange, isGroupRow, groupCell, selection, onRowKeyDown, containerRef, fill = false, manualSort = false, empty, className, ...props }: DataTableProps<Row>) {
   const words = useWords()
   const [own, setOwn] = React.useState<DataSort>(defaultSort)
   const sorted = sort === undefined ? own : sort
@@ -186,7 +203,9 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
   // data too: the library keeps what a row sorts by, and a column that sorts by something else must be read again.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => [...rows] as RowData[], [rows, columns])
-  const sorting: SortingState = React.useMemo(() => (sorted ? [{ id: sorted.column, desc: sorted.descending }] : []), [sorted])
+  // A tree is ordered by the app, so that a child never leaves its parent: the library is given no sorting then.
+  const appOrders = manualSort || rowLevel !== undefined || rowOpen !== undefined || isGroupRow !== undefined
+  const sorting: SortingState = React.useMemo(() => (sorted && !appOrders ? [{ id: sorted.column, desc: sorted.descending }] : []), [sorted, appOrders])
   const table = useTable({ features, columns: defs, data, getRowId: (row) => rowId(row as Row), state: { sorting } })
   const model = table.getRowModel().rows
 
@@ -290,17 +309,17 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
   }
 
   const columnName = (column: DataColumn<Row>) => (typeof column.header === 'string' ? column.header : (column.label ?? column.id))
-  const check = (state: boolean | 'mixed' | undefined) => (state === 'mixed' ? ('indeterminate' as const) : state === true)
+  const check = (state: boolean | 'mixed' | null | undefined) => (state === 'mixed' ? ('indeterminate' as const) : state === true)
   const span = columns.length + (selection ? 1 : 0)
 
   return (
-    <Table containerRef={boxRef} containerClassName={className} role={tree ? 'treegrid' : undefined} aria-rowcount={virtual ? model.length + 1 : undefined} {...props}>
+    <Table containerRef={boxRef} containerClassName={cn(fill && 'h-full min-h-0', className)} role={tree ? 'treegrid' : undefined} aria-rowcount={virtual ? model.length + 1 : undefined} {...props}>
       <TableHeader>
         <tr aria-rowindex={virtual ? 1 : undefined}>
           {selection ? (
             <TableHead key="select" sticky className="w-0">
               {selection.onSelectAll ? (
-                <Checkbox checked={check(selection.selectAll ?? false)} onCheckedChange={(next) => selection.onSelectAll?.(next === true)} aria-label={words.table.selectAll} />
+                <Checkbox checked={check(selection.selectAll ?? false)} onCheckedChange={(next) => selection.onSelectAll?.(next === true)} disabled={selection.selectAllDisabled} aria-label={words.table.selectAll} />
               ) : (
                 <span className="sr-only">{words.table.select}</span>
               )}
@@ -356,7 +375,9 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
           const caret = <Caret open={open} onToggle={() => toggle(row, !open)} label={open ? words.table.fold : words.table.unfold} />
           const mark = selection ? (
             <TableCell key="select" className={cn('w-0', group && STICKY)}>
-              <Checkbox checked={check(state)} onCheckedChange={(next) => selection.onSelectedChange(row, next === true)} aria-label={selection.label?.(row) ?? words.table.selectRow} />
+              {state === null ? null : (
+                <Checkbox checked={check(state)} onCheckedChange={(next) => selection.onSelectedChange(row, next === true)} disabled={selection.isDisabled?.(row) === true} aria-label={selection.label?.(row) ?? words.table.selectRow} />
+              )}
             </TableCell>
           ) : null
           return (
@@ -369,7 +390,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
               aria-rowindex={virtual ? index + 2 : undefined}
               aria-level={tree ? level : undefined}
               aria-expanded={tree ? open : undefined}
-              aria-selected={tree && selection ? state === true : undefined}
+              aria-selected={tree && selection && state !== null ? state === true : undefined}
               current={current != null && item.id === current}
               tabIndex={navigable ? (item.id === stop ? 0 : -1) : undefined}
               onClick={onRowPress ? (event) => press(event, row) : undefined}

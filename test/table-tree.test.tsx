@@ -236,3 +236,52 @@ describe('the parts of a heading, and the box', () => {
     expect(taken).toHaveBeenCalledWith(screen.getByRole('table').parentElement)
   })
 })
+
+describe('a choice that is not the same for every row', () => {
+  const names = ENTRIES.map((entry) => entry.name)
+
+  test('a row whose check is `null` has none, and says nothing of being chosen; a check that `isDisabled` cannot be pressed', () => {
+    const change = vi.fn()
+    const selection: DataSelection<Entry> = {
+      isSelected: (entry) => (entry.id === 'cache/dir' ? null : false),
+      isDisabled: (entry) => entry.id === 'logs',
+      onSelectedChange: change,
+      selectAll: false,
+      onSelectAll: () => {},
+      selectAllDisabled: true,
+      label: (entry) => `Select ${entry.name}`,
+    }
+    render(<Tree extra={{ selection }} />)
+    expect(screen.queryByRole('checkbox', { name: 'Select dir' })).toBeNull()
+    expect(row('dir').children).toHaveLength(3)
+    expect(row('dir').hasAttribute('aria-selected')).toBe(false)
+    expect(row('a.tmp').getAttribute('aria-selected')).toBe('false')
+    const blocked = screen.getByRole('checkbox', { name: 'Select Logs' })
+    expect(blocked.hasAttribute('disabled') || blocked.getAttribute('aria-disabled') === 'true').toBe(true)
+    fireEvent.click(blocked)
+    expect(change).not.toHaveBeenCalled()
+    const all = screen.getByRole('checkbox', { name: 'Select all' })
+    expect(all.hasAttribute('disabled') || all.getAttribute('aria-disabled') === 'true').toBe(true)
+  })
+
+  test('a tree is shown as the app gives it, also when a heading asks for an order: the app is asked and the column is marked', () => {
+    const sort = vi.fn()
+    const columns: DataColumn<Entry>[] = [
+      { id: 'name', header: 'Name', cell: (entry) => entry.name, sortValue: (entry) => entry.name },
+      { id: 'size', header: 'Size', cell: (entry) => `${entry.size} KB`, sortValue: (entry) => entry.size, align: 'end' },
+    ]
+    render(<Tree extra={{ columns, sort: { column: 'name', descending: true }, onSortChange: sort }} />)
+    expect(screen.getAllByRole('row').slice(1).map((el) => el.querySelector('td')!.textContent)).toEqual(names)
+    expect(screen.getByRole('columnheader', { name: /Name/ }).getAttribute('aria-sort')).toBe('descending')
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Size' }))
+    expect(sort).toHaveBeenCalledWith({ column: 'size', descending: false })
+  })
+
+  test('`manualSort` leaves the order to the app in a plain table too, and `fill` makes the box as tall as its place', () => {
+    const rows = [...ENTRIES].reverse()
+    const columns: DataColumn<Entry>[] = [{ id: 'name', header: 'Name', cell: (entry) => entry.name, sortValue: (entry) => entry.name }]
+    render(<DataTable aria-label="Files" columns={columns} rows={rows} rowId={(entry) => entry.id} sort={{ column: 'name', descending: false }} manualSort fill />)
+    expect(screen.getAllByRole('row').slice(1).map((el) => el.textContent)).toEqual(rows.map((entry) => entry.name))
+    expect(screen.getByRole('table').parentElement!.className).toContain('h-full')
+  })
+})
