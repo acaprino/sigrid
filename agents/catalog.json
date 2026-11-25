@@ -1719,7 +1719,7 @@
     },
     {
      "file": "src/primitives/button.tsx",
-     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
+     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
      "components": [
       {
        "name": "Button",
@@ -1730,7 +1730,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
         },
         {
          "name": "asChild",
@@ -2125,7 +2125,7 @@
     },
     {
      "file": "src/primitives/heading.tsx",
-     "about": "The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,\na small title 16px (a dialog, a message in a card), all semibold in the ink; or the small label over a group (12px,\nmedium, muted: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.\nAn icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it\nwrites none (the owner's rule of 2026-11-23).",
+     "about": "The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,\na small title 16px (a dialog, a message in a card), all semibold in the ink; or the small label over a group (12px,\nmedium, muted: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.\nAn icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it\nwrites none (the owner's rule of 2026-11-23). With `truncate` it is one line, cut where its place ends.",
      "components": [
       {
        "name": "Heading",
@@ -2147,6 +2147,11 @@
          "doc": "An icon before the words (an `Icon`), muted."
         },
         {
+         "name": "truncate",
+         "type": "boolean",
+         "doc": "One line, cut with an ellipsis where its place ends (the name of a thing, as long as the user made it); the whole title is its hint when it is plain words."
+        },
+        {
          "name": "children",
          "type": "React.ReactNode"
         }
@@ -2164,7 +2169,19 @@
      "components": [
       {
        "name": "Input",
-       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`.",
+       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.",
+       "props": [
+        {
+         "name": "mono",
+         "type": "boolean",
+         "doc": "What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size."
+        },
+        {
+         "name": "short",
+         "type": "\"md\" | \"sm\" | \"xs\"",
+         "doc": "A short field, no wider than what it holds, at the start of its place: `xs` 96px (a number of three or four figures), `sm` 160px (an amount, a date, a code), `md` 256px (a short name). Absent: as wide as its place."
+        }
+       ],
        "passesOn": true
       }
      ]
@@ -2215,7 +2232,7 @@
     },
     {
      "file": "src/primitives/layout.tsx",
-     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a part's own place among the others, a named section, an area that scrolls, the body of a\npage (or a page of exactly one screen, `Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px for a screen that is worked in; 2xl 32,\n3xl 48, 4xl 64px for a page of a few large parts, such as a welcome). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title.\n`Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),\ntakes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).",
+     "about": "The layout of a screen with no class of the app's own: a pile, a wrapping row, two groups at the two ends of a row, an\nautomatic grid, a spacer, a part's own place among the others, a named section, an area that scrolls, the body of a\npage (or a page of exactly one screen, `Page fit`), and the weight of a line of text.\nEvery space is a step of the scale (`Space`: xs 4, sm 8, md 12, lg 16, xl 24px for a screen that is worked in; 2xl 32,\n3xl 48, 4xl 64px for a page of a few large parts, such as a welcome). No part takes a class or a style, and\none passed in spite of the types is dropped: an app that lays out a screen with these writes no class (the owner's\nrule of 2026-11-23: an app has no interface code of its own).\nAfter Imago's helpers (`im-stack`, `im-cluster`, `im-split`, `im-auto-grid`, `im-spacer`, `im-section`, `im-scroll`,\n`im-page-content`, `im-muted`, `im-caption`, `im-kicker`, `im-readout`). The pile is `Column`: «Stack» names a view\nof an app, which the toolkit does not carry (test/build.test.ts).\n`Column fill` is a pile as tall as the region that holds it, so that one of its parts (a `GraphCanvas fill`, a\n`VirtualList fill`, an `Empty fill`) takes the height the others leave, with no class of the app's. With a canvas in\nit, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.\n`Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a\nrow on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line\nand the 13px note beside a title; it is cut to one line with its whole as a hint (`truncate`), set in the monospace\nface and selectable (`mono`: a path, an id), in a status colour beside its word (`tone`), or for screen readers only\n(`srOnly`). `TextList` is a list of lines with bullets or numbers.\n`Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),\ntakes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).",
      "components": [
       {
        "name": "Cell",
@@ -2497,8 +2514,46 @@
          "doc": "Keep the text's line breaks and spaces and wrap its long words: the output of a tool, a path, a message as it came."
         },
         {
+         "name": "truncate",
+         "type": "boolean",
+         "doc": "One line, cut with an ellipsis where its place ends (a name, a path in a row): it never widens its row. The whole text is its hint (`title`) when it is plain words; give a `title` for another hint (the path of a file shown by its name) or when it holds parts. It is a block that gives way: in a row beside other parts, in a `Cell grow` or in a `TableCell grow`."
+        },
+        {
+         "name": "mono",
+         "type": "boolean",
+         "doc": "A path, an id, a command: the monospace face at 13px (DESIGN.md `code-sm`), and it can be selected and copied wherever it is (in the chrome of a desktop frame too). A long one breaks anywhere instead of widening its place, unless it is cut (`truncate`) or keeps its breaks (`pre`)."
+        },
+        {
+         "name": "tone",
+         "type": "BadgeTone",
+         "doc": "A status in its colour: `success`, `warning`, `danger` (the destructive red) or `info`, the tones of a `Badge`. Always with its word: the text says the status, the colour only repeats it (an `Icon` in it takes the colour, the word stays beside it). In the chosen row of a list or a table, and in a row under the pointer, it takes the row's ink."
+        },
+        {
+         "name": "srOnly",
+         "type": "boolean",
+         "doc": "For screen readers only: read where it is in the page, never drawn (the words of a mark that says them by its form, as a dash for «none»)."
+        },
+        {
          "name": "children",
          "type": "React.ReactNode"
+        }
+       ],
+       "passesOn": true
+      },
+      {
+       "name": "TextList",
+       "doc": "A list of lines of text, each with a bullet, or a number with `ordered`: reasons, questions, steps to read. It takes the size and the ink of the text around it (in a `Text as=\"div\"`, that text's). A list of things to choose or to act on is an `ItemList`; names with their values a `DescriptionList`.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly React.ReactNode[]",
+         "required": true,
+         "doc": "The lines, in the order they are read. One may be left out with `null` or `false`; with none, nothing is drawn."
+        },
+        {
+         "name": "ordered",
+         "type": "boolean",
+         "doc": "Numbers in place of bullets: the lines are steps, or their order counts."
         }
        ],
        "passesOn": true
@@ -2516,6 +2571,7 @@
       "SectionProps",
       "Space",
       "SplitProps",
+      "TextListProps",
       "TextProps"
      ]
     },
@@ -3258,7 +3314,7 @@
     },
     {
      "file": "src/primitives/table.tsx",
-     "about": "A table: rows of the same things, each with the same facts in columns. These are the parts of its form and nothing\nmore: a `<table>` in a box that scrolls, a heading row, rows and cells, drawn with the toolkit's tokens so every\ntable of an app reads as the others do.\n- A row is as tall as the density's row (44px with a finger), with a line under it and no other frame (R4).\n- A heading is small muted text (the label size); a column of numbers is set at the end, in tabular figures (R5).\n- The row chosen has the selection tint, stronger text and a short accent bar at its start (R1), as in every list;\n  under the pointer a row takes a share of that tint.\nWhat a table does (sorting, filtering, choosing columns, drawing only the rows in sight) is not here: `DataTable`\n(the `./table` entry of the package) does the first and the last on TanStack Table, and an app with a table of its\nown drives it with the library it likes and draws it with these parts.",
+     "about": "A table: rows of the same things, each with the same facts in columns. These are the parts of its form and nothing\nmore: a `<table>` in a box that scrolls, a heading row, rows and cells, drawn with the toolkit's tokens so every\ntable of an app reads as the others do.\n- A row is as tall as the density's row (44px with a finger), with a line under it and no other frame (R4).\n- A heading is small muted text (the label size); a column of numbers is set at the end, in tabular figures (R5).\n- The row chosen has the selection tint, stronger text and a short accent bar at its start (R1), as in every list;\n  under the pointer a row takes a share of that tint. The row of the headings takes none: it is not a row to choose.\n- A cell that takes the room the other columns leave (`grow`) cuts a one-line text in it instead of widening the table.\nWhat a table does (sorting, filtering, choosing columns, drawing only the rows in sight) is not here: `DataTable`\n(the `./table` entry of the package) does the first and the last on TanStack Table, and an app with a table of its\nown drives it with the library it likes and draws it with these parts.",
      "components": [
       {
        "name": "Table",
@@ -3292,6 +3348,11 @@
          "name": "align",
          "type": "TableCellAlign",
          "doc": "`end`: a number, in tabular figures."
+        },
+        {
+         "name": "grow",
+         "type": "boolean",
+         "doc": "The cell takes the width the other columns leave, and no more: a one-line text in it that is too long (a `Text truncate`) is cut there instead of widening the table. For the column of the names."
         }
        ],
        "passesOn": true
@@ -3469,7 +3530,19 @@
      "components": [
       {
        "name": "Textarea",
-       "doc": "A multi-line field. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`). Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "doc": "A multi-line field that grows with its text. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`), and `mono` and `maxRows`. Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "props": [
+        {
+         "name": "mono",
+         "type": "boolean",
+         "doc": "What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size."
+        },
+        {
+         "name": "maxRows",
+         "type": "number",
+         "doc": "The field grows with its text by itself; this is the most lines it shows before it stops growing and scrolls (a whole number, 1 or more). Absent: it grows as far as its text goes."
+        }
+       ],
        "passesOn": true
       }
      ]
@@ -3988,7 +4061,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
         },
         {
          "name": "hoverScale",

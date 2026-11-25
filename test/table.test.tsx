@@ -50,6 +50,45 @@ describe('the parts of a table', () => {
     // A number is set at the end, in tabular figures (R5).
     expect(within(first!).getAllByRole('cell')[1]!.className).toContain('tabular-nums')
   })
+
+  test('the row of the headings takes no tint under the pointer, and a row of the body is as it was', () => {
+    render(
+      <Table aria-label="Files">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>a.pdf</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    )
+    const [head, body] = screen.getAllByRole('row')
+    expect(head!.parentElement!.tagName).toBe('THEAD')
+    // The undoing is written for a row whose parent is the `thead`: it matches the first row and not the second.
+    for (const row of [head!, body!]) expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(['hover:bg-selected/60', '[thead>&]:hover:bg-transparent']))
+    expect(head!.matches('thead > tr')).toBe(true)
+    expect(body!.matches('thead > tr')).toBe(false)
+  })
+
+  test('a cell that takes the room the others leave gives way, so a line that is cut in it does not widen the table', () => {
+    render(
+      <Table aria-label="Files">
+        <TableBody>
+          <TableRow>
+            <TableCell grow>a-very-long-name.pdf</TableCell>
+            <TableCell align="end">12</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    )
+    const [name, size] = screen.getAllByRole('cell')
+    expect(name!.className.split(/\s+/)).toEqual(expect.arrayContaining(['w-full', 'max-w-0']))
+    expect(size!.className).not.toContain('max-w-0')
+  })
 })
 
 describe('DataTable', () => {

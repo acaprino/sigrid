@@ -13,13 +13,16 @@
 // it, it is never shorter than what its parts need, so the canvas at its floor covers nothing that follows the pile.
 // `Column width` keeps a pile to the width of a column of text or of content, centred; `Cluster wrap={false}` keeps a
 // row on one line (an avatar and its words); `Text` also has the soft ink of running text, the strong words of a line
-// and the 13px note beside a title.
+// and the 13px note beside a title; it is cut to one line with its whole as a hint (`truncate`), set in the monospace
+// face and selectable (`mono`: a path, an id), in a status colour beside its word (`tone`), or for screen readers only
+// (`srOnly`). `TextList` is a list of lines with bullets or numbers.
 // `Cell` is one part's own place where the pile, the row or the grid decides for all: it lines up by itself (`align`),
 // takes the room the others leave (`grow`), or is two columns wide or a whole row of a `Grid` (`span`).
 import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { AppShellContext } from "../internal/frame"
+import type { BadgeTone } from "./badge"
 
 /**
  * A step of the spacing scale: 4, 8, 12, 16 or 24px (`xs` to `xl`) between the parts of a screen that is worked in, and
@@ -356,17 +359,91 @@ export type TextProps = LayoutAttributes & {
   as?: "span" | "p" | "div" | undefined
   /** Keep the text's line breaks and spaces and wrap its long words: the output of a tool, a path, a message as it came. */
   pre?: boolean | undefined
+  /**
+   * One line, cut with an ellipsis where its place ends (a name, a path in a row): it never widens its row. The whole
+   * text is its hint (`title`) when it is plain words; give a `title` for another hint (the path of a file shown by
+   * its name) or when it holds parts. It is a block that gives way: in a row beside other parts, in a `Cell grow` or
+   * in a `TableCell grow`.
+   */
+  truncate?: boolean | undefined
+  /**
+   * A path, an id, a command: the monospace face at 13px (DESIGN.md `code-sm`), and it can be selected and copied
+   * wherever it is (in the chrome of a desktop frame too). A long one breaks anywhere instead of widening its place,
+   * unless it is cut (`truncate`) or keeps its breaks (`pre`).
+   */
+  mono?: boolean | undefined
+  /**
+   * A status in its colour: `success`, `warning`, `danger` (the destructive red) or `info`, the tones of a `Badge`.
+   * Always with its word: the text says the status, the colour only repeats it (an `Icon` in it takes the colour, the
+   * word stays beside it). In the chosen row of a list or a table, and in a row under the pointer, it takes the row's ink.
+   */
+  tone?: BadgeTone | undefined
+  /** For screen readers only: read where it is in the page, never drawn (the words of a mark that says them by its form, as a dash for «none»). */
+  srOnly?: boolean | undefined
   children?: React.ReactNode
 }
 
+const TONE: Record<BadgeTone, string> = { success: "text-success", warning: "text-warning", danger: "text-destructive", info: "text-info" }
+// On the selection tint the status colours do not all hold 4.5:1 (success under the pointer in seven light themes, run
+// 45617020632): in the chosen row and in a row under the pointer (a table's, an `ItemRow`, a `Tree`'s) the word takes
+// the row's ink, which is measured there. The word still says the status.
+const TONE_ROW = "[:is([aria-current=true],[data-current],[data-slot=table-row]:hover,[data-slot=item-row]:hover,[data-slot=tree-row]:hover)_&]:text-inherit"
+// A block that gives way, also where its pile lines its parts up at the start (`max-w-full`).
+const TRUNCATE = "block max-w-full min-w-0 truncate"
+
 /** A line of text at the weight it carries: the text around it, muted, a caption or a kicker. */
-function Text({ variant = "body", as = "span", pre = false, children, ...props }: TextProps) {
+function Text({ variant = "body", as = "span", pre = false, truncate = false, mono = false, tone, srOnly = false, children, ...props }: TextProps) {
   const Tag = as
+  const rest = own(props)
+  const whole = truncate && (typeof children === "string" || typeof children === "number") ? String(children) : undefined
   return (
-    <Tag {...own(props)} data-slot="text" data-variant={variant} className={cn(TEXT[variant], pre && "break-words whitespace-pre-wrap") || undefined}>
+    <Tag
+      {...rest}
+      title={rest.title ?? whole}
+      data-slot="text"
+      data-variant={variant}
+      data-tone={tone}
+      data-selectable={mono ? "" : undefined}
+      className={
+        cn(
+          // Before the variant: a caption or a kicker in the monospace face keeps its own size.
+          mono && "font-mono text-xs",
+          TEXT[variant],
+          tone && [TONE[tone], TONE_ROW],
+          pre && "break-words whitespace-pre-wrap",
+          truncate ? TRUNCATE : mono && !pre && "break-all",
+          srOnly && "sr-only",
+        ) || undefined
+      }
+    >
       {children}
     </Tag>
   )
 }
 
-export { Cell, Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text }
+export type TextListProps = LayoutAttributes & {
+  /** The lines, in the order they are read. One may be left out with `null` or `false`; with none, nothing is drawn. */
+  items: readonly React.ReactNode[]
+  /** Numbers in place of bullets: the lines are steps, or their order counts. */
+  ordered?: boolean | undefined
+}
+
+/**
+ * A list of lines of text, each with a bullet, or a number with `ordered`: reasons, questions, steps to read. It takes
+ * the size and the ink of the text around it (in a `Text as="div"`, that text's). A list of things to choose or to act
+ * on is an `ItemList`; names with their values a `DescriptionList`.
+ */
+function TextList({ items, ordered = false, ...props }: TextListProps) {
+  const lines = items.filter((item) => item !== null && item !== undefined && item !== false && item !== "")
+  if (lines.length === 0) return null
+  const Tag = ordered ? "ol" : "ul"
+  return (
+    <Tag {...own(props)} data-slot="text-list" className={cn("min-w-0 space-y-1 ps-5", ordered ? "list-decimal" : "list-disc")}>
+      {lines.map((item, at) => (
+        <li key={at}>{item}</li>
+      ))}
+    </Tag>
+  )
+}
+
+export { Cell, Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, TextList }

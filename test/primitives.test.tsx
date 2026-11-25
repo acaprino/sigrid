@@ -120,3 +120,61 @@ test('what is on or chosen is the accent, in every control: no control keeps the
     expect(source(file), file).not.toMatch(/(checked|selected|data-checked)\]?:(bg|border)-ink\b/)
   }
 })
+
+test('a field in the monospace face, and a short field: only with the prop, and at the start of its place', () => {
+  render(
+    <>
+      <Input aria-label="plain" />
+      <Input aria-label="path" mono />
+      <Input aria-label="budget" short="xs" />
+      <Input aria-label="amount" short="sm" />
+      <Input aria-label="name" short="md" />
+      <Textarea aria-label="notes" />
+      <Textarea aria-label="code" mono />
+    </>,
+  )
+  const of = (name: string) => screen.getByRole('textbox', { name }).className.split(/\s+/)
+  expect(of('plain')).toContain('w-full')
+  for (const c of ['font-mono', 'max-w-24', 'max-w-40', 'max-w-64']) expect(of('plain')).not.toContain(c)
+  expect(of('path')).toContain('font-mono')
+  // The steps of the 4px grid: 96, 160 and 256px; the field is still as wide as its place up to there.
+  expect(of('budget')).toEqual(expect.arrayContaining(['w-full', 'max-w-24']))
+  expect(of('amount')).toContain('max-w-40')
+  expect(of('name')).toContain('max-w-64')
+  expect(screen.getByRole('textbox', { name: 'budget' }).hasAttribute('short')).toBe(false)
+  expect(of('notes')).not.toContain('font-mono')
+  expect(of('code')).toContain('font-mono')
+})
+
+test('a text area grows with its text, up to the lines it is given, then scrolls; without them nothing is set', () => {
+  render(
+    <>
+      <Textarea aria-label="free" />
+      <Textarea aria-label="capped" maxRows={10} />
+    </>,
+  )
+  const free = screen.getByRole('textbox', { name: 'free' })
+  expect(free.className.split(/\s+/)).toContain('field-sizing-content')
+  expect(free.hasAttribute('style')).toBe(false)
+  expect(free.hasAttribute('maxrows')).toBe(false)
+  const capped = screen.getByRole('textbox', { name: 'capped' })
+  // Ten lines of its own text, and the 16px of its padding and border.
+  expect(capped.getAttribute('style')).toContain('max-height: calc(10lh + 1rem)')
+  expect(capped.hasAttribute('maxrows')).toBe(false)
+})
+
+test('a link in a line: no side padding, the height of its line, 24px at least and 44px with a finger; it gives way, so its words can be cut', () => {
+  render(
+    <>
+      <Button variant="link" size="inline">
+        billing-service
+      </Button>
+      <Button variant="link">as before</Button>
+    </>,
+  )
+  const inline = screen.getByRole('button', { name: 'billing-service' }).className.split(/\s+/)
+  expect(inline).toEqual(expect.arrayContaining(['h-auto', 'min-h-6', 'px-0', 'min-w-0', 'max-w-full', 'shrink', 'justify-start', 'underline', 'pointer-coarse:min-h-11', 'pointer-coarse:min-w-11']))
+  for (const c of ['shrink-0', 'justify-center', 'h-(--control-md)', 'px-(--pad-md)']) expect(inline).not.toContain(c)
+  const before = screen.getByRole('button', { name: 'as before' }).className.split(/\s+/)
+  expect(before).toEqual(expect.arrayContaining(['shrink-0', 'justify-center', 'h-(--control-md)', 'px-(--pad-md)']))
+})

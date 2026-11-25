@@ -3,7 +3,7 @@
 // The frame around it (the showcase's `Section`, `Row`) is the showcase's. Under the page, the three things one part
 // asks for itself (`Cell`): two columns of a grid, its own line in a row and the room the others leave; and a page of
 // a few large parts, told apart by the large steps of the scale.
-import { Avatar, Badge, Button, Card, Cell, Cluster, Grid, Icon, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text } from '../src/primitives'
+import { Avatar, Badge, Button, Card, Cell, Cluster, Grid, Icon, Input, Column, Page as LayoutPage, ScrollArea, Section as LayoutSection, Spacer, Split, Text, TextList, Textarea } from '../src/primitives'
 import { Code, Row, Section } from './parts'
 
 const FILES = ['src/retry.ts', 'src/charge.ts', 'src/webhooks.ts', 'src/dunning.ts', 'test/retry.spec.ts', 'test/charge.spec.ts', 'test/webhooks.spec.ts', 'README.md']
@@ -12,7 +12,7 @@ export function LayoutParts() {
   return (
     <Section
       id="layout"
-      title="Column, Cluster, Split, Grid, Cell, Section, ScrollArea, Page and Text"
+      title="Column, Cluster, Split, Grid, Cell, Section, ScrollArea, Page, Text and TextList"
       note={
         <>
           A screen laid out with no class of the app's own. Every space is a step of the scale (<Code>xs</Code> to <Code>xl</Code> where the work is,{' '}
@@ -64,6 +64,68 @@ export function LayoutParts() {
               </LayoutSection>
             </Grid>
           </LayoutPage>
+        </div>
+      </Row>
+      <Row label="text: cut, monospace, a status, a list">
+        <div data-sample="layout-text" className="w-full max-w-sm rounded-lg bg-paper shadow-xs">
+          <Column pad="lg" gap="md">
+            <Column gap="xs">
+              <Text truncate variant="strong">
+                billing-service, the tree, its languages and every file of the last commit
+              </Text>
+              <Text truncate mono title="C:/work/billing-service/src/webhooks/retry-with-backoff.ts">
+                C:/work/billing-service/src/webhooks/retry-with-backoff.ts
+              </Text>
+            </Column>
+            <Text mono>C:/work/billing-service/logs/2026-11-25T09-41-07-run-42.log</Text>
+            <Cluster gap="lg">
+              <Text tone="success" variant="note">
+                Up to date
+              </Text>
+              <Text tone="warning" variant="note">
+                Needs a build
+              </Text>
+              <Text tone="danger" variant="note">
+                Could not be read
+              </Text>
+              <Text tone="info" variant="note">
+                Checked today
+              </Text>
+            </Cluster>
+            <Cluster>
+              <Text>Installed</Text>
+              <Spacer />
+              <Text variant="muted" aria-hidden="true">
+                –
+              </Text>
+              <Text srOnly>Not installed here</Text>
+            </Cluster>
+            <Text as="div" variant="soft">
+              <TextList aria-label="Open questions" items={['Which plan is retried first?', 'Who is told when a charge fails twice?']} />
+            </Text>
+            <Text as="div" variant="soft">
+              <TextList ordered aria-label="Steps" items={['Read the webhook', 'Charge again', 'Tell the owner']} />
+            </Text>
+          </Column>
+        </div>
+      </Row>
+      <Row label="a link in a line, fields for code, a short field">
+        <div data-sample="layout-fields" className="w-full max-w-sm rounded-lg bg-paper shadow-xs">
+          <Column pad="lg" gap="md">
+            <Text as="p" variant="soft">
+              Built from{' '}
+              <Button variant="link" size="inline">
+                billing-service
+              </Button>{' '}
+              this morning.
+            </Text>
+            <Button variant="link" size="inline">
+              <Text truncate>a-plugin-with-a-very-long-name-that-does-not-fit-on-one-line-of-this-card</Text>
+            </Button>
+            <Input mono aria-label="Folder" defaultValue="C:/work/billing-service" />
+            <Input short="xs" inputMode="decimal" aria-label="Budget" defaultValue="250" />
+            <Textarea mono maxRows={4} aria-label="Changelog" defaultValue={'1.2.0\n- retries with backoff\n- a webhook for failed charges\n1.1.0\n- dunning\n1.0.0\n- first release'} />
+          </Column>
         </div>
       </Row>
       <Row label="a cell of two columns">

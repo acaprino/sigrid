@@ -222,6 +222,17 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
   })
 
+  test('a status as text (`Text tone`): the four colours read on every surface; in a row under the pointer and in the chosen row the word is the row ink, which reads there', () => {
+    const surfaces = ['paper', 'paper-2', 'raised'].map((k) => t[k]!)
+    for (const bg of surfaces) {
+      for (const name of ['success', 'warning', 'info', 'destructive'] as const) expect(contrast(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
+      // A row under the pointer is the selection tint at 60% over its surface, its text the ink (`ROW_HOVER`). The
+      // status colours do not all hold there (success in seven light themes), so the word takes that ink (`TONE_ROW`).
+      expect(contrast(t['ink']!, mix(t['selected']!, bg, 0.6)), `the ink under the pointer on ${bg}`).toBeGreaterThanOrEqual(AA)
+    }
+    expect(contrast(t['selected-ink']!, t['selected']!), 'the row ink on the chosen row').toBeGreaterThanOrEqual(AA)
+  })
+
   test('a Note: its text (the ink) and the labels of its actions read on the soft fill of each tone and on the quiet fill over every background; its icon and the focus ring of its buttons show on them', () => {
     // The icon and the title of a tone are its colour on its soft fill: asserted above (status) and below (red).
     // Information has no status colour: its icon is the soft ink, on the quiet fill.

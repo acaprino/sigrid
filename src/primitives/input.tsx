@@ -25,12 +25,25 @@ const INPUT_CLASS = cn(
   FIELD_HOVER,
 )
 
+// The widest a short field grows, at the start of its place: steps of the 4px grid.
+const WIDTH = { xs: 'max-w-24', sm: 'max-w-40', md: 'max-w-64' } as const
+
+type InputOwnProps = React.ComponentProps<'input'> & {
+  /** What is typed is a path, an id or code: the monospace face (the second font role of DESIGN.md), at the field's size. */
+  mono?: boolean | undefined
+  /**
+   * A short field, no wider than what it holds, at the start of its place: `xs` 96px (a number of three or four
+   * figures), `sm` 160px (an amount, a date, a code), `md` 256px (a short name). Absent: as wide as its place.
+   */
+  short?: keyof typeof WIDTH | undefined
+}
+
 /**
  * A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`,
- * `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`.
+ * `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.
  */
-function Input({ className, ref, ...props }: React.ComponentProps<'input'>) {
-  return <InputPrimitive data-slot="input" className={cn(INPUT_CLASS, className)} {...props} ref={ref as React.Ref<HTMLElement>} />
+function Input({ className, ref, mono = false, short, ...props }: InputOwnProps) {
+  return <InputPrimitive data-slot="input" className={cn(INPUT_CLASS, mono && 'font-mono', short && WIDTH[short], className)} {...props} ref={ref as React.Ref<HTMLElement>} />
 }
 
 export { Input }
