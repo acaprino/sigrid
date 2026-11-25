@@ -20,7 +20,7 @@ import { parseDate } from '@internationalized/date'
 import { Archive, ArrowUpDown as ArrowDownUp, Bell, ChevronRight, CogFour as Settings, CornerUpLeft as Reply, Dots as Ellipsis, Inbox, PanelLeft, Plus, Search, Terminal, Trash as Trash2 } from '../src/internal/sigrid-icons'
 import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyFont, DEFAULT_FONT, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
-import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
+import { ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, type StepItem, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
 import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
 import { AuthForm, type AuthMode, Lightbox, Wizard, AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
@@ -767,11 +767,21 @@ const SIGNUP = [
   { label: 'Done' },
 ]
 const IMPORT = [{ label: 'Upload' }, { label: 'Read' }, { label: 'Convert' }, { label: 'Publish' }]
+// A pipeline: each step says what became of it, whatever its place, and the one on the screen is a done one.
+const PIPELINE: StepItem[] = [
+  { label: 'Read the sources', status: 'done', meta: '2 min' },
+  { label: 'Map the modules and what each one depends on', description: 'A long name wraps under itself', status: 'done', meta: '40 s' },
+  { label: 'Tests', status: 'skipped' },
+  { label: 'Security', status: 'error', meta: '3 of 6' },
+  { label: 'Architecture', status: 'running' },
+  { label: 'Report', status: 'todo', disabled: true, reason: 'After the analysis ends' },
+]
 const TUTORIAL = [{ label: 'Welcome' }, { label: 'Add a task' }, { label: 'Set a day' }, { label: 'Finish' }]
 
 function StepsSection() {
   const [current, setCurrent] = React.useState(1)
   const [lesson, setLesson] = React.useState(1)
+  const [looked, setLooked] = React.useState(1)
   const back = (value: number, set: (n: number) => void) => (
     <div className="flex gap-2">
       <Button variant="outline" size="sm" disabled={value === 0} onClick={() => set(value - 1)}>
@@ -783,7 +793,7 @@ function StepsSection() {
     </div>
   )
   return (
-    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with the circle with an X (the one look of a failure, as in a Note error) and says so. Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
+    <Section id="steps" title="Steps" note="The steps of a task as a path: numbered dots joined by a line that lights up one by one. A step done is a check on the accent tint, the step the user is on is the one solid dot with its name in strong text, the steps to come are quiet (R2: the accent is progress). Show the next step by its name: people finish when they know what is left. Steps already done can be buttons that go back to them; a step that failed is red with the circle with an X (the one look of a failure, as in a Note error) and says so. A step may say what became of it whatever its place (done, running, to do, skipped, failed), with a short fact at the end of its row, and one that cannot be gone to yet says why. Nothing moves: a running step is a clock and the words «in progress». Each step also says its state in words for screen readers. In a row too narrow for the names only the current one stays, with «Step 2 of 4» under it.">
       <Row label="a wizard">
         <div className="flex flex-col gap-4">
           <Steps aria-label="Signup" steps={SIGNUP} current={current} onStepSelect={setCurrent} />
@@ -803,6 +813,13 @@ function StepsSection() {
           </Cell>
           <Cell label="a step failed: it stays where it stopped, in red">
             <Steps aria-label="Import, failed" orientation="horizontal" steps={[IMPORT[0]!, IMPORT[1]!, { ...IMPORT[2]!, status: 'error' }, IMPORT[3]!]} current={2} className="w-full" />
+          </Cell>
+        </div>
+      </Row>
+      <Row label="a pipeline: each step has its own state">
+        <div className="w-full max-w-md">
+          <Cell label="done, skipped, failed and running at once; the step on the screen is the one solid dot and keeps its mark; the whole row is the target">
+            <Steps aria-label="Analysis" steps={PIPELINE} current={looked} onStepSelect={setLooked} />
           </Cell>
         </div>
       </Row>

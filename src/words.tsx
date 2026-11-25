@@ -139,6 +139,10 @@ export interface Words {
     readonly upcoming: string
     /** A step that failed. */
     readonly error: string
+    /** A step under way now: also shown at the end of its row. */
+    readonly running: string
+    /** A step left out. */
+    readonly skipped: string
     /** «Step 2 of 4»: said under a row of steps too narrow for their names, and the only name left is the current one. */
     readonly summary: (position: number, total: number) => string
   }
@@ -500,6 +504,8 @@ export const DEFAULT_WORDS: Words = {
     current: 'current step',
     upcoming: 'not started',
     error: 'failed',
+    running: 'in progress',
+    skipped: 'skipped',
     summary: (position, total) => `Step ${position} of ${total}`,
   },
   progress: {
