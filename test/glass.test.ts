@@ -349,7 +349,9 @@ function unlayered(css: string): string {
 
 describe('the rules of theme.css', () => {
   const GATE = '@media (forced-colors: none) and (prefers-reduced-transparency: no-preference)'
-  const css = unlayered(themeCss)
+  // The clear material's one rule (test/clear-material.test.ts) is the page's own, not glass: it is set apart here.
+  const CLEAR_RULE = /:root\[data-material="clear"\],\s*:root\[data-material="clear"\] body \{[^}]*\}/
+  const css = unlayered(themeCss).replace(CLEAR_RULE, '')
   const at = css.indexOf(GATE)
   const open = css.indexOf('{', at)
   let end = open
@@ -367,7 +369,7 @@ describe('the rules of theme.css', () => {
     expect(rules.length).toBeGreaterThan(0)
     // Nothing of the stylesheet names the material outside that block: without the attribute nothing is drawn another way.
     expect((css.slice(0, at) + css.slice(end)).includes('data-material')).toBe(false)
-    expect(themeCss.replace(/\/\*[\s\S]*?\*\//g, '').split('data-material').length - 1).toBe(block.split('data-material').length - 1)
+    expect(themeCss.replace(/\/\*[\s\S]*?\*\//g, '').replace(CLEAR_RULE, '').split('data-material').length - 1).toBe(block.split('data-material').length - 1)
     // And the ground's variable is read only there.
     expect((css.slice(0, at) + css.slice(end)).includes(GLASS_GROUND)).toBe(false)
   })
