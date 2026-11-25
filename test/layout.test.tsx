@@ -39,6 +39,16 @@ describe('piles and rows', () => {
     expect(classes(slot('column'))).toEqual(expect.arrayContaining(['flex-col', 'p-3', 'h-full', 'min-h-0', 'flex-1']))
   })
 
+  test('a row that fills is as tall as its region, for a terminal and its strip; without it, as tall as its parts', () => {
+    const { rerender } = render(<Cluster>a</Cluster>)
+    expect(slot('cluster').hasAttribute('data-fill')).toBe(false)
+    expect(classes(slot('cluster'))).not.toContain('h-full')
+    rerender(<Cluster fill align="stretch" wrap={false}>a</Cluster>)
+    expect(slot('cluster').hasAttribute('data-fill')).toBe(true)
+    expect(slot('cluster').hasAttribute('fill')).toBe(false)
+    expect(classes(slot('cluster'))).toEqual(expect.arrayContaining(['flex', 'flex-nowrap', 'items-stretch', 'h-full', 'min-h-0', 'flex-1']))
+  })
+
   test('a row wraps, with its parts at the start, the end or apart; two groups go to the two ends of a row', () => {
     render(
       <>

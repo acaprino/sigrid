@@ -2423,6 +2423,11 @@
          "doc": "False: one line whatever the width (an avatar and the words beside it); a part that can give way (a `Column`, a `Text`) narrows and wraps its own words. Default true."
         },
         {
+         "name": "fill",
+         "type": "boolean",
+         "doc": "As tall as the region that holds it, which gives it its height (the content of the frame, a pane, a `Column fill`): a row of a part that fills (a `Terminal`) and what stands beside it (an `OverviewStrip`), in a `Column fill` with other parts, takes the height they leave. The parts line up across it as `align` says, `stretch` for a part that is as tall as the row. Absent: as tall as its parts."
+        },
+        {
          "name": "children",
          "type": "React.ReactNode"
         }
@@ -10671,7 +10676,7 @@
     },
     {
      "file": "src/assemblies/Terminal.tsx",
-     "about": "A terminal: xterm.js on the toolkit's look. The emulation is xterm's (`@xterm/xterm` with its fit addon: npm\ndependencies, pinned, see THIRD_PARTY.md); the look is the toolkit's: the colours of the ground, the ink, the cursor,\nthe selection and the sixteen ANSI colours are made from the tokens as they resolve in the page (`terminalLook`),\nread again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`. xterm's own\nstylesheet is put in the page by the part, so an app imports none. It has its own entry of the package\n(`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.\n- The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)\n  and how big the terminal is (`onResize`, at the first size and at every change: the size of the pseudo-terminal).\n- It fits its box by itself (a `ResizeObserver` and the fit addon); `ref.fit()` does it at once.\n- Keys. The terminal keeps every key that can go to the program, and stops it at itself (not even the screen reader's\n  view lets one through to the page's commands). The keys the app keeps for its own commands are named by `appKeys`:\n  for those the terminal leaves the key alone and does not stop it, so it reaches the document and the app's commands\n  (`CommandsProvider`) run. Do not put the terminal's place in `ownKeysIn` for that: `ownKeysIn` silences the app's\n  commands there, the keys of `appKeys` too. Paste (Ctrl or Command V, Shift Insert) is always left to the browser,\n  so the text arrives as a paste and not as a key.\n- Links: an address of the text, or a hyperlink the program wrote (OSC 8), opens through `onLinkOpen`: the app\n  decides what it opens. `linkFinder` says what in a line is a link (web addresses by default).\n- xterm's stylesheet paints its viewport black, outside the part's own colours: the part makes it clear, so the ground\n  of the terminal is the page's `paper` (or what is behind it, with `transparent`) all the way to the edge.\n- The screen reader's view of the screen is on (`screenReaderMode`), the part is named by `aria-label`.",
+     "about": "A terminal: xterm.js on the toolkit's look. The emulation is xterm's (`@xterm/xterm` with its fit addon: npm\ndependencies, pinned, see THIRD_PARTY.md); the look is the toolkit's: the colours of the ground, the ink, the cursor,\nthe selection and the sixteen ANSI colours are made from the tokens as they resolve in the page (`terminalLook`),\nread again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`. xterm's own\nstylesheet is put in the page by the part, so an app imports none. It has its own entry of the package\n(`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.\n- The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)\n  and how big the terminal is (`onResize`, at the first size and at every change: the size of the pseudo-terminal).\n- It fills the box it is in, as tall and as wide (a terminal has no height of its own): in a pane of a `Workspace`, in a `Cluster fill`\n  beside its `OverviewStrip`, or in a box the app gives a size. It fits that box by itself (a `ResizeObserver` and the fit addon);\n  `ref.fit()` does it at once.\n- Keys. The terminal keeps every key that can go to the program, and stops it at itself (not even the screen reader's\n  view lets one through to the page's commands). The keys the app keeps for its own commands are named by `appKeys`:\n  for those the terminal leaves the key alone and does not stop it, so it reaches the document and the app's commands\n  (`CommandsProvider`) run. Do not put the terminal's place in `ownKeysIn` for that: `ownKeysIn` silences the app's\n  commands there, the keys of `appKeys` too. Paste (Ctrl or Command V, Shift Insert) is always left to the browser,\n  so the text arrives as a paste and not as a key.\n- Links: an address of the text, or a hyperlink the program wrote (OSC 8), opens through `onLinkOpen`: the app\n  decides what it opens. `linkFinder` says what in a line is a link (web addresses by default).\n- xterm's stylesheet paints its viewport black, outside the part's own colours: the part makes it clear, so the ground\n  of the terminal is the page's `paper` (or what is behind it, with `transparent`) all the way to the edge.\n- The screen reader's view of the screen is on (`screenReaderMode`), the part is named by `aria-label`.",
      "components": [
       {
        "name": "Terminal",
@@ -10898,7 +10903,7 @@
         },
         {
          "name": "terminal",
-         "type": "XTerm | null",
+         "type": "any",
          "required": true,
          "doc": "xterm's own terminal, for what the toolkit does not cover; null before the part is in the page."
         }
@@ -11080,7 +11085,7 @@
         },
         {
          "name": "view",
-         "type": "EditorView | null",
+         "type": "any",
          "required": true,
          "doc": "CodeMirror's own view, for what the toolkit does not cover; null before the part is in the page."
         }

@@ -6,7 +6,9 @@
 // (`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.
 // - The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)
 //   and how big the terminal is (`onResize`, at the first size and at every change: the size of the pseudo-terminal).
-// - It fits its box by itself (a `ResizeObserver` and the fit addon); `ref.fit()` does it at once.
+// - It fills the box it is in, as tall and as wide (a terminal has no height of its own): in a pane of a `Workspace`, in a `Cluster fill`
+//   beside its `OverviewStrip`, or in a box the app gives a size. It fits that box by itself (a `ResizeObserver` and the fit addon);
+//   `ref.fit()` does it at once.
 // - Keys. The terminal keeps every key that can go to the program, and stops it at itself (not even the screen reader's
 //   view lets one through to the page's commands). The keys the app keeps for its own commands are named by `appKeys`:
 //   for those the terminal leaves the key alone and does not stop it, so it reaches the document and the app's commands
@@ -345,7 +347,7 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
   }, [fontSize, lineHeight, scrollback, cursorStyle, readOnly, transparent, tone, screenReaderMode, label, fit])
 
   return (
-    <div data-slot="terminal" data-readonly={readOnly ? '' : undefined} className={cn('relative min-h-0 min-w-0', transparent ? '' : 'bg-paper', className)}>
+    <div data-slot="terminal" data-readonly={readOnly ? '' : undefined} className={cn('relative size-full min-h-0 min-w-0', transparent ? '' : 'bg-paper', className)}>
       <div ref={box} data-slot="terminal-screen" className="absolute inset-0 overflow-hidden [&_.xterm]:h-full [&_.xterm]:ps-2 [&_.xterm]:pt-1 [&_.xterm-viewport]:bg-transparent!" />
     </div>
   )
