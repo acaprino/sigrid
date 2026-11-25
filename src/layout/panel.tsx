@@ -1,7 +1,8 @@
 // A panel: the inner layout of a region of the frame (the content, the inspector), as Imago's `im-panel` and Xiox's
 // list are laid out. A header with the title, a line beside it that says how much is there («70 items · 8 selected»)
 // and the tools of the whole panel at its end (a filter, a switch); under it a row of tools (a search, «Fold all»);
-// then the body, which alone scrolls; and a foot that stays in sight (the actions on what is in the panel).
+// then the body, which alone scrolls; and a foot that stays in sight (the actions on what is in the panel). With tools
+// at the end of the header, the row of tools keeps 8px from them.
 // Every part is optional but the title. The panel paints nothing: it lies on the surface of the region that holds it
 // (the page, or the sheet of `AppShell frame="sheet"`), and only the foot has a line above it (R4). It is a region
 // named by its title, so a screen reader can jump to it.
@@ -50,7 +51,9 @@ function Panel({ title, subtitle, actions, tools, footer, level = 2, className, 
         ) : null}
       </div>
       {tools ? (
-        <div data-slot="panel-tools" className="flex shrink-0 flex-wrap items-center gap-2 px-4 pb-2">
+        // Under the tools of the header, 8px as between two controls of a row: a control as tall as the header's row
+        // (every one at compact density, where the row is a control tall) would touch the tools under it.
+        <div data-slot="panel-tools" className={cn("flex shrink-0 flex-wrap items-center gap-2 px-4 pb-2", actions ? "pt-2" : null)}>
           {tools}
         </div>
       ) : null}

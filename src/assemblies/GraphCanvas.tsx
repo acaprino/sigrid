@@ -34,14 +34,14 @@
 // - In the graph mode (`model="graph"`) a line is a relation (a call, an import, data that flows), not «hangs from»:
 //   - Nothing closes: every thing is in sight and none has an arrow. Opening a thing is the app's (going into it,
 //     showing what it holds), and only for the things it says it opens: a thing with an `openLabel` («Open Orders»)
-//     has a › button of that name, and a double press on it or its › calls `onOpen` with its id. Without `onOpen`,
-//     or on a thing without `openLabel`, there is no › and nothing opens. A thing that holds others the app keeps out
+//     has a → button of that name, and a double press on it or its → calls `onOpen` with its id. Without `onOpen`,
+//     or on a thing without `openLabel`, there is no → and nothing opens. A thing that holds others the app keeps out
 //     of sight (a group it has not opened) says how many (`hiddenCount`), at its end as a closed thing of the tree does,
 //     and in its name.
-//   - The things are one Tab stop, and the › of the one that has it is the next. Along the ranks the arrows follow the
+//   - The things are one Tab stop, and the → of the one that has it is the next. Along the ranks the arrows follow the
 //     lines: with `direction="right"` Right goes to what the thing's first line leads to and Left back to what its
 //     first line comes from, while Down and Up go through the things in the order the app gave them; downwards the
-//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the › the arrows,
+//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the → the arrows,
 //     Home and End move as from its thing. Screen readers hear a group called a graph, of buttons named by their name
 //     and second line, described by where their lines lead and come from, the chosen one `aria-current`.
 // - In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit the whole graph, as the buttons
@@ -55,6 +55,10 @@
 //   `link` lines in its description, with their words and the thing at the other end; the lines are not read twice.
 //   The words may be drawn only while one of the two things is chosen or has the focus, or while the line is the
 //   path's (`labelShown: 'chosen'`), and are heard always.
+//   Words are drawn on their line only where they have room: over no thing and over no other words (`wordsOf`). The
+//   others are listed under the view's buttons, each with a sample of its line and the two things it joins
+//   (`LineWords`). No room is made for them: the places are the same with a thing chosen or not, so a choice never
+//   makes the layout jump, and the app's own places and routes are kept as they are.
 //   An edge with an `id` is a line of its own: two between the same two things are two lines, each with its words. An
 //   edge without one is one line with its exact copies (the same ends, kind, words, dash, tone and arrowhead, and no
 //   route), and taking that line away takes them all; edges without ids that differ in any of those are lines of
@@ -161,8 +165,8 @@ export type GraphNode = {
    */
   group?: string | undefined
   /**
-   * In the graph mode, the name of the action that opens the thing and of its › button («Open Orders»): only a thing
-   * with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it.
+   * In the graph mode, the name of the action that opens the thing and of its → button («Open Orders»): only a thing
+   * with it opens (its →, a double press), and only when `onOpen` is given. The tree mode does not read it.
    */
   openLabel?: string | undefined
   /**
@@ -284,7 +288,7 @@ export type GraphCanvasProps = {
    */
   selected?: string | readonly string[] | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
-  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its › button. Without it nothing opens. */
+  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its → button. Without it nothing opens. */
   onOpen?: ((id: string) => void) | undefined
   /**
    * In the graph mode, the person asks to open or close a group in place: the button of a thing with `open: false`
@@ -961,7 +965,7 @@ type Drawn = {
   stop: boolean
   editable: boolean
   direction: 'right' | 'down'
-  /** In the graph mode, whether the app opens things (`onOpen`): a thing with an `openLabel` then has a › and opens on a double press. */
+  /** In the graph mode, whether the app opens things (`onOpen`): a thing with an `openLabel` then has a → and opens on a double press. */
   opens: boolean
   /** In the graph mode, the names of what the thing's lines lead to and of what the lines into it come from. */
   leadsTo: readonly string[]
@@ -986,7 +990,7 @@ type Drawn = {
 }
 
 const HANDLE = 'size-2! min-h-0! min-w-0! rounded-full! border-0! bg-ink-mute!'
-/** The small buttons on a thing: the plus that hangs a new one, the arrow that opens and closes, the › that opens. */
+/** The small buttons on a thing: the plus that hangs a new one, the arrow that opens and closes, the → that opens. */
 const ON_THING = 'nodrag nopan inline-flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-ink/6 [&_svg]:size-3.5'
 /** With a finger a button on a thing is 44px, as every control (DESIGN.md, the exception to R7; as `Button` does). */
 const TOUCH = 'pointer-coarse:min-h-11 pointer-coarse:min-w-11'
@@ -1134,7 +1138,7 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
 
 /**
  * A thing on the canvas in the graph mode. The surface is the button that chooses it; the buttons on it (the plus, the
- * › that opens) lie over its end, beside that button and not inside it: what a button holds is read as its name, so a
+ * → that opens) lie over its end, beside that button and not inside it: what a button holds is read as its name, so a
  * button inside another would not be reached. The box around them (`data-thing`) is where the keys pressed on any of
  * them find their thing.
  */
@@ -1145,9 +1149,10 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   const tinted = data.chosen || steps !== undefined
   // One clear action: the plus on the choice alone, not on each of the several chosen.
   const add = editable && data.primary
-  // Only a thing the app says it opens has a ›, under the app's name for the action, and opens on a double press.
+  // Only a thing the app says it opens has a →, under the app's name for the action, and opens on a double press.
   const openLabel = data.opens && node.openLabel ? node.openLabel : undefined
-  // A group the app opens in place has the arrow of every list that opens, before the › that goes into it.
+  // A group the app opens in place has the arrow of every list that opens (a chevron), before the → that goes into it
+  // (an arrow): one control for each action, and no two drawn alike.
   const toggles = data.toggles
   const ends = (add ? 1 : 0) + (toggles ? 1 : 0) + (openLabel ? 1 : 0)
   React.useEffect(() => onDrawn(node.id), [onDrawn, node.id])
@@ -1216,7 +1221,7 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
             <Tooltip label={words.open(node.label)}>
               <button
                 type="button"
-                // A Tab stop after the thing that has it, as its › is.
+                // A Tab stop after the thing that has it, as its → is.
                 tabIndex={data.stop ? 0 : -1}
                 data-slot="graph-toggle"
                 aria-label={words.open(node.label)}
@@ -1253,7 +1258,8 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
                 onFocus={() => data.onFocus(node.id)}
                 className={cn(ON_THING, TOUCH, 'text-ink-mute hover:text-ink', FOCUS_RING)}
               >
-                <Icon name="chevron" />
+                {/* An arrow, never the chevron: that one is the arrow of what opens in place (a group, beside it here). */}
+                <Icon name="moveRight" />
               </button>
             </Tooltip>
           ) : null}
@@ -1406,7 +1412,32 @@ const Route = React.memo(function Route({ id, data, style, markerStart, markerEn
  * hands a line besides is drawn by its `BaseEdge`, as on the other lines. It reads nothing of React Flow's state.
  */
 const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style, markerStart, markerEnd, label, labelStyle, labelShowBg, labelBgStyle, labelBgPadding, labelBgBorderRadius, interactionWidth }: EdgeProps<Edge<{ offset: number }, 'apart'>>) {
-  const offset = data?.offset ?? 0
+  const [path, labelX, labelY] = apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }, data?.offset ?? 0)
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={style}
+      markerStart={markerStart}
+      markerEnd={markerEnd}
+      label={label}
+      labelX={labelX}
+      labelY={labelY}
+      labelStyle={labelStyle}
+      labelShowBg={labelShowBg}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+      interactionWidth={interactionWidth}
+    />
+  )
+})
+
+/** Where a line leaves a thing and where it reaches the other, and the sides they are on. */
+type Ends = { sourceX: number; sourceY: number; targetX: number; targetY: number; sourcePosition: Position; targetPosition: Position }
+
+/** The path of a line beside the others (`Apart`), `offset` px across its sides from the middle, and where its words are: the middle of the path. */
+function apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: Ends, offset: number): [path: string, labelX: number, labelY: number] {
   // The start and the end of a thing (`direction="right"`) are moved up or down, its head and its foot along.
   const across = sourcePosition === Position.Left || sourcePosition === Position.Right
   const round = sourcePosition === targetPosition
@@ -1427,25 +1458,109 @@ const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY
     targetPosition,
     ...(round ? { offset: STUB + SPREAD - offset * turn } : across ? { centerX: bend } : { centerY: bend }),
   })
+  return [path, labelX, labelY]
+}
+
+/**
+ * The room the words of a line take on the canvas, in the graph's own px: 12px text (about 6px a letter), 4px of their
+ * ground at each side and 2px above and below, as `wordsOn` asks of React Flow. It is reckoned, not measured: the
+ * canvas places the words before anything is drawn, and a line 20px from another (`APART`) keeps its words clear of
+ * the other's.
+ */
+// shortcut: 6px a letter is the mean of lower-case words in the interface face; capitals, digits and wide scripts are wider, so such words may be kept on a line and reach a thing: measure the text (a canvas's `measureText`) when an app draws those.
+const WORD = { letter: 6, pad: 4, lead: 2, height: 20 }
+const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+/** The box the words of a line take, their middle at `at`. */
+export function wordBox(label: string, at: { x: number; y: number }): Box {
+  const width = label.length * WORD.letter + 2 * WORD.pad
+  return { x: at.x - width / 2, y: at.y - WORD.height / 2, width, height: WORD.height }
+}
+
+/** Where a line's words are drawn: the middle of its path, as React Flow reckons it from the sides of its two things; of a route, the middle of its longest piece. */
+function wordPoint(line: Edge, boxes: ReadonlyMap<string, Box>, direction: 'right' | 'down'): { x: number; y: number } | undefined {
+  if (line.type === 'route') return middleOf((line.data as { points?: Points } | undefined)?.points ?? [])
+  const from = boxes.get(line.source)
+  const to = boxes.get(line.target)
+  if (!from || !to) return undefined
+  // The handles: the middle of the side a line leaves and of the side it reaches (`Thing`, `Point`, `Frame`), the far
+  // side for a line that goes round (`SideHandle`).
+  const round = line.targetHandle === 'side'
+  const ends: Ends =
+    direction === 'right'
+      ? { sourceX: from.x + from.width, sourceY: from.y + from.height / 2, sourcePosition: Position.Right, targetX: round ? to.x + to.width : to.x, targetY: to.y + to.height / 2, targetPosition: round ? Position.Right : Position.Left }
+      : { sourceX: from.x + from.width / 2, sourceY: from.y + from.height, sourcePosition: Position.Bottom, targetX: to.x + to.width / 2, targetY: round ? to.y + to.height : to.y, targetPosition: round ? Position.Bottom : Position.Top }
+  const [, x, y] = line.type === 'apart' ? apartPath(ends, (line.data as { offset?: number } | undefined)?.offset ?? 0) : getSmoothStepPath(ends)
+  return { x, y }
+}
+
+/**
+ * Which lines have room for their words where the words are drawn, and which have not. The words of a line stay on it
+ * (`on`: the id of the line and the box they take) when their letters lie over no thing (the ground around them may
+ * touch one, as two short words side by side between two ranks do) and their box over no words already kept, the lines
+ * read in their order (the app gives the path's first); of an open group only the title counts, its ground is free. The others (`off`, in the same order) are not drawn on the canvas: it lists them beside it (`LineWords`), so
+ * no words are ever under a thing or on other words. `boxes` are the things in sight, on the canvas. Nothing is moved
+ * to make room: the places are the layout's, the same with a thing chosen or not.
+ */
+export function wordsOf(lines: readonly Edge[], boxes: ReadonlyMap<string, Box>, direction: 'right' | 'down', frames: ReadonlySet<string> = NO_IDS): { on: Map<string, Box>; off: string[] } {
+  const on = new Map<string, Box>()
+  const off: string[] = []
+  let solid: Box[] | null = null
+  for (const line of lines) {
+    if (typeof line.label !== 'string' || line.label === '') continue
+    solid ??= [...boxes].map(([id, box]) => (frames.has(id) ? { ...box, height: Math.min(box.height, HEAD) } : box))
+    const things = solid
+    const at = wordPoint(line, boxes, direction)
+    const box = at ? wordBox(line.label, at) : undefined
+    // The letters alone, without the ground around them.
+    const letters = box ? { x: box.x + WORD.pad, y: box.y + WORD.lead, width: box.width - 2 * WORD.pad, height: box.height - 2 * WORD.lead } : undefined
+    if (box !== undefined && letters !== undefined && !things.some((thing) => meets(letters, thing)) && ![...on.values()].some((kept) => meets(box, kept))) on.set(line.id, box)
+    else off.push(line.id)
+  }
+  return { on, off }
+}
+
+/** A line without its words, as the canvas hands it to React Flow when they have no room on it: the same one for the same line. */
+const bared = new WeakMap<Edge, Edge>()
+function bare(line: Edge): Edge {
+  let without = bared.get(line)
+  if (!without) {
+    const { label: _label, labelShowBg: _bg, labelBgPadding: _pad, labelBgBorderRadius: _radius, ...rest } = line
+    without = rest
+    bared.set(line, without)
+  }
+  return without
+}
+
+/** A row of the list of words: the line's id, its look on the canvas, the names of its two things, whether it goes both ways, its words. */
+type WordRow = { id: string; look: React.CSSProperties | undefined; from: string; to: string; both: boolean; words: string }
+
+/**
+ * The words that have no room on their lines, listed under the view's buttons: for each line a sample of it as it is
+ * drawn (its dash, its tone, thicker on the path), the two things it joins and its words. A raised surface (R4), 256px
+ * wide and at most 144px tall (it scrolls with the wheel); the eye's alone, since each thing already says its lines in
+ * its description, as for the words drawn on a line.
+ */
+function LineWords({ rows }: { rows: readonly WordRow[] }) {
   return (
-    <BaseEdge
-      id={id}
-      path={path}
-      style={style}
-      markerStart={markerStart}
-      markerEnd={markerEnd}
-      label={label}
-      labelX={labelX}
-      labelY={labelY}
-      labelStyle={labelStyle}
-      labelShowBg={labelShowBg}
-      labelBgStyle={labelBgStyle}
-      labelBgPadding={labelBgPadding}
-      labelBgBorderRadius={labelBgBorderRadius}
-      interactionWidth={interactionWidth}
-    />
+    <ul data-slot="graph-words" aria-hidden="true" className="nowheel nodrag nopan pointer-events-auto flex max-h-36 w-64 max-w-full flex-col gap-1 overflow-y-auto rounded-md bg-raised p-2 text-2xs text-ink-soft shadow-sm">
+      {rows.map((row) => (
+        <li key={row.id} className="flex items-start gap-2">
+          {/* The sample of the key (`GraphLegend`), in the look the line has on the canvas. */}
+          <svg viewBox="0 0 24 8" className="mt-1 h-2 w-6 shrink-0">
+            <line x1="2" y1="4" x2="22" y2="4" className="sigrid-graph-sample" style={row.look} />
+          </svg>
+          <span className="min-w-0 break-words">
+            <span className="font-medium text-ink">
+              {row.from} {row.both ? '–' : '→'} {row.to}
+            </span>{' '}
+            {row.words}
+          </span>
+        </li>
+      ))}
+    </ul>
   )
-})
+}
 
 const NODE_TYPES = { thing: Thing, point: Point, frame: Frame }
 const EDGE_TYPES = { route: Route, apart: Apart }
@@ -1579,7 +1694,19 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const [stoodIn, setStoodIn] = React.useState<{ stop: string; id: string } | null>(null)
   const tabStop = stoodIn !== null && stoodIn.stop === stop && sight.level.has(stoodIn.id) ? stoodIn.id : stop
   // What is joined to the chosen things, one line away on either side, and what is on the path or joined to it.
-  const near = React.useMemo(() => (chosen.size > 0 ? new Set([...chosen].flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [chosen, joined])
+  // What a chosen open group holds is near it too, at every depth: choosing a frame never dims its own things.
+  const near = React.useMemo(() => {
+    if (chosen.size === 0) return null
+    const set = new Set([...chosen].flatMap((id) => [id, ...(joined.get(id) ?? [])]))
+    const take = (id: string) => {
+      for (const inside of nest?.held.get(id) ?? []) {
+        set.add(inside)
+        take(inside)
+      }
+    }
+    for (const id of chosen) take(id)
+    return set
+  }, [chosen, joined, nest])
   const pathNear = React.useMemo(() => (path.length > 0 ? new Set(path.flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [path, joined])
   // Found by the field, then the chosen things and the path: the rest is dimmed.
   const dimmed = React.useMemo(() => {
@@ -1898,7 +2025,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
 
   /**
    * The keys of the things, read at the box; true when one was used. The thing is the one the key was pressed on or,
-   * in the graph mode, the one whose button (its ›, its plus) has the focus: from there the arrows, Home and End move
+   * in the graph mode, the one whose button (its →, its plus) has the focus: from there the arrows, Home and End move
    * as from the thing, while Enter and Space are the button's own (they press it) and Delete is the thing's alone.
    * In the tree mode the keys are the item's own, as a tree's.
    */
@@ -2129,10 +2256,32 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     })
     return changed ? next : placed
   }, [placed, edgeOf, held])
+  // The words that have no room on their line (they would lie under a thing or on other words) are not drawn on it:
+  // the line is handed over without them, and they are listed under the view's buttons. The others are the same lines.
+  const worded = React.useMemo(() => {
+    if (!lines.some((line) => line.label !== undefined)) return null
+    const boxes = new Map<string, Box>()
+    for (const [id, at] of places) boxes.set(id, { ...at, ...sizeOf(id) })
+    return wordsOf(lines, boxes, direction, nest?.frames)
+  }, [lines, places, sizeOf, direction, nest])
+  const fitted = React.useMemo(() => {
+    if (!worded || worded.off.length === 0) return lines
+    const off = new Set(worded.off)
+    return lines.map((line) => (off.has(line.id) ? bare(line) : line))
+  }, [lines, worded])
+  const listed = React.useMemo<WordRow[] | null>(() => {
+    if (!worded || worded.off.length === 0) return null
+    const at = new Map(lines.map((line) => [line.id, line]))
+    return worded.off.flatMap((id) => {
+      const line = at.get(id)
+      if (!line || typeof line.label !== 'string') return []
+      return [{ id, look: line.style, from: byId.get(line.source)?.label ?? line.source, to: byId.get(line.target)?.label ?? line.target, both: edgeOf.get(id)?.directed === false, words: line.label }]
+    })
+  }, [lines, worded, byId, edgeOf])
   // The library keeps what it measures and what the user picks on the nodes it is given: they are handed over whole
   // at every change of the graph, and its own changes are laid over them.
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<Drawn>>(drawn)
-  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(lines)
+  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(fitted)
   React.useEffect(() => {
     const held = draggedNow.current
     // What React Flow has is kept where nothing changed, and what it measured only while the measure holds (`handOver`).
@@ -2148,7 +2297,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     if (!movable) return
     for (const change of changes) if (change.type === 'position' && change.dragging === false && change.position && !draggedNow.current.has(change.id)) settle(change.id, change.position)
   }
-  React.useEffect(() => setFlowEdges(lines), [lines, setFlowEdges])
+  React.useEffect(() => setFlowEdges(fitted), [fitted, setFlowEdges])
 
   // The view: the buttons at the head of the canvas and the keys +, − and 0 do the same.
   const zoomIn = () => void flow.zoomIn({ duration: glide })
@@ -2219,7 +2368,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     //   library's: a group, which `aria-roledescription` calls a graph (the word `graph.roleDescription`).
     // - Each thing is a button: its name and second line name it, where its lines lead and come from describe it, and
     //   the chosen one is `aria-current` (a choice, not a toggle; the first of the several the app marks). One Tab stop
-    //   as in the tree. Not a listbox: an option cannot hold the › that opens it, and inside a listbox the app's
+    //   as in the tree. Not a listbox: an option cannot hold the → that opens it, and inside a listbox the app's
     //   commands give up their keys (`commands.tsx`).
     // The focus is followed here, where it moves from thing to thing: the words of a line drawn on a choice show while
     // one of its things has it.
@@ -2317,8 +2466,9 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
             />
           </Panel>
         ) : null}
-        <Panel position="top-right">
-          <div ref={viewRow} role="group" aria-label={words.view} className="flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
+        {/* The box of the two takes no press: beside the buttons, over the list's width, a press or a pan reaches the canvas. */}
+        <Panel position="top-right" className="pointer-events-none flex flex-col items-end gap-2">
+          <div ref={viewRow} role="group" aria-label={words.view} className="pointer-events-auto flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
             {/* Only while something was moved, and at the start of the row, which is held at its end: the other buttons stay where they are (R14). */}
             {moved.size > 0 ? (
               <Tooltip label={words.resetLayout}>
@@ -2343,6 +2493,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               </Button>
             </Tooltip>
           </div>
+          {/* Under the buttons, which stay where they are (R14): the words that have no room on their lines. */}
+          {listed ? <LineWords rows={listed} /> : null}
         </Panel>
       </ReactFlow>
       {movable ? (

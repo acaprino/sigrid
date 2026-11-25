@@ -59,3 +59,23 @@ test('a key that is not a command of the registry, such as the frame\'s F6, is n
   )
   expect([...screen.getByRole('list', { name: 'Keys' }).querySelectorAll('li')].map((item) => item.textContent)).toEqual(['Ctrl KCommands', 'F6Next region'])
 })
+
+test('in a narrow foot a hint that does not fit is left out whole: one row that wraps onto rows not shown, never a word cut', () => {
+  render(
+    <CommandsProvider>
+      <Detail />
+      <KeyHints ids={[PALETTE_COMMAND, 'search']} />
+    </CommandsProvider>,
+  )
+  const list = screen.getByRole('list', { name: 'Keys' })
+  const classes = list.className.split(' ')
+  // One row tall (a boxed key's 20px cap), wrapping, and clipped: what wraps is not shown.
+  for (const name of ['flex', 'flex-wrap', 'content-start', 'h-5', 'min-w-0', 'overflow-clip', 'whitespace-nowrap']) expect(classes, name).toContain(name)
+  // Never the cut at the list's edge, which fell in the middle of a word.
+  expect(classes).not.toContain('overflow-hidden')
+  for (const item of list.querySelectorAll('li')) {
+    // A hint is never wider than the list: the first one alone, in less room than it needs, ends in an ellipsis.
+    expect(item.className.split(' ')).toEqual(expect.arrayContaining(['max-w-full', 'h-5']))
+    expect(item.lastElementChild!.className.split(' ')).toEqual(expect.arrayContaining(['min-w-0', 'truncate']))
+  }
+})

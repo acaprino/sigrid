@@ -29,3 +29,13 @@ test('a panel draws only the parts it is given, and its heading level can be low
   expect(screen.getByRole('heading', { level: 3, name: 'Item' })).toBeTruthy()
   for (const slot of ['subtitle', 'actions', 'tools', 'footer']) expect(document.querySelector(`[data-slot="panel-${slot}"]`)).toBeNull()
 })
+
+test('the row of tools keeps 8px from the tools at the end of the header, which may be as tall as its row; without them it is as it was', () => {
+  const tools = () => document.querySelector('[data-slot="panel-tools"]')!.className.split(' ')
+  const { unmount } = render(<Panel title="Graph" actions={<button type="button">Gaps</button>} tools={<input aria-label="Search this view" />}>Body</Panel>)
+  expect(tools()).toContain('pt-2')
+  unmount()
+  render(<Panel title="Graph" subtitle="6 nodes" tools={<input aria-label="Search this view" />}>Body</Panel>)
+  expect(tools()).not.toContain('pt-2')
+  expect(tools()).toContain('pb-2')
+})

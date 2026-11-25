@@ -469,3 +469,34 @@ test('taken out of the page while open with the focus in it, the inspector gives
   expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull()
   expect(document.activeElement).toBe(button('First message'))
 })
+
+test('a closing inspector keeps what it showed while it slides out, then is the app’s again; opened again it shows the new thing at once', () => {
+  vi.useFakeTimers()
+  try {
+    // An app that shows the chosen thing, and closes the inspector with nothing to show once nothing is chosen.
+    const Frame = ({ chosen }: { chosen: string | null }) => (
+      <AppShell contentLabel="Page" inspector={<Inspector title={chosen ?? ''} open={chosen !== null} footer={chosen ? <button type="button">Open {chosen}</button> : null}>{chosen ? <p>Facts of {chosen}</p> : null}</Inspector>}>
+        Text
+      </AppShell>
+    )
+    const { rerender } = render(<Frame chosen="Server" />)
+    const panel = document.querySelector('[data-slot="inspector"]')!
+    expect(panel.textContent).toBe('ServerFacts of ServerOpen Server')
+    rerender(<Frame chosen={null} />)
+    // Closed, and on its way out: its title, its body and its foot are still the ones it had.
+    expect(panel.hasAttribute('hidden')).toBe(true)
+    expect(panel.getAttribute('aria-label')).toBe('Server')
+    expect(panel.textContent).toBe('ServerFacts of ServerOpen Server')
+    // Opened again before the slide ends: the new thing, at once.
+    rerender(<Frame chosen="Client" />)
+    expect(panel.textContent).toBe('ClientFacts of ClientOpen Client')
+    rerender(<Frame chosen={null} />)
+    expect(panel.textContent).toBe('ClientFacts of ClientOpen Client')
+    // Once the slide is over it is what the app hands it: nothing stays mounted behind a closed inspector.
+    act(() => void vi.advanceTimersByTime(400))
+    expect(panel.textContent).toBe('')
+    expect(panel.hasAttribute('hidden')).toBe(true)
+  } finally {
+    vi.useRealTimers()
+  }
+})

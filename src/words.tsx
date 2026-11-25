@@ -242,7 +242,7 @@ export interface Words {
     readonly find: string
     /** The name of the small map of the whole graph. */
     readonly map: string
-    /** The names of the arrow of a thing in the tree mode: to show what hangs from it, to hide it. (The › of the graph mode is named by the app: `openLabel`.) */
+    /** The names of the arrow of a thing in the tree mode: to show what hangs from it, to hide it. (The → of the graph mode is named by the app: `openLabel`.) */
     readonly open: (item: string) => string
     readonly close: (item: string) => string
     /** What screen readers hear of a closed thing: its name and how many it hides. */

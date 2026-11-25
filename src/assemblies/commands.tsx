@@ -284,7 +284,8 @@ export type KeyHintsProps = {
 /**
  * The keys that work now, for the window's foot (`AppShell`'s `footer`): each named command that has a key and can be
  * done now, its key as plain text and its name («Ctrl K Commands»). A command that cannot be done now leaves the list
- * and comes back with it. Hidden on a phone, where there is no keyboard to press them on.
+ * and comes back with it. Hidden on a phone, where there is no keyboard to press them on. In a narrow foot the hints
+ * that do not fit are left out whole, from the last: none is cut in the middle of a word.
  */
 function KeyHints({ ids, "aria-label": label }: KeyHintsProps) {
   const words = useWords()
@@ -297,11 +298,14 @@ function KeyHints({ ids, "aria-label": label }: KeyHintsProps) {
   )
   if (shown.length === 0) return null
   return (
-    <ul role="list" aria-label={label ?? words.palette.keys} data-slot="key-hints" className={cn("flex min-w-0 items-center gap-3 overflow-hidden whitespace-nowrap", ON_PHONE_HIDDEN)}>
+    // One row of whole hints: the row wraps and is one row tall (20px, a boxed key's cap), so a hint that does not fit
+    // goes whole onto a row that is not shown, never cut in the middle of a word (as `OverflowList` cuts). The first
+    // one alone, wider than the room, ends in an ellipsis. `clip`, not `hidden`: the list is no scroll container.
+    <ul role="list" aria-label={label ?? words.palette.keys} data-slot="key-hints" className={cn("flex h-5 min-w-0 flex-wrap content-start items-center gap-x-3 overflow-clip whitespace-nowrap", ON_PHONE_HIDDEN)}>
       {shown.map((hint) => (
-        <li key={hint.key} className="inline-flex items-center gap-1">
+        <li key={hint.key} className="inline-flex h-5 max-w-full items-center gap-1">
           <Kbd>{hint.shortcut}</Kbd>
-          <span>{hint.label}</span>
+          <span className="min-w-0 truncate">{hint.label}</span>
         </li>
       ))}
     </ul>
