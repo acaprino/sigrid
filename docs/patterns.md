@@ -277,6 +277,10 @@ Imago's `imago-shell` crate does these for Tauri on Windows.
 - A task of a few named stages (a signup, a tutorial, an import): `Steps`, in a column on a phone and in a row where
   there is width. The app moves `current` on as each stage ends and marks the one that failed with `status: 'error'`.
   A wizard keeps its own Back and Continue (one solid action, R3); `Steps` has none.
+- A pipeline whose stages end out of order (an analysis in parts): `Steps` in a column, each step with its own `status`
+  (`done`, `running`, `todo`, `skipped`, `error`) and a fact at the end of its row (`meta`); `current` is the step on the
+  screen (-1: none), and `onStepSelect` makes the rows the way to each part. A part not ready yet is `disabled` with its
+  `reason`.
 - One thing with a size (a file, an export): `Progress` under its name, with the speed or the size beside the name; at
   the end the text says «Complete» and the size takes the speed's place. A failure keeps the range where it stopped
   (`status="error"`), and Retry is the one solid action.
