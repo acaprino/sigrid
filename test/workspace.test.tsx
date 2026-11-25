@@ -5,7 +5,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import * as React from 'react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { WordsProvider } from '../src'
+import { COLORS, WordsProvider } from '../src'
 import { settle } from './helpers'
 import { DEFAULT_WORDS } from '../src/words'
 import {
@@ -131,6 +131,17 @@ test('renderTab is told whether the tab is shown, on screen and in the pane in f
     b: { active: false, visible: false, focused: true, groupId: 'g1' },
     c: { active: true, visible: true, focused: false, groupId: 'g2' },
   })
+})
+
+test('a tab with a colour has its dot before its title; one without has none', () => {
+  render(<Host start={row([1, 1], { kind: 'tabs', id: 'g1', tabs: [tab('a', { color: COLORS[3], icon: 'terminal' }), tab('b')], activeId: 'a' }, group('g2', ['c']))} />)
+  const dot = tabOf('A').querySelector('[data-slot="dot"]')
+  expect(dot).not.toBeNull()
+  // The colour is the palette's, drawn in the theme's shade (as every `Dot`), and the dot stands before the icon and the title.
+  expect(dot!.className).toContain('bg-(--mark-dot)')
+  expect(dot!.getAttribute('aria-hidden')).toBe('true')
+  expect(tabOf('A').firstElementChild).toBe(dot)
+  expect(tabOf('B').querySelector('[data-slot="dot"]')).toBeNull()
 })
 
 test('the panes are boxes in percent of the area from the weights, one flat list of contents above them; a tab icon and a title that is cut', () => {

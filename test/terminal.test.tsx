@@ -6,7 +6,7 @@ import * as React from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal, type TerminalHandle } from '../src/terminal'
-import { flush } from './helpers'
+import { classes, flush } from './helpers'
 
 // xterm probes for a canvas when it is loaded, and jsdom has none (it says so on the console): the answer is given before it is.
 vi.hoisted(() => {
@@ -41,6 +41,16 @@ describe('Terminal', () => {
     expect(document.querySelector('[data-slot="terminal"] .xterm')).not.toBeNull()
     expect(document.querySelector('textarea.xterm-helper-textarea')?.getAttribute('aria-label')).toBe('Shell of the project')
     expect(document.getElementById('sigrid-xterm')).not.toBeNull()
+  })
+
+  test('fills the box it is in, as tall and as wide: it has no height of its own, and 0 high in a pane of a Workspace without it', async () => {
+    render(<Terminal className="rounded-md" />)
+    await flush()
+    const terminal = document.querySelector('[data-slot="terminal"]') as HTMLElement
+    // `size-full` is the height and the width of the box it is in; `min-h-0` and `min-w-0` let a box smaller than the screen it holds shrink it.
+    expect(classes(terminal)).toEqual(expect.arrayContaining(['size-full', 'min-h-0', 'min-w-0', 'relative', 'rounded-md']))
+    // The screen is laid in it from corner to corner, so the fit addon reads the box's size and not the screen's own.
+    expect(classes(document.querySelector('[data-slot="terminal-screen"]') as HTMLElement)).toEqual(expect.arrayContaining(['absolute', 'inset-0']))
   })
 
   test('is called «Terminal» by default, in the words of the app', async () => {
