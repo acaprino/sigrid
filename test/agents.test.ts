@@ -72,7 +72,7 @@ describe('the catalogue for agents', () => {
     const types = catalog.entries.flatMap((e) => e.files.flatMap((f) => f.types ?? []))
     const column = types.find((t) => t.name === 'DataColumn')!
     expect(column.parameters).toEqual(['Row'])
-    expect(column.fields.find((f) => f.name === 'header')).toEqual({ name: 'header', type: 'string', required: true, doc: 'The heading of the column.' })
+    expect(column.fields.find((f) => f.name === 'header')).toEqual({ name: 'header', type: 'React.ReactNode', required: true, doc: 'The heading of the column: a word, or a part (a check that chooses all the rows, in the first column).' })
     expect(types.find((t) => t.name === 'ToastItem')!.fields.map((f) => f.name)).toEqual(expect.arrayContaining(['id', 'text']))
     // The props of a component are under the component, not a second time here.
     expect(types.find((t) => t.name === 'ButtonProps')).toBeUndefined()
