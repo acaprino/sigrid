@@ -696,16 +696,16 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     `defaultCollapsed` are the tree mode's). The arrows follow the lines: with `direction="right"` Right goes along
     a thing's first line out and Left back along its first line in, while Down and Up go through the things in the
     order given; with `direction="down"` the axes swap (Down along the first line out, Up back along the first line
-    in, Right and Left through the order). Home and End reach the first and the last, Enter chooses; from the › of a
+    in, Right and Left through the order). Home and End reach the first and the last, Enter chooses; from the → of a
     thing the arrows, Home and End move as from the thing. Opening is the app's, and only for the things it says it
-    opens: a thing with an `openLabel` («Open Orders», the name of its › and of the action) has a › button, and a
-    double press on it or its › calls `onOpen(id)`, once. Without `onOpen`, or on a thing without `openLabel`, there
-    is no › and nothing opens; the › of the thing that has the Tab stop is the next Tab stop. A screen reader hears a
+    opens: a thing with an `openLabel` («Open Orders», the name of its → and of the action) has a → button, and a
+    double press on it or its → calls `onOpen(id)`, once. Without `onOpen`, or on a thing without `openLabel`, there
+    is no → and nothing opens; the → of the thing that has the Tab stop is the next Tab stop. A screen reader hears a
     group named by the app and called a graph (`aria-roledescription`, the word `graph.roleDescription`), whose things
     are buttons named by their name and second line, described by where their lines lead and come from («leads to
     Store, Mail · comes from Gateway», the words `graph.leadsTo` and `graph.comesFrom`), the chosen one
     `aria-current`. With `editable` the plus of the chosen thing (the first of several) adds one after it
-    (`graph.addAfter`). With a finger the › and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
+    (`graph.addAfter`). With a finger the → and the plus are 44px. In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit, as
     the buttons do. Only what is in the view is drawn; the layout is done again at each change (about 30 ms for 200
     things in sight, 200 ms for a thousand). In the tree mode a larger graph starts with its branches closed
     (`defaultCollapsed`). In the graph mode every thing is always in sight, so the whole graph is laid out again
@@ -815,7 +815,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
       (add the corners of the groups the route is in). Without the app's places the canvas lays each open group out by
       itself (dagre, the innermost first) and then the group as one box among the others; a line that crosses a
       frame is drawn from thing to thing. Give a thing one of the two ways to open; with both, the arrow that opens in
-      place comes before the › that goes in. A screen reader hears the frame as a group named by its name and count
+      place comes before the → that goes in. A screen reader hears the frame as a group named by its name and count
       («Orders, open, holds 3», `graph.holds`) that owns what it holds, the title as a button that is expanded, and
       each thing in it described as «in Orders» (`graph.inGroup`). The arrow that follows the lines goes from the
       title into the group's first thing, and the one that goes back, from a thing no line leads to, goes out to the

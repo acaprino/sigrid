@@ -118,7 +118,7 @@ describe('a group opened in place', () => {
     expect(screen.getByRole('group', { name: 'Orders, open, holds 2' })).toBeTruthy()
   })
 
-  test('going into a thing is another action: `onOpen` and `openLabel` keep their ›, and the double press', () => {
+  test('going into a thing is another action: `onOpen` and `openLabel` keep their →, and the double press', () => {
     const onToggle = vi.fn()
     const onOpen = vi.fn()
     render(<Chart onToggle={onToggle} onOpen={onOpen} nodes={NODES.map((it) => (it.id === 'store' ? { ...it, openLabel: 'Go into Store' } : it))} />)
@@ -129,6 +129,41 @@ describe('a group opened in place', () => {
     expect(onToggle).not.toHaveBeenCalled()
     fireEvent.click(thing('Open Store'))
     expect(onToggle).toHaveBeenLastCalledWith('store')
+  })
+
+  test('one control for each action, and no two drawn alike: the arrow that opens in place is a chevron, the one that goes in an arrow', () => {
+    const drawing = (name: string) => thing(name).querySelector('[data-icon]')?.getAttribute('data-icon')
+    render(<Chart onToggle={() => {}} onOpen={() => {}} nodes={NODES.map((it) => (it.id === 'store' ? { ...it, openLabel: 'Go into Store' } : it.id === 'gateway' ? { ...it, openLabel: 'Go into Gateway' } : it))} />)
+    // The store opens in place and is gone into: two buttons, two drawings.
+    expect(drawing('Open Store')).toBe('chevron')
+    expect(drawing('Go into Store')).toBe('moveRight')
+    // The frame's own button is the chevron too, turned down; a thing with one action has one button.
+    expect(drawing('Close Orders')).toBe('chevron')
+    const buttons = (id: string) => Array.from(document.querySelectorAll(`[data-thing="${id}"] button`)).map((el) => el.getAttribute('data-slot'))
+    expect(buttons('store')).toEqual(['graph-toggle', 'graph-open'])
+    expect(buttons('gateway')).toEqual(['graph-open'])
+    expect(drawing('Go into Gateway')).toBe('moveRight')
+    expect(buttons('cart')).toEqual([])
+  })
+
+  test('a chosen open group keeps what it holds as it is: only what is neither in it nor joined to it is dimmed', () => {
+    const dim = (id: string) => Boolean(node(id).data.dim)
+    render(<Chart onToggle={() => {}} selected="orders" />)
+    // The cart and the payment are in the orders; the gateway has a line to them; the store has none.
+    expect(['gateway', 'orders', 'cart', 'pay', 'store'].filter(dim)).toEqual(['store'])
+    expect(document.querySelector('[data-thing="cart"]')!.className).not.toContain('opacity-40')
+    expect(document.querySelector('[data-thing="store"]')!.className).toContain('opacity-40')
+  })
+
+  test('what a chosen group holds is near at every depth; a thing chosen inside it is as before', () => {
+    const dim = (id: string) => Boolean(node(id).data.dim)
+    // The payment is itself an open group, with a card in it.
+    const deep: GraphNode[] = [...NODES.map((it) => (it.id === 'pay' ? { ...it, open: true, width: 240, height: 110 } : it)), { id: 'card', label: 'Card', group: 'pay', x: 16, y: 56 }]
+    const { rerender } = render(<Chart nodes={deep} onToggle={() => {}} selected="orders" />)
+    expect(['gateway', 'orders', 'cart', 'pay', 'card', 'store'].filter(dim)).toEqual(['store'])
+    // The cart chosen: what is joined to it stays (the payment), the rest is dimmed, the group that holds it too.
+    rerender(<Chart nodes={deep} onToggle={() => {}} selected="cart" />)
+    expect(['gateway', 'orders', 'cart', 'pay', 'card', 'store'].filter(dim)).toEqual(['gateway', 'orders', 'card', 'store'])
   })
 
   test('the keyboard goes into an open group and out of it, and reaches the button of its frame', () => {

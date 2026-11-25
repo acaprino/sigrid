@@ -58,6 +58,7 @@
 //   icon, so the bar does not eat the screen.
 import * as React from "react"
 import { useRevealAfterMount } from "../internal/reveal"
+import { motionMs } from "../internal/motion"
 import { AppShellContext, type AppShellLayout } from "../internal/frame"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
@@ -381,6 +382,9 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   )
 }
 
+/** How long a closing inspector keeps what it showed: the time of its slide (the sheet's and the docked column's, 200ms) and a frame more. */
+const LEAVE_MS = 240
+
 export type InspectorProps = {
   /** What it shows («Details»): its heading and its name for screen readers. */
   title: string
@@ -410,9 +414,24 @@ export type InspectorProps = {
  * stays in it, on the inspector itself (it takes the focus, with the ring of a region: F6 lands there too when it
  * holds no control).
  */
-function Inspector({ title, open, onOpenChange, footer, animated, className, children }: InspectorProps) {
+function Inspector({ open, onOpenChange, animated, className, ...given }: InspectorProps) {
   // Docked, it slides in from the end and out to it when the app opens or closes it; never on load.
   const reveal = useRevealAfterMount(open)
+  // What it showed while open is what it shows on its way out: an app that closes it because nothing is chosen any
+  // more hands it nothing to show (no title, no body), and it must not empty while it slides. Kept for the time of
+  // the slide (`LEAVE_MS`), then it is the app's again; opened again before that, it is the app's at once.
+  const kept = React.useRef<Pick<InspectorProps, "title" | "footer" | "children"> | null>(null)
+  if (open) kept.current = { title: given.title, footer: given.footer, children: given.children }
+  const [, forget] = React.useReducer((count: number) => count + 1, 0)
+  React.useEffect(() => {
+    if (open || kept.current === null) return
+    const timer = setTimeout(() => {
+      kept.current = null
+      forget()
+    }, motionMs(LEAVE_MS))
+    return () => clearTimeout(timer)
+  }, [open])
+  const { title, footer, children } = open ? given : (kept.current ?? given)
   const words = useWords()
   const { inspector } = useAppShell()
   const content = React.useContext(ContentContext)

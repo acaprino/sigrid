@@ -1,6 +1,6 @@
 // The graph mode of the canvas (`GraphCanvas` with `model="graph"`): the lines are relations (calls, imports, data),
 // not «hangs from». Nothing closes and every thing is in sight; the arrows follow the lines, from a thing or from its
-// ›; a double press or the › of a thing the app opens (`openLabel`) asks the app to open it; +, − and 0 zoom in both
+// →; a double press or the → of a thing the app opens (`openLabel`) asks the app to open it; +, − and 0 zoom in both
 // modes. jsdom lays nothing out and React Flow measures the page, so the zoom is seen in what the canvas asks of React
 // Flow's view, never in the drawing.
 import { act, fireEvent, render, screen } from '@testing-library/react'
@@ -78,7 +78,7 @@ const thing = (name: string) => screen.getByRole('button', { name })
 const things = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot="graph-node"]'))
 /** The thing that has the Tab stop: where the keys left the focus. */
 const stop = () => things().find((el) => el.tabIndex === 0)!
-/** The names of the › buttons drawn. */
+/** The names of the → buttons drawn. */
 const opens = () => Array.from(document.querySelectorAll('[data-slot="graph-open"]')).map((el) => el.getAttribute('aria-label')).sort()
 /** What screen readers hear after the name of a thing: the text its `aria-describedby` points to. */
 const described = (el: HTMLElement) => {
@@ -184,14 +184,14 @@ describe('the keys follow the lines', () => {
     expect(stop()).toBe(thing('Gateway'))
   })
 
-  test('from the › of a thing the arrows, Home and End move as from the thing; Enter is the ›’s own', () => {
+  test('from the → of a thing the arrows, Home and End move as from the thing; Enter is the →’s own', () => {
     render(<Calls onOpen={() => {}} />)
     const gateway = screen.getByRole('button', { name: 'Open Gateway' })
     act(() => gateway.focus())
     fireEvent.keyDown(gateway, { key: 'ArrowRight' })
     expect(stop()).toBe(thing('Sign-in'))
     expect(document.activeElement).toBe(thing('Sign-in'))
-    // From the › of the orders, which is not the Tab stop: Left back along their first line in, End, Home.
+    // From the → of the orders, which is not the Tab stop: Left back along their first line in, End, Home.
     const orders = screen.getByRole('button', { name: 'Open Orders' })
     fireEvent.keyDown(orders, { key: 'ArrowLeft' })
     expect(stop()).toBe(thing('Gateway'))
@@ -201,7 +201,7 @@ describe('the keys follow the lines', () => {
     expect(stop()).toBe(thing('Gateway'))
     fireEvent.keyDown(orders, { key: 'ArrowDown' })
     expect(stop()).toBe(thing('Sign-in'))
-    // Enter and Space press the ›: the canvas leaves them to it and chooses nothing.
+    // Enter and Space press the →: the canvas leaves them to it and chooses nothing.
     expect(fireEvent.keyDown(orders, { key: 'Enter' })).toBe(true)
     expect(fireEvent.keyDown(orders, { key: ' ' })).toBe(true)
     expect(things().some((el) => el.hasAttribute('aria-current'))).toBe(false)
@@ -209,7 +209,7 @@ describe('the keys follow the lines', () => {
 })
 
 describe('opening is the app’s', () => {
-  test('only a thing with an openLabel has a ›, named by it, and only it opens on a double press; the › chooses nothing', () => {
+  test('only a thing with an openLabel has a →, named by it, and only it opens on a double press; the → chooses nothing', () => {
     const opened = vi.fn<(id: string) => void>()
     const chose = vi.fn<(id: string | null) => void>()
     render(<Calls onOpen={opened} onSelect={chose} />)
@@ -224,12 +224,12 @@ describe('opening is the app’s', () => {
     expect(opened.mock.calls).toEqual([['orders'], ['gateway']])
     expect(chose).not.toHaveBeenCalled()
     expect(things()).toHaveLength(NODES.length)
-    // The › of the thing with the Tab stop is the next Tab stop: the way to open from the keyboard.
+    // The → of the thing with the Tab stop is the next Tab stop: the way to open from the keyboard.
     expect(screen.getByRole('button', { name: 'Open Gateway' }).tabIndex).toBe(0)
     expect(screen.getByRole('button', { name: 'Open Orders' }).tabIndex).toBe(-1)
   })
 
-  test('a double press on the › opens once: its second click opens nothing more', () => {
+  test('a double press on the → opens once: its second click opens nothing more', () => {
     const opened = vi.fn<(id: string) => void>()
     render(<Calls onOpen={opened} />)
     const open = screen.getByRole('button', { name: 'Open Orders' })
@@ -254,7 +254,7 @@ describe('opening is the app’s', () => {
     expect(stop()).toBe(thing('Store'))
   })
 
-  test('without onOpen there is no › and a double press opens nothing', () => {
+  test('without onOpen there is no → and a double press opens nothing', () => {
     render(<Calls />)
     expect(opens()).toEqual([])
     expect(screen.queryByRole('button', { name: 'Open Orders' })).toBeNull()
@@ -262,7 +262,7 @@ describe('opening is the app’s', () => {
     expect(things()).toHaveLength(NODES.length)
   })
 
-  test('the › and the plus of the chosen thing are 44px with a finger, and the plus adds after the thing', () => {
+  test('the → and the plus of the chosen thing are 44px with a finger, and the plus adds after the thing', () => {
     render(<Calls editable selected="orders" onOpen={() => {}} />)
     const add = screen.getByRole('button', { name: 'Add after Orders' })
     expect(screen.queryByRole('button', { name: 'Add under Orders' })).toBeNull()
@@ -271,7 +271,7 @@ describe('opening is the app’s', () => {
     }
   })
 
-  test("the words are the app's; the name of the › is the thing's", () => {
+  test("the words are the app's; the name of the → is the thing's", () => {
     render(
       <WordsProvider words={{ graph: { roleDescription: 'grafo', addAfter: (item) => `Aggiungi dopo ${item}`, leadsTo: (items) => `porta a ${items.join(', ')}`, comesFrom: (items) => `viene da ${items.join(', ')}` } }}>
         <Calls editable selected="orders" onOpen={() => {}} />

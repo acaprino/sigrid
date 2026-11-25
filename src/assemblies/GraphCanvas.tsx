@@ -34,14 +34,14 @@
 // - In the graph mode (`model="graph"`) a line is a relation (a call, an import, data that flows), not «hangs from»:
 //   - Nothing closes: every thing is in sight and none has an arrow. Opening a thing is the app's (going into it,
 //     showing what it holds), and only for the things it says it opens: a thing with an `openLabel` («Open Orders»)
-//     has a › button of that name, and a double press on it or its › calls `onOpen` with its id. Without `onOpen`,
-//     or on a thing without `openLabel`, there is no › and nothing opens. A thing that holds others the app keeps out
+//     has a → button of that name, and a double press on it or its → calls `onOpen` with its id. Without `onOpen`,
+//     or on a thing without `openLabel`, there is no → and nothing opens. A thing that holds others the app keeps out
 //     of sight (a group it has not opened) says how many (`hiddenCount`), at its end as a closed thing of the tree does,
 //     and in its name.
-//   - The things are one Tab stop, and the › of the one that has it is the next. Along the ranks the arrows follow the
+//   - The things are one Tab stop, and the → of the one that has it is the next. Along the ranks the arrows follow the
 //     lines: with `direction="right"` Right goes to what the thing's first line leads to and Left back to what its
 //     first line comes from, while Down and Up go through the things in the order the app gave them; downwards the
-//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the › the arrows,
+//     axes swap. Home and End reach the first and the last thing of that order, Enter chooses. From the → the arrows,
 //     Home and End move as from its thing. Screen readers hear a group called a graph, of buttons named by their name
 //     and second line, described by where their lines lead and come from, the chosen one `aria-current`.
 // - In both modes + (or =, the same key without Shift), − and 0 zoom in, out and fit the whole graph, as the buttons
@@ -161,8 +161,8 @@ export type GraphNode = {
    */
   group?: string | undefined
   /**
-   * In the graph mode, the name of the action that opens the thing and of its › button («Open Orders»): only a thing
-   * with it opens (its ›, a double press), and only when `onOpen` is given. The tree mode does not read it.
+   * In the graph mode, the name of the action that opens the thing and of its → button («Open Orders»): only a thing
+   * with it opens (its →, a double press), and only when `onOpen` is given. The tree mode does not read it.
    */
   openLabel?: string | undefined
   /**
@@ -284,7 +284,7 @@ export type GraphCanvasProps = {
    */
   selected?: string | readonly string[] | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
-  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its › button. Without it nothing opens. */
+  /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its → button. Without it nothing opens. */
   onOpen?: ((id: string) => void) | undefined
   /**
    * In the graph mode, the person asks to open or close a group in place: the button of a thing with `open: false`
@@ -961,7 +961,7 @@ type Drawn = {
   stop: boolean
   editable: boolean
   direction: 'right' | 'down'
-  /** In the graph mode, whether the app opens things (`onOpen`): a thing with an `openLabel` then has a › and opens on a double press. */
+  /** In the graph mode, whether the app opens things (`onOpen`): a thing with an `openLabel` then has a → and opens on a double press. */
   opens: boolean
   /** In the graph mode, the names of what the thing's lines lead to and of what the lines into it come from. */
   leadsTo: readonly string[]
@@ -986,7 +986,7 @@ type Drawn = {
 }
 
 const HANDLE = 'size-2! min-h-0! min-w-0! rounded-full! border-0! bg-ink-mute!'
-/** The small buttons on a thing: the plus that hangs a new one, the arrow that opens and closes, the › that opens. */
+/** The small buttons on a thing: the plus that hangs a new one, the arrow that opens and closes, the → that opens. */
 const ON_THING = 'nodrag nopan inline-flex size-6 shrink-0 items-center justify-center rounded-md hover:bg-ink/6 [&_svg]:size-3.5'
 /** With a finger a button on a thing is 44px, as every control (DESIGN.md, the exception to R7; as `Button` does). */
 const TOUCH = 'pointer-coarse:min-h-11 pointer-coarse:min-w-11'
@@ -1134,7 +1134,7 @@ const Thing = React.memo(function Thing({ data }: NodeProps<Node<Drawn>>) {
 
 /**
  * A thing on the canvas in the graph mode. The surface is the button that chooses it; the buttons on it (the plus, the
- * › that opens) lie over its end, beside that button and not inside it: what a button holds is read as its name, so a
+ * → that opens) lie over its end, beside that button and not inside it: what a button holds is read as its name, so a
  * button inside another would not be reached. The box around them (`data-thing`) is where the keys pressed on any of
  * them find their thing.
  */
@@ -1145,9 +1145,10 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
   const tinted = data.chosen || steps !== undefined
   // One clear action: the plus on the choice alone, not on each of the several chosen.
   const add = editable && data.primary
-  // Only a thing the app says it opens has a ›, under the app's name for the action, and opens on a double press.
+  // Only a thing the app says it opens has a →, under the app's name for the action, and opens on a double press.
   const openLabel = data.opens && node.openLabel ? node.openLabel : undefined
-  // A group the app opens in place has the arrow of every list that opens, before the › that goes into it.
+  // A group the app opens in place has the arrow of every list that opens (a chevron), before the → that goes into it
+  // (an arrow): one control for each action, and no two drawn alike.
   const toggles = data.toggles
   const ends = (add ? 1 : 0) + (toggles ? 1 : 0) + (openLabel ? 1 : 0)
   React.useEffect(() => onDrawn(node.id), [onDrawn, node.id])
@@ -1216,7 +1217,7 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
             <Tooltip label={words.open(node.label)}>
               <button
                 type="button"
-                // A Tab stop after the thing that has it, as its › is.
+                // A Tab stop after the thing that has it, as its → is.
                 tabIndex={data.stop ? 0 : -1}
                 data-slot="graph-toggle"
                 aria-label={words.open(node.label)}
@@ -1253,7 +1254,8 @@ const Point = React.memo(function Point({ data }: NodeProps<Node<Drawn>>) {
                 onFocus={() => data.onFocus(node.id)}
                 className={cn(ON_THING, TOUCH, 'text-ink-mute hover:text-ink', FOCUS_RING)}
               >
-                <Icon name="chevron" />
+                {/* An arrow, never the chevron: that one is the arrow of what opens in place (a group, beside it here). */}
+                <Icon name="moveRight" />
               </button>
             </Tooltip>
           ) : null}
@@ -1579,7 +1581,19 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   const [stoodIn, setStoodIn] = React.useState<{ stop: string; id: string } | null>(null)
   const tabStop = stoodIn !== null && stoodIn.stop === stop && sight.level.has(stoodIn.id) ? stoodIn.id : stop
   // What is joined to the chosen things, one line away on either side, and what is on the path or joined to it.
-  const near = React.useMemo(() => (chosen.size > 0 ? new Set([...chosen].flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [chosen, joined])
+  // What a chosen open group holds is near it too, at every depth: choosing a frame never dims its own things.
+  const near = React.useMemo(() => {
+    if (chosen.size === 0) return null
+    const set = new Set([...chosen].flatMap((id) => [id, ...(joined.get(id) ?? [])]))
+    const take = (id: string) => {
+      for (const inside of nest?.held.get(id) ?? []) {
+        set.add(inside)
+        take(inside)
+      }
+    }
+    for (const id of chosen) take(id)
+    return set
+  }, [chosen, joined, nest])
   const pathNear = React.useMemo(() => (path.length > 0 ? new Set(path.flatMap((id) => [id, ...(joined.get(id) ?? [])])) : null), [path, joined])
   // Found by the field, then the chosen things and the path: the rest is dimmed.
   const dimmed = React.useMemo(() => {
@@ -1898,7 +1912,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
 
   /**
    * The keys of the things, read at the box; true when one was used. The thing is the one the key was pressed on or,
-   * in the graph mode, the one whose button (its ›, its plus) has the focus: from there the arrows, Home and End move
+   * in the graph mode, the one whose button (its →, its plus) has the focus: from there the arrows, Home and End move
    * as from the thing, while Enter and Space are the button's own (they press it) and Delete is the thing's alone.
    * In the tree mode the keys are the item's own, as a tree's.
    */
@@ -2219,7 +2233,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     //   library's: a group, which `aria-roledescription` calls a graph (the word `graph.roleDescription`).
     // - Each thing is a button: its name and second line name it, where its lines lead and come from describe it, and
     //   the chosen one is `aria-current` (a choice, not a toggle; the first of the several the app marks). One Tab stop
-    //   as in the tree. Not a listbox: an option cannot hold the › that opens it, and inside a listbox the app's
+    //   as in the tree. Not a listbox: an option cannot hold the → that opens it, and inside a listbox the app's
     //   commands give up their keys (`commands.tsx`).
     // The focus is followed here, where it moves from thing to thing: the words of a line drawn on a choice show while
     // one of its things has it.
