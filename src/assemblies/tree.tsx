@@ -26,6 +26,16 @@
 // down a branch, the transitions.
 // What a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not
 // the icons, names and facts of every row.
+// A row may be `disabled`: it stays in sight and in the keys' way, says so (`aria-disabled`), is drawn quieter, and is
+// neither chosen, opened, closed nor taken by `onOpen`.
+// `onOpen` is the app's own «do the thing»: Enter, or a double press, on a row, besides the choice (a file opens in an
+// editor, a folder is entered); on a branch the row also opens or closes as before. `followFocus` makes the choice follow
+// the focus as the arrows move it, for a tree that is the list of a list and its details.
+// `virtual` draws only the rows in sight, for thousands of rows: the open branches are laid flat (each row says its
+// level, its place among its siblings and the size of the group: the tree of a screen reader is the same), the room of
+// the rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn.
+// The rows are all as tall as the first one, which is read where it is drawn. The box needs a height (`className`). This
+// is its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.
 // It is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and
 // the two share no code.
 import * as React from "react"
@@ -64,6 +74,8 @@ export type TreeNode = {
   children?: readonly TreeNode[] | undefined
   /** It holds rows the app loads when the branch is opened (`loadChildren`), until then unknown. Read only without `children`; without `loadChildren` the branch holds nothing. */
   hasChildren?: boolean | undefined
+  /** The row is there but cannot be chosen, opened or closed, nor taken by `onOpen`: drawn quieter, and still reached by the keys. */
+  disabled?: boolean | undefined
 }
 
 export type TreeProps = {
@@ -77,6 +89,12 @@ export type TreeProps = {
   defaultSelected?: string | null | undefined
   /** The person chose a row (a press, Enter or Space): its id, and the node. */
   onSelect?: ((id: string, node: TreeNode) => void) | undefined
+  /** The person asks to open the thing (Enter, or a double press, on a row): its id, and the node. Besides the choice, which it does not replace; on a branch the row also opens or closes. Not for a `disabled` row. */
+  onOpen?: ((id: string, node: TreeNode) => void) | undefined
+  /** The choice follows the focus: moving it with the arrows chooses the row it reaches, as in a list that shows details beside it. Absent: the choice is made by a press, Enter or Space. */
+  followFocus?: boolean | undefined
+  /** Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`). */
+  virtual?: boolean | undefined
   /** The branches the person opened, by id. With it they are the app's: pass the list `onExpandedChange` gives. The branches the filter opens are not in it. A branch still to load stays closed until the person opens it. */
   expanded?: readonly string[] | undefined
   /** The branches open at first, when they are the tree's own. */
@@ -120,6 +138,23 @@ type Loaded = { node: TreeNode; children: readonly TreeNode[] }
 /** The value of the root of Ark's collection: no id of the app's can be it. */
 const ROOT = "\u0000tree-root"
 const NONE: ReadonlySet<string> = new Set()
+/** A row's height in px before one is measured, the room between two rows, and how many rows are drawn beyond the ones in sight (`virtual`). */
+const ROW_ESTIMATE = 32
+const ROW_GAP = 2
+const OVERSCAN = 10
+
+/** A row of a tree laid flat (`virtual`): its place among its siblings, and how many they are. */
+type Flat = { node: Inner; indexPath: number[]; pos: number; size: number }
+
+/** The rows in sight, one after the other: each open branch is followed by what it holds. */
+function flatten(nodes: readonly Inner[], open: ReadonlySet<string>, path: readonly number[], into: Flat[]): Flat[] {
+  nodes.forEach((node, index) => {
+    const indexPath = [...path, index]
+    into.push({ node, indexPath, pos: index + 1, size: nodes.length })
+    if (node.children && open.has(node.id)) flatten(node.children, open, indexPath, into)
+  })
+  return into
+}
 
 /** The filter by default: the name holds the text, whatever the case and the spaces at its ends. */
 const byName = (node: TreeNode, query: string) => node.name.toLowerCase().includes(query.trim().toLowerCase())
@@ -202,6 +237,7 @@ const ROW = cn(
   "relative flex min-h-(--row-height) w-full cursor-default items-center gap-2 rounded-md pe-(--row-pad) text-start text-sm text-ink-soft pointer-coarse:min-h-11",
   // design-check-ignore-next-line dimension-value: one level in is 20px (the 16px chevron slot and its 4px gap), after the row's own padding
   "ps-[calc(var(--row-pad)_+_(var(--depth)_-_1)_*_1.25rem)]",
+  "aria-disabled:pointer-events-none aria-disabled:opacity-50",
   ROW_HOVER,
   ROW_CHOSEN,
   FOCUS_RING_INSET,
@@ -270,7 +306,7 @@ const RowBody = React.memo(function RowBody({ nameId, name, branch, open, chosen
   )
 })
 
-function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
+function TreeRow({ node, indexPath, flat }: { node: Inner; indexPath: number[]; flat?: Flat | undefined }) {
   const { icons, loading, failed, uid, motion, pressed } = React.useContext(RowsContext)
   const state = useTreeViewNodeContext()
   const source = node.source
@@ -285,6 +321,10 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
   const names = { "aria-labelledby": nameId, ...(node.lazy || hasMeta || hasCount ? { "aria-describedby": `${nameId}-detail` } : {}) }
   // The level sets the indent; Ark gives it to a leaf's row only.
   const depth = { "--depth": state.depth } as React.CSSProperties
+  const disabled = source.disabled === true
+  // A row of a tree laid flat says what its place in the nesting would have said.
+  const place = flat ? { "aria-level": indexPath.length, "aria-posinset": flat.pos, "aria-setsize": flat.size } : {}
+  const dimmed = disabled ? { "aria-disabled": true as const, "data-disabled": "" } : {}
   const body = (
     <RowBody
       nameId={nameId}
@@ -304,7 +344,7 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
   )
   if (!state.isBranch) {
     return (
-      <TreeViewPrimitive.Item data-slot="tree-row" {...names} style={depth} className={ROW}>
+      <TreeViewPrimitive.Item data-slot="tree-row" {...names} {...place} {...dimmed} style={depth} className={ROW}>
         {body}
       </TreeViewPrimitive.Item>
     )
@@ -321,8 +361,10 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
         aria-selected={state.selected}
         aria-current={state.selected ? "true" : undefined}
         aria-busy={busy || undefined}
-        aria-owns={open ? groupId : undefined}
+        aria-owns={open && !flat ? groupId : undefined}
         {...names}
+        {...place}
+        {...dimmed}
         style={depth}
         className={ROW}
       >
@@ -330,7 +372,7 @@ function TreeRow({ node, indexPath }: { node: Inner; indexPath: number[] }) {
       </TreeViewPrimitive.BranchControl>
       {/* The rows of the branch the person just opened or closed glide (theme.css, `[data-reveal]`): closing, they stay
           in the page, hidden, until another branch is pressed. Every other branch draws its rows only while open. */}
-      {open || pressed === node.id ? (
+      {!flat && (open || pressed === node.id) ? (
         <div role="group" id={groupId} data-slot="tree-group" hidden={!open} {...(pressed === node.id ? { "data-reveal": "" } : {})} className="flex flex-col gap-0.5">
           <TreeRows nodes={node.children ?? []} path={indexPath} />
         </div>
@@ -359,6 +401,9 @@ function Tree({
   selected,
   defaultSelected = null,
   onSelect,
+  onOpen,
+  followFocus = false,
+  virtual = false,
   expanded,
   defaultExpanded,
   onExpandedChange,
@@ -385,6 +430,14 @@ function Tree({
   const [ownOpen, setOwnOpen] = React.useState<readonly string[]>(defaultExpanded ?? [])
   const [ownQuery, setOwnQuery] = React.useState(defaultQuery)
   const [focus, setFocus] = React.useState<string | null>(null)
+  // `virtual`: where the box is scrolled to, how tall it is, and how tall a row is (read from the first one drawn).
+  const box = React.useRef<HTMLDivElement>(null)
+  const holder = React.useRef<HTMLDivElement>(null)
+  const [top, setTop] = React.useState(0)
+  const [viewport, setViewport] = React.useState(0)
+  const [rowSize, setRowSize] = React.useState(ROW_ESTIMATE)
+  // The row the focus is to go to once it is drawn (a key reached a row out of sight).
+  const wanted = React.useRef<string | null>(null)
   // The branches the filter opened and the person closed, for the text they filtered by: another text, or none, forgets them.
   const [shut, setShut] = React.useState<{ text: string; ids: ReadonlySet<string> }>({ text: "", ids: NONE })
 
@@ -414,6 +467,14 @@ function Tree({
   // hid can no longer hold it, or the tree would have none.
   const visible = React.useMemo(() => inSight(shown, new Set(view), new Set()), [shown, view])
   const focused = focus !== null && visible.has(focus) ? focus : chosen !== null && visible.has(chosen) ? chosen : null
+  // `virtual`: the rows in sight laid flat, and those of them that are drawn.
+  const flat = React.useMemo(() => (virtual ? flatten(shown, new Set(view), [], []) : []), [virtual, shown, view])
+  const step = rowSize + ROW_GAP
+  const from = virtual ? Math.max(0, Math.floor(top / step) - OVERSCAN) : 0
+  const to = virtual ? Math.min(flat.length, Math.ceil((top + viewport) / step) + OVERSCAN) : 0
+  const tabStop = focused ?? flat[0]?.node.id ?? null
+  const stopAt = tabStop === null ? -1 : flat.findIndex((entry) => entry.node.id === tabStop)
+  const stopDrawn = stopAt >= from && stopAt < to
   const collection = React.useMemo(
     () =>
       createTreeCollection<Inner>({
@@ -509,6 +570,60 @@ function Tree({
     }
   }, [])
 
+  /** The row the app's own choice: not a `disabled` one. */
+  const choose = (id: string) => {
+    if (id === chosen) return
+    const node = tree.index.get(id)?.source
+    if (node?.disabled === true) return
+    if (selected === undefined) setOwnChoice(id)
+    if (node) onSelect?.(id, node)
+  }
+  const frozen = (id: string) => tree.index.get(id)?.source?.disabled === true
+
+  // `virtual`: the box is as tall as it is, and a row as tall as the first one drawn: read where they are drawn.
+  React.useLayoutEffect(() => {
+    if (!virtual) return
+    const el = box.current
+    if (el && el.clientHeight !== viewport) setViewport(el.clientHeight)
+    const first = holder.current?.children[0]
+    const height = first instanceof HTMLElement ? first.offsetHeight : 0
+    if (height > 0 && height !== rowSize) setRowSize(height)
+    // A row reached out of sight takes the focus once it is drawn.
+    if (wanted.current === null || !el) return
+    const row = Array.from(el.querySelectorAll<HTMLElement>("[role=treeitem]")).find((candidate) => candidate.dataset.value === wanted.current)
+    if (!row) return
+    wanted.current = null
+    if (row !== document.activeElement) row.focus()
+  })
+  React.useEffect(() => {
+    const el = box.current
+    if (!virtual || !el || typeof ResizeObserver !== "function") return
+    const observer = new ResizeObserver(() => setViewport(el.clientHeight))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [virtual])
+  /** Scrolls the box so that the row at a place is in it, by the least it takes. */
+  const reveal = (id: string) => {
+    const el = box.current
+    const at = flat.findIndex((entry) => entry.node.id === id)
+    if (!virtual || !el || at < 0) return
+    wanted.current = id
+    const start = at * step
+    const next = start < el.scrollTop ? start : start + rowSize > el.scrollTop + el.clientHeight ? start + rowSize - el.clientHeight : el.scrollTop
+    if (next !== el.scrollTop) {
+      el.scrollTop = next
+      setTop(next)
+    }
+  }
+
+  /** Enter or a double press on a row: the app is asked to open the thing. */
+  const asked = (target: EventTarget) => {
+    if (!onOpen || !(target instanceof Element)) return
+    const id = target.closest<HTMLElement>("[data-part=branch-control], [data-part=item], [role=treeitem]")?.dataset.value
+    const node = id === undefined ? undefined : tree.index.get(id)?.source
+    if (id !== undefined && node && node.disabled !== true) onOpen(id, node)
+  }
+
   const setQuery = (value: string) => {
     if (query === undefined) setOwnQuery(value)
     onQueryChange?.(value)
@@ -523,10 +638,7 @@ function Tree({
       focusedValue={focused}
       onSelectionChange={(details) => {
         const id = details.selectedValue[0]
-        if (id === undefined || id === chosen) return
-        if (selected === undefined) setOwnChoice(id)
-        const node = tree.index.get(id)?.source
-        if (node) onSelect?.(id, node)
+        if (id !== undefined) choose(id)
       }}
       onExpandedChange={(details) => {
         const next = details.expandedValue
@@ -535,9 +647,9 @@ function Tree({
         // `*` opens every row beside the one in focus, leaves too: only branches are kept.
         const opened = next.filter((id) => {
           const node = tree.index.get(id)
-          return !before.has(id) && node !== undefined && (node.lazy || node.children !== undefined)
+          return !before.has(id) && node !== undefined && (node.lazy || node.children !== undefined) && !frozen(id)
         })
-        const closed = new Set(view.filter((id) => !after.has(id)))
+        const closed = new Set(view.filter((id) => !after.has(id) && !frozen(id)))
         // One branch opened or closed is the person's press on it; several at once (`*`) glide nowhere.
         const toggled = [...opened, ...closed]
         setPressed(toggled.length === 1 ? toggled[0]! : null)
@@ -559,7 +671,13 @@ function Tree({
         const mine = latest.current.open
         commitOpen([...new Set([...mine, ...ready])].filter((id) => !closed.has(id)))
       }}
-      onFocusChange={(details) => setFocus(details.focusedValue)}
+      onFocusChange={(details) => {
+        const id = details.focusedValue
+        setFocus(id)
+        if (id === null) return
+        reveal(id)
+        if (followFocus) choose(id)
+      }}
       translations={{ treeLabel: label }}
       className={cn("flex min-h-0 flex-col gap-2", className)}
     >
@@ -577,7 +695,19 @@ function Tree({
         />
       ) : null}
       <TreeViewPrimitive.Tree
+        ref={box}
         data-slot="tree-rows"
+        onScroll={virtual ? (event) => setTop(event.currentTarget.scrollTop) : undefined}
+        onDoubleClick={onOpen ? (event) => asked(event.target) : undefined}
+        // Where the row that is the Tab stop is not drawn, the box itself is, and hands the focus to that row.
+        {...(virtual && !stopDrawn && tabStop !== null
+          ? {
+              tabIndex: 0,
+              onFocus: (event: React.FocusEvent<HTMLDivElement>) => {
+                if (event.target === event.currentTarget) reveal(tabStop)
+              },
+            }
+          : {})}
         hidden={shown.length === 0 || undefined}
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing) return
@@ -588,6 +718,7 @@ function Tree({
             event.preventDefault()
             return
           }
+          if (event.key === "Enter") asked(event.target)
           // Ark keeps `a` for Cmd+A (choose all, which a tree of one choice does not do), so a plain `a` reaches no
           // name: it is sent again as `A`, which the first letters typed read the same, ignoring case.
           if (event.key !== "a" || event.metaKey || event.ctrlKey || event.altKey) return
@@ -597,7 +728,17 @@ function Tree({
         className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
       >
         <RowsContext.Provider value={rows}>
-          <TreeRows nodes={shown} path={[]} />
+          {virtual ? (
+            <div ref={holder} role="presentation" data-slot="tree-window" className="flex flex-col gap-0.5" style={{ paddingTop: from * step, paddingBottom: Math.max(0, flat.length - to) * step }}>
+              {flat.slice(from, to).map((entry) => (
+                <TreeViewPrimitive.NodeProvider key={entry.node.id} node={entry.node} indexPath={entry.indexPath}>
+                  <TreeRow node={entry.node} indexPath={entry.indexPath} flat={entry} />
+                </TreeViewPrimitive.NodeProvider>
+              ))}
+            </div>
+          ) : (
+            <TreeRows nodes={shown} path={[]} />
+          )}
         </RowsContext.Provider>
       </TreeViewPrimitive.Tree>
       {found && shown.length === 0 ? (
