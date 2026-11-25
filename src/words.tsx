@@ -235,6 +235,13 @@ export interface Words {
     readonly sortBy: (column: string) => string
     /** What a table says when it has no rows. */
     readonly empty: string
+    /** The check in the heading that chooses all the rows, the check of a row that has no name of its own, and the heading of the column of checks. */
+    readonly selectAll: string
+    readonly selectRow: string
+    readonly select: string
+    /** The caret of a row that holds others, closed and open. */
+    readonly unfold: string
+    readonly fold: string
   }
   readonly graph: {
     /** The names of the buttons that move the view, and of their row. */
@@ -578,6 +585,11 @@ export const DEFAULT_WORDS: Words = {
   table: {
     sortBy: (column) => `Sort by ${column}`,
     empty: 'Nothing to show',
+    selectAll: 'Select all',
+    selectRow: 'Select',
+    select: 'Select',
+    unfold: 'Open',
+    fold: 'Close',
   },
   graph: {
     view: 'View',
