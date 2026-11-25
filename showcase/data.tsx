@@ -5,7 +5,6 @@
 import * as React from 'react'
 import { Avatar, Badge, Button, Column, Icon, Input, Split, Switch, Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '../src/primitives'
 import { FormField, ItemRow, Message } from '../src/components'
-import { Checkbox } from '../src/primitives'
 import { DataTable, type DataColumn, type DataSelection, type DataSort } from '../src/table'
 import { VirtualConversation, VirtualList } from '../src/virtual'
 import { ReorderList } from '../src/reorder'
@@ -115,12 +114,6 @@ function CleanupTable() {
         </span>
       )}
       selection={selection}
-      onRowKeyDown={(entry, event) => {
-        if (event.key === ' ') {
-          event.preventDefault()
-          set(entry.id, state(entry.id) !== true)
-        }
-      }}
       className="max-h-80 rounded-md border border-line"
     />
   )
@@ -199,8 +192,21 @@ export function Tables() {
       <Row label="a heading that is a part">
         <div className="w-full max-w-3xl">
           <DataTable
-            aria-label="Files with a check in the heading"
-            columns={[{ id: 'name', header: <Checkbox aria-label="Select all files" />, label: 'Name', cell: (file: FileRow) => file.name, sortValue: (file: FileRow) => file.name }, COLUMNS[2]!]}
+            aria-label="Files with an icon in the heading"
+            columns={[
+              {
+                id: 'name',
+                header: (
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name="file" />
+                    Name
+                  </span>
+                ),
+                cell: (file: FileRow) => file.name,
+                sortValue: (file: FileRow) => file.name,
+              },
+              COLUMNS[2]!,
+            ]}
             rows={FEW.slice(0, 4)}
             rowId={(file) => file.id}
           />
