@@ -351,6 +351,20 @@ export interface Words {
     readonly put: (item: string, position: number, total: number) => string
     readonly back: (item: string) => string
   }
+  readonly terminal: {
+    /** The name of the terminal for screen readers (its input), when the app gives none. */
+    readonly label: string
+    /** The name of the strip that shows the lines of a terminal in miniature and moves them (a scroll bar by another face), when the app gives none. */
+    readonly overview: string
+    /** What screen readers hear of the strip's position: the first line in sight and how many there are («Line 40 of 900»). */
+    readonly overviewAt: (line: number, total: number) => string
+  }
+  readonly code: {
+    /** The name of the code view when the app gives none. */
+    readonly label: string
+    /** The name of the view when it cannot be changed («Code, read only»). */
+    readonly readOnly: (label: string) => string
+  }
   readonly richText: {
     /** The name of the row of buttons above the text. */
     readonly toolbar: string
@@ -699,6 +713,15 @@ export const DEFAULT_WORDS: Words = {
     moved: (item, position, total) => `${item} at ${position} of ${total}`,
     put: (item, position, total) => `${item} put down at ${position} of ${total}`,
     back: (item) => `${item} put back`,
+  },
+  terminal: {
+    label: 'Terminal',
+    overview: 'Lines of the terminal',
+    overviewAt: (line, total) => `Line ${line} of ${total}`,
+  },
+  code: {
+    label: 'Code',
+    readOnly: (label) => `${label}, read only`,
   },
   richText: {
     toolbar: 'Text format',
