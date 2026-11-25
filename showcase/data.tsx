@@ -60,12 +60,12 @@ export function Tables() {
           <Table aria-label="Plans">
             <TableCaption>The parts alone, for a table an app draws by hand.</TableCaption>
             <TableHeader>
-              <tr>
+              <TableRow>
                 <TableHead>Plan</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead align="end">Seats</TableHead>
                 <TableHead align="end">Each month</TableHead>
-              </tr>
+              </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>

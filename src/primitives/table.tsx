@@ -4,7 +4,8 @@
 // - A row is as tall as the density's row (44px with a finger), with a line under it and no other frame (R4).
 // - A heading is small muted text (the label size); a column of numbers is set at the end, in tabular figures (R5).
 // - The row chosen has the selection tint, stronger text and a short accent bar at its start (R1), as in every list;
-//   under the pointer a row takes a share of that tint.
+//   under the pointer a row takes a share of that tint. The row of the headings takes none: it is not a row to choose.
+// - A cell that takes the room the other columns leave (`grow`) cuts a one-line text in it instead of widening the table.
 // What a table does (sorting, filtering, choosing columns, drawing only the rows in sight) is not here: `DataTable`
 // (the `./table` entry of the package) does the first and the last on TanStack Table, and an app with a table of its
 // own drives it with the library it likes and draws it with these parts.
@@ -49,6 +50,8 @@ function TableRow({ className, current, ...props }: TableRowProps) {
       className={cn(
         "border-b border-line aria-[current=true]:bg-selected aria-[current=true]:font-semibold aria-[current=true]:text-selected-ink",
         ROW_HOVER,
+        // The row of the headings (a `TableRow` in the `TableHeader`) is not a row to choose: no tint under the pointer.
+        "[thead>&]:hover:bg-transparent",
         // The accent bar is drawn at the start of the row's first cell.
         "aria-[current=true]:[&>td:first-child]:before:absolute aria-[current=true]:[&>td:first-child]:before:top-1/2 aria-[current=true]:[&>td:first-child]:before:start-0 aria-[current=true]:[&>td:first-child]:before:h-4 aria-[current=true]:[&>td:first-child]:before:w-0.75 aria-[current=true]:[&>td:first-child]:before:-translate-y-1/2 aria-[current=true]:[&>td:first-child]:before:rounded-full aria-[current=true]:[&>td:first-child]:before:bg-primary aria-[current=true]:[&>td:first-child]:before:content-['']",
         FOCUS_RING_INSET,
@@ -88,10 +91,15 @@ function TableHead({ className, align = "start", sticky, scope = "col", ...props
 export type TableCellProps = Omit<React.ComponentProps<"td">, "align"> & {
   /** `end`: a number, in tabular figures. */
   align?: TableCellAlign | undefined
+  /**
+   * The cell takes the width the other columns leave, and no more: a one-line text in it that is too long (a
+   * `Text truncate`) is cut there instead of widening the table. For the column of the names.
+   */
+  grow?: boolean | undefined
 }
 
-function TableCell({ className, align = "start", ...props }: TableCellProps) {
-  return <td data-slot="table-cell" className={cn("relative h-(--row-height) px-3 py-1.5 align-middle", align === "end" ? "text-end tabular-nums" : "text-start", className)} {...props} />
+function TableCell({ className, align = "start", grow = false, ...props }: TableCellProps) {
+  return <td data-slot="table-cell" className={cn("relative h-(--row-height) px-3 py-1.5 align-middle", align === "end" ? "text-end tabular-nums" : "text-start", grow && "w-full max-w-0", className)} {...props} />
 }
 
 /** The name of the table, for everyone: above it, small and muted. A table can be named with `aria-label` instead. */

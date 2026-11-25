@@ -574,6 +574,27 @@ Each is off unless asked, or a new choice of a prop; `test/theme-details.test.ts
 | `ToolbarTab`, `TitleBar` | Under `ThemeDef.tabs: 'bold'` | The line of the chosen view stops 3px short of the edge it is near (the bar's lower edge; the upper one for a bar at the foot, `edge="top"`), in the bar, in the row of views under it and at the foot, at every density: clear ground is always seen between the line and the hairline of the sheet. The bar (not the compact one) is 2px taller, 46px at compact density; what it holds stays in its middle |
 | `Sidebar toggle="head"` | In the head row (`sidebar-head`) | A `SidebarRow` there has weight 600, and a `Count` there is the pill a count is on a row of the navigation, in the sidebar's neutral colours (`COUNT_PILL`, shared with `NavItem`). No new part |
 
+## Added on 2026-11-25: the text of an app that writes no class
+
+An app with no class of its own (21 files of one app carried them) still cut a long name to one line, set a path in
+the monospace face, coloured a status, hid words for screen readers, drew a bulleted list and tinted the heading row of
+its tables under the pointer. Each is a prop of a part that was there, or one small part; with none of them a part is
+drawn as before, attribute for attribute (`test/layout.test.tsx`).
+
+| Part | What an app writes | What it draws | Rules |
+|---|---|---|---|
+| `Text truncate` | `<Text truncate>{name}</Text>`; another hint with `title` (the path of a file shown by its name) | One line, cut with an ellipsis where its place ends: a block that gives way (`block max-w-full min-w-0 truncate`). The whole text is the `title` when the children are plain words; with parts in it the app gives the `title`. A screen reader reads the whole text: only the drawing is cut | The hint repeats what is cut, it holds nothing new (as a tooltip). In a table the cell is a `TableCell grow` |
+| `Heading truncate` | `<Heading size="small" truncate>{name}</Heading>` | The title on one line, cut; with an icon the words are cut and the icon keeps its slot. The whole title is the hint when it is plain words | The name of a thing is as long as the user made it; the title keeps its size (R7) |
+| `TableCell grow` | `<TableCell grow><Text truncate>…</Text></TableCell>` | The cell takes the width the other columns leave and no more (`w-full max-w-0`), so a line cut in it does not widen the table | For the column of the names; the other columns keep the width of their content |
+| `Text mono` | `<Text mono>{path}</Text>` | The monospace face at 13px (`code-sm`, the second font role of DESIGN.md), selectable wherever it is (`data-selectable`, read by the desktop frame's rule in theme.css); a long one breaks anywhere, unless it is cut (`truncate`) or keeps its breaks (`pre`). A `caption` or a `kicker` keeps its 12px | Two font roles, no third. Names with values that are code stay a `DescriptionList` with `code` |
+| `Text tone` | `<Text tone="warning">Needs a build</Text>`: `success`, `warning`, `danger`, `info` (`BadgeTone`, the tones of a `Badge`) | The status colour as the ink of the words, at the size and weight of the variant; `data-tone` on the element. An `Icon` in it takes the colour | DESIGN.md «Status»: always with its word, the colour is never the only signal. Not the accent (R2), not a fill (R10). Contrast: the four colours at 4.5:1 on `paper`, `paper-2` and `raised`, and on a row under the pointer (the selection tint at 60% over each), in every theme and scheme (`test/theme-engine.test.ts`); on the chosen row the word takes the row's ink (`selected-ink`, measured on `selected`), because the status colours are not measured on the selection tint |
+| `Text srOnly` | `<Text srOnly>Not installed here</Text>` beside a mark hidden with `aria-hidden` | Nothing: the words are in the page for screen readers, in their place (`sr-only`) | The name of a column with no words stays `TableHead aria-label`, and of an icon button its `aria-label` |
+| `TextList` | `<TextList items={reasons} />`, `ordered` for numbers | A `ul` with bullets or an `ol` with numbers, 20px in from the start, 4px between the lines, the form of the list in a `Note` and in `MarkdownBlocks`; the size and the ink of the text around it. A line left out (`null`, `false`) is not drawn, and no lines draw nothing | Lines to read. Things to choose are an `ItemList`, names with values a `DescriptionList`, the steps of a task `Steps` |
+| `TableRow` in a `TableHeader` | Nothing | The row of the headings takes no tint under the pointer (it took the share of the selection tint of a row of the body, where the heading was not `sticky`) | R1: the tint under the pointer says «about to be chosen», and a heading row is never chosen. A row of the body is as it was |
+
+Not added: a page wider than 768px is `Page`, which is `content-max` (1152px) wide (768px is `Column width="page"`); a
+failure in a box is a `Note tone="error"`; a status as a label is a `Badge tone`.
+
 ## Off-scale values (with locations, before the polish pass)
 
 | Value | Where |

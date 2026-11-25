@@ -3,7 +3,7 @@
 // the types never reaches the page.
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-import { Cell, Cluster, Column, Grid, Page, ScrollArea, Section, Spacer, Split, Text, type Space } from '../src/primitives'
+import { Cell, Cluster, Column, Grid, Heading, Icon, Page, ScrollArea, Section, Spacer, Split, Text, TextList, type Space } from '../src/primitives'
 import { classes } from './helpers'
 
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)!
@@ -163,6 +163,140 @@ describe('text', () => {
     const kicker = document.querySelector('[data-variant="kicker"]')!
     expect(kicker.tagName).toBe('DIV')
     expect(classes(kicker)).toEqual(expect.arrayContaining(['font-medium', 'whitespace-pre-wrap']))
+  })
+
+  test('a text without the new props is drawn as before: no hint, no tone, nothing more on its element', () => {
+    render(<Text variant="note">plain note</Text>)
+    const note = screen.getByText('plain note')
+    expect(note.getAttributeNames().sort()).toEqual(['class', 'data-slot', 'data-variant'])
+    expect(classes(note)).toEqual(['text-xs', 'text-ink-mute'])
+  })
+
+  test('a line that is cut is one line that gives way, with its whole as a hint; a hint of its own is kept, and parts have none', () => {
+    render(
+      <>
+        <Text truncate>a very long name</Text>
+        <Text truncate title="C:/work/report.pdf">
+          report.pdf
+        </Text>
+        <Text truncate variant="note">
+          <b>bold</b> parts
+        </Text>
+      </>,
+    )
+    const cut = screen.getByText('a very long name')
+    expect(classes(cut)).toEqual(expect.arrayContaining(['block', 'min-w-0', 'max-w-full', 'truncate']))
+    expect(cut.getAttribute('title')).toBe('a very long name')
+    expect(screen.getByText('report.pdf').getAttribute('title')).toBe('C:/work/report.pdf')
+    const parts = screen.getByText('bold').parentElement!
+    expect(parts.hasAttribute('title')).toBe(false)
+    expect(classes(parts)).toEqual(expect.arrayContaining(['truncate', 'text-xs', 'text-ink-mute']))
+  })
+
+  test('a path or an id is in the monospace face at 13px, selectable, and breaks anywhere unless it is cut or keeps its breaks', () => {
+    render(
+      <>
+        <Text mono>src/retry.ts</Text>
+        <Text mono truncate>
+          src/charge.ts
+        </Text>
+        <Text mono pre>
+          src/dunning.ts
+        </Text>
+        <Text mono variant="caption">
+          run-42
+        </Text>
+        <Text>words</Text>
+      </>,
+    )
+    const path = screen.getByText('src/retry.ts')
+    expect(classes(path)).toEqual(expect.arrayContaining(['font-mono', 'text-xs', 'break-all']))
+    expect(path.getAttribute('data-selectable')).toBe('')
+    expect(classes(screen.getByText('src/charge.ts'))).toEqual(expect.arrayContaining(['font-mono', 'truncate']))
+    expect(classes(screen.getByText('src/charge.ts'))).not.toContain('break-all')
+    expect(classes(screen.getByText('src/dunning.ts'))).toEqual(expect.arrayContaining(['font-mono', 'whitespace-pre-wrap']))
+    expect(classes(screen.getByText('src/dunning.ts'))).not.toContain('break-all')
+    // A caption keeps its own size in the monospace face.
+    expect(classes(screen.getByText('run-42'))).toEqual(expect.arrayContaining(['font-mono', 'text-2xs']))
+    expect(classes(screen.getByText('run-42'))).not.toContain('text-xs')
+    expect(screen.getByText('words').hasAttribute('data-selectable')).toBe(false)
+  })
+
+  test('a status is its word in the colour of its tone, the tones of a badge; on the chosen row it takes the ink of the row', () => {
+    const tones = [['success', 'text-success'], ['warning', 'text-warning'], ['danger', 'text-destructive'], ['info', 'text-info']] as const
+    render(
+      <>
+        {tones.map(([tone]) => (
+          <Text key={tone} tone={tone} variant="note">
+            {`is ${tone}`}
+          </Text>
+        ))}
+      </>,
+    )
+    for (const [tone, ink] of tones) {
+      const word = screen.getByText(`is ${tone}`)
+      expect(word.getAttribute('data-tone')).toBe(tone)
+      // The tone takes the place of the variant's ink, not of its size.
+      expect(classes(word)).toEqual(expect.arrayContaining([ink, 'text-xs', '[[aria-current=true]_&]:text-inherit']))
+      expect(classes(word)).not.toContain('text-ink-mute')
+    }
+  })
+
+  test('words for screen readers only are in the page, read in their place, and not drawn', () => {
+    render(
+      <p>
+        <span aria-hidden="true">-</span>
+        <Text srOnly>Not installed here</Text>
+      </p>,
+    )
+    const words = screen.getByText('Not installed here')
+    expect(classes(words)).toEqual(['sr-only'])
+    expect(words.hasAttribute('aria-hidden')).toBe(false)
+  })
+})
+
+describe('a list of lines', () => {
+  test('bullets by default and numbers when ordered; a line left out is not drawn, and no lines draw nothing', () => {
+    const { unmount } = render(<TextList aria-label="Reasons" items={['one', null, false, 'two', <b key="b">three</b>]} />)
+    const list = screen.getByRole('list', { name: 'Reasons' })
+    expect(list.tagName).toBe('UL')
+    expect(list.getAttribute('data-slot')).toBe('text-list')
+    expect(classes(list)).toEqual(expect.arrayContaining(['list-disc', 'ps-5', 'space-y-1']))
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['one', 'two', 'three'])
+    unmount()
+    const ordered = render(<TextList ordered items={['first', 'then']} />)
+    expect(screen.getByRole('list').tagName).toBe('OL')
+    expect(classes(screen.getByRole('list'))).toContain('list-decimal')
+    expect(classes(screen.getByRole('list'))).not.toContain('list-disc')
+    ordered.unmount()
+    const none = render(<TextList items={[null, false]} />)
+    expect(none.container.childElementCount).toBe(0)
+  })
+})
+
+describe('a title that is cut', () => {
+  test('it is one line with its whole as a hint; with an icon the words are cut and the icon stays; without the prop nothing changes', () => {
+    render(
+      <>
+        <Heading size="small" truncate>
+          A long name
+        </Heading>
+        <Heading size="small" truncate icon={<Icon name="now" />}>
+          With an icon
+        </Heading>
+        <Heading size="small">As before</Heading>
+      </>,
+    )
+    const cut = screen.getByRole('heading', { name: 'A long name' })
+    expect(classes(cut)).toEqual(expect.arrayContaining(['min-w-0', 'truncate']))
+    expect(cut.getAttribute('title')).toBe('A long name')
+    const marked = screen.getByRole('heading', { name: 'With an icon' })
+    expect(classes(marked)).not.toContain('truncate')
+    expect(classes(screen.getByText('With an icon'))).toEqual(expect.arrayContaining(['min-w-0', 'truncate']))
+    const plain = screen.getByRole('heading', { name: 'As before' })
+    expect(plain.hasAttribute('title')).toBe(false)
+    expect(classes(plain)).not.toContain('truncate')
+    expect(plain.childElementCount).toBe(0)
   })
 })
 
