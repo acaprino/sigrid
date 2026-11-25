@@ -758,7 +758,10 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
       word `graph.hides`); the tree mode counts what a closed thing hides by itself. An edge with
       `labelShown: 'chosen'` draws its words only while one of its two things is chosen or has the keyboard focus
       (the arrows move it), or while the line is the path's (`always`, the default, draws them always); either way
-      they are heard in the description of its things.
+      they are heard in the description of its things. Words are drawn on their line only where they have room, over
+      no thing and over no other words; the others are listed under the view's buttons, each with a sample of its line
+      and the two things it joins («Client → Server»). No room is made for words, so choosing a thing moves nothing;
+      an app that wants them on the lines keeps them short, or lays its ranks further apart.
     - Two edges between the same two things. An edge with an `id` is always a line of its own (React Flow's id
       too): two such edges are two lines, each with its words, and with `editable` taking one away takes that edge
       alone. An edge without an `id` is named by its two ends, and a second one by a number after them, unless it is
