@@ -252,7 +252,7 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
 
 // The four libraries under a table, a long list, a list put in order and formatted text (2026-11-23): pinned, listed, and
 // each behind its own entry of the package, so the main entry and the entries of the levels stay light.
-describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, each in its own entry', () => {
+describe('TanStack Table, TanStack Virtual, dnd-kit, TipTap, React Flow, xterm and CodeMirror: pinned, listed, each in its own entry', () => {
   const PINNED: Record<string, string> = {
     '@tanstack/react-table': '9.3.1',
     '@tanstack/react-virtual': '3.14.26',
@@ -265,15 +265,34 @@ describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, 
     // The canvas of a graph and the places of its things (2026-11-23, later the same day).
     '@xyflow/react': '13.0.2',
     '@dagrejs/dagre': '3.1.3',
+    // The terminal (xterm.js and its fit addon) and the code view (CodeMirror 6, its languages and the highlighting).
+    '@xterm/xterm': '6.0.0',
+    '@xterm/addon-fit': '0.11.0',
+    '@codemirror/commands': '6.11.1',
+    '@codemirror/lang-css': '6.3.1',
+    '@codemirror/lang-html': '6.4.12',
+    '@codemirror/lang-javascript': '6.2.5',
+    '@codemirror/lang-json': '6.0.2',
+    '@codemirror/lang-markdown': '6.5.2',
+    '@codemirror/lang-python': '6.2.1',
+    '@codemirror/lang-rust': '6.0.2',
+    '@codemirror/language': '6.13.1',
+    '@codemirror/search': '6.7.2',
+    '@codemirror/state': '6.7.6',
+    '@codemirror/view': '6.43.15',
+    '@lezer/highlight': '1.2.5',
   }
-  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap|xyflow|dagrejs)\//
+  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap|xyflow|dagrejs|xterm|codemirror|lezer)\//
   const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
-  const imports = (file: string) => [...new Set([...readFileSync(file, 'utf8').matchAll(/from ['"]([^'"]+)['"]/g)].map((m) => m[1]!).filter((spec) => LIBRARY.test(spec)))].sort()
+  // The stylesheet of xterm (`…/xterm.css?inline`) is the library's, as the code is: the file is listed by the package, not the file.
+  const imports = (file: string) => [...new Set([...readFileSync(file, 'utf8').matchAll(/from ['"]([^'"]+)['"]/g)].map((m) => m[1]!.replace(/\/css\/[^/]+\.css\?inline$/, '')).filter((spec) => LIBRARY.test(spec)))].sort()
 
   test('each is pinned to an exact version, installed at that version, MIT, and named with it in THIRD_PARTY.md', () => {
     expect(Object.fromEntries(Object.entries(pkg.dependencies ?? {}).filter(([name]) => LIBRARY.test(name)))).toEqual(PINNED)
     for (const section of ['devDependencies', 'peerDependencies', 'optionalDependencies'] as const) expect(Object.keys(pkg[section] ?? {}).filter((name) => LIBRARY.test(name)), section).toEqual([])
     for (const [name, version] of Object.entries(PINNED)) {
+      // Pinned: an exact version, never a range.
+      expect(pkg.dependencies?.[name], name).toMatch(/^\d+\.\d+\.\d+$/)
       const installed = JSON.parse(readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8')) as { version: string; license: string }
       expect(installed.version, name).toBe(version)
       expect(installed.license, name).toBe('MIT')
@@ -283,7 +302,7 @@ describe('TanStack Table, TanStack Virtual, dnd-kit and TipTap: pinned, listed, 
   })
 
   test('THIRD_PARTY.md says which files rest on them, and they are exactly the ones that import them', () => {
-    const start = text.indexOf('\n## TanStack Table, TanStack Virtual, dnd-kit and TipTap\n')
+    const start = text.indexOf('\n## TanStack Table, TanStack Virtual, dnd-kit, TipTap, React Flow, xterm and CodeMirror\n')
     expect(start).toBeGreaterThan(-1)
     const section = text.slice(start, text.indexOf('\n## ', start + 1))
     const rows = new Map([...section.matchAll(/^\| `(src\/[^`]+)` \| ([^|]+) \| `(\.\/[a-z-]+)` \|$/gm)].map((m) => [m[1]!, { libraries: [...m[2]!.matchAll(/`([^`]+)`/g)].map((l) => l[1]!).sort(), entry: m[3]! }]))

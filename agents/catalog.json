@@ -1441,6 +1441,16 @@
          "required": true
         },
         {
+         "name": "terminal",
+         "type": "{ readonly label: string; readonly overview: string; readonly overviewAt: (line: number, total: number) => string; }",
+         "required": true
+        },
+        {
+         "name": "code",
+         "type": "{ readonly label: string; readonly readOnly: (label: string) => string; }",
+         "required": true
+        },
+        {
          "name": "richText",
          "type": "{ readonly toolbar: string; readonly bold: string; readonly italic: string; readonly underline: string; readonly bulletList: string; readonly orderedList: string; readonly quote: string; readonly und…",
          "required": true
@@ -1596,6 +1606,14 @@
         {
          "name": "reorder",
          "type": "Partial<{ readonly handle: (item: string) => string; readonly role: string; readonly instructions: string; readonly taken: (item: string, position: number, total: number) => string; readonly moved: (…"
+        },
+        {
+         "name": "terminal",
+         "type": "Partial<{ readonly label: string; readonly overview: string; readonly overviewAt: (line: number, total: number) => string; }>"
+        },
+        {
+         "name": "code",
+         "type": "Partial<{ readonly label: string; readonly readOnly: (label: string) => string; }>"
         },
         {
          "name": "richText",
@@ -9756,6 +9774,671 @@
      ],
      "also": [
       "GraphLegendProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/terminal",
+   "files": [
+    {
+     "file": "src/assemblies/OverviewStrip.tsx",
+     "about": "A strip that shows the lines of a long text in miniature and moves them: each line is a bar from where its text starts\nto where it ends, a frame marks the lines in sight, a mark is a line the app wants seen, and a part above the live\nlines can hold an archive (lines that scrolled out of what the app keeps in memory), dimmer. It is a scroll bar by\nanother face: a press or a drag on it asks for the line it stands for (`onSeek`), a wheel moves by three lines, and\nit is a scroll bar for the keyboard and for screen readers (Up and Down, Page Up and Page Down, Home and End).\nIt is drawn on a canvas in the colours of the toolkit's tokens, read again when the page's look changes. It knows no\nterminal: it is on the `./terminal` entry because that is what it is made for (a terminal's `buffer` gives it its\nlines), and `textExtent` turns a line of text into the bar it is.\n- Few lines are bars a few pixels apart; more than fit are one pixel row for several lines, so the cost of a drawing is\n  the height of the strip and not the length of the text; at most once every 200ms, however fast the lines change.\n- The geometry is pure (`overviewGeometry`, `lineAt`, `holdAt`, `archivedLineAt`) and exported for what draws another way.",
+     "components": [
+      {
+       "name": "OverviewStrip",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the strip for screen readers; «Lines of the terminal» by default (`words.terminal.overview`)."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "required": true,
+         "doc": "How many live lines there are."
+        },
+        {
+         "name": "extent",
+         "type": "OverviewExtent",
+         "required": true,
+         "doc": "The bar of each live line."
+        },
+        {
+         "name": "viewport",
+         "type": "{ start: number; size: number; }",
+         "required": true,
+         "doc": "The lines in sight: the first, and how many."
+        },
+        {
+         "name": "columns",
+         "type": "number",
+         "doc": "How many cells of a line fill the strip's width; 80 by default."
+        },
+        {
+         "name": "marks",
+         "type": "readonly OverviewMark[]",
+         "doc": "Lines to be seen at a glance (an error, a search hit): a tick across the strip."
+        },
+        {
+         "name": "archive",
+         "type": "{ count: number; extent: OverviewExtent; }",
+         "doc": "Lines older than the live ones, kept elsewhere: their part of the strip is dimmer and a press on it is `onArchiveSeek`."
+        },
+        {
+         "name": "revision",
+         "type": "unknown",
+         "doc": "Changes when the text did, so the strip is drawn again (the lines are read through `extent`, which is not a value)."
+        },
+        {
+         "name": "onSeek",
+         "type": "(line: number) => void",
+         "required": true,
+         "doc": "The first line in sight the strip asks for, from a press, a drag, the wheel or a key."
+        },
+        {
+         "name": "onArchiveSeek",
+         "type": "((line: number) => void)",
+         "doc": "The archived line a press on the archive stands for."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "OverviewGeometry",
+       "doc": "Where the parts of the strip lie, in pixels from its top.",
+       "fields": [
+        {
+         "name": "archiveHeight",
+         "type": "number",
+         "required": true,
+         "doc": "The archive takes the top, then the live lines at `pitch` pixels each."
+        },
+        {
+         "name": "liveHeight",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "pitch",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "frameTop",
+         "type": "number",
+         "required": true,
+         "doc": "The frame around the lines in sight."
+        },
+        {
+         "name": "frameHeight",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "OverviewMark",
+       "fields": [
+        {
+         "name": "line",
+         "type": "number",
+         "required": true,
+         "doc": "The line (0-based, in the live lines)."
+        },
+        {
+         "name": "tone",
+         "type": "OverviewTone",
+         "doc": "`accent` by default."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "archivedLineAt",
+      "holdAt",
+      "lineAt",
+      "OVERVIEW_COLUMNS",
+      "OVERVIEW_PITCH",
+      "OverviewExtent",
+      "overviewGeometry",
+      "OverviewStripProps",
+      "OverviewTone",
+      "textExtent"
+     ]
+    },
+    {
+     "file": "src/assemblies/terminal-links.ts",
+     "about": "Links in terminal text, as pure functions: where a web address is in a line, and where in the cells of a line the\nterminal wrapped over several rows (a path or an address cut by the right edge is still one link, its range running\nfrom row to row). The terminal part wires them to xterm's link provider; an app that opens more than web addresses\n(a local file, an issue number) gives the part its own `linkFinder` with the same shape and keeps the rest.",
+     "types": [
+      {
+       "name": "TerminalCell",
+       "doc": "A terminal cell as the link finder reads it: its text and its 1-based column.",
+       "fields": [
+        {
+         "name": "chars",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "x",
+         "type": "number",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TerminalCellLink",
+       "doc": "A link as xterm places it: from a cell to a cell, 1-based, rows included.",
+       "fields": [
+        {
+         "name": "target",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "start",
+         "type": "{ x: number; y: number; }",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "{ x: number; y: number; }",
+         "required": true
+        }
+       ]
+      },
+      {
+       "name": "TerminalLinkMatch",
+       "doc": "A link in a line of text: its place (`start` inclusive, `end` exclusive, in characters) and what it opens.",
+       "fields": [
+        {
+         "name": "start",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "end",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "target",
+         "type": "string",
+         "doc": "What the app is told to open; the text of the link when it is absent."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "findLinksInRows",
+      "findWebLinks"
+     ]
+    },
+    {
+     "file": "src/assemblies/terminal-theme.ts",
+     "about": "The colours and the font of a terminal, made from the toolkit's tokens. xterm cannot take `var()`: it paints its text\non a canvas or sets inline colours, so it needs concrete values. They are read from the element the terminal is in\n(`readColor`: the resolved token, whatever theme, scheme and tone the page wears) and put in xterm's `ITheme`: the\nground, the ink, the cursor and the selection from the tokens of the page; the sixteen ANSI colours from the twelve\nsteps of a tint (`hueScale`: the text step on the page, so every colour holds 4.5:1) and from the page's own grays\nfor black and white. «Black» is the colour of the ground and «white» the ink, as the page has them, so a program that\nwrites black on a coloured cell or white text stays readable in a light scheme as well as in a dark one.",
+     "types": [
+      {
+       "name": "TerminalLook",
+       "fields": [
+        {
+         "name": "theme",
+         "type": "ITheme",
+         "required": true,
+         "doc": "What xterm takes as its `theme`."
+        },
+        {
+         "name": "scheme",
+         "type": "ThemeScheme",
+         "required": true,
+         "doc": "The scheme the page is in, read from its ground."
+        },
+        {
+         "name": "fontFamily",
+         "type": "string",
+         "required": true,
+         "doc": "The monospace stack of the page (`--font-mono`)."
+        },
+        {
+         "name": "fontSize",
+         "type": "number",
+         "required": true,
+         "doc": "The size of code on the page (`--text-xs`, the 13px of `code-sm`), in pixels."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "terminalLook"
+     ]
+    },
+    {
+     "file": "src/assemblies/Terminal.tsx",
+     "about": "A terminal: xterm.js on the toolkit's look. The emulation is xterm's (`@xterm/xterm` with its fit addon: npm\ndependencies, pinned, see THIRD_PARTY.md); the look is the toolkit's: the colours of the ground, the ink, the cursor,\nthe selection and the sixteen ANSI colours are made from the tokens as they resolve in the page (`terminalLook`),\nread again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`. xterm's own\nstylesheet is put in the page by the part, so an app imports none. It has its own entry of the package\n(`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.\n- The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)\n  and how big the terminal is (`onResize`, at the first size and at every change: the size of the pseudo-terminal).\n- It fits its box by itself (a `ResizeObserver` and the fit addon); `ref.fit()` does it at once.\n- Keys. The terminal keeps every key that can go to the program, and stops it at itself (not even the screen reader's\n  view lets one through to the page's commands). The keys the app keeps for its own commands are named by `appKeys`:\n  for those the terminal leaves the key alone and does not stop it, so it reaches the document and the app's commands\n  (`CommandsProvider`) run. Do not put the terminal's place in `ownKeysIn` for that: `ownKeysIn` silences the app's\n  commands there, the keys of `appKeys` too. Paste (Ctrl or Command V, Shift Insert) is always left to the browser,\n  so the text arrives as a paste and not as a key.\n- Links: an address of the text, or a hyperlink the program wrote (OSC 8), opens through `onLinkOpen`: the app\n  decides what it opens. `linkFinder` says what in a line is a link (web addresses by default).\n- xterm's stylesheet paints its viewport black, outside the part's own colours: the part makes it clear, so the ground\n  of the terminal is the page's `paper` (or what is behind it, with `transparent`) all the way to the edge.\n- The screen reader's view of the screen is on (`screenReaderMode`), the part is named by `aria-label`.",
+     "components": [
+      {
+       "name": "Terminal",
+       "props": [
+        {
+         "name": "ref",
+         "type": "React.Ref<TerminalHandle>"
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the terminal for screen readers; «Terminal» by default (`words.terminal.label`)."
+        },
+        {
+         "name": "onData",
+         "type": "((data: string) => void)",
+         "doc": "What the person typed or pasted, as the program should receive it."
+        },
+        {
+         "name": "onResize",
+         "type": "((cols: number, rows: number) => void)",
+         "doc": "The size, at the first fit and at every change: the size the pseudo-terminal should be given."
+        },
+        {
+         "name": "onLinkOpen",
+         "type": "((target: string, event: MouseEvent) => void)",
+         "doc": "A link was pressed: its target (the address, or what the program wrote as a hyperlink) and the press."
+        },
+        {
+         "name": "onLinkHover",
+         "type": "((target: string | null) => void)",
+         "doc": "The pointer is over a link (its target) or left it (null): where the app shows what the link really opens."
+        },
+        {
+         "name": "linkFinder",
+         "type": "((line: string) => readonly TerminalLinkMatch[])",
+         "doc": "Where the links are in a line of text; web addresses (`findWebLinks`) by default."
+        },
+        {
+         "name": "onBufferChange",
+         "type": "((buffer: TerminalBufferView) => void)",
+         "doc": "The lines changed: output was parsed, the view scrolled or the terminal was resized. For what follows them (`OverviewStrip`)."
+        },
+        {
+         "name": "appKeys",
+         "type": "((event: KeyboardEvent) => boolean)",
+         "doc": "The keys the app keeps for its own commands: for these the terminal does nothing and does not stop the key."
+        },
+        {
+         "name": "fontSize",
+         "type": "number",
+         "doc": "The size of the text in pixels; the toolkit's size of code (`--text-xs`) by default."
+        },
+        {
+         "name": "lineHeight",
+         "type": "number",
+         "doc": "The height of a row, in times the size of the text."
+        },
+        {
+         "name": "scrollback",
+         "type": "number",
+         "doc": "The lines kept above the screen."
+        },
+        {
+         "name": "cursorStyle",
+         "type": "\"underline\" | \"block\" | \"bar\"",
+         "doc": "The shape of the cursor."
+        },
+        {
+         "name": "readOnly",
+         "type": "boolean",
+         "doc": "The terminal shows output and takes no input: no keys, no cursor."
+        },
+        {
+         "name": "transparent",
+         "type": "boolean",
+         "doc": "The ground is clear, so what is behind the terminal (a glass window) shows through."
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\"",
+         "doc": "The tone of the colours of ANSI; Vivid, the toolkit's own, by default."
+        },
+        {
+         "name": "screenReaderMode",
+         "type": "boolean",
+         "doc": "The view of the screen for screen readers; on by default."
+        },
+        {
+         "name": "autoFocus",
+         "type": "boolean",
+         "doc": "Takes the keyboard when it is drawn."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "TerminalBufferView",
+       "doc": "What the app can read of the lines of the terminal (the screen and what scrolled off it): live, never a copy.",
+       "fields": [
+        {
+         "name": "length",
+         "type": "number",
+         "required": true,
+         "doc": "How many lines there are: the scrollback and the screen."
+        },
+        {
+         "name": "viewportY",
+         "type": "number",
+         "required": true,
+         "doc": "The first line in sight."
+        },
+        {
+         "name": "rows",
+         "type": "number",
+         "required": true,
+         "doc": "How many lines are in sight."
+        },
+        {
+         "name": "cols",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "line",
+         "type": "(index: number) => string",
+         "required": true,
+         "doc": "The text of a line, without the blanks at its end; empty for a line that is not there."
+        }
+       ]
+      },
+      {
+       "name": "TerminalHandle",
+       "doc": "What the app can do to the terminal, through its `ref`.",
+       "fields": [
+        {
+         "name": "write",
+         "type": "(data: string | Uint8Array, done?: () => void) => void",
+         "required": true,
+         "doc": "Writes what the program printed; `done` is called when it has been parsed."
+        },
+        {
+         "name": "focus",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "blur",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "fit",
+         "type": "() => TerminalSize | null",
+         "required": true,
+         "doc": "Fits the terminal to its box now, and gives the size it has (null while the box has none, as when it is hidden)."
+        },
+        {
+         "name": "clear",
+         "type": "() => void",
+         "required": true,
+         "doc": "Clears the lines that scrolled off the screen and the screen but for its last line."
+        },
+        {
+         "name": "reset",
+         "type": "() => void",
+         "required": true,
+         "doc": "Puts the terminal back as it was new: empty, with the cursor at the top."
+        },
+        {
+         "name": "scrollToBottom",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "scrollToLine",
+         "type": "(line: number) => void",
+         "required": true,
+         "doc": "Scrolls so that line `line` is the first in sight."
+        },
+        {
+         "name": "scrollLines",
+         "type": "(amount: number) => void",
+         "required": true
+        },
+        {
+         "name": "getSelection",
+         "type": "() => string",
+         "required": true,
+         "doc": "The text the person selected, empty when nothing is."
+        },
+        {
+         "name": "select",
+         "type": "(column: number, line: number, length: number) => void",
+         "required": true,
+         "doc": "Selects `length` cells of a line, from `column`; the line is a place of the buffer, as `scrollToLine` takes it."
+        },
+        {
+         "name": "clearSelection",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "paste",
+         "type": "(text: string) => void",
+         "required": true,
+         "doc": "Types text in as a paste (bracketed, if the program asked for it)."
+        },
+        {
+         "name": "size",
+         "type": "TerminalSize",
+         "required": true
+        },
+        {
+         "name": "buffer",
+         "type": "TerminalBufferView",
+         "required": true,
+         "doc": "The lines, for what is drawn from them (`OverviewStrip`, a search)."
+        },
+        {
+         "name": "terminal",
+         "type": "XTerm | null",
+         "required": true,
+         "doc": "xterm's own terminal, for what the toolkit does not cover; null before the part is in the page."
+        }
+       ]
+      },
+      {
+       "name": "TerminalSize",
+       "doc": "How many rows and columns the terminal has.",
+       "fields": [
+        {
+         "name": "cols",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "rows",
+         "type": "number",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "TerminalProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/code",
+   "files": [
+    {
+     "file": "src/assemblies/code-languages.ts",
+     "about": "The languages a code view knows, found by the name of the file and loaded the first time they are needed. A language\nof CodeMirror is a package of its own (a parser and its rules): each is behind a dynamic `import()`, so a view that\nshows plain text loads none, one that shows a Python file loads Python's, and the bundle splits at each. The names\nare the ones of Shinatama's file view: the extensions below, and the dot files that are JSON. Other languages are the\napp's: `CodeView` takes `extensions`, where its own language support goes (a name no entry here has is plain text).",
+     "types": [
+      {
+       "name": "CodeLanguage",
+       "fields": [
+        {
+         "name": "id",
+         "type": "CodeLanguageId",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The name to put in a status line."
+        },
+        {
+         "name": "wraps",
+         "type": "boolean",
+         "required": true,
+         "doc": "Prose wraps at the width of the view; code keeps its lines and scrolls."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "codeLanguageById",
+      "CodeLanguageId",
+      "codeLanguageOf",
+      "loadCodeLanguage"
+     ]
+    },
+    {
+     "file": "src/assemblies/code-theme.ts",
+     "about": "The colours of a code view, made from the toolkit's tokens, as a CodeMirror theme. A CodeMirror theme is a set of\nstyle rules, and the highlighting of the syntax is another (`HighlightStyle`): both are built here from the colours\nthe tokens resolve to where the view is (`readColor`), and built again when the page's look changes (the view\nreconfigures its theme compartment with the new extension). The ink, the ground, the lines, the selection and the\naccent are the page's own; the syntax uses the status colours the page already has: info for keywords, success for\nstrings, warning for numbers, destructive for what is wrong; comments and punctuation are the muted ink.\nThe font and the size are the page's too (`--font-mono`, `--text-xs`), written as the variables, so a font or a\ndensity change moves the code with everything else; the room around the text is the page's (`--pad-sm`).",
+     "also": [
+      "codeColors",
+      "CodeColors",
+      "codeTheme"
+     ]
+    },
+    {
+     "file": "src/assemblies/CodeView.tsx",
+     "about": "A view for code, read-only or editable: CodeMirror 6 (`@codemirror/*` and `@lezer/highlight`: npm dependencies,\npinned, see THIRD_PARTY.md) in the toolkit's colours. The editing, the highlighting and the search are CodeMirror's;\nthe colours are made from the tokens as they resolve in the page and made again when the page's look changes\n(`code-theme.ts`), and the font is `--font-mono`. It has its own entry of the package (`./code`): an app that shows no\ncode does not load CodeMirror, and a language is loaded when a file of it is shown (`code-languages.ts`).\n- The text is the app's: `value` in, `onChange` out at every change the person makes. A `value` that is not the one\n  last given back (another file opened, a visual edit) replaces the text and is not a step of the undo.\n- Each file keeps its own state (the undo steps, the selection) while the view lives: `docId` names the file, and\n  going back to it brings its state back. `ref.forget(docId)` lets one go.\n- The language comes from `fileName` (`src/main.rs`) or is said by `language`; `extensions` carries what the toolkit\n  does not know (another language, a key) into the editor. Prose (Markdown, text with no language) wraps; code\n  scrolls; `wrap` says otherwise.\n- Tab moves the focus on, as on every page, so the keyboard is never trapped in the text; `tabIndents` makes Tab indent.\n- Read-only is a view the person can still select and search in (Ctrl F), and says so to screen readers.",
+     "components": [
+      {
+       "name": "CodeView",
+       "props": [
+        {
+         "name": "ref",
+         "type": "React.Ref<CodeViewHandle>"
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The text."
+        },
+        {
+         "name": "onChange",
+         "type": "((value: string) => void)",
+         "doc": "The text changed by what the person did. Absent, the view takes the text but tells nobody."
+        },
+        {
+         "name": "fileName",
+         "type": "string",
+         "doc": "The name or the path of the file the text is from: its extension picks the language, and it names the text for the state kept for it unless `docId` does."
+        },
+        {
+         "name": "language",
+         "type": "CodeLanguageId",
+         "doc": "The language, when the name of the file does not say (or there is no file)."
+        },
+        {
+         "name": "docId",
+         "type": "string",
+         "doc": "Which text this is: a state is kept for each one. The file name by default."
+        },
+        {
+         "name": "readOnly",
+         "type": "boolean",
+         "doc": "The text cannot be changed; it can be selected and searched."
+        },
+        {
+         "name": "lineNumbers",
+         "type": "boolean",
+         "doc": "The numbers of the lines, and the arrows that fold them; on by default."
+        },
+        {
+         "name": "wrap",
+         "type": "boolean",
+         "doc": "Long lines wrap at the width of the view. By default prose wraps and code scrolls."
+        },
+        {
+         "name": "tabIndents",
+         "type": "boolean",
+         "doc": "Tab indents instead of moving the focus on."
+        },
+        {
+         "name": "tabSize",
+         "type": "number",
+         "doc": "The width of a tab, in characters."
+        },
+        {
+         "name": "extensions",
+         "type": "readonly Extension[]",
+         "doc": "More of CodeMirror: another language, another key."
+        },
+        {
+         "name": "phrases",
+         "type": "Readonly<Record<string, string>>",
+         "doc": "The words of CodeMirror's own panels (search), by its phrases: `{ 'Find': 'Cerca' }`."
+        },
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the view for screen readers; «Code» by default (`words.code.label`)."
+        },
+        {
+         "name": "autoFocus",
+         "type": "boolean",
+         "doc": "Takes the keyboard when it is drawn."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "CodeViewHandle",
+       "doc": "What the app can do to the view, through its `ref`.",
+       "fields": [
+        {
+         "name": "focus",
+         "type": "() => void",
+         "required": true
+        },
+        {
+         "name": "forget",
+         "type": "(docId: string) => void",
+         "required": true,
+         "doc": "Lets go of the state (undo steps, selection) kept for a file."
+        },
+        {
+         "name": "view",
+         "type": "EditorView | null",
+         "required": true,
+         "doc": "CodeMirror's own view, for what the toolkit does not cover; null before the part is in the page."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "CodeViewProps"
      ]
     }
    ]

@@ -4,7 +4,8 @@
 // a folder and an entry of the package, each on the ones before it: the primitives (`src/primitives`), the components
 // (`src/components`), the frame of an app (`src/layout`) and the assemblies (`src/assemblies`). A level never imports
 // from one after it. And the entries of the levels stay light: what they reach by static imports takes nothing of the
-// libraries that have entries of their own (the table, the long list, the order by hand, the rich text, the graph) or
+// libraries that have entries of their own (the table, the long list, the order by hand, the rich text, the graph, the
+// terminal, the code view) or
 // of Motion, which loads only when an app turns animations on.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -87,7 +88,7 @@ describe('the layers of the source', () => {
   })
 
   test('the main entry and the entries of the levels reach none of the heavy libraries by a static import', () => {
-    const HEAVY = /^(@tanstack\/|@dnd-kit\/|@tiptap\/|@xyflow\/|@dagrejs\/|motion($|\/))/
+    const HEAVY = /^(@tanstack\/|@dnd-kit\/|@tiptap\/|@xyflow\/|@dagrejs\/|@xterm\/|@codemirror\/|@lezer\/|motion($|\/))/
     const seen = new Set<string>()
     const found: string[] = []
     const queue = ['index', ...LEVELS].map((entry) => join(src, `${entry}.ts`))
