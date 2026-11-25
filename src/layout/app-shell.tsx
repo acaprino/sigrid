@@ -26,7 +26,7 @@
 // The keys and menus of the browser engine are a separate switch, `useDesktopGuard`, since a page in a tab keeps them.
 // Two forms, chosen with `frame`, with the same regions and steps:
 // - `line` (the default): one surface, the page, with a line between the regions;
-// - `sheet` (Xiox's frame, Imago's Smooth look without its glass): the title bar and the sidebar sit on the window's
+// - `sheet` (Xiox's frame, Imago's Smooth look; its glass is a theme's `material`): the title bar and the sidebar sit on the window's
 //   ground with no line and no fill of their own, and the work area (status, content, inspector, actions, footer) is
 //   one sheet of the page's surface with a line at its top and, where a sidebar lies beside it, at its start, with the
 //   large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a

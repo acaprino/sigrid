@@ -24,7 +24,7 @@ of the suite look like the suite is somewhere else, and no law may be used to ta
   key is a 20px cap with a hairline, still beside its action and still read by its letter. No app draws one by hand.
 - **A fact by its form.** A level, a state or a kind is told by the form of its mark and by a word, never by a colour
   alone. A colour the person gave to a thing is an 8px dot (R10).
-- **Still.** No glass, no gradient, no glow, nothing that loops. Motion answers a gesture, is short, and can be off.
+- **Still.** No blur, no gradient, no glow, nothing that loops; glass is the window's own, a theme's `material`. Motion answers a gesture, is short, and can be off.
 
 A change that makes a screen clearer and keeps these is right. A change that makes it look like another product's
 toolkit (a pill-shaped button, a coloured shadow, a second accent, a badge above every title) is wrong even when a law

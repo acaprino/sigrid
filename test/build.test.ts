@@ -133,6 +133,25 @@ describe('build output', () => {
     expect(c).not.toMatch(/@font-face[^}]*(?:Segoe|Cascadia)/)
   })
 
+  test('glass is compiled under its attribute on the root, outside the layers, shut with forced colours and with less transparency asked', () => {
+    const c = css()
+    // The frame that paints no ground, with what keeps a sample inside a work area as it was.
+    const frame = c.search(/\[data-material=["']?glass["']?\][^{}]*\[data-slot=["']?title-bar["']?\][^{}]*:not\(\[data-slot=["']?app-shell-work["']?\]\s*\*\)/)
+    expect(frame, 'the frame under glass').toBeGreaterThan(-1)
+    const ground = c.search(/\[data-material=["']?glass["']?\]\s+body\s*\{/)
+    expect(ground, 'the ground under glass').toBeGreaterThan(-1)
+    expect(c.slice(ground, c.indexOf('}', ground))).toMatch(/background-color:\s*var\(--glass-ground,\s*var\(--color-paper\)\)/)
+    for (const at of [frame, ground]) {
+      const rules = enclosingAtRules(c, at)
+      expect(rules.some((rule) => rule.startsWith('@layer'))).toBe(false)
+      const media = rules.filter((rule) => rule.startsWith('@media')).join(' ')
+      expect(media).toMatch(/forced-colors:\s*none/)
+      expect(media).toMatch(/prefers-reduced-transparency:\s*no-preference/)
+    }
+    // Every rule that names the material is in that gate.
+    for (const m of c.matchAll(/\[data-material/g)) expect(enclosingAtRules(c, m.index).join(' ')).toMatch(/prefers-reduced-transparency:\s*no-preference/)
+  })
+
   test('styles.css carries the muted text colors of theme.css, not an old copy', () => {
     const theme = readFileSync(`${root}src/styles/theme.css`, 'utf8')
     const c = css()

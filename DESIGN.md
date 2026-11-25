@@ -59,7 +59,7 @@ x-zsd:
       - Key hints drawn as boxes, unless `keys` is boxed.
       - Sparkles, bolts or info icons as decoration.
       - Gradients.
-      - Glass or blur effects.
+      - Blur, or glass without `material`.
       - Emoji in the interface (R6).
       - Looping animation, except loading skeletons.
       - Colour values outside the theme engine.
@@ -591,7 +591,7 @@ Use the one set, Sigrid Icons (R6), with the stroke and caps of `x-zsd.icons`. U
 
 ## Imagery
 
-Thumbnails show an attachment's image, cropped square. Its alternative text is empty: the row names it.
+Thumbnails show an attachment's image, cropped square. Its alt text is empty: the row names it.
 
 ## Accessibility
 

@@ -773,6 +773,36 @@ svg[data-glyph][stroke-width="2"] {
   }
 }
 
+/* Glass (`ThemeDef.material: 'glass'`, which `applyTheme` writes as `data-material="glass"` on the document's root): the
+   window's own material shows through the ground of the page. The toolkit draws no blur: the host gives a window that
+   is transparent, with the system's acrylic behind it; in a browser tab what shows is the browser's own canvas.
+   - the page (`html`) paints nothing and `body` is the ground: `--glass-ground`, one of the theme's backgrounds made as
+     thin as what is drawn on it allows (`glassGround` in src/theme-engine.ts: text 4.5:1, the control border and the
+     user's colours 3:1, over a white and a black desktop behind an acrylic that keeps half of it);
+   - the frame paints no ground of its own, so the title bar, the bars and a sidebar in the content's colours sit on
+     that one ground; a sidebar with colours of its own keeps its column (its inks are held on its colour only);
+   - the work area is the paper, opaque: parts inside it paint the paper to cover what scrolls under them, and a frame,
+     a bar or a sidebar inside it is a sample, drawn as without glass;
+   - what opens over the page (menus, dialogs, popovers, sheets, the sidebar as a drawer, notices) is not named here: opaque.
+   Opaque again with forced colours and where the person asked for less transparency; an engine that cannot tell
+   (it has no `prefers-reduced-transparency`) draws opaque too. Outside the layers, to win over the utilities
+   (test/glass.test.ts). */
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+  :root[data-material="glass"] {
+    background-color: transparent;
+  }
+  :root[data-material="glass"] body {
+    background-color: var(--glass-ground, var(--color-paper));
+  }
+  :root[data-material="glass"] :is([data-slot="app-shell"], [data-slot="title-bar"]):not([data-slot="app-shell-work"] *),
+  :root[data-material="glass"]:not([data-sidebar="own"]) [data-slot="sidebar"]:not([data-slot="app-shell-work"] *) {
+    background-color: transparent;
+  }
+  :root[data-material="glass"] [data-slot="app-shell-work"] {
+    background-color: var(--color-paper);
+  }
+}
+
 /* The measures of the layout parts (layout.tsx): the columns of `Grid`, each at least its `min` wide and as many as the
    width holds; the height `ScrollArea bounded` never passes, about half of what the person sees now (`--app-height`, below); the
    widest the body of a page (`Page`) grows, DESIGN.md's `content-max`. */
