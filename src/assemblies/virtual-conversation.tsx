@@ -7,10 +7,16 @@
 // TanStack Virtual: it has its own entry of the package, `./virtual`, so an app with short threads does not load it).
 // - What a place gives is one element, a `Message` or whatever the thread holds (`Reasoning`, `ToolCall`, a `Note`),
 //   never none and never two: the room of the messages not drawn is kept as padding, so the scrollbar is the thread's.
+// - The place of the reader is kept: with a `rowKey`, messages that come in before the ones in sight (older ones loaded, a
+//   thread read again that now begins earlier) or that replace them do not move what the reader is looking at, while the
+//   reader is away from the end; at the end the thread stays at the end. It opens at the end, drawing the last messages from
+//   the first paint. The app reaches the thread through `ref` (`scrollToEnd`, `scrollToStart`, `scrollToIndex`) and the box
+//   that scrolls through `containerRef`.
 // - Screen readers meet a log, which announces what is added to it: while the reader is away from the end the log is
 //   silent (`aria-live="off"`), so the messages that scroll into the page are not read out one after the other.
 import * as React from "react"
 import { cn, isEmptyNode } from "../lib/utils"
+import { useMergedRef } from "../lib/refs"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { useWords } from "../words"
 import { ConversationLatest, useStickToEnd, type ConversationProps } from "./conversation"
@@ -20,6 +26,16 @@ import { useVirtualRows } from "./virtual-list"
 const EDGE = 16
 /** The room between two messages, in px: `gap-6`, as `Conversation`. */
 const GAP = 24
+
+/** What the app can do to the thread, through its `ref`. */
+export type VirtualConversationHandle = {
+  /** Goes to the latest message; the thread follows the next ones again. */
+  scrollToEnd: () => void
+  /** Goes to the first message; the thread stops following. */
+  scrollToStart: () => void
+  /** Goes to the message at a place, counted from 0 (`align`: where it stands in the box, at the start by default); the thread stops following unless it is the last. */
+  scrollToIndex: (index: number, align?: "start" | "center" | "end") => void
+}
 
 export type VirtualConversationProps = Omit<ConversationProps, "children"> & {
   /** How many messages the thread holds, oldest first. */
@@ -32,17 +48,38 @@ export type VirtualConversationProps = Omit<ConversationProps, "children"> & {
   estimateSize?: number | undefined
   /** How many messages are drawn beyond the ones in sight, on each side. Default 6. */
   overscan?: number | undefined
+  /** What the app can do to the thread. */
+  ref?: React.Ref<VirtualConversationHandle> | undefined
+  /** The box that scrolls (the log), for an app that reads its scrolling. */
+  containerRef?: React.Ref<HTMLDivElement> | undefined
 }
 
 /** The thread of a long conversation: only the messages in sight are in the page, and it follows the latest one. */
-function VirtualConversation({ label, busy = false, empty, animated, className, count, children, rowKey, estimateSize = 96, overscan = 6 }: VirtualConversationProps) {
+function VirtualConversation({ label, busy = false, empty, animated, className, count, children, rowKey, estimateSize = 96, overscan = 6, ref, containerRef }: VirtualConversationProps) {
   const words = useWords().chat
-  const { box, list, drawn, room } = useVirtualRows<HTMLDivElement>({ count, rowKey, estimateSize, overscan, variable: true, gap: GAP, edge: EDGE })
-  const { away, onScroll, back } = useStickToEnd(box, list)
+  const { box, list, drawn, room, virtualizer } = useVirtualRows<HTMLDivElement>({ count, rowKey, estimateSize, overscan, variable: true, gap: GAP, edge: EDGE, openAtEnd: true, keepPlace: true })
+  const { away, onScroll, back, end, leave } = useStickToEnd(box, list)
+  const boxRef = useMergedRef<HTMLDivElement>(box, containerRef)
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      scrollToEnd: end,
+      scrollToStart: () => {
+        leave()
+        if (box.current) box.current.scrollTop = 0
+      },
+      scrollToIndex: (index, align = "start") => {
+        if (count > 0 && index >= count - 1) end()
+        else leave()
+        virtualizer.scrollToIndex(index, { align })
+      },
+    }),
+    [end, leave, box, virtualizer, count],
+  )
   return (
     <div data-slot="conversation" data-virtual="" className={cn("relative flex min-h-0 min-w-0 flex-1 flex-col", className)}>
       <div
-        ref={box}
+        ref={boxRef}
         data-slot="conversation-thread"
         role="log"
         aria-label={label ?? words.conversation}
