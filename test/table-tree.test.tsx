@@ -290,6 +290,18 @@ describe('a choice that is not the same for every row', () => {
     expect(screen.getAllByRole('row').slice(1).map((el) => el.textContent)).toEqual(rows.map((entry) => entry.name))
     expect(screen.getByRole('table').parentElement!.className).toContain('h-full')
   })
+
+  test('a column that `grow`s takes the room the others leave, and so does a group\'s cell', () => {
+    const columns: DataColumn<Entry>[] = [
+      { id: 'name', header: 'Name', cell: (entry) => entry.name, grow: true },
+      { id: 'size', header: 'Size', cell: (entry) => `${entry.size} KB`, align: 'end' },
+    ]
+    render(<Tree extra={{ columns }} />)
+    expect(row('a.tmp').children[0]!.className).toContain('max-w-0')
+    expect(row('a.tmp').children[1]!.className).not.toContain('max-w-0')
+    expect(row('a.tmp').children[1]!.className).toContain('whitespace-nowrap')
+    expect(row('Caches').children[0]!.className).toContain('max-w-0')
+  })
 })
 
 describe('a tree is ordered by the app', () => {
