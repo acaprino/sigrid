@@ -34,11 +34,12 @@ export type ConversationProps = {
   children?: React.ReactNode
 }
 
-/** The thread of a conversation: it follows the latest message while the reader is at the end. */
-function Conversation({ label, busy = false, empty, animated, className, children }: ConversationProps) {
-  const words = useWords().chat
-  const scroller = React.useRef<HTMLDivElement>(null)
-  const content = React.useRef<HTMLDivElement>(null)
+/**
+ * What a thread does about its end, for `Conversation` and for `VirtualConversation`: it follows the latest message
+ * while the reader is at the end, stops as soon as the reader moves up, and says so (`away`), for the button back.
+ * The thread is `scroller`; `content` is what grows inside it, watched for size.
+ */
+export function useStickToEnd(scroller: React.RefObject<HTMLDivElement | null>, content: React.RefObject<HTMLElement | null>) {
   // Whether the reader is at the end: a ref for the following (read while content grows), a state for the button.
   const atEnd = React.useRef(true)
   // Where the thread was last seen: a place further up than this is the reader's own move.
@@ -50,7 +51,7 @@ function Conversation({ label, busy = false, empty, animated, className, childre
     if (!el) return
     el.scrollTop = el.scrollHeight
     lastTop.current = el.scrollTop
-  }, [])
+  }, [scroller])
   const follow = React.useCallback(() => {
     if (atEnd.current) toEnd()
   }, [toEnd])
@@ -64,7 +65,7 @@ function Conversation({ label, busy = false, empty, animated, className, childre
     if (content.current) observer.observe(content.current)
     if (scroller.current) observer.observe(scroller.current)
     return () => observer.disconnect()
-  }, [follow])
+  }, [follow, content, scroller])
 
   const onScroll = () => {
     const el = scroller.current
@@ -80,7 +81,57 @@ function Conversation({ label, busy = false, empty, animated, className, childre
     setAway(!atEnd.current)
   }
 
+  /** The thread goes to the latest message, and follows the next ones again. */
+  const end = () => {
+    atEnd.current = true
+    setAway(false)
+    toEnd()
+  }
+  /** The reader is taken away from the end (to a message, to the start): the thread no longer follows. */
+  const leave = () => {
+    atEnd.current = false
+    setAway(true)
+  }
+  /** The reader asks for the latest message: the end is taken up again and the focus goes to the thread. */
+  const back = () => {
+    end()
+    // The button goes: the focus it had goes to the thread it acted on.
+    scroller.current?.focus()
+  }
+  return { away, onScroll, back, end, leave }
+}
+
+/** The button that leads back to the latest message, which the reader's own scroll brings up: it floats over the thread. */
+export function ConversationLatest({ away, onBack, animated }: { away: boolean; onBack: () => void; animated?: boolean | undefined }) {
+  const words = useWords().chat
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterTooltip(el), away)
+  if (!away) return null
+  return (
+    <div ref={enter} data-slot="conversation-latest" className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+      <Tooltip label={words.latest} side="top" animated={animated}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={words.latest}
+          animated={animated}
+          // A control that floats over the content: the raised fill and a small shadow, no border (R4). Its fill
+          // stays the raised one under the pointer, or the thread would show through: the ink answers instead.
+          className="pointer-events-auto bg-raised text-ink-soft shadow-sm hover:bg-raised hover:text-ink active:bg-raised"
+          onClick={onBack}
+        >
+          <Icon name="moveDown" />
+        </Button>
+      </Tooltip>
+    </div>
+  )
+}
+
+/** The thread of a conversation: it follows the latest message while the reader is at the end. */
+function Conversation({ label, busy = false, empty, animated, className, children }: ConversationProps) {
+  const words = useWords().chat
+  const scroller = React.useRef<HTMLDivElement>(null)
+  const content = React.useRef<HTMLDivElement>(null)
+  const { away, onScroll, back } = useStickToEnd(scroller, content)
   // A condition that came out false is not a message: `{turns.map(…)}{busy ? … : null}` with no turn is empty.
   const none = React.Children.toArray(children).length === 0
   return (
@@ -99,30 +150,7 @@ function Conversation({ label, busy = false, empty, animated, className, childre
           {none && !isEmptyNode(empty) ? empty : children}
         </div>
       </div>
-      {away ? (
-        <div ref={enter} data-slot="conversation-latest" className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-          <Tooltip label={words.latest} side="top" animated={animated}>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={words.latest}
-              animated={animated}
-              // A control that floats over the content: the raised fill and a small shadow, no border (R4). Its fill
-              // stays the raised one under the pointer, or the thread would show through: the ink answers instead.
-              className="pointer-events-auto bg-raised text-ink-soft shadow-sm hover:bg-raised hover:text-ink active:bg-raised"
-              onClick={() => {
-                atEnd.current = true
-                setAway(false)
-                toEnd()
-                // The button goes: the focus it had goes to the thread it acted on.
-                scroller.current?.focus()
-              }}
-            >
-              <Icon name="moveDown" />
-            </Button>
-          </Tooltip>
-        </div>
-      ) : null}
+      <ConversationLatest away={away} onBack={back} animated={animated} />
     </div>
   )
 }

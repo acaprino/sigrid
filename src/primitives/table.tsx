@@ -5,6 +5,7 @@
 // - A heading is small muted text (the label size); a column of numbers is set at the end, in tabular figures (R5).
 // - The row chosen has the selection tint, stronger text and a short accent bar at its start (R1), as in every list;
 //   under the pointer a row takes a share of that tint. The row of the headings takes none: it is not a row to choose.
+// - A column of numbers (`align="end"`) never wraps: a size is read on one line.
 // - A cell that takes the room the other columns leave (`grow`) cuts a one-line text in it instead of widening the table.
 // What a table does (sorting, filtering, choosing columns, drawing only the rows in sight) is not here: `DataTable`
 // (the `./table` entry of the package) does the first and the last on TanStack Table, and an app with a table of its
@@ -80,7 +81,7 @@ function TableHead({ className, align = "start", sticky, scope = "col", ...props
         "h-(--row-height) border-b border-line px-3 text-2xs font-medium whitespace-nowrap text-ink-mute",
         align === "end" ? "text-end" : "text-start",
         // The line of a heading that stays in sight is its own: the table's collapsed border scrolls away with the rows.
-        sticky && "sticky top-0 z-10 bg-paper after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-line after:content-['']",
+        sticky && "sticky top-0 z-10 bg-[var(--ground,var(--color-paper))] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-line after:content-['']",
         className,
       )}
       {...props}
@@ -99,7 +100,7 @@ export type TableCellProps = Omit<React.ComponentProps<"td">, "align"> & {
 }
 
 function TableCell({ className, align = "start", grow = false, ...props }: TableCellProps) {
-  return <td data-slot="table-cell" className={cn("relative h-(--row-height) px-3 py-1.5 align-middle", align === "end" ? "text-end tabular-nums" : "text-start", grow && "w-full max-w-0", className)} {...props} />
+  return <td data-slot="table-cell" className={cn("relative h-(--row-height) px-3 py-1.5 align-middle", align === "end" ? "text-end tabular-nums whitespace-nowrap" : "text-start", grow && "w-full max-w-0", className)} {...props} />
 }
 
 /** The name of the table, for everyone: above it, small and muted. A table can be named with `aria-label` instead. */

@@ -74,6 +74,10 @@ export interface Words {
     /** The button in the bar that opens the sidebar where the frame has made it a drawer (`DrawerButton`). */
     readonly open: string
   }
+  readonly splitPane: {
+    /** The hint of the divider between two panes (`SplitPane`): how it moves and how it goes back. */
+    readonly hint: string
+  }
   readonly search: {
     readonly clear: string
   }
@@ -235,6 +239,13 @@ export interface Words {
     readonly sortBy: (column: string) => string
     /** What a table says when it has no rows. */
     readonly empty: string
+    /** The check in the heading that chooses all the rows, the check of a row that has no name of its own, and the heading of the column of checks. */
+    readonly selectAll: string
+    readonly selectRow: string
+    readonly select: string
+    /** The caret of a row that holds others, closed and open. */
+    readonly unfold: string
+    readonly fold: string
   }
   readonly graph: {
     /** The names of the buttons that move the view, and of their row. */
@@ -461,6 +472,9 @@ export const DEFAULT_WORDS: Words = {
     empty: 'No results',
     open: 'Open the menu',
   },
+  splitPane: {
+    hint: 'Drag or use the arrow keys to resize · double press to reset',
+  },
   search: {
     clear: 'Clear the search',
   },
@@ -578,6 +592,11 @@ export const DEFAULT_WORDS: Words = {
   table: {
     sortBy: (column) => `Sort by ${column}`,
     empty: 'Nothing to show',
+    selectAll: 'Select all',
+    selectRow: 'Select',
+    select: 'Select',
+    unfold: 'Open',
+    fold: 'Close',
   },
   graph: {
     view: 'View',

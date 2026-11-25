@@ -47,9 +47,16 @@ function Empty({ action, className, description, icon, title, titleClassName, fi
         {title}
       </div>
       {description ? (
-        <p data-slot="empty-description" className="max-w-sm text-sm text-ink-soft">
-          {description}
-        </p>
+        // A sentence is a paragraph; markup (a `Note` with its actions) is a block, which a paragraph cannot hold.
+        typeof description === "string" || typeof description === "number" ? (
+          <p data-slot="empty-description" className="max-w-sm text-sm text-ink-soft">
+            {description}
+          </p>
+        ) : (
+          <div data-slot="empty-description" className="max-w-sm text-sm text-ink-soft">
+            {description}
+          </div>
+        )
       ) : null}
       {action ? (
         <div data-slot="empty-action" className="mt-2">

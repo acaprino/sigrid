@@ -21,3 +21,10 @@ test('Empty: title, description and action, no image', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Do it' }))
   expect(onClick).toHaveBeenCalledTimes(1)
 })
+
+test('Empty: a description that is markup (a Note with its action) is a block, not a paragraph that would hold a div', () => {
+  const { container } = render(<Empty title="Could not read" description={<div role="alert">The store is locked</div>} />)
+  const description = container.querySelector('[data-slot="empty-description"]')!
+  expect(description.tagName).toBe('DIV')
+  expect(description.querySelector('[role="alert"]')).not.toBeNull()
+})

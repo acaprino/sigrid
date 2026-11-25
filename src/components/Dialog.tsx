@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  type DialogWidth,
 } from '../primitives/dialog'
 import { restoreFocus, SHEET_TOASTS_ROOM } from '../internal/overlay'
 import { cn } from '../lib/utils'
@@ -37,6 +38,11 @@ export type DialogProps = {
    * Without it, it is a window in the center of the page: the short confirmations.
    */
   drawer?: boolean | undefined
+  /**
+   * How wide the centred window grows on a wide screen: `md` (a name, a confirmation; the default), `lg` (a form of
+   * several fields) or `xl` (a list or a table to choose from). Not used by a `drawer`, which has its own width.
+   */
+  width?: DialogWidth | undefined
   animated?: boolean | undefined
 }
 
@@ -77,7 +83,7 @@ function useCloseFocus(open: boolean, onCloseAutoFocus: DialogProps['onCloseAuto
 }
 
 /** Modal window on a raised surface: a name to change, a profile, confirmations. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, restoreFocusTo, onCloseAutoFocus, drawer = false, animated }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, restoreFocusTo, onCloseAutoFocus, drawer = false, width, animated }: DialogProps) {
   const finalFocus = useCloseFocus(open, onCloseAutoFocus, restoreFocusTo)
   // The sheet gives focus back by itself to whoever had it before it opened.
   if (drawer) return (
@@ -95,7 +101,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   )
   return (
     <DialogRoot open={open} onOpenChange={(next) => onOpenChange(next)}>
-      <DialogContent animated={animated} finalFocus={finalFocus}>
+      <DialogContent animated={animated} width={width} finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
