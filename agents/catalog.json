@@ -2251,7 +2251,7 @@
     },
     {
      "file": "src/primitives/hover-follow.tsx",
-     "about": "The hover background of a list, as one sheet that follows the pointer: with motion on it glides from the row the\npointer left to the row it is on, between rows of different heights too, and fades when the pointer leaves the list\nor the list scrolls under it. It is for a list whose rows are the app's own (the rows of `ItemList` have it by\nthemselves, with `animated`): the app gives it the element that holds the rows and how a row is found, and draws it\ninside that element. It is the tint of every row under the pointer (`ROW_HIGHLIGHT`), with the corners of the row it\nis under, and it lies under the rows: it never takes the pointer from them, and a row with a fill of its own (the\nchosen one) covers it. A mouse or a pen only: a finger has no hover.\nWhile it is at work the holder carries `data-hover-follow`, and only then: a row drops its own hover fill under that\nattribute, and keeps it without motion (the setting off, the system asking for less, the chunk not here yet), where\nthis part draws nothing and the list is exactly as it was.",
+     "about": "The hover background of a list, as one sheet that follows the pointer: with motion on it glides from the row the\npointer left to the row it is on, between rows of different heights too, and fades when the pointer leaves the list\nor the list scrolls under it. It is for a list whose rows are the app's own (the rows of `ItemList` have it by\nthemselves, with `animated`): the app gives it the element that holds the rows and how a row is found, and draws it\ninside that element. It is the tint of every row under the pointer (`ROW_HIGHLIGHT`), with the corners of the row it\nis under, and it lies under the rows: it never takes the pointer from them, and a row with a fill of its own (the\nchosen one) covers it. A mouse or a pen only: a finger has no hover.\nIt never adds to what its holder can scroll: it is placed and sized from the last measure, and a holder that narrows\n(a panel that gives room to an inspector) leaves it wider than the holder until the next measure, and a glide that\nstarts from the size it was seen at keeps it wider for a while after. So while it is at work the holder clips what\nsticks out of it sideways (`overflow-x: clip`, which makes no scroller and no scrollbar), unless it scrolls sideways by itself.\nWhile it is at work the holder carries `data-hover-follow`, and only then: a row drops its own hover fill under that\nattribute, and keeps it without motion (the setting off, the system asking for less, the chunk not here yet), where\nthis part draws nothing and the list is exactly as it was.",
      "components": [
       {
        "name": "HoverFollow",
@@ -11051,7 +11051,7 @@
         },
         {
          "name": "terminal",
-         "type": "any",
+         "type": "XTerm | null",
          "required": true,
          "doc": "xterm's own terminal, for what the toolkit does not cover; null before the part is in the page."
         }
@@ -11233,7 +11233,7 @@
         },
         {
          "name": "view",
-         "type": "any",
+         "type": "EditorView | null",
          "required": true,
          "doc": "CodeMirror's own view, for what the toolkit does not cover; null before the part is in the page."
         }
