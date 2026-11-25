@@ -222,7 +222,7 @@ describe('text', () => {
     expect(screen.getByText('words').hasAttribute('data-selectable')).toBe(false)
   })
 
-  test('a status is its word in the colour of its tone, the tones of a badge; on the chosen row it takes the ink of the row', () => {
+  test('a status is its word in the colour of its tone, the tones of a badge; on the chosen row and on a row under the pointer it takes the ink of the row', () => {
     const tones = [['success', 'text-success'], ['warning', 'text-warning'], ['danger', 'text-destructive'], ['info', 'text-info']] as const
     render(
       <>
@@ -237,7 +237,7 @@ describe('text', () => {
       const word = screen.getByText(`is ${tone}`)
       expect(word.getAttribute('data-tone')).toBe(tone)
       // The tone takes the place of the variant's ink, not of its size.
-      expect(classes(word)).toEqual(expect.arrayContaining([ink, 'text-xs', '[[aria-current=true]_&]:text-inherit']))
+      expect(classes(word)).toEqual(expect.arrayContaining([ink, 'text-xs', '[:is([aria-current=true],[data-current],[data-slot=table-row]:hover,[data-slot=item-row]:hover,[data-slot=tree-row]:hover)_&]:text-inherit']))
       expect(classes(word)).not.toContain('text-ink-mute')
     }
   })

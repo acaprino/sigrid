@@ -222,16 +222,14 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
     for (const bg of BG) expect(t['highlight'], `highlight on ${bg}`).not.toBe(bg)
   })
 
-  test('a status as text (`Text tone`): the four colours read on every surface, also under the pointer in a row; on the chosen row the word is the row ink', () => {
+  test('a status as text (`Text tone`): the four colours read on every surface; in a row under the pointer and in the chosen row the word is the row ink, which reads there', () => {
     const surfaces = ['paper', 'paper-2', 'raised'].map((k) => t[k]!)
-    for (const name of ['success', 'warning', 'info', 'destructive'] as const) {
-      for (const bg of surfaces) {
-        expect(contrast(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
-        // A row under the pointer: the selection tint at 60% over its surface (`ROW_HOVER`).
-        expect(contrast(t[name]!, mix(t['selected']!, bg, 0.6)), `${name} under the pointer on ${bg}`).toBeGreaterThanOrEqual(AA)
-      }
+    for (const bg of surfaces) {
+      for (const name of ['success', 'warning', 'info', 'destructive'] as const) expect(contrast(t[name]!, bg), `${name} on ${bg}`).toBeGreaterThanOrEqual(AA)
+      // A row under the pointer is the selection tint at 60% over its surface, its text the ink (`ROW_HOVER`). The
+      // status colours do not all hold there (success in seven light themes), so the word takes that ink (`TONE_ROW`).
+      expect(contrast(t['ink']!, mix(t['selected']!, bg, 0.6)), `the ink under the pointer on ${bg}`).toBeGreaterThanOrEqual(AA)
     }
-    // On the chosen row the word takes the ink of the row (`TONE_CHOSEN`), which holds on the selection tint.
     expect(contrast(t['selected-ink']!, t['selected']!), 'the row ink on the chosen row').toBeGreaterThanOrEqual(AA)
   })
 

@@ -375,7 +375,7 @@ export type TextProps = LayoutAttributes & {
   /**
    * A status in its colour: `success`, `warning`, `danger` (the destructive red) or `info`, the tones of a `Badge`.
    * Always with its word: the text says the status, the colour only repeats it (an `Icon` in it takes the colour, the
-   * word stays beside it). In the chosen row of a list or a table it takes the row's ink.
+   * word stays beside it). In the chosen row of a list or a table, and in a row under the pointer, it takes the row's ink.
    */
   tone?: BadgeTone | undefined
   /** For screen readers only: read where it is in the page, never drawn (the words of a mark that says them by its form, as a dash for «none»). */
@@ -384,8 +384,10 @@ export type TextProps = LayoutAttributes & {
 }
 
 const TONE: Record<BadgeTone, string> = { success: "text-success", warning: "text-warning", danger: "text-destructive", info: "text-info" }
-// On the chosen row (the selection tint) the status colours are not measured: the word takes the row's ink there.
-const TONE_CHOSEN = "[[aria-current=true]_&]:text-inherit"
+// On the selection tint the status colours do not all hold 4.5:1 (success under the pointer in seven light themes, run
+// 45617020632): in the chosen row and in a row under the pointer (a table's, an `ItemRow`, a `Tree`'s) the word takes
+// the row's ink, which is measured there. The word still says the status.
+const TONE_ROW = "[:is([aria-current=true],[data-current],[data-slot=table-row]:hover,[data-slot=item-row]:hover,[data-slot=tree-row]:hover)_&]:text-inherit"
 // A block that gives way, also where its pile lines its parts up at the start (`max-w-full`).
 const TRUNCATE = "block max-w-full min-w-0 truncate"
 
@@ -407,7 +409,7 @@ function Text({ variant = "body", as = "span", pre = false, truncate = false, mo
           // Before the variant: a caption or a kicker in the monospace face keeps its own size.
           mono && "font-mono text-xs",
           TEXT[variant],
-          tone && [TONE[tone], TONE_CHOSEN],
+          tone && [TONE[tone], TONE_ROW],
           pre && "break-words whitespace-pre-wrap",
           truncate ? TRUNCATE : mono && !pre && "break-all",
           srOnly && "sr-only",
