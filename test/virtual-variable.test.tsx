@@ -2,10 +2,11 @@
 // latest one (`VirtualConversation`), both of the `./virtual` entry, on TanStack Virtual. jsdom lays nothing out, so
 // here a layout is given to it: the box is 400px tall and a row is as tall as its `data-h` says. What is checked is
 // which rows are in the page, the room kept for the others, and where the thread stands.
-import { fireEvent, render, screen } from '@testing-library/react'
+import * as React from 'react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Message } from '../src/components'
-import { VirtualConversation, VirtualList } from '../src/virtual'
+import { VirtualConversation, VirtualList, type VirtualConversationHandle } from '../src/virtual'
 
 const BOX = 400
 
@@ -102,9 +103,9 @@ describe('VirtualConversation', () => {
     const { rerender } = render(thread(10_000, { busy: true }))
     expect(log().getAttribute('aria-busy')).toBe('true')
     const content = log().querySelector('[data-slot="conversation-content"]')!
-    // Each message is measured on its own: 200, 20 and 200px, and the box is full.
-    expect(indexes(content)).toEqual([0, 1, 2])
-    expect(screen.getAllByRole('article').length).toBe(3)
+    // It opens at the end, and each message is measured on its own (20, 200, 20 and 200px, counted from the last): the box is full.
+    expect(indexes(content)).toEqual([9996, 9997, 9998, 9999])
+    expect(screen.getAllByRole('article').length).toBe(4)
     rerender(thread(10_000))
     expect(log().hasAttribute('aria-busy')).toBe(false)
   })
@@ -142,5 +143,111 @@ describe('VirtualConversation', () => {
     expect(log().hasAttribute('aria-live')).toBe(false)
     // The button is gone: the focus it had is on the thread.
     expect(document.activeElement).toBe(log())
+  })
+})
+
+describe('VirtualConversation: where the reader is', () => {
+  // Messages of 100px each, by id: a message keeps its height where it moves. The box is 400px, a message is estimated at 40.
+  const ids = (from: number, to: number) => Array.from({ length: to - from }, (_, i) => `m${from + i}`)
+  const thread = (list: readonly string[], extra: Partial<React.ComponentProps<typeof VirtualConversation>> = {}) => (
+    <VirtualConversation label="Chat" count={list.length} estimateSize={40} overscan={0} rowKey={(index) => list[index]!} {...extra}>
+      {(index) => (
+        <Message from="assistant">
+          <span data-h={100}>{list[index]}</span>
+        </Message>
+      )}
+    </VirtualConversation>
+  )
+  const log = () => screen.getByRole('log', { name: 'Chat' })
+  /** The box can scroll as far as the thread is long, and what the library asks it to do is done by hand (jsdom scrolls nothing). */
+  function scrollable() {
+    vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockImplementation(() => 1_000_000)
+    Object.defineProperty(Element.prototype, 'scrollTo', {
+      configurable: true,
+      value(this: Element, options: { top?: number }) {
+        this.scrollTop = options.top ?? 0
+      },
+    })
+  }
+  const place = (top: number) =>
+    act(() => {
+      log().scrollTop = top
+      fireEvent.scroll(log())
+    })
+  const shown = () => Array.from(log().querySelectorAll('[data-h]')).map((el) => el.textContent)
+
+  test('it opens drawing the last messages at once, not the first ones', () => {
+    layOut()
+    scrollable()
+    render(thread(ids(0, 5000)))
+    expect(shown().at(-1)).toBe('m4999')
+    expect(shown()).not.toContain('m0')
+  })
+
+  test('older messages that come in before the ones in sight do not move what the reader is looking at', async () => {
+    layOut()
+    scrollable()
+    const { rerender } = render(thread(ids(100, 200)))
+    place(3000)
+    const before = shown()
+    expect(before.length).toBeGreaterThan(2)
+    rerender(thread(ids(95, 200)))
+    // The five new messages are above (40px and the 24 between, each, as estimated): the box moved down by that much, so that
+    // the messages in it are the same.
+    await waitFor(() => expect(log().scrollTop).toBe(3000 + 5 * 64))
+    expect(shown()).toEqual(before)
+  })
+
+  test('the app can take the reader to the end, to the start or to a message, and reach the box that scrolls', async () => {
+    layOut()
+    scrollable()
+    const handle = React.createRef<VirtualConversationHandle>()
+    const box = React.createRef<HTMLDivElement>()
+    render(thread(ids(0, 1000), { ref: handle, containerRef: box }))
+    expect(box.current).toBe(log())
+    act(() => handle.current!.scrollToStart())
+    expect(log().scrollTop).toBe(0)
+    act(() => fireEvent.scroll(log()))
+    expect(screen.getByRole('button', { name: 'Go to the latest message' })).toBeTruthy()
+    expect(shown()[0]).toBe('m0')
+    act(() => handle.current!.scrollToIndex(500))
+    await waitFor(() => expect(log().scrollTop).toBeGreaterThan(10_000))
+    act(() => fireEvent.scroll(log()))
+    await waitFor(() => expect(shown()).toContain('m500'))
+    // To the end: the thread follows again and the button goes.
+    act(() => handle.current!.scrollToEnd())
+    expect(log().scrollTop).toBe(1_000_000)
+    expect(screen.queryByRole('button', { name: 'Go to the latest message' })).toBeNull()
+    expect(log().hasAttribute('aria-live')).toBe(false)
+  })
+})
+
+describe('the keys of a list that moves', () => {
+  test('the library is given one function for the keys, and the app\'s own is read, not called for every row at every paint', () => {
+    layOut()
+    const calls = { count: 0 }
+    const key = (index: number) => {
+      calls.count++
+      return `k${index}`
+    }
+    const list = (rowKey: (index: number) => string) => (
+      <VirtualList aria-label="Messages" count={5000} estimateSize={40} overscan={0} variable rowKey={rowKey}>
+        {(index) => (
+          <li key={index} data-h={40}>
+            Row {index}
+          </li>
+        )}
+      </VirtualList>
+    )
+    const { rerender } = render(list(key))
+    // Once, to lay the rows out: every key (and again when the rows first drawn are known).
+    expect(calls.count).toBeGreaterThanOrEqual(5000)
+    rerender(list(key))
+    calls.count = 0
+    // A new function at every paint, the same keys: the library does not read 5000 keys again.
+    rerender(list((index) => key(index)))
+    rerender(list((index) => key(index)))
+    rerender(list((index) => key(index)))
+    expect(calls.count).toBeLessThan(200)
   })
 })

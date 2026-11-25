@@ -81,15 +81,24 @@ export function useStickToEnd(scroller: React.RefObject<HTMLDivElement | null>, 
     setAway(!atEnd.current)
   }
 
-  /** The reader asks for the latest message: the end is taken up again and the focus goes to the thread. */
-  const back = () => {
+  /** The thread goes to the latest message, and follows the next ones again. */
+  const end = () => {
     atEnd.current = true
     setAway(false)
     toEnd()
+  }
+  /** The reader is taken away from the end (to a message, to the start): the thread no longer follows. */
+  const leave = () => {
+    atEnd.current = false
+    setAway(true)
+  }
+  /** The reader asks for the latest message: the end is taken up again and the focus goes to the thread. */
+  const back = () => {
+    end()
     // The button goes: the focus it had goes to the thread it acted on.
     scroller.current?.focus()
   }
-  return { away, onScroll, back }
+  return { away, onScroll, back, end, leave }
 }
 
 /** The button that leads back to the latest message, which the reader's own scroll brings up: it floats over the thread. */

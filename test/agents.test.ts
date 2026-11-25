@@ -72,7 +72,10 @@ describe('the catalogue for agents', () => {
     const types = catalog.entries.flatMap((e) => e.files.flatMap((f) => f.types ?? []))
     const column = types.find((t) => t.name === 'DataColumn')!
     expect(column.parameters).toEqual(['Row'])
-    expect(column.fields.find((f) => f.name === 'header')).toEqual({ name: 'header', type: 'React.ReactNode', required: true, doc: 'The heading of the column: a word, or a part (a check that chooses all the rows, in the first column).' })
+    const header = column.fields.find((f) => f.name === 'header')!
+    expect(header).toEqual({ name: 'header', type: 'React.ReactNode', required: true, doc: expect.stringContaining('The heading of the column: a word, or a part') })
+    // The check that chooses all the rows is the selection's, not a heading in a sort button.
+    expect(header.doc).toContain('`selection.onSelectAll`')
     expect(types.find((t) => t.name === 'ToastItem')!.fields.map((f) => f.name)).toEqual(expect.arrayContaining(['id', 'text']))
     // The props of a component are under the component, not a second time here.
     expect(types.find((t) => t.name === 'ButtonProps')).toBeUndefined()

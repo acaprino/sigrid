@@ -9,6 +9,10 @@
 //   measured as it is drawn and watched, so a row that grows (an answer being written, an image that arrives) moves
 //   the ones after it. `estimateSize` is then the height of a row not yet seen, and the scrollbar is as honest as the
 //   rows seen so far allow.
+// - A row measured keeps its height where it moves: by its `rowKey` (its id), not its place. The library is given one
+//   function for the keys and not a new one at every paint (a new one makes it read the key of every row again, ten
+//   thousand of them, at each paint), and a new one only when the keys changed where the list can see them (its ends and
+//   the rows drawn).
 // - For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,
 //   `aria-posinset`): what is not drawn is still counted.
 // The box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),
@@ -58,6 +62,14 @@ export type VirtualRowsOptions = {
   gap?: number | undefined
   /** The room in px before the first row and after the last one, which the box keeps (the padding of the rows' holder is only at the sides). */
   edge?: number | undefined
+  /** The box opens at the end (a thread): the first paint is of the rows there, not of the first ones, so nothing blank is seen before it scrolls. */
+  openAtEnd?: boolean | undefined
+  /**
+   * The place the reader is at is kept when rows come in before it or the rows change (a thread re-read, older messages
+   * loaded): the library anchors on the row (by its `rowKey`) at the top of the box, and a box at its end stays at its end
+   * while the rows there are measured. Needs `rowKey` and `variable`.
+   */
+  keepPlace?: boolean | undefined
 }
 
 /**
@@ -66,10 +78,18 @@ export type VirtualRowsOptions = {
  * are all as tall as the first one, which is read where it is drawn (any density holds, so do a finger's 44px), or,
  * with `variable`, each one is measured and watched.
  */
-export function useVirtualRows<Holder extends HTMLElement = HTMLElement>({ count, rowKey, estimateSize, overscan, variable, gap = GAP, edge = 0 }: VirtualRowsOptions) {
+export function useVirtualRows<Holder extends HTMLElement = HTMLElement>({ count, rowKey, estimateSize, overscan, variable, gap = GAP, edge = 0, openAtEnd = false, keepPlace = false }: VirtualRowsOptions) {
   const box = React.useRef<HTMLDivElement>(null)
   const list = React.useRef<Holder>(null)
   const [size, setSize] = React.useState(estimateSize)
+  // One function for the keys, which reads the app's as it is now. The library is given a new one only when the keys changed
+  // where we can see them: a new function at every paint makes it ask the key of every row again.
+  const latestKey = React.useRef(rowKey)
+  latestKey.current = rowKey
+  const seen = React.useRef<number[]>([])
+  const signature = rowKey && variable ? [count, ...[0, count - 1, ...seen.current].filter((at) => at >= 0 && at < count).map((at) => String(rowKey(at)))].join("\u0000") : ""
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getItemKey = React.useMemo(() => (at: number): React.Key => latestKey.current?.(at) ?? at, [signature])
   const virtualizer = useVirtualizer({
     count,
     getScrollElement: () => box.current,
@@ -78,9 +98,13 @@ export function useVirtualRows<Holder extends HTMLElement = HTMLElement>({ count
     ...(variable ? { gap } : {}),
     ...(edge > 0 ? { paddingStart: edge, paddingEnd: edge } : {}),
     // A row measured keeps its height where it moves: by its id, not its place.
-    ...(variable && rowKey ? { getItemKey: rowKey } : {}),
+    ...(variable && rowKey ? { getItemKey } : {}),
+    // The first paint is of the end: the whole height as estimated is further than the box can go, and the library holds it at the end.
+    ...(openAtEnd ? { initialOffset: () => edge * 2 + count * (estimateSize + (variable ? gap : 0)) } : {}),
+    ...(keepPlace && variable && rowKey ? { anchorTo: "end" as const } : {}),
   })
   const drawn = virtualizer.getVirtualItems()
+  seen.current = drawn.map((item) => item.index)
   React.useLayoutEffect(() => {
     const rows = Array.from(list.current?.children ?? []) as HTMLElement[]
     if (variable) {

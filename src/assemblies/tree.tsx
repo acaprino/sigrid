@@ -4,7 +4,9 @@
 // Behaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right
 // opens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End
 // reach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the
-// row; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.
+// row; Enter, Space or a press choose a row, and on a branch also open or close it (with `onOpen`, Enter asks the app and
+// does not fold: Right and Left do). One row is chosen, never several. In a language written from the right, Right and
+// Left swap. Enter, Space, Right and Left with Shift, Ctrl, Alt or Meta held are not the tree's.
 // The row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a
 // branch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's
 // rows are not in the page.
@@ -29,11 +31,17 @@
 // A row may be `disabled`: it stays in sight and in the keys' way, says so (`aria-disabled`), is drawn quieter, and is
 // neither chosen, opened, closed nor taken by `onOpen`.
 // `onOpen` is the app's own «do the thing»: Enter, or a double press, on a row, besides the choice (a file opens in an
-// editor, a folder is entered); on a branch the row also opens or closes as before. `followFocus` makes the choice follow
-// the focus as the arrows move it, for a tree that is the list of a list and its details.
+// editor, a folder is entered); it does not open or close a branch (Right and Left do, and a single press). `followFocus`
+// makes the choice follow the focus as the arrows move it, for a tree that is the list of a list and its details.
+// `onKeyDown` is asked first about a key on a row, for the app's own keys (`j` and `k` that move the choice): when it calls
+// `preventDefault()` the tree does nothing with the key. `typeahead={false}` leaves the letters to the app. When the app
+// changes `selected` (a key of its own), the tree scrolls to the row (with `virtual`) and, if the focus is in the tree, takes
+// it there, so the keys that follow are on the row chosen.
 // `virtual` draws only the rows in sight, for thousands of rows: the open branches are laid flat (each row says its
 // level, its place among its siblings and the size of the group: the tree of a screen reader is the same), the room of
-// the rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn.
+// the rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn. The
+// row with the focus stays in the page when it is scrolled out of sight, while the focus is in the tree, so the keys do not
+// fall to the page after a turn of the wheel.
 // The rows are all as tall as the first one, which is read where it is drawn. The box needs a height (`className`). This
 // is its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.
 // It is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and
@@ -89,10 +97,14 @@ export type TreeProps = {
   defaultSelected?: string | null | undefined
   /** The person chose a row (a press, Enter or Space): its id, and the node. */
   onSelect?: ((id: string, node: TreeNode) => void) | undefined
-  /** The person asks to open the thing (Enter, or a double press, on a row): its id, and the node. Besides the choice, which it does not replace; on a branch the row also opens or closes. Not for a `disabled` row. */
+  /** The person asks to open the thing (Enter, or a double press, on a row): its id, and the node. Besides the choice, which it does not replace; it does not open or close a branch (Right, Left and a single press do). Not for a `disabled` row. */
   onOpen?: ((id: string, node: TreeNode) => void) | undefined
-  /** The choice follows the focus: moving it with the arrows chooses the row it reaches, as in a list that shows details beside it. Absent: the choice is made by a press, Enter or Space. */
+  /** The choice follows the focus: moving it with the arrows chooses the row it reaches, as in a list that shows details beside it. Absent: the choice is made by a press, Enter or Space. `onSelect` is heard once for each move. */
   followFocus?: boolean | undefined
+  /** A key on a row, before the tree takes it: the app's own keys (`j` and `k` to move the choice, Delete). `event.preventDefault()` makes the tree do nothing with the key. The id is the row's. */
+  onKeyDown?: ((event: React.KeyboardEvent<HTMLElement>, id: string) => void) | undefined
+  /** The first letters typed reach a row by its name. Default on; `false` leaves the letters to the app (`onKeyDown`). */
+  typeahead?: boolean | undefined
   /** Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`). */
   virtual?: boolean | undefined
   /** The branches the person opened, by id. With it they are the app's: pass the list `onExpandedChange` gives. The branches the filter opens are not in it. A branch still to load stays closed until the person opens it. */
@@ -154,6 +166,14 @@ function flatten(nodes: readonly Inner[], open: ReadonlySet<string>, path: reado
     if (node.children && open.has(node.id)) flatten(node.children, open, indexPath, into)
   })
   return into
+}
+
+/**
+ * A key the tree leaves alone: Ark's handler, which runs after the tree's own and skips an event that is already taken, does
+ * nothing with it, and the browser and the app's global keys still have it (the event is not stopped).
+ */
+function leaveAlone(event: React.SyntheticEvent) {
+  ;(event as { defaultPrevented: boolean }).defaultPrevented = true
 }
 
 /** The filter by default: the name holds the text, whatever the case and the spaces at its ends. */
@@ -403,6 +423,8 @@ function Tree({
   onSelect,
   onOpen,
   followFocus = false,
+  onKeyDown,
+  typeahead = true,
   virtual = false,
   expanded,
   defaultExpanded,
@@ -430,6 +452,10 @@ function Tree({
   const [ownOpen, setOwnOpen] = React.useState<readonly string[]>(defaultExpanded ?? [])
   const [ownQuery, setOwnQuery] = React.useState(defaultQuery)
   const [focus, setFocus] = React.useState<string | null>(null)
+  // The row that has the focus in the page now, whoever gave it (a key, a press, the app), or none when it is not in the tree.
+  const [has, setHas] = React.useState<string | null>(null)
+  // A key sent again with Right and Left swapped, which the tree must not swap a second time.
+  const swapping = React.useRef(false)
   // `virtual`: where the box is scrolled to, how tall it is, and how tall a row is (read from the first one drawn).
   const box = React.useRef<HTMLDivElement>(null)
   const holder = React.useRef<HTMLDivElement>(null)
@@ -474,7 +500,24 @@ function Tree({
   const to = virtual ? Math.min(flat.length, Math.ceil((top + viewport) / step) + OVERSCAN) : 0
   const tabStop = focused ?? flat[0]?.node.id ?? null
   const stopAt = tabStop === null ? -1 : flat.findIndex((entry) => entry.node.id === tabStop)
-  const stopDrawn = stopAt >= from && stopAt < to
+  // The row with the focus is kept in the page, whatever the scroll, while the focus is in the tree.
+  const heldAt = virtual && has !== null ? flat.findIndex((entry) => entry.node.id === has) : -1
+  const held = heldAt >= 0 && (heldAt < from || heldAt >= to) ? heldAt : -1
+  const stopDrawn = (stopAt >= from && stopAt < to) || (held >= 0 && flat[held]?.node.id === tabStop)
+  // The rows drawn, in one list so that the row with the focus keeps its place in the page (and the focus) as it moves
+  // from among them to apart from them: one row above or under, with the room between kept.
+  const windowRows: React.ReactNode[] = []
+  if (virtual) {
+    const draw = (entry: Flat) => (
+      <TreeViewPrimitive.NodeProvider key={entry.node.id} node={entry.node} indexPath={entry.indexPath}>
+        <TreeRow node={entry.node} indexPath={entry.indexPath} flat={entry} />
+      </TreeViewPrimitive.NodeProvider>
+    )
+    const room = (key: string, rows: number) => (rows > 0 ? <div key={key} aria-hidden="true" data-slot="tree-room" style={{ height: rows * step - ROW_GAP }} /> : null)
+    if (held >= 0 && held < from) windowRows.push(draw(flat[held]!), room("room-before", from - held - 1))
+    flat.slice(from, to).forEach((entry) => windowRows.push(draw(entry)))
+    if (held >= to) windowRows.push(room("room-after", held - to), draw(flat[held]!))
+  }
   const collection = React.useMemo(
     () =>
       createTreeCollection<Inner>({
@@ -570,11 +613,15 @@ function Tree({
     }
   }, [])
 
+  // A row reached is chosen once for a press: the focus and the selection both say so, one after the other (a press of the
+  // mouse, a key), while a choice the app holds (`selected`) has not come back yet. The next press forgets it.
+  const lately = React.useRef<string | null>(null)
   /** The row the app's own choice: not a `disabled` one. */
   const choose = (id: string) => {
-    if (id === chosen) return
+    if (id === chosen || id === lately.current) return
     const node = tree.index.get(id)?.source
     if (node?.disabled === true) return
+    lately.current = id
     if (selected === undefined) setOwnChoice(id)
     if (node) onSelect?.(id, node)
   }
@@ -600,6 +647,7 @@ function Tree({
     // A row reached out of sight takes the focus once it is drawn.
     takeFocus()
   })
+
   React.useEffect(() => {
     const el = box.current
     if (!virtual || !el || typeof ResizeObserver !== "function") return
@@ -607,20 +655,42 @@ function Tree({
     observer.observe(el)
     return () => observer.disconnect()
   }, [virtual])
-  /** Scrolls the box so that the row at a place is in it, by the least it takes. */
-  const reveal = (id: string) => {
+  /** Where the box is scrolled to, as the row it begins at: the rows drawn change with a row, not with a pixel. */
+  const scrolled = (scrollTop: number) => setTop(Math.floor(scrollTop / step) * step)
+  /** Scrolls the box so that the row with this id is in it, by the least it takes. */
+  const scrollTo = (id: string) => {
     const el = box.current
     const at = flat.findIndex((entry) => entry.node.id === id)
     if (!virtual || !el || at < 0) return
-    wanted.current = id
     const start = at * step
     const next = start < el.scrollTop ? start : start + rowSize > el.scrollTop + el.clientHeight ? start + rowSize - el.clientHeight : el.scrollTop
     if (next !== el.scrollTop) {
       el.scrollTop = next
-      setTop(next)
+      scrolled(next)
     }
+  }
+  /** Gives the row the focus, now or (with `virtual`, once it is scrolled to) when it is drawn. */
+  const take = (id: string) => {
+    wanted.current = id
+    scrollTo(id)
     takeFocus()
   }
+  const reveal = (id: string) => {
+    if (virtual && box.current && flat.some((entry) => entry.node.id === id)) take(id)
+  }
+  // The app changed the choice (a key of its own): the row is shown, and the focus, if it is in the tree, goes there, so
+  // that Enter and the keys that follow are on the row chosen. A choice the person made is already where the focus is.
+  React.useEffect(() => {
+    if (chosen === null || !flat.some((entry) => entry.node.id === chosen)) return
+    scrollTo(chosen)
+    const el = box.current
+    if (el && el.contains(document.activeElement) && focus !== chosen && !frozen(chosen)) {
+      setFocus(chosen)
+      take(chosen)
+    }
+    // Only a new choice moves things: the rows and the focus change all the time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosen])
   /** Home and End of a tree with rows out of sight: the first and the last row of all, not of those drawn. */
   const ends = (event: React.KeyboardEvent) => {
     if (!virtual || (event.key !== "Home" && event.key !== "End") || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
@@ -714,32 +784,72 @@ function Tree({
       <TreeViewPrimitive.Tree
         ref={box}
         data-slot="tree-rows"
-        onKeyDownCapture={virtual ? ends : undefined}
-        onScroll={virtual ? (event) => setTop(event.currentTarget.scrollTop) : undefined}
+        onKeyDownCapture={(event) => {
+          lately.current = null
+          if (virtual) ends(event)
+        }}
+        onPointerDownCapture={() => {
+          lately.current = null
+        }}
+        onScroll={virtual ? (event) => scrolled(event.currentTarget.scrollTop) : undefined}
         onDoubleClick={onOpen ? (event) => asked(event.target) : undefined}
+        // Ark's rows stop the focus events at themselves: the capture phase hears them first.
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHas(null)
+        }}
         // Where the row that is the Tab stop is not drawn, the box itself is, and hands the focus to that row.
-        {...(virtual && !stopDrawn && tabStop !== null
-          ? {
-              tabIndex: 0,
-              onFocus: (event: React.FocusEvent<HTMLDivElement>) => {
-                if (event.target === event.currentTarget) reveal(tabStop)
-              },
-            }
-          : {})}
+        tabIndex={virtual && !stopDrawn && tabStop !== null ? 0 : undefined}
+        onFocusCapture={(event) => {
+          // With `virtual` the row that has the focus stays in the page when it is scrolled out of sight.
+          const row = event.target instanceof Element ? event.target.closest<HTMLElement>("[role=treeitem]") : null
+          if (row?.dataset.value !== undefined) setHas(row.dataset.value)
+          if (virtual && !stopDrawn && tabStop !== null && event.target === event.currentTarget) reveal(tabStop)
+        }}
         hidden={shown.length === 0 || undefined}
         onKeyDown={(event) => {
-          if (event.nativeEvent.isComposing) return
+          if (event.nativeEvent.isComposing || swapping.current) return
+          const target = event.target instanceof Element ? event.target : null
+          const id = target?.closest<HTMLElement>("[data-part=branch-control], [data-part=item], [role=treeitem]")?.dataset.value
+          // The app's keys first: what it takes with `preventDefault()`, the tree leaves alone (Ark does the same).
+          if (id !== undefined && onKeyDown) {
+            onKeyDown(event, id)
+            if (event.defaultPrevented) return
+          }
+          const { key } = event
+          const command = event.metaKey || event.ctrlKey || event.altKey
+          // Enter, Space, Right and Left with a modifier held are not the tree's; nor are the letters, when the app wants them.
+          if (((key === "Enter" || key === " " || key === "ArrowRight" || key === "ArrowLeft") && (command || event.shiftKey)) || (!typeahead && key.length === 1 && key !== " " && key !== "*" && !command)) {
+            leaveAlone(event)
+            return
+          }
+          // The app is asked to open the thing, besides the choice, and nothing is opened or closed: Right and Left fold.
+          if (key === "Enter" && onOpen && id !== undefined) {
+            event.preventDefault()
+            choose(id)
+            asked(event.target)
+            return
+          }
+          // Where the text runs from the right, the key that goes in is Left: Ark does not know it, so the tree says the key it
+          // means (Ark's own `dir` is its locale's, not the page's).
+          const goes = (key === "ArrowLeft" || key === "ArrowRight") && target !== null && getComputedStyle(target).direction === "rtl" ? (key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft") : key
           // A branch that loads takes no second opening: Enter and Right are left to nothing (Ark would ask again).
-          const row = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-part=branch-control]") : null
-          const id = row?.dataset.value
-          if (id !== undefined && pending.current.has(id) && (event.key === "Enter" || event.key === "ArrowRight")) {
+          if ((key === "Enter" || goes === "ArrowRight") && id !== undefined && target?.closest("[data-part=branch-control]") && pending.current.has(id)) {
             event.preventDefault()
             return
           }
-          if (event.key === "Enter") asked(event.target)
+          if (goes !== key && target !== null) {
+            event.preventDefault()
+            swapping.current = true
+            try {
+              target.dispatchEvent(new KeyboardEvent("keydown", { key: goes, bubbles: true, cancelable: true }))
+            } finally {
+              swapping.current = false
+            }
+            return
+          }
           // Ark keeps `a` for Cmd+A (choose all, which a tree of one choice does not do), so a plain `a` reaches no
           // name: it is sent again as `A`, which the first letters typed read the same, ignoring case.
-          if (event.key !== "a" || event.metaKey || event.ctrlKey || event.altKey) return
+          if (key !== "a" || command) return
           event.preventDefault()
           event.target.dispatchEvent(new KeyboardEvent("keydown", { key: "A", bubbles: true, cancelable: true }))
         }}
@@ -747,12 +857,15 @@ function Tree({
       >
         <RowsContext.Provider value={rows}>
           {virtual ? (
-            <div ref={holder} role="presentation" data-slot="tree-window" className="flex flex-col gap-0.5" style={{ paddingTop: from * step, paddingBottom: Math.max(0, flat.length - to) * step }}>
-              {flat.slice(from, to).map((entry) => (
-                <TreeViewPrimitive.NodeProvider key={entry.node.id} node={entry.node} indexPath={entry.indexPath}>
-                  <TreeRow node={entry.node} indexPath={entry.indexPath} flat={entry} />
-                </TreeViewPrimitive.NodeProvider>
-              ))}
+            <div
+              ref={holder}
+              role="presentation"
+              data-slot="tree-window"
+              className="flex flex-col gap-0.5"
+              // The room of the rows not drawn; the row with the focus, drawn apart from the others, has its own place in it.
+              style={{ paddingTop: (held >= 0 && held < from ? held : from) * step, paddingBottom: Math.max(0, flat.length - (held >= to ? held + 1 : to)) * step }}
+            >
+              {windowRows}
             </div>
           ) : (
             <TreeRows nodes={shown} path={[]} />

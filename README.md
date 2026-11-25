@@ -342,10 +342,14 @@ when the branch is first opened. The rows look like every list of things (`ItemR
 selection tint, the chosen row the whole tint and the short accent bar at its start. The rows are one Tab stop (the
 chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
 out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
-Space or a press choose (and open or close a branch). `onOpen` hears Enter or a double press on a row (open the file,
-enter the folder) besides the choice; `followFocus` makes the choice follow the arrows, for a tree beside its
-details; a node `disabled` stays in the way of the keys but is neither chosen, opened nor asked for; `virtual` draws
-only the rows in sight, for thousands of them (the box needs a height). One row is chosen: `selected` and `onSelect` for the app's choice,
+Space or a press choose (and open or close a branch); Enter, Space, Right and Left with Shift, Ctrl, Alt or Meta held are
+not the tree's, and Right and Left swap in a language written from the right. `onOpen` hears Enter or a double press on a row (open the file,
+enter the folder) besides the choice, and does not open or close a branch (Right, Left and a press do); `followFocus` makes the choice follow the arrows
+(`onSelect` once for each), for a tree beside its details; `onKeyDown(event, id)` is asked first about a key on a row
+(`j` and `k` that move the choice, Delete: `preventDefault()` makes the tree do nothing with it) and `typeahead={false}`
+leaves the letters to the app; when the app changes `selected` with a key of its own, the tree scrolls to that row (with `virtual`) and,
+if the focus is in the tree, takes it there, so Enter is for the row chosen; a node `disabled` stays in the way of the keys but is neither chosen, opened nor asked for; `virtual` draws
+only the rows in sight, for thousands of them (the box needs a height), and keeps the row that has the focus in the page while the focus is in the tree. One row is chosen: `selected` and `onSelect` for the app's choice,
 or `defaultSelected`; the open branches likewise (`expanded`, `onExpandedChange`, called only when the list changes,
 `defaultExpanded`). The chevron is the sidebar's and turns only with `animated`. A closed branch's rows are not in the
 page.
@@ -672,17 +676,25 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   pinned and listed in `THIRD_PARTY.md`; the form, the words and the rules are the toolkit's):
   - `./table`: `DataTable`, on TanStack Table and TanStack Virtual. Columns say their heading, their cell and the
     value they sort by; a press on a heading sorts up, then down, then puts the rows back (`aria-sort`). One row can
-    be chosen (`current`, `onRowPress`): the rows are one Tab stop, which follows the focus; the arrows, Home and End
+    be chosen (`current`, `onRowPress`): the rows are one Tab stop, which follows the focus (the check and the caret
+    of a row are not Tab stops of their own, and give the focus back to the row); the arrows, Home and End
     move among them; a press on a control inside a cell (a button, a link, a field) is that control's, not the
-    row's. With `virtual` only the rows in sight are in the page, and Home and End still reach the ends of the data.
+    row's. With `virtual` only the rows in sight are in the page (and the row that has the focus, while the focus is in
+    the table), and Home and End still reach the ends of the data; the box keeps a row it scrolls to clear of the
+    headings that stay in sight. A table in a raised card says `surface="raised"`, so those headings cover the rows in the card's colour.
     A tree with a choice, for a list of things to clean up or a folder with what is in it: `rowLevel` (1 is the
     first) indents the first cell and gives `aria-level`; `rowOpen` and `onRowOpenChange` fold a row that holds
-    others (a caret, `aria-expanded`, Right and Left); `isGroupRow` and `groupCell` make a row a group, one cell across
-    the columns that stays under the headings while its rows scroll; `selection` adds a column of checks
-    (`isSelected` says `true`, `false` or `'mixed'`) and in the heading the one that chooses all. With any of the first
-    three the table is a `treegrid`; the app puts in `rows` only the rows in sight. A column's `header` can be a
-    part (give `label` for its name as text). `onRowKeyDown` is asked first about a key on a row (Space ticks, Enter
-    opens): `preventDefault()` keeps the table from taking it too; PageUp and PageDown move by a page. `containerRef`
+    others (a caret, `aria-expanded`, Right opens and goes in, Left closes and goes out to the row that holds it, swapped
+    where the text runs from the right); `isGroupRow` and `groupCell` make a row a group, one cell across
+    the columns that stays under the headings while its rows scroll (with `virtual` too: the heading of the group in
+    sight stays in the page); `selection` adds a column of checks
+    (`isSelected` says `true`, `false` or `'mixed'`, which the check says as «mixed») and in the heading the one that chooses all; Space on a row ticks it. With any of the first
+    three the table is a `treegrid` (each row says its level and its place among its siblings); the app puts in `rows` only the rows in sight, in the order it wants:
+    a press on a heading in a tree is heard (`onSortChange`, `aria-sort`) but the rows are not sorted, so no child leaves its
+    parent (`manualSort` asks the same of any table). A column's `header` can be a
+    part that says something (give `label` for its name as text; never a control: the check that chooses all is
+    `selection.onSelectAll`). `onRowKeyDown` is asked first about a key on a row (Enter opens):
+    `preventDefault()` keeps the table from taking it too; PageUp and PageDown move by a page. `containerRef`
     is the box that scrolls. Make `columns` once (outside the component, or with `useMemo`): a new array at every
     paint sorts again. For filters or pinned columns an app drives TanStack Table itself and draws it with `Table` and
     its parts, which are primitives (`@acaprino/sigrid/primitives`).
@@ -691,8 +703,10 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
     items there are and where each one is. Each place gives one row, never none. With `fill` it is as tall as the
     region that holds it, with `pad` the room around its rows. With `variable` every row is measured, for rows of
     different heights. `VirtualConversation` is `Conversation` for a long thread (ten thousand turns of any height):
-    the same log, opening at the end and following the newest message while the reader is there, with the button
-    back when not; the app gives `count` and a function that draws the turn at a place.
+    the same log, opening at the end (the last messages are drawn at the first paint) and following the newest message while the reader is there, with the button
+    back when not; the app gives `count` and a function that draws the turn at a place. With a `rowKey` the place of
+    a reader who is away from the end is kept when messages come in before it or the thread is read again; `ref`
+    (`scrollToEnd`, `scrollToStart`, `scrollToIndex`) and `containerRef` (the box that scrolls) are the app's way in.
   - `./reorder`: `ReorderList` and `moveItem`, on dnd-kit: a list put in order by the handle of each row, with the
     pointer, a finger or the keyboard (Space, arrows, Space; Escape puts it back), announced in the app's words.
     While a row is taken Escape is the list's, so a dialog or a sheet around it stays open.
