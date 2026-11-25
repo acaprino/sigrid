@@ -563,8 +563,9 @@ surface is opaque as before. `test/glass.test.ts` holds it and prints what the e
   backgrounds, as thin as it can be while every text colour that may sit on it (`ink`, `ink-soft`, `ink-mute`, the
   accent, the red and the status colours) keeps 4.5:1 and the control border and the user's colours keep 3:1, over the
   worst backdrops: a white desktop and a black one behind an acrylic that keeps half of it and gives the rest the
-  theme's paper. With the muted ink at 4.5:1 that leaves a ground about 85 to 90% opaque: the glass is a trace, as in
-  the look it comes from. A colour that falls short on the opaque background itself is held where it was.
+  theme's paper. Measured in run 45629382720 over the gray baseline, the sample themes and the shell
+  preset in its five accents: from 68% to 87% opaque in light and from 66% to 83% in dark (the preset: 68 to 75%, and
+  66%); the pairs nearest their ratio are the muted ink (4.51) and the control border (3.00). A colour that falls short on the opaque background itself is held where it was.
 - **The host** gives the window: transparent, with the system's material behind it and that material's colour the
   theme's paper (the value `applyTheme` writes in `<meta name="theme-color">`). In a browser tab an app can still set
   the choice: what shows through is the browser's canvas.
