@@ -21,6 +21,11 @@ function layOut() {
     return heightOf(this)
   })
   vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300)
+  // The library reads the size of the box it scrolls from its client size.
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(function (this: HTMLElement) {
+    return heightOf(this)
+  })
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(300)
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     const height = heightOf(this)
     return { x: 0, y: 0, top: 0, left: 0, right: 300, bottom: height, width: 300, height, toJSON: () => ({}) }
@@ -82,10 +87,9 @@ describe('VirtualConversation', () => {
   const log = () => screen.getByRole('log', { name: 'Chat' })
   const latest = () => screen.queryByRole('button', { name: 'Go to the latest message' })
 
-  /** The thread as tall as the box, holding `height` px of messages. */
+  /** The thread holding `height` px of messages in a box of `BOX`. */
   function holding(height: number) {
     vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockImplementation(() => height)
-    vi.spyOn(Element.prototype, 'clientHeight', 'get').mockImplementation(() => BOX)
   }
   const place = (top: number) => {
     log().scrollTop = top
