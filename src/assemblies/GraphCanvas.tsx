@@ -55,6 +55,10 @@
 //   `link` lines in its description, with their words and the thing at the other end; the lines are not read twice.
 //   The words may be drawn only while one of the two things is chosen or has the focus, or while the line is the
 //   path's (`labelShown: 'chosen'`), and are heard always.
+//   Words are drawn on their line only where they have room: over no thing and over no other words (`wordsOf`). The
+//   others are listed under the view's buttons, each with a sample of its line and the two things it joins
+//   (`LineWords`). No room is made for them: the places are the same with a thing chosen or not, so a choice never
+//   makes the layout jump, and the app's own places and routes are kept as they are.
 //   An edge with an `id` is a line of its own: two between the same two things are two lines, each with its words. An
 //   edge without one is one line with its exact copies (the same ends, kind, words, dash, tone and arrowhead, and no
 //   route), and taking that line away takes them all; edges without ids that differ in any of those are lines of
@@ -1408,7 +1412,32 @@ const Route = React.memo(function Route({ id, data, style, markerStart, markerEn
  * hands a line besides is drawn by its `BaseEdge`, as on the other lines. It reads nothing of React Flow's state.
  */
 const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, style, markerStart, markerEnd, label, labelStyle, labelShowBg, labelBgStyle, labelBgPadding, labelBgBorderRadius, interactionWidth }: EdgeProps<Edge<{ offset: number }, 'apart'>>) {
-  const offset = data?.offset ?? 0
+  const [path, labelX, labelY] = apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }, data?.offset ?? 0)
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={style}
+      markerStart={markerStart}
+      markerEnd={markerEnd}
+      label={label}
+      labelX={labelX}
+      labelY={labelY}
+      labelStyle={labelStyle}
+      labelShowBg={labelShowBg}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+      interactionWidth={interactionWidth}
+    />
+  )
+})
+
+/** Where a line leaves a thing and where it reaches the other, and the sides they are on. */
+type Ends = { sourceX: number; sourceY: number; targetX: number; targetY: number; sourcePosition: Position; targetPosition: Position }
+
+/** The path of a line beside the others (`Apart`), `offset` px across its sides from the middle, and where its words are: the middle of the path. */
+function apartPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: Ends, offset: number): [path: string, labelX: number, labelY: number] {
   // The start and the end of a thing (`direction="right"`) are moved up or down, its head and its foot along.
   const across = sourcePosition === Position.Left || sourcePosition === Position.Right
   const round = sourcePosition === targetPosition
@@ -1429,25 +1458,105 @@ const Apart = React.memo(function Apart({ id, sourceX, sourceY, targetX, targetY
     targetPosition,
     ...(round ? { offset: STUB + SPREAD - offset * turn } : across ? { centerX: bend } : { centerY: bend }),
   })
+  return [path, labelX, labelY]
+}
+
+/**
+ * The room the words of a line take on the canvas, in the graph's own px: 12px text (about 6.5px a letter), 4px at each
+ * side and 2px above and below, as `wordsOn` asks of React Flow. It is reckoned, not measured: the canvas places the
+ * words before anything is drawn, and a line 20px from another (`APART`) keeps its words clear of the other's.
+ */
+const WORD = { letter: 6.5, pad: 4, height: 20 }
+const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+
+/** The box the words of a line take, their middle at `at`. */
+export function wordBox(label: string, at: { x: number; y: number }): Box {
+  const width = label.length * WORD.letter + 2 * WORD.pad
+  return { x: at.x - width / 2, y: at.y - WORD.height / 2, width, height: WORD.height }
+}
+
+/** Where a line's words are drawn: the middle of its path, as React Flow reckons it from the sides of its two things; of a route, the middle of its longest piece. */
+function wordPoint(line: Edge, boxes: ReadonlyMap<string, Box>, direction: 'right' | 'down'): { x: number; y: number } | undefined {
+  if (line.type === 'route') return middleOf((line.data as { points?: Points } | undefined)?.points ?? [])
+  const from = boxes.get(line.source)
+  const to = boxes.get(line.target)
+  if (!from || !to) return undefined
+  // The handles: the middle of the side a line leaves and of the side it reaches (`Thing`, `Point`, `Frame`), the far
+  // side for a line that goes round (`SideHandle`).
+  const round = line.targetHandle === 'side'
+  const ends: Ends =
+    direction === 'right'
+      ? { sourceX: from.x + from.width, sourceY: from.y + from.height / 2, sourcePosition: Position.Right, targetX: round ? to.x + to.width : to.x, targetY: to.y + to.height / 2, targetPosition: round ? Position.Right : Position.Left }
+      : { sourceX: from.x + from.width / 2, sourceY: from.y + from.height, sourcePosition: Position.Bottom, targetX: to.x + to.width / 2, targetY: round ? to.y + to.height : to.y, targetPosition: round ? Position.Bottom : Position.Top }
+  const [, x, y] = line.type === 'apart' ? apartPath(ends, (line.data as { offset?: number } | undefined)?.offset ?? 0) : getSmoothStepPath(ends)
+  return { x, y }
+}
+
+/**
+ * Which lines have room for their words where the words are drawn, and which have not. The words of a line stay on it
+ * (`on`: the id of the line and the box they take) when that box lies over no thing and over no words already kept,
+ * the lines read in their order (the app gives the path's first); of an open group only the title counts, its ground is
+ * free. The others (`off`, in the same order) are not drawn on the canvas: it lists them beside it (`LineWords`), so
+ * no words are ever under a thing or on other words. `boxes` are the things in sight, on the canvas. Nothing is moved
+ * to make room: the places are the layout's, the same with a thing chosen or not.
+ */
+export function wordsOf(lines: readonly Edge[], boxes: ReadonlyMap<string, Box>, direction: 'right' | 'down', frames: ReadonlySet<string> = NO_IDS): { on: Map<string, Box>; off: string[] } {
+  const on = new Map<string, Box>()
+  const off: string[] = []
+  let solid: Box[] | null = null
+  for (const line of lines) {
+    if (typeof line.label !== 'string' || line.label === '') continue
+    solid ??= [...boxes].map(([id, box]) => (frames.has(id) ? { ...box, height: Math.min(box.height, HEAD) } : box))
+    const things = solid
+    const at = wordPoint(line, boxes, direction)
+    const box = at ? wordBox(line.label, at) : undefined
+    if (box !== undefined && !things.some((thing) => meets(box, thing)) && ![...on.values()].some((kept) => meets(box, kept))) on.set(line.id, box)
+    else off.push(line.id)
+  }
+  return { on, off }
+}
+
+/** A line without its words, as the canvas hands it to React Flow when they have no room on it: the same one for the same line. */
+const bared = new WeakMap<Edge, Edge>()
+function bare(line: Edge): Edge {
+  let without = bared.get(line)
+  if (!without) {
+    const { label: _label, labelShowBg: _bg, labelBgPadding: _pad, labelBgBorderRadius: _radius, ...rest } = line
+    without = rest
+    bared.set(line, without)
+  }
+  return without
+}
+
+/** A row of the list of words: the line's id, its look on the canvas, the names of its two things, whether it goes both ways, its words. */
+type WordRow = { id: string; look: React.CSSProperties | undefined; from: string; to: string; both: boolean; words: string }
+
+/**
+ * The words that have no room on their lines, listed under the view's buttons: for each line a sample of it as it is
+ * drawn (its dash, its tone, thicker on the path), the two things it joins and its words. A raised surface (R4), 256px
+ * wide and at most 144px tall (it scrolls with the wheel); the eye's alone, since each thing already says its lines in
+ * its description, as for the words drawn on a line.
+ */
+function LineWords({ rows }: { rows: readonly WordRow[] }) {
   return (
-    <BaseEdge
-      id={id}
-      path={path}
-      style={style}
-      markerStart={markerStart}
-      markerEnd={markerEnd}
-      label={label}
-      labelX={labelX}
-      labelY={labelY}
-      labelStyle={labelStyle}
-      labelShowBg={labelShowBg}
-      labelBgStyle={labelBgStyle}
-      labelBgPadding={labelBgPadding}
-      labelBgBorderRadius={labelBgBorderRadius}
-      interactionWidth={interactionWidth}
-    />
+    <ul data-slot="graph-words" aria-hidden="true" className="nowheel nodrag nopan flex max-h-36 w-64 max-w-full flex-col gap-1 overflow-y-auto rounded-md bg-raised p-2 text-2xs text-ink-soft shadow-sm">
+      {rows.map((row) => (
+        <li key={row.id} className="flex items-start gap-2">
+          {/* The sample of the key (`GraphLegend`), in the look the line has on the canvas. */}
+          <svg viewBox="0 0 24 8" className="mt-1 h-2 w-6 shrink-0">
+            <line x1="2" y1="4" x2="22" y2="4" className="sigrid-graph-sample" style={row.look} />
+          </svg>
+          <span className="min-w-0 break-words">
+            <span className="font-medium text-ink">
+              {row.from} {row.both ? '–' : '→'} {row.to}
+            </span>{' '}
+            {row.words}
+          </span>
+        </li>
+      ))}
+    </ul>
   )
-})
+}
 
 const NODE_TYPES = { thing: Thing, point: Point, frame: Frame }
 const EDGE_TYPES = { route: Route, apart: Apart }
@@ -2143,10 +2252,32 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     })
     return changed ? next : placed
   }, [placed, edgeOf, held])
+  // The words that have no room on their line (they would lie under a thing or on other words) are not drawn on it:
+  // the line is handed over without them, and they are listed under the view's buttons. The others are the same lines.
+  const worded = React.useMemo(() => {
+    if (!lines.some((line) => line.label !== undefined)) return null
+    const boxes = new Map<string, Box>()
+    for (const [id, at] of places) boxes.set(id, { ...at, ...sizeOf(id) })
+    return wordsOf(lines, boxes, direction, nest?.frames)
+  }, [lines, places, sizeOf, direction, nest])
+  const fitted = React.useMemo(() => {
+    if (!worded || worded.off.length === 0) return lines
+    const off = new Set(worded.off)
+    return lines.map((line) => (off.has(line.id) ? bare(line) : line))
+  }, [lines, worded])
+  const listed = React.useMemo<WordRow[] | null>(() => {
+    if (!worded || worded.off.length === 0) return null
+    const at = new Map(lines.map((line) => [line.id, line]))
+    return worded.off.flatMap((id) => {
+      const line = at.get(id)
+      if (!line || typeof line.label !== 'string') return []
+      return [{ id, look: line.style, from: byId.get(line.source)?.label ?? line.source, to: byId.get(line.target)?.label ?? line.target, both: edgeOf.get(id)?.directed === false, words: line.label }]
+    })
+  }, [lines, worded, byId, edgeOf])
   // The library keeps what it measures and what the user picks on the nodes it is given: they are handed over whole
   // at every change of the graph, and its own changes are laid over them.
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<Drawn>>(drawn)
-  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(lines)
+  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(fitted)
   React.useEffect(() => {
     const held = draggedNow.current
     // What React Flow has is kept where nothing changed, and what it measured only while the measure holds (`handOver`).
@@ -2162,7 +2293,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     if (!movable) return
     for (const change of changes) if (change.type === 'position' && change.dragging === false && change.position && !draggedNow.current.has(change.id)) settle(change.id, change.position)
   }
-  React.useEffect(() => setFlowEdges(lines), [lines, setFlowEdges])
+  React.useEffect(() => setFlowEdges(fitted), [fitted, setFlowEdges])
 
   // The view: the buttons at the head of the canvas and the keys +, − and 0 do the same.
   const zoomIn = () => void flow.zoomIn({ duration: glide })
@@ -2331,7 +2462,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
             />
           </Panel>
         ) : null}
-        <Panel position="top-right">
+        <Panel position="top-right" className="flex flex-col items-end gap-2">
           <div ref={viewRow} role="group" aria-label={words.view} className="flex items-center gap-0.5 rounded-md bg-raised p-0.5 shadow-sm">
             {/* Only while something was moved, and at the start of the row, which is held at its end: the other buttons stay where they are (R14). */}
             {moved.size > 0 ? (
@@ -2357,6 +2488,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               </Button>
             </Tooltip>
           </div>
+          {/* Under the buttons, which stay where they are (R14): the words that have no room on their lines. */}
+          {listed ? <LineWords rows={listed} /> : null}
         </Panel>
       </ReactFlow>
       {movable ? (
