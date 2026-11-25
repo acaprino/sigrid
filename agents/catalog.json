@@ -8270,7 +8270,7 @@
     },
     {
      "file": "src/assemblies/tree.tsx",
-     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, one of Sigrid's icons, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it. One row is chosen, never several.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nA row may be `disabled`: it stays in sight and in the keys' way, says so (`aria-disabled`), is drawn quieter, and is\nneither chosen, opened, closed nor taken by `onOpen`.\n`onOpen` is the app's own «do the thing»: Enter, or a double press, on a row, besides the choice (a file opens in an\neditor, a folder is entered); on a branch the row also opens or closes as before. `followFocus` makes the choice follow\nthe focus as the arrows move it, for a tree that is the list of a list and its details.\n`virtual` draws only the rows in sight, for thousands of rows: the open branches are laid flat (each row says its\nlevel, its place among its siblings and the size of the group: the tree of a screen reader is the same), the room of\nthe rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn.\nThe rows are all as tall as the first one, which is read where it is drawn. The box needs a height (`className`). This\nis its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
+     "about": "Park UI (MIT) tree-view 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tree-view.ts)\nA tree of rows: things that hold other things (folders and files, sections and pages, any hierarchy), each a row with\nits name, one of Sigrid's icons, a short fact and a count at its end, and the rows it holds under it, one level in.\nBehaviour: Ark UI's TreeView. The rows are one Tab stop (the chosen row when it is in sight); Down and Up move, Right\nopens a branch and then goes into it, Left closes it and then goes out to the branch that holds the row, Home and End\nreach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the\nrow; Enter, Space or a press choose a row, and on a branch also open or close it (with `onOpen`, Enter asks the app and\ndoes not fold: Right and Left do). One row is chosen, never several. In a language written from the right, Right and\nLeft swap. Enter, Space, Right and Left with Shift, Ctrl, Alt or Meta held are not the tree's.\nThe row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a\nbranch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's\nrows are not in the page.\nBranches whose children the app loads (`hasChildren` and `loadChildren`) load them when they are opened: the row says\n«Loading» meanwhile and takes no second opening (Enter and Right do nothing on it), and if the load fails it says so\nand stays closed, so opening it again tries again. The tree loads them itself, not through Ark, which would keep a\nbranch «loaded» for ever: children belong to the node object they were loaded for, and when the app gives another\nobject for that id (another project, the same folder read again), or none, they are dropped.\nThe filter (`query`, typed in the field of `search` or given by the app) keeps what `match` finds (by default: the name\nholds the text) with all it holds, and the branches that lead to a find, opened. What the person opens or closes\nmeanwhile is theirs: when the filter is cleared their own branches come back, with those changes.\nForm: Park's `tree-view` recipe on the toolkit's tokens: rows of the density's row height (44px with a finger), l2,\n14px, one level in 20px (Park's 22px, on the 4px grid). At the start the chevron of the sidebar's groups (14px in a\n16px slot, a quarter turn when open, turning only with `animated`), then the icon, the name, and at the end the fact\nin 12px tabular figures and a `Count` (R5). The row's look is that of every list of things (`lib/rows.ts`, as\n`ItemRow`): under the pointer a share of the selection tint; the chosen row has the whole tint, its ink and the short\naccent bar at its start (R1), and its name in semibold. Not taken from Park: the chevron in the accent (R2: it is\nchrome, in the muted ink), the semibold of the first level (semibold says «chosen»), the line that guides the eye\ndown a branch, the transitions.\nWhat a row draws is memoised: a move of the focus paints Ark's own parts again (its context is new at each move), not\nthe icons, names and facts of every row.\nA row may be `disabled`: it stays in sight and in the keys' way, says so (`aria-disabled`), is drawn quieter, and is\nneither chosen, opened, closed nor taken by `onOpen`.\n`onOpen` is the app's own «do the thing»: Enter, or a double press, on a row, besides the choice (a file opens in an\neditor, a folder is entered); it does not open or close a branch (Right and Left do, and a single press). `followFocus`\nmakes the choice follow the focus as the arrows move it, for a tree that is the list of a list and its details.\n`onKeyDown` is asked first about a key on a row, for the app's own keys (`j` and `k` that move the choice): when it calls\n`preventDefault()` the tree does nothing with the key. `typeahead={false}` leaves the letters to the app. When the app\nchanges `selected` (a key of its own), the tree scrolls to the row (with `virtual`) and, if the focus is in the tree, takes\nit there, so the keys that follow are on the row chosen.\n`virtual` draws only the rows in sight, for thousands of rows: the open branches are laid flat (each row says its\nlevel, its place among its siblings and the size of the group: the tree of a screen reader is the same), the room of\nthe rows not drawn is kept as padding, and a row the keys reach is scrolled to and takes the focus when it is drawn. The\nrow with the focus stays in the page when it is scrolled out of sight, while the focus is in the tree, so the keys do not\nfall to the page after a turn of the wheel.\nThe rows are all as tall as the first one, which is read where it is drawn. The box needs a height (`className`). This\nis its own small windowing, not TanStack Virtual (`VirtualList`, `./virtual`): this entry must stay free of libraries.\nIt is not the graph: `GraphCanvas` and its tree mode draw things joined by lines; this is a list of nested rows, and\nthe two share no code.",
      "components": [
       {
        "name": "Tree",
@@ -8305,12 +8305,22 @@
         {
          "name": "onOpen",
          "type": "((id: string, node: TreeNode) => void)",
-         "doc": "The person asks to open the thing (Enter, or a double press, on a row): its id, and the node. Besides the choice, which it does not replace; on a branch the row also opens or closes. Not for a `disabled` row."
+         "doc": "The person asks to open the thing (Enter, or a double press, on a row): its id, and the node. Besides the choice, which it does not replace; it does not open or close a branch (Right, Left and a single press do). Not for a `disabled` row."
         },
         {
          "name": "followFocus",
          "type": "boolean",
-         "doc": "The choice follows the focus: moving it with the arrows chooses the row it reaches, as in a list that shows details beside it. Absent: the choice is made by a press, Enter or Space."
+         "doc": "The choice follows the focus: moving it with the arrows chooses the row it reaches, as in a list that shows details beside it. Absent: the choice is made by a press, Enter or Space. `onSelect` is heard once for each move."
+        },
+        {
+         "name": "onKeyDown",
+         "type": "((event: React.KeyboardEvent<HTMLElement>, id: string) => void)",
+         "doc": "A key on a row, before the tree takes it: the app's own keys (`j` and `k` to move the choice, Delete). `event.preventDefault()` makes the tree do nothing with the key. The id is the row's."
+        },
+        {
+         "name": "typeahead",
+         "type": "boolean",
+         "doc": "The first letters typed reach a row by its name. Default on; `false` leaves the letters to the app (`onKeyDown`)."
         },
         {
          "name": "virtual",
@@ -8552,7 +8562,7 @@
    "files": [
     {
      "file": "src/assemblies/DataTable.tsx",
-     "about": "A table of data, ready to use: columns that sort when their heading is pressed, one row that can be chosen, and,\nfor thousands of rows, only the ones in sight in the page. The behaviour is TanStack's (`@tanstack/react-table` for\nthe columns and the sorting, `@tanstack/react-virtual` for the rows in sight: npm dependencies, pinned, see\nTHIRD_PARTY.md); the form is the toolkit's `Table` parts. It lives in its own entry of the package (`./table`), so\nan app without a table does not load either library.\n- A column says its heading, what a cell shows, and the value it sorts by. Without that value the heading is a\n  word and not a button. A press sorts up, a second down, a third puts the rows back as they were given. The\n  heading says how it is sorted with `aria-sort`, and with an arrow for the eye.\n- With `onRowPress` a row is pressed with the pointer or with Enter and Space; the arrows, Home and End move among\n  the rows, which are one Tab stop, as in a list: the row that had the focus last, or the chosen one, or the first\n  in sight. A press on a control inside a cell (a button, a link, a field) is that control's and not the row's.\n  The chosen row (`current`) has the selection tint (R1).\n- With `virtual` the box needs a height (`className=\"h-96\"`): the rows outside it are not in the page, two spacer\n  rows keep the scrollbar honest, and each row is measured as it is drawn, so any density and a finger's 44px hold.\n  Home and End go to the first and the last row of the data. A row scrolled far out of sight is no longer in the\n  page, and the focus it had goes with it: Tab comes back to a row in sight.\n- `columns` is best made once (outside the component, or with `useMemo`): a new array at every paint sorts the\n  rows again at every paint.\n- A tree and a choice (the list of things to clean up, a folder with what is in it): `rowLevel` gives a row its level\n  (1 is the first) and indents its first cell by it, `rowOpen` says of a row that holds others whether it is open\n  (`undefined`: it holds none) and puts a caret before its first cell, `onRowOpenChange` hears the caret and the keys\n  (Right opens, Left closes the row in focus); the app puts in `rows` only the rows in sight, the children of an open row.\n  `isGroupRow` makes a row a group: one cell across every column, which stays in sight under the headings while its\n  rows scroll (`groupCell` is what it says: a name, a count, a size), foldable like any row that holds others. With any\n  of them the table is a `treegrid`: each row says its level, whether it is open and, with `selection`, whether it is\n  chosen.\n- `selection` adds a column of checks, one for each row, and in the heading one for all: `isSelected` says `true`,\n  `false` or `'mixed'` (a group of which some rows are chosen, shown as a dash), `onSelectedChange` hears the check, and\n  `selectAll` and `onSelectAll` are the heading's. It is the app that holds what is chosen.\n- `onRowKeyDown` is asked first about a key on a row: an app key (Space ticks, Enter opens a folder) is taken there and\n  `preventDefault()` keeps the table from taking it too; without it, and for every key the app leaves, the table does\n  what it did (Enter and Space press the row, the arrows, Home, End, PageUp and PageDown move). `containerRef` is the\n  box that scrolls, for an app that reads its scrolling.\n- A row may have no check (`isSelected` gives `null`: a sub-heading that cannot be chosen) or a check that cannot be\n  pressed now (`isDisabled`, `selectAllDisabled`: a blocked row, a job that holds the list). `fill` makes the box as tall\n  as the place that holds it, so that the table is the content of a panel and its headings stay in sight.\nAn app that needs more of a table (filters, pinned columns, groups) drives TanStack Table itself and draws it with\n`Table`, `TableRow` and `TableCell`: this component is the common case, not a wall around the library.",
+     "about": "A table of data, ready to use: columns that sort when their heading is pressed, one row that can be chosen, and,\nfor thousands of rows, only the ones in sight in the page. The behaviour is TanStack's (`@tanstack/react-table` for\nthe columns and the sorting, `@tanstack/react-virtual` for the rows in sight: npm dependencies, pinned, see\nTHIRD_PARTY.md); the form is the toolkit's `Table` parts. It lives in its own entry of the package (`./table`), so\nan app without a table does not load either library.\n- A column says its heading, what a cell shows, and the value it sorts by. Without that value the heading is a\n  word and not a button. A press sorts up, a second down, a third puts the rows back as they were given. The\n  heading says how it is sorted with `aria-sort`, and with an arrow for the eye.\n- With `onRowPress` a row is pressed with the pointer or with Enter and Space; the arrows, Home and End move among\n  the rows, which are one Tab stop, as in a list: the row that had the focus last, or the chosen one, or the first\n  in sight (the check and the caret of a row are not Tab stops of their own, and give the focus back to the row\n  when pressed). A press on a control inside a cell (a button, a link, a field) is that control's and not the row's.\n  The chosen row (`current`) has the selection tint (R1).\n- With `virtual` the box needs a height (`className=\"h-96\"`): the rows outside it are not in the page, two spacer\n  rows keep the scrollbar honest, and each row is measured as it is drawn, so any density and a finger's 44px hold.\n  Home and End go to the first and the last row of the data. A row scrolled far out of sight is no longer in the\n  page, except the one that has the focus, which stays while the focus is in the table (so the keys do not fall to\n  the page after a turn of the wheel); once the focus leaves, Tab comes back to a row in sight. The box keeps clear of\n  the headings that stay in sight (and of a group's) when it scrolls to a row, whether the browser or the library does.\n- `columns` is best made once (outside the component, or with `useMemo`): a new array at every paint sorts the\n  rows again at every paint.\n- A tree and a choice (the list of things to clean up, a folder with what is in it): `rowLevel` gives a row its level\n  (1 is the first) and indents its first cell by it, `rowOpen` says of a row that holds others whether it is open\n  (`undefined`: it holds none) and puts a caret before its first cell, `onRowOpenChange` hears the caret and the keys\n  (Right opens a closed row and, on an open one, goes to its first row; Left closes an open row and, on any other, goes\n  to the row that holds it; they swap in a language written from the right); the app puts in `rows` only the rows in\n  sight, the children of an open row, in the order it wants them.\n  `isGroupRow` makes a row a group: one cell across every column, which stays in sight under the headings while its\n  rows scroll (`groupCell` is what it says: a name, a count, a size), foldable like any row that holds others; with\n  `virtual` the heading of the group in sight stays in the page even when its own row is far above. With any of them\n  the table is a `treegrid`: each row says its level, its place among its siblings (`aria-posinset`, `aria-setsize`),\n  whether it is open and, with `selection`, whether it is chosen (a row of which only some are chosen says nothing\n  of it, and its check says «mixed»).\n- A tree is ordered by the app, not by the table: with levels, folds or groups (or with `manualSort`) a press on a\n  heading still says how the app is asked to sort (the button, `aria-sort`, `onSortChange`) but the rows are shown as\n  given, so a child never leaves its parent.\n- `selection` adds a column of checks, one for each row, and in the heading one for all: `isSelected` says `true`,\n  `false` or `'mixed'` (a group of which some rows are chosen, shown as a dash), `onSelectedChange` hears the check, and\n  `selectAll` and `onSelectAll` are the heading's (the check that chooses all goes there, never in the `header` of a\n  column, where it would sit inside the sort button). It is the app that holds what is chosen.\n- `onRowKeyDown` is asked first about a key on a row: an app key (Enter opens a folder) is taken there and\n  `preventDefault()` keeps the table from taking it too; for every key the app leaves, the table does what it did\n  (Enter presses the row, Space too, or ticks it when there is a `selection`; the arrows, Home, End, PageUp and PageDown\n  move; none of them with Alt, Ctrl or Meta held). `containerRef` is the box that scrolls, for an app that reads its\n  scrolling.\n- A row may have no check (`isSelected` gives `null`: a sub-heading that cannot be chosen) or a check that cannot be\n  pressed now (`isDisabled`, `selectAllDisabled`: a blocked row, a job that holds the list). `fill` makes the box as tall\n  as the place that holds it, so that the table is the content of a panel and its headings stay in sight.\nAn app that needs more of a table (filters, pinned columns, groups) drives TanStack Table itself and draws it with\n`Table`, `TableRow` and `TableCell`: this component is the common case, not a wall around the library.",
      "components": [
       {
        "name": "DataTable",
@@ -8593,6 +8603,16 @@
          "type": "((sort: DataSort) => void)"
         },
         {
+         "name": "manualSort",
+         "type": "boolean",
+         "doc": "The app puts the rows in order, whatever the headings say: a press on a heading still asks `onSortChange` and `sort` still marks the column (`aria-sort`, the arrow), but the rows are shown as given. A tree is this always (sorting its rows flat would part a child from its parent)."
+        },
+        {
+         "name": "fill",
+         "type": "boolean",
+         "doc": "The table is the content of its place: the box takes the height of the place that holds it (a `Panel`, a pane) and scrolls inside it, the headings and the groups staying in sight. The place gives it its height; with `virtual` it is the box's height."
+        },
+        {
          "name": "current",
          "type": "string | null",
          "doc": "The id of the row chosen: the one shown in the details."
@@ -8605,12 +8625,12 @@
         {
          "name": "virtual",
          "type": "boolean",
-         "doc": "Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`)."
+         "doc": "Only the rows in sight are in the page: for thousands of rows. The box needs a height (`className`). With groups, the heading of the group in sight stays in the page and under the headings, whatever the rows above."
         },
         {
          "name": "rowLevel",
          "type": "((row: Row) => number)",
-         "doc": "The level of a row, 1 for the first: it indents the first cell and the row says it (`aria-level`)."
+         "doc": "The level of a row, 1 for the first: it indents the first cell and the row says it (`aria-level`, with its place among its siblings)."
         },
         {
          "name": "rowOpen",
@@ -8648,14 +8668,9 @@
          "doc": "The box that scrolls, for an app that reads its scrolling."
         },
         {
-         "name": "fill",
-         "type": "boolean",
-         "doc": "The table is the content of its place: the box takes the height of the place that holds it (a `Panel`, a pane) and scrolls inside it, the headings and the groups staying in sight. The place gives it its height; with `virtual` it is the box's height."
-        },
-        {
-         "name": "manualSort",
-         "type": "boolean",
-         "doc": "The app puts the rows in order, whatever the headings say: a press on a heading still asks `onSortChange` and `sort` still marks the column (`aria-sort`, the arrow), but the rows are shown as given. A tree is this always."
+         "name": "surface",
+         "type": "\"quiet\" | \"raised\" | \"paper\"",
+         "doc": "The surface the table is on, for the headings that stay in sight, which must cover the rows under them in its colour: the page (default), a raised card or the quiet fill."
         },
         {
          "name": "empty",
@@ -8686,12 +8701,12 @@
          "name": "header",
          "type": "React.ReactNode",
          "required": true,
-         "doc": "The heading of the column: a word, or a part (a check that chooses all the rows, in the first column)."
+         "doc": "The heading of the column: a word, or a part that says something (an icon with a word). Not a control: in a column that sorts the heading sits inside the sort button, and a control inside a button is not valid. The check that chooses all the rows is `selection.onSelectAll`, in the column of checks."
         },
         {
          "name": "label",
          "type": "string",
-         "doc": "The name of the column as a text, when `header` is not one: what the sort button and screen readers say. Absent: the `id`."
+         "doc": "The name of the column as a text, when `header` is not one: what the sort button and screen readers say. Absent: the words inside `header`, else the `id`."
         },
         {
          "name": "cell",
@@ -8738,7 +8753,7 @@
          "name": "onSelectedChange",
          "type": "(row: Row, checked: boolean) => void",
          "required": true,
-         "doc": "The check of a row was pressed: the state it asks for."
+         "doc": "The check of a row was pressed (or Space on the row): the state it asks for."
         },
         {
          "name": "selectAll",
@@ -8789,7 +8804,7 @@
    "files": [
     {
      "file": "src/assemblies/virtual-conversation.tsx",
-     "about": "The thread of a long conversation, of which only the messages in sight are in the page: `Conversation` for ten\nthousand turns, each of its own height (a line, or an answer of a screenful). It is `Conversation` in every other\nway: a log with a name that waits while an answer is written, that stays at the latest message while the reader is\nat the end (an answer being written is followed, and it opens at the end), that stops following as soon as the reader\nmoves up, and a button back to the latest message. The messages are given as a count and a function that draws the\none at a place, as `VirtualList` does, and each is measured as it is drawn and watched (`VirtualList variable`, on\nTanStack Virtual: it has its own entry of the package, `./virtual`, so an app with short threads does not load it).\n- What a place gives is one element, a `Message` or whatever the thread holds (`Reasoning`, `ToolCall`, a `Note`),\n  never none and never two: the room of the messages not drawn is kept as padding, so the scrollbar is the thread's.\n- Screen readers meet a log, which announces what is added to it: while the reader is away from the end the log is\n  silent (`aria-live=\"off\"`), so the messages that scroll into the page are not read out one after the other.",
+     "about": "The thread of a long conversation, of which only the messages in sight are in the page: `Conversation` for ten\nthousand turns, each of its own height (a line, or an answer of a screenful). It is `Conversation` in every other\nway: a log with a name that waits while an answer is written, that stays at the latest message while the reader is\nat the end (an answer being written is followed, and it opens at the end), that stops following as soon as the reader\nmoves up, and a button back to the latest message. The messages are given as a count and a function that draws the\none at a place, as `VirtualList` does, and each is measured as it is drawn and watched (`VirtualList variable`, on\nTanStack Virtual: it has its own entry of the package, `./virtual`, so an app with short threads does not load it).\n- What a place gives is one element, a `Message` or whatever the thread holds (`Reasoning`, `ToolCall`, a `Note`),\n  never none and never two: the room of the messages not drawn is kept as padding, so the scrollbar is the thread's.\n- The place of the reader is kept: with a `rowKey`, messages that come in before the ones in sight (older ones loaded, a\n  thread read again that now begins earlier) or that replace them do not move what the reader is looking at, while the\n  reader is away from the end; at the end the thread stays at the end. It opens at the end, drawing the last messages from\n  the first paint. The app reaches the thread through `ref` (`scrollToEnd`, `scrollToStart`, `scrollToIndex`) and the box\n  that scrolls through `containerRef`.\n- Screen readers meet a log, which announces what is added to it: while the reader is away from the end the log is\n  silent (`aria-live=\"off\"`), so the messages that scroll into the page are not read out one after the other.",
      "components": [
       {
        "name": "VirtualConversation",
@@ -8845,6 +8860,42 @@
          "name": "overscan",
          "type": "number",
          "doc": "How many messages are drawn beyond the ones in sight, on each side. Default 6."
+        },
+        {
+         "name": "ref",
+         "type": "React.Ref<VirtualConversationHandle>",
+         "doc": "What the app can do to the thread."
+        },
+        {
+         "name": "containerRef",
+         "type": "React.Ref<HTMLDivElement>",
+         "doc": "The box that scrolls (the log), for an app that reads its scrolling."
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "VirtualConversationHandle",
+       "doc": "What the app can do to the thread, through its `ref`.",
+       "fields": [
+        {
+         "name": "scrollToEnd",
+         "type": "() => void",
+         "required": true,
+         "doc": "Goes to the latest message; the thread follows the next ones again."
+        },
+        {
+         "name": "scrollToStart",
+         "type": "() => void",
+         "required": true,
+         "doc": "Goes to the first message; the thread stops following."
+        },
+        {
+         "name": "scrollToIndex",
+         "type": "(index: number, align?: \"start\" | \"center\" | \"end\") => void",
+         "required": true,
+         "doc": "Goes to the message at a place, counted from 0 (`align`: where it stands in the box, at the start by default); the thread stops following unless it is the last."
         }
        ]
       }
@@ -8855,7 +8906,7 @@
     },
     {
      "file": "src/assemblies/virtual-list.tsx",
-     "about": "A long list of which only the rows in sight are in the page: ten thousand messages cost what thirty do. The rows\nare the toolkit's own (`ItemRow`, or any `<li>`); this part is the box that scrolls and the choice of which rows to\ndraw, on TanStack Virtual (`@tanstack/react-virtual`, an npm dependency, pinned: THIRD_PARTY.md). It has its own\nentry of the package (`./virtual`), so an app with short lists does not load the library.\n- The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:\n  any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.\n- The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.\n- With `variable` the rows are not all as tall (messages of a thread, a few lines or a screenful): each row is\n  measured as it is drawn and watched, so a row that grows (an answer being written, an image that arrives) moves\n  the ones after it. `estimateSize` is then the height of a row not yet seen, and the scrollbar is as honest as the\n  rows seen so far allow.\n- For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,\n  `aria-posinset`): what is not drawn is still counted.\nThe box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),\nas `Empty fill` and `Page fit` are, so an app writes no class for it; beside other parts in a `Column fill` it takes\nwhat they leave. `pad` is the room inside the box, around the rows, a step of the scale.",
+     "about": "A long list of which only the rows in sight are in the page: ten thousand messages cost what thirty do. The rows\nare the toolkit's own (`ItemRow`, or any `<li>`); this part is the box that scrolls and the choice of which rows to\ndraw, on TanStack Virtual (`@tanstack/react-virtual`, an npm dependency, pinned: THIRD_PARTY.md). It has its own\nentry of the package (`./virtual`), so an app with short lists does not load the library.\n- The rows of a list are all as tall as each other, so one of them is measured as it is drawn and the rest follow:\n  any density holds, and so do the 44px of a finger. `estimateSize` is only where the first paint starts from.\n- The room of the rows not drawn is kept as padding, so the scrollbar is the one of the whole list.\n- With `variable` the rows are not all as tall (messages of a thread, a few lines or a screenful): each row is\n  measured as it is drawn and watched, so a row that grows (an answer being written, an image that arrives) moves\n  the ones after it. `estimateSize` is then the height of a row not yet seen, and the scrollbar is as honest as the\n  rows seen so far allow.\n- A row measured keeps its height where it moves: by its `rowKey` (its id), not its place. The library is given one\n  function for the keys and not a new one at every paint (a new one makes it read the key of every row again, ten\n  thousand of them, at each paint), and a new one only when the keys changed where the list can see them (its ends and\n  the rows drawn).\n- For screen readers it is a list that says how many items it holds and where each one is (`aria-setsize`,\n  `aria-posinset`): what is not drawn is still counted.\nThe box needs a height: `fill` makes it as tall as the region that holds it (the content, a pane of `ContentSplit`),\nas `Empty fill` and `Page fit` are, so an app writes no class for it; beside other parts in a `Column fill` it takes\nwhat they leave. `pad` is the room inside the box, around the rows, a step of the scale.",
      "components": [
       {
        "name": "VirtualList",
