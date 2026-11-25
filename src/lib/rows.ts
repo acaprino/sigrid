@@ -13,6 +13,15 @@ export const ROW_HIGHLIGHT = 'bg-selected/60 text-ink'
 export const ROW_HOVER = 'hover:bg-selected/60 hover:text-ink'
 
 /**
+ * `ROW_HOVER` for a row of a list whose hover is one background that follows the pointer (`HoverFollow`, with motion
+ * on): the row keeps the stronger text and leaves the fill to that background, which is under it.
+ */
+export const ROW_HOVER_FOLLOWED = 'hover:text-ink'
+
+/** The fill of `ROW_HIGHLIGHT` alone: what the background that follows the pointer is made of (`HoverFollow`). */
+export const ROW_HIGHLIGHT_FILL = 'bg-selected/60'
+
+/**
  * `ROW_HIGHLIGHT` on the row the primitive marks `data-highlighted` (Base UI's menu and select, Ark's combo box): the
  * one under the pointer or reached with the arrows, while the focus stays in the list or in the text box.
  */
