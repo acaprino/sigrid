@@ -49,7 +49,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
   ],
   '@acaprino/sigrid/layout': [
     'APP_SHELL_STEPS', 'AppShell', 'AppShellContext', 'appShellLayout', 'brandInitial', 'ContentSplit',
-    'DrawerButton', 'Inspector', 'NavItem', 'NavList', 'Panel', 'Sidebar', 'SidebarGroup', 'SidebarRow', 'TitleBar',
+    'DrawerButton', 'Inspector', 'NavItem', 'NavList', 'Panel', 'Sidebar', 'SidebarGroup', 'SidebarRow', 'SplitPane', 'TitleBar',
     'TitleBarDragContext', 'TitleBarSizeContext', 'Toolbar', 'ToolbarBrand', 'ToolbarButton', 'ToolbarGroup',
     'ToolbarSearch', 'ToolbarSeparator', 'ToolbarSpacer', 'ToolbarTab', 'ToolbarTabs', 'ToolbarTitle', 'useAppShell',
     'WindowControls',

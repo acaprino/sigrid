@@ -29,7 +29,7 @@ import { ExamplesView } from './examples'
 import { Graphs, LongLists, RichTexts, Reorders, Tables } from './data'
 import { LayoutParts } from './layout-parts'
 import { type DialogWidth, type SheetWidth } from '../src/primitives'
-import { ContentSplit } from '../src/layout'
+import { ContentSplit, SplitPane } from '../src/layout'
 import { VirtualList } from '../src/virtual'
 import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
@@ -153,7 +153,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "progress": "Progress",
   "table": "Table and DataTable",
   "composition": "Card, Heading, Dot, Separator, DescriptionList, SettingRow, SidebarRow and DrawerButton",
-  "composition-panes": "ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width",
+  "composition-panes": "ItemRow with a control, ContentSplit, SplitPane, VirtualList fill and SheetContent width",
   "form-field": "FormField",
   "pickers": "Slider, SearchField, InputGroup, CopyButton, Disclosure, Combobox, Avatar",
   "date": "Calendar, DateField, DateTimeField and DateRangeField",
@@ -2441,8 +2441,8 @@ function CompositionPanes({ animated }: { animated: boolean }) {
   return (
     <Section
       id="composition-panes"
-      title="ItemRow with a control, ContentSplit, VirtualList fill and SheetContent width"
-      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A long list as tall as its region, and a sheet at the side of a named width."
+      title="ItemRow with a control, ContentSplit, SplitPane, VirtualList fill and SheetContent width"
+      note="A thing one both ticks and opens: the box and the row are two tab stops, and a press on the box never opens the row; the facts under the title wrap. Two panes in the content: a column of a fixed width with the list, the thing chosen in the room that is left; the split measures itself, and where the two do not fit one is on screen (narrow the window, or look at 390px), with the way back the app's. A `SplitPane` is the same two panes with a divider the person moves (pointer, arrow keys, a double press to put it back). A long list as tall as its region, and a sheet at the side of a named width."
     >
       <Row label="a row with a control">
         <div data-sample="item-row-control" className="w-full max-w-md">
@@ -2469,6 +2469,20 @@ function CompositionPanes({ animated }: { animated: boolean }) {
               </Text>
             </Column>
           </ContentSplit>
+        </div>
+      </Row>
+      <Row label="two panes that move">
+        <div data-sample="split-pane" className="h-56 w-full max-w-3xl overflow-hidden rounded-lg border border-line">
+          <SplitPane start={<Column pad="sm">{rows}</Column>} startLabel="Tasks" endLabel="Task" label="Resize the task list" defaultSize={280}>
+            <Column gap="md" pad="lg">
+              <Heading size="card" level={3}>
+                {task?.title ?? 'Nothing chosen'}
+              </Heading>
+              <Text as="p" variant="soft">
+                Drag the line, or press an arrow key on it; a double press puts it back.
+              </Text>
+            </Column>
+          </SplitPane>
         </div>
       </Row>
       <Row label="a long list that fills">

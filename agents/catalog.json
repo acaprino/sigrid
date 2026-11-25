@@ -1329,6 +1329,11 @@
          "required": true
         },
         {
+         "name": "splitPane",
+         "type": "{ readonly hint: string; }",
+         "required": true
+        },
+        {
          "name": "search",
          "type": "{ readonly clear: string; }",
          "required": true
@@ -1500,6 +1505,10 @@
         {
          "name": "sidebar",
          "type": "Partial<{ readonly collapse: string; readonly expand: string; readonly search: string; readonly empty: string; readonly open: string; }>"
+        },
+        {
+         "name": "splitPane",
+         "type": "Partial<{ readonly hint: string; }>"
         },
         {
          "name": "search",
@@ -6173,6 +6182,90 @@
      "also": [
       "SidebarGroupProps",
       "SidebarProps"
+     ]
+    },
+    {
+     "file": "src/layout/split-pane.tsx",
+     "about": "Two panes side by side with a divider the person moves: the list and the thing read beside it, where each wants the\nwidth the person gives it (a session list and its transcript, a file tree and a file). `ContentSplit` is the fixed\ncolumn; this is the one whose column moves.\n- The divider is a window splitter: one tab stop, `role=\"separator\"` with its value in px between the two minimums.\n  A pointer drags it (the pane follows while it moves, and the size is kept when the pointer is let go). The arrows\n  move it 16px (Shift, 64px; the end the arrow points to), Home takes the first pane to its minimum and End to its\n  largest, a double press puts it back to the size it started with. In a language written from the right the arrows\n  and the drag follow the panes.\n- Each pane keeps `minStart` and `minEnd` px. A split narrower than the two minimums and the divider shows one pane\n  at a time, the one `show` names, as `ContentSplit` does; the other stays in the page, hidden, and the app is told of\n  the form (`onPanesChange`) to put its way back in the bar.\n- The size is the person's, and the app can keep it: `size` and `onSizeChange` (null: put back to the default), or\n  just a `storageKey`, under which the size is kept in the browser's storage (a store that fails keeps nothing, and\n  the split works the same).\n- It measures its own width, as the frame does, never the screen's. Without a way to measure (a server, a test) it\n  has its two panes and keeps the size as it is.\nA hairline at the divider (R4: a line, not a box); the divider is wider where a finger is the pointer.",
+     "components": [
+      {
+       "name": "SplitPane",
+       "doc": "Two panes with a divider that moves with the pointer and the keys, the size kept where the app says.",
+       "props": [
+        {
+         "name": "start",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The pane at the start: the list."
+        },
+        {
+         "name": "startLabel",
+         "type": "string",
+         "required": true,
+         "doc": "The start pane's name for screen readers («Sessions»): it is a region of its own."
+        },
+        {
+         "name": "endLabel",
+         "type": "string",
+         "required": true,
+         "doc": "The other pane's name for screen readers («Transcript»)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "The divider's name for screen readers («Resize the sessions list»); its hint says how to move it."
+        },
+        {
+         "name": "size",
+         "type": "number | null",
+         "doc": "The width of the start pane, in px, when the app keeps it; `null` is the default width. With it, the size is the app's: pass what `onSizeChange` gives."
+        },
+        {
+         "name": "defaultSize",
+         "type": "number",
+         "doc": "The width at first, and the one a double press puts back, in px. Default 320."
+        },
+        {
+         "name": "onSizeChange",
+         "type": "((size: number | null) => void)",
+         "doc": "The person moved the divider (a drag is told once, when it ends) or put it back (`null`)."
+        },
+        {
+         "name": "storageKey",
+         "type": "string",
+         "doc": "Where the browser keeps the size, when the app does not (`size`): a name of the app's («mukade.split.sessions»)."
+        },
+        {
+         "name": "minStart",
+         "type": "number",
+         "doc": "The least width of the start pane, in px. Default 180."
+        },
+        {
+         "name": "minEnd",
+         "type": "number",
+         "doc": "The least width of the end pane, in px. Default 240."
+        },
+        {
+         "name": "show",
+         "type": "\"end\" | \"start\"",
+         "doc": "The pane on screen when only one fits: the start pane (the default) or the end pane (`end`)."
+        },
+        {
+         "name": "onPanesChange",
+         "type": "((panes: 1 | 2) => void)",
+         "doc": "The form changed: 2 panes side by side, or 1 at a time. Told once at first, when the split has measured itself."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The end pane: the thing read, in the room that is left."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SplitPaneProps"
      ]
     },
     {

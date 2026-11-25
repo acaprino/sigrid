@@ -74,6 +74,10 @@ export interface Words {
     /** The button in the bar that opens the sidebar where the frame has made it a drawer (`DrawerButton`). */
     readonly open: string
   }
+  readonly splitPane: {
+    /** The hint of the divider between two panes (`SplitPane`): how it moves and how it goes back. */
+    readonly hint: string
+  }
   readonly search: {
     readonly clear: string
   }
@@ -467,6 +471,9 @@ export const DEFAULT_WORDS: Words = {
     search: 'Search the menu',
     empty: 'No results',
     open: 'Open the menu',
+  },
+  splitPane: {
+    hint: 'Drag or use the arrow keys to resize · double press to reset',
   },
   search: {
     clear: 'Clear the search',

@@ -161,7 +161,7 @@ open). In the inspector, Escape on a field that holds text, or with a list open,
 Where the thing chosen is the work itself and not its details (a message to read, a file to edit), it needs the
 width the inspector does not have: the content is two panes, `ContentSplit`, the list a column of a fixed width and
 the thing chosen in the room that is left. The split measures itself as the frame does and, where the two do not fit,
-shows one at a time (`show`); the app then puts its way back to the list in the bar. The inspector stays for the
+shows one at a time (`show`); the app then puts its way back to the list in the bar. Where the person should give each pane the width it needs (a list and a transcript), the split is a `SplitPane`: the same two panes with a divider that moves with the pointer and the arrow keys, its size kept by the app or under a `storageKey`. The inspector stays for the
 details. A thing one both ticks and opens (a task) keeps its box beside the row's button: `ItemRow control`.
 A list that can hold thousands of rows (a mail folder, a log) is a `VirtualList` (`@acaprino/sigrid/virtual`): the
 same rows, of which only the ones in sight are drawn. Things with several facts to compare and sort by (files, records,
