@@ -850,6 +850,7 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   if (theme.tabs === 'bold') attributes['data-tabs'] = 'bold'
   if (theme.statusStrip === 'tall') attributes['data-status-strip'] = 'tall'
   const shape = shapeOf(theme, scheme)
+  if (theme.material === 'clear') attributes['data-material'] = 'clear'
   if (theme.material === 'glass') {
     attributes['data-material'] = 'glass'
     const levels = glassLevels(colors, backgrounds, theme.surfaces?.[scheme].glass)

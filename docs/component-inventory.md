@@ -595,6 +595,12 @@ surface is opaque as before. `test/glass.test.ts` holds it and prints what the e
 - **Opaque again** with forced colours and with `prefers-reduced-transparency: reduce`, by the stylesheet alone; an
   engine that does not know that query draws opaque too.
 
+## Added on 2026-11-25: the clear material
+
+| Detail | What a theme writes | What changes, and only then |
+|---|---|---|
+| Clear | `ThemeDef.material: 'clear'`; the engine writes `data-material="clear"` on the root and nothing else (no colour, no variable) | `html` and `body` paint no ground, so a window of its own that is transparent shows the desktop around the one part it holds, a notice card with its own surface (`Card`). The host gives the window: transparent, with no material. It is not for a frame (`AppShell`), and not glass: the stylesheet's glass rules are another block. Shinatama's attention widget (a small window that floats over the desktop) is the first use |
+
 ## Added on 2026-11-24: four details of those looks
 
 Each is off unless asked, or a new choice of a prop; `test/theme-details.test.tsx` holds them and measures the preset.

@@ -148,8 +148,12 @@ describe('build output', () => {
       expect(media).toMatch(/forced-colors:\s*none/)
       expect(media).toMatch(/prefers-reduced-transparency:\s*no-preference/)
     }
-    // Every rule that names the material is in that gate.
-    for (const m of c.matchAll(/\[data-material/g)) expect(enclosingAtRules(c, m.index).join(' ')).toMatch(/prefers-reduced-transparency:\s*no-preference/)
+    // Every rule that names the glass material is in that gate; the clear material's one rule is the page's own, outside the layers.
+    for (const m of c.matchAll(/\[data-material(?!=["']?clear)/g)) expect(enclosingAtRules(c, m.index).join(' ')).toMatch(/prefers-reduced-transparency:\s*no-preference/)
+    const clear = c.search(/\[data-material=["']?clear["']?\]\s+body\s*\{/)
+    expect(clear, 'the ground under clear').toBeGreaterThan(-1)
+    expect(c.slice(clear, c.indexOf('}', clear))).toMatch(/background-color:\s*transparent/)
+    expect(enclosingAtRules(c, clear).some((rule) => rule.startsWith('@layer'))).toBe(false)
   })
 
   test('styles.css carries the muted text colors of theme.css, not an old copy', () => {
