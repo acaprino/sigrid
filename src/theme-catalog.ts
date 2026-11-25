@@ -131,8 +131,11 @@ export interface ThemeDef {
    * `glassGround` in theme-engine.ts). A curated palette may state its glass instead (`Surfaces.glass`): the ground,
    * and the work area and what opens over the page, which take glass only then. It is drawn only when the attribute
    * is on the document's root, and opaque again under forced colours and where the person asked for less transparency.
+   * `clear`: the page paints no ground at all (`html` and `body` are transparent), for a window of its own that is
+   * transparent and holds one part that has its own surface, such as a notice card that floats over the desktop. The
+   * engine writes `data-material="clear"` and no variable; nothing else changes. A frame (`AppShell`) is not for it.
    */
-  readonly material?: 'solid' | 'glass' | undefined
+  readonly material?: 'solid' | 'glass' | 'clear' | undefined
   /**
    * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
    * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
