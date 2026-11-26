@@ -715,6 +715,22 @@ svg[data-glyph][stroke-width="2"] {
     margin-inline-end: -18.75rem;
     opacity: 0;
   }
+  /* Docked beside the sidebar (`inspectorAt="sidebar"`) it slides in from the start instead, and out to it. */
+  :where(:root[data-motion]) [data-reveal="side"][data-inspector-at="sidebar"] {
+    transition:
+      margin-inline-start var(--motion-normal) var(--motion-ease-move),
+      opacity var(--motion-normal) var(--motion-ease-move),
+      display var(--motion-normal) allow-discrete;
+    @starting-style {
+      margin-inline-start: -18.75rem;
+      margin-inline-end: 0;
+      opacity: 0;
+    }
+  }
+  :where(:root[data-motion]) [data-reveal="side"][data-inspector-at="sidebar"][hidden] {
+    margin-inline-start: -18.75rem;
+    margin-inline-end: 0;
+  }
   /* A panel the person changed to (a tab's) fades in, from the side of its tab; the one it takes the place of is gone
      at once. */
   :where(:root[data-motion]) [data-reveal="fade"] {

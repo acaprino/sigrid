@@ -156,6 +156,54 @@ test('a sheet frame without a sidebar has no corner either', () => {
   expect(document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')).toBe('alone')
 })
 
+// `inspectorAt`: the docked inspector at the end of the frame (the default), or beside the sidebar, before the content.
+function Beside({ at, sidebar = true }: { at?: 'end' | 'sidebar'; sidebar?: boolean }) {
+  return (
+    <AppShell
+      contentLabel="Messages"
+      inspectorAt={at}
+      sidebar={sidebar ? <Sidebar aria-label="Main" open><SidebarGroup label="Places"><NavItem icon={<svg />} current>Inbox</NavItem></SidebarGroup></Sidebar> : undefined}
+      inspector={<Inspector title="Details" open>The sender</Inspector>}
+    >
+      <p>The list</p>
+    </AppShell>
+  )
+}
+const columns = () => [...document.querySelector('[data-slot="app-shell-columns"]')!.children].map((el) => el.getAttribute('data-slot'))
+
+test('with inspectorAt="sidebar" the docked inspector stands beside the sidebar, before the content, with its line towards the content', () => {
+  const { rerender } = render(<Beside at="sidebar" />)
+  expect(columns()).toEqual(['inspector', 'app-shell-content'])
+  const aside = screen.getByRole('complementary', { name: 'Details' })
+  expect(aside.getAttribute('data-inspector-at')).toBe('sidebar')
+  expect(aside.classList.contains('border-e')).toBe(true)
+  expect(aside.classList.contains('border-s')).toBe(false)
+  // Moved to the end, it is the same element: what it holds is not drawn anew.
+  rerender(<Beside at="end" />)
+  expect(columns()).toEqual(['app-shell-content', 'inspector'])
+  expect(screen.getByRole('complementary', { name: 'Details' })).toBe(aside)
+  expect(aside.getAttribute('data-inspector-at')).toBe('end')
+  expect(aside.classList.contains('border-s')).toBe(true)
+})
+
+test('by default, and with no sidebar beside the work area, the inspector is at the end', () => {
+  const { unmount } = render(<Beside />)
+  expect(columns()).toEqual(['app-shell-content', 'inspector'])
+  unmount()
+  render(<Beside at="sidebar" sidebar={false} />)
+  expect(columns()).toEqual(['app-shell-content', 'inspector'])
+})
+
+test('with inspectorAt="sidebar", under 1000px the inspector is the drawer over the end of the content, as without it', () => {
+  const resize = observed()
+  render(<Beside at="sidebar" />)
+  resize(1200)
+  expect(screen.getByRole('complementary', { name: 'Details' }).getAttribute('data-inspector-at')).toBe('sidebar')
+  resize(900)
+  expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull()
+  expect(document.querySelector('[data-inspector-form="drawer"]')?.textContent).toContain('The sender')
+})
+
 // The inspector beside the rest of the window: a list to choose from, and the details of the one chosen.
 function Details({ start = true, shown = true, find = '', onChange }: { start?: boolean; shown?: boolean; find?: string; onChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(start)

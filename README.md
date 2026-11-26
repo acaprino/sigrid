@@ -174,7 +174,8 @@ went, or that a press was felt. What moves:
 - what opens in place (a `Disclosure`, and so a `Reasoning` and a `ToolCall`; a group of the sidebar; a branch of
   a `Tree`; the rows of the copies of an `EmailComposer`) glides open and shut, and its arrow turns, after the
   reader's press; opened or closed by the app, it changes at once;
-- the `Inspector`, docked, slides in from the end and out to it, and the page takes the room it leaves; the panel
+- the `Inspector`, docked, slides in from the edge it stands at (the end, or the start beside the sidebar with
+  `inspectorAt="sidebar"`) and out to it, and the page takes the room it leaves; the panel
   of a tab the person changed to fades in;
 - the tint of the chosen row of a `Sidebar` or a `NavList` slides to the row chosen next, as one mark for the whole
   navigation; the hover background of an `ItemList` follows the pointer from row to row, and `HoverFollow` gives the

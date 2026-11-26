@@ -11,8 +11,9 @@
 //
 // The frame measures its own width, not the screen's, so a window half-snapped on a wide screen is laid out as the
 // narrow window it is. Three steps, Imago's:
-// - 1000px or more: the inspector is docked at the end and pushes the content; under it, it covers the end of the
-//   content as a panel with no backdrop (the page beside it keeps working);
+// - 1000px or more: the inspector is docked at the end and pushes the content (or, with `inspectorAt="sidebar"`, beside
+//   the sidebar, before the content); under it, it covers the end of the content as a panel with no backdrop (the page
+//   beside it keeps working);
 // - 850px or more: the sidebar is whole, or a rail if the user shrank it; from 620px to 850px it is the rail, whatever
 //   the user chose; under 620px it is out of the layout and opens as a drawer from a button of the title bar.
 // The steps are a recommendation, not a rule: an app with a narrower sidebar or a wider inspector passes its own
@@ -72,14 +73,19 @@ import { Button, QUIET_ICON } from "../primitives/button"
 import { TOASTS_ATTR } from "../internal/overlay"
 
 // The regions F6 goes through, in order: inside the frame, or (the inspector shown as a drawer, a sheet, and the column
-// of notices) in a layer of the page.
-const REGIONS: readonly { inside: string; page?: string }[] = [
-  { inside: '[data-slot="title-bar"]' },
-  { inside: '[data-slot="sidebar"]' },
-  { inside: '[data-slot="app-shell-content"]' },
-  { inside: '[data-slot="inspector"]', page: '[data-inspector-form="drawer"]' },
-  { inside: `[${TOASTS_ATTR}]`, page: `[${TOASTS_ATTR}]` },
-]
+// of notices) in a layer of the page. Docked beside the sidebar (`inspectorAt="sidebar"`), the inspector comes before
+// the content, as it is laid out.
+type Region = { inside: string; page?: string }
+const TITLE_BAR_REGION: Region = { inside: '[data-slot="title-bar"]' }
+const SIDEBAR_REGION: Region = { inside: '[data-slot="sidebar"]' }
+const CONTENT_REGION: Region = { inside: '[data-slot="app-shell-content"]' }
+const INSPECTOR_REGION: Region = { inside: '[data-slot="inspector"]', page: '[data-inspector-form="drawer"]' }
+const NOTICES_REGION: Region = { inside: `[${TOASTS_ATTR}]`, page: `[${TOASTS_ATTR}]` }
+const REGIONS: readonly Region[] = [TITLE_BAR_REGION, SIDEBAR_REGION, CONTENT_REGION, INSPECTOR_REGION, NOTICES_REGION]
+const REGIONS_INSPECTOR_FIRST: readonly Region[] = [TITLE_BAR_REGION, SIDEBAR_REGION, INSPECTOR_REGION, CONTENT_REGION, NOTICES_REGION]
+
+/** Where the docked inspector stands: at the `end` of the frame, or beside the `sidebar`, before the content. */
+const InspectorAtContext = React.createContext<"end" | "sidebar">("end")
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex], [contenteditable=""], [contenteditable="true"]'
 // An open surface that is not a region of the round keeps F6 (a menu, a list of options, a dialog other than the inspector).
 const SURFACES = '[role="dialog"]:not([data-inspector-form]), [role="alertdialog"], [role="menu"], [role="listbox"]'
@@ -155,6 +161,12 @@ export type AppShellProps = {
   sidebar?: React.ReactNode
   /** The details of what is selected (an `Inspector`). */
   inspector?: React.ReactNode
+  /**
+   * Where the inspector is docked: at the `end` of the frame (the default), or beside the `sidebar`, between it and the
+   * content, so the details open next to the list they were chosen in. With no sidebar beside the work area (none, or
+   * one that is a drawer) it is at the end; as a drawer, under the inspector's step, it covers the end of the content.
+   */
+  inspectorAt?: "end" | "sidebar" | undefined
   /** Under the content: the actions on it, the primary one last (R3: one). */
   actions?: React.ReactNode
   /** The foot: the state of the service, counts, the keys that work now. */
@@ -192,7 +204,7 @@ const STATUS_TALL = "[[data-status-strip=tall]_&]:min-h-10 [[data-status-strip=t
 // strip's text style (`STRIP`), so it takes the same size; its height stays its own.
 const STRIP_BODY_TEXT = "[[data-status-strip=tall]_&]:text-sm"
 
-function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
+function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "end", actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const content = React.useRef<HTMLElement>(null)
@@ -256,6 +268,8 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
     }
   }, [hasBar, hasActions, hasFooter])
   const id = React.useId()
+  // The order of the regions, the frame's as it is now drawn (set below, once the layout is known).
+  const regionOrder = React.useRef(REGIONS)
   // F6 and Shift+F6, from wherever the focus is in the frame (or nowhere): the next region that has something to focus.
   React.useEffect(() => {
     const el = root.current
@@ -265,7 +279,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
     const own = (region: Element) => region.closest('[data-slot="app-shell"]') === el
     const listen = (event: KeyboardEvent) => {
       if (event.key !== "F6" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return
-      const found = REGIONS.map(({ inside, page }) => Array.from(el.querySelectorAll<HTMLElement>(inside)).find(own) ?? (page ? doc.querySelector<HTMLElement>(page) : null))
+      const found = regionOrder.current.map(({ inside, page }) => Array.from(el.querySelectorAll<HTMLElement>(inside)).find(own) ?? (page ? doc.querySelector<HTMLElement>(page) : null))
       const active = doc.activeElement
       const nowhere = active === null || active === doc.body || active === doc.documentElement
       // With the focus nowhere, the outermost frame answers; with it somewhere, the frame it is in (or one of its
@@ -298,6 +312,9 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
   const sheet = frame === "sheet"
   // The sheet has its corner and its start edge only where a sidebar lies beside it.
   const beside = Boolean(sidebar) && layout.sidebar !== "drawer"
+  // Docked beside the sidebar only where one lies beside the work area; a drawer stays over the end of the content.
+  const inspectorFirst = inspectorAt === "sidebar" && beside && layout.inspector === "docked"
+  regionOrder.current = inspectorFirst ? REGIONS_INSPECTOR_FIRST : REGIONS
   // Everything under the title bar, so the overlays of a window start there.
   const below = (
     <>
@@ -318,11 +335,16 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, actions, footer,
               {status}
             </div>
           ) : null}
-          <div data-slot="app-shell-columns" className="flex min-h-0 flex-1">
-            <main ref={content} id={id} tabIndex={-1} aria-label={contentLabel} data-slot="app-shell-content" className={cn("min-w-0 flex-1 overflow-y-auto", FOCUS_RING_INSET)}>
-              {children}
-            </main>
-            {inspector}
+          {/* Beside the sidebar the inspector comes first, in the order it is read in; keyed, so it moves without being
+              drawn anew. Its slide from the start is kept off the sidebar. */}
+          <div data-slot="app-shell-columns" className={cn("flex min-h-0 flex-1", inspectorFirst && "overflow-hidden")}>
+            <InspectorAtContext.Provider value={inspectorFirst ? "sidebar" : "end"}>
+              {inspectorFirst ? <React.Fragment key="inspector">{inspector}</React.Fragment> : null}
+              <main key="content" ref={content} id={id} tabIndex={-1} aria-label={contentLabel} data-slot="app-shell-content" className={cn("min-w-0 flex-1 overflow-y-auto", FOCUS_RING_INSET)}>
+                {children}
+              </main>
+              {inspectorFirst ? null : <React.Fragment key="inspector">{inspector}</React.Fragment>}
+            </InspectorAtContext.Provider>
           </div>
           {actions ? (
             <div ref={actionsBox} data-slot="app-shell-actions" className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-4 py-2">
@@ -404,7 +426,8 @@ export type InspectorProps = {
 }
 
 /**
- * The details or the form of what is selected, at the end of the frame. It is not modal: the rest of the window keeps
+ * The details or the form of what is selected, at the end of the frame, or beside the sidebar where the frame asks for
+ * it (`inspectorAt`). It is not modal: the rest of the window keeps
  * working beside it. Docked it is a column with a line at its inner edge (R4); in a frame under 1000px it is a raised
  * panel over the end of the content. Closed, the content takes its room.
  * A press outside it does not close it, and opening it does not move the focus (a selection opened it, not a request:
@@ -415,8 +438,9 @@ export type InspectorProps = {
  * holds no control).
  */
 function Inspector({ open, onOpenChange, animated, className, ...given }: InspectorProps) {
-  // Docked, it slides in from the end and out to it when the app opens or closes it; never on load.
+  // Docked, it slides in from the edge it stands at and out to it when the app opens or closes it; never on load.
   const reveal = useRevealAfterMount(open)
+  const at = React.useContext(InspectorAtContext)
   // What it showed while open is what it shows on its way out: an app that closes it because nothing is chosen any
   // more hands it nothing to show (no title, no body), and it must not empty while it slides. Kept for the time of
   // the slide (`LEAVE_MS`), then it is the app's again; opened again before that, it is the app's at once.
@@ -572,6 +596,7 @@ function Inspector({ open, onOpenChange, animated, className, ...given }: Inspec
     <aside
       data-slot="inspector"
       data-inspector-form="docked"
+      data-inspector-at={at}
       aria-label={title}
       hidden={!open}
       {...reveal}
@@ -588,7 +613,8 @@ function Inspector({ open, onOpenChange, animated, className, ...given }: Inspec
         event.preventDefault()
         onOpenChange(false)
       }}
-      className={cn("flex w-75 shrink-0 flex-col border-s border-line bg-paper", FOCUS_RING_INSET, className)}
+      // The line is at its inner edge: towards the content.
+      className={cn("flex w-75 shrink-0 flex-col border-line bg-paper", at === "sidebar" ? "border-e" : "border-s", FOCUS_RING_INSET, className)}
     >
       {heading}
       {body}
