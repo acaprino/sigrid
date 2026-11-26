@@ -52,12 +52,57 @@ export function ansiColors(scheme: ThemeScheme, tone: TonePreset, grays: { black
   }
 }
 
+/** The families of CSS that are a kind of font and not a name: written bare, never in quotes. */
+const GENERIC_FAMILIES = new Set(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', 'emoji', 'math', 'fangsong'])
+
+/** The names of a list of font families (`"Cascadia Mono", Consolas, monospace`), without their quotes: split at the commas that are not inside a name in quotes. */
+function familyNames(list: string): { name: string; quoted: boolean }[] {
+  const names: { name: string; quoted: boolean }[] = []
+  let name = ''
+  let quote = ''
+  let quoted = false
+  const push = () => {
+    // A control character (a new line) ends a string of CSS: it is a blank here, and blanks count once.
+    // eslint-disable-next-line no-control-regex
+    const clean = name.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim()
+    if (clean) names.push({ name: clean, quoted })
+    name = ''
+    quoted = false
+  }
+  for (let at = 0; at < list.length; at++) {
+    const char = list[at]!
+    if (quote) {
+      if (char === '\\' && at + 1 < list.length) name += list[++at]
+      else if (char === quote) quote = ''
+      else name += char
+    } else if ((char === '"' || char === "'") && !name.trim()) {
+      quote = char
+      quoted = true
+    } else if (char === ',') push()
+    else name += char
+  }
+  push()
+  return names
+}
+
+/**
+ * The font of a terminal: the families the app asked for first, then the monospace stack of the page, so a name the
+ * machine does not have leaves the terminal with the toolkit's own font and never with a proportional one. xterm writes
+ * the list into a stylesheet as it is, so it is written again here, safe whatever the names hold: every name in double
+ * quotes with its own quotes and backslashes escaped (a name with spaces or digits, `3270 Nerd Font`, is one name), and
+ * the kinds of font (`monospace`, `ui-monospace`) bare. Nothing asked for, or nothing left of it: the stack of the page as it is.
+ */
+export function terminalFontStack(family: string | undefined, mono: string): string {
+  const asked = familyNames(family ?? '').map(({ name, quoted }) => (!quoted && GENERIC_FAMILIES.has(name.toLowerCase()) ? name.toLowerCase() : `"${name.replace(/[\\"]/g, '\\$&')}"`))
+  return asked.length ? `${asked.join(', ')}, ${mono}` : mono
+}
+
 export interface TerminalLook {
   /** What xterm takes as its `theme`. */
   readonly theme: ITheme
   /** The scheme the page is in, read from its ground. */
   readonly scheme: ThemeScheme
-  /** The monospace stack of the page (`--font-mono`). */
+  /** The font: the families asked for (`fontFamily`), if any, then the monospace stack of the page (`--font-mono`). */
   readonly fontFamily: string
   /** The size of code on the page (`--text-xs`, the 13px of `code-sm`), in pixels. */
   readonly fontSize: number
@@ -65,9 +110,10 @@ export interface TerminalLook {
 
 /**
  * The look of a terminal drawn inside `el`: its theme and its font, read from the tokens as they are now. `transparent`
- * leaves the ground clear, so what is behind the terminal (a glass window) shows through; `quietCursor` draws the cursor in the colour of the ground, for a terminal that takes no input.
+ * leaves the ground clear, so what is behind the terminal (a glass window) shows through; `quietCursor` draws the cursor in the colour of the ground, for a terminal that takes no input;
+ * `fontFamily` is a list of font families that goes before the monospace stack of the page (`terminalFontStack`).
  */
-export function terminalLook(el: Element, options: { tone?: TonePreset | undefined; transparent?: boolean | undefined; quietCursor?: boolean | undefined } = {}): TerminalLook {
+export function terminalLook(el: Element, options: { tone?: TonePreset | undefined; transparent?: boolean | undefined; quietCursor?: boolean | undefined; fontFamily?: string | undefined } = {}): TerminalLook {
   const c = Object.fromEntries(Object.entries(TOKENS).map(([key, name]) => [key, readColor(el, `--color-${name}`, BASELINE[name] as Hex)])) as Record<keyof typeof TOKENS, Hex>
   const ground = c.paper.slice(0, 7)
   const scheme: ThemeScheme = isDarkColor(ground) ? 'dark' : 'light'
@@ -86,5 +132,5 @@ export function terminalLook(el: Element, options: { tone?: TonePreset | undefin
     overviewRulerBorder: c.paper,
     ...ansiColors(scheme, options.tone ?? 'vivid', { black: c.sunken, white: c.soft, brightBlack: c.mute, brightWhite: c.ink }),
   }
-  return { theme, scheme, fontFamily: readText(el, '--font-mono', 'monospace'), fontSize: readLength(el, '--text-xs', 13) }
+  return { theme, scheme, fontFamily: terminalFontStack(options.fontFamily, readText(el, '--font-mono', 'monospace')), fontSize: readLength(el, '--text-xs', 13) }
 }

@@ -1,7 +1,8 @@
 // A terminal: xterm.js on the toolkit's look. The emulation is xterm's (`@xterm/xterm` with its fit addon: npm
 // dependencies, pinned, see THIRD_PARTY.md); the look is the toolkit's: the colours of the ground, the ink, the cursor,
 // the selection and the sixteen ANSI colours are made from the tokens as they resolve in the page (`terminalLook`),
-// read again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`. xterm's own
+// read again whenever the page's look changes (a theme, a scheme, a density), and the font is `--font-mono`, after the
+// families the app asks for (`fontFamily`), if any: the cells are measured again when the font changes and when a face that was not ready is. xterm's own
 // stylesheet is put in the page by the part, so an app imports none. It has its own entry of the package
 // (`./terminal`), with the strip that shows its lines in miniature: an app without a terminal does not load xterm.
 // - The program is the app's: the part writes what it is given (`ref.write`) and says what the person typed (`onData`)
@@ -95,6 +96,12 @@ export type TerminalProps = {
   onBufferChange?: ((buffer: TerminalBufferView) => void) | undefined
   /** The keys the app keeps for its own commands: for these the terminal does nothing and does not stop the key. */
   appKeys?: ((event: KeyboardEvent) => boolean) | undefined
+  /**
+   * The font, as a list of font families of CSS (`"Cascadia Mono", Consolas`): it goes before the toolkit's monospace
+   * stack (`--font-mono`), which stays as what is drawn when the machine has none of the names. Absent or empty: the
+   * toolkit's stack alone. It can change while the terminal lives: the cells are measured again and the terminal fits its box again (`onResize`).
+   */
+  fontFamily?: string | undefined
   /** The size of the text in pixels; the toolkit's size of code (`--text-xs`) by default. */
   fontSize?: number | undefined
   /** The height of a row, in times the size of the text. */
@@ -163,7 +170,7 @@ function wrappedRows(term: XTerm, y: number): { first: number; rows: TerminalCel
   return { first, rows }
 }
 
-function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, onLinkHover, linkFinder, onBufferChange, appKeys, fontSize, lineHeight = 1.15, scrollback = 5000, cursorStyle = 'block', readOnly = false, transparent = false, tone, screenReaderMode = true, autoFocus = false, className }: TerminalProps) {
+function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, onLinkHover, linkFinder, onBufferChange, appKeys, fontFamily, fontSize, lineHeight = 1.15, scrollback = 5000, cursorStyle = 'block', readOnly = false, transparent = false, tone, screenReaderMode = true, autoFocus = false, className }: TerminalProps) {
   const words = useWords().terminal
   const label = ariaLabel ?? words.label
   const box = React.useRef<HTMLDivElement>(null)
@@ -174,7 +181,7 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
   const latest = React.useRef({ onData, onResize, onLinkOpen, onLinkHover, linkFinder, onBufferChange, appKeys })
   latest.current = { onData, onResize, onLinkOpen, onLinkHover, linkFinder, onBufferChange, appKeys }
   // What is set when the terminal is made, and again when it changes.
-  const options = { fontSize, lineHeight, scrollback, cursorStyle, readOnly, transparent, tone, screenReaderMode }
+  const options = { fontFamily, fontSize, lineHeight, scrollback, cursorStyle, readOnly, transparent, tone, screenReaderMode }
   const wanted = React.useRef(options)
   wanted.current = options
 
@@ -192,6 +199,37 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
     }
     return size
   }, [])
+
+  /**
+   * The font is set, and the cells measured again once its faces are ready: a face the browser has not loaded yet (a
+   * font of the page, fetched when it is first used) is measured as the font after it in the list, which would leave
+   * the grid of another font under the glyphs. A font of the machine is ready at once, and nothing is waited for.
+   */
+  const setFont = React.useCallback((family: string) => {
+    const x = term.current
+    if (!x) return
+    x.options.fontFamily = family
+    const fonts = box.current?.ownerDocument.fonts
+    if (!fonts || typeof fonts.check !== 'function' || typeof fonts.load !== 'function') return
+    const font = `${x.options.fontSize ?? 13}px ${family}`
+    try {
+      if (fonts.check(font)) return
+      void fonts.load(font).then(
+        () => {
+          const now = term.current
+          // Another terminal, or another font since: that one has its own wait.
+          if (now !== x || now.options.fontFamily !== family) return
+          // xterm measures when the option changes, and has no call that measures the same font again.
+          now.options.fontFamily = 'monospace'
+          now.options.fontFamily = family
+          fit()
+        },
+        () => {},
+      )
+    } catch {
+      // A list the browser cannot read as a font: it draws what it can of it, and there is nothing to wait for.
+    }
+  }, [fit])
 
   React.useImperativeHandle(
     ref,
@@ -223,7 +261,7 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
     const doc = host.ownerDocument
     ensureStyle(doc, STYLE_ID, xtermCss)
     const o = wanted.current
-    const look = terminalLook(host, { tone: o.tone, transparent: o.transparent, quietCursor: o.readOnly })
+    const look = terminalLook(host, { tone: o.tone, transparent: o.transparent, quietCursor: o.readOnly, fontFamily: o.fontFamily })
     const x = new XTerm({
       theme: look.theme,
       fontFamily: look.fontFamily,
@@ -305,12 +343,13 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
     const observer = new ResizeObserver(soon)
     observer.observe(host)
     fit()
+    setFont(look.fontFamily)
     // The page's look changed (a theme, a scheme, a density): the colours and the font are read again.
     const stopWatching = watchLook(doc, () => {
-      const next = terminalLook(host, { tone: wanted.current.tone, transparent: wanted.current.transparent, quietCursor: wanted.current.readOnly })
+      const next = terminalLook(host, { tone: wanted.current.tone, transparent: wanted.current.transparent, quietCursor: wanted.current.readOnly, fontFamily: wanted.current.fontFamily })
       x.options.theme = next.theme
-      x.options.fontFamily = next.fontFamily
       if (wanted.current.fontSize === undefined) x.options.fontSize = next.fontSize
+      setFont(next.fontFamily)
       soon()
     })
     if (autoFocus) x.focus()
@@ -332,9 +371,10 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
     const x = term.current
     const host = box.current
     if (!x || !host) return
-    const look = terminalLook(host, { tone, transparent, quietCursor: readOnly })
+    const look = terminalLook(host, { tone, transparent, quietCursor: readOnly, fontFamily })
     x.options.theme = look.theme
     x.options.fontSize = fontSize ?? look.fontSize
+    if (x.options.fontFamily !== look.fontFamily) setFont(look.fontFamily)
     x.options.lineHeight = lineHeight
     x.options.scrollback = scrollback
     x.options.cursorStyle = cursorStyle
@@ -344,7 +384,7 @@ function Terminal({ ref, 'aria-label': ariaLabel, onData, onResize, onLinkOpen, 
     x.options.screenReaderMode = screenReaderMode
     x.textarea?.setAttribute('aria-label', label)
     fit()
-  }, [fontSize, lineHeight, scrollback, cursorStyle, readOnly, transparent, tone, screenReaderMode, label, fit])
+  }, [fontFamily, fontSize, lineHeight, scrollback, cursorStyle, readOnly, transparent, tone, screenReaderMode, label, fit, setFont])
 
   return (
     <div data-slot="terminal" data-readonly={readOnly ? '' : undefined} className={cn('relative size-full min-h-0 min-w-0', transparent ? '' : 'bg-paper', className)}>

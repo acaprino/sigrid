@@ -205,6 +205,159 @@ describe('Terminal', () => {
     document.documentElement.removeAttribute('data-scheme')
   })
 
+  test('the font is the token alone without `fontFamily`, and the family asked for goes before it', async () => {
+    document.documentElement.style.setProperty('--font-mono', 'Menlo, monospace')
+    const ref = React.createRef<TerminalHandle>()
+    const view = render(<Terminal ref={ref} />)
+    await flush()
+    expect(ref.current?.terminal?.options.fontFamily).toBe('Menlo, monospace')
+    view.rerender(<Terminal ref={ref} fontFamily="" />)
+    await flush()
+    expect(ref.current?.terminal?.options.fontFamily).toBe('Menlo, monospace')
+    view.unmount()
+    render(<Terminal ref={ref} fontFamily={'Cascadia Mono, "Fira Code"'} />)
+    await flush()
+    expect(ref.current?.terminal?.options.fontFamily).toBe('"Cascadia Mono", "Fira Code", Menlo, monospace')
+    document.documentElement.removeAttribute('style')
+  })
+
+  test('a font that changes while the terminal lives: the same terminal, its lines kept, fitted again, and the new size said', async () => {
+    let holds = { cols: 100, rows: 30 }
+    vi.spyOn(FitAddon.prototype, 'proposeDimensions').mockImplementation(() => holds)
+    boxSize(800, 400)
+    const onResize = vi.fn()
+    const ref = React.createRef<TerminalHandle>()
+    const view = render(<Terminal ref={ref} onResize={onResize} />)
+    await flush()
+    const x = ref.current!.terminal!
+    await act(async () => {
+      ref.current?.write('kept line\r\n$ ')
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    const cursor = { x: x.buffer.active.cursorX, y: x.buffer.active.cursorY }
+    expect(onResize).toHaveBeenCalledTimes(1)
+    // A wider font: the box holds fewer cells.
+    holds = { cols: 80, rows: 24 }
+    view.rerender(<Terminal ref={ref} onResize={onResize} fontFamily="Courier New" />)
+    await flush()
+    expect(ref.current?.terminal).toBe(x)
+    expect(x.options.fontFamily).toMatch(/^"Courier New", /)
+    expect(onResize).toHaveBeenCalledTimes(2)
+    expect(onResize).toHaveBeenLastCalledWith(80, 24)
+    expect(ref.current?.buffer.line(0)).toBe('kept line')
+    expect({ x: x.buffer.active.cursorX, y: x.buffer.active.cursorY }).toEqual(cursor)
+    // Back to the toolkit's own font.
+    holds = { cols: 100, rows: 30 }
+    view.rerender(<Terminal ref={ref} onResize={onResize} />)
+    await flush()
+    expect(x.options.fontFamily).not.toContain('Courier New')
+    expect(onResize).toHaveBeenLastCalledWith(100, 30)
+  })
+
+  test('the font asked for stays when the page\'s look changes, before the new token', async () => {
+    document.documentElement.style.setProperty('--font-mono', 'Menlo, monospace')
+    const ref = React.createRef<TerminalHandle>()
+    render(<Terminal ref={ref} fontFamily="Consolas" />)
+    await flush()
+    document.documentElement.style.setProperty('--font-mono', 'Monaco, monospace')
+    document.documentElement.setAttribute('data-scheme', 'light')
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)) })
+    expect(ref.current?.terminal?.options.fontFamily).toBe('"Consolas", Monaco, monospace')
+    document.documentElement.removeAttribute('style')
+    document.documentElement.removeAttribute('data-scheme')
+  })
+
+  test('a page without `document.fonts` (jsdom) draws the font and waits for nothing', async () => {
+    expect((document as { fonts?: unknown }).fonts).toBeUndefined()
+    const ref = React.createRef<TerminalHandle>()
+    const view = render(<Terminal ref={ref} fontFamily="Cascadia Mono" />)
+    await flush()
+    expect(() => view.rerender(<Terminal ref={ref} fontFamily="Consolas" />)).not.toThrow()
+    await flush()
+    expect(ref.current?.terminal?.options.fontFamily).toMatch(/^"Consolas", /)
+  })
+
+  describe('a face that is not ready', () => {
+    /** The page's fonts as a test has them: nothing is ready until the test says so. */
+    function fonts(check: (font: string) => boolean) {
+      const waits: { font: string; ready(): void }[] = []
+      const set = {
+        check: vi.fn(check),
+        load: vi.fn((font: string) => new Promise<unknown[]>((resolve) => { waits.push({ font, ready: () => resolve([]) }) })),
+      }
+      Object.defineProperty(document, 'fonts', { configurable: true, value: set })
+      return { set, waits }
+    }
+    afterEach(() => { delete (document as { fonts?: unknown }).fonts })
+
+    test('is waited for, and the cells are measured and the box fitted again once it is', async () => {
+      const { set, waits } = fonts(() => false)
+      let holds = { cols: 100, rows: 30 }
+      vi.spyOn(FitAddon.prototype, 'proposeDimensions').mockImplementation(() => holds)
+      boxSize(800, 400)
+      const onResize = vi.fn()
+      const ref = React.createRef<TerminalHandle>()
+      render(<Terminal ref={ref} onResize={onResize} fontFamily="Web Mono" fontSize={15} />)
+      await flush()
+      expect(set.load).toHaveBeenCalledTimes(1)
+      expect(waits[0]!.font).toMatch(/^15px "Web Mono", /)
+      expect(onResize).toHaveBeenCalledTimes(1)
+      const x = ref.current!.terminal!
+      const measured: string[] = []
+      x.onResize(() => measured.push(`${x.cols}x${x.rows}`))
+      const family = x.options.fontFamily
+      // The face arrives, and its cells are narrower than those of the font drawn while it was awaited.
+      holds = { cols: 120, rows: 30 }
+      await act(async () => {
+        waits[0]!.ready()
+        await Promise.resolve()
+      })
+      expect(x.options.fontFamily).toBe(family)
+      expect(measured).toEqual(['120x30'])
+      expect(onResize).toHaveBeenCalledTimes(2)
+      expect(onResize).toHaveBeenLastCalledWith(120, 30)
+    })
+
+    test('a font that is ready is not waited for, and a wait for a font that was changed since does nothing', async () => {
+      const { set, waits } = fonts((font) => !font.includes('Web Mono'))
+      const ref = React.createRef<TerminalHandle>()
+      const view = render(<Terminal ref={ref} />)
+      await flush()
+      expect(set.check).toHaveBeenCalled()
+      expect(set.load).not.toHaveBeenCalled()
+      view.rerender(<Terminal ref={ref} fontFamily="Web Mono" />)
+      await flush()
+      expect(set.load).toHaveBeenCalledTimes(1)
+      view.rerender(<Terminal ref={ref} fontFamily="Consolas" />)
+      await flush()
+      const x = ref.current!.terminal!
+      const set_ = vi.fn()
+      x.onResize(set_)
+      await act(async () => {
+        waits[0]!.ready()
+        await Promise.resolve()
+      })
+      expect(x.options.fontFamily).toMatch(/^"Consolas", /)
+      expect(set_).not.toHaveBeenCalled()
+      // The terminal is gone before the face is ready: nothing is touched.
+      view.rerender(<Terminal ref={ref} fontFamily="Web Mono" />)
+      await flush()
+      view.unmount()
+      await act(async () => {
+        waits.at(-1)!.ready()
+        await Promise.resolve()
+      })
+    })
+
+    test('a list the browser refuses does not throw', async () => {
+      fonts(() => { throw new SyntaxError('not a font') })
+      const ref = React.createRef<TerminalHandle>()
+      expect(() => render(<Terminal ref={ref} fontFamily="Consolas" />)).not.toThrow()
+      await flush()
+      expect(ref.current?.terminal?.options.fontFamily).toMatch(/^"Consolas", /)
+    })
+  })
+
   test('opens a link through the app: an address of the text, and the hyperlink the program wrote', async () => {
     const onLinkOpen = vi.fn()
     const ref = React.createRef<TerminalHandle>()
