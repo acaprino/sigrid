@@ -650,6 +650,18 @@ drawn as before, attribute for attribute (`test/layout.test.tsx`).
 Not added: a page wider than 768px is `Page`, which is `content-max` (1152px) wide (768px is `Column width="page"`); a
 failure in a box is a `Note tone="error"`; a status as a label is a `Badge tone`.
 
+## Asked on 2026-11-26: a graph that does not throw the reader off (not built)
+
+The owner asked these of `GraphCanvas`, from the work on managing the complexity of large graphs:
+
+- Opening, closing or filtering updates the drawing there is, without laying it out again from scratch: the things that
+  stay move no more than they need to ([Dogrusoz et al., 2018](https://doi.org/10.1371/journal.pone.0197238)).
+- What is closed and what is filtered are worked out together, in one place: applied one after the other by different
+  parts, they give views that disagree ([CMGV](https://doi.org/10.1177/14738716251383173)).
+
+Today: with the canvas's own layout the whole graph is laid out again when a thing opens or closes; with the app's
+places (`x`, `y`) they are the app's to keep. The canvas has no filter of its own.
+
 ## Off-scale values (with locations, before the polish pass)
 
 | Value | Where |
