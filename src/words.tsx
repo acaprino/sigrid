@@ -331,6 +331,8 @@ export interface Words {
     readonly inGroup: (group: string) => string
     /** The name of the button that puts the things the person moved back where the layout had them (`movable`): in the view's buttons only while something was moved. */
     readonly resetLayout: string
+    /** The name screen readers hear of a line the person can choose (`onSelectEdge` of the canvas): its two things, whether it goes both ways, and its words («Client to Server, 2 calls»). */
+    readonly lineName: (from: string, to: string, both: boolean, label?: string) => string
     /** With `movable`, how a thing is moved from the keyboard: in the description of each thing. */
     readonly moveKeys: string
     /** What screen readers hear when a thing was moved with the keys: its name and its new place in px. */
@@ -701,6 +703,7 @@ export const DEFAULT_WORDS: Words = {
     holds: (item, count) => `${item}, open, holds ${count}`,
     inGroup: (group) => `in ${group}`,
     resetLayout: 'Reset the layout',
+    lineName: (from, to, both, label) => `${from} ${both ? 'with' : 'to'} ${to}${label ? `, ${label}` : ''}`,
     moveKeys: 'Alt and an arrow key move it',
     moved: (item, x, y) => `${item} moved to ${x}, ${y}`,
     moreSteps: (count) => `+${count}`,
