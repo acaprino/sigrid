@@ -11,7 +11,7 @@
  * light or the dark one, whichever reads better on it, and the accent as text stays a separate, readable tone.
  */
 import { COLORS } from './colors'
-import { DEFAULT_DARK_DEPTH, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type GlassLevels, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
+import { DEFAULT_DARK_DEPTH, DEFAULT_DARK_TINT, DEFAULT_SHAPE, SHAPE_RADII, isThemeRadii, isThemeShape, themeDark, type DarkDepth, type GlassLevels, type SidebarKind, type Surfaces, type ThemeDef } from './theme-catalog'
 
 export interface Oklch {
   readonly L: number
@@ -421,7 +421,7 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
   // asks for its own hue and its grays have one; a warm hue takes the soft strength, since it turns muddy sooner.
   const dark = themeDark(t.dark)
   const d = DARK_LADDER[dark?.depth ?? DEFAULT_DARK_DEPTH]
-  const bc = dark?.tint === 'theme' && !mono && t.chroma > 0 ? TINT_CHROMA[warm ? 'soft' : 'medium'][1] : 0
+  const bc = (dark?.tint ?? DEFAULT_DARK_TINT) === 'theme' && !mono && t.chroma > 0 ? TINT_CHROMA[warm ? 'soft' : 'medium'][1] : 0
   const n = (L: number, k = 1): Oklch => {
     if (!bc) return ok(L, 0, 0)
     // A tinted background is never lighter than its gray: the ladder sits at the thresholds measured on the grays (the
@@ -439,7 +439,9 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     // 2026-11-23 that is the default of a parameter (`ThemeDef.dark`): the depth picks the ladder, the tint its chroma,
     // spread as on a page the user derives (`surfacesFrom`: the sidebar and the sheets as the page, the lines a little less).
     raised: n(d.raised), paper: n(d.page), paper2: n(d.sidebar), line: n(d.line, 0.9), input: n(0.53, 0.9),
-    ink: f(0.92, 0.4), inkSoft: f(0.8, 0.45), inkMute: f(0.67, 0.5),
+    // The muted text sits at 0.76 and the secondary at 0.86 (they were 0.67 and 0.8 until the review of 2026-11-26):
+    // small muted text on a dark sheet passed 4.5:1 and still read faint.
+    ink: f(0.92, 0.4), inkSoft: f(0.86, 0.45), inkMute: f(0.76, 0.5),
     // The accent as text is light, to be readable on the dark background; the button fill is a solid and deeper tone,
     // with light text on it. In "Ink" the button stays light with dark text.
     accent: mono ? ok(0.9, 0, 0) : strong ? ok(0.8, Math.min(ac, tone.k > 1 ? 0.2 : 0.17), ah) : ok(0.78, Math.min(ac * 0.78, tone.k > 1 ? 0.16 : 0.125), ah),
@@ -448,8 +450,9 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
     onFill: mono ? ok(0.16, 0, 0) : strong ? labelOn(strong, ok(0.99, 0.008, ah)) : tone.on ? labelOn(darkFill, ok(0.99, 0.008, ah)) : ok(0.99, 0.008, ah),
     accentSoft: ok(d.soft, mono ? 0 : tint(0.042), ah),
     selected: mono ? ok(d.selected + 0.01, 0, 0) : ok(d.selected, Math.max(sc * 0.38, tint(0.032)), sh), selectedInk: mono ? ok(0.96, 0, 0) : ok(0.94, sc * 0.25, sh),
-    sidebar: full ? ok(d.solid, Math.max(tc * 1.1, bc), t.hue) : n(d.sidebar),
-    barInk: f(0.9, 0.4), barMute: f(0.68, 0.45),
+    // The dark column stays a sober near-black, whatever the tint of the page.
+    sidebar: full ? ok(d.solid, Math.max(tc * 1.1, bc), t.hue) : column ? ok(d.sidebar, 0, 0) : n(d.sidebar),
+    barInk: f(0.9, 0.4), barMute: f(0.76, 0.45),
     barSelected: column ? f(d.row, 1) : ok(d.row, Math.max(ac * 0.45, 0.036), ah), barSelectedInk: column ? f(0.97, 0.3) : ok(0.95, ac * 0.25, ah),
     barAccent: mono ? ok(0.93, 0, 0) : ok(0.8, Math.min(ac * 1.2, 0.13), ah), barAccentInk: ok(0.22, mono ? 0 : 0.03, ah),
   }
@@ -470,14 +473,16 @@ const at = (token: string, percent: number) => `color-mix(in srgb, var(--color-$
  */
 function elevationOf(scheme: ThemeScheme): Record<string, string> {
   if (scheme === 'light') {
-    const soft = at('drop', 9)
+    // Layered (the review of 2026-11-26): a tight drop where the surface touches the page, a wider one under it and,
+    // from `md` up, a faint one far around. One wide drop alone read as a surface resting on a smudge.
     const edge = at('drop', 15)
+    const contact = at('drop', 6)
     return {
       '--elevation-xs': `0 1px 2px ${edge}, 0 0 1px ${at('drop', 19)}`,
-      '--elevation-sm': `0 2px 6px ${soft}, 0 0 1px ${edge}`,
-      '--elevation-md': `0 6px 16px ${soft}, 0 0 1px ${edge}`,
-      '--elevation-lg': `0 12px 32px ${at('drop', 12)}, 0 0 1px ${edge}`,
-      '--elevation-float': `0 24px 48px ${edge}, 0 4px 8px ${soft}, 0 0 1px ${edge}`,
+      '--elevation-sm': `0 1px 2px ${contact}, 0 2px 6px ${at('drop', 7)}, 0 0 1px ${edge}`,
+      '--elevation-md': `0 1px 2px ${contact}, 0 4px 8px ${contact}, 0 12px 24px ${at('drop', 8)}, 0 0 1px ${edge}`,
+      '--elevation-lg': `0 2px 4px ${contact}, 0 8px 16px ${at('drop', 7)}, 0 20px 40px ${at('drop', 10)}, 0 0 1px ${edge}`,
+      '--elevation-float': `0 2px 4px ${contact}, 0 8px 16px ${at('drop', 8)}, 0 24px 48px ${edge}, 0 0 1px ${edge}`,
     }
   }
   const drop = at('drop', 47)
@@ -744,6 +749,14 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
     // label (light instead of dark, or the reverse) is tried before giving up.
     const other = fillWith(luminance(solved.on) > 0.5 ? ok(0.13, 0.02, s.fill.h) : light ? ok(1, 0, 0) : ok(0.99, 0.008, s.fill.h))
     if (other.met) solved = other
+  }
+  // In dark a mid-tone fill takes a dark label by the numbers (it has the higher ratio) and still reads weak: the one
+  // primary action is then the faintest label on the screen. Where a deeper tone of the same fill holds a light label
+  // at 4.5:1 and still holds 3:1 on the backgrounds, that one is taken (the owner's choice of 2026-11-26). Only the
+  // engine's own fill: a theme's stated fill, a curated palette's and the user's own colour stay as they were given.
+  if (!light && !custom && !theme.fill && !theme.surfaces && theme.accent[0] > 0 && luminance(solved.on) < 0.5) {
+    const lightLabel = fillWith(ok(0.99, 0.008, s.fill.h))
+    if (lightLabel.met) solved = lightLabel
   }
   if (solved.moved) corrected.add('primary')
   const fill = solved.c

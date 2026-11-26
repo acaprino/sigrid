@@ -27,35 +27,38 @@ const def = (id: string): ThemeDef => DEFS.find((t) => t.id === id)!
 const SURFACES = ['paper', 'paper-2', 'sidebar-paper', 'raised', 'line'] as const
 
 describe('the choices', () => {
-  test('three depths and two tints; the standard neutral anthracite is the default', () => {
+  test('three depths and two tints; the standard anthracite in the hue of the theme is the default', () => {
     expect(DARK_DEPTHS).toEqual(['deep', 'standard', 'soft'])
     expect(DARK_TINTS).toEqual(['neutral', 'theme'])
     expect(DEFAULT_DARK_DEPTH).toBe('standard')
-    expect(DEFAULT_DARK_TINT).toBe('neutral')
+    expect(DEFAULT_DARK_TINT).toBe('theme')
   })
 
   test('a saved value keeps only what is valid and not the default; with nothing left there are no parameters', () => {
-    expect(themeDark({ depth: 'deep', tint: 'theme' })).toEqual({ depth: 'deep', tint: 'theme' })
+    expect(themeDark({ depth: 'deep', tint: 'neutral' })).toEqual({ depth: 'deep', tint: 'neutral' })
     expect(themeDark({ depth: 'soft', tint: 'navy', more: 1 })).toEqual({ depth: 'soft' })
-    expect(themeDark({ depth: 'pitch', tint: 'theme' })).toEqual({ tint: 'theme' })
-    for (const none of [null, undefined, 'deep', 3, [], {}, { depth: 'standard' }, { tint: 'neutral' }, { depth: 'standard', tint: 'neutral' }, { depth: 'constructor' }]) expect(themeDark(none), JSON.stringify(none)).toBeNull()
+    expect(themeDark({ depth: 'pitch', tint: 'neutral' })).toEqual({ tint: 'neutral' })
+    for (const none of [null, undefined, 'deep', 3, [], {}, { depth: 'standard' }, { tint: 'theme' }, { depth: 'standard', tint: 'theme' }, { depth: 'constructor' }]) expect(themeDark(none), JSON.stringify(none)).toBeNull()
   })
 })
 
 describe('without the parameters nothing moves', () => {
+  // The ladder of 4.3.2 is the neutral one, which a theme now asks for by name (`NEUTRAL`).
+  const NEUTRAL = { tint: 'neutral' } as const
+  // The muted text alone is not 4.3.2's: it went a step lighter with the review of 2026-11-26 (0.67 to 0.76).
   test('the dark of a generated theme is the ladder it had: values computed before the parameters existed (Sigrid 4.3.2)', () => {
-    const neutro = tokensFor(def('neutro'), 'dark', AS_CHOSEN).colors
+    const neutro = tokensFor({ ...def('neutro'), dark: NEUTRAL }, 'dark', AS_CHOSEN).colors
     expect([neutro['paper'], neutro['sidebar-paper'], neutro['paper-2'], neutro['raised'], neutro['line'], neutro['input'], neutro['selected'], neutro['accent-soft'], neutro['ink-mute']])
-      .toEqual(['#1e1e1e', '#171717', '#171717', '#2a2a2a', '#353535', '#747474', '#0c2927', '#0c3230', '#969593'])
+      .toEqual(['#1e1e1e', '#171717', '#171717', '#2a2a2a', '#353535', '#747474', '#0c2927', '#0c3230', '#b2b1af'])
     // In the default tone the sidebar takes the theme's tint, as before.
-    const notte = tokensFor(def('notte'), 'dark').colors
+    const notte = tokensFor({ ...def('notte'), dark: NEUTRAL }, 'dark').colors
     expect([notte['paper'], notte['sidebar-paper'], notte['raised'], notte['line'], notte['selected'], notte['accent-soft'], notte['ink-mute']])
-      .toEqual(['#1e1e1e', '#0b121b', '#2a2a2a', '#353535', '#492600', '#422200', '#959699'])
+      .toEqual(['#1e1e1e', '#0b121b', '#2a2a2a', '#353535', '#492600', '#422200', '#afb1b4'])
     // The solid sidebar and Ink.
-    const solid = tokensFor(def('ultravioletto'), 'dark', AS_CHOSEN).colors
+    const solid = tokensFor({ ...def('ultravioletto'), dark: NEUTRAL }, 'dark', AS_CHOSEN).colors
     expect([solid['paper'], solid['sidebar-paper'], solid['paper-2'], solid['selected']]).toEqual(['#1e1e1e', '#111014', '#171717', '#2a1747'])
     const ink = tokensFor(def('inchiostro'), 'dark').colors
-    expect([ink['paper'], ink['sidebar-paper'], ink['selected'], ink['accent-soft'], ink['ink-mute']]).toEqual(['#1e1e1e', '#171717', '#333333', '#2b2b2b', '#9b9b9b'])
+    expect([ink['paper'], ink['sidebar-paper'], ink['selected'], ink['accent-soft'], ink['ink-mute']]).toEqual(['#1e1e1e', '#171717', '#333333', '#2b2b2b', '#b1b1b1'])
   })
 
   test.each(DEFS.map((t) => t.id))('%s: no parameters, the default ones and values that are none give the same tokens, in both schemes', (id) => {
@@ -63,7 +66,7 @@ describe('without the parameters nothing moves', () => {
     for (const scheme of ['light', 'dark'] as const) {
       for (const tone of [null, AS_CHOSEN]) {
         const plain = tokensFor(t, scheme, tone)
-        for (const dark of [{}, { depth: 'standard' }, { tint: 'neutral' }, { depth: 'standard', tint: 'neutral' }, { depth: 'pitch', tint: 'navy' }, 'deep', null]) {
+        for (const dark of [{}, { depth: 'standard' }, { tint: 'theme' }, { depth: 'standard', tint: 'theme' }, { depth: 'pitch', tint: 'navy' }, 'deep', null]) {
           expect(tokensFor({ ...t, dark: dark as never }, scheme, tone), `${scheme} ${JSON.stringify(dark)}`).toEqual(plain)
         }
       }
@@ -80,7 +83,7 @@ describe('without the parameters nothing moves', () => {
 
 describe('the depth', () => {
   test('the page of each depth: a near-black, the anthracite, a lighter charcoal', () => {
-    const page = (depth: ThemeDark['depth']) => tokensFor({ ...def('neutro'), dark: { depth } }, 'dark', AS_CHOSEN).colors
+    const page = (depth: ThemeDark['depth']) => tokensFor({ ...def('neutro'), dark: { depth, tint: 'neutral' } }, 'dark', AS_CHOSEN).colors
     expect([page('deep')['paper'], page('deep')['sidebar-paper'], page('deep')['raised'], page('deep')['line']]).toEqual(['#161616', '#0d0d0d', '#242424', '#303030'])
     expect([page('standard')['paper'], page('standard')['sidebar-paper'], page('standard')['raised'], page('standard')['line']]).toEqual(['#1e1e1e', '#171717', '#2a2a2a', '#353535'])
     expect([page('soft')['paper'], page('soft')['sidebar-paper'], page('soft')['raised'], page('soft')['line']]).toEqual(['#222222', '#1c1c1c', '#2a2a2a', '#373737'])
@@ -171,7 +174,7 @@ describe('the tint', () => {
 
   test.each(TINTED)('%s: the tint keeps the ladder, each background about as light as its gray and never lighter', (id) => {
     for (const depth of DARK_DEPTHS) {
-      const neutral = tokensFor({ ...def(id), dark: { depth } }, 'dark', AS_CHOSEN).colors
+      const neutral = tokensFor({ ...def(id), dark: { depth, tint: 'neutral' } }, 'dark', AS_CHOSEN).colors
       const tinted = tokensFor({ ...def(id), dark: { depth, tint: 'theme' } }, 'dark', AS_CHOSEN).colors
       for (const name of ['paper', 'raised', 'line']) {
         expect(Math.abs(fromHex(tinted[name]!).L - fromHex(neutral[name]!).L), `${depth} ${name}`).toBeLessThan(0.008)

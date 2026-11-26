@@ -188,13 +188,13 @@ How it moves is the app's to choose, once for the whole page, as the theme is:
 ```tsx
 import { MotionProvider, applyMotionFeel } from '@acaprino/sigrid'
 
-<MotionProvider animated={settings.motion} ease="ease-in-out" pace={1}>…</MotionProvider>
+<MotionProvider animated={settings.motion} ease="fluent" pace={1}>…</MotionProvider>
 // or, in the entry file, with what the user chose:
 applyMotionFeel({ ease: 'ease-out', pace: 1.5 })
 ```
 
-`ease` is the curve of every movement: `ease-in-out` (the default), `ease`, `ease-out`, `ease-in` (the four of CSS;
-`MOTION_EASE_NAMES` lists them for a settings page), or `fluent`, where each kind of movement has its own of Fluent
+`ease` is the curve of every movement: `fluent` (the default), or `ease-in-out`, `ease`, `ease-out`, `ease-in` (the four of CSS;
+`MOTION_EASE_NAMES` lists them for a settings page). Under `fluent` each kind of movement has its own curve of Fluent
 2's (what enters decelerates, what leaves accelerates, what moves in place eases). No movement is linear. `pace`
 multiplies the toolkit's times (100, 150 and 200ms): 1 at first, from 0.5 to 2. What moves by script reads the
 choice at each movement; what the stylesheet moves reads it from variables on the root (`--motion-fast`,

@@ -98,3 +98,12 @@ test('asChild: the child takes the busy state too', () => {
   fireEvent.click(link)
   expect(onClick).not.toHaveBeenCalled()
 })
+
+test('loading with no loadingText: the button steps back, so the press is seen; with one, the text says it', () => {
+  const { rerender } = render(<Button loading>Save</Button>)
+  expect(screen.getByRole('button').className).toContain('opacity-70')
+  rerender(<Button loading loadingText="Saving…">Save</Button>)
+  expect(screen.getByRole('button').className).not.toContain('opacity-70')
+  rerender(<Button>Save</Button>)
+  expect(screen.getByRole('button').className).not.toContain('opacity-70')
+})

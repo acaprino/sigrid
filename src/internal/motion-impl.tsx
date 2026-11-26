@@ -13,7 +13,7 @@
 //   moving    easy ease (`easyEase`): what stays on the page and changes place starts and ends gently. The pill under
 //             a choice, a list closing up, the notices moving up, the hover background, an arrow turning.
 // The app may choose another feel (`applyMotionFeel`, motion.ts): one of the four curves of CSS for every movement
-// (ease-in-out is the default), or these of Fluent's, and a pace that multiplies the times below. The movements read
+// or these of Fluent's (the default), and a pace that multiplies the times below. The movements read
 // it when they run (`tr`, `motionCurve`, `motionMs`); the constants here are Fluent's own, at the toolkit's pace.
 // Every duration is under 250 ms, so of Fluent's eight only the first four are used:
 //   100  `faster`  small and near: a press, a hint, the check mark, the hover background, whatever leaves

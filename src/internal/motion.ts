@@ -17,7 +17,7 @@ let marking = 0
  * one provider has motion on, the document root carries `data-motion`: with it (and only where the system allows
  * motion) a control's fill, border and text ease to the state under the pointer instead of snapping (theme.css).
  */
-export function MotionProvider({ animated, ease, pace, children }: { animated: boolean; /** The curve of every movement. Absent: the one in use (ease-in-out at first). */ ease?: MotionEase | undefined; /** How long movements take, as a multiple of the toolkit's times. Absent: the one in use (1 at first). */ pace?: number | undefined; children: ReactNode }) {
+export function MotionProvider({ animated, ease, pace, children }: { animated: boolean; /** The curve of every movement. Absent: the one in use (Fluent's curves at first). */ ease?: MotionEase | undefined; /** How long movements take, as a multiple of the toolkit's times. Absent: the one in use (1 at first). */ pace?: number | undefined; children: ReactNode }) {
   useEffect(() => {
     if (!animated || typeof document === 'undefined') return
     const root = document.documentElement
@@ -52,7 +52,7 @@ export const MOTION_EASES = {
 } as const
 
 /** The curves a feel may name, in the order they are offered. */
-export const MOTION_EASE_NAMES: readonly MotionEase[] = ['ease-in-out', 'ease', 'ease-out', 'ease-in', 'fluent']
+export const MOTION_EASE_NAMES: readonly MotionEase[] = ['fluent', 'ease-in-out', 'ease', 'ease-out', 'ease-in']
 
 /** True for a value that names a curve (one kept by the app between visits). */
 export function isMotionEase(value: unknown): value is MotionEase {
@@ -71,8 +71,11 @@ export const MOTION_PACE = { min: 0.5, max: 2 } as const
 /** How the toolkit moves: the curve, and the pace (1: the toolkit's own times; 1.5: half as long again). */
 export type MotionFeel = { ease: MotionEase; pace: number }
 
-/** Movements ease in and out, at the toolkit's own times. */
-export const DEFAULT_MOTION_FEEL: MotionFeel = { ease: 'ease-in-out', pace: 1 }
+/**
+ * Each kind of movement on its own curve of Fluent's, at the toolkit's own times: what enters starts fast and settles,
+ * so it never reads as lag (the review of 2026-11-26; one curve for all three, ease-in-out, was the default before).
+ */
+export const DEFAULT_MOTION_FEEL: MotionFeel = { ease: 'fluent', pace: 1 }
 
 let feel: MotionFeel = DEFAULT_MOTION_FEEL
 

@@ -89,6 +89,21 @@ export function toneHasEffect(pick: Omit<ThemePick, 'tone'>): boolean {
   })
 }
 
+/** The mark on an element whose theme is being changed: under it nothing eases (theme.css). */
+const THEME_SWAP_ATTR = 'data-theme-swap'
+
+/**
+ * A theme put over another changes every colour at once: for two frames the element is marked, and under the mark no
+ * transition runs, so the controls do not fade after the page has already changed. Not on the first theme of an
+ * element (nothing to change from), and not where there are no frames (a server, a test without them).
+ */
+function holdTransitions(el: HTMLElement): void {
+  const frame = el.ownerDocument.defaultView?.requestAnimationFrame
+  if (!frame || !el.hasAttribute('data-scheme')) return
+  el.setAttribute(THEME_SWAP_ATTR, '')
+  frame(() => frame(() => el.removeAttribute(THEME_SWAP_ATTR)))
+}
+
 /**
  * Puts a theme in a scheme on an element: the color and shape variables as an inline style, and the attributes
  * (`data-theme`, `data-scheme` and the shape ones). On the document root it also updates the browser bar's
@@ -96,6 +111,7 @@ export function toneHasEffect(pick: Omit<ThemePick, 'tone'>): boolean {
  */
 export function applyTheme(el: HTMLElement, pick: ThemePick): void {
   const t = tokensOf(pick)
+  holdTransitions(el)
   for (const [k, v] of Object.entries(themeVariables(pick))) el.style.setProperty(k, v)
   el.setAttribute('data-theme', t.theme)
   el.setAttribute('data-scheme', t.scheme)

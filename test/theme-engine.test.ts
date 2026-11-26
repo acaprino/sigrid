@@ -349,9 +349,11 @@ describe.each(CASES)('%s', (_name, themeId, scheme) => {
       expect(luminance(t['sidebar-paper']!)).toBeLessThan(luminance(t['paper']!))
       expect(luminance(t['paper-2']!)).toBeLessThanOrEqual(luminance(t['paper']!))
       expect(contrast(t['raised']!, t['paper']!)).toBeGreaterThanOrEqual(1.14)
-      // No muddy or overly tinted backgrounds in the dark: the paper's RGB spread stays sober.
+      // No muddy or overly tinted backgrounds in the dark: the paper's RGB spread stays sober. The bound was 12 while
+      // the dark page was a gray by default; the page in the theme's hue (the default since 2026-11-26) reaches 14 on
+      // the coolest grays.
       const ch = [1, 3, 5].map((i) => parseInt(t['paper']!.slice(i, i + 2), 16))
-      expect(Math.max(...ch) - Math.min(...ch)).toBeLessThanOrEqual(12)
+      expect(Math.max(...ch) - Math.min(...ch)).toBeLessThanOrEqual(14)
     }
   })
 

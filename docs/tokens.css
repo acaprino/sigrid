@@ -80,9 +80,9 @@
     --color-paper: #1e1e1e;
     --color-paper-2: #171717;
     --color-sidebar-paper: #171717;
-    --color-ink: #e4e4e4;
-    --color-ink-soft: #bebebe;
-    --color-ink-mute: #9b9b9b;
+    --color-ink: #efefef;
+    --color-ink-soft: #d1d1d1;
+    --color-ink-mute: #b1b1b1;
     --color-line: #353535;
     --color-accent: #dedede;
     --color-accent-hover: #cfcfcf;
@@ -90,12 +90,12 @@
     --color-raised: #2a2a2a;
     --color-drop: #060606;
     --color-background: #1e1e1e;
-    --color-foreground: #e4e4e4;
+    --color-foreground: #efefef;
     --color-popover: #2a2a2a;
-    --color-popover-foreground: #e4e4e4;
+    --color-popover-foreground: #efefef;
     --color-primary: #dedede;
     --color-primary-foreground: #0d0d0d;
-    --color-muted-foreground: #9b9b9b;
+    --color-muted-foreground: #b1b1b1;
     --color-destructive: #ff9a8d;
     --color-destructive-soft: #3d2420;
     --color-destructive-foreground: #17161a;
@@ -115,8 +115,8 @@
     --color-spot-foreground: #0d0d0d;
     --color-spot-soft: #2b2b2b;
     --color-spot-ink: #dedede;
-    --color-sidebar-ink: #bebebe;
-    --color-sidebar-mute: #9b9b9b;
+    --color-sidebar-ink: #d1d1d1;
+    --color-sidebar-mute: #b1b1b1;
     --color-sidebar-selected: #333333;
     --color-sidebar-selected-ink: #f2f2f2;
     --color-sidebar-accent: #dedede;
@@ -156,10 +156,10 @@
   --icon-join: round;
   --border-width: 1px;
   --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
-  --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-  --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-  --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 12%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-  --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-sm: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 2px 6px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-md: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 12px 24px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-lg: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 20px 40px color-mix(in srgb, var(--color-drop) 10%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+  --elevation-float: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -386,9 +386,9 @@
   --motion-faster: 100ms;
   --motion-fast: 150ms;
   --motion-normal: 200ms;
-  --motion-ease-enter: cubic-bezier(0.42, 0, 0.58, 1);
-  --motion-ease-leave: cubic-bezier(0.42, 0, 0.58, 1);
-  --motion-ease-move: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-enter: cubic-bezier(0, 0, 0, 1);
+  --motion-ease-leave: cubic-bezier(0.8, 0, 0.78, 1);
+  --motion-ease-move: cubic-bezier(0.33, 0, 0.67, 1);
 }
 :root {
   --grid-columns-sm: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));

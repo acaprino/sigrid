@@ -95,8 +95,8 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - No gradient, no blur, no emoji in the interface, no decorative icon, no animation that loops. Glass is only a
   theme's `material: 'glass'` (the window's own material behind the page's ground), never drawn by a part.
 - Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
-  with it off. How it moves is the app's choice, once for the whole page: the curve (`ease-in-out` at first, or
-  `ease`, `ease-in`, `ease-out`, `fluent`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
+  with it off. How it moves is the app's choice, once for the whole page: the curve (`fluent` at first, or
+  `ease-in-out`, `ease`, `ease-in`, `ease-out`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
   `pace`. No part writes a time or a curve of its own.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
