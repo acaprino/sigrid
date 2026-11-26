@@ -14,7 +14,8 @@
 // switch (DESIGN.md Colors).
 // Not knowing how far it is (`value={null}`) is a track with no range and the word «In progress», not a loop.
 // In a line of words (the frame's status row, docs/patterns.md «Progress of a task») the bar is `inline`: a fixed width
-// that does not give way, so the words beside it stay put while the value moves.
+// that does not give way, so the words beside it stay put while the value moves. Its text (the value, «Complete»,
+// «In progress») stands beside the bar, in the same line, and never under it: a status row has one line.
 // For screen readers: `role="progressbar"` named by the app, with `aria-valuenow` and, always, `aria-valuetext` («45%»,
 // «Complete»). The visible text repeats it and is hidden from them. A page that updates a value often should
 // announce the end and the failure only, in a live region of its own, not every percent.
@@ -78,10 +79,10 @@ const TRACK = "bg-ink/6"
  * The text beside the shape: the value, or what became of the task. Said once to screen readers, by `aria-valuetext`.
  * With `mark`, a failure starts with the `error` icon (the ring holds its own, inside it).
  */
-const Text = ({ mood, mark = false, children }: { mood: Mood; mark?: boolean; children: React.ReactNode }) => {
+const Text = ({ mood, mark = false, inline = false, children }: { mood: Mood; mark?: boolean; inline?: boolean; children: React.ReactNode }) => {
   const failed = mark && mood === "error"
   return (
-    <span data-slot="progress-text" aria-hidden="true" className={cn("text-xs font-medium tabular-nums", TEXT[mood], failed && "inline-flex items-center gap-1")}>
+    <span data-slot="progress-text" aria-hidden="true" className={cn("text-xs font-medium tabular-nums", TEXT[mood], failed && "inline-flex items-center gap-1", inline && "shrink-0 whitespace-nowrap")}>
       {failed ? <Icon name="error" className="size-3.5" /> : null}
       {children}
     </span>
@@ -92,12 +93,12 @@ const Text = ({ mood, mark = false, children }: { mood: Mood; mark?: boolean; ch
 function Progress({ size = "md", showValue, inline = false, className, ...props }: ProgressProps) {
   const p = useProgress(props)
   return (
-    <div data-slot="progress" data-state={p.mood} className={cn("flex w-full flex-col gap-1.5", inline && "w-48 shrink-0", className)}>
-      <div {...p.aria} aria-label={props["aria-label"]} className={cn("w-full overflow-hidden rounded-sm", TRACK, size === "sm" ? "h-2" : "h-2.5")}>
+    <div data-slot="progress" data-state={p.mood} className={cn("flex w-full flex-col gap-1.5", inline && "w-48 shrink-0 flex-row items-center gap-2", className)}>
+      <div {...p.aria} aria-label={props["aria-label"]} className={cn("w-full overflow-hidden rounded-sm", TRACK, size === "sm" ? "h-2" : "h-2.5", inline && "min-w-0 flex-1")}>
         <div data-slot="progress-range" className={cn("h-full", FILL[p.mood])} style={{ width: `${p.fraction * 100}%` }} />
       </div>
       {showValue || p.mood !== "active" ? (
-        <Text mood={p.mood} mark>
+        <Text mood={p.mood} mark inline={inline}>
           {p.text}
         </Text>
       ) : null}

@@ -25,6 +25,20 @@ describe('Progress', () => {
     expect(bar.getAttribute('data-state')).toBe('active')
   })
 
+  test('inline puts the text beside the bar, in one line; a bar that is not inline keeps it under', () => {
+    const { container, rerender } = render(<Progress aria-label="Scan" value={41} size="sm" inline showValue />)
+    const root = () => container.querySelector('[data-slot="progress"]') as HTMLElement
+    expect(root().className).toContain('flex-row')
+    expect(root().className).not.toContain('flex-col')
+    expect(root().querySelector('[data-slot="progress-text"]')!.className).toContain('whitespace-nowrap')
+    // What became of it stands beside the bar too: «In progress», «Complete», «Failed».
+    rerender(<Progress aria-label="Scan" value={null} size="sm" inline />)
+    expect(root().className).toContain('flex-row')
+    expect(root().querySelector('[data-slot="progress-text"]')!.textContent).toBe('In progress')
+    rerender(<Progress aria-label="Scan" value={41} showValue />)
+    expect(root().className).toContain('flex-col')
+  })
+
   test('the range is as wide as the value, on the scale of max', () => {
     const { container } = render(<Progress aria-label="Import" value={3} max={12} />)
     expect((container.querySelector('[data-slot="progress-range"]') as HTMLElement).style.width).toBe('25%')

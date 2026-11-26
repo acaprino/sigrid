@@ -294,7 +294,7 @@ Imago's `imago-shell` crate does these for Tauri on Windows.
   (`status="error"`), and Retry is the one solid action.
 - A job of the whole window (an analysis, a scan, a cleaning), as Xiox does it: the frame's `status` row is its
   progress while it runs, and appears there by itself, under the tabs. In order: the state as a word («Analyzing»),
-  the job, a `Progress` of a fixed width, how far as text («36%»), and the item it is on; what the row says at its end
+  the job, a `Progress` of a fixed width (`inline`, with `showValue` its percent stands beside the bar, in the one line of the row), how far as text («36%»), and the item it is on; what the row says at its end
   stays. The list is frozen meanwhile: what the job works on cannot change. At the end the row says the result
   («Analysis done · 13.48 GB to delete»).
 - A time that runs out: `ProgressRing` with the time left as its value and as its text; it empties by itself.
