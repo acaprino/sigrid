@@ -230,6 +230,9 @@ describe('text', () => {
     expect(classes(screen.getByText('run-42'))).toEqual(expect.arrayContaining(['font-mono', 'text-2xs']))
     expect(classes(screen.getByText('run-42'))).not.toContain('text-xs')
     expect(screen.getByText('words').hasAttribute('data-selectable')).toBe(false)
+    // The app's own mark on a line that is not monospace stays.
+    render(<Text data-selectable="">marked by the app</Text>)
+    expect(screen.getByText('marked by the app').getAttribute('data-selectable')).toBe('')
   })
 
   test('a status is its word in the colour of its tone, the tones of a badge; on the chosen row and on a row under the pointer it takes the ink of the row', () => {

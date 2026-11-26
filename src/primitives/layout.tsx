@@ -407,7 +407,7 @@ function Text({ variant = "body", as = "span", pre = false, truncate = false, mo
       data-slot="text"
       data-variant={variant}
       data-tone={tone}
-      data-selectable={mono ? "" : undefined}
+      {...(mono && { "data-selectable": "" })}
       className={
         cn(
           // Before the variant: a caption or a kicker in the monospace face keeps its own size.
