@@ -881,6 +881,20 @@ function ProgressSection() {
           </Cell>
         </div>
       </Row>
+      <Row label="in a line of words (the status row)">
+        <div data-sample="progress-inline" className="flex h-10 w-full max-w-2xl items-center gap-2 rounded-md bg-paper-2 px-3">
+          <Badge variant="secondary">Cleaning</Badge>
+          <Text truncate>Cleaning</Text>
+          <Progress aria-label="Cleaning" value={sent} size="sm" inline showValue />
+          <Text variant="muted" truncate>Cargo cache · Extracted dependencies of every project that was built</Text>
+        </div>
+        <div className="flex h-10 w-full max-w-2xl items-center gap-2 rounded-md bg-paper-2 px-3">
+          <Badge variant="secondary">Reading</Badge>
+          <Progress aria-label="Reading, not known" value={null} size="sm" inline />
+          <Progress aria-label="Reading, done" value={100} size="sm" inline />
+          <Progress aria-label="Reading, failed" value={35} status="error" size="sm" inline />
+        </div>
+      </Row>
       <Row label="a ring">
         <Cell label="25%">
           <ProgressRing aria-label="Ring, a quarter" value={25} showValue />
