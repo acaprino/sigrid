@@ -269,7 +269,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   }, [hasBar, hasActions, hasFooter])
   const id = React.useId()
   // The order of the regions, the frame's as it is now drawn (set below, once the layout is known).
-  const regions = React.useRef(REGIONS)
+  const regionOrder = React.useRef(REGIONS)
   // F6 and Shift+F6, from wherever the focus is in the frame (or nowhere): the next region that has something to focus.
   React.useEffect(() => {
     const el = root.current
@@ -279,7 +279,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
     const own = (region: Element) => region.closest('[data-slot="app-shell"]') === el
     const listen = (event: KeyboardEvent) => {
       if (event.key !== "F6" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return
-      const found = regions.current.map(({ inside, page }) => Array.from(el.querySelectorAll<HTMLElement>(inside)).find(own) ?? (page ? doc.querySelector<HTMLElement>(page) : null))
+      const found = regionOrder.current.map(({ inside, page }) => Array.from(el.querySelectorAll<HTMLElement>(inside)).find(own) ?? (page ? doc.querySelector<HTMLElement>(page) : null))
       const active = doc.activeElement
       const nowhere = active === null || active === doc.body || active === doc.documentElement
       // With the focus nowhere, the outermost frame answers; with it somewhere, the frame it is in (or one of its
@@ -314,7 +314,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   const beside = Boolean(sidebar) && layout.sidebar !== "drawer"
   // Docked beside the sidebar only where one lies beside the work area; a drawer stays over the end of the content.
   const inspectorFirst = inspectorAt === "sidebar" && beside && layout.inspector === "docked"
-  regions.current = inspectorFirst ? REGIONS_INSPECTOR_FIRST : REGIONS
+  regionOrder.current = inspectorFirst ? REGIONS_INSPECTOR_FIRST : REGIONS
   // Everything under the title bar, so the overlays of a window start there.
   const below = (
     <>
