@@ -143,7 +143,7 @@ function Button({
     "data-slot": "button",
     "data-variant": variant,
     "data-size": size,
-    className: cn(buttonVariants({ variant, size, className }), loading && BUSY),
+    className: cn(buttonVariants({ variant, size, className }), loading && BUSY, loading && loadingText === undefined && WAITING),
   }
   // While busy a click (or the Enter and Space that become one, or a form's implicit submit) does nothing.
   const busy = loading
@@ -168,8 +168,13 @@ function Button({
   )
 }
 
-/** A busy button: no pointer (no hover, no press, no click), the label at full contrast. */
+/** A busy button: no pointer (no hover, no press, no click). */
 const BUSY = "pointer-events-none"
+/**
+ * A busy button with no `loadingText`: with nothing to swap the label for, the button steps back a little, so the
+ * press is seen to have been taken. Lighter than `disabled` (half): it is still the action in hand, not one out of reach.
+ */
+const WAITING = "opacity-70"
 
 /**
  * The neutral quiet chip: Park's subtle variant for chips (a row of quick choices in an app), on top of the `ghost`

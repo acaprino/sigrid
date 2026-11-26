@@ -107,10 +107,10 @@ x-zsd:
     color-divider: "{colors.divider}"
   elevation:
     xs: "0 1px 2px #14171726, 0 0 1px #14171730"
-    sm: "0 2px 6px #14171717, 0 0 1px #14171726"
-    md: "0 6px 16px #14171717, 0 0 1px #14171726"
-    lg: "0 12px 32px #1417171F, 0 0 1px #14171726"
-    float: "0 24px 48px #14171726, 0 4px 8px #14171717, 0 0 1px #14171726"
+    sm: "0 1px 2px #1417170F, 0 2px 6px #14171712, 0 0 1px #14171726"
+    md: "0 1px 2px #1417170F, 0 4px 8px #1417170F, 0 12px 24px #14171714, 0 0 1px #14171726"
+    lg: "0 2px 4px #1417170F, 0 8px 16px #14171712, 0 20px 40px #1417171A, 0 0 1px #14171726"
+    float: "0 2px 4px #1417170F, 0 8px 16px #14171714, 0 24px 48px #14171726, 0 0 1px #14171726"
     xs-dark: "0 1px 1px #05060678, inset 0 0 1px #E3E5E554"
     sm-dark: "0 2px 6px #05060678, inset 0 0 1px #E3E5E554"
     md-dark: "0 6px 16px #05060678, inset 0 0 1px #E3E5E554"
@@ -423,11 +423,11 @@ components:
 
 ## Overview
 
-The toolkit is the shared design system of the owner's apps. Ark UI and Base UI supply behaviour, Park UI recipes the form, the theme engine every colour. Apps pass their own themes; these values are examples. The owner rules R1 to R14 are in `x-zsd.preferences`.
+Sigrid is the shared design system of the owner's apps. Ark UI and Base UI supply behaviour, Park UI recipes the form, the theme engine every colour. Apps pass their own themes; these values are examples. The owner rules R1 to R14 are in `x-zsd.preferences`.
 
 ### Implementation
 
-Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change. Run `npm run showcase` to see every state.
+Read `docs/component-inventory.md` and `docs/tokens.css` before a UI change; `npm run showcase` shows every state.
 
 ## Colors
 
@@ -475,18 +475,18 @@ Use the `xs` to `section` spacing steps. Controls use `control-md`; dense rows `
 
 ### Responsive behavior
 
-Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer controls and rows grow to `touch-target` (approved exception to R7). Key hints disappear on a phone (narrow and coarse).
+Below `x-zsd.breakpoints.md` the sidebar becomes a drawer and fields use `body-lg`. With a coarse pointer controls and rows grow to `touch-target` (approved exception to R7). Key hints hide on a phone.
 
 ## Elevation & Depth
 
-Raised surfaces use a shadow from `x-zsd.elevation` and no border. Inputs, selects and outline buttons use a border and no shadow.
+Raised surfaces use a shadow from `x-zsd.elevation`, no border. Inputs, selects and outline buttons use a border, no shadow.
 
-- Use `xs` for the segment thumb, board cards and file tiles.
-- Use `sm` for the tooltip, `md` for menus and select lists.
-- Use `lg` for popovers, dialogs, sheets, toasts and the date card.
+- Use `xs` for the segment thumb, board cards, file tiles.
+- Use `sm` for the tooltip, `md` for menus, select lists.
+- Use `lg` for popovers, dialogs, sheets, toasts, the date card.
 - Use `float` for a dragged item.
 
-The shadow colour is the ink in light mode and a near black in dark mode. In dark mode an inner ring of `on-surface` replaces the outer ring.
+Shadows are the ink in light and near black in dark, where an inner `on-surface` ring replaces the outer one.
 
 ## Shapes
 
@@ -503,7 +503,7 @@ The checkbox keeps `l1`. `--radius-check` defaults to `full`, so an app can roun
 
 Use `button-primary` for the one solid action of a screen and `button-primary-hover` under the pointer. Use `button-outline` or `button-secondary` for other actions, `button-ghost` for the weakest, `button-destructive` to delete. Disabled buttons drop to half opacity and take no pointer.
 
-With `loading` a button keeps its size and focus and ignores clicks; `loadingText` can replace the label. No spinner.
+With `loading` a button keeps its size and focus and ignores clicks; `loadingText` replaces the label, or the button dims to 70%. No spinner.
 
 ### Input
 
@@ -583,20 +583,20 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Motion
 
-`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states immediately. Progress set by events jumps.
+`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states at once. Progress set by events jumps.
 
 ## Iconography
 
-Use the one set, Sigrid Icons (R6), with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. Give an icon-only button a name and a tooltip. A row with no icon keeps an empty slot.
+Use Sigrid Icons (R6) with the stroke and caps of `x-zsd.icons`. Use `x-zsd.icons.size-md` in controls and `x-zsd.icons.size-sm` in dense rows. An icon-only button has a name and a tooltip; a row with no icon keeps an empty slot.
 
 ## Imagery
 
-Thumbnails show an attachment's image, cropped square. Its alt text is empty: the row names it.
+Thumbnails show an attachment's image, cropped square, alt text empty: the row names it.
 
 ## Accessibility
 
-Every control shows the ring of `x-zsd.accessibility`: width, offset, colour. Inside the inverted toast the ring takes the toast text colour. Text keeps 4.5:1 and control borders and rings keep 3:1 on every surface of every theme; `test/contrast.test.ts` and `test/theme-engine.test.ts` check this. Hidden inputs show focus through their label.
+Every control shows the `x-zsd.accessibility` ring. Inside the inverted toast the ring takes the toast text colour. Text keeps 4.5:1 and control borders and rings keep 3:1 on every surface and theme (`test/contrast.test.ts`, `test/theme-engine.test.ts`). Hidden inputs show focus through their label.
 
 ### Review checks
 
-Open items stay in `x-zsd.unresolved`. Each approved deviation from Ark UI or Park UI names its decision in `docs/component-inventory.md`.
+Open items stay in `x-zsd.unresolved`. Each approved deviation from Ark or Park UI names its decision in `docs/component-inventory.md`.

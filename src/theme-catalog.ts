@@ -49,12 +49,15 @@ export type DarkDepth = 'deep' | 'standard' | 'soft'
 export const DARK_DEPTHS = ['deep', 'standard', 'soft'] as const satisfies readonly DarkDepth[]
 export const DEFAULT_DARK_DEPTH: DarkDepth = 'standard'
 /**
- * The tint of the dark backgrounds: `neutral` grays, or `theme`, the hue of the theme's grays (`ThemeDef.hue`) at a low
- * chroma the engine sets. A theme whose grays have no chroma has no hue to give and stays neutral.
+ * The tint of the dark backgrounds: `theme`, the hue of the theme's grays (`ThemeDef.hue`) at a low chroma the engine
+ * sets, or `neutral` grays. A theme whose grays have no chroma has no hue to give and stays neutral. `theme` is the
+ * default since the owner's choice of 2026-11-26, on a board of both drawn by the engine: a page of pure gray beside a
+ * sidebar and a selection in the theme's colour read as two families of neutrals. `neutral`, the default before, is
+ * still a theme's to ask for.
  */
 export type DarkTint = 'neutral' | 'theme'
 export const DARK_TINTS = ['neutral', 'theme'] as const satisfies readonly DarkTint[]
-export const DEFAULT_DARK_TINT: DarkTint = 'neutral'
+export const DEFAULT_DARK_TINT: DarkTint = 'theme'
 
 /** The dark scheme of a theme, as parameters the engine computes the backgrounds from (`ThemeDef.dark`). */
 export interface ThemeDark {
@@ -138,7 +141,7 @@ export interface ThemeDef {
   readonly material?: 'solid' | 'glass' | 'clear' | undefined
   /**
    * The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value:
-   * the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
+   * the standard anthracite in the theme's hue. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here.
    */
   readonly dark?: ThemeDark | undefined
   /**

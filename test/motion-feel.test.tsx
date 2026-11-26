@@ -8,15 +8,15 @@ import { DEFAULT_MOTION_FEEL, MOTION_EASES, MOTION_EASE_NAMES, MOTION_PACE, Moti
 afterEach(() => void applyMotionFeel(DEFAULT_MOTION_FEEL))
 
 describe('the feel of the motion', () => {
-  test('at first every movement eases in and out, at the toolkit\'s own times', () => {
-    expect(motionFeel()).toEqual({ ease: 'ease-in-out', pace: 1 })
+  test("at first each kind of movement has its own curve of Fluent's, at the toolkit's own times", () => {
+    expect(motionFeel()).toEqual({ ease: 'fluent', pace: 1 })
     expect(motionVariables(DEFAULT_MOTION_FEEL)).toEqual({
       '--motion-faster': '100ms',
       '--motion-fast': '150ms',
       '--motion-normal': '200ms',
-      '--motion-ease-enter': 'cubic-bezier(0.42, 0, 0.58, 1)',
-      '--motion-ease-leave': 'cubic-bezier(0.42, 0, 0.58, 1)',
-      '--motion-ease-move': 'cubic-bezier(0.42, 0, 0.58, 1)',
+      '--motion-ease-enter': 'cubic-bezier(0, 0, 0, 1)',
+      '--motion-ease-leave': 'cubic-bezier(0.8, 0, 0.78, 1)',
+      '--motion-ease-move': 'cubic-bezier(0.33, 0, 0.67, 1)',
     })
   })
 
@@ -38,7 +38,7 @@ describe('the feel of the motion', () => {
   })
 
   test('the pace multiplies the times, within its limits; what is not given stays as it is', () => {
-    expect(applyMotionFeel({ pace: 1.5 })).toEqual({ ease: 'ease-in-out', pace: 1.5 })
+    expect(applyMotionFeel({ pace: 1.5 })).toEqual({ ease: 'fluent', pace: 1.5 })
     expect(document.documentElement.style.getPropertyValue('--motion-normal')).toBe('300ms')
     expect(applyMotionFeel({ ease: 'ease' })).toEqual({ ease: 'ease', pace: 1.5 })
     expect(applyMotionFeel({ pace: 99 }).pace).toBe(MOTION_PACE.max)
@@ -49,6 +49,8 @@ describe('the feel of the motion', () => {
 
   test('what moves by script follows: a movement takes the curve and the pace chosen', async () => {
     const { MOTION, tr } = await import('../src/internal/motion-impl')
+    expect(tr('slide')).toEqual({ duration: MOTION.slide.duration, ease: [...MOTION.slide.ease] })
+    applyMotionFeel({ ease: 'ease-in-out' })
     expect(tr('slide')).toEqual({ duration: MOTION.slide.duration, ease: [...MOTION_EASES['ease-in-out']] })
     applyMotionFeel({ ease: 'fluent', pace: 2 })
     expect(tr('slide')).toEqual({ duration: MOTION.slide.duration * 2, ease: [...MOTION.slide.ease] })

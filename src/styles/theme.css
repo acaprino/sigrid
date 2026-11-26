@@ -131,16 +131,17 @@
 }
 
 /* The elevation of the first paint, in light: the drop and the ring are the engine's `drop` color (the ink, in light)
-   at Park's alpha steps (its gray a4, a6 and a7: 9%, 15% and 19%), so the shadow takes the tint of the theme's grays.
+   in layers (a tight drop at the edge, a wider one under it, a faint one far around from `md` up; 6 to 15%), so the
+   shadow takes the tint of the theme's grays.
    `applyTheme` writes the same values (`elevationOf` in src/theme-engine.ts). */
 @layer theme {
   :root,
   :host {
     --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
-    --elevation-sm: 0 2px 6px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-md: 0 6px 16px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-lg: 0 12px 32px color-mix(in srgb, var(--color-drop) 12%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 9%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-sm: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 2px 6px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-md: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 12px 24px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-lg: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 20px 40px color-mix(in srgb, var(--color-drop) 10%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-float: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
   }
 }
 
@@ -156,9 +157,9 @@
       --color-paper: #1e1e1e;
       --color-paper-2: #171717;
       --color-sidebar-paper: #171717;
-      --color-ink: #e4e4e4;
-      --color-ink-soft: #bebebe;
-      --color-ink-mute: #9b9b9b;
+      --color-ink: #efefef;
+      --color-ink-soft: #d1d1d1;
+      --color-ink-mute: #b1b1b1;
       --color-line: #353535;
       --color-accent: #dedede;
       --color-accent-hover: #cfcfcf;
@@ -174,12 +175,12 @@
       --elevation-float: 0 24px 48px color-mix(in srgb, var(--color-drop) 55%, transparent), inset 0 0 1px color-mix(in srgb, var(--color-ink) 33%, transparent);
 
       --color-background: #1e1e1e;
-      --color-foreground: #e4e4e4;
+      --color-foreground: #efefef;
       --color-popover: #2a2a2a;
-      --color-popover-foreground: #e4e4e4;
+      --color-popover-foreground: #efefef;
       --color-primary: #dedede;
       --color-primary-foreground: #0d0d0d;
-      --color-muted-foreground: #9b9b9b;
+      --color-muted-foreground: #b1b1b1;
       --color-destructive: #ff9a8d;
       --color-destructive-soft: #3d2420;
       --color-border: #353535;
@@ -195,8 +196,8 @@
       --color-highlight: #4f3f08;
       --color-selected: #333333;
       --color-selected-ink: #f2f2f2;
-      --color-sidebar-ink: #bebebe;
-      --color-sidebar-mute: #9b9b9b;
+      --color-sidebar-ink: #d1d1d1;
+      --color-sidebar-mute: #b1b1b1;
       --color-sidebar-selected: #333333;
       --color-sidebar-selected-ink: #f2f2f2;
       --color-mark-1: #a19593;
@@ -630,15 +631,24 @@ svg[data-glyph][stroke-width="2"] {
 }
 /* How the toolkit moves, for what the stylesheet itself moves: three times (Fluent's `faster`, `fast`, `normal`) and
    the curve of each kind of movement (what enters, what leaves, what changes place or size while staying). At first
-   every movement eases in and out; an app chooses the curve and the pace with `applyMotionFeel` (or `MotionProvider`'s
-   `ease` and `pace`), which writes these on the root; what moves by script reads the same choice. */
+   each kind has its own curve of Fluent's (what enters decelerates, what leaves accelerates, what moves in place eases
+   at both ends); an app chooses the curve and the pace with `applyMotionFeel` (or `MotionProvider`'s `ease` and
+   `pace`), which writes these on the root; what moves by script reads the same choice. */
 :root {
   --motion-faster: 100ms;
   --motion-fast: 150ms;
   --motion-normal: 200ms;
-  --motion-ease-enter: cubic-bezier(0.42, 0, 0.58, 1);
-  --motion-ease-leave: cubic-bezier(0.42, 0, 0.58, 1);
-  --motion-ease-move: cubic-bezier(0.42, 0, 0.58, 1);
+  --motion-ease-enter: cubic-bezier(0, 0, 0, 1);
+  --motion-ease-leave: cubic-bezier(0.8, 0, 0.78, 1);
+  --motion-ease-move: cubic-bezier(0.33, 0, 0.67, 1);
+}
+/* While a theme or a scheme is being put on (`applyTheme` marks the root for two frames), nothing eases: every colour
+   changes on the same frame, instead of the controls fading after the page has already changed. */
+:root[data-theme-swap],
+:root[data-theme-swap] *,
+:root[data-theme-swap] *::before,
+:root[data-theme-swap] *::after {
+  transition: none !important;
 }
 @keyframes surface-leave {
   to { opacity: 0; }
@@ -732,7 +742,9 @@ svg[data-glyph][stroke-width="2"] {
   :where(:root[data-motion]) :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"])[data-ending-style] {
     opacity: 0;
   }
+  /* A sheet goes back to its edge and is seen all the way there: it fades for as long as it travels. */
   :where(:root[data-motion]) [data-slot="sheet-content"][data-ending-style] {
+    transition-duration: var(--motion-fast);
     &[data-side="right"] { translate: 32px 0; }
     &[data-side="left"] { translate: -32px 0; }
     &[data-side="top"] { translate: 0 -32px; }
@@ -749,6 +761,13 @@ svg[data-glyph][stroke-width="2"] {
   }
   :where(:root[data-motion]) :is([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]):is([data-starting-style], [data-ending-style]) {
     opacity: 0;
+  }
+  /* A pair leaves on one clock: the veil of a window is gone with the window, the veil of a sheet with the sheet. */
+  :where(:root[data-motion]) [data-slot="dialog-overlay"][data-ending-style] {
+    transition: opacity var(--motion-faster) var(--motion-ease-leave);
+  }
+  :where(:root[data-motion]) [data-slot="sheet-overlay"][data-ending-style] {
+    transition: opacity var(--motion-fast) var(--motion-ease-leave);
   }
 }
 @media (prefers-reduced-motion: no-preference) {

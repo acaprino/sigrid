@@ -1006,7 +1006,7 @@
         {
          "name": "dark",
          "type": "ThemeDark",
-         "doc": "The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value: the standard neutral anthracite. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here."
+         "doc": "The dark scheme: how deep it is and whether its backgrounds take the theme's hue. Absent, or with no valid value: the standard anthracite in the theme's hue. A curated palette (`surfaces`) keeps its own backgrounds, whatever is here."
         },
         {
          "name": "fill",
