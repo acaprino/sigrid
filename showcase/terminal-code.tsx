@@ -1,7 +1,7 @@
 // The sections of the gallery for the terminal (`./terminal`: xterm.js) and the code view (`./code`: CodeMirror 6). The
 // program the terminal runs is made up here: a few lines of colour and a prompt that answers what is typed.
 import * as React from 'react'
-import { Button, Cluster, ToggleGroup, ToggleGroupItem } from '../src/primitives'
+import { Button, Cluster, Select, ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { OverviewStrip, Terminal, findWebLinks, textExtent, type OverviewMark, type TerminalBufferView, type TerminalHandle } from '../src/terminal'
 import { CodeView, codeLanguageOf, type CodeViewHandle } from '../src/code'
 import { Code, Row, Section } from './parts'
@@ -10,6 +10,14 @@ const ESC = String.fromCharCode(27)
 const sgr = (...codes: number[]) => `${ESC}[${codes.join(';')}m`
 const RESET = sgr(0)
 const NAMES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white']
+/** Fonts to show the choice with: families a machine has by itself, no file is loaded. The serif one is here only because the change is plain to see. */
+const FONTS = [
+  { value: 'toolkit', label: 'The toolkit\'s (--font-mono)' },
+  { value: '"Courier New", Courier', label: 'Courier New' },
+  { value: 'Consolas, "DejaVu Sans Mono"', label: 'Consolas, DejaVu Sans Mono' },
+  { value: 'Georgia, serif', label: 'Georgia (a serif, to see the change)' },
+  { value: 'A font nobody has', label: 'A name the machine lacks' },
+]
 const PROMPT = `${sgr(1, 32)}sigrid${RESET}:${sgr(1, 34)}~/app${RESET}$ `
 
 /** What the made-up program prints first: the sixteen colours, the weights, a link and a line that is an error. */
@@ -35,6 +43,7 @@ export function Terminals() {
   const [tick, setTick] = React.useState(0)
   const [readOnly, setReadOnly] = React.useState(false)
   const [keys, setKeys] = React.useState('')
+  const [font, setFont] = React.useState('toolkit')
   // The program: it greets, and answers a line with the line.
   React.useEffect(() => {
     const first = window.setTimeout(() => terminal.current?.write(`${GREETING}\r\n${OUTPUT}\r\n${PROMPT}`), 50)
@@ -69,7 +78,7 @@ export function Terminals() {
       title="Terminal"
       note={
         <>
-          A terminal from the entry <Code>@acaprino/sigrid/terminal</Code> (xterm.js, with its fit addon; its own stylesheet comes with the part). The colours are not written anywhere: the ground, the ink, the cursor and the selection are the tokens of the page, the sixteen colours of ANSI are the text steps of the six tints in the scheme the ground says (black and white are the page's own grays), and all of it is read again when the theme, the scheme or the density changes. The font is <Code>--font-mono</Code>. The program is the app's: <Code>ref.write</Code> gives it output, <Code>onData</Code> says what was typed and <Code>onResize</Code> the size of the pseudo-terminal, at the first fit and at every change. The terminal keeps every key for the program and stops it there; the keys named by <Code>appKeys</Code> go on to the app's commands. An address of the text, or a hyperlink the program wrote, opens through <Code>onLinkOpen</Code>. <Code>OverviewStrip</Code> is a scroll bar by another face: the lines in miniature, a frame on the ones in sight, ticks on the lines the app marks.
+          A terminal from the entry <Code>@acaprino/sigrid/terminal</Code> (xterm.js, with its fit addon; its own stylesheet comes with the part). The colours are not written anywhere: the ground, the ink, the cursor and the selection are the tokens of the page, the sixteen colours of ANSI are the text steps of the six tints in the scheme the ground says (black and white are the page's own grays), and all of it is read again when the theme, the scheme or the density changes. The font is <Code>--font-mono</Code>, after the families the app asks for with <Code>fontFamily</Code> (a choice of the person's, in the app's settings): the cells are measured again and the terminal fits its box again, and a name the machine lacks leaves the toolkit's font. The program is the app's: <Code>ref.write</Code> gives it output, <Code>onData</Code> says what was typed and <Code>onResize</Code> the size of the pseudo-terminal, at the first fit and at every change. The terminal keeps every key for the program and stops it there; the keys named by <Code>appKeys</Code> go on to the app's commands. An address of the text, or a hyperlink the program wrote, opens through <Code>onLinkOpen</Code>. <Code>OverviewStrip</Code> is a scroll bar by another face: the lines in miniature, a frame on the ones in sight, ticks on the lines the app marks.
         </>
       }
     >
@@ -89,6 +98,7 @@ export function Terminals() {
               <ToggleGroupItem value="type">Type</ToggleGroupItem>
               <ToggleGroupItem value="read">Read only</ToggleGroupItem>
             </ToggleGroup>
+            <Select aria-label="Font of the terminal" options={FONTS} value={font} onValueChange={setFont} />
           </Cluster>
           <div className="flex h-96 gap-1 rounded-md bg-paper">
             <Terminal
@@ -96,6 +106,7 @@ export function Terminals() {
               aria-label="Shell of the app"
               className="min-w-0 flex-1"
               readOnly={readOnly}
+              fontFamily={font === 'toolkit' ? undefined : font}
               onData={answer}
               onResize={(cols, rows) => setSize(`${cols} × ${rows}`)}
               onLinkOpen={(target) => setOpened(target)}
