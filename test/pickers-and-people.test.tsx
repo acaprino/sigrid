@@ -378,7 +378,9 @@ describe('a window taller than the page', () => {
     )
     const list = classes(document.querySelector('[data-slot="dialog-content"]')!)
     expect(list).toContain('overflow-y-auto')
-    expect(list).toContain('max-h-[calc(100dvh-2rem)]')
+    // Of the box it is placed in, not of the screen: in a window that box is the layer under the title bar (it bounds
+    // `fixed`), and a height of the screen would put the foot of a long window under the window's bottom edge.
+    expect(list).toContain('max-h-[calc(100%-2rem)]')
     expect(list.some((name) => name.includes('translate'))).toBe(false)
   })
 })

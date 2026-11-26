@@ -5,10 +5,11 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
 import { AppShell, Inspector, NavItem, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarButton } from '../src/layout'
 
-function Frame({ inspector = true }: { inspector?: boolean }) {
+function Frame({ inspector = true, at }: { inspector?: boolean; at?: 'end' | 'sidebar' }) {
   return (
     <AppShell
       contentLabel="Messages"
+      inspectorAt={at}
       titleBar={
         <TitleBar>
           <Toolbar aria-label="Mail">
@@ -84,4 +85,18 @@ test('a region the frame does not have is skipped, even when another frame on th
   expect(focused()).toBe(screen.getByRole('button', { name: 'Edit' }))
   press()
   expect(focused()).toBe(screen.getByRole('main', { name: 'Messages' }))
+})
+
+test('docked beside the sidebar (inspectorAt="sidebar"), the inspector comes before the content, as it is laid out', () => {
+  render(<Frame at="sidebar" />)
+  press()
+  expect(focused()).toBe(screen.getByRole('button', { name: 'New message' }))
+  press()
+  expect(focused()).toBe(screen.getByRole('button', { name: 'Inbox' }))
+  press()
+  expect(focused()).toBe(screen.getByRole('button', { name: 'Edit' }))
+  press()
+  expect(focused()).toBe(screen.getByRole('main', { name: 'Messages' }))
+  press(true)
+  expect(focused()).toBe(screen.getByRole('button', { name: 'Edit' }))
 })
