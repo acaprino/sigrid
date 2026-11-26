@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { hueScale } from '../src/hues'
 import { contrast, themeTokens } from '../src/theme-engine'
 import { BASE_THEME, applyTheme } from '../src/themes'
-import { ansiColors, terminalLook } from '../src/assemblies/terminal-theme'
+import { ansiColors, terminalFontStack, terminalLook } from '../src/assemblies/terminal-theme'
 import { root, walk } from './helpers'
 import { THEMES } from './fixtures/sample-themes'
 
@@ -138,5 +138,51 @@ describe('no colour is written in the sources of the terminal and the code view:
       // The names of the tints (`red`, `amber`) are the engine's hue names, not CSS colours.
       expect(text, file).not.toMatch(/['"`](?:white|black|gray|grey)['"`]/)
     }
+  })
+})
+
+describe('terminalFontStack: the font the app asks for, before the page\'s own', () => {
+  const MONO = 'ui-monospace, Consolas, monospace'
+
+  test('nothing asked for, or nothing but blanks and commas, is the stack of the page as it is', () => {
+    expect(terminalFontStack(undefined, MONO)).toBe(MONO)
+    expect(terminalFontStack('', MONO)).toBe(MONO)
+    expect(terminalFontStack('  , ,', MONO)).toBe(MONO)
+  })
+
+  test('a family goes first, in quotes, and the stack of the page stays after it', () => {
+    expect(terminalFontStack('Consolas', MONO)).toBe(`"Consolas", ${MONO}`)
+    expect(terminalFontStack('Cascadia Mono', MONO)).toBe(`"Cascadia Mono", ${MONO}`)
+    expect(terminalFontStack('"Cascadia Mono", Consolas', MONO)).toBe(`"Cascadia Mono", "Consolas", ${MONO}`)
+  })
+
+  test('a name with spaces, digits or quotes is one name; a comma inside quotes does not split it', () => {
+    expect(terminalFontStack('3270 Nerd Font', MONO)).toBe(`"3270 Nerd Font", ${MONO}`)
+    expect(terminalFontStack("'JetBrains Mono NL'", MONO)).toBe(`"JetBrains Mono NL", ${MONO}`)
+    expect(terminalFontStack('  Source   Code\tPro ', MONO)).toBe(`"Source Code Pro", ${MONO}`)
+    expect(terminalFontStack('"Mono, the First"', MONO)).toBe(`"Mono, the First", ${MONO}`)
+    expect(terminalFontStack("O'Neil Mono", MONO)).toBe(`"O'Neil Mono", ${MONO}`)
+    expect(terminalFontStack('"Say \\"Mono\\""', MONO)).toBe(`"Say \\"Mono\\"", ${MONO}`)
+  })
+
+  test('a kind of font stays bare, and in quotes it is a name', () => {
+    expect(terminalFontStack('Georgia, Serif', MONO)).toBe(`"Georgia", serif, ${MONO}`)
+    expect(terminalFontStack('"monospace"', MONO)).toBe(`"monospace", ${MONO}`)
+  })
+
+  test('what would end the rule xterm writes the font in stays inside a name', () => {
+    // xterm's DOM renderer writes `font-family: <the option>;` in a stylesheet: a name never closes its string.
+    const stack = terminalFontStack('x"; } body { display: none } .y { font-family: "z\nw', MONO)
+    expect(stack).toBe(`"x\\"; } body { display: none } .y { font-family: \\"z w", ${MONO}`)
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(`.rows { font-family: ${terminalFontStack('a\\', MONO)}; } .next { color: inherit }`)
+    expect(sheet.cssRules).toHaveLength(2)
+  })
+
+  test('terminalLook puts the font asked for before the token', () => {
+    document.documentElement.style.setProperty('--font-mono', 'Menlo, monospace')
+    expect(terminalLook(document.documentElement, { fontFamily: 'Cascadia Mono' }).fontFamily).toBe('"Cascadia Mono", Menlo, monospace')
+    expect(terminalLook(document.documentElement, { fontFamily: '' }).fontFamily).toBe('Menlo, monospace')
+    document.documentElement.removeAttribute('style')
   })
 })
