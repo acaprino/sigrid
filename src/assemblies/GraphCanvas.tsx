@@ -65,6 +65,14 @@
 //   their own, numbered after their ends. Without the app's routes, two lines or more between the same two things are
 //   drawn side by side (a line type of the canvas's, `apart`), so the lines and their words do not lie on each
 //   other; with the routes each follows its own.
+// - A line the person chooses (`onSelectEdge`, `selectedEdge`): with `onSelectEdge` a press on a line or on its words
+//   chooses it (the press is taken 12px from the line on each side, 22px with a finger), and the lines are one Tab stop
+//   after the things: Down and Right go to the next line in the order of the edges, Up and Left to the one before,
+//   Home and End to the ends, Enter or Space chooses, Escape gives the choice up, and with `editable` Delete takes the
+//   line away. Each line is then a button named by its two things and its words («Client to Server, 2 calls»), the
+//   chosen one `aria-current`; it is drawn in the accent (a tone of its own stays) and thicker than any other line,
+//   with its words. One choice at a time: choosing a thing gives up the chosen line, choosing a line the chosen
+//   things, a press on the ground both. Without `onSelectEdge` no line takes a press or the focus, as before.
 // - With `steps` the app numbers a path through the graph (the steps of a plan, the answer to a question): each
 //   thing on it has the selection tint and its numbers in small dots and in its name, one line between two of them
 //   (the first in the order of the edges) is the path's, in the accent or in a tone of its own and thicker, what is
@@ -288,6 +296,23 @@ export type GraphCanvasProps = {
    */
   selected?: string | readonly string[] | null | undefined
   onSelect?: ((id: string | null) => void) | undefined
+  /**
+   * The line chosen: the one whose details the app shows (a message, a call, a dependency). Its name is the edge's
+   * `id`, which an app that lets lines be chosen gives every edge; an edge without one is named by its two ends
+   * (`from→to`, `from→to#link` for a `link`, a number after a second one: `#2`). The chosen line is drawn in the
+   * accent (a line with a tone of its own keeps it) and thicker than any other, with its words, and screen readers
+   * hear it chosen (`aria-current`). It is the app's to keep: one choice at a time, so the canvas asks to give it up
+   * (`onSelectEdge(null)`) when a thing is chosen, and to give the things up (`onSelect(null)`) when a line is.
+   */
+  selectedEdge?: string | null | undefined
+  /**
+   * The person chose a line (its name, as `selectedEdge` reads it), or gave the choice up (null): a press on the line
+   * or on its words, Enter or Space on it; Escape on a line, a press on the ground, or a thing chosen give it up. With
+   * it every line takes a press (12px from it on each side, 22px with a finger) and the lines are one Tab stop after
+   * the things, the arrows going from line to line in the order of the edges; each is a button named by its two things
+   * and its words (`graph.lineName`). Without it no line takes a press or the focus.
+   */
+  onSelectEdge?: ((id: string | null) => void) | undefined
   /** In the graph mode, the app opens a thing (goes into it, shows what it holds): asked by a double press on a thing with an `openLabel` or by its → button. Without it nothing opens. */
   onOpen?: ((id: string) => void) | undefined
   /**
@@ -841,6 +866,8 @@ const APART = 20
 const SPREAD = 16
 /** How far a line goes straight out of a side before it bends: React Flow's own (`offset` of its smoothstep path). */
 const STUB = 20
+/** How wide a line that can be chosen takes a press, in px: 12 on each side of it (graph.css makes it 44 with a finger). */
+const HIT = 24
 
 /**
  * The lines React Flow draws for the edges whose two ends are in sight, and the edge each one is (the first of its
@@ -857,11 +884,15 @@ const STUB = 20
  * `chosen` is the chosen thing, or the several the app marks: their lines are told from the others, and the words of
  * a line drawn only on a choice (`labelShown: 'chosen'`) are drawn while one of its two things is among them, or while
  * it is the path's (the canvas draws them too while one of its two things has the focus).
+ * The line named `picked` is the chosen one (`selectedEdge`): drawn as such (`lineLook`), with its words, never dimmed,
+ * and with `editable` it is the line Delete takes away. With `pick` the lines can be chosen (`onSelectEdge`): each
+ * takes a press and the focus (out of the Tab order: the canvas gives one of them the Tab stop) and is a button named
+ * by `pick`, the chosen one `aria-current`.
  */
 export function linesOf(
   edges: readonly GraphEdge[],
   places: ReadonlyMap<string, { x: number; y: number }>,
-  { direction, chosen, marked, dimmed, editable, routes = false, loose = null }: { direction: 'right' | 'down'; chosen: string | ReadonlySet<string> | null; marked: ReadonlySet<string> | null; dimmed: ReadonlySet<string> | null; editable: boolean; routes?: boolean; loose?: ReadonlySet<string> | null },
+  { direction, chosen, marked, dimmed, editable, routes = false, loose = null, picked: line1 = null, pick = null }: { direction: 'right' | 'down'; chosen: string | ReadonlySet<string> | null; marked: ReadonlySet<string> | null; dimmed: ReadonlySet<string> | null; editable: boolean; routes?: boolean; loose?: ReadonlySet<string> | null; picked?: string | null; pick?: ((edge: GraphEdge) => string) | null },
 ): { lines: Edge[]; edgeOf: Map<string, GraphEdge> } {
   const lines: Edge[] = []
   const edgeOf = new Map<string, GraphEdge>()
@@ -895,14 +926,15 @@ export function linesOf(
     const onPath = said ? edge.path === true : marked !== null && marked.has(edge.from) && marked.has(edge.to) && !stepped.has(pair)
     if (onPath && !said) stepped.add(pair)
     // The words of a line drawn only on a choice wait for one of its ends to be chosen, or for the path; they are heard either way.
-    const words = edge.label && (edge.labelShown !== 'chosen' || near || onPath) ? edge.label : undefined
+    const own1 = line1 === id
+    const words = edge.label && (edge.labelShown !== 'chosen' || near || onPath || own1) ? edge.label : undefined
     // The path takes the accent, but a tone of the line's own stays (a warning stays a warning): its thickness says the path.
     const own = edge.tone ?? 'default'
     const tone = onPath && own === 'default' ? 'accent' : own
     const style = edge.style ?? 'solid'
     // Its look (colour, width, dash, ends) comes from the module that also draws the key (`GraphLegend`): a line of the
     // chosen things is told from the others, the path's is thicker.
-    const look = lineLook(style, tone, { near, path: onPath })
+    const look = lineLook(style, tone, { near, path: onPath, chosen: own1 })
     // A `link` to a thing no further along (a sibling, a thing before it) arrives on the far side: the line goes round, not across the boxes.
     // Along the app's route only with the app's places (`routes`): a route of its layout would cross dagre's.
     const route = routes && edge.points && edge.points.length > 1 && !(loose !== null && (loose.has(edge.from) || loose.has(edge.to))) ? edge.points : null
@@ -914,17 +946,27 @@ export function linesOf(
       ...(back ? { targetHandle: 'side' } : {}),
       type: route ? 'route' : 'smoothstep',
       ...(route ? { data: { points: route } } : {}),
-      focusable: false,
+      focusable: pick !== null,
       selectable: editable,
-      // Its look is all in `style`; the one class is for graph.css to dim a line to a dimmed thing.
-      className: !onPath && (said || (dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)))) ? 'sigrid-graph-dim' : undefined,
+      // The chosen line is the one Delete takes away (React Flow's own pick), where lines are taken away.
+      ...(own1 && editable ? { selected: true } : {}),
+      // Its look is all in `style`; the classes are for graph.css: to dim a line to a dimmed thing, and to mark a
+      // line that can be chosen (its pointer, its focus ring, its room with a finger) and the chosen one.
+      className: [!own1 && !onPath && (said || (dimmed !== null && (dimmed.has(edge.from) || dimmed.has(edge.to)))) ? 'sigrid-graph-dim' : '', pick !== null ? 'sigrid-graph-pick' : '', own1 ? 'sigrid-graph-chosen' : ''].filter(Boolean).join(' ') || undefined,
       // One object for one look (`lineVars`): a line whose look a change of choice leaves as it was keeps its `style`.
       style: lineVars(look),
       // The arrowheads are drawn apart from the lines, so they take the colour of the line's tone by name.
-      ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: lineLook(style, tone).stroke, width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
+      ...((edge.directed ?? !child) ? { markerEnd: { type: MarkerType.ArrowClosed, color: lineLook(style, tone, { chosen: own1 }).stroke, width: 16, height: 16, markerUnits: 'userSpaceOnUse' } } : {}),
       ...(words ? wordsOn(words) : {}),
-      // What a `link` or a line with words says is in the description of its two things: the line is not read again.
-      ...(!child || edge.label ? { domAttributes: { 'aria-hidden': true } } : {}),
+      ...(pick !== null
+        ? // A line that can be chosen is a button, named by its two things and its words, the chosen one current. Out
+          // of the Tab order: the canvas gives one line the Tab stop (`stopOn`). The library's own word for the kind
+          // («edge») and its description (its own keys, in English) are not said: the role and the name say it.
+          { ariaRole: 'button' as const, ariaLabel: pick(edge), interactionWidth: HIT, domAttributes: { tabIndex: -1, 'aria-roledescription': undefined, 'aria-describedby': undefined, ...(own1 ? { 'aria-current': true } : {}) } }
+        : // What a `link` or a line with words says is in the description of its two things: the line is not read again.
+          !child || edge.label
+          ? { domAttributes: { 'aria-hidden': true } }
+          : {}),
     }
     lines.push(line)
     if (route) continue
@@ -1582,7 +1624,7 @@ const NO_NAMES: readonly string[] = []
 let made = 0
 const freshId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `node-${Date.now()}-${++made}`)
 
-function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect, onOpen, onToggle, movable = false, onMove, animated, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, fill = false, className, ...props }: GraphCanvasProps) {
+function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, selected = null, onSelect: onSelectThing, selectedEdge = null, onSelectEdge, onOpen, onToggle, movable = false, onMove, animated, steps, collapsed, defaultCollapsed, onCollapsedChange, minFitZoom = READABLE, search = false, minimap = false, editable = false, onChange, ref, fill = false, className, ...props }: GraphCanvasProps) {
   const words = useWords().graph
   const flow = useReactFlow()
   // The library's helpers, as they are now: the view's own helpers below are made once.
@@ -1598,6 +1640,16 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
   // At the app's pace (`applyMotionFeel`): the stylesheet's glide reads the same time from its variable.
   const glide = useMotionAllowed(animated) ? motionMs(GLIDE_MS) : 0
   const graph = React.useMemo<Graph>(() => ({ nodes, edges }), [nodes, edges])
+  // The lines can be chosen only where the app can be told.
+  const picks = onSelectEdge !== undefined
+  // One choice at a time: a thing chosen gives up the chosen line.
+  const onSelect =
+    onSelectThing === undefined && !picks
+      ? undefined
+      : (id: string | null) => {
+          onSelectThing?.(id)
+          if (id !== null && selectedEdge !== null) onSelectEdge?.(null)
+        }
   // Each thing by its id, once for the graph; the first of two with the same id, as the layout reads them.
   const byId = React.useMemo(() => {
     const map = new Map<string, GraphNode>()
@@ -1803,6 +1855,8 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
 
   const latest = React.useRef({ graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onToggle, onChange, setClosed, focus, editable, tree, sizeOf, glide, stop, held })
   latest.current = { graph, closed, sight, places, given, below, above, path, size, minFitZoom, direction, byId, chosen: choice.first, onSelect, onOpen, onToggle, onChange, setClosed, focus, editable, tree, sizeOf, glide, stop, held }
+  // The lines as they are now, for what is read after a draw (a thing taken away, the end of a move of the view).
+  const lineNow = React.useRef<{ edgeOf: ReadonlyMap<string, GraphEdge>; stop: string | null; selectedEdge: string | null; onSelectEdge: GraphCanvasProps['onSelectEdge'] }>({ edgeOf: new Map(), stop: null, selectedEdge, onSelectEdge })
   // When a gesture that changes the places was made (a group opened or closed, the reset): the next change of places
   // is its answer and, with motion, glides. And the group whose button was pressed: it is drawn again as another part
   // (a thing, a frame), and takes the focus its button had.
@@ -1999,6 +2053,10 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       wanted.current = now.sight.order[at - 1] ?? now.sight.order[at + 1] ?? null
       now.onChange?.({ nodes: now.graph.nodes.filter((node) => node.id !== id), edges: now.graph.edges.filter((edge) => !gone.includes(edge)) }, { kind: 'remove', nodes: [id], edges: gone })
       now.onSelect?.(null)
+      // The chosen line went with the thing: the choice is given up.
+      const lines = lineNow.current
+      const line = lines.selectedEdge === null ? undefined : lines.edgeOf.get(lines.selectedEdge)
+      if (line && gone.includes(line)) lines.onSelectEdge?.(null)
     }
     return { toggle, add, remove, group, drawn, open: (id: string) => latest.current.onOpen?.(id), focus: (id: string) => setFocused(id) }
   }, [words.newNode])
@@ -2238,9 +2296,15 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     return same.sort((a, b) => deep.get(a.id)! - deep.get(b.id)!)
   }, [sight, byId, places, rel, sizeOf, nest, marked, about, uid, dimmed, below, closed, chosen, primary, words, editable, direction, tree, opens, groups, movable, relations, handlers])
   const drawn = React.useMemo<Node<Drawn>[]>(() => still.map((it) => (it.id === tabStop ? { ...it, data: { ...it.data, stop: true } } : it)), [still, tabStop])
+  // The name of a line that can be chosen, for screen readers: its two things, whether it goes both ways, its words.
+  const lineName = React.useMemo(() => {
+    if (!picks) return null
+    const name = (id: string) => byId.get(id)?.label ?? id
+    return (edge: GraphEdge) => words.lineName(name(edge.from), name(edge.to), edge.directed === false, edge.label || undefined)
+  }, [picks, byId, words])
   const { lines: placed, edgeOf } = React.useMemo(
-    () => linesOf(edges, places, { direction, chosen: chosen.size > 0 ? chosen : null, marked: path.length > 0 ? new Set(path) : null, dimmed: path.length > 0 && !found ? dimmed : null, editable, routes: given !== null, loose }),
-    [edges, places, direction, chosen, path, found, dimmed, editable, given, loose],
+    () => linesOf(edges, places, { direction, chosen: chosen.size > 0 ? chosen : null, marked: path.length > 0 ? new Set(path) : null, dimmed: path.length > 0 && !found ? dimmed : null, editable, routes: given !== null, loose, picked: selectedEdge, pick: lineName }),
+    [edges, places, direction, chosen, path, found, dimmed, editable, given, loose, selectedEdge, lineName],
   )
   // The words that wait for a choice show too while one of the line's two things has the focus: only those lines are
   // handed over anew as the focus moves, so the others are not drawn again at every arrow.
@@ -2278,10 +2342,104 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       return [{ id, look: line.style, from: byId.get(line.source)?.label ?? line.source, to: byId.get(line.target)?.label ?? line.target, both: edgeOf.get(id)?.directed === false, words: line.label }]
     })
   }, [lines, worded, byId, edgeOf])
+  // The lines that can be chosen are one Tab stop, after the things': the line that last had the focus, else the chosen
+  // one, else the first. Only what is in the view is drawn, so after the view moved a line in the view stands in for a
+  // stop that is out of it (`keepLines`), by its tabindex alone, as for the things.
+  const [lineAt, setLineAt] = React.useState<string | null>(null)
+  const [lineStood, setLineStood] = React.useState<{ stop: string; id: string } | null>(null)
+  const lineStop = !picks ? null : ([lineAt, selectedEdge].find((id) => id !== null && edgeOf.has(id)) ?? placed[0]?.id ?? null)
+  const lineTab = lineStood !== null && lineStood.stop === lineStop && edgeOf.has(lineStood.id) ? lineStood.id : lineStop
+  const handed = React.useMemo(() => (lineTab === null ? fitted : fitted.map((line) => (line.id === lineTab ? { ...line, domAttributes: { ...line.domAttributes, tabIndex: 0 } } : line))), [fitted, lineTab])
+  lineNow.current = { edgeOf, stop: lineStop, selectedEdge, onSelectEdge }
+  // The line to give the focus to once it is drawn: one out of the view an arrow went to, the one beside a line taken away.
+  const wantedLine = React.useRef<string | null>(null)
+  const lineEl = (id: string) => box.current?.querySelector<SVGGElement>(`.react-flow__edge[data-id="${CSS.escape(id)}"]`) ?? null
+  const focusLine = (id: string) => {
+    const el = lineEl(id)
+    el?.focus({ preventScroll: true })
+    return el !== null
+  }
+  /** The focus goes to a line, also one React Flow has not drawn because it is out of the view: the view goes to the middle of its two things, and the line takes the focus once it is drawn (`keepLines`). */
+  const reachLine = (id: string) => {
+    if (focusLine(id)) return
+    const line = placed.find((it) => it.id === id)
+    const from = line && places.get(line.source)
+    const to = line && places.get(line.target)
+    if (!line || !from || !to) return
+    wantedLine.current = id
+    const [a, b] = [sizeOf(line.source), sizeOf(line.target)]
+    void flow.setCenter((from.x + a.width / 2 + to.x + b.width / 2) / 2, (from.y + a.height / 2 + to.y + b.height / 2) / 2, { zoom: flow.getZoom(), duration: glide })
+  }
+  React.useEffect(() => {
+    // A line that waits for the focus takes it as soon as it is drawn (the one beside a line just taken away).
+    if (wantedLine.current !== null && focusLine(wantedLine.current)) wantedLine.current = null
+  })
+  /** After the view moved, once React Flow has drawn what is in it: the line that waits for the focus takes it, and a line in the view stands in for a Tab stop that is out of it. */
+  const linesKept = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const keepLines = () => {
+    clearTimeout(linesKept.current)
+    linesKept.current = setTimeout(() => {
+      const stop = lineNow.current.stop
+      if (box.current === null || stop === null) return
+      if (wantedLine.current !== null && focusLine(wantedLine.current)) wantedLine.current = null
+      const id = lineEl(stop) ? null : (box.current.querySelector('.react-flow__edge.sigrid-graph-pick')?.getAttribute('data-id') ?? null)
+      setLineStood((was) => (id === null ? null : was !== null && was.stop === stop && was.id === id ? was : { stop, id }))
+    }, 0)
+  }
+  React.useEffect(() => () => clearTimeout(linesKept.current), [])
+  /** A line is chosen: one choice at a time, so the chosen things are given up. */
+  const chooseLine = (id: string) => {
+    onSelectEdge?.(id)
+    if (selectedIds.size > 0) onSelectThing?.(null)
+  }
+  /**
+   * Lines are taken away (`editable`): the edge of each, and every exact copy of an edge without an `id` (one line,
+   * drawn once); of two edges between the same things that differ, only the one picked goes. A chosen line that goes
+   * is given up.
+   */
+  const takeLines = (ids: readonly string[]) => {
+    const picked = ids.flatMap((id) => {
+      const edge = edgeOf.get(id)
+      return edge ? [edge] : []
+    })
+    const copies = new Set(picked.map(copyOf).filter((key): key is string => key !== null))
+    const removed = edges.filter((edge) => picked.includes(edge) || copies.has(copyOf(edge) ?? ''))
+    if (removed.length === 0) return
+    onChange?.({ nodes, edges: edges.filter((edge) => !removed.includes(edge)) }, { kind: 'remove', nodes: [], edges: removed })
+    const line = selectedEdge === null ? undefined : edgeOf.get(selectedEdge)
+    if (line && removed.includes(line)) onSelectEdge?.(null)
+  }
+  /**
+   * The keys of the lines that can be chosen, read at the box; true when one was used. Down and Right go to the next
+   * line in the order of the edges, Up and Left to the one before, Home and End to the ends; Enter and Space choose
+   * the line, Escape gives the choice up (with none it is not the canvas's key), and with `editable` Delete takes the
+   * line away, the focus going to the one beside it.
+   */
+  const lineKey = (event: React.KeyboardEvent<HTMLDivElement>, target: Element): boolean => {
+    const id = picks ? target.closest('.react-flow__edge')?.getAttribute('data-id') : null
+    if (id === null || id === undefined || !edgeOf.has(id)) return false
+    const at = placed.findIndex((line) => line.id === id)
+    let to: string | undefined
+    if (event.key === 'Enter' || event.key === ' ') chooseLine(id)
+    else if (event.key === 'Escape') {
+      if (selectedEdge === null) return false
+      onSelectEdge?.(null)
+    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (!editable) return false
+      wantedLine.current = placed[at + 1]?.id ?? placed[at - 1]?.id ?? null
+      takeLines([id])
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowRight') to = placed[at + 1]?.id
+    else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') to = placed[at - 1]?.id
+    else if (event.key === 'Home') to = placed[0]?.id
+    else if (event.key === 'End') to = placed[placed.length - 1]?.id
+    else return false
+    if (to !== undefined) reachLine(to)
+    return true
+  }
   // The library keeps what it measures and what the user picks on the nodes it is given: they are handed over whole
   // at every change of the graph, and its own changes are laid over them.
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<Drawn>>(drawn)
-  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(fitted)
+  const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>(handed)
   React.useEffect(() => {
     const held = draggedNow.current
     // What React Flow has is kept where nothing changed, and what it measured only while the measure holds (`handOver`).
@@ -2297,7 +2455,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     if (!movable) return
     for (const change of changes) if (change.type === 'position' && change.dragging === false && change.position && !draggedNow.current.has(change.id)) settle(change.id, change.position)
   }
-  React.useEffect(() => setFlowEdges(fitted), [fitted, setFlowEdges])
+  React.useEffect(() => setFlowEdges(handed), [handed, setFlowEdges])
 
   // The view: the buttons at the head of the canvas and the keys +, − and 0 do the same.
   const zoomIn = () => void flow.zoomIn({ duration: glide })
@@ -2337,7 +2495,7 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
     if (event.key === '+' || event.key === '=') zoomIn()
     else if (event.key === '-') zoomOut()
     else if (event.key === '0') fit()
-    else if (!thingKey(event, target)) return
+    else if (!lineKey(event, target) && !thingKey(event, target)) return
     event.preventDefault()
     event.stopPropagation()
   }
@@ -2383,7 +2541,12 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
       // A press or a key here is a gesture: a new layout of the app's that follows at once may glide (`animated`).
       onPointerDownCapture={() => (touched.current = Date.now())}
       onKeyDownCapture={() => (touched.current = Date.now())}
-      onFocus={(event) => setHeld(event.target instanceof Element ? (event.target.closest<HTMLElement>('[data-thing]')?.dataset.thing ?? null) : null)}
+      onFocus={(event) => {
+        setHeld(event.target instanceof Element ? (event.target.closest<HTMLElement>('[data-thing]')?.dataset.thing ?? null) : null)
+        // The line that has the focus holds the lines' Tab stop from now on.
+        const line = picks && event.target instanceof Element ? event.target.closest('.react-flow__edge')?.getAttribute('data-id') : null
+        if (line !== null && line !== undefined) setLineAt(line)
+      }}
       onBlur={(event) => {
         if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(null)
       }}
@@ -2401,21 +2564,15 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
         onNodesChange={onThingsChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, node) => onSelect?.(node.id)}
-        onPaneClick={() => onSelect?.(null)}
+        onEdgeClick={picks ? (_, line) => chooseLine(line.id) : undefined}
+        onPaneClick={() => {
+          onSelectThing?.(null)
+          onSelectEdge?.(null)
+        }}
         onConnect={editable ? join : undefined}
         onDelete={
           editable
-            ? ({ edges: gone }) => {
-                // The edge of each line picked, and every exact copy of an edge without an `id` (one line, drawn once);
-                // of two edges between the same things that differ, only the one picked goes.
-                const picked = gone.flatMap((it) => {
-                  const edge = edgeOf.get(it.id)
-                  return edge ? [edge] : []
-                })
-                const copies = new Set(picked.map(copyOf).filter((key): key is string => key !== null))
-                const removed = edges.filter((edge) => picked.includes(edge) || copies.has(copyOf(edge) ?? ''))
-                if (removed.length > 0) onChange?.({ nodes, edges: edges.filter((edge) => !removed.includes(edge)) }, { kind: 'remove', nodes: [], edges: removed })
-              }
+            ? ({ edges: gone }) => takeLines(gone.map((it) => it.id))
             : undefined
         }
         nodesDraggable={movable}
@@ -2433,10 +2590,14 @@ function Canvas({ nodes, edges, model = 'tree', direction = 'right', layoutKey, 
               },
             }
           : {})}
-        onMoveEnd={keepStop}
+        onMoveEnd={() => {
+          keepStop()
+          keepLines()
+        }}
         nodesConnectable={editable}
         nodesFocusable={false}
-        edgesFocusable={false}
+        // A line takes the focus only where it can be chosen (`onSelectEdge`): one Tab stop for them all (`lineTab`).
+        edgesFocusable={picks}
         elementsSelectable={editable}
         deleteKeyCode={editable ? ['Delete', 'Backspace'] : null}
         // The keys are the canvas's own, on the things and on the box.

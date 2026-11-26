@@ -839,6 +839,17 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
       arrowhead at `to`; a `link` has one unless `false`, a `child` line none unless `true`). What a kind of line
       means is told by its dash and its words, never by its colour alone. Screen readers hear a thing's `link` lines
       in its description («waits for, to Screens»); the lines themselves are not read twice.
+    - Lines the person chooses. With `onSelectEdge` a press on a line or on its words chooses it (the press is taken
+      12px from the line on each side, 22px with a finger), and the app keeps it in `selectedEdge`: the line's name,
+      which is the edge's `id` (give one to every edge; an edge without one is named by its ends, `from→to`). The
+      chosen line is in the accent (a tone of its own stays) and thicker than any other, with its words. One choice at
+      a time: the canvas asks to give up the line when a thing is chosen, the things when a line is, both at a press
+      on the ground. From the keyboard the lines are one Tab stop after the things': the arrows go from line to line
+      in the order of the edges, Home and End to the ends, Enter or Space chooses, Escape gives the choice up, and
+      with `editable` Delete takes the line away (the chosen line is also the one Delete takes from anywhere on the
+      canvas). Each line is then a button named by its two things and its words («Client to Server, 2 calls», the
+      word `graph.lineName`), the chosen one `aria-current`, with the focus ring of every control around it. Without
+      `onSelectEdge` no line takes a press or the focus, and `selectedEdge` alone only marks a line.
     - What the app marks on its things and lines. `selected` takes one id or several, for an app that draws one of
       its things as several (an entity in each place it is): each has the selection tint and what is joined to any of
       them stays. One of them is the choice, the first in the order of the things: it holds the Tab stop, it alone is
@@ -1053,6 +1064,9 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   // A part the app goes into names the action: { id: 'orders', label: 'Orders', openLabel: 'Open Orders' }.
   <GraphCanvas aria-label="Calls" model="graph" nodes={parts} edges={calls} selected={chosen} onSelect={setChosen}
     onOpen={(id) => setScope(id)} fill />
+  // A line the person chooses (a message, a call): every edge has an `id`, and the app keeps the two choices.
+  <GraphCanvas aria-label="Messages" model="graph" nodes={agents} edges={messages} selected={agent} onSelect={setAgent}
+    selectedEdge={message} onSelectEdge={setMessage} fill />
   // Under a row of filters and over its key, it takes the height they leave.
   <Column fill pad="md">
     <Cluster>{filters}</Cluster>

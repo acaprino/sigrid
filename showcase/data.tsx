@@ -458,6 +458,19 @@ const WIDE_JOINS: GraphEdge[] = WIDE.slice(1).map((node, i) => ({ from: `n${Math
  * The calls between the parts of a service: relations, not «hangs from», with a ring (the queue and the worker call
  * each other). The orders and the store hold parts of their own, so the app opens them: they name the action.
  */
+// A team and the messages between its agents: each message a line with a name of its own, so the app is told which.
+const TEAM: GraphNode[] = [
+  { id: 'lead', label: 'Lead' },
+  { id: 'coder', label: 'Coder' },
+  { id: 'reviewer', label: 'Reviewer' },
+  { id: 'tester', label: 'Tester' },
+]
+const MESSAGES: GraphEdge[] = [
+  { id: 'brief', from: 'lead', to: 'coder', kind: 'link', label: 'Build the login' },
+  { id: 'review', from: 'coder', to: 'reviewer', kind: 'link', label: 'Review this' },
+  { id: 'notes', from: 'reviewer', to: 'coder', kind: 'link', label: 'Two notes', style: 'dashed' },
+  { id: 'check', from: 'coder', to: 'tester', kind: 'link', label: 'Try it' },
+]
 const CALLS: GraphNode[] = [
   { id: 'gateway', label: 'Gateway', detail: 'Takes the requests' },
   { id: 'auth', label: 'Sign-in' },
@@ -554,6 +567,10 @@ export function Graphs() {
     return { nodes, edges: [...SERVICE_LINES, ...HELD_LINES].filter((line) => there.has(line.from) && there.has(line.to)) }
   }, [openGroups])
   const openedPart = CALLS.find((node) => node.id === opened)
+  // One choice at a time: the canvas asks to give up the agent when a message is chosen, and the message when an agent is.
+  const [agent, setAgent] = React.useState<string | null>(null)
+  const [message, setMessage] = React.useState<string | null>('brief')
+  const saidMessage = MESSAGES.find((line) => line.id === message)
   return (
     <Section
       id="graph"
@@ -607,6 +624,14 @@ export function Graphs() {
         <div data-sample="graph-model" className="flex w-full max-w-4xl flex-col gap-3">
           <GraphCanvas aria-label="Calls of the service" model="graph" nodes={CALLS} edges={CALL_LINES} selected={call} onSelect={setCall} onOpen={setOpened} search className="h-80" />
           <p className="text-xs text-ink-mute">{openedPart ? `The app opens «${openedPart.label}» as it likes: here it only says which.` : 'Nothing is opened. Press Orders or Store twice, or its →.'}</p>
+        </div>
+      </Row>
+      <Row label="lines the person chooses">
+        <div data-sample="graph-lines-chosen" className="flex w-full max-w-4xl flex-col gap-3">
+          <GraphCanvas aria-label="Messages of the team" model="graph" nodes={TEAM} edges={MESSAGES} selected={agent} onSelect={setAgent} selectedEdge={message} onSelectEdge={setMessage} className="h-80" />
+          <p className="text-xs text-ink-mute">
+            {saidMessage ? `Chosen: «${saidMessage.label}». The app shows it where it likes (its inspector).` : 'No message is chosen. Press a line or its words; or Tab to the lines, the arrows from one to the next, Enter to choose, Escape to give it up.'}
+          </p>
         </div>
       </Row>
       <Row label="groups opened in place, things that move, motion">
