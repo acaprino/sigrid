@@ -71,9 +71,28 @@
   text-decoration: none;
 }
 
-/* A line the user picked to take away (with `editable`) looks picked whatever its tone. */
+/* A line the user picked to take away (with `editable`) looks picked whatever its tone. The chosen line
+   (`selectedEdge`) keeps its own look there: the accent, or its tone. */
 .react-flow .react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--color-ink);
+  stroke: var(--xy-edge-stroke-selected);
+}
+.react-flow__edge.sigrid-graph-chosen {
+  --xy-edge-stroke-selected: var(--sigrid-line-stroke);
+}
+
+/* A line the person can choose (`onSelectEdge`): the pointer of a press, the focus ring of every control around it
+   (2px in `--color-ring`, 2px away, on the keyboard alone), and with a finger 44px of room across it to press. */
+.react-flow__edge.sigrid-graph-pick {
+  cursor: pointer;
+}
+.react-flow__edge.sigrid-graph-pick:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .react-flow__edge.sigrid-graph-pick .react-flow__edge-interaction {
+    stroke-width: calc(var(--spacing, 0.25rem) * 11);
+  }
 }
 
 /* After a gesture that changes the places (a group opened or closed, a new layout, the reset), where the app turned
