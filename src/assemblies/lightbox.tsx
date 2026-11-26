@@ -59,7 +59,7 @@ function Lightbox({ open, onOpenChange, title, images, index, onIndexChange, ani
       <DialogContent
         animated={animated}
         data-lightbox=""
-        className="flex h-[calc(100dvh-2rem)] flex-col gap-3 sm:max-w-5xl"
+        className="flex h-[calc(100%-2rem)] flex-col gap-3 sm:max-w-5xl"
         onKeyDown={(event) => {
           if (event.altKey || event.ctrlKey || event.metaKey) return
           // The arrows of the page: the picture before is to the left, whatever the direction of the text.

@@ -135,7 +135,7 @@ function DialogContent({
         aria-modal="true"
         className={cn(
           // Centred with auto margins, not a translation: a translated window would be the containing block of what is `fixed` inside it (the date card), and its scrolling would clip it.
-          "fixed inset-0 z-50 m-auto grid h-fit max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none md:p-6",
+          "fixed inset-0 z-50 m-auto grid h-fit max-h-[calc(100%-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none md:p-6",
           WIDTH_CLASS[width],
           className
         )}
