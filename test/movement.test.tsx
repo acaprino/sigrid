@@ -382,7 +382,7 @@ describe('a popover that hangs from something other than its button', () => {
 
   test('closing, a card fades where motion is on: the stylesheet has its exit, under the gate of motion', () => {
     const gate = themeCss.indexOf('@media (prefers-reduced-motion: no-preference)', themeCss.indexOf('@keyframes surface-leave'))
-    const leaving = themeCss.indexOf('[data-ending-style] {', gate)
+    const leaving = themeCss.indexOf('[data-state="closed"] {', gate)
     expect(gate).toBeGreaterThan(-1)
     expect(leaving).toBeGreaterThan(gate)
     const rule = themeCss.slice(themeCss.lastIndexOf(':where(:root[data-motion])', leaving), themeCss.indexOf('}', leaving) + 1)

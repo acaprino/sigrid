@@ -57,10 +57,10 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     expect(Object.values(pkg.scripts ?? {}).join(' ')).not.toMatch(/shadcn/)
   })
 
-  // Base UI stays: it carries the basic controls and the surfaces that open (the split is meant to stay, 2026-11-22).
-  test('@base-ui/react and motion are pinned to exact versions', () => {
-    expect(pkg.dependencies?.['@base-ui/react']).toBe('1.9.0')
+  test('motion is pinned to an exact version and @base-ui/react is removed', () => {
+    expect(pkg.dependencies?.['@base-ui/react']).toBeUndefined()
     expect(pkg.dependencies?.motion).toBe('14.6.0')
+    expect(codeFiles.filter((f) => /@base-ui\/react/.test(readFileSync(f, 'utf8'))).map(rel)).toEqual([])
   })
 
   test('the sources import only the toolkit\'s own files, its declared packages and Node built-ins: never an app', () => {

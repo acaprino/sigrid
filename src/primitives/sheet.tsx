@@ -84,6 +84,15 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
   const [side, setSide] = React.useState<SheetSide>("right")
   const [initialFocus, setInitialFocus] = React.useState<React.RefObject<HTMLElement | null> | false | undefined>(undefined)
   const reasonRef = React.useRef<SheetCloseReason>("other")
+  const beforeRef = React.useRef<HTMLElement | null>(null)
+  const wasOpen = React.useRef(open)
+  if (open && !wasOpen.current) {
+    wasOpen.current = true
+    const active = typeof document !== "undefined" ? document.activeElement : null
+    beforeRef.current = active instanceof HTMLElement && active !== active.ownerDocument.body ? active : null
+  } else if (!open && wasOpen.current) {
+    wasOpen.current = false
+  }
   const latest = React.useRef({ closesOnEscape, onOpenChange, controlled: openProp !== undefined })
   latest.current = { closesOnEscape, onOpenChange, controlled: openProp !== undefined }
   const ctx = React.useMemo(() => ({ setSide, setInitialFocus, modal, open }), [modal, open])
@@ -117,7 +126,7 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
         modal={modal}
         trapFocus={modal}
         preventScroll={modal}
-        restoreFocus={true}
+        restoreFocus={false}
         lazyMount
         unmountOnExit
         immediate
@@ -217,8 +226,8 @@ function SheetContent({
   React.useLayoutEffect(() => setSide(side), [setSide, side])
   React.useLayoutEffect(() => setInitialFocus(initialFocus), [setInitialFocus, initialFocus])
   const motion = useMotion(animated)
-  const latest = React.useRef({ motion, onCloseAutoFocus, initialFocus })
-  latest.current = { motion, onCloseAutoFocus, initialFocus }
+  const latest = React.useRef({ motion, onCloseAutoFocus, initialFocus, open })
+  latest.current = { motion, onCloseAutoFocus, initialFocus, open }
   const popup = React.useRef<HTMLDivElement | null>(null)
   const before = React.useRef<Element | null>(null)
   const entered = React.useRef<Element | null>(null)
@@ -232,11 +241,25 @@ function SheetContent({
     captured.current = false
   }
 
-  // Stable reference: called once when the sheet mounts (the opening, a user gesture) and not on every render.
+  // Stable reference: called once when the sheet mounts (the opening, a user gesture) and when it unmounts (closing).
   const enter = React.useCallback(
     (el: HTMLDivElement | null) => {
+      const prev = popup.current
       popup.current = el
-      if (!el) return
+      if (!el) {
+        if (prev && !latest.current.open) {
+          const target = before.current
+          setTimeout(() => {
+            if (latest.current.open) return
+            const event = new Event("closeAutoFocus", { cancelable: true })
+            latest.current.onCloseAutoFocus?.(event)
+            if (!event.defaultPrevented && target instanceof HTMLElement && target.isConnected) {
+              target.focus({ preventScroll: true })
+            }
+          }, 0)
+        }
+        return
+      }
       if (!before.current) before.current = el.ownerDocument.activeElement
       const initial = latest.current.initialFocus
       if (initial && typeof initial === "object") initial.current?.focus()
@@ -246,25 +269,6 @@ function SheetContent({
     [side],
   )
   const popupRef = useMergedRef(enter, ref)
-
-  // On closing, return focus after one turn (once the sheet is unmounted and the page is visible again):
-  // first the caller's `onCloseAutoFocus` handler, then the element that had focus before opening.
-  React.useEffect(() => {
-    const prev = wasOpen.current
-    wasOpen.current = open
-    if (!prev || open) return
-    const timer = setTimeout(() => {
-      const el = popup.current
-      if (el && el.isConnected && el.getAttribute("data-state") !== "closed") return
-      const event = new Event("closeAutoFocus", { cancelable: true })
-      latest.current.onCloseAutoFocus?.(event)
-      const target = before.current
-      if (!event.defaultPrevented && target instanceof HTMLElement && target.isConnected) {
-        target.focus({ preventScroll: true })
-      }
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [open])
 
   return (
     <SheetPortal>

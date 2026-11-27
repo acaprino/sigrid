@@ -728,7 +728,7 @@ svg[data-glyph][stroke-width="2"] {
       opacity: 0;
     }
   }
-  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-closed], [data-state="closed"]) {
+  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-state="closed"]) {
     height: 0;
     opacity: 0;
   }
@@ -781,18 +781,18 @@ svg[data-glyph][stroke-width="2"] {
   }
 
   /* A surface that closes leaves as it came, in the short time of what leaves: it fades, and a sheet goes back
-     towards its edge. (Its entrance is the script's, which knows the side it opens from.) The primitives keep it in
-     the page until this has ended (`data-ending-style`). */
+     towards its edge. (Its entrance is the script's, which knows the side it opens from.) Ark keeps it in the page
+     while its closed state runs (`data-state="closed"`). */
   :where(:root[data-motion]) :where([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"]) {
     transition:
       opacity var(--motion-faster) var(--motion-ease-leave),
       translate var(--motion-fast) var(--motion-ease-leave);
   }
-  :where(:root[data-motion]) :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"])[data-ending-style] {
+  :where(:root[data-motion]) :is([data-slot="dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"])[data-state="closed"] {
     opacity: 0;
   }
   /* A sheet goes back to its edge and is seen all the way there: it fades for as long as it travels. */
-  :where(:root[data-motion]) [data-slot="sheet-content"][data-ending-style] {
+  :where(:root[data-motion]) [data-slot="sheet-content"][data-state="closed"] {
     transition-duration: var(--motion-fast);
     &[data-side="right"] { translate: 32px 0; }
     &[data-side="left"] { translate: -32px 0; }
@@ -807,15 +807,16 @@ svg[data-glyph][stroke-width="2"] {
   /* The veil behind a window or a sheet fades in and out with it. */
   :where(:root[data-motion]) :where([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]) {
     transition: opacity var(--motion-fast) var(--motion-ease-move);
+    @starting-style { opacity: 0; }
   }
-  :where(:root[data-motion]) :is([data-slot="dialog-overlay"], [data-slot="sheet-overlay"]):is([data-starting-style], [data-ending-style]) {
+  :where(:root[data-motion]) :is([data-slot="dialog-overlay"], [data-slot="sheet-overlay"])[data-state="closed"] {
     opacity: 0;
   }
   /* A pair leaves on one clock: the veil of a window is gone with the window, the veil of a sheet with the sheet. */
-  :where(:root[data-motion]) [data-slot="dialog-overlay"][data-ending-style] {
+  :where(:root[data-motion]) [data-slot="dialog-overlay"][data-state="closed"] {
     transition: opacity var(--motion-faster) var(--motion-ease-leave);
   }
-  :where(:root[data-motion]) [data-slot="sheet-overlay"][data-ending-style] {
+  :where(:root[data-motion]) [data-slot="sheet-overlay"][data-state="closed"] {
     transition: opacity var(--motion-fast) var(--motion-ease-leave);
   }
 }
@@ -885,6 +886,17 @@ svg[data-glyph][stroke-width="2"] {
 :root[data-material="clear"],
 :root[data-material="clear"] body {
   background-color: transparent;
+}
+
+/* The chosen tab of a strip joined to the sheet (`DocumentTabs` attached, src/layout/document-tabs.tsx) is cut from the
+   work area's own surface: where the palette states the work area's glass (`--glass-sheet`, which the engine writes for
+   a glass theme only) the tab paints that glass too, as the work area does (above); elsewhere it is the paper its class
+   already paints. Under the same gate as glass, and outside the layers, to win over that class as the work area's rule
+   does. Its corners into the sheet are not drawn under glass (the tab's own classes): two thin layers would show a seam. */
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+  [data-slot="document-tabs"][data-appearance="attached"] [data-slot="document-tab"][data-selected] {
+    background-color: var(--glass-sheet, var(--color-paper));
+  }
 }
 
 /* The measures of the layout parts (layout.tsx): the columns of `Grid`, each at least its `min` wide and as many as the
