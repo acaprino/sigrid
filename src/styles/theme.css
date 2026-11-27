@@ -60,7 +60,7 @@
   --text-2xl--line-height: calc(2 / 1.5);
   --text-2xl--letter-spacing: -0.02em;
 
-  /* The two font roles of DESIGN.md: the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
+  /* Two of the three font roles of DESIGN.md (the titles' is `font-heading`, below): the interface (`font-sans`) and inline code in notes (`font-mono`, the system's
      monospace faces: DESIGN.md `code-sm`). */
   --font-sans: "IBM Plex Sans", "Inter", system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
@@ -902,6 +902,14 @@ svg[data-glyph][stroke-width="2"] {
   html:has([data-slot="page"][data-fit]) {
     overscroll-behavior-y: none;
   }
+}
+
+/* The titles' font role (DESIGN.md: three font roles), written by `applyHeadingFont` on an element. Unset, a title is
+   the interface font at 600, as before the role. Read where it is used, not declared in `@theme`, so a font put on an
+   element reaches the titles inside it. */
+@utility font-heading {
+  font-family: var(--font-heading, var(--font-sans));
+  font-weight: var(--font-heading-weight, 600);
 }
 
 /* The system's font as the interface font (`SYSTEM_FONT`, written by `applyFont` as `data-font`): the monospace of
