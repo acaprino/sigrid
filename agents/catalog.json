@@ -1266,11 +1266,15 @@
      ],
      "also": [
       "applyFont",
+      "applyHeadingFont",
       "applyTheme",
       "BASE_THEME",
       "copyTheme",
       "FONT_VARIABLE",
       "fontById",
+      "HEADING_FONT_VARIABLE",
+      "HEADING_WEIGHT_VARIABLE",
+      "HeadingWeight",
       "isFontId",
       "THEME_ATTRIBUTES",
       "THEME_VARIABLES",
@@ -2211,7 +2215,7 @@
     },
     {
      "file": "src/primitives/heading.tsx",
-     "about": "The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,\na small title 16px (a dialog, a message in a card), all semibold in the ink; or the small label over a group (12px,\nmedium, muted: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.\nAn icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it\nwrites none (the owner's rule of 2026-11-23). With `truncate` it is one line, cut where its place ends.",
+     "about": "The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,\na small title 16px (a dialog, a message in a card), all in the ink and in the titles' font (`font-heading`: the\ninterface font at 600 unless the app names another with `applyHeadingFont`); or the small label over a group (12px,\nmedium, muted, always in the interface font: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.\nAn icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it\nwrites none (the owner's rule of 2026-11-23). With `truncate` it is one line, cut where its place ends.",
      "components": [
       {
        "name": "Heading",
