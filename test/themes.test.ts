@@ -1,9 +1,9 @@
-// A theme in a scheme and a font on the root: `applyTheme` and `applyFont` set the variables and the attributes,
+// A theme in a scheme and a font on the root: `applyTheme`, `applyFont` and `applyHeadingFont` set the variables and the attributes,
 // `copyTheme` carries them to another root (separate windows). The colors themselves are tested by test/theme-engine.test.ts.
 import { describe, expect, test } from 'vitest'
 import { DENSITY_VARIABLES } from '../src/density'
 import { DEFAULT_FONT } from '../src/theme-catalog'
-import { BASE_THEME, FONT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyTheme, copyTheme, fontById, isFontId, themeVariables } from '../src/themes'
+import { BASE_THEME, FONT_VARIABLE, HEADING_FONT_VARIABLE, HEADING_WEIGHT_VARIABLE, THEME_ATTRIBUTES, THEME_VARIABLES, applyFont, applyHeadingFont, applyTheme, copyTheme, fontById, isFontId, themeVariables } from '../src/themes'
 import { sampleTheme, themeTokens } from './fixtures/sample-themes'
 import { themeCss } from './theme-tokens'
 
@@ -64,7 +64,7 @@ describe('applyTheme', () => {
   test('always writes the same variables, whatever the theme and the scheme', () => {
     for (const pick of [{ theme: BASE_THEME, scheme: 'light' }, { theme: BASE_THEME, scheme: 'dark' }, { theme: sampleTheme('notte'), scheme: 'dark' }, { theme: sampleTheme('inchiostro'), scheme: 'light' }] as const) {
       // The surfaces of a glass page are the variables only a theme that asks for them writes (test/glass.test.ts).
-      expect([...Object.keys(themeVariables(pick)), '--glass-ground', '--glass-sheet', '--glass-float', FONT_VARIABLE, ...DENSITY_VARIABLES].sort()).toEqual([...THEME_VARIABLES].sort())
+      expect([...Object.keys(themeVariables(pick)), '--glass-ground', '--glass-sheet', '--glass-float', FONT_VARIABLE, HEADING_FONT_VARIABLE, HEADING_WEIGHT_VARIABLE, ...DENSITY_VARIABLES].sort()).toEqual([...THEME_VARIABLES].sort())
     }
   })
 })
@@ -98,12 +98,37 @@ describe('applyFont', () => {
   })
 })
 
+describe('applyHeadingFont', () => {
+  test('the titles take a font and a weight of their own; null gives them back to the interface font', () => {
+    const { el } = createDocument()
+    applyFont(el, 'system')
+    applyHeadingFont(el, 'serif', 400)
+    expect(el.style.getPropertyValue(HEADING_FONT_VARIABLE)).toBe(fontById('serif').stack)
+    expect(el.style.getPropertyValue(HEADING_WEIGHT_VARIABLE)).toBe('400')
+    expect(el.getAttribute('data-font-heading')).toBe('serif')
+    // The interface font is not touched.
+    expect(el.getAttribute('data-font')).toBe('system')
+    applyHeadingFont(el, 'inter')
+    expect(el.style.getPropertyValue(HEADING_WEIGHT_VARIABLE)).toBe('600')
+    applyHeadingFont(el, null)
+    for (const name of [HEADING_FONT_VARIABLE, HEADING_WEIGHT_VARIABLE]) expect(el.style.getPropertyValue(name), name).toBe('')
+    expect(el.hasAttribute('data-font-heading')).toBe(false)
+    expect(el.getAttribute('data-font')).toBe('system')
+  })
+
+  test('unset, a title reads the interface font at 600, where it is (not a value of @theme)', () => {
+    expect(themeCss).toMatch(/@utility font-heading \{\s*font-family: var\(--font-heading, var\(--font-sans\)\);\s*font-weight: var\(--font-heading-weight, 600\);\s*\}/)
+    expect(themeCss).not.toMatch(/^\s*--font-heading:/m)
+  })
+})
+
 describe('copyTheme', () => {
   test('carries attributes and variables (the font too) to another root, and removes the ones the source does not have', () => {
     const a = createDocument().el
     const b = createDocument().el
     applyTheme(a, { theme: sampleTheme('oliva'), scheme: 'dark' })
     applyFont(a, 'atkinson')
+    applyHeadingFont(a, 'serif', 400)
     b.setAttribute('data-checks', 'round')
     b.style.setProperty(FONT_VARIABLE, 'Georgia')
     copyTheme(a, b)

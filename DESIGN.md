@@ -73,7 +73,7 @@ x-zsd:
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
       - "One backdrop for every overlay that dims: the drop colour at 40%."
-      - "Two font roles: the interface stack and the monospace stack of inline code."
+      - "Three font roles: the interface stack; the titles' (`Heading`, `font-heading`), the interface's at 600 unless the app names another with `applyHeadingFont`, at 400, 500 or 600; and the monospace stack of inline code."
   implementation:
     token-source: src/styles/theme.css
     component-sources:

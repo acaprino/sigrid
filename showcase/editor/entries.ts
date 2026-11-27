@@ -4,13 +4,13 @@
 // exports, so a part added to the toolkit is added here too.
 export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
   '@acaprino/sigrid': [
-    'accentSuggestions', 'APP_HEIGHT_VAR', 'applyDensity', 'applyFont', 'applyMotionFeel', 'applyTheme', 'BACKDROP',
+    'accentSuggestions', 'APP_HEIGHT_VAR', 'applyDensity', 'applyFont', 'applyHeadingFont', 'applyMotionFeel', 'applyTheme', 'BACKDROP',
     'BASE_THEME', 'BOTTOM_BAR_ROOM_VAR', 'cn', 'COARSE', 'COLOR_NAMES', 'colorHue', 'COLORS', 'colorTheme',
     'contrast', 'copyTheme', 'DARK_DEPTHS', 'DARK_TINTS', 'DEFAULT_DARK_DEPTH', 'DEFAULT_DARK_TINT',
     'DEFAULT_DENSITY', 'DEFAULT_FONT', 'DEFAULT_MOTION_FEEL', 'DEFAULT_SHAPE', 'DEFAULT_TONE_INTENSITY',
     'DEFAULT_TONE_LIGHT', 'DEFAULT_WORDS', 'DENSITIES', 'DENSITY_LIMITS', 'DENSITY_VARIABLES', 'densityById',
     'densityOf', 'densityVariables', 'densityWith', 'duoTheme', 'fit', 'FIXED', 'FONT_VARIABLE', 'fontById', 'FONTS',
-    'grayScale', 'guardDesktop', 'HARMONIES', 'hasMarkdown', 'HUE_NAMES', 'hueColor', 'hueScale', 'ignoreToasts', 'isAccentColor', 'isBrowserKey', 'isDensityId',
+    'grayScale', 'guardDesktop', 'HARMONIES', 'hasMarkdown', 'HEADING_FONT_VARIABLE', 'HEADING_WEIGHT_VARIABLE', 'HUE_NAMES', 'hueColor', 'hueScale', 'ignoreToasts', 'isAccentColor', 'isBrowserKey', 'isDensityId',
     'isFontId', 'isHueName', 'isMotionEase', 'isSpotKind', 'isThemeRadii', 'isThemeShape', 'kindIcon', 'kindLabel', 'limitLabel',
     'loadMotion', 'luminance', 'markHueAttrs', 'MAX_FILE_BYTES', 'MOTION_EASE_NAMES', 'MOTION_EASES', 'MOTION_PACE',
     'motionFeel', 'MotionProvider', 'motionVariables', 'namedTheme', 'NARROW', 'over', 'overLimitNotice', 'OWN_BACKGROUNDS',

@@ -128,7 +128,9 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
    chosen view of a bar and the chosen item of a segment by weight 700 and the accent (a square line that grows from
    its middle; a track whose chosen item has an accent tint and border), `statusStrip: 'tall'` makes the status strip
    of `AppShell` 40px, and `applyFont(el, 'system')` sets the system's own font (Segoe UI on Windows, with its 700 and
-   the system's monospace); nothing is shipped for it and it is never the default. A curated palette can also state
+   the system's monospace); nothing is shipped for it and it is never the default. The titles have a font role of
+   their own (2026-11-27): `applyHeadingFont(el, 'serif', 400)` puts one of `FONTS` and its weight (400, 500 or 600)
+   on `Heading` and the `font-heading` class; unset, the titles read the interface font at 600, as before. A curated palette can also state
    its muted text (`surfaces.<scheme>.mute`, held at 4.5:1 by the engine), and a `ToolbarButton variant="quiet"` is
    an outline with the muted ink that keeps its hairline under strong control borders. One more on 2026-11-25:
    `material: 'glass'` lets the window's own material (Windows' acrylic behind a transparent window, which the host
