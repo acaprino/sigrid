@@ -66,8 +66,6 @@ function Checkbox({
   const input = React.useRef<HTMLInputElement>(null)
   const inputRef = useMergedRef(input, outerRef)
   const checkSvg = React.useRef<SVGSVGElement>(null)
-  // True between the user's click and the mark appearing: it animates only a gesture, never a mark already present at mount.
-  const gesture = React.useRef(false)
 
   // Without a visible label Ark still points the input at its label part (`aria-labelledby`), which is not on the page:
   // the pointer is taken off, and the name is the caller's `aria-label` or the `<label htmlFor>` elsewhere.
@@ -92,10 +90,8 @@ function Checkbox({
       {...(value !== undefined ? { value } : {})}
       {...(id !== undefined ? { ids: { hiddenInput: id } } : {})}
       onCheckedChange={(details) => {
-        gesture.current = details.checked === true
         if (details.checked === true && motion && checkSvg.current) {
           motion.popCheck(checkSvg.current)
-          gesture.current = false
         }
         onCheckedChange?.(details.checked)
       }}

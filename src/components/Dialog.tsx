@@ -1,7 +1,7 @@
 // Modal dialog and right-side drawer sheet composed from `primitives/dialog` and `primitives/sheet` (Ark UI),
 // with controlled focus return (`onCloseAutoFocus`, `restoreFocusTo`) and the toolkit's motion preference.
 import type * as React from 'react'
-import { useCallback, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, type RefObject } from 'react'
 import {
   Dialog as DialogRoot,
   DialogContent,
@@ -65,9 +65,15 @@ function useCloseFocus(open: boolean, onCloseAutoFocus: DialogProps['onCloseAuto
   s.open = open
   const latest = useRef({ onCloseAutoFocus, restoreFocusTo })
   latest.current = { onCloseAutoFocus, restoreFocusTo }
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (timer.current !== null) clearTimeout(timer.current)
+  }, [])
   return useCallback((): boolean => {
     const session = state.current.session
-    setTimeout(() => {
+    if (timer.current !== null) clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      timer.current = null
       const now = state.current
       if (now.open || now.handled === session || now.session !== session) return
       now.handled = session

@@ -51,10 +51,10 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }:
     }
   }, [open, focusConfig.finalFocus])
 
-  const customFinal = focusConfig.finalFocus !== undefined
+  const disableRestore = typeof focusConfig.finalFocus === "function" || focusConfig.finalFocus === false
   const finalFocusEl =
     focusConfig.finalFocus && typeof focusConfig.finalFocus === "object"
-      ? () => focusConfig.finalFocus && typeof focusConfig.finalFocus === "object" ? focusConfig.finalFocus.current : null
+      ? () => (focusConfig.finalFocus && typeof focusConfig.finalFocus === "object" ? focusConfig.finalFocus.current : null)
       : undefined
   const initialFocusEl =
     focusConfig.initialFocus === false
@@ -75,7 +75,7 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }:
         lazyMount
         unmountOnExit
         immediate
-        restoreFocus={customFinal ? false : true}
+        restoreFocus={!disableRestore}
         persistentElements={persistentElements}
         {...(initialFocusEl ? { initialFocusEl } : {})}
         {...(finalFocusEl ? { finalFocusEl } : {})}

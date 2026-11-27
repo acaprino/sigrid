@@ -1528,6 +1528,12 @@
          "type": "{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }",
          "required": true,
          "doc": "What a chart says when it has no data or describes itself to screen readers."
+        },
+        {
+         "name": "documentTabs",
+         "type": "{ readonly tabs: string; readonly newTab: string; readonly close: (title: string) => string; readonly scrollNext: string; readonly scrollPrev: string; }",
+         "required": true,
+         "doc": "What the tab strip of a `DocumentTabs` says by itself."
         }
        ]
       },
@@ -1713,6 +1719,11 @@
          "name": "chart",
          "type": "Partial<{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }>",
          "doc": "What a chart says when it has no data or describes itself to screen readers."
+        },
+        {
+         "name": "documentTabs",
+         "type": "Partial<{ readonly tabs: string; readonly newTab: string; readonly close: (title: string) => string; readonly scrollNext: string; readonly scrollPrev: string; }>",
+         "doc": "What the tab strip of a `DocumentTabs` says by itself."
         }
        ]
       }
@@ -3852,7 +3863,7 @@
     },
     {
      "file": "src/primitives/tabs.tsx",
-     "about": "Park UI (MIT) tabs 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts)\nFrom Park's `tabs` recipe comes the form (its md size, its subtle variant): a row of triggers 40px tall with 14px\nsemibold text, 16px of side padding and a 4px gap between them, the chosen one on a tinted sheet with l2 corners,\nand the panels below, 8px away. The tint is the theme's selection (`selected`, with `selected-ink`), the one tint a\nview has for what is chosen (R1); the others are muted text that turns to ink under the pointer. Park's `line`\nvariant (a 2px bar under the chosen tab) is not offered: R1 keeps bars off the toolkit. For a choice with no panels\nuse `ToggleGroup` (Park's `enclosed` look).\nBehaviour: Ark UI's Tabs (`role=\"tablist\"`, one Tab stop, arrows move and, by default, choose; Home and End). With\n`animated` the tint is one sheet that slides from the old tab to the new one (`Highlight` in `motion-impl`).",
+     "about": "Park UI (MIT) tabs 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/tabs.ts)\nFrom Park's `tabs` recipe comes the form (its md size, its subtle variant): a row of triggers 40px tall with 14px\nsemibold text, 16px of side padding and a 4px gap between them, the chosen one on a tinted sheet with l2 corners,\nand the panels below, 8px away. The tint is the theme's selection (`selected`, with `selected-ink`), the one tint a\nview has for what is chosen (R1); the others are muted text that turns to ink under the pointer. Park's `line`\nvariant (a 2px bar under the chosen tab) is not offered: R1 keeps bars off the toolkit. For a choice with no panels\nuse `ToggleGroup` (Park's `enclosed` look).\nBehaviour: Ark UI's Tabs (`role=\"tablist\"`, one Tab stop, arrows move and, by default, choose; Home and End). With\n`animated` the tint is one sheet that slides from the old tab to the new one (`Highlight` in `motion-impl`).\nA row too long for its room scrolls sideways (`scroll`) and says there is more by fading its edges, or, with\n`overflow=\"buttons\"` (a strip of open documents, for the mouse), by an arrow after it in a slot of its own: the arrow\nis there, disabled, when nothing overflows, so what follows the row never moves (R14).",
      "components": [
       {
        "name": "Tabs",
@@ -3925,6 +3936,11 @@
          "name": "scroll",
          "type": "boolean",
          "doc": "More tabs than fit in a row (the filters of a list, on a phone): the row scrolls sideways under the finger, its edges fade where there is more, and the chosen tab is brought into sight. Absent: the row is as wide as its tabs."
+        },
+        {
+         "name": "overflow",
+         "type": "\"shade\" | \"buttons\"",
+         "doc": "How a row that scrolls says there is more. `shade` (the default): with `scroll`, its edges fade where it goes on. `buttons`: the row scrolls (with or without `scroll`) and an arrow after it steps forward by three quarters of the row, toward the end of the line (to the left in a language written from the right). The arrow keeps its slot, disabled, when there is no more: what comes after the row never moves (R14). Scrolled away from the start, an arrow back appears before it. The arrows are for the pointer and out of the Tab order: the keys move through the tabs, which come into sight."
         },
         {
          "name": "className",
@@ -7066,6 +7082,117 @@
      ]
     },
     {
+     "file": "src/layout/document-tabs.tsx",
+     "about": "The strip of open documents: a row of tabs the person opens, closes and moves between, with a `+` for a new one, as\nin a browser or an editor (`DocumentTabs`; `DocumentTab` is one of them). It stands on the toolkit's `Tabs` (Ark UI:\none Tab stop, the arrows, Home and End) and on the arrows of a row too long for its room (`TabsList\noverflow=\"buttons\"`): after the row come, in this order and never moving (R14), the arrow forward (there, disabled,\nwhen nothing overflows), a 1px divider and the `+`, all written in the tabs' own direction, so the order holds both ways.\nA tab closes with its × (out of the Tab order), a middle press or Delete. The app removes it (`onClose`) and chooses\nthe tab shown next; the focus goes to the tab beside it (the next one, or the one before for the last), or to the `+`\nwhen none is left. `value` may be `null`: no tab is chosen when there is none.\nTwo looks. `pill`: the chosen tab has the tint of a selection, as `Tabs` draws it. `attached` (in `AppShell\nframe=\"sheet\" top=\"unified\"`, which `auto` follows): the chosen tab is cut from the sheet below. It is the paper, with\nthe sheet's 1px line on its top and its sides, its top corners `--radius-lg`, its bottom corners curving out into the\nsheet's top line (two small drawn corners, no gradient), its title in ink and semibold, and a 2px bar of the accent\ninside its top (R1). The other tabs are quiet text on the window's ground, with the same room, so nothing moves when the\nchoice does. The strip lies 1px over the sheet's top line and the chosen tab covers it: the tab opens into the sheet.\nThe first tab sits at the sheet's start edge and has no corner there: its side drops straight into the sheet's side.\nUnder glass the chosen tab is the sheet's glass and its corners are not drawn (theme.css).\nA colour the person gave to a document is an 8px dot beside its title, never a fill (R10).",
+     "components": [
+      {
+       "name": "DocumentTab",
+       "doc": "One open document in a `DocumentTabs`: its title, an icon and a dot if given, and its × when it can close.",
+       "props": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "An `Icon` before the title."
+        },
+        {
+         "name": "color",
+         "type": "\"red\" | \"coral\" | \"orange\" | \"brown\" | \"amber\" | \"lime\" | \"green\" | \"emerald\" | \"teal\" | \"turquoise\" | \"blue\" | \"slate\" | \"indigo\" | \"violet\" | \"orchid\" | \"magenta\" | \"pink\" | \"burgundy\" | \"#e34432\" …",
+         "doc": "A colour the person gave to the document, one of the palette's by its name (`amber`) or its value: an 8px dot (R10)."
+        },
+        {
+         "name": "closable",
+         "type": "boolean",
+         "doc": "`false`: no × and no closing by Delete or a middle press, even with `onClose` (a tab kept open)."
+        },
+        {
+         "name": "onClose",
+         "type": "(() => void)",
+         "doc": "The person closes the tab: the app removes it and chooses the tab shown next. Absent: the tab cannot close."
+        },
+        {
+         "name": "closeLabel",
+         "type": "string",
+         "doc": "The name of the ×. Absent: the words', from the title («Close Trip»)."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The title."
+        }
+       ]
+      },
+      {
+       "name": "DocumentTabs",
+       "doc": "A strip of open documents: the tabs, the arrow forward when they overflow, a divider and the `+`.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "doc": "The name of the strip for screen readers. Absent: the words' («Open tabs»)."
+        },
+        {
+         "name": "value",
+         "type": "string | null",
+         "required": true,
+         "doc": "The chosen tab; `null` (or absent) when none is, as when the last one has closed."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "onAdd",
+         "type": "(() => void)",
+         "doc": "The `+` after the strip, for a new tab. Absent: no `+` and no divider."
+        },
+        {
+         "name": "addLabel",
+         "type": "string",
+         "doc": "The name of the `+`. Absent: the words' («New tab»)."
+        },
+        {
+         "name": "appearance",
+         "type": "\"auto\" | \"attached\" | \"pill\"",
+         "doc": "`auto` (the default): `attached` inside `AppShell frame=\"sheet\" top=\"unified\"`, `pill` elsewhere."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The tint slides to the new tab (`pill`), the buttons go down a little when pressed (off by default)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The tabs: `DocumentTab`s."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "DocumentTabProps",
+      "DocumentTabsProps"
+     ]
+    },
+    {
      "file": "src/layout/drawer-button.tsx",
      "about": "The button in the bar that opens the sidebar, where the frame has taken the sidebar out of the layout and made it a\ndrawer (`useAppShell().sidebar === 'drawer'`, under 620px of the frame's width): on a wider frame the sidebar is in\nsight, and the button is not drawn (docs/patterns.md, «Start from the one frame»). It is a `ToolbarButton`, an icon\nwith its name as a hint, the first thing of the bar; the app keeps the drawer's state and passes it to `Sidebar open`.",
      "components": [
@@ -7264,7 +7391,7 @@
     },
     {
      "file": "src/layout/sidebar.tsx",
-     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with\n  `toggle=\"head\"`, the button at the end of the header's row (the name of the list, its count and the button on one\n  row; on the rail the button alone, at the top);\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).\nWith `animated` that tint is one mark for the whole sidebar, which slides to the row chosen next, across the groups\n(`NavItem`, nav-list.tsx). It is drawn anew, without a slide, when the sidebar shrinks to its rail or widens, and a\nrow in a closed group or hidden by the search has none.",
+     "about": "The sidebar of an app: its navigation as groups of rows (`NavItem`), on the theme's sidebar surface and inks\n(`sidebar-*`). It puts together pieces the toolkit already has, so an app does not assemble them by hand:\n- shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its\n  name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with\n  `toggle=\"head\"`, the button at the end of the header's row (the name of the list, its count and the button on one\n  row; on the rail the button alone, at the top), or, with `toggle=\"head-start\"`, the button first, at a start offset\n  that is the same on the rail and in the column, then a hairline and the header (the rail keeps the button alone);\n  inside an `AppShell frame=\"sheet\"` that draws the one top row (`UnifiedShellContext`) the sidebar has no button\n  and no head of its own: the frame's button shrinks it and the sidebar follows the frame's `collapsed`;\n- groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;\n  the rows a user reaches most are simply the first group («Favorites»);\n- a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the\n  groups left with no row; with nothing left it says so;\n- below 860px (the `md` of theme.css, where the sidebar stops being a column) it is a drawer from the left, a `Sheet`\n  the app opens from its own button (`open`, `onOpenChange`); choosing a row closes it.\nInside an `AppShell` the steps are the frame's (`app-shell.tsx`): a rail the width forces has no button to widen it.\nWhat sits above the groups (the app's name, a menu that changes workspace) and below them (the account) is the app's:\n`header` and `footer`. No rail or bar marks the current row: the selection tint does (R1).\nWith `animated` that tint is one mark for the whole sidebar, which slides to the row chosen next, across the groups\n(`NavItem`, nav-list.tsx). It is drawn anew, without a slide, when the sidebar shrinks to its rail or widens, and a\nrow in a closed group or hidden by the search has none.",
      "components": [
       {
        "name": "Sidebar",
@@ -7287,8 +7414,8 @@
         },
         {
          "name": "toggle",
-         "type": "\"head\" | \"foot\"",
-         "doc": "Where that button is. `foot` (the default): alone at the foot, under the groups. `head`: at the end of the header's row, beside `header` (a `SidebarRow` with the name of the list and its `Count`); with no `header` the row holds the button alone; on the rail it is at the top, centred. Where there is no button (no `onCollapsedChange`, the drawer, a rail the frame's width forces) it changes nothing."
+         "type": "\"head\" | \"foot\" | \"head-start\"",
+         "doc": "Where that button is. `foot` (the default): alone at the foot, under the groups. `head`: at the end of the header's row, beside `header` (a `SidebarRow` with the name of the list and its `Count`); with no `header` the row holds the button alone; on the rail it is at the top, centred. `head-start`: the button first in that row, at one fixed offset from the start (so it does not move when the sidebar shrinks), then a hairline and `header`; on the rail the button alone, at the same place. Where there is no button (no `onCollapsedChange`, the drawer, a rail the frame's width forces, a frame that draws the top row itself) it changes nothing."
         },
         {
          "name": "open",

@@ -352,6 +352,7 @@ type DropdownMenuSubProps = {
 
 function DropdownMenuSub({ open, defaultOpen, onOpenChange, children }: DropdownMenuSubProps) {
   const handlers = React.useRef(new Map<string, () => void>())
+  const [gutter, setGutter] = React.useState(2)
   const registerSelect = React.useCallback((value: string, fn: (() => void) | undefined) => {
     if (!fn) return () => {}
     handlers.current.set(value, fn)
@@ -359,8 +360,11 @@ function DropdownMenuSub({ open, defaultOpen, onOpenChange, children }: Dropdown
       if (handlers.current.get(value) === fn) handlers.current.delete(value)
     }
   }, [])
-  const noopConfig = React.useCallback(() => {}, [])
-  const state = React.useMemo(() => ({ setConfig: noopConfig, registerSelect }), [noopConfig, registerSelect])
+  const setConfig = React.useCallback((next: ContentConfig) => {
+    setGutter((prev) => (prev === next.sideOffset ? prev : next.sideOffset))
+  }, [])
+  const positioning = React.useMemo(() => ({ placement: "right-start" as const, gutter }), [gutter])
+  const state = React.useMemo(() => ({ setConfig, registerSelect }), [setConfig, registerSelect])
   return (
     <MenuStateContext.Provider value={state}>
       <Menu.Root
@@ -370,7 +374,7 @@ function DropdownMenuSub({ open, defaultOpen, onOpenChange, children }: Dropdown
         unmountOnExit
         onSelect={(details) => handlers.current.get(details.value)?.()}
         onOpenChange={onOpenChange ? (details) => onOpenChange(details.open) : undefined}
-        positioning={{ placement: "right-start", gutter: 2 }}
+        positioning={positioning}
       >
         {children}
       </Menu.Root>
@@ -407,9 +411,14 @@ function DropdownMenuSubTrigger({
 
 function DropdownMenuSubContent({
   className,
-  sideOffset: _sideOffset = 2,
+  sideOffset = 2,
   ...props
 }: React.ComponentProps<"div"> & { sideOffset?: number | undefined }) {
+  const ctx = React.useContext(MenuStateContext)
+  const setConfig = ctx?.setConfig
+  React.useLayoutEffect(() => {
+    setConfig?.({ side: "right", align: "start", sideOffset })
+  }, [setConfig, sideOffset])
   return (
     <OverlayPortal>
       <Menu.Positioner data-slot="dropdown-menu-sub-positioner" className="z-50 outline-none">

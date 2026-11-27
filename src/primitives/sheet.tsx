@@ -84,15 +84,6 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
   const [side, setSide] = React.useState<SheetSide>("right")
   const [initialFocus, setInitialFocus] = React.useState<React.RefObject<HTMLElement | null> | false | undefined>(undefined)
   const reasonRef = React.useRef<SheetCloseReason>("other")
-  const beforeRef = React.useRef<HTMLElement | null>(null)
-  const wasOpen = React.useRef(open)
-  if (open && !wasOpen.current) {
-    wasOpen.current = true
-    const active = typeof document !== "undefined" ? document.activeElement : null
-    beforeRef.current = active instanceof HTMLElement && active !== active.ownerDocument.body ? active : null
-  } else if (!open && wasOpen.current) {
-    wasOpen.current = false
-  }
   const latest = React.useRef({ closesOnEscape, onOpenChange, controlled: openProp !== undefined })
   latest.current = { closesOnEscape, onOpenChange, controlled: openProp !== undefined }
   const ctx = React.useMemo(() => ({ setSide, setInitialFocus, modal, open }), [modal, open])
@@ -231,8 +222,8 @@ function SheetContent({
   const popup = React.useRef<HTMLDivElement | null>(null)
   const before = React.useRef<Element | null>(null)
   const entered = React.useRef<Element | null>(null)
-  const captured = React.useRef(open)
-  const wasOpen = React.useRef(open)
+  const captured = React.useRef(false)
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   // Capture the active element once per opening during render (before Ark's focus effects move focus inside the sheet).
   if (open && !captured.current) {
     captured.current = true
@@ -240,6 +231,12 @@ function SheetContent({
   } else if (!open && captured.current) {
     captured.current = false
   }
+
+  React.useEffect(() => {
+    return () => {
+      if (closeTimer.current !== null) clearTimeout(closeTimer.current)
+    }
+  }, [])
 
   // Stable reference: called once when the sheet mounts (the opening, a user gesture) and when it unmounts (closing).
   const enter = React.useCallback(
@@ -249,7 +246,9 @@ function SheetContent({
       if (!el) {
         if (prev && !latest.current.open) {
           const target = before.current
-          setTimeout(() => {
+          if (closeTimer.current !== null) clearTimeout(closeTimer.current)
+          closeTimer.current = setTimeout(() => {
+            closeTimer.current = null
             if (latest.current.open) return
             const event = new Event("closeAutoFocus", { cancelable: true })
             latest.current.onCloseAutoFocus?.(event)

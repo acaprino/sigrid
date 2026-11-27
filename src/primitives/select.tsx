@@ -22,6 +22,7 @@ import { FOCUS_FIELD } from "../lib/focus"
 import { FIELD_HOVER, FIELD_OFF_NOW, FIELD_SURFACE, FIELD_TEXT } from "../lib/field"
 import { OverlayPortal } from "../internal/portal"
 import { useEntrance } from "../internal/motion"
+import { useMergedRef } from "../lib/refs"
 
 /**
  * An option: a value and its label. An app can add its own fields (`O extends SelectOption`) and draw them before the
@@ -79,6 +80,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
   const contentRef = React.useRef<HTMLDivElement>(null)
   const [open, setOpen] = React.useState(false)
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, trigger.current), open)
+  const mergedContentRef = useMergedRef(contentRef, enter)
   const all = React.useMemo(() => (groups ? [...options, ...groups.flatMap((g) => g.options)] : options), [options, groups])
   const collection = React.useMemo(
     () => createListCollection<O>({ items: all, itemToValue: (o) => o.value, itemToString: (o) => o.label }),
@@ -147,10 +149,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
       <OverlayPortal>
         <SelectPrimitive.Positioner data-slot="select-positioner" className="z-50 outline-none">
           <SelectPrimitive.Content
-            ref={(el) => {
-              contentRef.current = el
-              enter(el)
-            }}
+            ref={mergedContentRef}
             data-slot="select-content"
             hidden={!open}
             aria-label={aria["aria-label"]}
