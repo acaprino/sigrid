@@ -10,6 +10,7 @@ import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@ark-ui/react/avatar"
 import { cn } from "../lib/utils"
 import { contrast, toHex } from "../theme-engine"
+import { useWords } from "../words"
 
 const SIZES = {
   md: "size-(--control-md) text-sm",
@@ -74,4 +75,51 @@ function Avatar({ name, src, size = "md", decorative, color, children, className
   )
 }
 
-export { Avatar }
+const GROUP_RING = {
+  paper: "ring-paper",
+  raised: "ring-raised",
+  quiet: "ring-paper-2",
+} as const
+
+/** One person in an `AvatarGroup`. */
+export type AvatarGroupItem = Pick<AvatarProps, "name" | "src" | "color">
+
+export type AvatarGroupProps = {
+  /** The people shown in the stack. */
+  items: readonly AvatarGroupItem[]
+  /** How many avatars are shown before the `+N` counter. Default 4. */
+  max?: number | undefined
+  size?: keyof typeof SIZES | undefined
+  /** The surface behind the stack, for the ring that parts overlapping avatars. Default `paper`. */
+  surface?: keyof typeof GROUP_RING | undefined
+  /** What the group represents («Assignees», «Participants»), for screen readers. */
+  label: string
+  className?: string | undefined
+}
+
+/** A tight stack of avatars for a group of people, with a `+N` counter when there are more than `max`. */
+function AvatarGroup({ items, max = 4, size = "sm", surface = "paper", label, className }: AvatarGroupProps) {
+  const words = useWords()
+  const limit = Math.max(1, max)
+  const visible = items.slice(0, limit)
+  const overflow = items.length - visible.length
+  const ring = cn("ring-2", GROUP_RING[surface])
+  return (
+    <div role="group" aria-label={label} data-slot="avatar-group" className={cn("inline-flex items-center [&>*+*]:-ms-2", className)}>
+      {visible.map((item, index) => (
+        <Avatar key={`${item.name}-${index}`} name={item.name} src={item.src} color={item.color} size={size} className={ring} />
+      ))}
+      {overflow > 0 ? (
+        <span
+          data-slot="avatar-overflow"
+          aria-label={words.list.more(overflow)}
+          className={cn("relative inline-flex shrink-0 items-center justify-center rounded-full bg-paper-2 font-medium text-ink-soft tabular-nums select-none", SIZES[size], ring)}
+        >
+          <span aria-hidden="true">+{overflow}</span>
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+export { Avatar, AvatarGroup }

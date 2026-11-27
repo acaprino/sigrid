@@ -43,11 +43,15 @@ export interface Words {
     readonly noDateTime: string
     /** The button text of a range field without a value. */
     readonly noRange: string
-    /** The quick choices above the calendar (`dayPicks`, `rangePicks`). */
+    /** The quick choices above the calendar (`dayPicks`, `rangePicks`, `pastRangePicks`). */
     readonly today: string
     readonly tomorrow: string
     readonly weekend: string
     readonly nextDays: (days: number) => string
+    readonly lastDays: (days: number) => string
+    readonly thisMonth: string
+    readonly lastMonth: string
+    readonly thisYear: string
     readonly time: string
     readonly timeOfDay: string
     readonly done: string
@@ -261,6 +265,10 @@ export interface Words {
     readonly textNotice: string
     readonly arriving: string
     readonly notUploaded: string
+    readonly uploading: string
+    readonly failed: string
+    readonly retry: string
+    readonly retryNamed: (title: string) => string
     readonly overLimit: (limit: string) => string
     readonly fileOverLimit: (name: string, limit: string) => string
     readonly filesOverLimit: (count: number, limit: string) => string
@@ -482,6 +490,29 @@ export interface Words {
     readonly done: string
     readonly todo: string
   }
+  /** What a `FilterBar` and its `FilterPopover` say by themselves. */
+  readonly filters: {
+    readonly label: string
+    readonly add: string
+    readonly apply: string
+    readonly clearAll: string
+    readonly remove: string
+    readonly field: string
+    readonly operator: string
+    readonly value: string
+    readonly empty: string
+    readonly opIs: string
+    readonly opIsNot: string
+    readonly opContains: string
+    readonly opGt: string
+    readonly opLt: string
+    readonly opBetween: string
+  }
+  /** What a chart says when it has no data or describes itself to screen readers. */
+  readonly chart: {
+    readonly empty: string
+    readonly seriesSummary: (series: number, points: number) => string
+  }
 }
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`)
@@ -511,6 +542,10 @@ export const DEFAULT_WORDS: Words = {
     tomorrow: 'Tomorrow',
     weekend: 'This weekend',
     nextDays: (days) => `Next ${days} days`,
+    lastDays: (days) => `Last ${days} days`,
+    thisMonth: 'This month',
+    lastMonth: 'Last month',
+    thisYear: 'This year',
     time: 'Time',
     timeOfDay: 'Time of day',
     done: 'Done',
@@ -662,6 +697,10 @@ export const DEFAULT_WORDS: Words = {
     textNotice: 'Files and links are added here: text is not an attachment.',
     arriving: 'Arriving',
     notUploaded: 'Not uploaded yet from the other device',
+    uploading: 'Uploading',
+    failed: 'Upload failed',
+    retry: 'Try again',
+    retryNamed: (title) => `Try uploading ${title} again`,
     overLimit: (limit) => `Over the limit of ${limit}`,
     fileOverLimit: (name, limit) => `“${name}” is over the limit of ${limit}: it was not added.`,
     filesOverLimit: (count, limit) => `${count} files are over the limit of ${limit}: they were not added.`,
@@ -814,6 +853,27 @@ export const DEFAULT_WORDS: Words = {
   },
   onThisPage: { label: 'On this page' },
   checklist: { done: 'Done: ', todo: 'To do: ' },
+  filters: {
+    label: 'Filters',
+    add: 'Add filter',
+    apply: 'Apply',
+    clearAll: 'Clear filters',
+    remove: 'Remove filter',
+    field: 'Field',
+    operator: 'Condition',
+    value: 'Value',
+    empty: 'No filters added yet.',
+    opIs: 'is',
+    opIsNot: 'is not',
+    opContains: 'contains',
+    opGt: 'greater than',
+    opLt: 'less than',
+    opBetween: 'between',
+  },
+  chart: {
+    empty: 'No data to display',
+    seriesSummary: (series, points) => `${plural(series, 'series', 'series')}, ${plural(points, 'point', 'points')}`,
+  },
 }
 
 /** Some of the words, group by group: what is left out stays as it is. */

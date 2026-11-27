@@ -281,8 +281,10 @@ describe('TanStack Table, TanStack Virtual, dnd-kit, TipTap, React Flow, xterm a
     '@codemirror/state': '6.7.6',
     '@codemirror/view': '6.43.15',
     '@lezer/highlight': '1.2.5',
+    // Statistical charts (LineChart, BarChart, PieChart, RadialGauge), behind `./chart`.
+    recharts: '3.11.2',
   }
-  const LIBRARY = /^@(?:tanstack|dnd-kit|tiptap|xyflow|dagrejs|xterm|codemirror|lezer)\//
+  const LIBRARY = /^(?:@(?:tanstack|dnd-kit|tiptap|xyflow|dagrejs|xterm|codemirror|lezer)\/|recharts$)/
   const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
   // The stylesheet of xterm (`…/xterm.css?inline`) is the library's, as the code is: the file is listed by the package, not the file.
   const imports = (file: string) => [...new Set([...readFileSync(file, 'utf8').matchAll(/from ['"]([^'"]+)['"]/g)].map((m) => m[1]!.replace(/\/css\/[^/]+\.css\?inline$/, '')).filter((spec) => LIBRARY.test(spec)))].sort()

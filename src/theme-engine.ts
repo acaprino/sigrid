@@ -473,16 +473,17 @@ const at = (token: string, percent: number) => `color-mix(in srgb, var(--color-$
  */
 function elevationOf(scheme: ThemeScheme): Record<string, string> {
   if (scheme === 'light') {
-    // Layered (the review of 2026-11-26): a tight drop where the surface touches the page, a wider one under it and,
-    // from `md` up, a faint one far around. One wide drop alone read as a surface resting on a smudge.
-    const edge = at('drop', 15)
+    // Layered (the review of 2026-11-26, refined for lighter cards): a tight drop where the surface touches the page, a
+    // wider one under it and, from `md` up, a faint one far around, with a quiet hairline ring (`11%` on xs/sm, `12%` above).
+    const ring = at('drop', 11)
+    const edge = at('drop', 12)
     const contact = at('drop', 6)
     return {
-      '--elevation-xs': `0 1px 2px ${edge}, 0 0 1px ${at('drop', 19)}`,
-      '--elevation-sm': `0 1px 2px ${contact}, 0 2px 6px ${at('drop', 7)}, 0 0 1px ${edge}`,
+      '--elevation-xs': `0 1px 2px ${at('drop', 7)}, 0 0 1px ${ring}`,
+      '--elevation-sm': `0 1px 2px ${contact}, 0 2px 6px ${at('drop', 7)}, 0 0 1px ${ring}`,
       '--elevation-md': `0 1px 2px ${contact}, 0 4px 8px ${contact}, 0 12px 24px ${at('drop', 8)}, 0 0 1px ${edge}`,
       '--elevation-lg': `0 2px 4px ${contact}, 0 8px 16px ${at('drop', 7)}, 0 20px 40px ${at('drop', 10)}, 0 0 1px ${edge}`,
-      '--elevation-float': `0 2px 4px ${contact}, 0 8px 16px ${at('drop', 8)}, 0 24px 48px ${edge}, 0 0 1px ${edge}`,
+      '--elevation-float': `0 2px 4px ${contact}, 0 8px 16px ${at('drop', 8)}, 0 24px 48px ${at('drop', 14)}, 0 0 1px ${edge}`,
     }
   }
   const drop = at('drop', 47)

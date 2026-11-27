@@ -58,6 +58,10 @@
       "types": "./dist/code.d.ts",
       "import": "./dist/code.js"
     },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
+    },
     "./tauri": {
       "types": "./dist/tauri.d.ts",
       "import": "./dist/tauri.js"
@@ -167,6 +171,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "motion": "14.6.0",
+    "recharts": "3.11.2",
     "tailwind-merge": "3.7.0"
   }
 }

@@ -309,6 +309,9 @@ toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
   `@lezer/rust`), `@marijn/find-cluster-break`, `crelt` and `style-mod` (all **MIT**). The editing, the highlighting and the
   search of `CodeView`. The packages are the versions Shinatama pinned. Each language is its own chunk, loaded when a file of
   it is shown. The theme is the toolkit's: made from the tokens.
+- **Recharts**: `recharts` 3.11.2 (**MIT**, Copyright (c) 2015-present Recharts Group). The plotting engine behind
+  `LineChart`, `BarChart`, `PieChart` and `RadialGauge` in `./chart`, styled with the toolkit's tokens, `hueScale`,
+  non-animated rendering, raised tooltips and R10 dot legends.
 
 The test `test/provenance.test.ts` checks the pinned versions, that this list and the imports match, and that the main
 entry of the package imports none of them. (The seven languages of CodeMirror are reached with `import()` in
@@ -326,6 +329,7 @@ entry of the package imports none of them. (The seven languages of CodeMirror ar
 | `src/assemblies/CodeView.tsx` | `@codemirror/commands`, `@codemirror/language`, `@codemirror/search`, `@codemirror/state`, `@codemirror/view` | `./code` |
 | `src/assemblies/code-theme.ts` | `@codemirror/language`, `@codemirror/state`, `@codemirror/view`, `@lezer/highlight` | `./code` |
 | `src/assemblies/code-languages.ts` | `@codemirror/state` | `./code` |
+| `src/assemblies/Chart.tsx` | `recharts` | `./chart` |
 
 ## Tauri's API
 

@@ -3,7 +3,7 @@
 // `Cluster`, `Text`…). Ark UI and Base UI give the behaviour, Park UI's recipes the form. A primitive imports no
 // component, no part of the frame and no assembly (test/layers.test.ts).
 export { ICON_NAMES, Icon, isIconName, type IconName } from './icons'
-export { Avatar, initials, type AvatarProps } from './primitives/avatar'
+export { Avatar, AvatarGroup, initials, type AvatarGroupItem, type AvatarGroupProps, type AvatarProps } from './primitives/avatar'
 export { Badge, badgeVariants, type BadgeTone } from './primitives/badge'
 export { Button, QUIET_CHIP, buttonVariants, type ButtonProps } from './primitives/button'
 export { Card, type CardProps } from './primitives/card'

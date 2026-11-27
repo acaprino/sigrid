@@ -2,3 +2,5 @@ node_modules/
 dist/
 release/
 provenance.json
+.jcode/local/
+effectiveness-metrics.json

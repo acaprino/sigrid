@@ -88,7 +88,7 @@ describe('the layers of the source', () => {
   })
 
   test('the main entry and the entries of the levels reach none of the heavy libraries by a static import', () => {
-    const HEAVY = /^(@tanstack\/|@dnd-kit\/|@tiptap\/|@xyflow\/|@dagrejs\/|@xterm\/|@codemirror\/|@lezer\/|motion($|\/))/
+    const HEAVY = /^(@tanstack\/|@dnd-kit\/|@tiptap\/|@xyflow\/|@dagrejs\/|@xterm\/|@codemirror\/|@lezer\/|recharts($|\/)|motion($|\/))/
     const seen = new Set<string>()
     const found: string[] = []
     const queue = ['index', ...LEVELS].map((entry) => join(src, `${entry}.ts`))

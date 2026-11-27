@@ -137,11 +137,13 @@
 @layer theme {
   :root,
   :host {
-    --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 19%, transparent);
-    --elevation-sm: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 2px 6px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-md: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 12px 24px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-lg: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 20px 40px color-mix(in srgb, var(--color-drop) 10%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
-    --elevation-float: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 24px 48px color-mix(in srgb, var(--color-drop) 15%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 15%, transparent);
+    --elevation-xs: 0 1px 2px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 11%, transparent);
+    --elevation-sm: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 2px 6px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 11%, transparent);
+    --elevation-md: 0 1px 2px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 4px 8px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 12px 24px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 12%, transparent);
+    --elevation-lg: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 7%, transparent), 0 20px 40px color-mix(in srgb, var(--color-drop) 10%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 12%, transparent);
+    --elevation-float: 0 2px 4px color-mix(in srgb, var(--color-drop) 6%, transparent), 0 8px 16px color-mix(in srgb, var(--color-drop) 8%, transparent), 0 24px 48px color-mix(in srgb, var(--color-drop) 14%, transparent), 0 0 1px color-mix(in srgb, var(--color-drop) 12%, transparent);
+    /* Hairline for chart grids and ultra-quiet dividers: blends with any ground in light and dark. */
+    --line-subtle: color-mix(in srgb, var(--color-ink) 8%, transparent);
   }
 }
 

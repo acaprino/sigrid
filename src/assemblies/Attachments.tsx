@@ -18,6 +18,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { FileUpload } from '@ark-ui/react/file-upload'
 import { Button } from '../primitives/button'
 import { Input } from '../primitives/input'
+import { Progress } from '../primitives/progress'
 import { Tooltip } from '../primitives/tooltip'
 import { limitLabel, overLimitNotice, useDropTarget, type AttachPayload, type DropPayload } from '../internal/drop'
 import { DROP_BUTTON, DROP_HINT, DROP_TITLE, DROP_ZONE, DROP_ZONE_ACTIVE, useFileChoice } from '../components/file-drop'
@@ -30,10 +31,11 @@ import { GROUP_LABEL } from '../lib/rows'
 import { FOCUS_RING } from '../lib/focus'
 
 /**
- * The state of an attachment, as the app says it: `ready` can be opened; `arriving` is arriving from the sync; `notUploaded`
- * the other device has not uploaded it yet; `overLimit` exceeds the limit; `textOnly` only its text is left.
+ * The state of an attachment, as the app says it: `ready` can be opened; `uploading` is being uploaded (with `progress`);
+ * `failed` could not be uploaded (with optional `retry`); `arriving` is arriving from the sync; `notUploaded` the other
+ * device has not uploaded it yet; `overLimit` exceeds the limit; `textOnly` only its text is left.
  */
-export type AttachmentState = 'ready' | 'arriving' | 'notUploaded' | 'overLimit' | 'textOnly'
+export type AttachmentState = 'ready' | 'uploading' | 'failed' | 'arriving' | 'notUploaded' | 'overLimit' | 'textOnly'
 
 /**
  * An attachment in the details. `A` is the app's action type: the
@@ -50,9 +52,13 @@ export type AttachmentView<A = unknown> = {
   state: AttachmentState
   /**
    * The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words
-   * («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»).
+   * («Arriving», «Uploading», «Upload failed», «Not uploaded yet from the other device», «Over the 50 MB limit»).
    */
   stateLabel?: string | null | undefined
+  /** Upload progress from 0 to 100 while `state` is `uploading`; `null` when unknown. */
+  progress?: number | null | undefined
+  /** Action sent to `onAction` when the user presses «Try again» on a `failed` upload. */
+  retry?: A | null | undefined
   /**
    * An image with its thumbnail ready: the row shows a 64px thumbnail in place
    * of the type mark, taken from `the section's `thumbnails[id]``. Absent or false: the row as before.
@@ -98,6 +104,10 @@ function AttachmentIcon({ kind }: { kind: AttachmentKind | undefined }) {
 /** The state in calm words; null for a ready attachment (or a text-only one). */
 export function stateText(state: AttachmentState, maxFileBytes: number, words: Words = DEFAULT_WORDS): string | null {
   switch (state) {
+    case 'uploading':
+      return words.attachments.uploading
+    case 'failed':
+      return words.attachments.failed
     case 'arriving':
       return words.attachments.arriving
     case 'notUploaded':
@@ -232,9 +242,24 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                       {detail}
                     </p>
                   ) : null}
-                  {state ? <p className="text-xs text-ink-mute">{state}</p> : null}
+                  {a.state === 'uploading' ? (
+                    <Progress value={a.progress ?? null} size="sm" showValue valueText={a.stateLabel ?? undefined} aria-label={a.title} className="mt-1.5" />
+                  ) : a.state === 'failed' ? (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-destructive">
+                      <Icon name="error" className="size-3.5 shrink-0" />
+                      <span>{state ?? said.failed}</span>
+                    </p>
+                  ) : state ? (
+                    <p className="text-xs text-ink-mute">{state}</p>
+                  ) : null}
                 </div>
-                {canOpen && open !== null ? (
+                {a.state === 'failed' && a.retry != null ? (
+                  <Button variant="outline" size="xs" aria-label={said.retryNamed(a.title)} onClick={() => onAction(a.retry!)}>
+                    <Icon name="refresh" className="size-3.5" />
+                    {said.retry}
+                  </Button>
+                ) : null}
+                {canOpen && open !== null && a.state !== 'uploading' && a.state !== 'failed' ? (
                   <Button variant="ghost" size="xs" aria-label={said.openNamed(a.title)} onClick={() => onAction(open)}>
                     {said.open}
                   </Button>

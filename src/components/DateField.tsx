@@ -20,6 +20,7 @@ import { Button } from '../primitives/button'
 import { Checkbox } from '../primitives/checkbox'
 import { Input } from '../primitives/input'
 import { useEntrance } from '../internal/motion'
+import { NARROW, useMedia } from '../internal/media'
 import { cn } from '../lib/utils'
 import { FOCUS_FIELD } from '../lib/focus'
 import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
@@ -86,6 +87,8 @@ type FieldShellProps = {
   onRange?: ((first: CalendarDate, last: CalendarDate) => void) | undefined
   /** Quick choices, in a row above the calendar. */
   picks?: readonly ShellPick[] | undefined
+  /** How many months the calendar shows at once on wide screens (falls back to 1 below `md`). Default 1. */
+  months?: 1 | 2 | undefined
   /** The card closes when a day is chosen. */
   closeOnSelect: boolean
   /** The card has just opened. */
@@ -100,8 +103,10 @@ type FieldShellProps = {
   children: React.ReactNode
 }
 
-function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange, picks, closeOnSelect, onOpen, onPressSelected, animated, min, max, disabled, locale = DEFAULT_LOCALE, children }: FieldShellProps) {
+function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange, picks, months = 1, closeOnSelect, onOpen, onPressSelected, animated, min, max, disabled, locale = DEFAULT_LOCALE, children }: FieldShellProps) {
   const toolkit = useWords()
+  const narrow = useMedia(NARROW)
+  const numOfMonths = months === 2 && !narrow ? 2 : 1
   const translations = React.useMemo(() => ({ ...calendarWords(toolkit), trigger: NO_TRIGGER_NAME }), [toolkit])
   const earliest = parseDay(min)
   const latest = parseDay(max)
@@ -140,6 +145,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange,
         else setFirst(null)
       }}
       selectionMode={ranged ? 'range' : 'single'}
+      numOfMonths={numOfMonths}
       closeOnSelect={closeOnSelect}
       locale={locale}
       {...(earliest ? { min: earliest } : {})}
@@ -265,6 +271,23 @@ export function rangePicks(words: Words['date'] = DEFAULT_WORDS.date, now: Date 
   ]
 }
 
+/** Past-facing quick choices of a range field (analytics, logs, reports): today, last 7/30 days, this month, last month and this year. */
+export function pastRangePicks(words: Words['date'] = DEFAULT_WORDS.date, now: Date = new Date()): DateRangePick[] {
+  const today = dayOf(now)
+  const monthStart = today.set({ day: 1 })
+  const prevMonthEnd = monthStart.subtract({ days: 1 })
+  const prevMonthStart = prevMonthEnd.set({ day: 1 })
+  const yearStart = new CalendarDate(today.year, 1, 1)
+  return [
+    { label: words.today, start: today.toString(), end: today.toString() },
+    { label: words.lastDays(7), start: today.subtract({ days: 6 }).toString(), end: today.toString() },
+    { label: words.lastDays(30), start: today.subtract({ days: 29 }).toString(), end: today.toString() },
+    { label: words.thisMonth, start: monthStart.toString(), end: today.toString() },
+    { label: words.lastMonth, start: prevMonthStart.toString(), end: prevMonthEnd.toString() },
+    { label: words.thisYear, start: yearStart.toString(), end: today.toString() },
+  ]
+}
+
 /** The quick choices as the card takes them: one that is not a real date is left out. */
 function shellPicks(picks: readonly (DatePick | DateRangePick)[] | undefined): ShellPick[] | undefined {
   return picks?.flatMap((pick) => {
@@ -331,8 +354,10 @@ export type DateRangeFieldProps = Omit<DateFieldProps, 'value' | 'onChange' | 'p
   /** The two ends as `YYYY-MM-DD`, or null. A value whose ends are not real dates, or are the wrong way round, reads as null. */
   value: DateRange | null
   onChange: (value: DateRange | null) => void
-  /** Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days. */
+  /** Quick choices in a row above the calendar: `rangePicks()` for upcoming spans, `pastRangePicks()` for reports and logs. */
   picks?: readonly DateRangePick[] | undefined
+  /** Show two months side by side on wide viewports (automatically collapses to 1 below `md`). Default 1. */
+  months?: 1 | 2 | undefined
 }
 
 /** «November 20 – 24, 2026»: the range as the button shows it, in the field's locale (one day alone reads as a date). */
@@ -350,7 +375,7 @@ function rangeText(first: CalendarDate, last: CalendarDate, locale: string = DEF
  * the days between take the selection tint. The two clicks may come in either order, and on the same day for a range
  * of one day. The caller hears of a range only when it has both ends.
  */
-export function DateRangeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, picks }: DateRangeFieldProps) {
+export function DateRangeField({ id, value, onChange, animated, placeholder, min, max, disabled, locale, picks, months = 1 }: DateRangeFieldProps) {
   const toolkit = useWords()
   const start = parseDay(value?.start)
   const end = parseDay(value?.end)
@@ -365,6 +390,7 @@ export function DateRangeField({ id, value, onChange, animated, placeholder, min
       range={range}
       onRange={(first, last) => onChange({ start: first.toString(), end: last.toString() })}
       picks={shellPicks(picks)}
+      months={months}
       closeOnSelect
       animated={animated}
       min={min}

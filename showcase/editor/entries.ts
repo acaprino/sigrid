@@ -25,7 +25,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'withinLimit', 'withWords', 'WordsProvider',
   ],
   '@acaprino/sigrid/primitives': [
-    'Avatar', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Cell', 'Checkbox', 'Cluster', 'Collapsible',
+    'Avatar', 'AvatarGroup', 'Badge', 'badgeVariants', 'Button', 'buttonVariants', 'Card', 'Cell', 'Checkbox', 'Cluster', 'Collapsible',
     'Column', 'Count', 'DialogClose', 'DialogContent', 'DialogDescription', 'DialogFooter', 'DialogHeader',
     'DialogOverlay', 'DialogPortal', 'DialogRoot', 'DialogTitle', 'DialogTrigger', 'Dot', 'DropdownMenu',
     'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup', 'DropdownMenuItem', 'DropdownMenuLabel',
@@ -43,9 +43,9 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
   '@acaprino/sigrid/components': [
     'Calendar', 'CALENDAR_WORDS', 'calendarWords', 'ChipsInput', 'Combobox', 'ConfirmDialog', 'ContextMenu', 'COPIED_MS',
     'CopyButton', 'DateField', 'DateRangeField', 'DateTimeField', 'dayPicks', 'DescriptionList', 'Dialog',
-    'Disclosure', 'DurationField', 'Empty', 'FileDrop', 'FormField', 'frameRect', 'FrameSurface', 'InlineMarkdown', 'InputGroup',
-    'InputGroupButton', 'InputGroupText', 'ItemList', 'ItemRow', 'MarkdownBlocks', 'markdownHeadings', 'Message', 'Note', 'OnThisPage', 'OverflowList',
-    'Prose', 'rangePicks', 'Reasoning', 'SearchField', 'SettingRow', 'Steps', 'Suggestions', 'Swatches', 'Toasts', 'ToolCall',
+    'Disclosure', 'DurationField', 'Empty', 'FileDrop', 'FilterBar', 'FilterPopover', 'FormField', 'frameRect', 'FrameSurface', 'InlineMarkdown', 'InputGroup',
+    'InputGroupButton', 'InputGroupText', 'ItemList', 'ItemRow', 'MarkdownBlocks', 'markdownHeadings', 'Message', 'Metric', 'Note', 'OnThisPage', 'OverflowList',
+    'pastRangePicks', 'Prose', 'rangePicks', 'Reasoning', 'SearchField', 'SettingRow', 'Sparkline', 'Steps', 'Suggestions', 'Swatches', 'Toasts', 'ToolCall',
   ],
   '@acaprino/sigrid/layout': [
     'APP_SHELL_STEPS', 'AppShell', 'AppShellContext', 'appShellLayout', 'brandInitial', 'ContentSplit',

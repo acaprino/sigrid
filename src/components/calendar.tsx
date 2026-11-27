@@ -142,58 +142,77 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
     const along = (((from.toDate('UTC').getUTCDay() - first.value.toDate('UTC').getUTCDay()) % 7) + 7) % 7
     picker.setFocusedValue(e.key === 'Home' ? from.subtract({ days: along }) : from.add({ days: 6 - along }))
     // Ark moves its roving `tabIndex` to that day; focus follows it once the grid has rendered it.
-    requestAnimationFrame(() => grid.current?.querySelector<HTMLElement>('[data-part="table-cell-trigger"][data-focus]')?.focus({ preventScroll: true }))
+    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[data-part="table-cell-trigger"][data-focus]')?.focus({ preventScroll: true }))
   }
+  const second = picker.numOfMonths > 1 ? picker.getOffset({ months: 1 }) : null
+  const renderGrid = (
+    weeks: typeof picker.weeks,
+    visibleRange: typeof picker.visibleRange,
+    ref?: React.RefObject<HTMLTableElement | null>,
+    heading?: string,
+  ) => (
+    <div className="flex flex-col gap-2">
+      {heading ? <p className="text-center text-xs font-medium text-ink-soft">{heading}</p> : null}
+      <DatePicker.Table ref={ref} onKeyDown={weekEdge} className="w-full border-collapse">
+        {/* Ark hides the header row from screen readers (each day says its weekday): here it stays, as in a table. */}
+        <DatePicker.TableHead aria-hidden={false}>
+          <DatePicker.TableRow className="flex gap-1">
+            {picker.weekDays.map((day) => (
+              <DatePicker.TableHeader key={day.long} scope="col" abbr={day.long} className="flex h-(--cell-size) flex-1 select-none items-center justify-center pointer-coarse:h-9 font-semibold text-sm text-ink-mute">
+                {day.short}
+              </DatePicker.TableHeader>
+            ))}
+          </DatePicker.TableRow>
+        </DatePicker.TableHead>
+        <DatePicker.TableBody>
+          {weeks.map((week, index) => (
+            <DatePicker.TableRow key={index} className="mt-1 flex w-full gap-1">
+              {week.map((day, column) => {
+                const again = onPressSelected && picker.getDayTableCellState({ value: day, visibleRange }).selected ? onPressSelected : undefined
+                return (
+                  // Keyed by its place, not by its date: when the month changes the buttons stay (with other days),
+                  // so the focused one is not removed from under the keyboard. Inside a modal sheet a focus that
+                  // falls on nothing is taken back by the sheet, and Ark would close the card as "focus outside".
+                  <DatePicker.TableCell key={column} value={day} visibleRange={visibleRange} className="relative aspect-square flex-1 select-none p-0 text-center">
+                    <DatePicker.TableCellTrigger
+                      asChild
+                      // Before Ark's own handlers: a prevented event is one they leave alone.
+                      onClick={(e: React.MouseEvent) => {
+                        if (!again) return
+                        e.preventDefault()
+                        again()
+                      }}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (!again || e.nativeEvent.isComposing || e.key !== 'Enter') return
+                        e.preventDefault()
+                        again()
+                      }}
+                    >
+                      <button type="button" className={CELL_CLASS}>
+                        {day.day}
+                      </button>
+                    </DatePicker.TableCellTrigger>
+                  </DatePicker.TableCell>
+                )
+              })}
+            </DatePicker.TableRow>
+          ))}
+        </DatePicker.TableBody>
+      </DatePicker.Table>
+    </div>
+  )
   return (
-    <div ref={root} data-slot="calendar" className={cn('w-fit p-4 [--cell-size:var(--control-sm)] pointer-coarse:[--cell-size:2.75rem]', className)}>
+    <div ref={root} data-slot="calendar" data-months={picker.numOfMonths} className={cn('w-fit p-4 [--cell-size:var(--control-sm)] pointer-coarse:[--cell-size:2.75rem]', className)}>
       <DatePicker.View view="day" className="flex flex-col gap-3">
         <Header view="day" />
-        <DatePicker.Table ref={grid} onKeyDown={weekEdge} className="w-full border-collapse">
-          {/* Ark hides the header row from screen readers (each day says its weekday): here it stays, as in a table. */}
-          <DatePicker.TableHead aria-hidden={false}>
-            <DatePicker.TableRow className="flex gap-1">
-              {picker.weekDays.map((day) => (
-                <DatePicker.TableHeader key={day.long} scope="col" abbr={day.long} className="flex h-(--cell-size) flex-1 select-none items-center justify-center pointer-coarse:h-9 font-semibold text-sm text-ink-mute">
-                  {day.short}
-                </DatePicker.TableHeader>
-              ))}
-            </DatePicker.TableRow>
-          </DatePicker.TableHead>
-          <DatePicker.TableBody>
-            {picker.weeks.map((week, index) => (
-              <DatePicker.TableRow key={index} className="mt-1 flex w-full gap-1">
-                {week.map((day, column) => {
-                  const again = onPressSelected && picker.getDayTableCellState({ value: day, visibleRange: picker.visibleRange }).selected ? onPressSelected : undefined
-                  return (
-                    // Keyed by its place, not by its date: when the month changes the buttons stay (with other days),
-                    // so the focused one is not removed from under the keyboard. Inside a modal sheet a focus that
-                    // falls on nothing is taken back by the sheet, and Ark would close the card as "focus outside".
-                    <DatePicker.TableCell key={column} value={day} visibleRange={picker.visibleRange} className="relative aspect-square flex-1 select-none p-0 text-center">
-                      <DatePicker.TableCellTrigger
-                        asChild
-                        // Before Ark's own handlers: a prevented event is one they leave alone.
-                        onClick={(e: React.MouseEvent) => {
-                          if (!again) return
-                          e.preventDefault()
-                          again()
-                        }}
-                        onKeyDown={(e: React.KeyboardEvent) => {
-                          if (!again || e.nativeEvent.isComposing || e.key !== 'Enter') return
-                          e.preventDefault()
-                          again()
-                        }}
-                      >
-                        <button type="button" className={CELL_CLASS}>
-                          {day.day}
-                        </button>
-                      </DatePicker.TableCellTrigger>
-                    </DatePicker.TableCell>
-                  )
-                })}
-              </DatePicker.TableRow>
-            ))}
-          </DatePicker.TableBody>
-        </DatePicker.Table>
+        {second ? (
+          <div className="flex flex-col gap-4 md:flex-row">
+            {renderGrid(picker.weeks, picker.visibleRange, grid, picker.visibleRangeText.start)}
+            {renderGrid(second.weeks, second.visibleRange, undefined, second.visibleRangeText.start)}
+          </div>
+        ) : (
+          renderGrid(picker.weeks, picker.visibleRange, grid)
+        )}
       </DatePicker.View>
       <Choices view="month" />
       <Choices view="year" />

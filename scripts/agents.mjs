@@ -30,6 +30,7 @@ const ENTRIES = [
   ['@acaprino/sigrid/graph', 'src/graph.ts'],
   ['@acaprino/sigrid/terminal', 'src/terminal.ts'],
   ['@acaprino/sigrid/code', 'src/code.ts'],
+  ['@acaprino/sigrid/chart', 'src/chart.ts'],
   // Its source is outside `src/`: the toolkit knows no shell (test/no-shell.test.ts).
   ['@acaprino/sigrid/tauri', 'tauri/index.ts'],
 ]

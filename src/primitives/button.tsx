@@ -35,7 +35,7 @@ import { SwapLabel } from "../internal/swap-label"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80 hover:[&_svg]:opacity-100 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
@@ -69,11 +69,11 @@ const buttonVariants = cva(
         sm: "h-(--control-sm) min-w-(--control-sm) px-(--pad-sm)",
         // R7 caps a control at the default height: `lg` keeps its name for compatibility and differs from `default` only by its 16px label.
         lg: "h-(--control-md) min-w-(--control-md) px-4 text-base",
-        icon: "size-(--control-md)",
-        "icon-xs": "size-(--control-xs)",
-        "icon-sm": "size-(--control-sm)",
+        icon: "size-(--control-md) [&_svg]:opacity-100",
+        "icon-xs": "size-(--control-xs) [&_svg]:opacity-100",
+        "icon-sm": "size-(--control-sm) [&_svg]:opacity-100",
         // As `icon` (R7): kept for compatibility.
-        "icon-lg": "size-(--control-md)",
+        "icon-lg": "size-(--control-md) [&_svg]:opacity-100",
         // In a line of text or a cell of a table (a `link`): no side padding and no height of a control, so the line
         // is as tall as its words (24px at least, the least target; 44px with a finger, from the base classes); its
         // words start where the line does, and it gives way, so a `Text truncate` in it is cut.

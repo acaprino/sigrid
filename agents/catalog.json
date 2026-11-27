@@ -1510,6 +1510,18 @@
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
+        },
+        {
+         "name": "filters",
+         "type": "{ readonly label: string; readonly add: string; readonly apply: string; readonly clearAll: string; readonly remove: string; readonly field: string; readonly operator: string; readonly value: string; …",
+         "required": true,
+         "doc": "What a `FilterBar` and its `FilterPopover` say by themselves."
+        },
+        {
+         "name": "chart",
+         "type": "{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }",
+         "required": true,
+         "doc": "What a chart says when it has no data or describes itself to screen readers."
         }
        ]
       },
@@ -1680,6 +1692,16 @@
         {
          "name": "checklist",
          "type": "Partial<{ readonly done: string; readonly todo: string; }>"
+        },
+        {
+         "name": "filters",
+         "type": "Partial<{ readonly label: string; readonly add: string; readonly apply: string; readonly clearAll: string; readonly remove: string; readonly field: string; readonly operator: string; readonly value: …",
+         "doc": "What a `FilterBar` and its `FilterPopover` say by themselves."
+        },
+        {
+         "name": "chart",
+         "type": "Partial<{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }>",
+         "doc": "What a chart says when it has no data or describes itself to screen readers."
         }
        ]
       }
@@ -1773,9 +1795,70 @@
          "type": "string"
         }
        ]
+      },
+      {
+       "name": "AvatarGroup",
+       "doc": "A tight stack of avatars for a group of people, with a `+N` counter when there are more than `max`.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly AvatarGroupItem[]",
+         "required": true,
+         "doc": "The people shown in the stack."
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "How many avatars are shown before the `+N` counter. Default 4."
+        },
+        {
+         "name": "size",
+         "type": "\"md\" | \"sm\" | \"xs\""
+        },
+        {
+         "name": "surface",
+         "type": "\"quiet\" | \"paper\" | \"raised\"",
+         "doc": "The surface behind the stack, for the ring that parts overlapping avatars. Default `paper`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What the group represents («Assignees», «Participants»), for screen readers."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "AvatarGroupItem",
+       "doc": "One person in an `AvatarGroup`.",
+       "fields": [
+        {
+         "name": "color",
+         "type": "string",
+         "doc": "An identity fill, `#rrggbb`, for an app whose people or accounts are told apart by colour (a mail app's accounts). The initials take the ink with the better contrast on it (white or black). Without it the tile is the neutral one (R10: a colour for a person is a dot, not a fill): this is for what the app chose on purpose."
+        },
+        {
+         "name": "name",
+         "type": "string",
+         "required": true,
+         "doc": "The person's name: the accessible name, and the source of the initials."
+        },
+        {
+         "name": "src",
+         "type": "string",
+         "doc": "The picture. Without one, or while it loads, or if it fails: the initials."
+        }
+       ]
       }
      ],
      "also": [
+      "AvatarGroupProps",
       "AvatarProps",
       "initials"
      ]
@@ -3278,16 +3361,26 @@
     },
     {
      "file": "src/primitives/separator.tsx",
-     "about": "A hairline between two groups of a page or a panel, in the divider's colour: what tells two groups apart where the\nspace between them is not enough («Lines and space, not boxes», docs/design-laws.md). It is a horizontal rule, read\nby screen readers as a separator, and takes no room of its own: the pile around it spaces it. The separators of a\nbar and of a menu are their own (`ToolbarSeparator`, `DropdownMenuSeparator`).",
+     "about": "A hairline between two groups of a page or a panel, in the divider's colour: what tells two groups apart where the\nspace between them is not enough («Lines and space, not boxes», docs/design-laws.md). It is a horizontal rule, read\nby screen readers as a separator, and takes no room of its own: the pile around it spaces it. With `label` it breaks\nthe line around a short caption («Today», «or»). The separators of a bar and of a menu are their own\n(`ToolbarSeparator`, `DropdownMenuSeparator`).",
      "components": [
       {
        "name": "Separator",
-       "doc": "A line across its place, between two groups.",
+       "doc": "A line across its place, between two groups, with an optional caption.",
        "props": [
         {
          "name": "decorative",
          "type": "boolean",
          "doc": "Only a drawing (between two groups that are already told apart for a screen reader): hidden from screen readers."
+        },
+        {
+         "name": "label",
+         "type": "React.ReactNode",
+         "doc": "A short caption set in the line («Today», «or»). Absent: a plain hairline."
+        },
+        {
+         "name": "align",
+         "type": "\"center\" | \"start\"",
+         "doc": "Where `label` sits along the line: `center` (the default) or `start`."
         }
        ]
       }
@@ -4585,7 +4678,12 @@
         {
          "name": "picks",
          "type": "readonly DateRangePick[]",
-         "doc": "Quick choices in a row above the calendar: `rangePicks()` gives this weekend and the next seven days."
+         "doc": "Quick choices in a row above the calendar: `rangePicks()` for upcoming spans, `pastRangePicks()` for reports and logs."
+        },
+        {
+         "name": "months",
+         "type": "1 | 2",
+         "doc": "Show two months side by side on wide viewports (automatically collapses to 1 below `md`). Default 1."
         }
        ]
       },
@@ -4709,6 +4807,7 @@
       "DateRangeFieldProps",
       "DateTimeFieldProps",
       "dayPicks",
+      "pastRangePicks",
       "rangePicks"
      ]
     },
@@ -5072,6 +5171,187 @@
      "also": [
       "FileDropProps",
       "FileDropReason"
+     ]
+    },
+    {
+     "file": "src/components/filter-bar.tsx",
+     "about": "A compact filter bar and a structured rule builder popover for lists and tables. `FilterBar` keeps search, quick\nchoices, the advanced filter popover and the «Clear filters» action in stable positions (R14); `FilterPopover` edits\na controlled list of `{ field, operator, value }` rules in a raised popover (`shadow-lg`, R4) and shows the applied\ncount in tabular figures (`Count`, R5). No filter logic runs here: the app filters its own data from `rules`.",
+     "components": [
+      {
+       "name": "FilterBar",
+       "doc": "A wrapping filter bar: search, quick controls, structured filters, clear-all and trailing actions.",
+       "props": [
+        {
+         "name": "search",
+         "type": "FilterBarSearch",
+         "doc": "Search box at the start of the bar."
+        },
+        {
+         "name": "quick",
+         "type": "React.ReactNode",
+         "doc": "Always-visible quick controls beside the search (tabs, selects, date range)."
+        },
+        {
+         "name": "filters",
+         "type": "React.ReactNode",
+         "doc": "Advanced filter trigger (typically `FilterPopover`)."
+        },
+        {
+         "name": "actions",
+         "type": "React.ReactNode",
+         "doc": "Trailing actions at the end of the bar (sort, export). Avoid a second solid primary button (R3)."
+        },
+        {
+         "name": "appliedCount",
+         "type": "number",
+         "doc": "How many filters are active: when greater than zero and `onClearAll` is given, shows «Clear filters»."
+        },
+        {
+         "name": "onClearAll",
+         "type": "(() => void)",
+         "doc": "Clears all active filters at once."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "FilterPopover",
+       "doc": "A button with an applied-filter count that opens a popover to add, edit and apply compound filter rules.",
+       "props": [
+        {
+         "name": "fields",
+         "type": "readonly FilterField[]",
+         "required": true,
+         "doc": "The fields a rule can filter on."
+        },
+        {
+         "name": "rules",
+         "type": "readonly FilterRule[]",
+         "required": true,
+         "doc": "Currently applied filter rules."
+        },
+        {
+         "name": "onApply",
+         "type": "(rules: FilterRule[]) => void",
+         "required": true,
+         "doc": "Called with the edited rules when the user presses Apply (or clears all)."
+        },
+        {
+         "name": "appliedCount",
+         "type": "number",
+         "doc": "Count shown on the trigger button. Absent: `rules.length`."
+        },
+        {
+         "name": "disabled",
+         "type": "boolean"
+        },
+        {
+         "name": "animated",
+         "type": "boolean"
+        },
+        {
+         "name": "align",
+         "type": "\"end\" | \"center\" | \"start\"",
+         "doc": "Alignment of the popover relative to the trigger. Default `start`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "FilterBarSearch",
+       "fields": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "onChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "Accessible name of the search field («Filter issues»)."
+        },
+        {
+         "name": "placeholder",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "FilterField",
+       "doc": "One filterable column or property offered by `FilterPopover`.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "kind",
+         "type": "\"number\" | \"text\" | \"select\" | \"date\"",
+         "required": true
+        },
+        {
+         "name": "operators",
+         "type": "readonly FilterOperator[]",
+         "doc": "Allowed operators for this field. Absent: the defaults for `kind`."
+        },
+        {
+         "name": "options",
+         "type": "readonly SelectOption[]",
+         "doc": "Choices when `kind` is `select`."
+        }
+       ]
+      },
+      {
+       "name": "FilterRule",
+       "doc": "One active filter condition: a field, an operator and the value to match.",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "field",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "operator",
+         "type": "FilterOperator",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        }
+       ]
+      }
+     ],
+     "also": [
+      "FilterBarProps",
+      "FilterOperator",
+      "FilterPopoverProps"
      ]
     },
     {
@@ -5590,6 +5870,104 @@
      ]
     },
     {
+     "file": "src/components/metric.tsx",
+     "about": "A KPI card showing one key figure with its label, optional change indicator, supporting caption, sparkline and\nfooter action. Follows DESIGN.md: raised surface with `shadow-xs` or quiet fill with no border (R4), tabular figures\n(`Count`, R5), and a change indicator that always pairs a direction icon with its text (never colour alone).",
+     "components": [
+      {
+       "name": "Metric",
+       "doc": "A KPI card: label, tabular figure, optional delta (icon + text), optional sparkline and optional footer.",
+       "props": [
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What the figure measures («Active users», «Latency p95»)."
+        },
+        {
+         "name": "value",
+         "type": "string | number",
+         "required": true,
+         "doc": "The figure itself, rendered in tabular figures (`2xl` semibold). Zero is always displayed."
+        },
+        {
+         "name": "delta",
+         "type": "MetricDelta",
+         "doc": "Optional period-over-period change, always paired with a direction icon."
+        },
+        {
+         "name": "caption",
+         "type": "string",
+         "doc": "Short context beside the delta or under the value («vs last 30 days»)."
+        },
+        {
+         "name": "rolling",
+         "type": "boolean",
+         "doc": "Roll the value in from below when it updates from live events (`Count rolling`)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for `rolling` only, over `MotionProvider`."
+        },
+        {
+         "name": "sparkline",
+         "type": "React.ReactNode | readonly number[]",
+         "doc": "Optional trend line: a numeric series (drawn with `Sparkline`) or a custom chart node."
+        },
+        {
+         "name": "action",
+         "type": "React.ReactNode",
+         "doc": "Trailing action in the header (a ghost button or overflow menu)."
+        },
+        {
+         "name": "footer",
+         "type": "React.ReactNode",
+         "doc": "Footer row separated by a hairline (typically a link or secondary action)."
+        },
+        {
+         "name": "variant",
+         "type": "\"quiet\" | \"raised\"",
+         "doc": "Card surface: `raised` (`shadow-xs`, default) or `quiet` (`bg-paper-2`, no shadow). Never a border (R4)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "MetricDelta",
+       "doc": "A change against a prior period: always rendered with a direction icon and its formatted value.",
+       "fields": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "Formatted change («+12%», «-3.4%», «0%»)."
+        },
+        {
+         "name": "direction",
+         "type": "MetricDeltaDirection",
+         "required": true,
+         "doc": "Direction of the change: `up`, `down` or `flat`."
+        },
+        {
+         "name": "tone",
+         "type": "MetricDeltaTone",
+         "doc": "Status tone. Absent: `success` for `up`, `danger` for `down`, `neutral` for `flat`."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "MetricDeltaDirection",
+      "MetricDeltaTone",
+      "MetricProps"
+     ]
+    },
+    {
      "file": "src/components/note.tsx",
      "about": "Park UI (MIT) alert 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/alert.ts)\nA message that stays in the page until the app removes it: a failure, a warning, a success or a piece of\ninformation, with a title, its text, an optional list and the actions that answer it. It has no close button: it\ngoes when its cause is gone. One need, one look: a failure the page shows is a note with `tone=\"error\"` (with\n«Retry» as its action when it can be tried again), never an `Empty`, which is only for a view with nothing in it; a\npassing event (saved, moved, sent) is a toast (`Toasts`).\nEach tone is said three ways, never by colour alone (DESIGN.md \"Status\"): its icon, from Sigrid's one set (`info`,\n`check`, `alert` for a warning, `error` for a failure: the circle with an X that marks a failure everywhere, in a\ntoast, a progress and a step too), its colour, and a word read first by screen readers («Error: Could not reach the\nserver»: `useWords().common.error`, the word of an error toast, and `useWords().note` for the other three).\nAn error or a warning is announced when it appears (`role=\"alert\"`, read at once), unless the app says `announce`\nfalse: a warning that is a fact of the item shown (read only, out of date) would be read again at each selection.\nInformation and a success are not: they have no live role, so a screen reader meets them in the page's order. A\npolite `role=\"status\"` would not keep them quiet: some screen readers read a status as soon as it is put in the page,\nand again at each change of its text. The root is keyed on its tone: a note whose tone changes in place is drawn\nanew, so an information that becomes an error, or a warning that becomes an error, is announced as it appears.\nA long word (a path, a JSON value, an address) breaks where it must (`overflow-wrap: anywhere`, inherited by the\ntitle, the text and the list), so the note never grows wider than its place; a tool's output, with its line breaks,\ngoes in the text as a `<Text pre>`.\nForm: Park's `alert` recipe, its default `subtle` variant at its `md` size: a row with the icon at the start and the\ncontent beside it (12px apart, 16px of padding, l3 corners, 14px text), the title semibold over the text, 4px apart.\nThe fill is the tone's soft colour (the theme engine's `success-soft`, `warning-soft`, `destructive-soft`, as the\nerror box of `FormField`); information has no status colour and is never the accent (R2), so it is the quiet fill\n(the ink at 6%). A fill and no border or shadow: it lies in the page, it is not raised (R4). The icon and the title\ntake the tone's colour, which reads on its soft fill in every theme; the text and the list stay in the ink.\nNot taken from Park: its colour palettes (blue, orange, green, red: here the status tokens), the 20px icon (16px, R7),\nthe `solid`, `surface` and `outline` variants and the `lg` size (one form for every app). The actions are the\napp's buttons, `outline` (the ink) or `ghost` (the soft ink), both at 4.5:1 on the four fills in every theme: a note\nnever holds the solid action unless it is the one of its screen (R3).",
      "components": [
@@ -5915,6 +6293,58 @@
      ],
      "also": [
       "SettingRowProps"
+     ]
+    },
+    {
+     "file": "src/components/sparkline.tsx",
+     "about": "A tiny inline trend line for a KPI or a table cell: pure SVG with zero external chart dependencies, styled purely\nthrough the theme's tokens (`currentColor`), with no gradients and no looping animations (DESIGN.md). When `area`\nis set, a flat translucent fill sits under the line; `highlightLast` marks the final point with a crisp dot.",
+     "components": [
+      {
+       "name": "Sparkline",
+       "doc": "A lightweight inline trend line in pure SVG, suitable inside `Metric` cards and dense rows.",
+       "props": [
+        {
+         "name": "values",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "Ordered numeric values, oldest first. Fewer than two finite numbers render nothing."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "Accessible name describing what the trend represents («Daily active users»)."
+        },
+        {
+         "name": "tone",
+         "type": "SparklineTone",
+         "doc": "Colour role of the line. Default `accent`."
+        },
+        {
+         "name": "area",
+         "type": "boolean",
+         "doc": "Draw a flat, translucent fill under the line (no gradient). Default false."
+        },
+        {
+         "name": "highlightLast",
+         "type": "boolean",
+         "doc": "Mark the last point with a small dot. Default false."
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "doc": "Height in pixels (default 32)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SparklineProps",
+      "SparklineTone"
      ]
     },
     {
@@ -7370,7 +7800,17 @@
         {
          "name": "stateLabel",
          "type": "string | null",
-         "doc": "The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words («Arriving», «Not uploaded yet from the other device», «Over the 50 MB limit»)."
+         "doc": "The state in words, if the caller gives it («Arriving»); null: none. Absent: the sheet's own words («Arriving», «Uploading», «Upload failed», «Not uploaded yet from the other device», «Over the 50 MB limit»)."
+        },
+        {
+         "name": "progress",
+         "type": "number | null",
+         "doc": "Upload progress from 0 to 100 while `state` is `uploading`; `null` when unknown."
+        },
+        {
+         "name": "retry",
+         "type": "A | null",
+         "doc": "Action sent to `onAction` when the user presses «Try again» on a `failed` upload."
         },
         {
          "name": "thumbnail",
@@ -9774,7 +10214,7 @@
         },
         {
          "name": "surface",
-         "type": "\"quiet\" | \"raised\" | \"paper\"",
+         "type": "\"quiet\" | \"paper\" | \"raised\"",
          "doc": "The surface the table is on, for the headings that stay in sight, which must cover the rows under them in its colour: the page (default), a raised card or the quiet fill."
         },
         {
@@ -11417,6 +11857,385 @@
      ],
      "also": [
       "CodeViewProps"
+     ]
+    }
+   ]
+  },
+  {
+   "import": "@acaprino/sigrid/chart",
+   "files": [
+    {
+     "file": "src/assemblies/Chart.tsx",
+     "about": "Statistical charts built on Recharts, behind the `./chart` entry so apps without charts load none of Recharts.\nEvery chart follows DESIGN.md: series colours come from the theme's accent and 12-step `hueScale` (src/hues.ts),\ngrids use `--line-subtle`, areas use flat translucent fills (no gradients), tooltips use raised surfaces with\n`shadow-md` (R4) and tabular figures (R5), legends use 8px dots (R10), and animations stay off (`isAnimationActive={false}`).",
+     "components": [
+      {
+       "name": "BarChart",
+       "doc": "A responsive vertical or horizontal bar chart styled with Sigrid's theme tokens and 12-step hues.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Accessible name of the chart («Monthly revenue»)."
+        },
+        {
+         "name": "data",
+         "type": "readonly Row[]",
+         "required": true,
+         "doc": "Flat array of data rows, one per x-axis point."
+        },
+        {
+         "name": "xKey",
+         "type": "keyof Row & string",
+         "required": true,
+         "doc": "Row property drawn along the category/time axis."
+        },
+        {
+         "name": "series",
+         "type": "readonly ChartSeries[]",
+         "required": true,
+         "doc": "Series plotted from each row."
+        },
+        {
+         "name": "xTickCount",
+         "type": "number",
+         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems`."
+        },
+        {
+         "name": "formatX",
+         "type": "((value: unknown) => string)",
+         "doc": "Format x-axis ticks and tooltip heading."
+        },
+        {
+         "name": "formatValue",
+         "type": "((value: number, seriesKey: string) => string)",
+         "doc": "Format y-axis ticks and tooltip values."
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\"",
+         "doc": "Tone preset for `hueScale` series colours. Default `vivid` (R11)."
+        },
+        {
+         "name": "showLegend",
+         "type": "boolean",
+         "doc": "Show the legend below the chart. Default true when more than one series."
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "doc": "Height in pixels. Default 240."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "stacked",
+         "type": "boolean",
+         "doc": "Stack series bars on top of one another. Default false."
+        },
+        {
+         "name": "horizontal",
+         "type": "boolean",
+         "doc": "Horizontal bars (`layout=\"vertical\"` in Recharts). Default false."
+        }
+       ]
+      },
+      {
+       "name": "ChartLegend",
+       "doc": "Legend list with 8px dots (R10) and logical spacing.",
+       "props": [
+        {
+         "name": "payload",
+         "type": "readonly LegendEntry[]"
+        },
+        {
+         "name": "layout",
+         "type": "\"horizontal\" | \"vertical\""
+        },
+        {
+         "name": "align",
+         "type": "\"center\" | \"left\" | \"right\""
+        },
+        {
+         "name": "reversed",
+         "type": "boolean"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "ChartTooltip",
+       "doc": "Raised tooltip card (`shadow-md`, R4) with 8px series dots (R10) and tabular figures (R5).",
+       "props": [
+        {
+         "name": "active",
+         "type": "boolean"
+        },
+        {
+         "name": "payload",
+         "type": "readonly TooltipEntry[]"
+        },
+        {
+         "name": "label",
+         "type": "string | number"
+        },
+        {
+         "name": "formatLabel",
+         "type": "((label: unknown) => string)"
+        },
+        {
+         "name": "formatValue",
+         "type": "((value: number, seriesKey: string) => string)"
+        }
+       ]
+      },
+      {
+       "name": "LineChart",
+       "doc": "A responsive line (or flat-filled area) chart with theme-driven colours, subtle horizontal grid and raised tooltip.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Accessible name of the chart («Monthly revenue»)."
+        },
+        {
+         "name": "data",
+         "type": "readonly Row[]",
+         "required": true,
+         "doc": "Flat array of data rows, one per x-axis point."
+        },
+        {
+         "name": "xKey",
+         "type": "keyof Row & string",
+         "required": true,
+         "doc": "Row property drawn along the category/time axis."
+        },
+        {
+         "name": "series",
+         "type": "readonly ChartSeries[]",
+         "required": true,
+         "doc": "Series plotted from each row."
+        },
+        {
+         "name": "xTickCount",
+         "type": "number",
+         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems`."
+        },
+        {
+         "name": "formatX",
+         "type": "((value: unknown) => string)",
+         "doc": "Format x-axis ticks and tooltip heading."
+        },
+        {
+         "name": "formatValue",
+         "type": "((value: number, seriesKey: string) => string)",
+         "doc": "Format y-axis ticks and tooltip values."
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\"",
+         "doc": "Tone preset for `hueScale` series colours. Default `vivid` (R11)."
+        },
+        {
+         "name": "showLegend",
+         "type": "boolean",
+         "doc": "Show the legend below the chart. Default true when more than one series."
+        },
+        {
+         "name": "height",
+         "type": "number",
+         "doc": "Height in pixels. Default 240."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        },
+        {
+         "name": "area",
+         "type": "boolean",
+         "doc": "Fill under the lines with a flat translucent tint (`fillOpacity: 0.12`, no gradient). Default false."
+        },
+        {
+         "name": "stacked",
+         "type": "boolean",
+         "doc": "Stack areas when `area` is true. Default false."
+        }
+       ]
+      },
+      {
+       "name": "PieChart",
+       "doc": "A pie or donut chart with `hueScale` slice colours, raised tooltip and R10 dot legend.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "data",
+         "type": "readonly PieSlice[]",
+         "required": true
+        },
+        {
+         "name": "donut",
+         "type": "boolean",
+         "doc": "Render as a ring with an open centre. Default true."
+        },
+        {
+         "name": "formatValue",
+         "type": "((value: number, name: string) => string)"
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\""
+        },
+        {
+         "name": "showLegend",
+         "type": "boolean"
+        },
+        {
+         "name": "height",
+         "type": "number"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      },
+      {
+       "name": "RadialGauge",
+       "doc": "Concentric activity gauge rings on a shared scale (`0..max`), with optional centre KPI and R10 dot legend.",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "data",
+         "type": "readonly RadialGaugeItem[]",
+         "required": true
+        },
+        {
+         "name": "max",
+         "type": "number",
+         "doc": "Upper bound of the radial scale. Default 100."
+        },
+        {
+         "name": "centerValue",
+         "type": "string | number",
+         "doc": "Primary figure drawn in the middle of the rings."
+        },
+        {
+         "name": "centerLabel",
+         "type": "string",
+         "doc": "Supporting label under `centerValue`."
+        },
+        {
+         "name": "formatValue",
+         "type": "((value: number, name: string) => string)"
+        },
+        {
+         "name": "tone",
+         "type": "\"balanced\" | \"calm\" | \"vivid\""
+        },
+        {
+         "name": "showLegend",
+         "type": "boolean"
+        },
+        {
+         "name": "height",
+         "type": "number"
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "ChartSeries",
+       "doc": "One plotted data series of a `LineChart` or `BarChart`.",
+       "fields": [
+        {
+         "name": "key",
+         "type": "string",
+         "required": true,
+         "doc": "Key in each row of `data`."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "Visible name in the legend and tooltip."
+        },
+        {
+         "name": "hue",
+         "type": "\"red\" | \"coral\" | \"orange\" | \"brown\" | \"amber\" | \"lime\" | \"green\" | \"emerald\" | \"teal\" | \"turquoise\" | \"blue\" | \"slate\" | \"indigo\" | \"violet\" | \"orchid\" | \"magenta\" | \"pink\" | \"burgundy\"",
+         "doc": "Optional named hue from Sigrid's 18-hue scale (`hueScale`). Absent: series 0 uses `--color-primary`, further series cycle `DEFAULT_CHART_HUES`."
+        }
+       ]
+      },
+      {
+       "name": "PieSlice",
+       "doc": "One slice of a `PieChart`.",
+       "fields": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "hue",
+         "type": "\"red\" | \"coral\" | \"orange\" | \"brown\" | \"amber\" | \"lime\" | \"green\" | \"emerald\" | \"teal\" | \"turquoise\" | \"blue\" | \"slate\" | \"indigo\" | \"violet\" | \"orchid\" | \"magenta\" | \"pink\" | \"burgundy\""
+        }
+       ]
+      },
+      {
+       "name": "RadialGaugeItem",
+       "doc": "One concentric ring of a `RadialGauge`.",
+       "fields": [
+        {
+         "name": "name",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "value",
+         "type": "number",
+         "required": true
+        },
+        {
+         "name": "hue",
+         "type": "\"red\" | \"coral\" | \"orange\" | \"brown\" | \"amber\" | \"lime\" | \"green\" | \"emerald\" | \"teal\" | \"turquoise\" | \"blue\" | \"slate\" | \"indigo\" | \"violet\" | \"orchid\" | \"magenta\" | \"pink\" | \"burgundy\""
+        }
+       ]
+      }
+     ],
+     "also": [
+      "BarChartProps",
+      "ChartLegendProps",
+      "chartSeriesColors",
+      "ChartTooltipProps",
+      "DEFAULT_CHART_HUES",
+      "LineChartProps",
+      "PieChartProps",
+      "RadialGaugeProps",
+      "selectEvenlySpacedItems"
      ]
     }
    ]

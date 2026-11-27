@@ -17,7 +17,7 @@ export type DotProps = {
 
 /** An 8px dot in a person's colour or in the colour of a state, beside the word that names it. */
 function Dot({ color, tone = "neutral" }: DotProps) {
-  return <span aria-hidden="true" data-slot="dot" {...(color ? markHueAttrs(color) : {})} className={cn("size-2 shrink-0 rounded-full", color ? "bg-(--mark-dot)" : TONE[tone])} />
+  return <span aria-hidden="true" data-slot="dot" {...(color ? markHueAttrs(color) : {})} className={cn("size-2 shrink-0 rounded-full ring-1 ring-ink/10 ring-inset", color ? "bg-(--mark-dot)" : TONE[tone])} />
 }
 
 export { Dot }
