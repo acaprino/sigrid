@@ -90,12 +90,14 @@ test('the shortcut of a menu', () => {
   expectCap(document.querySelector('[data-slot="dropdown-menu-shortcut"]'), 'DropdownMenuShortcut', ['ms-auto', 'text-2xs', 'leading-none', 'font-medium', 'text-ink-mute', 'max-md' + ':pointer-coarse:hidden'])
 })
 
-test('the hint of a toast, inside its button, still shown only with a fine pointer', async () => {
+test('the hint of a toast, inside its button, shown only with a fine pointer and never on a phone (R5), a pen one included', async () => {
   render(<Toasts inline items={[{ id: 'x', text: 'Moved to Home.', undo: { hint: 'Z', onClick: () => {} } }]} />)
   await settle()
   const hint = screen.getByRole('button', { name: 'Undo' }).querySelector('kbd')
   expect(hint?.textContent).toBe('Z')
-  expectCap(hint, 'Toasts', ['hidden', 'any-pointer-fine' + ':inline', 'font-sans', 'text-2xs', 'leading-none', 'font-medium'])
+  expectCap(hint, 'Toasts', ['hidden', 'pointer-fine' + ':inline', 'md:any-pointer-fine' + ':inline', 'font-sans', 'text-2xs', 'leading-none', 'font-medium'])
+  // `any-pointer-fine` alone would show it on a phone that also has a pen (a fine pointer beside the finger).
+  expect(hint?.className.split(/\s+/)).not.toContain('any-pointer-fine' + ':inline')
   expect(hint?.closest('[data-slot="button"]')).toBeTruthy()
 })
 

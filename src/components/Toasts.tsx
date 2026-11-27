@@ -231,9 +231,11 @@ function Notice({ id }: { id: string }) {
           >
             {item.undo.label ?? words.common.undo}
             {item.undo.hint ? (
-              // A key hint (R5): plain 12px text in the toast's own colour, only with a fine pointer; the cap of `Kbd`
+              // A key hint (R5): plain 12px text in the toast's own colour, only with a fine pointer and never on a phone
+              // (narrow with a finger first, as `ON_PHONE_HIDDEN`), even one that also has a pen: there is no key to press.
+              // The two conditions are written as where it shows, so no rule has to win over another. The cap of `Kbd`
               // under a theme with boxed keys, its hairline in the toast's text colour (the hint is inside a button).
-              <kbd aria-hidden="true" data-slot="toast-hint" className={cn("hidden font-sans text-2xs leading-none font-medium any-pointer-fine:inline", KEY_CAP)}>
+              <kbd aria-hidden="true" data-slot="toast-hint" className={cn("hidden font-sans text-2xs leading-none font-medium pointer-fine:inline md:any-pointer-fine:inline", KEY_CAP)}>
                 {item.undo.hint}
               </kbd>
             ) : null}
