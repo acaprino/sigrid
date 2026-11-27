@@ -23,7 +23,7 @@ import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER, ROW_HOVER_FOLLOWED } from "../lib/rows"
-import { useMotion } from "../internal/motion"
+import { useMotion, useMotionAllowed } from "../internal/motion"
 import { useWords } from "../words"
 import { Dot } from "../primitives/dot"
 import { HoverFollow } from "../primitives/hover-follow"
@@ -31,7 +31,11 @@ import { HoverFollow } from "../primitives/hover-follow"
 export type ItemListProps = {
   /** Name of the list for screen readers («Messages»). */
   "aria-label": string
-  /** One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion). */
+  /**
+   * One hover background follows the pointer from row to row, and a row added once the list is shown comes in (it fades
+   * and comes down 4px, at the app's pace); the rows there at first are drawn at once. Off by default, never with
+   * prefers-reduced-motion.
+   */
   animated?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
@@ -43,9 +47,13 @@ const FollowedContext = React.createContext(false)
 function ItemList({ animated, className, children, ...props }: ItemListProps) {
   // The same answer `HoverFollow` gets: the rows give up their own hover fill only while it draws the shared one.
   const followed = useMotion(animated) !== null
+  const allowed = useMotionAllowed(animated)
   const [list, setList] = React.useState<HTMLUListElement | null>(null)
+  // Only rows added after the first paint come in (the stylesheet: `theme.css`), so the mark waits for it.
+  const [shown, setShown] = React.useState(false)
+  React.useEffect(() => setShown(true), [])
   return (
-    <ul ref={setList} role="list" data-slot="item-list" {...props} className={cn("flex flex-col gap-0.5", className)}>
+    <ul ref={setList} role="list" data-slot="item-list" data-entering={(allowed && shown) || undefined} {...props} className={cn("flex flex-col gap-0.5", className)}>
       <FollowedContext.Provider value={followed}>{children}</FollowedContext.Provider>
       {followed ? <HoverFollow container={list} rows='[data-slot="item-row"]:not([data-plain])' as="li" animated={animated} /> : null}
     </ul>

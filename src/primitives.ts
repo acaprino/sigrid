@@ -10,6 +10,7 @@ export { Card, type CardProps } from './primitives/card'
 export { Checkbox } from './primitives/checkbox'
 export type CheckboxProps = React.ComponentProps<typeof import('./primitives/checkbox').Checkbox>
 export { Count, type CountProps } from './primitives/count'
+export { LevelMeter, type LevelMeterProps } from './primitives/level-meter'
 export { Dialog as DialogRoot, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger, type DialogWidth } from './primitives/dialog'
 export { Dot, type DotProps } from './primitives/dot'
 export { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from './primitives/dropdown-menu'
