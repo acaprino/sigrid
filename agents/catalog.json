@@ -1967,7 +1967,7 @@
     },
     {
      "file": "src/primitives/count.tsx",
-     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`.",
+     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`. With `rolling` a number set by events (things caught, unread)\nrolls its new value in from below when it changes, an odometer, where the app turned motion on and the system allows\nit (the stylesheet moves it, at the app's pace: `theme.css`); it never rolls when it first appears.",
      "components": [
       {
        "name": "Count",
@@ -1987,6 +1987,16 @@
          "name": "reserve",
          "type": "boolean",
          "doc": "Keep the room of a number when there is nothing to show, so a column of counts stays aligned."
+        },
+        {
+         "name": "rolling",
+         "type": "boolean",
+         "doc": "A number set by events rolls its new value in from below when it changes (an odometer), with motion on (`animated` or `MotionProvider`) and not reduced; otherwise it changes at once. Never on its first appearance."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this count only, over `MotionProvider`."
         },
         {
          "name": "className",
@@ -2715,6 +2725,41 @@
       "SplitProps",
       "TextListProps",
       "TextProps"
+     ]
+    },
+    {
+     "file": "src/primitives/level-meter.tsx",
+     "about": "A level meter: a few thin bars whose heights follow a live level the app reads (a microphone's volume while it\nlistens, a transfer's rate), oldest first, the newest at the end. It moves only with its data, never by itself and\nnever in a loop, and only where the app turned motion on and the system allows it; otherwise the bars rest at half\ntheir height and the words beside it say what is going on. The bars are 3px wide, 20px tall at most, in the accent:\nsomething is on (R2). A height is one of eight steps, so a level never draws a size off the scale.",
+     "components": [
+      {
+       "name": "LevelMeter",
+       "props": [
+        {
+         "name": "levels",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "The levels from 0 to 1, oldest first: one bar each (five to seven read best)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it measures, for screen readers («Microphone level»)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this meter only, over `MotionProvider`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "LevelMeterProps"
      ]
     },
     {
@@ -5308,7 +5353,7 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion)."
+         "doc": "One hover background follows the pointer from row to row, and a row added once the list is shown comes in (it fades and comes down 4px, at the app's pace); the rows there at first are drawn at once. Off by default, never with prefers-reduced-motion."
         },
         {
          "name": "className",
