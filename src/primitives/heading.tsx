@@ -1,6 +1,7 @@
 // The title of a part of a screen, at the size DESIGN.md gives it (Typography): a page 24px, a section 20px, a card 18px,
-// a small title 16px (a dialog, a message in a card), all semibold in the ink; or the small label over a group (12px,
-// medium, muted: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.
+// a small title 16px (a dialog, a message in a card), all in the ink and in the titles' font (`font-heading`: the
+// interface font at 600 unless the app names another with `applyHeadingFont`); or the small label over a group (12px,
+// medium, muted, always in the interface font: «Now», «In the stack»). The level of the element is the screen's outline, chosen apart from the size.
 // An icon before it (R6) sits in a muted 16px slot. It takes no class or style: an app that titles a part with it
 // writes none (the owner's rule of 2026-11-23). With `truncate` it is one line, cut where its place ends.
 import type * as React from "react"
@@ -8,10 +9,10 @@ import { cn } from "../lib/utils"
 import type { LayoutAttributes } from "./layout"
 
 const SIZE = {
-  page: "text-2xl font-semibold text-ink",
-  section: "text-xl font-semibold text-ink",
-  card: "text-lg font-semibold text-ink",
-  small: "text-base font-semibold text-ink",
+  page: "text-2xl font-heading text-ink",
+  section: "text-xl font-heading text-ink",
+  card: "text-lg font-heading text-ink",
+  small: "text-base font-heading text-ink",
   label: "text-2xs font-medium text-ink-mute",
 } as const
 

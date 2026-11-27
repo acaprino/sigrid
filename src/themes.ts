@@ -36,7 +36,7 @@ function tokensOf(pick: ThemePick): ThemeTokens {
 export const BASE_THEME: ThemeDef = { id: 'base', label: 'Base', hue: 0, chroma: 0, accent: [0, 0], sidebar: 'tenue', palette: 'mono' }
 
 /** The root attributes that carry the theme, the font and the density: another document that shows part of the app copies them (`copyTheme`). */
-export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-float', 'data-font', 'data-density'] as const
+export const THEME_ATTRIBUTES = ['data-theme', 'data-scheme', 'data-sidebar', 'data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-float', 'data-font', 'data-font-heading', 'data-density'] as const
 
 /** The attributes only a theme that asks for them writes (`ThemeDef.keys`, `controls`, `tabs`, `statusStrip`, `material`, and `data-float` with a stated `Surfaces.glass.float`): the next theme takes them away. */
 const ASKED_ATTRIBUTES = ['data-keys', 'data-controls', 'data-tabs', 'data-status-strip', 'data-material', 'data-float'] as const
@@ -44,13 +44,18 @@ const ASKED_ATTRIBUTES = ['data-keys', 'data-controls', 'data-tabs', 'data-statu
 /** The font variable, written by `applyFont`. */
 export const FONT_VARIABLE = '--font-sans'
 
+/** The titles' font and its weight, written by `applyHeadingFont`; unset, the titles read the interface font at 600. */
+export const HEADING_FONT_VARIABLE = '--font-heading'
+export const HEADING_WEIGHT_VARIABLE = '--font-heading-weight'
+
 /**
- * The names of the variables that `applyTheme`, `applyFont` and `applyDensity` write: they are the same for every
- * theme, scheme and density, but for the surfaces of a glass page (`GLASS_VARIABLES`), which only a glass theme writes.
+ * The names of the variables that `applyTheme`, `applyFont`, `applyHeadingFont` and `applyDensity` write: they are the
+ * same for every theme, scheme and density, but for the surfaces of a glass page (`GLASS_VARIABLES`), which only a glass
+ * theme writes.
  */
 export const THEME_VARIABLES: readonly string[] = (() => {
   const t = themeTokens(BASE_THEME, 'light')
-  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), ...GLASS_VARIABLES, FONT_VARIABLE, ...DENSITY_VARIABLES]
+  return [...Object.keys(t.colors).map((k) => `--color-${k}`), ...Object.keys(t.shape), ...GLASS_VARIABLES, FONT_VARIABLE, HEADING_FONT_VARIABLE, HEADING_WEIGHT_VARIABLE, ...DENSITY_VARIABLES]
 })()
 
 export function isFontId(value: unknown): value is FontId {
@@ -135,6 +140,27 @@ export function applyFont(el: HTMLElement, font: FontId): void {
   }
   el.style.setProperty(FONT_VARIABLE, fontById(font).stack)
   el.setAttribute('data-font', font)
+}
+
+/** The weights a heading font may take (R7). */
+export type HeadingWeight = 400 | 500 | 600
+
+/**
+ * Puts a font on the titles of an element (`Heading`, the `font-heading` class): `--font-heading`, its weight in
+ * `--font-heading-weight` and `data-font-heading`. `null`, the default, removes the three: the titles are in the
+ * interface font (`--font-sans`) at 600, so an app that names no heading font looks as before. A font that `fonts.css`
+ * does not ship falls back along its stack, the serif's to Georgia.
+ */
+export function applyHeadingFont(el: HTMLElement, font: FontId | null, weight: HeadingWeight = 600): void {
+  if (font === null) {
+    el.style.removeProperty(HEADING_FONT_VARIABLE)
+    el.style.removeProperty(HEADING_WEIGHT_VARIABLE)
+    el.removeAttribute('data-font-heading')
+    return
+  }
+  el.style.setProperty(HEADING_FONT_VARIABLE, fontById(font).stack)
+  el.style.setProperty(HEADING_WEIGHT_VARIABLE, String(weight))
+  el.setAttribute('data-font-heading', font)
 }
 
 /** Copies the theme, font and density of one element onto another (separate windows copy those of the main one). */
