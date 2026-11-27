@@ -711,3 +711,18 @@ F31, F34 (Q1, fixed afterwards: see the table), F35 to F42 (approved), F43 (snap
 DESIGN.md records these tokens and the rules (step `design-file`); the polish pass fixes the defects above in severity
 order (step `design-review`); the drift measurement compares the showcase's computed styles with DESIGN.md
 (step `design-file-inspection`); code checks keep the rules (step `design-file-integration`).
+
+## Added on 2026-11-27: a page of reading
+
+The toolkit had no scale for text read whole: `MarkdownBlocks` is the 14px blocks of a note, a heading in it only a
+bold line, and `Text`'s variants are the lines of rows and captions. A wiki page, an article or help written with
+them reads as chrome. What a reading page needs was added, generic (the owner's rule: the apps bring their screens,
+the parts are Sigrid's), with the pattern in `docs/patterns.md` («A page of reading, and the home of a wiki») and the
+scale here (16px, 400, a 1.75 line; DESIGN.md sits at its 24 KB lint limit, so the role `body-reading` waits for room
+there — a gap recorded, not invented).
+
+| Part or prop | Behaviour | Form | Rules | Needed by |
+|---|---|---|---|---|
+| `Prose` (`as`) | The reading ground of a long text: plain written elements inside (headings, paragraphs, lists, quotes, tables, figures, rules) take the reading scale with no class. The one place bare elements are written; only the written kinds, never a control. It sets no width: the column is its place's (`Column width="prose"`) | 16px body on a 1.75 line in the ink; headings on `Heading`'s sizes (24/20/18/16) in the titles' face, more room above than below; h5/h6 the small muted label; lists, quotes and rules on the tokens; a link underlined in the muted ink, whole under the pointer, never the accent; a bare `pre` the quiet mono box | R2 (no accent on links), R4, R7 (sizes of the scale), R10; logical sides | A wiki, help, release notes; Shinatama's long answers as pages |
+| `MarkdownBlocks variant="article"` | The same blocks on `Prose`'s scale: the headings real (`h1`–`h6`, the level kept by `parseBlocks` now) and each with the anchor `markdownHeadings` names, so an index can point into it; `---` a rule (both variants); the fenced box and the checklist as in a note | `Prose`'s form; the code box and the checklist keep their own frame (`md-code`, `data-check`) | As `Prose` | A page kept as Markdown |
+| `OnThisPage` (`items`, `currentId`) | The index of a reading page: the sections as plain anchors into the headings' ids, the one in view marked by itself (the last heading at or above a line a quarter down, watched without naming the scroller); `aria-current` on the current one; `markdownHeadings` reads the items from the same Markdown | A `nav` named `words.onThisPage.label`, 14px rows on a start hairline, muted; the current one in the accent with the accent's hairline (R2: what is current); rows 44px with a finger | R2, R8; logical sides; words through `WordsProvider` | The inspector of a reading page |

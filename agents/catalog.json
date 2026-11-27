@@ -442,6 +442,7 @@
      "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "also": [
       "hasMarkdown",
+      "markdownHeadings",
       "parseBlocks",
       "parseInline",
       "plainText"
@@ -1501,6 +1502,11 @@
          "required": true
         },
         {
+         "name": "onThisPage",
+         "type": "{ readonly label: string; }",
+         "required": true
+        },
+        {
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
@@ -1666,6 +1672,10 @@
         {
          "name": "lightbox",
          "type": "Partial<{ readonly previous: string; readonly next: string; readonly count: (position: number, total: number) => string; }>"
+        },
+        {
+         "name": "onThisPage",
+         "type": "Partial<{ readonly label: string; }>"
         },
         {
          "name": "checklist",
@@ -5425,17 +5435,22 @@
     },
     {
      "file": "src/components/markdown-blocks.tsx",
-     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced\nblocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
+     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes, rules and\nfenced blocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nTwo renderings: `note` (the default), the compact 14px blocks of a message or a note, where a heading is only a bold\nline; and `article`, a page of reading on the scale of `Prose`, where the headings are real (`h1` to `h6`), each\nwith the anchor `markdownHeadings` names, so an `OnThisPage` can point into it.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
      "components": [
       {
        "name": "MarkdownBlocks",
-       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced code, with inline Markdown inside.",
+       "doc": "The notes and the answers: paragraphs, lists, checkboxes (read-only), headings, quotes, rules and fenced code; `article` for a page of reading.",
        "props": [
         {
          "name": "text",
          "type": "string",
          "required": true,
          "doc": "The Markdown source."
+        },
+        {
+         "name": "variant",
+         "type": "\"article\" | \"note\"",
+         "doc": "`note` (the default): the compact blocks of a message or a note. `article`: a page of reading on the scale of `Prose`, the headings real and anchored."
         },
         {
          "name": "className",
@@ -5573,6 +5588,60 @@
      ]
     },
     {
+     "file": "src/components/on-this-page.tsx",
+     "about": "The index of a reading page: the sections of an article, each a link to its heading, the one in view marked. It is\ngiven the sections (`markdownHeadings` reads them from the same Markdown an article is drawn from, or the app lists\nthem), and watches their headings itself: the last one at or above the reading line is the current one, said with\n`aria-current` and the accent (R2: what is current). It sits in the inspector of an `AppShell`, or beside the text in\na wide pane; on a phone the inspector folds and the index with it. The links are plain anchors: the browser brings\nthe heading into view and the address keeps the place.",
+     "components": [
+      {
+       "name": "OnThisPage",
+       "doc": "The index of a reading page: its sections as links, the one in view marked with the accent.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly OnThisPageItem[]",
+         "required": true,
+         "doc": "The sections, in the order they are read. With none, nothing is drawn."
+        },
+        {
+         "name": "currentId",
+         "type": "string",
+         "doc": "The current section's id, when the app knows it; absent, the index watches the headings itself."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "OnThisPageItem",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "The id of the heading it points to (`markdownHeadings`' `id`, or the `id` the app gave its heading)."
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The words of the section, as the index says them."
+        },
+        {
+         "name": "level",
+         "type": "3 | 2",
+         "doc": "The depth of the section: 2 (the default) a section of the page, 3 a part inside one, drawn further in."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "OnThisPageProps"
+     ]
+    },
+    {
      "file": "src/components/overflow-list.tsx",
      "about": "One line of items (the details under a title, a row of labels) that never grows: what does not fit is cut from the\nend, whole, and counted after the line («+2»). It never wraps to a second line and the first item always stays.\nOther libraries call it an overflow list; this one is CSS and one `ResizeObserver`:\n- the box is a flex row that wraps, one row tall, with `overflow: clip`: what does not fit wraps onto a row that is\n  not shown. `clip` and not `hidden`: the box is no scroll container, so focus can never scroll the line.\n- the items that sit below the first one are the cut ones. They are counted when the items are drawn, again when the\n  box changes size, and again when the fonts are ready (a font that comes late changes the widths, not the box).\n- a cut item is `inert` and invisible: no focus, no press, and screen readers skip it, as the eye does. So the cue is\n  for both: «+2» to the eye, «2 more» to a screen reader (`words.list.more`). What is cut must also be found where\n  the whole item is (its page, its details).\nThe caller gives the box its height in `className`: one row of its items (`h-5` for labels 20px tall), with the gap\nand the text. Each child is one item: one element (a bare text is not counted: put it in a `<span>`). A first item\nwider than the line is cut at the line's end: give it `min-w-0 truncate` for an ellipsis.\nIts boxes are spans, so it also sits inside a button or a row's line. Without layout (jsdom, a server) nothing is\ncut, and nothing moves.",
      "components": [
@@ -5599,6 +5668,35 @@
      ],
      "also": [
       "OverflowListProps"
+     ]
+    },
+    {
+     "file": "src/components/prose.tsx",
+     "about": "The reading ground of a long text: an article, a wiki page, help, notes kept as pages. Inside it plain written\nelements (headings, paragraphs, lists, quotes, tables, figures, rules) take the reading scale of DESIGN.md\n(Typography): a 16px body with a reading line, the headings of `Heading`'s sizes in the flow with the room of their\nlevel, and every colour from the tokens. It is the one place an app writes bare elements: only the written kinds,\nnever a control (a control sits outside it, or the text is a `MarkdownBlocks variant=\"article\"`). It sets no width:\na column of reading is its place's (`Column width=\"prose\"`, or a pane).",
+     "components": [
+      {
+       "name": "Prose",
+       "doc": "The reading ground of a long text: plain written elements inside take the reading scale, from the tokens.",
+       "props": [
+        {
+         "name": "as",
+         "type": "\"article\" | \"div\" | \"section\"",
+         "doc": "The element: a neutral block (the default), an `article` (a whole page of reading) or a `section`."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The written elements: headings, paragraphs, lists, quotes, tables, figures, rules; or a `MarkdownBlocks variant=\"article\"`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ProseProps"
      ]
     },
     {
@@ -6074,6 +6172,9 @@
         }
        ]
       }
+     ],
+     "also": [
+      "markdownHeadings"
      ]
     }
    ]

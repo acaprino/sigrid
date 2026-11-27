@@ -116,6 +116,10 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
   tool a view lacks keeps its place empty (`ToolbarButton absent`), it is not left out.
+- Long text read whole (an article, a wiki or help page, release notes) is a `Prose` in a `Column width="prose"`,
+  or a `MarkdownBlocks variant="article"`, with an `OnThisPage` in the inspector (`docs/patterns.md`, «A page of
+  reading»). Inside `Prose` the text is bare written elements, the one place they are written. The compact scale of
+  rows, notes and messages is not for a page of reading.
 - A height is the host's, never a guess: no `100vh`, `h-screen` or `h-dvh` around `AppShell` (it is as tall as what
   is seen, and keeps clear of the notch and the gesture bar by itself); a screen that must fit is `Page fit`, whose
   body gives way, never the document. Nothing is sized with the live `env(safe-area-inset-bottom)`: room at the foot
