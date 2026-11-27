@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import { Checkbox } from '../src/primitives'
 import { ItemList, ItemRow } from '../src/components'
+import { settle } from './helpers'
 
 function Task({ current = false, side, onOpen = () => {}, onTick = () => {} }: { current?: boolean; side?: 'start' | 'end'; onOpen?: () => void; onTick?: (checked: boolean) => void }) {
   return (
@@ -41,11 +42,12 @@ test('the control and the row are two tab stops with their own names, the contro
   expect(document.activeElement).toBe(row)
 })
 
-test('a press on the control is the control\'s and never opens the row', () => {
+test('a press on the control is the control\'s and never opens the row', async () => {
   const opened = vi.fn()
   const ticked = vi.fn()
   render(<Task onOpen={opened} onTick={ticked} />)
   fireEvent.click(screen.getByRole('checkbox'))
+  await settle()
   expect(ticked).toHaveBeenCalledTimes(1)
   expect(opened).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: /Pay the rent/ }))

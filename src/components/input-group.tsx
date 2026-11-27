@@ -7,7 +7,7 @@
 // A button beside a field, with a border of its own («Subscribe» after an e-mail), is not this: it is an `Input` and
 // a `Button` in a `Cluster`.
 import * as React from "react"
-import { Input as InputPrimitive } from "@base-ui/react/input"
+import { Field } from "@ark-ui/react/field"
 import { Button } from "../primitives/button"
 import { Tooltip } from "../primitives/tooltip"
 import { cn, isEmptyNode } from "../lib/utils"
@@ -70,10 +70,10 @@ function InputGroup({ start, end, className, disabled, ref, ...props }: InputGro
             {start}
           </div>
         ) : null}
-        <InputPrimitive
+        <Field.Input
           data-slot="input"
           {...props}
-          ref={setRef as React.Ref<HTMLElement>}
+          ref={setRef}
           disabled={disabled}
           className={cn(INPUT_CLASS, has(start) ? "ps-0" : "ps-(--pad-sm)", has(end) ? "pe-0" : "pe-(--pad-sm)")}
         />

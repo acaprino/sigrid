@@ -1518,6 +1518,12 @@
          "doc": "What a `FilterBar` and its `FilterPopover` say by themselves."
         },
         {
+         "name": "metric",
+         "type": "{ readonly up: string; readonly down: string; readonly flat: string; readonly trend: (label: string) => string; }",
+         "required": true,
+         "doc": "What a `Metric` says to screen readers for its delta direction and trend sparkline."
+        },
+        {
          "name": "chart",
          "type": "{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }",
          "required": true,
@@ -1699,6 +1705,11 @@
          "doc": "What a `FilterBar` and its `FilterPopover` say by themselves."
         },
         {
+         "name": "metric",
+         "type": "Partial<{ readonly up: string; readonly down: string; readonly flat: string; readonly trend: (label: string) => string; }>",
+         "doc": "What a `Metric` says to screen readers for its delta direction and trend sparkline."
+        },
+        {
          "name": "chart",
          "type": "Partial<{ readonly empty: string; readonly seriesSummary: (series: number, points: number) => string; }>",
          "doc": "What a chart says when it has no data or describes itself to screen readers."
@@ -1865,7 +1876,7 @@
     },
     {
      "file": "src/primitives/badge.tsx",
-     "about": "SmoothUI (MIT) badge 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/badge.json)\nPark UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)\nFrom Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,\ntabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its\noutline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).\nIcons are 14px (R7).\nFrom SmoothUI's Badge we keep the plain `<span>` with `data-slot` and `data-variant` and the 12 px icons. Our variants stay (with the tokens from `theme.css`, not SmoothUI's colors) and so does `asChild`, here with\nBase UI's `useRender` instead of Radix's Slot. Removed: `size`, the success/warning variants and `StatusDot` with its\nlooping pulse (nobody uses them; no looping motion in the toolkit). The badge does not animate.\n`tone` (the owner, 2026-11-24) is a status as a label: the status colour on its soft ground, with a 6px dot before the\nword. It is a meaning, not a colour the user gave (R10's 8px dots), and not the accent (R2); the word is always there.",
+     "about": "Park UI (MIT) badge 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/badge.ts)\nFrom Park's `badge` recipe comes the form (its md size: 20px tall, 12px medium text, 8px of side padding, l2 corners,\ntabular numbers) and the variants under our names: `default` is its solid, `secondary` its subtle, `outline` its\noutline, all in the neutral gray (R2: labels never take the accent; R5: a badge is for a label, never a count).\nIcons are 14px (R7). A plain `<span>` with `data-slot` and `data-variant`, and `asChild` via Ark UI's `ark.span`\nfactory (`@ark-ui/react/factory`). The badge does not animate.\n`tone` (the owner, 2026-11-24) is a status as a label: the status colour on its soft ground, with a 6px dot before the\nword. It is a meaning, not a colour the user gave (R10's 8px dots), and not the accent (R2); the word is always there.",
      "components": [
       {
        "name": "Badge",
@@ -1894,7 +1905,7 @@
     },
     {
      "file": "src/primitives/button.tsx",
-     "about": "SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)\nPark UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nFrom SmoothButton we keep: the plain `<button>` with `type=\"button\"` by default and `asChild` without Radix's Slot\n(here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size\nnames stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nA button that is a switch (Details open or not, in a panel's header) says so with `aria-pressed`: on, it has the selection tint and\nits ink, as the toolbar's switch has. A button that is not one says nothing and looks as before.\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
+     "about": "Park UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)\nA plain `<button>` with `type=\"button\"` by default and `asChild` via Ark UI's `ark.button` factory (`@ark-ui/react/factory`,\nwhich merges classes, styles, handlers and ref). Our variant and size names stay (the ones the package uses).\nFrom Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is\nmedium (Park's is semibold: lighter here).\nVariants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1\ncontrol border), `ghost` its plain, `destructive` its subtle in red; `link` is ours. A neutral subtle chip is\n`QUIET_CHIP` below, for an app's chips: it is not a public variant.\nSizes: `default`, `sm` and `xs` are 36, 32 and 28px at normal density, one 4px step under Park's md, sm and xs (40, 36\nand 32px, which is the large density); `lg` is the default height with a 16px label; the `icon-*` sizes are the same\nheights, square; `inline` is a link in a line of text or in a cell, with no padding and no height of its own. Colors are the theme engine's\ntokens, not Park's palettes. Focus: the toolkit's ring (`lib/focus.ts`, R8).\nA button that is a switch (Details open or not, in a panel's header) says so with `aria-pressed`: on, it has the selection tint and\nits ink, as the toolbar's switch has. A button that is not one says nothing and looks as before.\nThe variant `secondary` is Park's subtle in the neutral gray (R4: no border and shadow together).\nMotion, only with `animated` true and without prefers-reduced-motion: the button goes down a little while pressed\n(`tapScale`) and, if asked, grows under the pointer (`hoverScale`). The gestures are attached to the `<button>` that is\nalready there (`pressable` in `motion-impl`), so the element is the same with animations on or off and nothing\nremounts when the Motion chunk arrives. With `animated` false the DOM is the same as before.\nPark's `loading` state, without its spinner (the owner's decision of 2026-11-20: no looping animation, as the\nattachment viewer): a busy button keeps its size and its place, is `aria-busy` and `aria-disabled` (it keeps focus,\nunlike `disabled`), ignores clicks and the pointer, and may show the caller's `loadingText` (\"Saving…\") in place of\nits label. With `loadingText` the label and the loading text share one grid cell (`SwapLabel`), so the width is the\nwider of the two before, during and after the wait.",
      "components": [
       {
        "name": "Button",
@@ -1905,7 +1916,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | \"inline\" | null"
         },
         {
          "name": "asChild",
@@ -1989,7 +2000,7 @@
     },
     {
      "file": "src/primitives/checkbox.tsx",
-     "about": "SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)\nPark UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)\nFrom Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid\nvariant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`\ntoken (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine\npairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.\nFrom SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type=\"button\">` (`nativeButton`,\nso a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked\ncheck mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`\nalso accept \"indeterminate\", `onCheckedChange` receives `boolean | \"indeterminate\"`, `data-state` on the control), the\ntokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,\n`pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),\nonly after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.\nWith `label` the box comes with its words: one `<label>` around both, so a press on the words checks it too, the\nrow as tall as the smallest control (44px with a finger), in the text of what is around it.",
+     "about": "Park UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)\nFrom Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid\nvariant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`\ntoken (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine\npairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.\nBehaviour: Ark UI's Checkbox (`@ark-ui/react/checkbox`: a hidden `<input type=\"checkbox\">` inside a `<label>`, with\nnative Space toggle, Enter ignored, and native `\"indeterminate\"` state). With `animated` the mark grows once, with\nthe Web animation from `motion-impl` (`popCheck`), only after the user's click, never on a mark already present at\nmount and never with `prefers-reduced-motion`.\nWith `label` the box comes with its words: one `<label>` around both, so a press on the words checks it too, the\nrow as tall as the smallest control (44px with a finger), in the text of what is around it.",
      "components": [
       {
        "name": "Checkbox",
@@ -2395,11 +2406,11 @@
     },
     {
      "file": "src/primitives/input.tsx",
-     "about": "SmoothUI (MIT) input 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/input.json)\nPark UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)",
+     "about": "Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)",
      "components": [
       {
        "name": "Input",
-       "doc": "A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.",
+       "doc": "A one-line field: Ark UI's `Field.Input` (outside a `Field.Root` it behaves like a native `<input>`: `value`/`onChange`, `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.",
        "props": [
         {
          "name": "mono",
@@ -3146,7 +3157,7 @@
     },
     {
      "file": "src/primitives/radio-group.tsx",
-     "about": "SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/radio-group.json)\nFrom SmoothUI's RadioGroup we keep: Base UI's Root and Radio (`role=\"radiogroup\"`/`role=\"radio\"` with\n`aria-checked`, a single Tab stop, arrows that move focus and select, wrapping at the ends), the Radio\nrendered as a real `<button type=\"button\">` (`nativeButton`), the Indicator with the filled dot and the optional label.\nAdapted: Base UI does not handle Home and End in the radio group (`enableHomeAndEndKeys: false`), here they go to the first and\nlast enabled radio and select it, like the arrows; `theme.css` tokens (`input` border, dot and selected border\n`ink`, `ring/50` ring), touch area enlarged to 24 px (44 with touch). Removed: all of Motion's animations (cascading\nappearance of the radios, spring on the dot, `useReducedMotion`): the dot is there or it is not, no movement, Motion is not loaded.",
+     "about": "Radio group on Ark UI (`@ark-ui/react/radio-group`): `role=\"radiogroup\"`, single Tab stop, arrows wrapping at the\nends, Home and End to jump and select, and two variants: \"radio\" (18px circle, Park's sm control, accent dot) and\n\"swatch\" (24px filled pill, 44px with touch, detached 2px ink ring when chosen and focus outline 6px away). No motion.",
      "components": [
       {
        "name": "RadioGroup",
@@ -3370,7 +3381,7 @@
         {
          "name": "decorative",
          "type": "boolean",
-         "doc": "Only a drawing (between two groups that are already told apart for a screen reader): hidden from screen readers."
+         "doc": "Only a drawing (between two groups that are already told apart for a screen reader): hides the rule from screen readers while keeping any visible `label` readable."
         },
         {
          "name": "label",
@@ -3819,11 +3830,11 @@
     },
     {
      "file": "src/primitives/textarea.tsx",
-     "about": "SmoothUI (MIT) textarea 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/textarea.json)\nPark UI (MIT) textarea 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts)",
+     "about": "Park UI (MIT) textarea 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/textarea.ts)",
      "components": [
       {
        "name": "Textarea",
-       "doc": "A multi-line field that grows with its text. Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`), and `mono` and `maxRows`. Base UI's types describe an `<input>`: with `render` the element is a `<textarea>`, so the props are passed with a cast.",
+       "doc": "A multi-line field that grows with its text: Ark UI's `Field.Textarea` (outside a `Field.Root` it behaves like a native `<textarea>`). Same API as before: the props of `<textarea>` (`ref` reaches the `<textarea>`), and `mono` and `maxRows`.",
        "props": [
         {
          "name": "mono",
@@ -3907,7 +3918,7 @@
     },
     {
      "file": "src/primitives/toggle-group.tsx",
-     "about": "SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)\nPark UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)\nFrom Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline\nring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item\nas a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).\nWith `animated` the background of the pressed item is one pill that slides from the old choice to the new one\n(`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.\nFrom SmoothUI we keep the primitive (Base UI's `ToggleGroup` and `Toggle`) and the shape of the segmented control\n(container with a light background, pressed item raised). Adapted: single choice only (the already pressed button\ndoes not turn off: the group always has a value), paper/ink tokens in place of `foreground`/`muted`, no\nshadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`\nbutton (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives\n`role=\"group\"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).\nThe group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as\nwide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.",
+     "about": "Park UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)\nFrom Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline\nring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item\nas a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).\nWith `animated` the background of the pressed item is one pill that slides from the old choice to the new one\n(`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.\nBehaviour: Ark UI's ToggleGroup (`@ark-ui/react/toggle-group`, with `multiple` so the root carries `role=\"group\"`\nand items carry `aria-pressed`, kept single-choice here so the already pressed button never turns off, with a single\ntab stop and arrow navigation).\nThe group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as\nwide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.",
      "components": [
       {
        "name": "ToggleGroup",
@@ -4518,7 +4529,7 @@
         },
         {
          "name": "size",
-         "type": "\"sm\" | \"xs\" | \"default\" | \"inline\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | null"
+         "type": "\"sm\" | \"xs\" | \"default\" | \"lg\" | \"icon\" | \"icon-xs\" | \"icon-sm\" | \"icon-lg\" | \"inline\" | null"
         },
         {
          "name": "hoverScale",
@@ -4931,7 +4942,7 @@
     },
     {
      "file": "src/components/disclosure.tsx",
-     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Base UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.\nThe arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,\na quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row\nthe app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.\nThe panel glides open and shut the same way (`internal/reveal.ts`, theme.css).",
+     "about": "One row that opens in place: what most people do not need on most visits stays behind it, and the first view holds\nthe rest (progressive disclosure). The row is named for what it holds («Add a coupon»; «More options» only for a\nmix). What is inside stays in the page while closed, so what was written there is kept, and the page does not move\nthe reader anywhere: it grows under the row. Ark UI's `Collapsible` gives the behaviour (a button with\n`aria-expanded` that names its panel); the form is the toolkit's: a quiet row with the chevron in the icon slot,\n44px with a finger. Never inside another `Disclosure` that is itself inside one: two levels at most.\nNever put behind it what people need before they commit: a price, a required field, what a delete removes.\nThe arrow is the one of every row that opens (a branch of the tree, a group of the sidebar): 14px in a 16px slot,\na quarter turn when open. With motion on it turns (`Turn`) when the reader pressed the row, and only then: a row\nthe app opens or closes by itself (a reasoning that ends) changes at once, since nothing moves without a gesture.\nThe panel glides open and shut the same way (`internal/reveal.ts`, theme.css).",
      "components": [
       {
        "name": "Disclosure",
@@ -5175,7 +5186,7 @@
     },
     {
      "file": "src/components/filter-bar.tsx",
-     "about": "A compact filter bar and a structured rule builder popover for lists and tables. `FilterBar` keeps search, quick\nchoices, the advanced filter popover and the «Clear filters» action in stable positions (R14); `FilterPopover` edits\na controlled list of `{ field, operator, value }` rules in a raised popover (`shadow-lg`, R4) and shows the applied\ncount in tabular figures (`Count`, R5). No filter logic runs here: the app filters its own data from `rules`.",
+     "about": "A compact filter bar and a structured rule builder popover for lists and tables. `FilterBar` keeps search, quick\nchoices, the advanced filter popover and the «Clear filters» action in stable positions (R14) at matching heights;\n`FilterPopover` edits a controlled list of `{ field, operator, value, valueEnd? }` rules in a raised popover\n(`shadow-lg`, R4), supports two-ended `between` ranges on number/date fields, manages focus on rule removal, uses a\n`secondary` Apply button (avoiding a second solid primary button, R3) and shows the applied count in tabular figures\n(`Count`, R5). No filter logic runs here: the app filters its own data from `rules`.",
      "components": [
       {
        "name": "FilterBar",
@@ -5323,7 +5334,7 @@
       },
       {
        "name": "FilterRule",
-       "doc": "One active filter condition: a field, an operator and the value to match.",
+       "doc": "One active filter condition: a field, an operator, its value and (for `between`) its upper bound.",
        "fields": [
         {
          "name": "id",
@@ -5344,6 +5355,11 @@
          "name": "value",
          "type": "string",
          "required": true
+        },
+        {
+         "name": "valueEnd",
+         "type": "string",
+         "doc": "Upper bound when `operator` is `between` on a `number` or `date` field."
         }
        ]
       }
@@ -5871,7 +5887,7 @@
     },
     {
      "file": "src/components/metric.tsx",
-     "about": "A KPI card showing one key figure with its label, optional change indicator, supporting caption, sparkline and\nfooter action. Follows DESIGN.md: raised surface with `shadow-xs` or quiet fill with no border (R4), tabular figures\n(`Count`, R5), and a change indicator that always pairs a direction icon with its text (never colour alone).",
+     "about": "A KPI card showing one key figure with its label, optional change indicator, supporting caption, sparkline and\nfooter action. Follows DESIGN.md: raised surface with `shadow-xs` or quiet fill with no border (R4), tabular figures\n(`Count`, R5), and a change indicator that always pairs a direction icon, screen-reader direction word and text\n(never colour alone).",
      "components": [
       {
        "name": "Metric",
@@ -5892,7 +5908,7 @@
         {
          "name": "delta",
          "type": "MetricDelta",
-         "doc": "Optional period-over-period change, always paired with a direction icon."
+         "doc": "Optional period-over-period change, always paired with a direction icon and accessible direction text."
         },
         {
          "name": "caption",
@@ -6297,7 +6313,7 @@
     },
     {
      "file": "src/components/sparkline.tsx",
-     "about": "A tiny inline trend line for a KPI or a table cell: pure SVG with zero external chart dependencies, styled purely\nthrough the theme's tokens (`currentColor`), with no gradients and no looping animations (DESIGN.md). When `area`\nis set, a flat translucent fill sits under the line; `highlightLast` marks the final point with a crisp dot.",
+     "about": "A tiny inline trend line for a KPI or a table cell: pure SVG with zero external chart dependencies, styled purely\nthrough the theme's tokens (`currentColor`), with no gradients and no looping animations (DESIGN.md). When `area`\nis set, a flat translucent fill sits under the line; `highlightLast` marks the final point with a circular dot that\nstays round at any aspect ratio via `vectorEffect=\"non-scaling-stroke\"`.",
      "components": [
       {
        "name": "Sparkline",
@@ -6328,12 +6344,17 @@
         {
          "name": "highlightLast",
          "type": "boolean",
-         "doc": "Mark the last point with a small dot. Default false."
+         "doc": "Mark the last point with a crisp circular dot. Default false."
         },
         {
          "name": "height",
          "type": "number",
          "doc": "Height in pixels (default 32)."
+        },
+        {
+         "name": "width",
+         "type": "number",
+         "doc": "Optional fixed width in pixels (useful inside a `Cluster` or table cell with `own-class` enabled). Absent: fills container width."
         },
         {
          "name": "className",
@@ -7361,7 +7382,7 @@
     },
     {
      "file": "src/layout/toolbar.tsx",
-     "about": "The toolbar: one row of actions that is a single Tab stop. Base UI's `Toolbar` carries the behaviour (the arrows\nmove among the items, Home and End reach the ends, a disabled item stays reachable); the form is the toolkit's\n`Button` recipe at the dense height, so an item is the same control as everywhere else.\n- `ToolbarButton` is an action. With no children it is an icon alone: its `label` is its accessible name and the\n  hint under the pointer (with the `shortcut` after it, as plain text: R5). With children it is an icon and a word.\n  `pressed` makes it a switch (a filter that is on, a panel that is open): the selection tint, never the accent fill.\n  One item of a toolbar may be `variant=\"default\"`, the one solid action of the screen (R3); the rest stay quiet.\n- `ToolbarSearch` is a search box that takes no room until it is asked for: a magnifier that opens into the\n  toolkit's `SearchField` on a press (or when the app opens it from its own key), and closes again with Esc, or when\n  it is left empty. While it holds text it stays open, so what filters the page is always in sight.\n- `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the\n  initial of the product's name, and the name beside it, or the name alone (`mark={false}`). With `page` the place\n  follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.\n- `ToolbarTabs` are the views of the app as words in the bar, after the brand, as in Xiox («Cleanup · Registry ·\n  Developers · Settings»): the view the user is in has the stronger text and a short bar in the accent under it. The\n  same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`), in a bar at the\n  foot of the window (`bottomBar`, with `edge=\"top\"` and, on a narrow window, `layout=\"stacked\"`: the icon over the\n  word), or small in the status bar (`size=\"sm\"` in the `footer`).\n- A button with a word shows its `shortcut` after the word, as plain text («Commands Ctrl K»): the way into the\n  command palette.\n- `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the\n  root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.\nShort of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container\nquery, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon\nand a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.\nWhat the user needs to act (the buttons) is never what gives way.\nThe tools keep their places from one page or state to the next (the owner's rule, above all on a phone): a tool that\na view lacks keeps its place, empty (`absent`), and a view's word is as wide chosen as not. What grows (a search that\nopens, the place in the brand) sits next to a `ToolbarSpacer`, so it takes the spacer's room and not a tool's place.\nTwo sizes, chosen with a parameter: `md`, and `sm` for the dense bars of a classic desktop program (28px items, a\n20px mark). A toolbar in a compact `TitleBar` is `sm` by itself. Text buttons that open a `DropdownMenu` («File»,\n«Edit», «View») make the menu bar of such a program out of the same parts.\nIcons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.",
+     "about": "The toolbar: one row of actions that is a single Tab stop. Native WAI-ARIA roving tabindex carries the behaviour\n(the arrows move among the items, Home and End reach the ends, a disabled item stays reachable); the form is the toolkit's\n`Button` recipe at the dense height, so an item is the same control as everywhere else.\n- `ToolbarButton` is an action. With no children it is an icon alone: its `label` is its accessible name and the\n  hint under the pointer (with the `shortcut` after it, as plain text: R5). With children it is an icon and a word.\n  `pressed` makes it a switch (a filter that is on, a panel that is open): the selection tint, never the accent fill.\n  One item of a toolbar may be `variant=\"default\"`, the one solid action of the screen (R3); the rest stay quiet.\n- `ToolbarSearch` is a search box that takes no room until it is asked for: a magnifier that opens into the\n  toolkit's `SearchField` on a press (or when the app opens it from its own key), and closes again with Esc, or when\n  it is left empty. While it holds text it stays open, so what filters the page is always in sight.\n- `ToolbarBrand` is the app at the start of the bar, as in Imago's apps: a small square in the accent holding the\n  initial of the product's name, and the name beside it, or the name alone (`mark={false}`). With `page` the place\n  follows the name after a chevron («Daodan › Settings»). No drawn logo: the hue and the name tell the apps apart.\n- `ToolbarTabs` are the views of the app as words in the bar, after the brand, as in Xiox («Cleanup · Registry ·\n  Developers · Settings»): the view the user is in has the stronger text and a short bar in the accent under it. The\n  same tabs can sit in a toolbar of their own directly under the title bar (`AppShell`'s `tabs`), in a bar at the\n  foot of the window (`bottomBar`, with `edge=\"top\"` and, on a narrow window, `layout=\"stacked\"`: the icon over the\n  word), or small in the status bar (`size=\"sm\"` in the `footer`).\n- A button with a word shows its `shortcut` after the word, as plain text («Commands Ctrl K»): the way into the\n  command palette.\n- `ToolbarSeparator`, `ToolbarGroup`, `ToolbarTitle` and `ToolbarSpacer` lay the row out. Inside a `TitleBar` the\n  root, the title and the spacers also carry the bar's drag attributes, so the empty parts of the bar move the window.\nShort of room the bar gives way in fixed steps, measured on the toolbar itself and not on the screen (a container\nquery, as Imago's frame does: a window half-snapped is narrow on a wide screen). Under 448px a button with an icon\nand a word keeps the icon alone, and the search shown as a field is its magnifier; under 256px the title goes.\nWhat the user needs to act (the buttons) is never what gives way.\nThe tools keep their places from one page or state to the next (the owner's rule, above all on a phone): a tool that\na view lacks keeps its place, empty (`absent`), and a view's word is as wide chosen as not. What grows (a search that\nopens, the place in the brand) sits next to a `ToolbarSpacer`, so it takes the spacer's room and not a tool's place.\nTwo sizes, chosen with a parameter: `md`, and `sm` for the dense bars of a classic desktop program (28px items, a\n20px mark). A toolbar in a compact `TitleBar` is `sm` by itself. Text buttons that open a `DropdownMenu` («File»,\n«Edit», «View») make the menu bar of such a program out of the same parts.\nIcons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.",
      "components": [
       {
        "name": "Toolbar",
@@ -11866,7 +11887,7 @@
    "files": [
     {
      "file": "src/assemblies/Chart.tsx",
-     "about": "Statistical charts built on Recharts, behind the `./chart` entry so apps without charts load none of Recharts.\nEvery chart follows DESIGN.md: series colours come from the theme's accent and 12-step `hueScale` (src/hues.ts),\ngrids use `--line-subtle`, areas use flat translucent fills (no gradients), tooltips use raised surfaces with\n`shadow-md` (R4) and tabular figures (R5), legends use 8px dots (R10), and animations stay off (`isAnimationActive={false}`).",
+     "about": "Statistical charts built on Recharts, behind the `./chart` entry so apps without charts load none of Recharts.\nEvery chart follows DESIGN.md: series colours come from the theme's accent and 12-step `hueScale` (src/hues.ts),\ngrids use `--line-subtle`, areas use flat translucent fills (no gradients), tooltips use raised surfaces with\n`shadow-md` (R4) and tabular figures (R5), legends use 8px dots (R10), and every chart and tooltip keeps animations\noff (`isAnimationActive={false}`).",
      "components": [
       {
        "name": "BarChart",
@@ -11899,7 +11920,7 @@
         {
          "name": "xTickCount",
          "type": "number",
-         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems`."
+         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems` (positive integer)."
         },
         {
          "name": "formatX",
@@ -11985,6 +12006,11 @@
          "type": "string | number"
         },
         {
+         "name": "nameFromPayload",
+         "type": "boolean",
+         "doc": "Read the item name from `entry.payload.name` (used by `PieChart` and `RadialGauge`, where `dataKey` is `'value'`)."
+        },
+        {
          "name": "formatLabel",
          "type": "((label: unknown) => string)"
         },
@@ -12025,7 +12051,7 @@
         {
          "name": "xTickCount",
          "type": "number",
-         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems`."
+         "doc": "Cap the number of x-axis tick labels with `selectEvenlySpacedItems` (positive integer)."
         },
         {
          "name": "formatX",
@@ -12126,7 +12152,7 @@
         {
          "name": "max",
          "type": "number",
-         "doc": "Upper bound of the radial scale. Default 100."
+         "doc": "Upper bound of the radial scale (must be positive). Default 100."
         },
         {
          "name": "centerValue",
@@ -12181,7 +12207,7 @@
         {
          "name": "hue",
          "type": "\"red\" | \"coral\" | \"orange\" | \"brown\" | \"amber\" | \"lime\" | \"green\" | \"emerald\" | \"teal\" | \"turquoise\" | \"blue\" | \"slate\" | \"indigo\" | \"violet\" | \"orchid\" | \"magenta\" | \"pink\" | \"burgundy\"",
-         "doc": "Optional named hue from Sigrid's 18-hue scale (`hueScale`). Absent: series 0 uses `--color-primary`, further series cycle `DEFAULT_CHART_HUES`."
+         "doc": "Optional named hue from Sigrid's 18-hue scale (`hueScale`). Absent: series 0 uses `--color-primary`, further series pick unused hues from `DEFAULT_CHART_HUES`."
         }
        ]
       },

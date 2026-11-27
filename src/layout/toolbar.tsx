@@ -1,5 +1,5 @@
-// The toolbar: one row of actions that is a single Tab stop. Base UI's `Toolbar` carries the behaviour (the arrows
-// move among the items, Home and End reach the ends, a disabled item stays reachable); the form is the toolkit's
+// The toolbar: one row of actions that is a single Tab stop. Native WAI-ARIA roving tabindex carries the behaviour
+// (the arrows move among the items, Home and End reach the ends, a disabled item stays reachable); the form is the toolkit's
 // `Button` recipe at the dense height, so an item is the same control as everywhere else.
 // - `ToolbarButton` is an action. With no children it is an icon alone: its `label` is its accessible name and the
 //   hint under the pointer (with the `shortcut` after it, as plain text: R5). With children it is an icon and a word.
@@ -32,7 +32,6 @@
 // «Edit», «View») make the menu bar of such a program out of the same parts.
 // Icons are the app's (an `Icon`, or any 16px drawing); the magnifier is functional chrome, as in `SearchField`.
 import * as React from "react"
-import { Toolbar as ToolbarPrimitive } from "@base-ui/react/toolbar"
 import { ChevronRight } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn, isEmptyNode } from "../lib/utils"
@@ -59,14 +58,69 @@ export type ToolbarProps = {
   children?: React.ReactNode
 }
 
+const NAV_SELECTOR = "[data-toolbar-nav]"
+
 function Toolbar({ size, className, children, ...props }: ToolbarProps) {
   const drag = React.useContext(TitleBarDragContext)
   const bar = React.useContext(TitleBarSizeContext)
   const own = size ?? (bar === "compact" ? "sm" : "md")
+  const root = React.useRef<HTMLDivElement>(null)
+
+  // Keep a single Tab stop across the toolbar's items: the active item (or the first) gets tabIndex 0, the rest -1.
+  React.useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    const items = Array.from(el.querySelectorAll<HTMLElement>(NAV_SELECTOR))
+    if (items.length === 0) return
+    const current = items.find((item) => item === el.ownerDocument.activeElement || item.tabIndex === 0) ?? items[0]
+    for (const item of items) item.tabIndex = item === current ? 0 : -1
+  })
+
+  const onFocusCapture = (event: React.FocusEvent<HTMLDivElement>) => {
+    const target = (event.target as Element).closest?.(NAV_SELECTOR) as HTMLElement | null
+    if (!target || !root.current?.contains(target)) return
+    for (const item of root.current.querySelectorAll<HTMLElement>(NAV_SELECTOR)) {
+      item.tabIndex = item === target ? 0 : -1
+    }
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented) return
+    const key = event.key
+    if (key !== "ArrowRight" && key !== "ArrowLeft" && key !== "Home" && key !== "End") return
+    const el = root.current
+    if (!el) return
+    const items = Array.from(el.querySelectorAll<HTMLElement>(NAV_SELECTOR))
+    const current = items.indexOf(el.ownerDocument.activeElement as HTMLElement)
+    if (current === -1 || items.length === 0) return
+    const rtl = getComputedStyle(el).direction === "rtl"
+    const forward = rtl ? "ArrowLeft" : "ArrowRight"
+    let next: HTMLElement | undefined
+    if (key === "Home") next = items[0]
+    else if (key === "End") next = items[items.length - 1]
+    else if (key === forward) next = items[(current + 1) % items.length]
+    else next = items[(current - 1 + items.length) % items.length]
+    if (!next) return
+    event.preventDefault()
+    for (const item of items) item.tabIndex = item === next ? 0 : -1
+    next.focus()
+  }
+
   return (
-    <ToolbarPrimitive.Root data-slot="toolbar" data-size={own} {...drag} {...props} className={cn("@container/toolbar flex min-w-0 flex-1 items-center self-stretch", own === "sm" ? "gap-0.5" : "gap-1", className)}>
+    <div
+      ref={root}
+      role="toolbar"
+      aria-orientation="horizontal"
+      data-slot="toolbar"
+      data-size={own}
+      onFocusCapture={onFocusCapture}
+      onKeyDown={onKeyDown}
+      {...drag}
+      {...props}
+      className={cn("@container/toolbar flex min-w-0 flex-1 items-center self-stretch", own === "sm" ? "gap-0.5" : "gap-1", className)}
+    >
       <ToolbarSizeContext.Provider value={own}>{children}</ToolbarSizeContext.Provider>
-    </ToolbarPrimitive.Root>
+    </div>
   )
 }
 
@@ -108,7 +162,7 @@ const NARROW_GONE = "@max-md/toolbar:hidden"
 // control borders would replace it (one attribute heavier than that rule, which sits in `:where()`).
 const QUIET = "text-ink-mute hover:text-ink [[data-controls=strong]_&]:border-line"
 
-function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
+function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keepWord = false, animated, absent = false, disabled, onClick, className, children, type = "button", ref, ...props }: ToolbarButtonProps) {
   const small = React.useContext(ToolbarSizeContext) === "sm"
   const iconOnly = isEmptyNode(children)
   // Beside a word the key is plain text in the button's own colour, a step quieter (R5).
@@ -139,19 +193,23 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
     )
   }
   const button = (
-    <ToolbarPrimitive.Button
+    <button
       data-slot="button"
       data-toolbar-item="button"
+      data-toolbar-nav=""
       data-variant={variant}
+      data-disabled={disabled ? "" : undefined}
       aria-label={label}
       aria-pressed={pressed}
+      aria-disabled={disabled ? true : undefined}
       type={type}
+      onClick={disabled ? (event) => event.preventDefault() : onClick}
       {...props}
-      ref={ref as React.Ref<HTMLButtonElement>}
+      ref={ref}
       className={look}
     >
       {body}
-    </ToolbarPrimitive.Button>
+    </button>
   )
   if (!iconOnly) return button
   return (
@@ -187,9 +245,9 @@ const TabsContext = React.createContext<({ value: string; onValueChange: (value:
 function ToolbarTabs({ value, onValueChange, edge = "bottom", size = "md", layout = "inline", className, children, ...props }: ToolbarTabsProps) {
   const context = React.useMemo(() => ({ value, onValueChange, edge, size, layout }), [value, onValueChange, edge, size, layout])
   return (
-    <ToolbarPrimitive.Group data-slot="toolbar-tabs" data-edge={edge} {...props} className={cn("flex items-stretch self-stretch", layout === "stacked" ? "min-w-0 flex-1" : "shrink-0", className)}>
+    <div role="group" data-slot="toolbar-tabs" data-edge={edge} {...props} className={cn("flex items-stretch self-stretch", layout === "stacked" ? "min-w-0 flex-1" : "shrink-0", className)}>
       <TabsContext.Provider value={context}>{children}</TabsContext.Provider>
-    </ToolbarPrimitive.Group>
+    </div>
   )
 }
 
@@ -234,16 +292,25 @@ function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabPr
     tabs?.layout === "stacked" ? "min-w-0 flex-1 flex-col justify-center gap-0.5 px-2 py-1.5 text-2xs short:flex-row short:gap-1.5 short:py-0" : cn("shrink-0 gap-2 px-3", tabs?.size === "sm" ? "text-2xs" : "text-sm"),
   )
   return (
-    <ToolbarPrimitive.Button data-slot="toolbar-tab" type="button" disabled={disabled} aria-current={current ? "page" : undefined} onClick={() => tabs?.onValueChange(value)} className={cn(TAB, TAB_BOLD, look, className)}>
+    <button
+      data-slot="toolbar-tab"
+      data-toolbar-nav=""
+      data-disabled={disabled ? "" : undefined}
+      type="button"
+      aria-disabled={disabled ? true : undefined}
+      aria-current={current ? "page" : undefined}
+      onClick={disabled ? (event) => event.preventDefault() : () => tabs?.onValueChange(value)}
+      className={cn(TAB, TAB_BOLD, look, className)}
+    >
       {icon}
       {/* As wide when it is the current view as when it is not: the views beside it never move. */}
       {steadyLabel(children)}
-    </ToolbarPrimitive.Button>
+    </button>
   )
 }
 
 function ToolbarSeparator({ className }: { className?: string | undefined }) {
-  return <ToolbarPrimitive.Separator data-slot="toolbar-separator" className={cn("mx-1 h-4 w-px shrink-0 bg-line", className)} />
+  return <div role="separator" aria-orientation="vertical" data-slot="toolbar-separator" className={cn("mx-1 h-4 w-px shrink-0 bg-line", className)} />
 }
 
 export type ToolbarGroupProps = {
@@ -255,9 +322,9 @@ export type ToolbarGroupProps = {
 
 function ToolbarGroup({ className, children, ...props }: ToolbarGroupProps) {
   return (
-    <ToolbarPrimitive.Group data-slot="toolbar-group" {...props} className={cn("flex shrink-0 items-center gap-0.5", className)}>
+    <div role="group" data-slot="toolbar-group" {...props} className={cn("flex shrink-0 items-center gap-0.5", className)}>
       {children}
-    </ToolbarPrimitive.Group>
+    </div>
   )
 }
 

@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { Disclosure } from '../src/components'
-import { classes } from './helpers'
+import { classes, settle } from './helpers'
 
 const panel = () => document.querySelector('[data-slot="disclosure-panel"]') as HTMLElement
 
@@ -23,7 +23,7 @@ describe('Disclosure', () => {
     expect(panel().querySelector('input')).toBeTruthy()
   })
 
-  test('a press opens it in place and a second closes it; what was written inside is kept', () => {
+  test('a press opens it in place and a second closes it; what was written inside is kept', async () => {
     render(
       <Disclosure label="Add a note">
         <input aria-label="Note" />
@@ -31,18 +31,21 @@ describe('Disclosure', () => {
     )
     const row = screen.getByRole('button', { name: 'Add a note' })
     fireEvent.click(row)
+    await settle()
     expect(row.getAttribute('aria-expanded')).toBe('true')
     expect(panel().hidden).toBe(false)
     expect(row.getAttribute('aria-controls')).toBe(panel().id)
     const field = screen.getByLabelText('Note') as HTMLInputElement
     fireEvent.change(field, { target: { value: 'kept' } })
     fireEvent.click(row)
+    await settle()
     expect(row.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(row)
+    await settle()
     expect((screen.getByLabelText('Note') as HTMLInputElement).value).toBe('kept')
   })
 
-  test('the app can keep it open or closed; the fact after the name is not part of the name people look for', () => {
+  test('the app can keep it open or closed; the fact after the name is not part of the name people look for', async () => {
     const seen = vi.fn()
     function Sample() {
       const [open, setOpen] = useState(true)
@@ -57,11 +60,12 @@ describe('Disclosure', () => {
     expect(row.getAttribute('aria-expanded')).toBe('true')
     expect(row.querySelector('[data-slot="disclosure-summary"]')!.textContent).toBe('2 set')
     fireEvent.click(row)
+    await settle()
     expect(seen).toHaveBeenCalledWith(false)
     expect(row.getAttribute('aria-expanded')).toBe('false')
   })
 
-  test('disabled: the row does not open', () => {
+  test('disabled: the row does not open', async () => {
     render(
       <Disclosure label="Not available" disabled>
         <p>inside</p>
@@ -70,6 +74,7 @@ describe('Disclosure', () => {
     const row = screen.getByRole('button', { name: 'Not available' }) as HTMLButtonElement
     expect(row.disabled).toBe(true)
     fireEvent.click(row)
+    await settle()
     expect(row.getAttribute('aria-expanded')).toBe('false')
   })
 })
@@ -86,6 +91,7 @@ describe('what opens in place glides only after the reader\'s own press', () => 
     expect(panel().hasAttribute('data-reveal')).toBe(false)
     // Opened by the reader: it glides.
     fireEvent.click(screen.getByRole('button', { name: 'Thought' }))
+    await settle()
     expect(panel().hasAttribute('data-reveal')).toBe(true)
   })
 

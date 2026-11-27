@@ -9,7 +9,7 @@ import { COLORS, COLOR_NAMES } from '../src/colors'
 import { RadioGroup, RadioGroupItem } from '../src/primitives/radio-group'
 import { Swatches } from '../src/components/Swatches'
 import { palettes } from './theme-tokens'
-import { contrast } from './helpers'
+import { contrast, settle } from './helpers'
 
 // Base UI moves the arrow focus in a microtask (`queueMicrotask` in `useCompositeRoot`, after the `returnFocus`
 // of FocusManager): the test waits for that microtask before looking at the focus, as the browser would.
@@ -34,7 +34,9 @@ function Pick({ start = COLORS[0] as string, onPick = () => {} }: { start?: stri
   )
 }
 
-describe('RadioGroup (Base UI)', () => {
+const controlOf = (input: Element) => input.closest('label')!.querySelector<HTMLElement>('[data-slot="radio-group-item"]')!
+
+describe('RadioGroup (Ark UI)', () => {
   function Sizes({ onChange = () => {} }: { onChange?: (v: string) => void }) {
     return (
       <RadioGroup aria-label="Size" defaultValue="m" onValueChange={onChange}>
@@ -52,19 +54,22 @@ describe('RadioGroup (Base UI)', () => {
     expect(screen.getByRole('radiogroup', { name: 'Size' })).toBeTruthy()
     for (const name of ['Small', 'Medium', 'Large']) expect(radio(name)).toBeTruthy()
     expect(radio('Medium').getAttribute('aria-checked')).toBe('true')
-    expect(radio('Medium').tagName).toBe('BUTTON')
-    expect(radio('Medium').getAttribute('type')).toBe('button')
+    expect(radio('Medium').tagName).toBe('INPUT')
+    expect(radio('Medium').getAttribute('type')).toBe('radio')
   })
 
-  test('a click and the label choose; the value comes back; a disabled item cannot be chosen', () => {
+  test('a click and the label choose; the value comes back; a disabled item cannot be chosen', async () => {
     const onChange = vi.fn()
     render(<Sizes onChange={onChange} />)
     fireEvent.click(radio('Small'))
+    await settle()
     expect(onChange).toHaveBeenLastCalledWith('s')
     expect(radio('Small').getAttribute('aria-checked')).toBe('true')
     fireEvent.click(screen.getByText('Medium'))
+    await settle()
     expect(onChange).toHaveBeenLastCalledWith('m')
     fireEvent.click(radio('Large'))
+    await settle()
     expect(onChange).not.toHaveBeenCalledWith('l')
     expect(radio('Medium').getAttribute('aria-checked')).toBe('true')
   })
@@ -73,7 +78,7 @@ describe('RadioGroup (Base UI)', () => {
     const { container } = render(<Sizes />)
     const dots = container.querySelectorAll('[data-slot="radio-group-indicator"]')
     expect(dots).toHaveLength(1)
-    expect(radio('Medium').contains(dots[0]!)).toBe(true)
+    expect(controlOf(radio('Medium')).contains(dots[0]!)).toBe(true)
     // No motion styles: no `transform`/`transition` in the inline styles, no transition classes.
     for (const el of container.querySelectorAll<HTMLElement>('[data-slot^="radio-group"]')) {
       expect(el.getAttribute('style') ?? '').not.toMatch(/transform|transition|will-change/)
@@ -82,7 +87,7 @@ describe('RadioGroup (Base UI)', () => {
   })
 })
 
-describe('Swatches on the Base UI RadioGroup', () => {
+describe('Swatches on the Ark UI RadioGroup', () => {
   test('one radio group named “Color”, a radio per color with its English name', () => {
     render(<Swatches value={COLORS[2]} onChange={() => {}} />)
     expect(screen.getByRole('radiogroup', { name: 'Color' })).toBeTruthy()
@@ -93,7 +98,7 @@ describe('Swatches on the Base UI RadioGroup', () => {
     expect(checked()).toEqual([radios[2]])
     // The color is in the swatch, not in the name.
     expect(radios.map((r) => r.getAttribute('data-color'))).toEqual([...COLORS])
-    expect(radios[0]!.style.background).not.toBe('')
+    expect(controlOf(radios[0]!).style.background).not.toBe('')
   })
 
   test('another label can be given', () => {
@@ -101,10 +106,11 @@ describe('Swatches on the Base UI RadioGroup', () => {
     expect(screen.getByRole('radiogroup', { name: 'Project color' })).toBeTruthy()
   })
 
-  test('a click returns the hex code of the color', () => {
+  test('a click returns the hex code of the color', async () => {
     const onChange = vi.fn()
     render(<Swatches value={COLORS[0]} onChange={onChange} />)
     fireEvent.click(radio(COLOR_NAMES[COLORS[4]]))
+    await settle()
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenLastCalledWith(COLORS[4])
     expect(COLORS[4]).toMatch(/^#[0-9a-f]{6}$/i)
@@ -169,16 +175,17 @@ describe('Swatches on the Base UI RadioGroup', () => {
   test('targets are 24 px, 44 with touch; the choice is an ink ring, the focus a separate full outline', () => {
     render(<Swatches value={COLORS[1]} onChange={() => {}} />)
     for (const r of screen.getAllByRole('radio')) {
-      const cls = r.className.split(/\s+/)
+      const ctrl = controlOf(r)
+      const cls = ctrl.className.split(/\s+/)
       expect(cls).toContain('size-6')
       expect(cls).toContain('pointer-coarse:size-11')
-      expect(cls).toEqual(expect.arrayContaining(['data-checked:ring-2', 'data-checked:ring-ink', 'data-checked:ring-offset-2', 'data-checked:ring-offset-paper']))
-      expect(cls).toEqual(expect.arrayContaining(['focus-visible:outline-2', 'focus-visible:outline-ring']))
+      expect(cls).toEqual(expect.arrayContaining(['data-[state=checked]' + ':ring-2', 'data-[state=checked]' + ':ring-ink', 'data-[state=checked]' + ':ring-offset-2', 'data-[state=checked]' + ':ring-offset-paper']))
+      expect(cls).toEqual(expect.arrayContaining(['data-[focus-visible]' + ':outline-2', 'data-[focus-visible]' + ':outline-ring']))
       // No reduced opacity on the ring or the outline, no animation.
-      expect(r.className).not.toMatch(/(ring|outline)-(ink|ring)\/\d+|transition|animate-/)
+      expect(ctrl.className).not.toMatch(/(ring|outline)-(ink|ring)\/\d+|transition|animate-/)
     }
-    expect(radio('Coral').hasAttribute('data-checked')).toBe(true)
-    expect(radio('Red').hasAttribute('data-checked')).toBe(false)
+    expect(controlOf(radio('Coral')).getAttribute('data-state')).toBe('checked')
+    expect(controlOf(radio('Red')).getAttribute('data-state')).toBe('unchecked')
   })
 })
 

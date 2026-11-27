@@ -1,23 +1,19 @@
-// SmoothUI (MIT) checkbox 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/checkbox.json)
 // Park UI (MIT) checkbox 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/checkbox.ts)
 // From Park's `checkbox` recipe comes the form of the control (its sm size: an 18px box with l1 corners, its solid
 // variant: when checked the box is a fill with the mark in the contrast color). The border at rest stays our `input`
 // token (3:1, WCAG 1.4.11): Park's is its hairline `border`. The fill is the accent, with the label colour the engine
 // pairs with it for the mark (the owner's design of 2026-11-22; it was the ink). An app may round its own boxes in its own CSS, through the shape token `--radius-check`.
-// From SmoothUI's Checkbox we keep: Base UI's Root rendered as a real `<button type="button">` (`nativeButton`,
-// so a `<label htmlFor>` labels it and Space checks it; Enter does not, per WAI-ARIA), the Indicator with the stroked
-// check mark and the dash for the indeterminate state. Our API stays (the one from before: `checked` and `defaultChecked`
-// also accept "indeterminate", `onCheckedChange` receives `boolean | "indeterminate"`, `data-state` on the control), the
-// tokens from `theme.css` and the enlarged touch area. Removed: SmoothUI's automatic animations (AnimatePresence, spring,
-// `pathLength`, exit): with `animated` the mark grows once, with the Web animation from `motion-impl` (`popCheck`),
-// only after the user's click, never on a mark already present at mount and never with `prefers-reduced-motion`.
+// Behaviour: Ark UI's Checkbox (`@ark-ui/react/checkbox`: a hidden `<input type="checkbox">` inside a `<label>`, with
+// native Space toggle, Enter ignored, and native `"indeterminate"` state). With `animated` the mark grows once, with
+// the Web animation from `motion-impl` (`popCheck`), only after the user's click, never on a mark already present at
+// mount and never with `prefers-reduced-motion`.
 // With `label` the box comes with its words: one `<label>` around both, so a press on the words checks it too, the
 // row as tall as the smallest control (44px with a finger), in the text of what is around it.
 import * as React from "react"
-import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
+import { Checkbox as CheckboxPrimitive } from "@ark-ui/react/checkbox"
 import { cn } from "../lib/utils"
-import { FOCUS_RING } from "../lib/focus"
 import { useMotion } from "../internal/motion"
+import { useMergedRef } from "../lib/refs"
 
 type CheckedState = boolean | "indeterminate"
 
@@ -40,14 +36,17 @@ type CheckboxOwnProps = {
   label?: React.ReactNode
 }
 
-/** The `<button>` attributes (ref, `aria-*`, `data-*`, handlers) go on the control. */
+/** The `<input>` attributes (ref, `aria-*`, `data-*`, handlers) go on the hidden checkbox control. */
 type CheckboxNativeProps = Omit<
-  React.ComponentPropsWithRef<"button">,
+  React.ComponentPropsWithRef<"input">,
   keyof CheckboxOwnProps | "children" | "defaultValue" | "onChange" | "type"
 >
 
+const CONTROL_CLASS =
+  "peer relative grid size-4.5 shrink-0 place-content-center rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input not-data-disabled:data-[state=unchecked]:hover:border-ink-soft not-data-disabled:data-[state=checked]:hover:border-accent-hover not-data-disabled:data-[state=checked]:hover:bg-accent-hover not-data-disabled:data-[state=indeterminate]:hover:border-accent-hover not-data-disabled:data-[state=indeterminate]:hover:bg-accent-hover data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[invalid]:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground outline-hidden data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring"
+
 function Checkbox({
-  checked: checkedProp,
+  checked,
   defaultChecked,
   onCheckedChange,
   disabled,
@@ -58,80 +57,107 @@ function Checkbox({
   className,
   animated,
   label,
+  ref: outerRef,
   ...props
 }: CheckboxOwnProps & CheckboxNativeProps) {
   const motion = useMotion(animated)
-  // Base UI keeps "indeterminate" outside `checked`: here the state is kept in a single place and Base UI is always
-  // controlled. If the caller does not control it, it starts from `defaultChecked` (the initial dash disappears on the first click).
-  const controlled = checkedProp !== undefined
-  const [own, setOwn] = React.useState<CheckedState>(defaultChecked ?? false)
-  const current = controlled ? checkedProp : own
-  const indeterminate = current === "indeterminate"
-  const isChecked = current === true
+  const hasLabel = label != null && label !== false && label !== ""
+  const invalid = props["aria-invalid"] === true || props["aria-invalid"] === "true"
+  const input = React.useRef<HTMLInputElement>(null)
+  const inputRef = useMergedRef(input, outerRef)
+  const checkSvg = React.useRef<SVGSVGElement>(null)
   // True between the user's click and the mark appearing: it animates only a gesture, never a mark already present at mount.
   const gesture = React.useRef(false)
-  const state = indeterminate ? "indeterminate" : isChecked ? "checked" : "unchecked"
-  const onIcon = React.useCallback(
-    (el: SVGSVGElement | null) => {
-      if (el && gesture.current && motion) motion.popCheck(el)
-      if (el) gesture.current = false
-    },
-    [motion]
-  )
-  const box = (
-    <CheckboxPrimitive.Root
-      data-slot="checkbox"
-      data-state={state}
-      className={cn(
-        "peer relative size-4.5 shrink-0 rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input enabled:data-[state=unchecked]:hover:border-ink-soft enabled:data-[state=checked]:hover:border-accent-hover enabled:data-[state=checked]:hover:bg-accent-hover enabled:data-[state=indeterminate]:hover:border-accent-hover enabled:data-[state=indeterminate]:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
-        FOCUS_RING,
-        className
-      )}
-      checked={isChecked}
-      indeterminate={indeterminate}
-      disabled={disabled}
-      required={required}
-      name={name}
-      value={value}
-      id={id}
-      nativeButton
-      onCheckedChange={(next) => {
-        gesture.current = next
-        if (!controlled) setOwn(next)
-        onCheckedChange?.(next)
-      }}
-      // The native attributes go on the rendered `<button>`: Base UI merges the props and ref of the `render` element.
-      render={<button type="button" {...props} />}
-    >
-      <CheckboxPrimitive.Indicator
-        data-slot="checkbox-indicator"
-        data-state={state}
-        className="grid place-content-center text-current transition-none"
-        style={{ pointerEvents: "none" }}
-      >
-        <svg
-          ref={indeterminate ? undefined : onIcon}
-          className="size-3"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={3}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d={indeterminate ? "M5 12h14" : "M20 6L9 17l-5-5"} />
-        </svg>
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
-  )
-  if (label == null || label === false || label === "") return box
+
+  // Without a visible label Ark still points the input at its label part (`aria-labelledby`), which is not on the page:
+  // the pointer is taken off, and the name is the caller's `aria-label` or the `<label htmlFor>` elsewhere.
+  React.useLayoutEffect(() => {
+    if (!hasLabel) input.current?.removeAttribute("aria-labelledby")
+  })
+
   return (
-    <label data-slot="checkbox-label" className="flex min-h-(--control-xs) min-w-0 items-center gap-2 text-sm pointer-coarse:min-h-11">
-      {box}
-      <span className="min-w-0">{label}</span>
-    </label>
+    <CheckboxPrimitive.Root
+      data-slot={hasLabel ? "checkbox-label" : "checkbox"}
+      className={
+        hasLabel
+          ? "flex min-h-(--control-xs) min-w-0 items-center gap-2 text-sm pointer-coarse:min-h-11"
+          : "relative inline-flex items-center align-middle"
+      }
+      {...(checked !== undefined ? { checked } : {})}
+      {...(defaultChecked !== undefined ? { defaultChecked } : {})}
+      {...(disabled !== undefined ? { disabled } : {})}
+      {...(invalid ? { invalid: true } : {})}
+      {...(required !== undefined ? { required } : {})}
+      {...(name !== undefined ? { name } : {})}
+      {...(value !== undefined ? { value } : {})}
+      {...(id !== undefined ? { ids: { hiddenInput: id } } : {})}
+      onCheckedChange={(details) => {
+        gesture.current = details.checked === true
+        if (details.checked === true && motion && checkSvg.current) {
+          motion.popCheck(checkSvg.current)
+          gesture.current = false
+        }
+        onCheckedChange?.(details.checked)
+      }}
+    >
+      <CheckboxPrimitive.Context>
+        {(api) => {
+          const state = api.indeterminate ? "indeterminate" : api.checked ? "checked" : "unchecked"
+          return (
+            <>
+              <CheckboxPrimitive.HiddenInput ref={inputRef} data-state={state} aria-checked={api.indeterminate ? "mixed" : api.checked} {...props} />
+              <CheckboxPrimitive.Control data-slot="checkbox-control" className={cn(CONTROL_CLASS, className)}>
+                <CheckboxPrimitive.Indicator
+                  data-slot="checkbox-indicator"
+                  className="grid place-content-center text-current transition-none"
+                  style={{ pointerEvents: "none" }}
+                >
+                  <svg
+                    ref={checkSvg}
+                    className="size-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </CheckboxPrimitive.Indicator>
+                <CheckboxPrimitive.Indicator
+                  indeterminate
+                  data-slot="checkbox-indicator"
+                  className="grid place-content-center text-current transition-none"
+                  style={{ pointerEvents: "none" }}
+                >
+                  <svg
+                    className="size-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M5 12h14" />
+                  </svg>
+                </CheckboxPrimitive.Indicator>
+              </CheckboxPrimitive.Control>
+              {hasLabel ? (
+                <CheckboxPrimitive.Label className="min-w-0">
+                  {label}
+                </CheckboxPrimitive.Label>
+              ) : null}
+            </>
+          )
+        }}
+      </CheckboxPrimitive.Context>
+    </CheckboxPrimitive.Root>
   )
 }
 

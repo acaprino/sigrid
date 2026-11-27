@@ -1,16 +1,10 @@
-// SmoothUI (MIT) radio-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/radio-group.json)
-// From SmoothUI's RadioGroup we keep: Base UI's Root and Radio (`role="radiogroup"`/`role="radio"` with
-// `aria-checked`, a single Tab stop, arrows that move focus and select, wrapping at the ends), the Radio
-// rendered as a real `<button type="button">` (`nativeButton`), the Indicator with the filled dot and the optional label.
-// Adapted: Base UI does not handle Home and End in the radio group (`enableHomeAndEndKeys: false`), here they go to the first and
-// last enabled radio and select it, like the arrows; `theme.css` tokens (`input` border, dot and selected border
-// `ink`, `ring/50` ring), touch area enlarged to 24 px (44 with touch). Removed: all of Motion's animations (cascading
-// appearance of the radios, spring on the dot, `useReducedMotion`): the dot is there or it is not, no movement, Motion is not loaded.
+// Radio group on Ark UI (`@ark-ui/react/radio-group`): `role="radiogroup"`, single Tab stop, arrows wrapping at the
+// ends, Home and End to jump and select, and two variants: "radio" (18px circle, Park's sm control, accent dot) and
+// "swatch" (24px filled pill, 44px with touch, detached 2px ink ring when chosen and focus outline 6px away). No motion.
 import * as React from "react"
-import { Radio as RadioPrimitive } from "@base-ui/react/radio"
-import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
+import { RadioGroup as RadioGroupPrimitive } from "@ark-ui/react/radio-group"
 import { cn } from "../lib/utils"
-import { FOCUS_RING, FOCUS_RING_SWATCH } from "../lib/focus"
+import { useMergedRef } from "../lib/refs"
 
 type RadioGroupOwnProps = {
   children?: React.ReactNode
@@ -37,6 +31,11 @@ type RadioGroupNativeProps = Omit<
 
 export type RadioGroupProps = RadioGroupOwnProps & RadioGroupNativeProps
 
+/** Passes the caller's optional form `name` to items so unnamed groups stay out of FormData. */
+const GroupNameContext = React.createContext<string | undefined>(undefined)
+
+const INPUT_SELECTOR = 'input[data-slot="radio-group-item-input"]'
+
 function RadioGroup({
   value,
   defaultValue,
@@ -48,36 +47,84 @@ function RadioGroup({
   required,
   orientation = "vertical",
   onKeyDown,
+  ref: outerRef,
   ...props
 }: RadioGroupProps) {
+  const root = React.useRef<HTMLDivElement>(null)
+  const rootRef = useMergedRef(root, outerRef)
+  const hasLabelledBy = props["aria-labelledby"] !== undefined
+
+  // Without an internal `RadioGroup.Label` Ark still points `aria-labelledby` at its label id: remove the dangling id
+  // when the caller names the group with `aria-label`. Also keep a single Tab stop across the group's radios.
+  React.useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    if (!hasLabelledBy) el.removeAttribute("aria-labelledby")
+    const inputs = Array.from(el.querySelectorAll<HTMLInputElement>(INPUT_SELECTOR))
+    const enabled = inputs.filter((i) => !i.disabled)
+    const active = enabled.find((i) => i.getAttribute("aria-checked") === "true") ?? enabled[0]
+    for (const i of inputs) i.tabIndex = i === active ? 0 : -1
+  })
+
   const onGroupKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event)
-    if (event.defaultPrevented || (event.key !== "Home" && event.key !== "End")) return
+    if (event.defaultPrevented) return
+    const key = event.key
+    if (
+      key !== "ArrowRight" &&
+      key !== "ArrowDown" &&
+      key !== "ArrowLeft" &&
+      key !== "ArrowUp" &&
+      key !== "Home" &&
+      key !== "End"
+    ) {
+      return
+    }
     const radios = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>('[data-slot="radio-group-item"]:not([disabled]):not([data-disabled])')
+      event.currentTarget.querySelectorAll<HTMLInputElement>(`${INPUT_SELECTOR}:not(:disabled)`)
     )
-    const target = event.key === "Home" ? radios[0] : radios[radios.length - 1]
+    if (radios.length === 0) return
+    const current = radios.indexOf(document.activeElement as HTMLInputElement)
+    let target: HTMLInputElement | undefined
+    if (key === "Home") target = radios[0]
+    else if (key === "End") target = radios[radios.length - 1]
+    else if (key === "ArrowRight" || key === "ArrowDown") {
+      target = radios[current === -1 ? 0 : (current + 1) % radios.length]
+    } else {
+      target = radios[current === -1 ? radios.length - 1 : (current - 1 + radios.length) % radios.length]
+    }
     if (!target) return
     event.preventDefault()
+    for (const r of radios) r.tabIndex = r === target ? 0 : -1
     target.focus()
-    // The click goes through Base UI: it selects the radio like a user click and calls `onValueChange`.
-    if (target.getAttribute("aria-checked") !== "true") target.click()
+    if (!target.checked) target.click()
   }
+
   return (
-    <RadioGroupPrimitive
-      {...props}
-      data-slot="radio-group"
-      className={cn(orientation === "vertical" ? "grid gap-3" : "flex items-center gap-4", className)}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onValueChange === undefined ? undefined : (next) => onValueChange(next as string)}
-      disabled={disabled}
-      required={required}
-      name={name}
-      onKeyDown={onGroupKeyDown}
-    >
-      {children}
-    </RadioGroupPrimitive>
+    <GroupNameContext.Provider value={name}>
+      <RadioGroupPrimitive.Root
+        {...props}
+        ref={rootRef}
+        data-slot="radio-group"
+        className={cn(orientation === "vertical" ? "grid gap-3" : "flex items-center gap-4", className)}
+        {...(value !== undefined ? { value } : {})}
+        {...(defaultValue !== undefined ? { defaultValue } : {})}
+        onValueChange={
+          onValueChange === undefined
+            ? undefined
+            : (details) => {
+                if (details.value !== null) onValueChange(details.value)
+              }
+        }
+        disabled={disabled}
+        {...(required !== undefined ? { required } : {})}
+        {...(name !== undefined ? { name } : {})}
+        orientation={orientation}
+        onKeyDown={onGroupKeyDown}
+      >
+        {children}
+      </RadioGroupPrimitive.Root>
+    </GroupNameContext.Provider>
   )
 }
 
@@ -101,17 +148,17 @@ const ITEM_CLASSES = {
   radio: cn(
     // 18px, as the checkbox (Park's sm control for both).
     "peer relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-full border border-input bg-paper after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3.5",
-    FOCUS_RING,
+    "outline-hidden data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring",
     // Under the pointer the ring goes one step darker, as a field's border and a checkbox do.
-    "enabled:data-unchecked:hover:border-ink-soft aria-invalid:border-destructive data-checked:border-primary enabled:data-checked:hover:border-accent-hover"
+    "not-data-disabled:data-[state=unchecked]:hover:border-ink-soft data-[invalid]:border-destructive data-[state=checked]:border-primary not-data-disabled:data-[state=checked]:hover:border-accent-hover"
   ),
   // 24 px, 44 with touch; `ink` selection ring on `paper` (2 px, detached by 2 px) and the focus ring (accent text, R8)
   // at 6 px: the 2px offset of R8 is taken by the selection ring, so focus sits outside it (approved exception).
   swatch: cn(
     "relative inline-flex size-6 shrink-0 rounded-full pointer-coarse:size-11",
-    FOCUS_RING_SWATCH,
-    // `SWATCH_CHOSEN`, on the radio Base UI marks checked.
-    "data-checked:ring-2 data-checked:ring-ink data-checked:ring-offset-2 data-checked:ring-offset-paper"
+    "outline-hidden data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-6 data-[focus-visible]:outline-ring",
+    // `SWATCH_CHOSEN`, on the radio Ark marks checked.
+    "data-[state=checked]:ring-2 data-[state=checked]:ring-ink data-[state=checked]:ring-offset-2 data-[state=checked]:ring-offset-paper"
   ),
 } as const
 
@@ -121,47 +168,86 @@ const ITEM_CLASSES = {
  */
 export const SWATCH_CHOSEN = "ring-2 ring-ink ring-offset-2 ring-offset-paper"
 
-/** The `<button>` attributes (ref, `aria-*`, `data-*`, `style`, handlers) go on the radio. */
+/** The `<input>` attributes (ref, `aria-*`, `data-*`, `style`, handlers) passed to the item. */
 type RadioNativeProps = Omit<
-  React.ComponentPropsWithRef<"button">,
+  React.ComponentPropsWithRef<"input">,
   keyof RadioOwnProps | "defaultValue" | "onChange" | "type"
 >
 
 export type RadioGroupItemProps = RadioOwnProps & RadioNativeProps
 
-function RadioGroupItem({ value, disabled = false, className, id, children, variant = "radio", ...props }: RadioGroupItemProps) {
-  const generatedId = React.useId()
-  const radioId = id ?? generatedId
-  const radio = (
-    <RadioPrimitive.Root
-      data-slot="radio-group-item"
-      data-variant={variant}
-      className={cn(ITEM_CLASSES[variant], "disabled:cursor-not-allowed disabled:opacity-50", className)}
+function RadioGroupItem({
+  value,
+  disabled = false,
+  className,
+  id,
+  children,
+  variant = "radio",
+  style,
+  title,
+  ref: outerRef,
+  ...props
+}: RadioGroupItemProps) {
+  const groupName = React.useContext(GroupNameContext)
+  const input = React.useRef<HTMLInputElement>(null)
+  const inputRef = useMergedRef(input, outerRef)
+  const hasLabel = children != null && children !== false && children !== ""
+
+  // Without visible text, remove Ark's dangling `aria-labelledby` so `aria-label` names the radio cleanly.
+  // Without an explicit group `name`, remove Ark's auto-generated `name` so the radio stays out of FormData.
+  React.useLayoutEffect(() => {
+    const el = input.current
+    if (!el) return
+    if (!hasLabel) el.removeAttribute("aria-labelledby")
+    if (groupName === undefined) el.removeAttribute("name")
+  })
+
+  // Visual data attributes (such as `data-color` and `data-mark-hue` on swatches) go on the visible control too.
+  const controlData: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(props)) {
+    if (k.startsWith("data-")) controlData[k] = v
+  }
+
+  return (
+    <RadioGroupPrimitive.Item
       value={value}
       disabled={disabled}
-      id={radioId}
-      nativeButton
-      // The native attributes go on the rendered `<button>`: Base UI merges the props and ref of the `render` element.
-      render={<button type="button" {...props} />}
+      title={title}
+      className={cn("relative inline-flex items-center", hasLabel && "gap-2", disabled && "cursor-not-allowed")}
     >
-      {variant === "radio" ? (
-        <RadioPrimitive.Indicator data-slot="radio-group-indicator" className="flex size-full items-center justify-center">
-          <span aria-hidden="true" className="block size-2 rounded-full bg-primary" />
-        </RadioPrimitive.Indicator>
+      <RadioGroupPrimitive.ItemContext>
+        {(item) => (
+          <>
+            <RadioGroupPrimitive.ItemHiddenInput
+              ref={inputRef}
+              data-slot="radio-group-item-input"
+              aria-checked={item.checked}
+              name={groupName ?? ""}
+              {...(id !== undefined ? { id } : {})}
+              {...props}
+            />
+            <RadioGroupPrimitive.ItemControl
+              data-slot="radio-group-item"
+              data-variant={variant}
+              style={style}
+              {...controlData}
+              className={cn(ITEM_CLASSES[variant], "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50", className)}
+            >
+              {variant === "radio" && item.checked ? (
+                <span data-slot="radio-group-indicator" className="flex size-full items-center justify-center">
+                  <span aria-hidden="true" className="block size-2 rounded-full bg-primary" />
+                </span>
+              ) : null}
+            </RadioGroupPrimitive.ItemControl>
+          </>
+        )}
+      </RadioGroupPrimitive.ItemContext>
+      {hasLabel ? (
+        <RadioGroupPrimitive.ItemText className={cn("text-sm leading-none font-medium", disabled && "cursor-not-allowed opacity-50")}>
+          {children}
+        </RadioGroupPrimitive.ItemText>
       ) : null}
-    </RadioPrimitive.Root>
-  )
-  if (!children) return radio
-  return (
-    <div className="flex items-center gap-2">
-      {radio}
-      <label
-        htmlFor={radioId}
-        className={cn("text-sm leading-none font-medium", disabled && "cursor-not-allowed opacity-50")}
-      >
-        {children}
-      </label>
-    </div>
+    </RadioGroupPrimitive.Item>
   )
 }
 

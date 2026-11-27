@@ -1,8 +1,6 @@
-// SmoothUI (MIT) smooth-button 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/smooth-button.json)
 // Park UI (MIT) button 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/button.ts)
-// From SmoothButton we keep: the plain `<button>` with `type="button"` by default and `asChild` without Radix's Slot
-// (here with Base UI's `useRender`, which merges classes, styles, handlers and ref like the Slot). Our variant and size
-// names stay (the ones the package uses).
+// A plain `<button>` with `type="button"` by default and `asChild` via Ark UI's `ark.button` factory (`@ark-ui/react/factory`,
+// which merges classes, styles, handlers and ref). Our variant and size names stay (the ones the package uses).
 // From Park's `button` recipe comes the form: l2 corners, and its variants and sizes under our names. The label is
 // medium (Park's is semibold: lighter here).
 // Variants: `default` is Park's solid, `secondary` its subtle in the neutral gray, `outline` its outline (with the 3:1
@@ -26,7 +24,7 @@
 // wider of the two before, during and after the wait.
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { useRender } from "@base-ui/react/use-render"
+import { ark } from "@ark-ui/react/factory"
 import { cn } from "../lib/utils"
 import { FOCUS_RING } from "../lib/focus"
 import { useMotion } from "../internal/motion"
@@ -35,7 +33,7 @@ import { SwapLabel } from "../internal/swap-label"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80 hover:[&_svg]:opacity-100 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80 hover:[&_svg]:opacity-100 focus-visible:[&_svg]:opacity-100 aria-pressed:[&_svg]:opacity-100 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
@@ -155,11 +153,15 @@ function Button({
     : onClick
       ? { onClick }
       : {}
-  // With `asChild` the child takes classes, attributes and handlers (its own win, handlers add up, the ref is merged);
-  // without a child element nothing is rendered, like the Slot.
-  const child = asChild && React.isValidElement(children) ? children : null
-  const slotted = useRender({ render: child ?? undefined, props: { ...own, ...props, ...busy }, ref, enabled: child !== null })
-  if (asChild) return slotted
+  // With `asChild` the child takes classes, attributes and handlers (merged by Ark's factory, with the ref composed);
+  // without a child element nothing is rendered.
+  if (asChild) {
+    return (
+      <ark.button asChild ref={ref} {...own} {...props} {...busy}>
+        {children}
+      </ark.button>
+    )
+  }
 
   return (
     <button ref={ref} {...own} type={type} {...props} {...busy}>

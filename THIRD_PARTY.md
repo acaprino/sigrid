@@ -50,6 +50,18 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/assemblies/Attachments.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/components/file-drop.tsx` | `file-upload` | `@ark-ui/react/file-upload` |
 | `src/assemblies/tree.tsx` | `tree-view` | `@ark-ui/react/tree-view` |
+| `src/primitives/button.tsx` | `factory` | `@ark-ui/react/factory` |
+| `src/primitives/badge.tsx` | `factory` | `@ark-ui/react/factory` |
+| `src/primitives/input.tsx` | `field` | `@ark-ui/react/field` |
+| `src/primitives/textarea.tsx` | `field` | `@ark-ui/react/field` |
+| `src/components/input-group.tsx` | `field` | `@ark-ui/react/field` |
+| `src/primitives/checkbox.tsx` | `checkbox` | `@ark-ui/react/checkbox` |
+| `src/primitives/radio-group.tsx` | `radio-group` | `@ark-ui/react/radio-group` |
+| `src/primitives/toggle-group.tsx` | `toggle-group` | `@ark-ui/react/toggle-group` |
+| `src/components/disclosure.tsx` | `collapsible` | `@ark-ui/react/collapsible` |
+| `src/primitives/headless.ts` | `collapsible` | `@ark-ui/react/collapsible` |
+| `src/primitives/headless.ts` | `field` | `@ark-ui/react/field` |
+| `src/primitives/headless.ts` | `popover` | `@ark-ui/react/popover` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -309,9 +321,11 @@ toolkit's: its tokens, its `Table` parts, its `Toolbar` and its icons.
   `@lezer/rust`), `@marijn/find-cluster-break`, `crelt` and `style-mod` (all **MIT**). The editing, the highlighting and the
   search of `CodeView`. The packages are the versions Shinatama pinned. Each language is its own chunk, loaded when a file of
   it is shown. The theme is the toolkit's: made from the tokens.
-- **Recharts**: `recharts` 3.11.2 (**MIT**, Copyright (c) 2015-present Recharts Group). The plotting engine behind
-  `LineChart`, `BarChart`, `PieChart` and `RadialGauge` in `./chart`, styled with the toolkit's tokens, `hueScale`,
-  non-animated rendering, raised tooltips and R10 dot legends.
+- **Recharts**: `recharts` 3.11.2 (**MIT**, Copyright (c) 2015-present Recharts Group), with `@reduxjs/toolkit`,
+  `react-redux`, `reselect`, `immer`, `es-toolkit`, `decimal.js-light`, `eventemitter3`, `tiny-invariant` (all **MIT**)
+  and `victory-vendor` (**MIT AND ISC AND BSD-3-Clause**) that it depends on. The plotting engine behind `LineChart`,
+  `BarChart`, `PieChart` and `RadialGauge` in `./chart`, styled with the toolkit's tokens, `hueScale`, non-animated
+  rendering, raised tooltips and R10 dot legends.
 
 The test `test/provenance.test.ts` checks the pinned versions, that this list and the imports match, and that the main
 entry of the package imports none of them. (The seven languages of CodeMirror are reached with `import()` in
@@ -361,11 +375,6 @@ for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that th
 
 | File | Slug SmoothUI | Source |
 |---|---|---|
-| `src/primitives/button.tsx` | `smooth-button` | https://smoothui.dev/r/base-nova/smooth-button.json |
-| `src/primitives/badge.tsx` | `badge` | https://smoothui.dev/r/base-nova/badge.json |
-| `src/primitives/checkbox.tsx` | `checkbox` | https://smoothui.dev/r/base-nova/checkbox.json |
-| `src/primitives/input.tsx` | `input` | https://smoothui.dev/r/base-nova/input.json |
-| `src/primitives/textarea.tsx` | `textarea` | https://smoothui.dev/r/base-nova/textarea.json |
 | `src/primitives/dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
 | `src/components/Dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
 | `src/primitives/sheet.tsx` | `drawer` | https://smoothui.dev/r/base-nova/drawer.json |
@@ -373,10 +382,8 @@ for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that th
 | `src/primitives/popover.tsx` | `popover` | https://smoothui.dev/r/base-nova/popover.json |
 | `src/components/Toasts.tsx` | `toast` | https://smoothui.dev/r/base-nova/toast.json |
 | `src/primitives/select.tsx` | `select` | https://smoothui.dev/r/base-nova/select.json |
-| `src/primitives/radio-group.tsx` | `radio-group` | https://smoothui.dev/r/base-nova/radio-group.json |
 | `src/primitives/tooltip.tsx` | `tooltip` | https://smoothui.dev/r/base-nova/tooltip.json |
 | `src/components/empty.tsx` | `empty` | https://smoothui.dev/r/base-nova/empty.json |
-| `src/primitives/toggle-group.tsx` | `toggle-group` | https://smoothui.dev/r/base-nova/toggle-group.json |
 
 Notes:
 - `primitives/kbd.tsx` no longer rests on SmoothUI: its form is Park UI's `kbd`, the rest is the toolkit's own.

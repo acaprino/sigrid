@@ -1,21 +1,16 @@
-// SmoothUI (MIT) toggle-group 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/toggle-group.json)
 // Park UI (MIT) segment-group 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/segment-group.ts)
 // From Park's `segment-group` recipe comes the form (its md size): a quiet gray group with l3 corners and a hairline
 // ring inside its edge, no padding, items 40px tall with 14px medium text and 14px of side padding, and the chosen item
 // as a raised sheet with l3 corners (Park's indicator, here with its xs elevation, as in the approved preview).
 // With `animated` the background of the pressed item is one pill that slides from the old choice to the new one
 // (`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.
-// From SmoothUI we keep the primitive (Base UI's `ToggleGroup` and `Toggle`) and the shape of the segmented control
-// (container with a light background, pressed item raised). Adapted: single choice only (the already pressed button
-// does not turn off: the group always has a value), paper/ink tokens in place of `foreground`/`muted`, no
-// shadow or dark variant, and the toolkit's focus ring (`lib/focus.ts`, R8, like the other controls). SmoothUI's `Toggle`
-// button (slug `toggle`) is not copied: the item uses Base UI's `Toggle` directly. Base UI gives
-// `role="group"`, `aria-pressed` on the buttons and a single tab stop with the arrows (which restart from the beginning).
+// Behaviour: Ark UI's ToggleGroup (`@ark-ui/react/toggle-group`, with `multiple` so the root carries `role="group"`
+// and items carry `aria-pressed`, kept single-choice here so the already pressed button never turns off, with a single
+// tab stop and arrow navigation).
 // The group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as
 // wide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.
 import * as React from "react"
-import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group"
-import { Toggle as TogglePrimitive } from "@base-ui/react/toggle"
+import { ToggleGroup as ToggleGroupPrimitive } from "@ark-ui/react/toggle-group"
 import { cn } from "../lib/utils"
 import { FOCUS_RING } from "../lib/focus"
 import { useMotion } from "../internal/motion"
@@ -45,19 +40,20 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
   const id = React.useId()
   const group = React.useMemo(() => ({ value, motion, id, fill }), [value, motion, id, fill])
   return (
-    <ToggleGroupPrimitive<Value>
+    <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
+      multiple
       value={[value]}
-      onValueChange={(next) => {
+      onValueChange={(details) => {
         // A click on the already pressed item would turn it off: in a single-choice group that one stays.
-        const chosen = next[0]
-        if (chosen !== undefined && chosen !== value) onValueChange(chosen)
+        const chosen = details.value.find((v) => v !== value)
+        if (chosen !== undefined) onValueChange(chosen as Value)
       }}
       className={cn("inline-flex items-center rounded-lg bg-paper-2 inset-ring inset-ring-line", TRACK_BOLD, fill ? "w-full" : "w-fit", className)}
       {...props}
     >
       <GroupContext.Provider value={group}>{children}</GroupContext.Provider>
-    </ToggleGroupPrimitive>
+    </ToggleGroupPrimitive.Root>
   )
 }
 
@@ -70,16 +66,16 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
 // border or a shadow). With `animated` the fill and the border are the sliding pill's, not the item's.
 const TRACK_BOLD = "[[data-tabs=bold]_&]:gap-0.5 [[data-tabs=bold]_&]:rounded-md [[data-tabs=bold]_&]:bg-ink/3 [[data-tabs=bold]_&]:p-0.5"
 const ITEM_BOLD =
-  "[[data-tabs=bold]_&]:h-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:min-w-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:rounded-sm [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-transparent [[data-tabs=bold]_&]:data-[pressed]:font-bold [[data-tabs=bold]_&]:data-[pressed]:shadow-none"
+  "[[data-tabs=bold]_&]:h-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:min-w-[calc(var(--control-md)_-_4px)] [[data-tabs=bold]_&]:rounded-sm [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-transparent [[data-tabs=bold]_&]:data-[state=on]:font-bold [[data-tabs=bold]_&]:data-[state=on]:shadow-none"
 const ITEM_BOLD_PRESSED =
-  "[[data-tabs=bold]_&]:data-[pressed]:border-accent/55 [[data-tabs=bold]_&]:data-[pressed]:bg-accent/16 [[data-tabs=bold]_&]:data-[pressed]:hover:bg-accent/16"
+  "[[data-tabs=bold]_&]:data-[state=on]:border-accent/55 [[data-tabs=bold]_&]:data-[state=on]:bg-accent/16 [[data-tabs=bold]_&]:data-[state=on]:hover:bg-accent/16"
 const PILL_BOLD = "[[data-tabs=bold]_&]:-inset-px [[data-tabs=bold]_&]:border [[data-tabs=bold]_&]:border-accent/55 [[data-tabs=bold]_&]:bg-accent/16 [[data-tabs=bold]_&]:shadow-none"
 
 const ITEM = cn(
   // Park's segment item, md: 40px, 14px medium text; the chosen one is a raised sheet with the xs elevation.
-  "inline-flex h-(--control-md) min-w-(--control-md) items-center justify-center gap-2 rounded-lg px-(--pad-md) text-sm font-medium text-ink-mute pointer-coarse:h-auto pointer-coarse:min-h-11 hover:text-ink data-[pressed]:hover:bg-raised",
+  "inline-flex h-(--control-md) min-w-(--control-md) items-center justify-center gap-2 rounded-lg px-(--pad-md) text-sm font-medium text-ink-mute pointer-coarse:h-auto pointer-coarse:min-h-11 hover:text-ink data-[state=on]:hover:bg-raised",
   FOCUS_RING,
-  "data-[pressed]:bg-raised data-[pressed]:font-semibold data-[pressed]:text-ink data-[pressed]:shadow-xs",
+  "data-[state=on]:bg-raised data-[state=on]:font-semibold data-[state=on]:text-ink data-[state=on]:shadow-xs",
   "disabled:pointer-events-none disabled:opacity-50"
 )
 
@@ -100,21 +96,21 @@ function ToggleGroupItem({ className, children, highlightClassName, ...props }: 
   if (motion && group) {
     // The pill is a layer under the text of the pressed item; the item itself stays without a background.
     return (
-      <TogglePrimitive data-slot="toggle-group-item" className={cn(ITEM, ITEM_BOLD, className, "relative isolate data-[pressed]:bg-transparent data-[pressed]:shadow-none data-[pressed]:hover:bg-transparent")} {...props}>
+      <ToggleGroupPrimitive.Item data-slot="toggle-group-item" className={cn(ITEM, ITEM_BOLD, className, "relative isolate data-[state=on]:bg-transparent data-[state=on]:shadow-none data-[state=on]:hover:bg-transparent")} {...props}>
         {group.value === props.value ? <motion.Highlight id={group.id} className={cn("absolute inset-0 -z-10 rounded-[inherit] bg-raised shadow-xs", PILL_BOLD, highlightClassName)} /> : null}
         {steadyLabel(children)}
-      </TogglePrimitive>
+      </ToggleGroupPrimitive.Item>
     )
   }
   return (
-    <TogglePrimitive
+    <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       className={cn(ITEM, ITEM_BOLD, ITEM_BOLD_PRESSED, className)}
       {...props}
     >
       {/* As wide pressed as not: a two-state switch stays where it is in both states. */}
       {steadyLabel(children)}
-    </TogglePrimitive>
+    </ToggleGroupPrimitive.Item>
   )
 }
 

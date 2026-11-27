@@ -1,7 +1,6 @@
-// SmoothUI (MIT) input 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/input.json)
 // Park UI (MIT) input 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/input.ts)
 import * as React from 'react'
-import { Input as InputPrimitive } from '@base-ui/react/input'
+import { Field } from '@ark-ui/react/field'
 import { cn } from '../lib/utils'
 import { FOCUS_FIELD } from '../lib/focus'
 import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from '../lib/field'
@@ -9,10 +8,8 @@ import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from 
 // The form is Park's `input` recipe, md size and outline variant: 40px tall, l2 corners, 12px of side padding, no fill.
 // Park's border is its gray step 7, lighter than 3:1: here it stays `border-input` (>= 3:1 on every background,
 // contrast test). The text is 14px (16px below 860px, so iOS does not zoom the page on focus).
-// Adaptation of SmoothUI's primitive: border `border-input` instead of `border-foreground/25`; the toolkit's focus ring (`lib/focus.ts`, R8) instead of `focus-ring`; no
-// `state-transition` nor any other transition: without `animated` the field has no motion styles. `pointer-coarse:min-h-11`
-// keeps the 44 px with touch. No default `type` (SmoothUI sets `text`): the attribute stays whatever is passed.
-// The parts every field shares are in `lib/field.ts`: this is the field the others follow.
+// Border `border-input`, the toolkit's focus ring (`lib/focus.ts`, R8), no automatic motion, `pointer-coarse:min-h-11`
+// for 44 px touch targets, no forced default `type`. The parts every field shares are in `lib/field.ts`.
 const INPUT_CLASS = cn(
   FIELD_SURFACE,
   FIELD_HEIGHT,
@@ -39,11 +36,11 @@ type InputOwnProps = React.ComponentProps<'input'> & {
 }
 
 /**
- * A one-line field: Base UI's `Input` (outside a `Field` it behaves like a native `<input>`: `value`/`onChange`,
+ * A one-line field: Ark UI's `Field.Input` (outside a `Field.Root` it behaves like a native `<input>`: `value`/`onChange`,
  * `ref`, `autoFocus`, `id` passed as they are). Same API as before: the props of `<input>`, and `mono` and `short`.
  */
 function Input({ className, ref, mono = false, short, ...props }: InputOwnProps) {
-  return <InputPrimitive data-slot="input" className={cn(INPUT_CLASS, mono && 'font-mono', short && WIDTH[short], className)} {...props} ref={ref as React.Ref<HTMLElement>} />
+  return <Field.Input data-slot="input" className={cn(INPUT_CLASS, mono && 'font-mono', short && WIDTH[short], className)} {...props} ref={ref} />
 }
 
 export { Input }

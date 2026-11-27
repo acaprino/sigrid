@@ -86,14 +86,18 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
     const installed = (name: string) => JSON.parse(readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8')) as { version: string; license: string; dependencies?: Record<string, string> }
     /** The Ark components a file imports (`@ark-ui/react/<component>`): the subpath says which. */
     const arkImports = (file: string) => [...readFileSync(file, 'utf8').matchAll(/from ['"](@ark-ui\/[^'"]+)['"]/g)].map((m) => m[1]!)
-    /** The rows of the «Ark UI» table of THIRD_PARTY.md: file → the import it declares. */
-    function listedArk(): Map<string, { component: string; from: string }> {
+    /** The rows of the «Ark UI» table of THIRD_PARTY.md: file → the imports it declares. */
+    function listedArk(): Map<string, { component: string; from: string }[]> {
       const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
       const start = text.indexOf('\n## Ark UI\n')
       expect(start, 'section Ark UI').toBeGreaterThan(-1)
       const section = text.slice(start, text.indexOf('\n## ', start + 1))
-      const rows = new Map<string, { component: string; from: string }>()
-      for (const m of section.matchAll(/^\| `(src\/[^`]+)` \| `([a-z-]+)` \| `(@ark-ui\/react\/[a-z-]+)` \|$/gm)) rows.set(m[1]!, { component: m[2]!, from: m[3]! })
+      const rows = new Map<string, { component: string; from: string }[]>()
+      for (const m of section.matchAll(/^\| `(src\/[^`]+)` \| `([a-z-]+)` \| `(@ark-ui\/react\/[a-z-]+)` \|$/gm)) {
+        const list = rows.get(m[1]!) ?? []
+        list.push({ component: m[2]!, from: m[3]! })
+        rows.set(m[1]!, list)
+      }
       return rows
     }
 
@@ -122,9 +126,9 @@ describe('INV-007: Ark UI (and Base UI) under SmoothUI and Park UI, with the pro
       const importing = codeFiles.filter((f) => arkImports(f).length > 0)
       expect(importing.map(rel).sort()).toEqual([...rows.keys()].sort())
       for (const file of importing) {
-        const row = rows.get(rel(file))!
-        expect(arkImports(file), rel(file)).toEqual([row.from])
-        expect(row.from, rel(file)).toBe(`@ark-ui/react/${row.component}`)
+        const entries = rows.get(rel(file))!
+        expect(arkImports(file).sort(), rel(file)).toEqual(entries.map((r) => r.from).sort())
+        for (const row of entries) expect(row.from, rel(file)).toBe(`@ark-ui/react/${row.component}`)
       }
       const text = readFileSync(join(root, 'THIRD_PARTY.md'), 'utf8')
       expect(text).toContain(`\`@ark-ui/react\` ${ARK}`)

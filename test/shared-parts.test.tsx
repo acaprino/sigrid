@@ -11,7 +11,7 @@ import { useMergedRef } from '../src/lib/refs'
 import { isEmptyNode } from '../src/lib/utils'
 import { SwapLabel } from '../src/internal/swap-label'
 import { inToasts, TOASTS_ATTR } from '../src/internal/overlay'
-import { classes } from './helpers'
+import { classes, settle } from './helpers'
 
 describe('useMergedRef', () => {
   test('gives the element to a function ref and to an object ref, and takes it back from both', () => {
@@ -156,17 +156,18 @@ describe('a swatch shows its selection and its focus apart', () => {
     sample: { action: 'Save', chosen: 'Inbox', row: 'Today', due: 'Due', running: 'Running' },
   }
 
-  test("ColorMatch's theme colours are the toolkit's radio group of swatches: focus 6px away, outside the 2px selection ring", () => {
+  test("ColorMatch's theme colours are the toolkit's radio group of swatches: focus 6px away, outside the 2px selection ring", async () => {
     const onColor = vi.fn()
     render(<ColorMatch colors={[{ color: '#2563eb', label: 'Blue' }, { color: '#0d9488', label: 'Teal' }]} color="#0d9488" spot="balanced" scheme="light" onColor={onColor} onSpot={() => {}} text={TEXT} />)
     const teal = screen.getByRole('radio', { name: 'Teal' })
-    expect(teal.getAttribute('data-slot')).toBe('radio-group-item')
-    expect(classes(teal)).toEqual(expect.arrayContaining(['focus-visible:outline-offset-6', 'data-checked:ring-offset-2']))
-    expect(classes(teal)).not.toContain('focus-visible:outline-offset-2')
+    const tealControl = teal.closest('label')!.querySelector('[data-slot="radio-group-item"]')!
+    expect(classes(tealControl)).toEqual(expect.arrayContaining(['data-[focus-visible]' + ':outline-offset-6', 'data-[state=checked]' + ':ring-offset-2']))
+    expect(classes(tealControl)).not.toContain('data-[focus-visible]' + ':outline-offset-2')
     // One Tab stop, on the chosen colour; the arrows move and choose, as in every radio group.
     expect(teal.tabIndex).toBe(0)
     expect(screen.getByRole('radio', { name: 'Blue' }).tabIndex).toBe(-1)
     fireEvent.click(screen.getByRole('radio', { name: 'Blue' }))
+    await settle()
     expect(onColor).toHaveBeenLastCalledWith('#2563eb')
     // The colour of one's own: its field's focus also sits outside the ring.
     const own = screen.getByLabelText('Theme colour: Your own colour').closest('label')!

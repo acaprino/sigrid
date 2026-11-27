@@ -108,7 +108,7 @@ test('what is on or chosen is the accent, in every control: no control keeps the
   const source = (file: string) => readFileSync(`${process.cwd()}/src/${file}`, 'utf8')
   const on: Record<string, RegExp> = {
     'primitives/checkbox.tsx': /data-\[state=checked\]:bg-primary/,
-    'primitives/radio-group.tsx': /data-checked:border-primary/,
+    'primitives/radio-group.tsx': /data-\[state=checked\]:border-primary/,
     'primitives/switch.tsx': /data-\[state=checked\]:bg-primary/,
     'primitives/slider.tsx': /bg-primary/,
     'components/calendar.tsx': /data-selected:bg-primary/,

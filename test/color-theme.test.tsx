@@ -6,6 +6,7 @@ import { expect, test, vi } from 'vitest'
 import { SPOT_KINDS, colorTheme, isSpotKind, spotOf, spotSuggestions, themeTokens } from '../src'
 import { ColorMatch } from '../src/assemblies'
 import { contrast, fromHex, luminance } from '../src/theme-engine'
+import { settle } from './helpers'
 
 const COLORS = ['#00857a', '#d1453b', '#eb6f0a', '#f5b800', '#058527', '#3db8e5', '#246fe0', '#7b3ff2', '#d6246e', '#3d4350']
 const AS_CHOSEN = { intensity: 'theme', light: 'theme' } as const
@@ -97,7 +98,7 @@ test('a pick names a proposal or a colour of its own; anything else is no spot',
   expect(colorTheme({ id: 'one', label: 'One', color: '#00857a', spot: 'none' }).spot).toBeUndefined()
 })
 
-test('ColorMatch: two radio groups, the proposals named, a pick reported', () => {
+test('ColorMatch: two radio groups, the proposals named, a pick reported', async () => {
   const onColor = vi.fn()
   const onSpot = vi.fn()
   render(
@@ -110,10 +111,13 @@ test('ColorMatch: two radio groups, the proposals named, a pick reported', () =>
   expect(screen.getByRole('radio', { name: 'Teal' }).getAttribute('aria-checked')).toBe('true')
   expect(screen.getByRole('radio', { name: 'Balanced' }).getAttribute('aria-checked')).toBe('true')
   fireEvent.click(screen.getByRole('radio', { name: 'Blue' }))
+  await settle()
   expect(onColor).toHaveBeenCalledWith('#246fe0')
   fireEvent.click(screen.getByRole('radio', { name: 'Loud' }))
+  await settle()
   expect(onSpot).toHaveBeenCalledWith('loud')
   fireEvent.click(screen.getByRole('radio', { name: 'None' }))
+  await settle()
   expect(onSpot).toHaveBeenCalledWith(null)
   fireEvent.change(screen.getByLabelText('Spot colour: Your own colour'), { target: { value: '#aa3300' } })
   expect(onSpot).toHaveBeenCalledWith('#aa3300')

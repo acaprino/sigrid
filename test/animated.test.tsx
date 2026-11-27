@@ -346,13 +346,14 @@ describe('rule 3: setting on and no system preference: it animates, in under 250
     expect(onUndo).toHaveBeenCalledTimes(1)
     expect(undoButton.closest('[inert]')).not.toBeNull() // and for the browser it is inert: neither pointer nor keyboard
   })
-  test('Checkbox: the mark animates only after the user\'s click, under 250 ms', () => {
+  test('Checkbox: the mark animates only after the user\'s click, under 250 ms', async () => {
     const wa = fakeAnimations()
     try {
       render(<Checkbox animated defaultChecked aria-label="Already done" />)
       expect(wa.calls).toEqual([]) // already checked on mount: still
       render(<Checkbox animated aria-label="Complete" />)
       fireEvent.click(screen.getByRole('checkbox', { name: 'Complete' }))
+      await settle()
       expect(wa.calls.length).toBe(2)
       expect(wa.calls[0]!.duration).toBeLessThan(250)
     } finally {

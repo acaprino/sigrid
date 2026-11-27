@@ -472,7 +472,7 @@ function DataTable<Row>({ columns, rows, rowId, sort, defaultSort = null, onSort
     const caret = <Caret open={open} onToggle={() => toggle(row, !open)} label={open ? words.table.fold : words.table.unfold} />
     const mark = selection ? (
       // A press on the check, or near it, leaves the focus on the row, which is the Tab stop (the check is not).
-      <TableCell key="select" onClick={(event) => rowOf(event.currentTarget)?.focus()} className={cn('w-0', group && STICKY)}>
+      <TableCell key="select" onClickCapture={(event) => rowOf(event.currentTarget)?.focus()} className={cn('w-0', group && STICKY)}>
         {state === null ? null : (
           <Checkbox tabIndex={-1} checked={check(state)} onCheckedChange={(next) => selection.onSelectedChange(row, next === true)} disabled={selection.isDisabled?.(row) === true} aria-label={selection.label?.(row) ?? words.table.selectRow} />
         )}

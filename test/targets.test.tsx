@@ -40,8 +40,9 @@ describe('hit areas: 24px on every pointer, 44px on a coarse one, same look on a
   })
 
   test('the checkbox keeps its 18px look (Park sm) and grows its hit area with a pseudo-element: 24px, 44px on coarse', () => {
-    render(<Checkbox aria-label="Complete: x" checked={false} onCheckedChange={noop} />)
-    const c = classes(screen.getByRole('checkbox'))
+    const { container } = render(<Checkbox aria-label="Complete: x" checked={false} onCheckedChange={noop} />)
+    expect(screen.getByRole('checkbox', { name: 'Complete: x' })).toBeTruthy()
+    const c = classes(container.querySelector('[data-slot="checkbox-control"]')!)
     // 18px: `size-4.5` is 1.125rem on the 4px spacing scale.
     expect(c).toContain('size-4.5')
     expect(c).toContain('relative')

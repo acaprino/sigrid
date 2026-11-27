@@ -12,7 +12,7 @@ import { Card, Checkbox, Cluster, Column, Dot, Heading, ICON_NAMES, Icon, Progre
 import { DescriptionList, Empty, SettingRow } from '../src/components'
 import { AppShellContext, DrawerButton, SidebarRow, Toolbar } from '../src/layout'
 import { CommandsProvider, useCommand } from '../src/assemblies'
-import { classes } from './helpers'
+import { classes, settle } from './helpers'
 
 const slot = (name: string) => document.querySelector(`[data-slot="${name}"]`)
 
@@ -184,10 +184,11 @@ describe('the props that spare a class', () => {
     expect(classes(slot('progress'))).toEqual(expect.arrayContaining(['w-48', 'shrink-0']))
   })
 
-  test('a check box with its words: one label, so a press on the words checks it', () => {
+  test('a check box with its words: one label, so a press on the words checks it', async () => {
     const change = vi.fn()
     render(<Checkbox label="Print the contract" onCheckedChange={change} />)
     fireEvent.click(screen.getByText('Print the contract'))
+    await settle()
     expect(change).toHaveBeenCalledWith(true)
     expect(screen.getByRole('checkbox', { name: 'Print the contract' })).toBeTruthy()
   })

@@ -131,8 +131,8 @@
 }
 
 /* The elevation of the first paint, in light: the drop and the ring are the engine's `drop` color (the ink, in light)
-   in layers (a tight drop at the edge, a wider one under it, a faint one far around from `md` up; 6 to 15%), so the
-   shadow takes the tint of the theme's grays.
+   in layers (a tight drop at the edge, a wider one under it, a faint one far around from `md` up; 6 to 14%, hairline 11 to 12%),
+   so the shadow takes the tint of the theme's grays.
    `applyTheme` writes the same values (`elevationOf` in src/theme-engine.ts). */
 @layer theme {
   :root,
@@ -467,9 +467,11 @@
   }
   [data-scheme="light"] {
     color-scheme: light;
+    --line-subtle: color-mix(in srgb, var(--color-ink) 8%, transparent);
   }
   [data-scheme="dark"] {
     color-scheme: dark;
+    --line-subtle: color-mix(in srgb, var(--color-ink) 8%, transparent);
   }
   /* A `border` without a color (sheets, windows, menus and shadcn popovers) takes the divider, not `currentColor` as
      Tailwind 4 wants: that would be the ink, a dark line on the paper and almost white in dark. */
@@ -726,7 +728,7 @@ svg[data-glyph][stroke-width="2"] {
       opacity: 0;
     }
   }
-  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-closed]) {
+  :where(:root[data-motion]) [data-reveal=""]:is([hidden], [data-closed], [data-state="closed"]) {
     height: 0;
     opacity: 0;
   }

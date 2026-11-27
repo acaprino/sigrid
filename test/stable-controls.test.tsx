@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { describe, expect, test } from 'vitest'
 import { Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarSpacer, ToolbarTab, ToolbarTabs } from '../src/layout'
-import { noop } from './helpers'
+import { noop, settle } from './helpers'
 
 const bar = () => screen.getByRole('toolbar', { name: 'Tools' })
 const slots = () => Array.from(bar().children).map((el) => el.getAttribute('data-slot'))
@@ -68,7 +68,7 @@ describe('a tool that a view lacks keeps its place', () => {
 describe('a chosen label is as wide as it is when not chosen', () => {
   const label = (name: string) => screen.getByRole('button', { name }).querySelector<HTMLElement>('[data-slot="steady-label"]')
 
-  test('the segment: both words carry their bold width, and pressing one does not change what they hold', () => {
+  test('the segment: both words carry their bold width, and pressing one does not change what they hold', async () => {
     function Stage() {
       const [value, setValue] = useState('write')
       return (
@@ -87,6 +87,7 @@ describe('a chosen label is as wide as it is when not chosen', () => {
       expect(span.className).toContain('after:invisible')
     }
     fireEvent.click(screen.getByRole('button', { name: 'Sort · 12' }))
+    await settle()
     expect(screen.getByRole('button', { name: 'Sort · 12' }).getAttribute('aria-pressed')).toBe('true')
     expect(label('Write')!.getAttribute('data-label')).toBe('Write')
     // The bold copy is not in the page's text: the word is found once, and the name is the word.

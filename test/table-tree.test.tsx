@@ -5,6 +5,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { DataTable, type DataColumn, type DataSelection } from '../src/table'
+import { settle } from './helpers'
 
 type Entry = { id: string; name: string; level: number; kind: 'group' | 'folder' | 'item'; size: number; open?: boolean }
 const ENTRIES: Entry[] = [
@@ -127,7 +128,7 @@ describe('a column of checks', () => {
     expect(row('a.tmp').children).toHaveLength(3)
   })
 
-  test('a group shows a dash for some of its rows chosen, stays in sight with its check, and a press on any check says the state asked for', () => {
+  test('a group shows a dash for some of its rows chosen, stays in sight with its check, and a press on any check says the state asked for', async () => {
     const change = vi.fn()
     const all = vi.fn()
     render(<Chosen onChange={change} onAll={all} all="mixed" />)
@@ -135,21 +136,25 @@ describe('a column of checks', () => {
     expect(master.getAttribute('data-state')).toBe('indeterminate')
     expect(master.closest('td')!.className).toContain('sticky')
     fireEvent.click(master)
+    await settle()
     expect(change).toHaveBeenLastCalledWith(ENTRIES[0], true)
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select a.tmp' }))
+    await settle()
     expect(change).toHaveBeenLastCalledWith(ENTRIES[1], true)
     const head = screen.getByRole('checkbox', { name: 'Select all' })
     expect(head.getAttribute('data-state')).toBe('indeterminate')
     fireEvent.click(head)
+    await settle()
     expect(all).toHaveBeenLastCalledWith(true)
   })
 
-  test('a press on a check is the check\'s: it does not press the row', () => {
+  test('a press on a check is the check\'s: it does not press the row', async () => {
     const pressed = vi.fn()
     const change = vi.fn()
     const selection: DataSelection<Entry> = { isSelected: () => false, onSelectedChange: change }
     render(<DataTable aria-label="Files" columns={COLUMNS} rows={ENTRIES} rowId={(entry) => entry.id} selection={selection} onRowPress={pressed} />)
     fireEvent.click(screen.getAllByRole('checkbox')[1]!)
+    await settle()
     expect(change).toHaveBeenCalledTimes(1)
     expect(pressed).not.toHaveBeenCalled()
   })

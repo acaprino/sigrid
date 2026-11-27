@@ -26,7 +26,7 @@ const BOLD = '[[data-tabs=bold]_&]' + ':'
 const TALL = '[[data-status-strip=tall]_&]' + ':'
 const CHOSEN = 'aria-[current=page]' + ':'
 const OTHER = 'not-aria-[current=page]' + ':'
-const PRESSED = 'data-[pressed]' + ':'
+const PRESSED = 'data-[state=on]' + ':'
 const AFTER = 'after' + ':'
 const HOVER = 'hover' + ':'
 const nord = THEMES.find((t) => t.id === 'nord')! as ThemeDef

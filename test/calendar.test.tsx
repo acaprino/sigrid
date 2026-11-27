@@ -219,12 +219,12 @@ test('reminder: an empty value has the time off (09:00); the “Time” box turn
   await press(within(grid).getAllByRole('button')[10]!)
   expect(onChange.mock.lastCall?.[0]).toMatch(/^\d{4}-\d{2}-\d{2}T09:00$/)
   // With «Time» the time is typed, and the value follows.
-  fireEvent.click(box)
+  await press(box)
   expect(timeInput.disabled).toBe(false)
   fireEvent.change(timeInput, { target: { value: '10:00' } })
   expect(onChange.mock.lastCall?.[0]).toMatch(/^\d{4}-\d{2}-\d{2}T10:00$/)
   // Turning it off goes back to 09:00.
-  fireEvent.click(box)
+  await press(box)
   expect(timeInput.value).toBe('09:00')
   expect(onChange.mock.lastCall?.[0]).toMatch(/^\d{4}-\d{2}-\d{2}T09:00$/)
 })
