@@ -1967,7 +1967,7 @@
     },
     {
      "file": "src/primitives/count.tsx",
-     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`.",
+     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`. With `rolling` a number set by events (things caught, unread)\nrolls its new value in from below when it changes, an odometer, where the app turned motion on and the system allows\nit (the stylesheet moves it, at the app's pace: `theme.css`); it never rolls when it first appears.",
      "components": [
       {
        "name": "Count",
@@ -1987,6 +1987,16 @@
          "name": "reserve",
          "type": "boolean",
          "doc": "Keep the room of a number when there is nothing to show, so a column of counts stays aligned."
+        },
+        {
+         "name": "rolling",
+         "type": "boolean",
+         "doc": "A number set by events rolls its new value in from below when it changes (an odometer), with motion on (`animated` or `MotionProvider`) and not reduced; otherwise it changes at once. Never on its first appearance."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this count only, over `MotionProvider`."
         },
         {
          "name": "className",
@@ -2715,6 +2725,41 @@
       "SplitProps",
       "TextListProps",
       "TextProps"
+     ]
+    },
+    {
+     "file": "src/primitives/level-meter.tsx",
+     "about": "A level meter: a few thin bars whose heights follow a live level the app reads (a microphone's volume while it\nlistens, a transfer's rate), oldest first, the newest at the end. It moves only with its data, never by itself and\nnever in a loop, and only where the app turned motion on and the system allows it; otherwise the bars rest at half\ntheir height and the words beside it say what is going on. The bars are 3px wide, 20px tall at most, in the accent:\nsomething is on (R2). A height is one of eight steps, so a level never draws a size off the scale.",
+     "components": [
+      {
+       "name": "LevelMeter",
+       "props": [
+        {
+         "name": "levels",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "The levels from 0 to 1, oldest first: one bar each (five to seven read best)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it measures, for screen readers («Microphone level»)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this meter only, over `MotionProvider`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "LevelMeterProps"
      ]
     },
     {
@@ -5294,7 +5339,7 @@
     },
     {
      "file": "src/components/item-list.tsx",
-     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nWith `animated` the share of the tint under the pointer is one background for the whole list, which follows the\npointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring\nis the row's own, as without it.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
+     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nWith `animated` the share of the tint under the pointer is one background for the whole list, which follows the\npointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring\nis the row's own, as without it.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.\nA row only to read (`plain`: what a dictation has caught so far, as it arrives) is the same row without the button:\nno press, no hover, no focus, not chosen; its words and facts are drawn the same.",
      "components": [
       {
        "name": "ItemList",
@@ -5308,7 +5353,7 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion)."
+         "doc": "One hover background follows the pointer from row to row, and a row added once the list is shown comes in (it fades and comes down 4px, at the app's pace); the rows there at first are drawn at once. Off by default, never with prefers-reduced-motion."
         },
         {
          "name": "className",
@@ -5378,6 +5423,11 @@
          "name": "unread",
          "type": "boolean",
          "doc": "Not read yet: a dot in the accent and a stronger title. Absent: the list has no such state and keeps no slot for it."
+        },
+        {
+         "name": "plain",
+         "type": "boolean",
+         "doc": "Only to read: the row is a plain list item, not a button or a link (what a dictation has caught, shown as it arrives). No hover, no focus, never chosen: `href`, `onClick`, `disabled`, `control` and `current` are not used."
         },
         {
          "name": "href",

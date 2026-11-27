@@ -59,7 +59,7 @@ height is what the person sees (`--app-height`), measured by the frame itself: s
 |---|---|---|
 | Controls and rows | At least 44px tall with a coarse pointer, at every density. A density that asks for more gets more | `--touch-target`, `TOUCH_TARGET`, `theme.css` |
 | Fields | 16px text below 860px, so iOS does not zoom the page on focus. No other text size changes | `Input`, `Textarea`, `Combobox`, the date fields |
-| Key hints | Hidden: `Kbd`, the shortcuts of a menu and of the command palette (R5) | `max-md:pointer-coarse:hidden` |
+| Key hints | Hidden: `Kbd`, the shortcuts of a menu and of the command palette (R5); the key beside a toast's «Undo» too, on a phone that also has a pen | `max-md:pointer-coarse:hidden`; the toast's `pointer-fine:inline md:any-pointer-fine:inline` |
 | Sidebar | A drawer when the frame is under 620px (outside a frame, when the screen is under 860px). A swipe towards its edge closes it | `Sidebar`, `APP_SHELL_STEPS.rail` |
 | Inspector | Under 1000px a panel over the end of the content, three quarters of the frame wide, not modal: a press outside it does not close it (the list beside it is still chosen from), a swipe towards its edge and its button do, and Esc with the focus in it (not on a field that holds text; with the focus elsewhere Esc is the field's or the app's command, and the panel stays). It opens without taking the focus, and closed with the focus in it gives it back to where it was | `Inspector`, `APP_SHELL_STEPS.inspector` |
 | Toolbar | Under 448px of its own width a button keeps its icon and drops its word, and a search field is its magnifier. Under 256px the app's name goes. The buttons never go | `Toolbar` |

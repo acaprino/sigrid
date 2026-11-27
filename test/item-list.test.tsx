@@ -1,8 +1,11 @@
 // The list of things (`ItemList`, `ItemRow`): rows with a title, a line under it and a fact at the end, the chosen one
 // with the selection tint (R1) and the unread ones with the accent dot (R2).
-import { fireEvent, render, screen } from '@testing-library/react'
-import { expect, test, vi } from 'vitest'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
 import { ItemList, ItemRow } from '../src/components'
+import { systemMotion } from './helpers'
+
+afterEach(() => vi.unstubAllGlobals())
 
 test('a row is a button with its title, its line and its fact; the chosen one is current, with the tint and the accent bar', () => {
   const chosen = vi.fn()
@@ -48,4 +51,48 @@ test('with an address a row is a link; disabled it is a button that takes no pre
   )
   expect(screen.getByRole('link', { name: 'Report' }).getAttribute('href')).toBe('/report')
   expect((screen.getByRole('button', { name: 'Locked' }) as HTMLButtonElement).disabled).toBe(true)
+})
+
+test('a plain row is only read: a list item with its title and facts, no button, no link, never chosen', () => {
+  render(
+    <ItemList aria-label="Caught">
+      <ItemRow plain wrapTitle current href="/x" onClick={() => {}} title="Call the doctor about the prescriptions" facts={[{ text: 'Personal' }, { text: 'today 15:00', numeric: true }]} />
+    </ItemList>,
+  )
+  const list = screen.getByRole('list', { name: 'Caught' })
+  expect(within(list).queryByRole('button')).toBeNull()
+  expect(within(list).queryByRole('link')).toBeNull()
+  const row = list.querySelector('[data-slot="item-row"]')!
+  expect(row.tagName).toBe('LI')
+  expect(row.hasAttribute('data-plain')).toBe(true)
+  expect(row.textContent).toBe('Call the doctor about the prescriptionsPersonaltoday 15:00')
+  expect(row.querySelector('[data-slot="item-row-title"]')?.className).toContain('line-clamp-2')
+  // Nothing to choose or press: no hover fill, no chosen tint, no stronger title.
+  expect(row.className).not.toMatch(/hover:|aria-\[current|bg-selected/)
+  expect(row.querySelector('[aria-current]')).toBeNull()
+  expect(row.querySelector('[data-slot="item-row-title"]')?.className).not.toContain('font-semibold')
+})
+
+test('a moving list marks itself once shown, so only the rows added later come in; without motion it never does', () => {
+  systemMotion(false)
+  const { rerender } = render(
+    <ItemList aria-label="Caught" animated>
+      <ItemRow plain title="Call the doctor" />
+    </ItemList>,
+  )
+  const list = screen.getByRole('list', { name: 'Caught' })
+  expect(list.hasAttribute('data-entering')).toBe(true)
+  rerender(
+    <ItemList aria-label="Caught">
+      <ItemRow plain title="Call the doctor" />
+    </ItemList>,
+  )
+  expect(list.hasAttribute('data-entering')).toBe(false)
+  systemMotion(true)
+  rerender(
+    <ItemList aria-label="Caught" animated>
+      <ItemRow plain title="Call the doctor" />
+    </ItemList>,
+  )
+  expect(list.hasAttribute('data-entering')).toBe(false)
 })
