@@ -17,11 +17,13 @@
 // the end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are
 // two tab stops with their own names; a press on the control is the control's and never opens the row.
 // The rows of a navigation are `NavItem`: those are places, these are things.
+// A row only to read (`plain`: what a dictation has caught so far, as it arrives) is the same row without the button:
+// no press, no hover, no focus, not chosen; its words and facts are drawn the same.
 import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER, ROW_HOVER_FOLLOWED } from "../lib/rows"
-import { useMotion } from "../internal/motion"
+import { useMotion, useMotionAllowed } from "../internal/motion"
 import { useWords } from "../words"
 import { Dot } from "../primitives/dot"
 import { HoverFollow } from "../primitives/hover-follow"
@@ -29,7 +31,11 @@ import { HoverFollow } from "../primitives/hover-follow"
 export type ItemListProps = {
   /** Name of the list for screen readers («Messages»). */
   "aria-label": string
-  /** One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion). */
+  /**
+   * One hover background follows the pointer from row to row, and a row added once the list is shown comes in (it fades
+   * and comes down 4px, at the app's pace); the rows there at first are drawn at once. Off by default, never with
+   * prefers-reduced-motion.
+   */
   animated?: boolean | undefined
   className?: string | undefined
   children?: React.ReactNode
@@ -41,11 +47,15 @@ const FollowedContext = React.createContext(false)
 function ItemList({ animated, className, children, ...props }: ItemListProps) {
   // The same answer `HoverFollow` gets: the rows give up their own hover fill only while it draws the shared one.
   const followed = useMotion(animated) !== null
+  const allowed = useMotionAllowed(animated)
   const [list, setList] = React.useState<HTMLUListElement | null>(null)
+  // Only rows added after the first paint come in (the stylesheet: `theme.css`), so the mark waits for it.
+  const [shown, setShown] = React.useState(false)
+  React.useEffect(() => setShown(true), [])
   return (
-    <ul ref={setList} role="list" data-slot="item-list" {...props} className={cn("flex flex-col gap-0.5", className)}>
+    <ul ref={setList} role="list" data-slot="item-list" data-entering={(allowed && shown) || undefined} {...props} className={cn("flex flex-col gap-0.5", className)}>
       <FollowedContext.Provider value={followed}>{children}</FollowedContext.Provider>
-      {followed ? <HoverFollow container={list} rows='[data-slot="item-row"]' as="li" animated={animated} /> : null}
+      {followed ? <HoverFollow container={list} rows='[data-slot="item-row"]:not([data-plain])' as="li" animated={animated} /> : null}
     </ul>
   )
 }
@@ -91,6 +101,11 @@ export type ItemRowProps = {
   current?: boolean | undefined
   /** Not read yet: a dot in the accent and a stronger title. Absent: the list has no such state and keeps no slot for it. */
   unread?: boolean | undefined
+  /**
+   * Only to read: the row is a plain list item, not a button or a link (what a dictation has caught, shown as it arrives).
+   * No hover, no focus, never chosen: `href`, `onClick`, `disabled`, `control` and `current` are not used.
+   */
+  plain?: boolean | undefined
   /** With it the row is a link. */
   href?: string | undefined
   onClick?: React.MouseEventHandler<HTMLElement> | undefined
@@ -120,9 +135,10 @@ const ROW_BUTTON = cn(
   FOCUS_RING_INSET,
 )
 
-function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, end, control, controlSide = "start", current = false, unread, href, onClick, disabled, className }: ItemRowProps) {
+function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, end, control, controlSide = "start", current: chosen = false, unread, plain = false, href, onClick, disabled, className }: ItemRowProps) {
   const words = useWords()
   const followed = React.useContext(FollowedContext)
+  const current = chosen && !plain
   // On the chosen row the muted ink would not keep its contrast on the tint: the row's own ink, a step quieter.
   const quiet = current ? "opacity-80" : "text-ink-mute"
   const body = (
@@ -176,6 +192,13 @@ function ItemRow({ title, wrapTitle = false, description, facts, leading, meta, 
       {end}
     </>
   )
+  if (plain) {
+    return (
+      <li data-slot="item-row" data-plain="" className={cn(ROW_SHAPE, className)}>
+        {body}
+      </li>
+    )
+  }
   const currentAttr = current ? ("true" as const) : undefined
   if (control !== undefined && control !== null && control !== false) {
     const start = controlSide === "start"

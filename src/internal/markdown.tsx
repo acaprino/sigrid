@@ -131,10 +131,54 @@ export function InlineMarkdown({ text }: { text: string }) {
   return <>{renderInline(parseInline(text))}</>
 }
 
+/** The words of a heading as an anchor: lowered, the marks and accents dropped, joined with hyphens; never empty. */
+function slugOf(text: string): string {
+  return (
+    plainOf(parseInline(text))
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'section'
+  )
+}
+
+/** The anchor of each heading of `blocks`, in order: the slug of its words, and `-2`, `-3`… where one repeats. */
+export function headingAnchors(blocks: MarkdownBlock[]): string[] {
+  const taken = new Map<string, number>()
+  const anchors: string[] = []
+  for (const b of blocks) {
+    if (b.kind !== 'h') continue
+    const slug = slugOf(b.text)
+    const seen = taken.get(slug) ?? 0
+    taken.set(slug, seen + 1)
+    anchors.push(seen === 0 ? slug : `${slug}-${seen + 1}`)
+  }
+  return anchors
+}
+
+/**
+ * The headings of a Markdown text, each with the anchor it takes in an article (`MarkdownBlocks variant="article"`):
+ * what an `OnThisPage` is given, from the same source.
+ */
+export function markdownHeadings(src: string): { id: string; text: string; level: 1 | 2 | 3 | 4 | 5 | 6 }[] {
+  const blocks = parseBlocks(src)
+  const anchors = headingAnchors(blocks)
+  let at = 0
+  const out: { id: string; text: string; level: 1 | 2 | 3 | 4 | 5 | 6 }[] = []
+  for (const b of blocks) {
+    if (b.kind !== 'h') continue
+    out.push({ id: anchors[at]!, text: plainOf(parseInline(b.text)), level: b.level })
+    at += 1
+  }
+  return out
+}
+
 export type MarkdownBlock =
   | { kind: 'p'; lines: string[] }
   | { kind: 'code'; lang: string; text: string }
-  | { kind: 'h'; text: string }
+  | { kind: 'h'; text: string; level: 1 | 2 | 3 | 4 | 5 | 6 }
+  | { kind: 'hr' }
   | { kind: 'quote'; lines: string[] }
   | { kind: 'ul' | 'ol'; items: { text: string; check?: boolean }[] }
 
@@ -169,7 +213,8 @@ export function parseBlocks(src: string): MarkdownBlock[] {
       continue
     }
     let m: RegExpMatchArray | null
-    if ((m = line.match(/^\s*#{1,6}\s+(.*)$/))) blocks.push({ kind: 'h', text: m[1]! })
+    if ((m = line.match(/^\s*(#{1,6})\s+(.*)$/))) blocks.push({ kind: 'h', text: m[2]!, level: m[1]!.length as 1 | 2 | 3 | 4 | 5 | 6 })
+    else if (/^\s*([-*_])\s*(?:\1\s*){2,}$/.test(line)) blocks.push({ kind: 'hr' })
     else if ((m = line.match(/^\s*>\s?(.*)$/))) {
       const b = last()
       if (b?.kind === 'quote') b.lines.push(m[1]!)

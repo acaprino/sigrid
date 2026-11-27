@@ -197,6 +197,28 @@ actions with the main one first. It is the screen where the accent has the least
 must fit one screen with no scrolling (sort, triage) is a `Page fit`: the head (a switch, a count) and the foot (the
 answers) keep their height and the body between them gives way and scrolls inside itself, never the document.
 
+## A page of reading, and the home of a wiki
+
+**Reading page.** For text read whole: an article, a page of a wiki or of help, release notes. The sidebar is the
+pages (a `Tree` for a wiki's folders, a `NavList` for a handbook's few), the content is one column of reading
+(`Column width="prose"`, centred) with the page's name as a `Heading size="page"` and the text in a `Prose`, and the
+inspector is an `OnThisPage`: the page's sections as links, the one in view marked by itself. Inside `Prose` the text
+is written as plain elements — headings, paragraphs, lists, quotes, tables, figures, rules — and takes the reading
+scale (a 16px body on a reading line; the headings `Heading`'s sizes) with no class; it is the one place bare elements are written,
+and it holds only the written kinds, never a control. Text kept as Markdown is a `MarkdownBlocks variant="article"`:
+its headings are real (`h2`, `h3`…) and anchored, and `markdownHeadings` reads from the same source the sections an
+`OnThisPage` is given. The page scrolls as one (`Page`, never `fit`); the actions on the page (edit, history, share)
+are the toolbar's, not buttons in the text; a width wider than the column stays empty at both sides, since the
+measure is for reading. Under 1000px the inspector covers the text when opened from the bar; a page that wants its
+index always at hand puts it above the text in a `Disclosure` instead.
+
+**Wiki hub.** The first page of a wiki or of a handbook: the ways in, not the text itself. The name as a
+`Heading size="page"`, a `SearchField` (or the command palette alone), then the categories as a `Grid` of `Card`s,
+each with its icon (R6), its name and its pages as rows (`NavItem`s, or an `ItemList` where a page carries facts:
+who touched it, when). Recent and unread pages are a list above or beside the grid, unread with the accent dot.
+The hub is content like any other: it composes the toolkit's parts and writes no class; a cover picture, a colour
+band or an emoji mark (the look of another product's wiki) is not of the suite.
+
 ## Inside a region: piles, rows, grids, and one part's own place
 
 A region is laid out with the layout parts, each named by what it is for: `Column` a pile, `Cluster` a row that

@@ -68,7 +68,7 @@ x-zsd:
       - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default, the dark column an option."
       - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22); 3:1 if `controls` is strong."
       - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light, light in dark."
-      - "Motion: short Fluent 2 tweens, only after a gesture, enabled by the app, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
+      - "Motion: short Fluent 2 tweens, on a gesture or live data, app-enabled, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Accessibility exception to R7 (approved): with a coarse pointer every control and row is at least 44px at every density."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
@@ -583,7 +583,7 @@ Use `calendar-day-selected` for the chosen day. Today is a short `accent-text` d
 
 ## Motion
 
-`MotionProvider` enables gesture feedback across an app. Controls can override it with `animated`. Use Fluent 2’s enter, exit and move curves. Limit press travel on wide buttons. Reduced motion changes states at once. Progress set by events jumps.
+`MotionProvider` enables motion; `animated` overrides. Use Fluent 2 curves: enter, exit, move. Limit press travel on wide buttons. Reduced motion changes states at once. Event progress jumps unless live (`Count rolling`, `LevelMeter`, `ItemList`).
 
 ## Iconography
 

@@ -442,6 +442,7 @@
      "about": "A small Markdown of our own, for a title and the notes under it. No dependencies and no `innerHTML`: the text becomes\nReact elements, so a `<script>` written in a note stays text. Links are not opened from here (the app that uses the\npackage does it): they are shown underlined, with the address as a hint.\n\nInline (title and notes): **bold** or __bold__, *italic* or _italic_, ~~strikethrough~~, `code`, [text](url).\nIn blocks (notes only): lines starting with «- », «* » or «1. » (lists), «- [ ] » and «- [x] » (checkboxes, read-only),\n«# » (heading), «> » (quote), a fenced block of code («```lang» to «```», or «~~~»; unclosed it runs to the end, so a\ntext still arriving shows as code from its first line); an empty line separates paragraphs. A «\\*» stays an asterisk.\nThe parser is here; `MarkdownBlocks` (`src/components/markdown-blocks.tsx`) draws the blocks.",
      "also": [
       "hasMarkdown",
+      "markdownHeadings",
       "parseBlocks",
       "parseInline",
       "plainText"
@@ -1501,6 +1502,11 @@
          "required": true
         },
         {
+         "name": "onThisPage",
+         "type": "{ readonly label: string; }",
+         "required": true
+        },
+        {
          "name": "checklist",
          "type": "{ readonly done: string; readonly todo: string; }",
          "required": true
@@ -1666,6 +1672,10 @@
         {
          "name": "lightbox",
          "type": "Partial<{ readonly previous: string; readonly next: string; readonly count: (position: number, total: number) => string; }>"
+        },
+        {
+         "name": "onThisPage",
+         "type": "Partial<{ readonly label: string; }>"
         },
         {
          "name": "checklist",
@@ -1957,7 +1967,7 @@
     },
     {
      "file": "src/primitives/count.tsx",
-     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`.",
+     "about": "A count beside a name (R5 of the owner's rules): a number in tabular figures, in the 12px label size and the muted\nink. On a row of a navigation the row draws it as a pill (`NavItem`: the accent on the chosen row, neutral on the\nothers); anywhere else it is the plain number. Zero, or nothing, shows nothing and takes no room; the caller that wants a\ncolumn of counts to stay aligned passes `reserve`. With `rolling` a number set by events (things caught, unread)\nrolls its new value in from below when it changes, an odometer, where the app turned motion on and the system allows\nit (the stylesheet moves it, at the app's pace: `theme.css`); it never rolls when it first appears.",
      "components": [
       {
        "name": "Count",
@@ -1977,6 +1987,16 @@
          "name": "reserve",
          "type": "boolean",
          "doc": "Keep the room of a number when there is nothing to show, so a column of counts stays aligned."
+        },
+        {
+         "name": "rolling",
+         "type": "boolean",
+         "doc": "A number set by events rolls its new value in from below when it changes (an odometer), with motion on (`animated` or `MotionProvider`) and not reduced; otherwise it changes at once. Never on its first appearance."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this count only, over `MotionProvider`."
         },
         {
          "name": "className",
@@ -2705,6 +2725,41 @@
       "SplitProps",
       "TextListProps",
       "TextProps"
+     ]
+    },
+    {
+     "file": "src/primitives/level-meter.tsx",
+     "about": "A level meter: a few thin bars whose heights follow a live level the app reads (a microphone's volume while it\nlistens, a transfer's rate), oldest first, the newest at the end. It moves only with its data, never by itself and\nnever in a loop, and only where the app turned motion on and the system allows it; otherwise the bars rest at half\ntheir height and the words beside it say what is going on. The bars are 3px wide, 20px tall at most, in the accent:\nsomething is on (R2). A height is one of eight steps, so a level never draws a size off the scale.",
+     "components": [
+      {
+       "name": "LevelMeter",
+       "props": [
+        {
+         "name": "levels",
+         "type": "readonly number[]",
+         "required": true,
+         "doc": "The levels from 0 to 1, oldest first: one bar each (five to seven read best)."
+        },
+        {
+         "name": "label",
+         "type": "string",
+         "required": true,
+         "doc": "What it measures, for screen readers («Microphone level»)."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "Motion for this meter only, over `MotionProvider`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "LevelMeterProps"
      ]
     },
     {
@@ -5284,7 +5339,7 @@
     },
     {
      "file": "src/components/item-list.tsx",
-     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nWith `animated` the share of the tint under the pointer is one background for the whole list, which follows the\npointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring\nis the row's own, as without it.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.",
+     "about": "A list of things to read and act on (messages, files, records): the content of the «list and detail» layout. Each\nrow has a title and, if the app has them, a second line under it, something before the title (an avatar, an icon), a\nshort fact at the end (a date, a size) and whatever else the caller adds there (a `Count`, a label).\nIt speaks the one language of every list of the toolkit:\n- the row the user chose has the selection tint, stronger text and a short accent bar at its start (R1), and under\n  the pointer a row takes a share of that tint;\n- a row not read yet has a dot in the accent before its title and the title in semibold (R2: unread is one of the\n  accent's places); the dot's slot stays when empty, so the titles line up;\n- a row is one line as tall as the density's row, or two lines; with a finger it is at least 44px.\nWith `animated` the share of the tint under the pointer is one background for the whole list, which follows the\npointer from row to row (`HoverFollow`); the chosen row keeps its own tint over it, and the keyboard's focus ring\nis the row's own, as without it.\nThe second line is a sentence (`description`), or short facts side by side (`facts`: a label with its dot, a project,\nthe day, a count of steps), which wrap rather than cut.\nA row is a button, or a link with `href`, so nothing in it is a control: a button cannot hold a button. A thing one\nboth ticks and opens (a task, a file to clean) carries its one control beside the button (`control`, at the start or\nthe end): the list item is then the row, with the tint, the bar and the hover, and the control and the button are\ntwo tab stops with their own names; a press on the control is the control's and never opens the row.\nThe rows of a navigation are `NavItem`: those are places, these are things.\nA row only to read (`plain`: what a dictation has caught so far, as it arrives) is the same row without the button:\nno press, no hover, no focus, not chosen; its words and facts are drawn the same.",
      "components": [
       {
        "name": "ItemList",
@@ -5298,7 +5353,7 @@
         {
          "name": "animated",
          "type": "boolean",
-         "doc": "One hover background follows the pointer from row to row (off by default, never with prefers-reduced-motion)."
+         "doc": "One hover background follows the pointer from row to row, and a row added once the list is shown comes in (it fades and comes down 4px, at the app's pace); the rows there at first are drawn at once. Off by default, never with prefers-reduced-motion."
         },
         {
          "name": "className",
@@ -5370,6 +5425,11 @@
          "doc": "Not read yet: a dot in the accent and a stronger title. Absent: the list has no such state and keeps no slot for it."
         },
         {
+         "name": "plain",
+         "type": "boolean",
+         "doc": "Only to read: the row is a plain list item, not a button or a link (what a dictation has caught, shown as it arrives). No hover, no focus, never chosen: `href`, `onClick`, `disabled`, `control` and `current` are not used."
+        },
+        {
          "name": "href",
          "type": "string",
          "doc": "With it the row is a link."
@@ -5425,17 +5485,22 @@
     },
     {
      "file": "src/components/markdown-blocks.tsx",
-     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced\nblocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
+     "about": "The notes and the answers as Markdown blocks: paragraphs, lists, checkboxes (read-only), headings, quotes, rules and\nfenced blocks of code, with the inline marks inside (`InlineMarkdown`). It draws what `parseBlocks` reads\n(`src/internal/markdown.tsx`): React elements only, never HTML, so a `<script>` written in a note stays text.\nTwo renderings: `note` (the default), the compact 14px blocks of a message or a note, where a heading is only a bold\nline; and `article`, a page of reading on the scale of `Prose`, where the headings are real (`h1` to `h6`), each\nwith the anchor `markdownHeadings` names, so an `OnThisPage` can point into it.\nA fenced block («```ts») is a quiet box in the mono face, the language above it and a `CopyButton` beside it, always\nthere (nothing is revealed by the pointer): the text is shown as written, with no syntax colours (R1), and a line\nlonger than the box scrolls sideways; the box is a Tab stop so the keyboard can scroll it.",
      "components": [
       {
        "name": "MarkdownBlocks",
-       "doc": "The notes: paragraphs, lists, checkboxes (read-only), headings, quotes and fenced code, with inline Markdown inside.",
+       "doc": "The notes and the answers: paragraphs, lists, checkboxes (read-only), headings, quotes, rules and fenced code; `article` for a page of reading.",
        "props": [
         {
          "name": "text",
          "type": "string",
          "required": true,
          "doc": "The Markdown source."
+        },
+        {
+         "name": "variant",
+         "type": "\"article\" | \"note\"",
+         "doc": "`note` (the default): the compact blocks of a message or a note. `article`: a page of reading on the scale of `Prose`, the headings real and anchored."
         },
         {
          "name": "className",
@@ -5573,6 +5638,60 @@
      ]
     },
     {
+     "file": "src/components/on-this-page.tsx",
+     "about": "The index of a reading page: the sections of an article, each a link to its heading, the one in view marked. It is\ngiven the sections (`markdownHeadings` reads them from the same Markdown an article is drawn from, or the app lists\nthem), and watches their headings itself: the last one at or above the reading line is the current one, said with\n`aria-current` and the accent (R2: what is current). It sits in the inspector of an `AppShell`, or beside the text in\na wide pane; on a phone the inspector folds and the index with it. The links are plain anchors: the browser brings\nthe heading into view and the address keeps the place.",
+     "components": [
+      {
+       "name": "OnThisPage",
+       "doc": "The index of a reading page: its sections as links, the one in view marked with the accent.",
+       "props": [
+        {
+         "name": "items",
+         "type": "readonly OnThisPageItem[]",
+         "required": true,
+         "doc": "The sections, in the order they are read. With none, nothing is drawn."
+        },
+        {
+         "name": "currentId",
+         "type": "string",
+         "doc": "The current section's id, when the app knows it; absent, the index watches the headings itself."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "OnThisPageItem",
+       "fields": [
+        {
+         "name": "id",
+         "type": "string",
+         "required": true,
+         "doc": "The id of the heading it points to (`markdownHeadings`' `id`, or the `id` the app gave its heading)."
+        },
+        {
+         "name": "title",
+         "type": "string",
+         "required": true,
+         "doc": "The words of the section, as the index says them."
+        },
+        {
+         "name": "level",
+         "type": "3 | 2",
+         "doc": "The depth of the section: 2 (the default) a section of the page, 3 a part inside one, drawn further in."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "OnThisPageProps"
+     ]
+    },
+    {
      "file": "src/components/overflow-list.tsx",
      "about": "One line of items (the details under a title, a row of labels) that never grows: what does not fit is cut from the\nend, whole, and counted after the line («+2»). It never wraps to a second line and the first item always stays.\nOther libraries call it an overflow list; this one is CSS and one `ResizeObserver`:\n- the box is a flex row that wraps, one row tall, with `overflow: clip`: what does not fit wraps onto a row that is\n  not shown. `clip` and not `hidden`: the box is no scroll container, so focus can never scroll the line.\n- the items that sit below the first one are the cut ones. They are counted when the items are drawn, again when the\n  box changes size, and again when the fonts are ready (a font that comes late changes the widths, not the box).\n- a cut item is `inert` and invisible: no focus, no press, and screen readers skip it, as the eye does. So the cue is\n  for both: «+2» to the eye, «2 more» to a screen reader (`words.list.more`). What is cut must also be found where\n  the whole item is (its page, its details).\nThe caller gives the box its height in `className`: one row of its items (`h-5` for labels 20px tall), with the gap\nand the text. Each child is one item: one element (a bare text is not counted: put it in a `<span>`). A first item\nwider than the line is cut at the line's end: give it `min-w-0 truncate` for an ellipsis.\nIts boxes are spans, so it also sits inside a button or a row's line. Without layout (jsdom, a server) nothing is\ncut, and nothing moves.",
      "components": [
@@ -5599,6 +5718,35 @@
      ],
      "also": [
       "OverflowListProps"
+     ]
+    },
+    {
+     "file": "src/components/prose.tsx",
+     "about": "The reading ground of a long text: an article, a wiki page, help, notes kept as pages. Inside it plain written\nelements (headings, paragraphs, lists, quotes, tables, figures, rules) take the reading scale of DESIGN.md\n(Typography): a 16px body with a reading line, the headings of `Heading`'s sizes in the flow with the room of their\nlevel, and every colour from the tokens. It is the one place an app writes bare elements: only the written kinds,\nnever a control (a control sits outside it, or the text is a `MarkdownBlocks variant=\"article\"`). It sets no width:\na column of reading is its place's (`Column width=\"prose\"`, or a pane).",
+     "components": [
+      {
+       "name": "Prose",
+       "doc": "The reading ground of a long text: plain written elements inside take the reading scale, from the tokens.",
+       "props": [
+        {
+         "name": "as",
+         "type": "\"article\" | \"div\" | \"section\"",
+         "doc": "The element: a neutral block (the default), an `article` (a whole page of reading) or a `section`."
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "doc": "The written elements: headings, paragraphs, lists, quotes, tables, figures, rules; or a `MarkdownBlocks variant=\"article\"`."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "also": [
+      "ProseProps"
      ]
     },
     {
@@ -6074,6 +6222,9 @@
         }
        ]
       }
+     ],
+     "also": [
+      "markdownHeadings"
      ]
     }
    ]

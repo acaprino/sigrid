@@ -473,6 +473,10 @@ export interface Words {
     readonly next: string
     readonly count: (position: number, total: number) => string
   }
+  readonly onThisPage: {
+    /** The name of the index of a reading page's sections (`OnThisPage`). */
+    readonly label: string
+  }
   readonly checklist: {
     /** Read before an item of a checklist, with its colon and space. */
     readonly done: string
@@ -808,6 +812,7 @@ export const DEFAULT_WORDS: Words = {
     next: 'Next picture',
     count: (position, total) => `${position} of ${total}`,
   },
+  onThisPage: { label: 'On this page' },
   checklist: { done: 'Done: ', todo: 'To do: ' },
 }
 

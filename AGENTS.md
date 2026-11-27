@@ -94,8 +94,9 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   400, 500 and 600; icons 16 or 14px (R7).
 - No gradient, no blur, no emoji in the interface, no decorative icon, no animation that loops. Glass is only a
   theme's `material: 'glass'` (the window's own material behind the page's ground), never drawn by a part.
-- Motion only after a gesture and only when the app turned it on (`animated`, or `MotionProvider`); everything works
-  with it off. How it moves is the app's choice, once for the whole page: the curve (`fluent` at first, or
+- Motion only after a gesture, or following live data the app shows (a `Count` with `rolling`, a `LevelMeter`, the
+  new rows of an animated `ItemList`), and only when the app turned it on (`animated`, or `MotionProvider`); never a
+  loop; everything works with it off. How it moves is the app's choice, once for the whole page: the curve (`fluent` at first, or
   `ease-in-out`, `ease`, `ease-in`, `ease-out`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
   `pace`. No part writes a time or a curve of its own.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
@@ -116,6 +117,10 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
 - A control that is on every page, or in every state, never changes place: a two-state switch stays where it is in
   both states (a `ToggleGroup`, at the start of its row), the tools of the bar and the bar at the foot stay put, and a
   tool a view lacks keeps its place empty (`ToolbarButton absent`), it is not left out.
+- Long text read whole (an article, a wiki or help page, release notes) is a `Prose` in a `Column width="prose"`,
+  or a `MarkdownBlocks variant="article"`, with an `OnThisPage` in the inspector (`docs/patterns.md`, «A page of
+  reading»). Inside `Prose` the text is bare written elements, the one place they are written. The compact scale of
+  rows, notes and messages is not for a page of reading.
 - A height is the host's, never a guess: no `100vh`, `h-screen` or `h-dvh` around `AppShell` (it is as tall as what
   is seen, and keeps clear of the notch and the gesture bar by itself); a screen that must fit is `Page fit`, whose
   body gives way, never the document. Nothing is sized with the live `env(safe-area-inset-bottom)`: room at the foot
