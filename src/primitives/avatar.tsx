@@ -75,10 +75,10 @@ function Avatar({ name, src, size = "md", decorative, color, children, className
   )
 }
 
-const GROUP_RING = {
-  paper: "ring-paper",
-  raised: "ring-raised",
-  quiet: "ring-paper-2",
+const GROUP_SURFACE = {
+  paper: { bg: "bg-paper", ring: "ring-paper", badge: "bg-paper-2" },
+  raised: { bg: "bg-raised", ring: "ring-raised", badge: "bg-paper-2" },
+  quiet: { bg: "bg-paper-2", ring: "ring-paper-2", badge: "bg-raised" },
 } as const
 
 /** One person in an `AvatarGroup`. */
@@ -91,7 +91,7 @@ export type AvatarGroupProps = {
   max?: number | undefined
   size?: keyof typeof SIZES | undefined
   /** The surface behind the stack, for the ring that parts overlapping avatars. Default `paper`. */
-  surface?: keyof typeof GROUP_RING | undefined
+  surface?: keyof typeof GROUP_SURFACE | undefined
   /** What the group represents («Assignees», «Participants»), for screen readers. */
   label: string
   className?: string | undefined
@@ -100,22 +100,27 @@ export type AvatarGroupProps = {
 /** A tight stack of avatars for a group of people, with a `+N` counter when there are more than `max`. */
 function AvatarGroup({ items, max = 4, size = "sm", surface = "paper", label, className }: AvatarGroupProps) {
   const words = useWords()
-  const limit = Math.max(1, max)
+  if (items.length === 0) return null
+  const limit = Number.isFinite(max) ? Math.max(1, Math.floor(max)) : 4
   const visible = items.slice(0, limit)
   const overflow = items.length - visible.length
-  const ring = cn("ring-2", GROUP_RING[surface])
+  const style = GROUP_SURFACE[surface]
+  const ring = cn("ring-2", style.ring)
   return (
     <div role="group" aria-label={label} data-slot="avatar-group" className={cn("inline-flex items-center [&>*+*]:-ms-2", className)}>
       {visible.map((item, index) => (
-        <Avatar key={`${item.name}-${index}`} name={item.name} src={item.src} color={item.color} size={size} className={ring} />
+        // Opaque surface base prevents translucent `bg-ink/6` initials from bleeding through the avatar underneath.
+        <span key={`${item.name}-${index}`} className={cn("relative inline-flex shrink-0 rounded-full", style.bg, ring)}>
+          <Avatar name={item.name} src={item.src} color={item.color} size={size} />
+        </span>
       ))}
       {overflow > 0 ? (
         <span
           data-slot="avatar-overflow"
-          aria-label={words.list.more(overflow)}
-          className={cn("relative inline-flex shrink-0 items-center justify-center rounded-full bg-paper-2 font-medium text-ink-soft tabular-nums select-none", SIZES[size], ring)}
+          className={cn("relative inline-flex shrink-0 items-center justify-center rounded-full font-medium text-ink-soft tabular-nums select-none", SIZES[size], style.badge, ring)}
         >
           <span aria-hidden="true">+{overflow}</span>
+          <span className="sr-only">{words.list.more(overflow)}</span>
         </span>
       ) : null}
     </div>

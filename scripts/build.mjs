@@ -1,9 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { build } from 'esbuild'
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
+const resolvePkg = createRequire(import.meta.url).resolve
 const run = (script, args) => execFileSync(process.execPath, [`${root}node_modules/${script}`, ...args], { cwd: root, stdio: 'inherit' })
 
 rmSync(`${root}dist`, { recursive: true, force: true })
@@ -28,20 +31,23 @@ const syncExternalStore = {
   },
 }
 
-// Recharts pulls three tiny CommonJS dependencies (`decimal.js-light`, `eventemitter3`, `react-is`): resolve them to
-// their ESM files / shim so `dist/chart.js` and every shared chunk stay pure browser ESM (test/build.test.ts).
+// Recharts pulls three tiny CommonJS dependencies (`decimal.js-light`, `eventemitter3`, `react-is`): resolve them via
+// Node module resolution to their ESM files / shim so `dist/chart.js` and every shared chunk stay pure browser ESM (test/build.test.ts).
+const EE3_CJS_EXPORT = /if\s*\(\s*['"]undefined['"]\s*!==\s*typeof module\s*\)\s*\{\s*module\.exports\s*=\s*EventEmitter;\s*\}/
 const chartDepsEsm = {
   name: 'chart-deps-esm',
   setup(b) {
-    b.onResolve({ filter: /^decimal\.js-light$/ }, () => ({ path: `${root}node_modules/decimal.js-light/decimal.mjs` }))
+    b.onResolve({ filter: /^decimal\.js-light$/ }, () => ({ path: resolvePkg('decimal.js-light/decimal.mjs') }))
     b.onResolve({ filter: /^react-is$/ }, () => ({ path: `${root}scripts/shims/react-is.js` }))
     b.onResolve({ filter: /^eventemitter3$/ }, () => ({ path: 'eventemitter3', namespace: 'ee3-esm' }))
     b.onLoad({ filter: /.*/, namespace: 'ee3-esm' }, () => {
-      const src = readFileSync(`${root}node_modules/eventemitter3/index.js`, 'utf8').replace(
-        /if\s*\(\s*['"]undefined['"]\s*!==\s*typeof module\s*\)\s*\{\s*module\.exports\s*=\s*EventEmitter;\s*\}/,
-        'export { EventEmitter }; export default EventEmitter;',
-      )
-      return { contents: src, loader: 'js', resolveDir: `${root}node_modules/eventemitter3` }
+      const entry = resolvePkg('eventemitter3')
+      const raw = readFileSync(entry, 'utf8')
+      if (!EE3_CJS_EXPORT.test(raw)) {
+        throw new Error(`chartDepsEsm: unexpected CommonJS export footer in ${entry}`)
+      }
+      const src = raw.replace(EE3_CJS_EXPORT, 'export { EventEmitter }; export default EventEmitter;')
+      return { contents: src, loader: 'js', resolveDir: dirname(entry) }
     })
   },
 }

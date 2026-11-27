@@ -24,11 +24,11 @@ test('hover opens after the delay, not before; the tooltip does not catch the po
   fireEvent.pointerMove(button, { pointerType: 'mouse' })
   fireEvent.mouseMove(button)
   await act(async () => {
-    vi.advanceTimersByTime(TOOLTIP_DELAY_MS - 100)
+    await vi.advanceTimersByTimeAsync(TOOLTIP_DELAY_MS - 100)
   })
   expect(tip()).toBeNull()
   await act(async () => {
-    vi.advanceTimersByTime(200)
+    await vi.advanceTimersByTimeAsync(200)
   })
   const content = tip() as HTMLElement | null
   expect(content).not.toBeNull()
@@ -50,6 +50,7 @@ test('without animated the tooltip has no motion styles', async () => {
   )
   const button = screen.getByRole('button', { name: 'Notifications' })
   await act(async () => {
+    fireEvent.keyDown(document.body, { key: 'Tab' })
     fireEvent.focus(button)
     button.focus()
   })
@@ -69,6 +70,7 @@ test('a click on the button still reaches its handler, and Escape closes the too
   )
   const button = screen.getByRole('button', { name: 'Minimize' })
   await act(async () => {
+    fireEvent.keyDown(document.body, { key: 'Tab' })
     fireEvent.focus(button)
     button.focus()
   })

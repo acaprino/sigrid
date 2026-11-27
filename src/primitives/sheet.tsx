@@ -1,26 +1,24 @@
-// SmoothUI (MIT) drawer 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/drawer.json)
 // Park UI (MIT) drawer 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/drawer.ts)
 // From Park's `drawer` recipe comes the elevation (lg, in place of a border: no border on the inner edge, R4) and the
-// backdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's is 20px: R7, text sizes from the toolkit's tokens).
-// From SmoothUI's Drawer we keep Base UI's primitives (Root, Portal, Backdrop, Viewport, Popup, Content), the
-// drag direction per side and the content marked `Drawer.Content` (a mouse drag that starts
-// there does not move the sheet: the text of the fields can be selected). Removed: the 400 ms CSS transitions, the spring and the
-// staggering of the children with Motion. The entrance (32 px from the panel edge, 200 ms) follows
-// the shared Motion preference and respects reduced motion.
+// backdrop (the `drop` color, at the 40% of `BACKDROP`, the same as the dialog's). The title is 16px semibold (Park's
+// is 20px: R7, text sizes from the toolkit's tokens).
+// Behaviour: Ark UI's Drawer (`@ark-ui/react/drawer`: Root, Trigger, Backdrop, Positioner, Content, Title, Description,
+// CloseTrigger). The entrance (32 px from the panel edge, 200 ms) follows the shared Motion preference and respects
+// reduced motion.
 import * as React from "react"
-import { Drawer as SheetPrimitive } from "@base-ui/react/drawer"
+import { Drawer as SheetPrimitive } from "@ark-ui/react/drawer"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../internal/motion"
-import { BACKDROP, inTitleBar, inToasts, openState } from "../internal/overlay"
+import { BACKDROP, inTitleBar, inToasts } from "../internal/overlay"
 import { useMergedRef } from "../lib/refs"
-import { usePortalContainer } from "../internal/portal-container"
+import { OverlayPortal } from "../internal/portal"
 
 type SheetSide = "top" | "right" | "bottom" | "left"
 
-const SIDE_TO_SWIPE = { bottom: "down", left: "left", right: "right", top: "up" } as const satisfies Record<
+const SIDE_TO_SWIPE = { bottom: "down", left: "start", right: "end", top: "up" } as const satisfies Record<
   SheetSide,
   NonNullable<React.ComponentProps<typeof SheetPrimitive.Root>["swipeDirection"]>
 >
@@ -32,14 +30,12 @@ const VIEWPORT_SIDE_CLASS: Record<SheetSide, string> = {
   top: "items-start justify-center",
 }
 
-// The offset during a drag (variables written by Base UI only while the finger moves): it follows the gesture,
-// it is not an animation, and at rest it is 0.
 const POPUP_SIDE_CLASS: Record<SheetSide, string> = {
-// No border on the inner edge: the sheet is a raised surface and its lg shadow already draws the edge (R4).
-  right: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
-  left: "h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x,0px))]",
-  top: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
-  bottom: "h-auto w-full [transform:translateY(var(--drawer-swipe-movement-y,0px))]",
+  // No border on the inner edge: the sheet is a raised surface and its lg shadow already draws the edge (R4).
+  right: "h-full w-3/4",
+  left: "h-full w-3/4",
+  top: "h-auto w-full",
+  bottom: "h-auto w-full",
 }
 
 /**
@@ -52,10 +48,14 @@ export type SheetWidth = "sm" | "md" | "lg"
 // Whole class names, so that Tailwind finds them in this file.
 const SIDE_WIDTH_CLASS: Record<SheetWidth, string> = { sm: "sm:max-w-sm", md: "sm:max-w-md", lg: "sm:max-w-lg" }
 
-/** `SheetContent` declares the side, the root needs the drag direction: it passes through here. */
-const SideContext = React.createContext<(side: SheetSide) => void>(() => {})
-/** The root says whether the sheet is modal: a non-modal one has no backdrop and leaves the page under it usable. */
-const ModalContext = React.createContext(true)
+type SheetContextValue = {
+  setSide: (side: SheetSide) => void
+  setInitialFocus: (next: React.RefObject<HTMLElement | null> | false | undefined) => void
+  modal: boolean
+  open: boolean
+}
+
+const SheetContext = React.createContext<SheetContextValue>({ setSide: () => {}, setInitialFocus: () => {}, modal: true, open: false })
 
 /** Why a sheet asks to close: the Esc key, a press outside it, or anything else (a close button, the code). */
 export type SheetCloseReason = "escape" | "outside" | "other"
@@ -63,6 +63,8 @@ export type SheetCloseReason = "escape" | "outside" | "other"
 type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpenChange" | "swipeDirection"> & {
   /** `reason` is told when it closes: an app that keeps a form in the sheet may answer a press outside differently from the Esc. */
   onOpenChange?: ((open: boolean, reason: SheetCloseReason) => void) | undefined
+  /** Keep the sheet open on a press outside it (for a side panel that stays while clicking the page). */
+  disablePointerDismissal?: boolean | undefined
   /**
    * Asked at each Esc: false leaves the sheet open and the key to what has the focus and to the app's commands (the
    * `Inspector` beside the page answers it so, when the focus is not in it). Absent: Esc always closes the sheet.
@@ -74,47 +76,87 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
  * A modal sheet: focus trapped, Esc and a click outside close it, page scrolling is blocked. With `modal={false}` it
  * is a side panel beside the page: no backdrop, the focus is not trapped, the page scrolls and takes clicks, and Esc
  * or a click outside still close it (`disablePointerDismissal` keeps it open on a click outside).
- * A click on the notifications (which sit above, outside the sheet) does not close it: Base UI closes a modal only on what
- * is behind it, and here a second safeguard also cancels the closing caused by focus moving to the notifications.
+ * A click on the notifications (which sit above, outside the sheet) or on the window's title bar does not close it.
  */
-function Sheet({ onOpenChange, closesOnEscape, ...props }: SheetProps) {
+function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEscape, disablePointerDismissal = false, modal = true, ...props }: SheetProps) {
+  const [inner, setInner] = React.useState(defaultOpen)
+  const open = openProp ?? inner
   const [side, setSide] = React.useState<SheetSide>("right")
-  // One answer for each press of Esc: Base UI asks twice for the same key (on the sheet, then on the document), and what
-  // the app does in between (it empties or removes the field that had the focus) must not change the answer.
-  const asked = React.useRef<{ event: unknown; closes: boolean } | null>(null)
+  const [initialFocus, setInitialFocus] = React.useState<React.RefObject<HTMLElement | null> | false | undefined>(undefined)
+  const reasonRef = React.useRef<SheetCloseReason>("other")
+  const latest = React.useRef({ closesOnEscape, onOpenChange, controlled: openProp !== undefined })
+  latest.current = { closesOnEscape, onOpenChange, controlled: openProp !== undefined }
+  const ctx = React.useMemo(() => ({ setSide, setInitialFocus, modal, open }), [modal, open])
+
+  // When `closesOnEscape` is given, handle Escape in capture phase on `window` (before Zag's document capture listener)
+  // so a `true` answer closes the sheet with reason `"escape"`.
+  React.useEffect(() => {
+    if (!open || !latest.current.closesOnEscape) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return
+      if (!latest.current.closesOnEscape?.()) return
+      event.preventDefault()
+      if (!latest.current.controlled) setInner(false)
+      latest.current.onOpenChange?.(false, "escape")
+    }
+    window.addEventListener("keydown", onKey, true)
+    return () => window.removeEventListener("keydown", onKey, true)
+  }, [open, closesOnEscape !== undefined])
+
+  const initialFocusEl =
+    initialFocus === false
+      ? () => false as const
+      : initialFocus && typeof initialFocus === "object"
+        ? () => initialFocus.current
+        : undefined
+
   return (
-    <ModalContext.Provider value={props.modal !== false}>
-      <SideContext.Provider value={setSide}>
+    <SheetContext.Provider value={ctx}>
       <SheetPrimitive.Root
+        open={open}
+        modal={modal}
+        trapFocus={modal}
+        preventScroll={modal}
+        restoreFocus={true}
+        lazyMount
+        unmountOnExit
+        immediate
+        closeOnEscape={closesOnEscape === undefined}
+        closeOnInteractOutside={!disablePointerDismissal}
         swipeDirection={SIDE_TO_SWIPE[side]}
-        onOpenChange={(open, details) => {
-          // A sheet beside the page stays when the focus goes to the page: Tab past its last control, or a click that
-          // gives focus elsewhere, is not a way to dismiss it (a form in it would be lost). Esc and a click outside are.
-          if (!open && details.reason === "focus-out" && props.modal === false) {
-            details.cancel()
+        {...(initialFocusEl ? { initialFocusEl } : {})}
+        onEscapeKeyDown={() => {
+          reasonRef.current = "escape"
+        }}
+        onPointerDownOutside={(event) => {
+          const target = event.detail.originalEvent.target
+          if (inToasts(target) || inTitleBar(target)) {
+            event.preventDefault()
             return
           }
-          // An Esc that is not the sheet's: it stays open, and the key goes on to whoever else listens for it.
-          if (!open && details.reason === "escape-key" && closesOnEscape) {
-            if (asked.current?.event !== details.event) asked.current = { event: details.event, closes: closesOnEscape() }
-            if (!asked.current.closes) {
-              details.cancel()
-              details.allowPropagation()
-              return
-            }
-          }
-          const outside = details.reason === "outside-press" || details.reason === "focus-out"
-          // A press on the window's bar (moving the window, its buttons) is not leaving the sheet either.
-          if (!open && outside && (inToasts(details.event?.target) || inTitleBar(details.event?.target))) {
-            details.cancel()
+          reasonRef.current = "outside"
+        }}
+        onFocusOutside={(event) => {
+          // A sheet beside the page stays when focus moves to the page: Tab past its last control is not a dismiss.
+          if (!modal) {
+            event.preventDefault()
             return
           }
-          onOpenChange?.(open, details.reason === "escape-key" ? "escape" : details.reason === "outside-press" ? "outside" : "other")
+          const target = event.detail.originalEvent.target
+          if (inToasts(target) || inTitleBar(target)) {
+            event.preventDefault()
+          }
+        }}
+        onOpenChange={(details) => {
+          if (details.open === open) return
+          const reason = details.open ? "other" : reasonRef.current
+          reasonRef.current = "other"
+          if (openProp === undefined) setInner(details.open)
+          onOpenChange?.(details.open, reason)
         }}
         {...props}
       />
-      </SideContext.Provider>
-    </ModalContext.Provider>
+    </SheetContext.Provider>
   )
 }
 
@@ -122,19 +164,19 @@ function SheetTrigger({ ...props }: React.ComponentProps<typeof SheetPrimitive.T
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
-function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+function SheetClose({ ...props }: React.ComponentProps<typeof SheetPrimitive.CloseTrigger>) {
+  return <SheetPrimitive.CloseTrigger data-slot="sheet-close" {...props} />
 }
 
-function SheetPortal({ ...props }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+function SheetPortal({ children, container }: { children: React.ReactNode; container?: HTMLElement | null | undefined }) {
+  return <OverlayPortal container={container}>{children}</OverlayPortal>
 }
 
 function SheetOverlay({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Backdrop>) {
   return <SheetPrimitive.Backdrop data-slot="sheet-overlay" className={cn("fixed inset-0 z-50", BACKDROP, className)} {...props} />
 }
 
-type SheetContentProps = Omit<React.ComponentProps<typeof SheetPrimitive.Popup>, "className" | "finalFocus"> & {
+type SheetContentProps = React.ComponentProps<typeof SheetPrimitive.Content> & {
   className?: string | undefined
   side?: SheetSide | undefined
   /** At the side (`left`, `right`): the widest it grows, `sm` 384px (the default), `md` 448px, `lg` 512px. Ignored at the top or the foot. */
@@ -146,9 +188,11 @@ type SheetContentProps = Omit<React.ComponentProps<typeof SheetPrimitive.Popup>,
    */
   cover?: boolean | undefined
   showCloseButton?: boolean | undefined
+  /** Element to focus right away when the sheet mounts. */
+  initialFocus?: React.RefObject<HTMLElement | null> | false | undefined
   /**
-   * On closing, before the focus moves (like Radix's `onCloseAutoFocus`): `event.preventDefault()` says that
-   * the caller has already taken care of the focus, and the sheet no longer touches it.
+   * On closing, before the focus moves: `event.preventDefault()` says that the caller has already taken care of the
+   * focus, and the sheet no longer touches it.
    */
   onCloseAutoFocus?: ((event: Event) => void) | undefined
   /** Animate the entrance from the configured edge. Inherits the provider preference. */
@@ -162,79 +206,88 @@ function SheetContent({
   width = "sm",
   cover = false,
   showCloseButton = true,
+  initialFocus,
   onCloseAutoFocus,
   animated,
   ref,
   ...props
 }: SheetContentProps) {
-  const setSide = React.useContext(SideContext)
-  const modal = React.useContext(ModalContext)
-  // As the dialog: inside part of the app drawn elsewhere (another document, the layer of a window's frame) the sheet opens there.
-  const container = usePortalContainer()
+  const { setSide, setInitialFocus, modal, open } = React.useContext(SheetContext)
   const words = useWords()
   React.useLayoutEffect(() => setSide(side), [setSide, side])
+  React.useLayoutEffect(() => setInitialFocus(initialFocus), [setInitialFocus, initialFocus])
   const motion = useMotion(animated)
-  // The latest value of what the stable references below read.
-  const latest = React.useRef({ motion, onCloseAutoFocus, initialFocus: props.initialFocus })
-  latest.current = { motion, onCloseAutoFocus, initialFocus: props.initialFocus }
+  const latest = React.useRef({ motion, onCloseAutoFocus, initialFocus })
+  latest.current = { motion, onCloseAutoFocus, initialFocus }
   const popup = React.useRef<HTMLDivElement | null>(null)
   const before = React.useRef<Element | null>(null)
   const entered = React.useRef<Element | null>(null)
-  // Stable reference: React calls it once when the sheet mounts (the opening, a user gesture) and not on
-  // every render; the Motion piece that arrives after opening does not make an already open sheet move.
+  const captured = React.useRef(open)
+  const wasOpen = React.useRef(open)
+  // Capture the active element once per opening during render (before Ark's focus effects move focus inside the sheet).
+  if (open && !captured.current) {
+    captured.current = true
+    if (typeof document !== "undefined") before.current = document.activeElement
+  } else if (!open && captured.current) {
+    captured.current = false
+  }
+
+  // Stable reference: called once when the sheet mounts (the opening, a user gesture) and not on every render.
   const enter = React.useCallback(
     (el: HTMLDivElement | null) => {
       popup.current = el
       if (!el) return
-      before.current = el.ownerDocument.activeElement
-      // Base UI sets the initial focus one frame later (microtask + requestAnimationFrame): a key pressed
-      // right away would go elsewhere. Here it goes right away to the requested element; Base UI then finds it already inside and does not move it.
+      if (!before.current) before.current = el.ownerDocument.activeElement
       const initial = latest.current.initialFocus
       if (initial && typeof initial === "object") initial.current?.focus()
-      // Once per element: a reference called again on the same sheet (React does it in development) is not a new opening.
       if (entered.current !== el) latest.current.motion?.enterSheet(el, side)
       entered.current = el
     },
-    [side]
+    [side],
   )
-  // The caller's ref gets the sheet too, without taking the place of the entrance and the focus above.
   const popupRef = useMergedRef(enter, ref)
-  // On closing the sheet decides the focus, as Radix did: after one turn (the sheet is unmounted and the page is no
-  // longer `aria-hidden`), first the caller's handler, then, if it did not decide, the element that had focus before
-  // opening. Base UI calls this function even if one of its effects restarts with the sheet open: then nothing is done.
-  const finalFocus = React.useCallback(() => {
-    setTimeout(() => {
+
+  // On closing, return focus after one turn (once the sheet is unmounted and the page is visible again):
+  // first the caller's `onCloseAutoFocus` handler, then the element that had focus before opening.
+  React.useEffect(() => {
+    const prev = wasOpen.current
+    wasOpen.current = open
+    if (!prev || open) return
+    const timer = setTimeout(() => {
       const el = popup.current
-      if (el && el.isConnected && !el.hasAttribute("data-closed")) return
+      if (el && el.isConnected && el.getAttribute("data-state") !== "closed") return
       const event = new Event("closeAutoFocus", { cancelable: true })
       latest.current.onCloseAutoFocus?.(event)
       const target = before.current
-      if (!event.defaultPrevented && target instanceof HTMLElement && target.isConnected) target.focus({ preventScroll: true })
+      if (!event.defaultPrevented && target instanceof HTMLElement && target.isConnected) {
+        target.focus({ preventScroll: true })
+      }
     }, 0)
-    return false
-  }, [])
+    return () => clearTimeout(timer)
+  }, [open])
+
   return (
-    <SheetPortal container={container}>
+    <SheetPortal>
       {modal ? <SheetOverlay /> : null}
       {/* Non-modal: the viewport still places the sheet, but only the sheet takes the pointer. */}
-      <SheetPrimitive.Viewport data-slot="sheet-viewport" data-modal={modal ? undefined : "false"} className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}>
-        <SheetPrimitive.Popup
+      <SheetPrimitive.Positioner
+        data-slot="sheet-viewport"
+        data-modal={modal ? undefined : "false"}
+        className={cn("fixed inset-0 z-50 flex", !modal && "pointer-events-none", VIEWPORT_SIDE_CLASS[side])}
+      >
+        <SheetPrimitive.Content
           ref={popupRef}
           data-slot="sheet-content"
           data-side={side}
-          finalFocus={finalFocus}
-          // The sheet itself is the `Drawer.Content`: a single element, with the caller's classes, and `data-state` as
-          // every overlay of the toolkit (`openState`).
-          render={(renderProps, state) => <SheetPrimitive.Content {...renderProps} data-state={openState(state)} />}
           className={cn(
             // A sheet floats over the page: the raised surface (DESIGN.md), told from the page in dark too. One that covers
             // the whole of a narrow window is that window's page, on the page's ground, and a raised surface from `sm` up.
-            "pointer-events-auto relative flex flex-col gap-4 bg-raised shadow-lg outline-none data-swiping:select-none",
+            "pointer-events-auto relative flex flex-col gap-4 bg-raised shadow-lg outline-none data-dragging:select-none",
             POPUP_SIDE_CLASS[side],
             (side === "left" || side === "right") && SIDE_WIDTH_CLASS[width],
             // After the side's own width, which it replaces.
             cover && "w-full max-sm:bg-paper",
-            className
+            className,
           )}
           {...props}
         >
@@ -242,16 +295,19 @@ function SheetContent({
           {side === "bottom" ? <span aria-hidden="true" data-slot="sheet-handle" className="pointer-events-none absolute inset-x-0 top-2 mx-auto h-1 w-9 rounded-full bg-ink/20" /> : null}
           {children}
           {showCloseButton && (
-            <SheetPrimitive.Close
-              render={<Button variant="ghost" size="icon-sm" />}
-              className={cn("absolute top-3 end-3 pointer-coarse:top-1.5 pointer-coarse:end-1.5", QUIET_ICON)}
-            >
-              <Icon name="close" />
-              <span className="sr-only">{words.common.close}</span>
-            </SheetPrimitive.Close>
+            <SheetPrimitive.CloseTrigger asChild data-slot="sheet-close">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className={cn("absolute top-3 end-3 pointer-coarse:top-1.5 pointer-coarse:end-1.5", QUIET_ICON)}
+              >
+                <Icon name="close" />
+                <span className="sr-only">{words.common.close}</span>
+              </Button>
+            </SheetPrimitive.CloseTrigger>
           )}
-        </SheetPrimitive.Popup>
-      </SheetPrimitive.Viewport>
+        </SheetPrimitive.Content>
+      </SheetPrimitive.Positioner>
     </SheetPortal>
   )
 }

@@ -30,7 +30,8 @@ test('the right button opens a menu with its entries: icons or empty slots, a hi
   await open(screen.getByRole('button', { name: 'Row' }))
   expect(menu()!.getAttribute('aria-label')).toBe('Actions')
   // At the point pressed (the card is placed against a zero-size box there).
-  expect(document.querySelector<HTMLElement>('[data-slot="dropdown-menu-positioner"]')!.style.transform).toBe('translate(40px, 60px)')
+  const pos = document.querySelector<HTMLElement>('[data-slot="dropdown-menu-positioner"]')!
+  expect([pos.style.getPropertyValue('--x'), pos.style.getPropertyValue('--y')]).toEqual(['40px', '60px'])
   const rows = screen.getAllByRole('menuitem')
   expect(rows.map((row) => row.textContent)).toEqual(['RenameF2', 'Duplicate', 'Delete'])
   // R6: every entry has an icon or its slot.
@@ -158,12 +159,14 @@ test('the arrows move through the entries and Enter chooses', async () => {
   fireEvent.keyDown(row, { key: 'ContextMenu' })
   await waitFor(() => expect(menu()).not.toBeNull())
   const rows = screen.getAllByRole('menuitem')
-  await act(async () => rows[0]!.focus())
-  fireEvent.keyDown(rows[0]!, { key: 'ArrowDown' })
-  await waitFor(() => expect(document.activeElement).toBe(rows[1]))
-  fireEvent.keyDown(rows[1]!, { key: 'Enter' })
-  fireEvent.click(rows[1]!)
-  expect(second).toHaveBeenCalled()
+  const card = menu()!
+  await act(async () => card.focus())
+  fireEvent.keyDown(card, { key: 'ArrowDown' })
+  await waitFor(() => expect(rows[0]!.hasAttribute('data-highlighted')).toBe(true))
+  fireEvent.keyDown(card, { key: 'ArrowDown' })
+  await waitFor(() => expect(rows[1]!.hasAttribute('data-highlighted')).toBe(true))
+  fireEvent.keyDown(card, { key: 'Enter' })
+  await waitFor(() => expect(second).toHaveBeenCalled())
 })
 
 test('a text field keeps the system menu, a disabled menu opens nothing, an empty list opens nothing', async () => {

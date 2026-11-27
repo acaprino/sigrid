@@ -155,7 +155,7 @@ function FieldShell({ id, text, placeholder, selected, onSelect, range, onRange,
       startOfWeek={1}
       // Six weeks always: the card keeps its height from month to month, and the grid keeps its buttons (see `Calendar`).
       fixedWeeks
-      outsideDaySelectable
+      outsideDaySelectable={numOfMonths === 1}
       translations={translations}
       positioning={POSITIONING}
       lazyMount

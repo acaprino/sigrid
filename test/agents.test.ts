@@ -118,7 +118,7 @@ describe('the documents for agents', () => {
 
   test('the entries AGENTS.md names are entries of the package, and the tokens it names are tokens', () => {
     const text = read('AGENTS.md')
-    for (const entry of ['table', 'virtual', 'reorder', 'rich-text', 'graph', 'terminal', 'code']) {
+    for (const entry of ['table', 'virtual', 'reorder', 'rich-text', 'graph', 'terminal', 'code', 'chart']) {
       expect(text).toContain(`\`/${entry}\``)
       expect(pkg.exports).toHaveProperty(`./${entry}`)
     }

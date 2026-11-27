@@ -231,7 +231,7 @@ describe('build output', () => {
       visit(entry)
       return seen
     }
-    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js', 'terminal.js', 'code.js', 'tauri.js']
+    const ENTRIES = ['index.js', 'table.js', 'virtual.js', 'reorder.js', 'rich-text.js', 'graph.js', 'terminal.js', 'code.js', 'chart.js', 'tauri.js']
 
     // Since the package has more than one entry, the code that asks for Motion can sit in a chunk the entries share.
     test('what index.js loads reaches that chunk only through one dynamic import(), never a static import', () => {
@@ -253,7 +253,7 @@ describe('build output', () => {
 
     // The libraries of the other entries are for the apps that import those entries: the main one loads none of them.
     test('index.js loads none of the libraries of the other entries', () => {
-      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*|@xyflow|@dagrejs|@xterm|@codemirror|@lezer)\//)
+      for (const [file, js] of loaded('index.js')) expect(js, file).not.toMatch(/node_modules\/(?:@tanstack|@dnd-kit|@tiptap|prosemirror[\w-]*|@xyflow|@dagrejs|@xterm|@codemirror|@lezer|recharts)\//)
     })
 
     test('each of the other entries holds its own library, and the table and the lists do not load the text editor', () => {
@@ -268,10 +268,12 @@ describe('build output', () => {
       expect(has('terminal.js', /node_modules\/@xterm\/addon-fit\//)).toBe(true)
       expect(has('code.js', /node_modules\/@codemirror\/view\//)).toBe(true)
       expect(has('code.js', /node_modules\/@lezer\/highlight\//)).toBe(true)
-      for (const entry of ['table.js', 'virtual.js', 'reorder.js', 'graph.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
-      // The terminal and the code view do not load each other's library, nor the others' libraries.
-      expect(has('terminal.js', /node_modules\/(?:@codemirror|@lezer)\//)).toBe(false)
-      expect(has('code.js', /node_modules\/@xterm\//)).toBe(false)
+      expect(has('chart.js', /node_modules\/recharts\//)).toBe(true)
+      for (const entry of ['table.js', 'virtual.js', 'reorder.js', 'graph.js', 'chart.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*)\//), entry).toBe(false)
+      // The terminal, code view and charts do not load each other's libraries, nor the other entries' libraries.
+      expect(has('terminal.js', /node_modules\/(?:@codemirror|@lezer|recharts)\//)).toBe(false)
+      expect(has('code.js', /node_modules\/(?:@xterm|recharts)\//)).toBe(false)
+      expect(has('chart.js', /node_modules\/(?:@xterm|@codemirror|@lezer|@tanstack|@xyflow|@dagrejs|@dnd-kit)\//)).toBe(false)
       for (const entry of ['terminal.js', 'code.js']) expect(has(entry, /node_modules\/(?:@tiptap|prosemirror[\w-]*|@tanstack|@xyflow|@dagrejs|@dnd-kit)\//), entry).toBe(false)
     })
 

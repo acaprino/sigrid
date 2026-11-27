@@ -1,6 +1,5 @@
-// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)
-// SmoothUI's props (`open`, `onOpenChange`, `title`, `description`, `footer`, `children`) match ours;
-// plus returning focus and the toolkit's motion preference.
+// Modal dialog and right-side drawer sheet composed from `primitives/dialog` and `primitives/sheet` (Ark UI),
+// with controlled focus return (`onCloseAutoFocus`, `restoreFocusTo`) and the toolkit's motion preference.
 import type * as React from 'react'
 import { useCallback, useRef, type RefObject } from 'react'
 import {

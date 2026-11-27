@@ -1,52 +1,98 @@
-// SmoothUI (MIT) dialog 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dialog.json)
 // Park UI (MIT) dialog 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/dialog.ts)
 // From Park's `dialog` recipe comes the form: the window on the raised sheet with l3 corners and the lg elevation in
 // place of a border, 16px of padding (24px from 768px) and as much between its parts; the backdrop is the toolkit's one
-// backdrop (`BACKDROP`: the elevation's `drop` color at 40%, the same for every overlay that dims); the close button is a 36px plain icon button (Park's sm), muted at rest and
-// the ink under the pointer, like the sheet's. The title is 16px semibold (Park's is 18px: R7, text sizes from the
-// toolkit's tokens) and the header is aligned to the start at every width.
-//
-// From the SmoothUI source we keep the Base UI primitives (`Root`, `Portal`, `Backdrop`, `Popup`, `Title`, `Description`,
-// `Close`), the layout parts (`DialogHeader`, `DialogFooter`) and the panel structure. Removed: `AlertDialog`,
-// `trigger` and the internal state with `AnimatePresence`, the staggered entrance of the children, the spring and the
-// rotation of the X on hover, the blur of the page behind the window (decorative effects). The public `Dialog` has no `animated` prop:
-// here there is no animation and Motion is not imported. Colors and borders are the tokens from `theme.css`.
+// backdrop (`BACKDROP`: the elevation's `drop` color at 40%, the same for every overlay that dims); the close button is a
+// 36px plain icon button (Park's sm), muted at rest and the ink under the pointer, like the sheet's. The title is 16px
+// semibold (Park's is 18px: R7, text sizes from the toolkit's tokens) and the header is aligned to the start at every width.
+// Behaviour: Ark UI's Dialog (`@ark-ui/react/dialog`: Root, Trigger, Backdrop, Positioner, Content, Title, Description,
+// CloseTrigger). Colors and borders are the tokens from `theme.css`.
 import * as React from "react"
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { Dialog as DialogPrimitive } from "@ark-ui/react/dialog"
 import { Icon } from "../icons"
 
 import { cn } from "../lib/utils"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "./button"
-import { BACKDROP, inTitleBar, inToasts, renderWithOpenState } from "../internal/overlay"
-import { usePortalContainer } from "../internal/portal-container"
+import { BACKDROP, TOASTS_ATTR, inTitleBar, inToasts } from "../internal/overlay"
+import { OverlayPortal } from "../internal/portal"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
 
-type RootProps = React.ComponentProps<typeof DialogPrimitive.Root>
-type ChangeDetails = Parameters<NonNullable<RootProps["onOpenChange"]>>[1]
+type FocusConfig = {
+  initialFocus?: React.RefObject<HTMLElement | null> | false | undefined
+  finalFocus?: (() => boolean | HTMLElement | null | void) | React.RefObject<HTMLElement | null> | false | undefined
+}
 
-/**
- * A click on a notification does not close the window: the user is undoing the last action, not leaving the window.
- * Base UI closes a modal only for a click on its backdrop (or on an ancestor of the panel), so the notification, which sits
- * above the backdrop, already does not close it; this is the second check, the same one the sheets use (`inToasts`).
- */
-const isToastPress = (details: ChangeDetails): boolean => details.reason === "outside-press" && inToasts(details.event.target)
+const DialogFocusContext = React.createContext<(next: FocusConfig) => void>(() => {})
 
-function Dialog({ onOpenChange, ...props }: RootProps) {
+type RootProps = Omit<React.ComponentProps<typeof DialogPrimitive.Root>, "onOpenChange"> & {
+  onOpenChange?: ((open: boolean) => void) | undefined
+}
+
+function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }: RootProps) {
+  const [inner, setInner] = React.useState(defaultOpen)
+  const open = openProp ?? inner
+  const [focusConfig, setFocusConfig] = React.useState<FocusConfig>({})
+  const wasOpen = React.useRef(open)
+
+  const setFocusStable = React.useCallback((next: FocusConfig) => {
+    setFocusConfig((prev) =>
+      prev.initialFocus === next.initialFocus && prev.finalFocus === next.finalFocus ? prev : next,
+    )
+  }, [])
+
+  // When a caller provides a custom `finalFocus` handler (such as `components/Dialog`'s `useCloseFocus`),
+  // run it when the dialog transitions from open to closed.
+  React.useEffect(() => {
+    const prev = wasOpen.current
+    wasOpen.current = open
+    if (prev && !open && typeof focusConfig.finalFocus === "function") {
+      focusConfig.finalFocus()
+    }
+  }, [open, focusConfig.finalFocus])
+
+  const customFinal = focusConfig.finalFocus !== undefined
+  const finalFocusEl =
+    focusConfig.finalFocus && typeof focusConfig.finalFocus === "object"
+      ? () => focusConfig.finalFocus && typeof focusConfig.finalFocus === "object" ? focusConfig.finalFocus.current : null
+      : undefined
+  const initialFocusEl =
+    focusConfig.initialFocus === false
+      ? () => false as const
+      : focusConfig.initialFocus && typeof focusConfig.initialFocus === "object"
+        ? () => (focusConfig.initialFocus && typeof focusConfig.initialFocus === "object" ? focusConfig.initialFocus.current : null)
+        : undefined
+
+  const persistentElements = React.useMemo(
+    () => [() => document.querySelector<HTMLElement>(`[${TOASTS_ATTR}]`)],
+    [],
+  )
+
   return (
-    <DialogPrimitive.Root
-      onOpenChange={(open, details) => {
-        // Nor does a press on the window's bar: in a desktop frame the bar is outside the backdrop, and moving the
-        // window is not leaving the dialog.
-        if (!open && (isToastPress(details) || (details.reason === "outside-press" && inTitleBar(details.event.target)))) {
-          details.cancel()
-          return
-        }
-        onOpenChange?.(open, details)
-      }}
-      {...props}
-    />
+    <DialogFocusContext.Provider value={setFocusStable}>
+      <DialogPrimitive.Root
+        open={open}
+        lazyMount
+        unmountOnExit
+        immediate
+        restoreFocus={customFinal ? false : true}
+        persistentElements={persistentElements}
+        {...(initialFocusEl ? { initialFocusEl } : {})}
+        {...(finalFocusEl ? { finalFocusEl } : {})}
+        onInteractOutside={(event) => {
+          const target = event.detail.originalEvent.target
+          // A click on a notification (undoing) or on the window's title bar (moving/minimizing) does not leave the dialog.
+          if (inToasts(target) || inTitleBar(target)) {
+            event.preventDefault()
+          }
+        }}
+        onOpenChange={(details) => {
+          if (openProp === undefined) setInner(details.open)
+          onOpenChange?.(details.open)
+        }}
+        {...props}
+      />
+    </DialogFocusContext.Provider>
   )
 }
 
@@ -54,18 +100,18 @@ function DialogTrigger(props: React.ComponentProps<typeof DialogPrimitive.Trigge
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
-function DialogPortal(props: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+function DialogPortal({ children, container }: { children: React.ReactNode; container?: HTMLElement | null | undefined }) {
+  return <OverlayPortal container={container}>{children}</OverlayPortal>
 }
 
-function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.CloseTrigger>) {
+  return <DialogPrimitive.CloseTrigger data-slot="dialog-close" {...props} />
 }
 
 function DialogOverlay({
   className,
   ...props
-}: Omit<React.ComponentProps<typeof DialogPrimitive.Backdrop>, "className"> & { className?: string }) {
+}: React.ComponentProps<typeof DialogPrimitive.Backdrop>) {
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
@@ -78,12 +124,7 @@ function DialogOverlay({
 const TABBABLE =
   'input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
 
-/**
- * The initial focus right away, when the panel mounts, as Radix did: Base UI sets it one frame later
- * (microtask + `requestAnimationFrame`), and a key pressed right away would go to the page; with the window already open at
- * mount it does not set it at all. If the focus is already inside (an `autoFocus`) it stays where it is; Base UI then finds it inside
- * and does not move it. With the caller's `initialFocus`, Base UI decides.
- */
+/** Immediate initial focus when the panel mounts so a key pressed right away lands inside the dialog. */
 function focusFirst(el: HTMLDivElement | null) {
   if (!el || el.contains(el.ownerDocument.activeElement)) return
   const first = Array.from(el.querySelectorAll<HTMLElement>(TABBABLE)).find((c) => !c.closest("[hidden], [inert]"))
@@ -106,53 +147,66 @@ function DialogContent({
   ref,
   animated,
   width = "md",
+  initialFocus,
+  finalFocus,
   ...props
-}: Omit<React.ComponentProps<typeof DialogPrimitive.Popup>, "className"> & {
-  className?: string
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   animated?: boolean | undefined
   /** How wide the window grows on a wide screen: `md` by default (see `DialogWidth`). */
   width?: DialogWidth | undefined
+  initialFocus?: FocusConfig["initialFocus"]
+  finalFocus?: FocusConfig["finalFocus"]
 }) {
-  // Inside part of the app drawn in another document (`PortalContainerProvider`) the dialog opens in that document.
-  const container = usePortalContainer()
+  const setFocus = React.useContext(DialogFocusContext)
+  React.useLayoutEffect(() => {
+    setFocus({ initialFocus, finalFocus })
+  }, [setFocus, initialFocus, finalFocus])
+
   const words = useWords()
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterDialog(el))
-  const autoFocus = props.initialFocus === undefined
-  const first = React.useCallback((el: HTMLDivElement | null) => {
-    if (autoFocus) focusFirst(el)
-  }, [autoFocus])
+  const autoFocus = initialFocus === undefined
+  const first = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      if (autoFocus) focusFirst(el)
+    },
+    [autoFocus],
+  )
   const popupRef = useMergedRef(enter, first, ref)
   return (
-    <DialogPortal container={container}>
+    <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Popup
-        ref={popupRef}
-        data-slot="dialog-content"
-        render={renderWithOpenState}
-        // The window is always modal (focus trapped, page blocked, the rest `aria-hidden`): this is also told
-        // to screen readers, which Base UI does not announce by itself.
-        aria-modal="true"
-        className={cn(
-          // Centred with auto margins, not a translation: a translated window would be the containing block of what is `fixed` inside it (the date card), and its scrolling would clip it.
-          "fixed inset-0 z-50 m-auto grid h-fit max-h-[calc(100%-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none md:p-6",
-          WIDTH_CLASS[width],
-          className
-        )}
-        {...props}
+      <DialogPrimitive.Positioner
+        data-slot="dialog-positioner"
+        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
       >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={<Button variant="ghost" size="icon-sm" />}
-            className={cn("absolute top-3 end-3 pointer-coarse:top-1.5 pointer-coarse:end-1.5", QUIET_ICON)}
-          >
-            <Icon name="close" />
-            <span className="sr-only">{words.common.close}</span>
-          </DialogPrimitive.Close>
-        )}
-      </DialogPrimitive.Popup>
+        <DialogPrimitive.Content
+          ref={popupRef}
+          data-slot="dialog-content"
+          aria-modal="true"
+          className={cn(
+            // Centred without a translation: a translated window would be the containing block of what is `fixed` inside it (the date card), and its scrolling would clip it.
+            "pointer-events-auto relative grid h-fit max-h-[calc(100%-2rem)] w-full max-w-[calc(100%-2rem)] gap-6 overflow-y-auto rounded-lg bg-raised p-4 text-sm shadow-lg outline-none md:p-6",
+            WIDTH_CLASS[width],
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          {showCloseButton && (
+            <DialogPrimitive.CloseTrigger asChild data-slot="dialog-close">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className={cn("absolute top-3 end-3 pointer-coarse:top-1.5 pointer-coarse:end-1.5", QUIET_ICON)}
+              >
+                <Icon name="close" />
+                <span className="sr-only">{words.common.close}</span>
+              </Button>
+            </DialogPrimitive.CloseTrigger>
+          )}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Positioner>
     </DialogPortal>
   )
 }
@@ -180,7 +234,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
 function DialogTitle({
   className,
   ...props
-}: Omit<React.ComponentProps<typeof DialogPrimitive.Title>, "className"> & { className?: string }) {
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
@@ -193,7 +247,7 @@ function DialogTitle({
 function DialogDescription({
   className,
   ...props
-}: Omit<React.ComponentProps<typeof DialogPrimitive.Description>, "className"> & { className?: string }) {
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"

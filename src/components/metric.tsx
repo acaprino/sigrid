@@ -1,11 +1,13 @@
 // A KPI card showing one key figure with its label, optional change indicator, supporting caption, sparkline and
 // footer action. Follows DESIGN.md: raised surface with `shadow-xs` or quiet fill with no border (R4), tabular figures
-// (`Count`, R5), and a change indicator that always pairs a direction icon with its text (never colour alone).
+// (`Count`, R5), and a change indicator that always pairs a direction icon, screen-reader direction word and text
+// (never colour alone).
 import type * as React from "react"
 import { Count } from "../primitives/count"
 import { Separator } from "../primitives/separator"
 import { Icon, type IconName } from "../icons"
-import { cn } from "../lib/utils"
+import { cn, isEmptyNode } from "../lib/utils"
+import { useWords } from "../words"
 import { Sparkline, type SparklineTone } from "./sparkline"
 
 export type MetricDeltaDirection = "up" | "down" | "flat"
@@ -26,7 +28,7 @@ export type MetricProps = {
   label: string
   /** The figure itself, rendered in tabular figures (`2xl` semibold). Zero is always displayed. */
   value: number | string
-  /** Optional period-over-period change, always paired with a direction icon. */
+  /** Optional period-over-period change, always paired with a direction icon and accessible direction text. */
   delta?: MetricDelta | undefined
   /** Short context beside the delta or under the value («vs last 30 days»). */
   caption?: string | undefined
@@ -84,10 +86,13 @@ export function Metric({
   variant = "raised",
   className,
 }: MetricProps) {
+  const words = useWords()
   const deltaTone = delta ? (delta.tone ?? defaultTone(delta.direction)) : undefined
   const sparkTone: SparklineTone = deltaTone === "success" ? "success" : deltaTone === "danger" ? "danger" : "accent"
   // Stringify numbers so `0` is rendered as a valid metric figure instead of hidden by `Count`'s empty-badge rule.
   const display = typeof value === "number" ? String(value) : value
+  const series = isNumberSeries(sparkline) ? sparkline : null
+  const hasSparkline = series ? series.filter(Number.isFinite).length >= 2 : !isEmptyNode(sparkline)
 
   return (
     <section
@@ -103,17 +108,13 @@ export function Metric({
 
       <div className="flex items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
-          <Count
-            value={display}
-            rolling={rolling}
-            animated={animated}
-            className="text-2xl font-semibold text-ink"
-          />
+          <Count value={display} rolling={rolling} animated={animated} className="text-2xl font-semibold text-ink" />
           {delta || caption ? (
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               {delta && deltaTone ? (
                 <span data-slot="metric-delta" className={cn("inline-flex items-center gap-0.5 font-medium tabular-nums", DELTA_TONE_COLOR[deltaTone])}>
                   <Icon name={DELTA_ICON[delta.direction]} className="size-3.5 shrink-0" />
+                  <span className="sr-only">{words.metric[delta.direction]} </span>
                   <span>{delta.value}</span>
                 </span>
               ) : null}
@@ -122,13 +123,9 @@ export function Metric({
           ) : null}
         </div>
 
-        {sparkline !== undefined && sparkline !== null ? (
-          <div className="w-24 shrink-0">
-            {isNumberSeries(sparkline) ? (
-              <Sparkline values={sparkline} label={label} tone={sparkTone} area highlightLast height={32} />
-            ) : (
-              sparkline
-            )}
+        {hasSparkline ? (
+          <div data-slot="metric-sparkline" className="w-24 shrink-0">
+            {series ? <Sparkline values={series} label={words.metric.trend(label)} tone={sparkTone} area highlightLast height={32} /> : sparkline}
           </div>
         ) : null}
       </div>

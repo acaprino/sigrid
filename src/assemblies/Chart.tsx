@@ -1,7 +1,8 @@
 // Statistical charts built on Recharts, behind the `./chart` entry so apps without charts load none of Recharts.
 // Every chart follows DESIGN.md: series colours come from the theme's accent and 12-step `hueScale` (src/hues.ts),
 // grids use `--line-subtle`, areas use flat translucent fills (no gradients), tooltips use raised surfaces with
-// `shadow-md` (R4) and tabular figures (R5), legends use 8px dots (R10), and animations stay off (`isAnimationActive={false}`).
+// `shadow-md` (R4) and tabular figures (R5), legends use 8px dots (R10), and every chart and tooltip keeps animations
+// off (`isAnimationActive={false}`).
 import * as React from 'react'
 import {
   Area,
@@ -38,7 +39,7 @@ export type ChartSeries = {
   key: string
   /** Visible name in the legend and tooltip. */
   label: string
-  /** Optional named hue from Sigrid's 18-hue scale (`hueScale`). Absent: series 0 uses `--color-primary`, further series cycle `DEFAULT_CHART_HUES`. */
+  /** Optional named hue from Sigrid's 18-hue scale (`hueScale`). Absent: series 0 uses `--color-primary`, further series pick unused hues from `DEFAULT_CHART_HUES`. */
   hue?: HueName | undefined
 }
 
@@ -58,37 +59,55 @@ export function selectEvenlySpacedItems<T>(items: readonly T[], count: number): 
   return out
 }
 
-/** Resolves each series to a concrete CSS colour from the active theme scheme and tone (`hueScale` step 9, or `--color-primary` for the first unnamed series). */
+/**
+ * Resolves each series to a concrete CSS colour from the active theme scheme and tone (`hueScale` step 9, or
+ * `--color-primary` for the first unnamed series). Unnamed fallback hues avoid colliding with explicitly chosen hues.
+ */
 export function chartSeriesColors(series: readonly Pick<ChartSeries, 'hue'>[], scheme: ThemeScheme = 'light', tone: TonePreset = 'vivid'): string[] {
+  const taken = new Set<HueName>(series.flatMap((item) => (item.hue ? [item.hue] : [])))
+  const pool = DEFAULT_CHART_HUES.filter((h) => !taken.has(h))
+  const available = pool.length > 0 ? pool : DEFAULT_CHART_HUES
+  let auto = 0
   return series.map((item, index) => {
     if (item.hue) return hueScale(item.hue, tone, scheme).steps[8]!
     if (index === 0) return 'var(--color-primary)'
-    const fallback = DEFAULT_CHART_HUES[index % DEFAULT_CHART_HUES.length]!
+    const fallback = available[auto % available.length]!
+    auto += 1
     return hueScale(fallback, tone, scheme).steps[8]!
   })
 }
 
-function readScheme(doc: Document): ThemeScheme {
+function readScheme(doc: Document, el: Element | null): ThemeScheme {
+  const local = el?.closest('[data-scheme]')?.getAttribute('data-scheme')
+  if (local === 'dark' || local === 'light') return local
   const attr = doc.documentElement.getAttribute('data-scheme')
   if (attr === 'dark' || attr === 'light') return attr
   return typeof doc.defaultView?.matchMedia === 'function' && doc.defaultView.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-/** Tracks the document's active light/dark scheme so `hueScale` series colours update when the theme switches. */
-function useChartScheme(): ThemeScheme {
-  const [scheme, setScheme] = React.useState<ThemeScheme>(() => (typeof document === 'undefined' ? 'light' : readScheme(document)))
+/** Tracks the nearest `[data-scheme]` ancestor or document scheme so `hueScale` series colours update on theme switch. */
+function useChartScheme(ref: React.RefObject<HTMLElement | null>): ThemeScheme {
+  const [scheme, setScheme] = React.useState<ThemeScheme>(() => (typeof document === 'undefined' ? 'light' : readScheme(document, null)))
   React.useEffect(() => {
     if (typeof document === 'undefined') return
-    const sync = () => setScheme(readScheme(document))
+    const sync = () => setScheme(readScheme(document, ref.current))
     sync()
-    return watchLook(document, sync)
-  }, [])
+    const stopRoot = watchLook(document, sync)
+    const ancestor = ref.current?.closest('[data-scheme]')
+    if (!ancestor || ancestor === document.documentElement || typeof MutationObserver !== 'function') return stopRoot
+    const localObserver = new MutationObserver(sync)
+    localObserver.observe(ancestor, { attributes: true, attributeFilter: ['data-scheme'] })
+    return () => {
+      stopRoot()
+      localObserver.disconnect()
+    }
+  }, [ref])
   return scheme
 }
 
 type TooltipEntry = {
   name?: string | number | undefined
-  value?: string | number | readonly (string | number)[] | undefined
+  value?: string | number | readonly (string | number)[] | null | undefined
   color?: string | undefined
   dataKey?: string | number | undefined
   payload?: Record<string, unknown> | undefined
@@ -98,12 +117,14 @@ export type ChartTooltipProps = {
   active?: boolean | undefined
   payload?: readonly TooltipEntry[] | undefined
   label?: string | number | undefined
+  /** Read the item name from `entry.payload.name` (used by `PieChart` and `RadialGauge`, where `dataKey` is `'value'`). */
+  nameFromPayload?: boolean | undefined
   formatLabel?: ((label: unknown) => string) | undefined
   formatValue?: ((value: number, seriesKey: string) => string) | undefined
 }
 
 /** Raised tooltip card (`shadow-md`, R4) with 8px series dots (R10) and tabular figures (R5). */
-export function ChartTooltip({ active, payload, label, formatLabel, formatValue }: ChartTooltipProps) {
+export function ChartTooltip({ active, payload, label, nameFromPayload = false, formatLabel, formatValue }: ChartTooltipProps) {
   if (!active || !payload || payload.length === 0) return null
   const heading = label !== undefined && label !== null && label !== '' ? (formatLabel ? formatLabel(label) : String(label)) : null
   return (
@@ -111,14 +132,17 @@ export function ChartTooltip({ active, payload, label, formatLabel, formatValue 
       {heading ? <p className="font-medium text-ink-soft">{heading}</p> : null}
       <div className="flex flex-col gap-0.5">
         {payload.map((entry, index) => {
-          const key = String(entry.dataKey ?? entry.name ?? index)
-          const raw = typeof entry.value === 'number' ? entry.value : Number(entry.value ?? 0)
-          const formatted = Number.isFinite(raw) && formatValue ? formatValue(raw, key) : String(entry.value ?? '')
+          const payloadName = typeof entry.payload?.['name'] === 'string' && entry.payload['name'] ? entry.payload['name'] : undefined
+          const displayName = nameFromPayload && payloadName ? payloadName : String(entry.name ?? payloadName ?? entry.dataKey ?? index)
+          const key = nameFromPayload ? displayName : String(entry.dataKey ?? entry.name ?? index)
+          const present = entry.value !== null && entry.value !== undefined && entry.value !== ''
+          const numeric = present && !Array.isArray(entry.value) ? Number(entry.value) : NaN
+          const formatted = !present ? '—' : Number.isFinite(numeric) && formatValue ? formatValue(numeric, key) : String(entry.value)
           return (
             <div key={`${key}-${index}`} className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-2 text-ink-soft">
                 <span aria-hidden="true" className="size-2 shrink-0 rounded-full ring-1 ring-ink/10 ring-inset" style={{ backgroundColor: entry.color }} />
-                <span>{String(entry.name ?? key)}</span>
+                <span>{displayName}</span>
               </span>
               <span className="font-medium text-ink">{formatted}</span>
             </div>
@@ -167,6 +191,7 @@ export function ChartLegend({ payload, layout = 'horizontal', align = 'left', re
 }
 
 function ChartFrame({
+  figureRef,
   label,
   seriesCount,
   pointCount,
@@ -175,6 +200,7 @@ function ChartFrame({
   className,
   children,
 }: {
+  figureRef: React.RefObject<HTMLElement | null>
   label: string
   seriesCount: number
   pointCount: number
@@ -185,10 +211,12 @@ function ChartFrame({
 }) {
   const words = useWords()
   return (
-    <figure role="figure" aria-label={label} data-slot="chart" className={cn('m-0 w-full min-w-0', className)}>
-      <figcaption className="sr-only">
-        {label}: {words.chart.seriesSummary(seriesCount, pointCount)}
-      </figcaption>
+    <figure ref={figureRef} role="figure" aria-label={label} data-slot="chart" className={cn('m-0 w-full min-w-0', className)}>
+      {!empty ? (
+        <figcaption className="sr-only">
+          {label}: {words.chart.seriesSummary(seriesCount, pointCount)}
+        </figcaption>
+      ) : null}
       {empty ? (
         <div style={{ height }} className="flex w-full items-center justify-center rounded-lg bg-paper-2 text-sm text-ink-mute">
           {words.chart.empty}
@@ -213,7 +241,7 @@ type CartesianBaseProps<Row extends Record<string, unknown>> = {
   xKey: keyof Row & string
   /** Series plotted from each row. */
   series: readonly ChartSeries[]
-  /** Cap the number of x-axis tick labels with `selectEvenlySpacedItems`. */
+  /** Cap the number of x-axis tick labels with `selectEvenlySpacedItems` (positive integer). */
   xTickCount?: number | undefined
   /** Format x-axis ticks and tooltip heading. */
   formatX?: ((value: unknown) => string) | undefined
@@ -251,22 +279,23 @@ export function LineChart<Row extends Record<string, unknown>>({
   height = 240,
   className,
 }: LineChartProps<Row>) {
-  const scheme = useChartScheme()
+  const figureRef = React.useRef<HTMLElement>(null)
+  const scheme = useChartScheme(figureRef)
   const colors = chartSeriesColors(series, scheme, tone)
   const legendOn = showLegend ?? series.length > 1
-  const ticks = xTickCount && data.length > xTickCount ? selectEvenlySpacedItems(data, xTickCount).map((row) => row[xKey] as string | number) : undefined
+  const ticks = xTickCount !== undefined && xTickCount > 0 && data.length > xTickCount ? selectEvenlySpacedItems(data, xTickCount).map((row) => row[xKey] as string | number) : undefined
   const rows = data as Row[]
 
   return (
-    <ChartFrame label={ariaLabel} seriesCount={series.length} pointCount={data.length} height={height} empty={data.length === 0 || series.length === 0} className={className}>
+    <ChartFrame figureRef={figureRef} label={ariaLabel} seriesCount={series.length} pointCount={data.length} height={height} empty={data.length === 0 || series.length === 0} className={className}>
       <ResponsiveContainer width="100%" height={height} initialDimension={{ width: 640, height }}>
         {area ? (
           <AreaChart data={rows} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--line-subtle)" />
             <XAxis dataKey={xKey as string} ticks={ticks} tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={formatX ? (v) => formatX(v) : undefined} />
-            <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={44} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
-            <Tooltip content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} />
-            {legendOn ? <Legend content={<ChartLegend />} /> : null}
+            <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={52} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
+            <Tooltip isAnimationActive={false} content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} />
+            {legendOn ? <Legend align="left" content={<ChartLegend align="left" />} /> : null}
             {series.map((s, i) => {
               const color = colors[i]!
               return (
@@ -291,9 +320,9 @@ export function LineChart<Row extends Record<string, unknown>>({
           <RechartsLineChart data={rows} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--line-subtle)" />
             <XAxis dataKey={xKey as string} ticks={ticks} tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={formatX ? (v) => formatX(v) : undefined} />
-            <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={44} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
-            <Tooltip content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} />
-            {legendOn ? <Legend content={<ChartLegend />} /> : null}
+            <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={52} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
+            <Tooltip isAnimationActive={false} content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} />
+            {legendOn ? <Legend align="left" content={<ChartLegend align="left" />} /> : null}
             {series.map((s, i) => {
               const color = colors[i]!
               return (
@@ -340,30 +369,31 @@ export function BarChart<Row extends Record<string, unknown>>({
   height = 240,
   className,
 }: BarChartProps<Row>) {
-  const scheme = useChartScheme()
+  const figureRef = React.useRef<HTMLElement>(null)
+  const scheme = useChartScheme(figureRef)
   const colors = chartSeriesColors(series, scheme, tone)
   const legendOn = showLegend ?? series.length > 1
-  const ticks = !horizontal && xTickCount && data.length > xTickCount ? selectEvenlySpacedItems(data, xTickCount).map((row) => row[xKey] as string | number) : undefined
+  const ticks = !horizontal && xTickCount !== undefined && xTickCount > 0 && data.length > xTickCount ? selectEvenlySpacedItems(data, xTickCount).map((row) => row[xKey] as string | number) : undefined
   const rows = data as Row[]
 
   return (
-    <ChartFrame label={ariaLabel} seriesCount={series.length} pointCount={data.length} height={height} empty={data.length === 0 || series.length === 0} className={className}>
+    <ChartFrame figureRef={figureRef} label={ariaLabel} seriesCount={series.length} pointCount={data.length} height={height} empty={data.length === 0 || series.length === 0} className={className}>
       <ResponsiveContainer width="100%" height={height} initialDimension={{ width: 640, height }}>
         <RechartsBarChart data={rows} layout={horizontal ? 'vertical' : 'horizontal'} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
           <CartesianGrid vertical={horizontal} horizontal={!horizontal} stroke="var(--line-subtle)" />
           {horizontal ? (
             <>
               <XAxis type="number" tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
-              <YAxis type="category" dataKey={xKey as string} tick={AXIS_TICK} tickLine={false} axisLine={false} width={88} tickFormatter={formatX ? (v) => formatX(v) : undefined} />
+              <YAxis type="category" dataKey={xKey as string} tick={AXIS_TICK} tickLine={false} axisLine={false} width={96} tickFormatter={formatX ? (v) => formatX(v) : undefined} />
             </>
           ) : (
             <>
               <XAxis dataKey={xKey as string} ticks={ticks} tick={AXIS_TICK} tickLine={false} axisLine={false} tickFormatter={formatX ? (v) => formatX(v) : undefined} />
-              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={44} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
+              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={52} tickFormatter={formatValue ? (v) => formatValue(Number(v), '') : undefined} />
             </>
           )}
-          <Tooltip content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} cursor={{ fill: 'var(--line-subtle)' }} />
-          {legendOn ? <Legend content={<ChartLegend />} /> : null}
+          <Tooltip isAnimationActive={false} content={<ChartTooltip formatLabel={formatX} formatValue={formatValue} />} cursor={{ fill: 'var(--line-subtle)' }} />
+          {legendOn ? <Legend align="left" content={<ChartLegend align="left" />} /> : null}
           {series.map((s, i) => (
             <Bar
               key={s.key}
@@ -403,12 +433,13 @@ export type PieChartProps = {
 
 /** A pie or donut chart with `hueScale` slice colours, raised tooltip and R10 dot legend. */
 export function PieChart({ 'aria-label': ariaLabel, data, donut = true, formatValue, tone = 'vivid', showLegend = true, height = 240, className }: PieChartProps) {
-  const scheme = useChartScheme()
+  const figureRef = React.useRef<HTMLElement>(null)
+  const scheme = useChartScheme(figureRef)
   const colors = chartSeriesColors(data, scheme, tone)
   const slices = data as PieSlice[]
 
   return (
-    <ChartFrame label={ariaLabel} seriesCount={1} pointCount={data.length} height={height} empty={data.length === 0} className={className}>
+    <ChartFrame figureRef={figureRef} label={ariaLabel} seriesCount={1} pointCount={data.length} height={height} empty={data.length === 0} className={className}>
       <ResponsiveContainer width="100%" height={height} initialDimension={{ width: 320, height }}>
         <RechartsPieChart>
           <Pie
@@ -425,8 +456,8 @@ export function PieChart({ 'aria-label': ariaLabel, data, donut = true, formatVa
               <Cell key={`${slice.name}-${index}`} fill={colors[index]!} />
             ))}
           </Pie>
-          <Tooltip content={<ChartTooltip formatValue={formatValue} />} />
-          {showLegend ? <Legend content={<ChartLegend align="center" />} /> : null}
+          <Tooltip isAnimationActive={false} content={<ChartTooltip nameFromPayload formatValue={formatValue} />} />
+          {showLegend ? <Legend align="center" content={<ChartLegend align="center" />} /> : null}
         </RechartsPieChart>
       </ResponsiveContainer>
     </ChartFrame>
@@ -443,7 +474,7 @@ export type RadialGaugeItem = {
 export type RadialGaugeProps = {
   'aria-label': string
   data: readonly RadialGaugeItem[]
-  /** Upper bound of the radial scale. Default 100. */
+  /** Upper bound of the radial scale (must be positive). Default 100. */
   max?: number | undefined
   /** Primary figure drawn in the middle of the rings. */
   centerValue?: string | number | undefined
@@ -469,27 +500,31 @@ export function RadialGauge({
   height = 240,
   className,
 }: RadialGaugeProps) {
-  const scheme = useChartScheme()
+  const figureRef = React.useRef<HTMLElement>(null)
+  const scheme = useChartScheme(figureRef)
   const colors = chartSeriesColors(data, scheme, tone)
+  const top = Number.isFinite(max) && max > 0 ? max : 100
   const items = data.map((item, index) => ({ ...item, fill: colors[index]! }))
 
   return (
-    <ChartFrame label={ariaLabel} seriesCount={data.length} pointCount={data.length} height={height} empty={data.length === 0} className={className}>
-      <div className="relative size-full">
-        <ResponsiveContainer width="100%" height={height} initialDimension={{ width: 280, height }}>
-          <RadialBarChart data={items} innerRadius="48%" outerRadius="88%" startAngle={90} endAngle={-270}>
-            <PolarAngleAxis type="number" domain={[0, max]} tick={false} />
-            <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'var(--line-subtle)' }} isAnimationActive={false} />
-            <Tooltip content={<ChartTooltip formatValue={formatValue} />} />
-            {showLegend ? <Legend content={<ChartLegend align="center" />} /> : null}
-          </RadialBarChart>
-        </ResponsiveContainer>
-        {centerValue !== undefined || centerLabel !== undefined ? (
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-            {centerValue !== undefined ? <span className="text-xl font-semibold text-ink tabular-nums">{centerValue}</span> : null}
-            {centerLabel !== undefined ? <span className="text-2xs text-ink-mute">{centerLabel}</span> : null}
-          </div>
-        ) : null}
+    <ChartFrame figureRef={figureRef} label={ariaLabel} seriesCount={data.length} pointCount={data.length} height={height} empty={data.length === 0} className={className}>
+      <div className="flex size-full flex-col">
+        <div className="relative min-h-0 flex-1">
+          <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 280, height: showLegend ? Math.max(120, height - 32) : height }}>
+            <RadialBarChart data={items} innerRadius="48%" outerRadius="88%" startAngle={90} endAngle={-270}>
+              <PolarAngleAxis type="number" domain={[0, top]} tick={false} />
+              <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'var(--line-subtle)' }} isAnimationActive={false} />
+              <Tooltip isAnimationActive={false} content={<ChartTooltip nameFromPayload formatValue={formatValue} />} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          {centerValue !== undefined || centerLabel !== undefined ? (
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              {centerValue !== undefined ? <span className="text-xl font-semibold text-ink tabular-nums">{centerValue}</span> : null}
+              {centerLabel !== undefined ? <span className="text-2xs text-ink-mute">{centerLabel}</span> : null}
+            </div>
+          ) : null}
+        </div>
+        {showLegend ? <ChartLegend align="center" payload={items.map((item) => ({ value: item.name, color: item.fill }))} /> : null}
       </div>
     </ChartFrame>
   )

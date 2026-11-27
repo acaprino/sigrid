@@ -1,4 +1,3 @@
-// SmoothUI (MIT) select 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/select.json)
 // Park UI (MIT) select 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/select.ts)
 // From Park's `select` recipe comes the form: its outline variant at the md size for the button (40px, l2 corners, 12px
 // of side padding, a border and no fill, as the fields; 36px at `size="sm"`; R4: a border, never a shadow too; open, the
@@ -6,25 +5,22 @@
 // of a border, 4px of padding, items 40px tall with l1 corners and a quiet fill on the highlighted one). The text is
 // 14px, not Park's 16px (the type scale of the app). The button's border stays `border-input` (3:1, WCAG 1.4.11):
 // Park's outline border is lighter.
-// From SmoothUI we keep the data API (`options`: `{ value, label }`, `value`/`onValueChange`, `aria-label`, `id` on the
-// button), the shape (button with an arrow, card with the list and the check mark on the chosen item) and the classes
-// of the card. SmoothUI's hand-made listbox (createPortal + computed position) is replaced by the primitive
-// `Select` from Base UI (Root, Trigger, Value, Icon, Portal, Positioner, Popup, List, Item, ItemText, ItemIndicator): so
-// keyboard (arrows, type-ahead, Enter, Esc), ARIA roles and the portal nested in a modal sheet come from the
-// primitive. The list uses the shared Motion entrance from the trigger.
+// Behaviour: Ark UI's Select (`@ark-ui/react/select`: Root, Control, Trigger, Indicator, Positioner, Content,
+// ItemGroup, ItemGroupLabel, Item, ItemText, ItemIndicator) for keyboard (arrows, type-ahead, Enter, Esc), ARIA roles
+// and portaled positioning. The list uses the shared Motion entrance from the trigger.
 // States from Park's recipe (the owner's decision of 2026-11-20): `disabled` is the toolkit's disabled look (half
-// opacity, no pointer, out of the Tab order: Base UI's `disabled`), `invalid` sets `aria-invalid` and turns the 3:1
-// control border into the destructive colour, also while the list is open (Park's `_invalid`).
-// A value that is not among the options leaves the button empty (like the previous `<option hidden>`) and cannot be chosen.
+// opacity, no pointer, out of the Tab order), `invalid` sets `aria-invalid` and turns the 3:1 control border into the
+// destructive colour, also while the list is open (Park's `_invalid`).
+// A value that is not among the options leaves the button empty (like `<option hidden>`) and cannot be chosen.
 import * as React from "react"
-import { Select as SelectPrimitive } from "@base-ui/react/select"
+import { Select as SelectPrimitive, createListCollection } from "@ark-ui/react/select"
 import { ChevronDown } from "../internal/sigrid-icons"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW } from "../lib/rows"
 import { FOCUS_FIELD } from "../lib/focus"
 import { FIELD_HOVER, FIELD_OFF_NOW, FIELD_SURFACE, FIELD_TEXT } from "../lib/field"
-import { usePortalContainer } from "../internal/portal-container"
+import { OverlayPortal } from "../internal/portal"
 import { useEntrance } from "../internal/motion"
 
 /**
@@ -48,13 +44,13 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
   "aria-invalid"?: boolean | "true" | "false" | undefined
   className?: string
   size?: "sm" | "default"
-  /** Grouped options, with a non-selectable heading (Base UI's `Select.Group`), after `options`. */
+  /** Grouped options, with a non-selectable heading (Ark UI's `Select.ItemGroup`), after `options`. */
   groups?: SelectGroup<O>[] | undefined
   /** The button text when the value is not among the options (default: empty, as before). */
   placeholder?: string | undefined
   /** The mark drawn before an option's label in the list (`aria-hidden`), or null for none. Absent: no mark. */
   renderMark?: ((option: O) => React.ReactNode) | undefined
-  /** The value cannot be changed: half opacity, no pointer, not reachable with Tab (Base UI's `disabled`). */
+  /** The value cannot be changed: half opacity, no pointer, not reachable with Tab. */
   disabled?: boolean | undefined
   /** The value is not accepted: `aria-invalid` and the control border in the destructive colour. */
   invalid?: boolean | undefined
@@ -63,9 +59,11 @@ export type SelectProps<O extends SelectOption = SelectOption> = {
 /** The row of every list (`LIST_ROW`), with room at its end for the check of the chosen one. */
 const ITEM_CLASS = cn(LIST_ROW, "pe-8")
 
+const POSITIONING = { placement: "bottom-start", gutter: 4 } as const
+
 function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMark?: ((option: O) => React.ReactNode) | undefined }) {
   return (
-    <SelectPrimitive.Item value={o.value} data-slot="select-item" className={ITEM_CLASS}>
+    <SelectPrimitive.Item item={o} data-slot="select-item" className={ITEM_CLASS}>
       {renderMark ? renderMark(o) : null}
       <SelectPrimitive.ItemText style={o.style}>{o.label}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="absolute end-2 flex size-4 items-center justify-center">
@@ -77,76 +75,105 @@ function OptionItem<O extends SelectOption>({ o, renderMark }: { o: O; renderMar
 
 function Select<O extends SelectOption = SelectOption>({ options, value, onValueChange, id, className, size = "default", groups, placeholder, renderMark, disabled = false, invalid: invalidProp = false, animated, ...aria }: SelectProps<O>) {
   const invalid = invalidProp || aria["aria-invalid"] === true || aria["aria-invalid"] === "true"
-  const container = usePortalContainer()
   const trigger = React.useRef<HTMLButtonElement>(null)
-  // The primitive can keep its list mounted between openings.
+  const contentRef = React.useRef<HTMLDivElement>(null)
   const [open, setOpen] = React.useState(false)
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterPopup(el, trigger.current), open)
-  const all = groups ? [...options, ...groups.flatMap((g) => g.options)] : options
+  const all = React.useMemo(() => (groups ? [...options, ...groups.flatMap((g) => g.options)] : options), [options, groups])
+  const collection = React.useMemo(
+    () => createListCollection<O>({ items: all, itemToValue: (o) => o.value, itemToString: (o) => o.label }),
+    [all],
+  )
+  const chosen = React.useMemo(() => (all.some((o) => o.value === value) ? [value] : []), [all, value])
   const label = all.find((o) => o.value === value)?.label ?? placeholder ?? ""
+  const ids = React.useMemo(() => (id ? { trigger: id } : undefined), [id])
+
+  // Without an internal `Select.Label`, remove Ark's dangling `aria-labelledby` so `aria-label` names trigger and listbox.
+  // Also omit `aria-invalid="false"` when valid so callers checking attribute presence match native fields.
+  React.useLayoutEffect(() => {
+    if (aria["aria-label"]) {
+      trigger.current?.removeAttribute("aria-labelledby")
+      contentRef.current?.removeAttribute("aria-labelledby")
+    }
+    if (!invalid) trigger.current?.removeAttribute("aria-invalid")
+  })
+
   return (
-    <SelectPrimitive.Root
-      onOpenChange={setOpen}
-      value={value}
+    <SelectPrimitive.Root<O>
+      collection={collection}
+      value={chosen}
       disabled={disabled}
-      onValueChange={(next) => {
+      invalid={invalid || undefined}
+      ids={ids}
+      lazyMount
+      unmountOnExit
+      immediate
+      positioning={POSITIONING}
+      onOpenChange={(details) => setOpen(details.open)}
+      onValueChange={(details) => {
+        const next = details.value[0]
         if (typeof next === "string" && next !== value) onValueChange(next)
       }}
     >
-      <SelectPrimitive.Trigger
-        ref={trigger}
-        id={id}
-        aria-label={aria["aria-label"]}
-        aria-describedby={aria["aria-describedby"]}
-        aria-invalid={invalid || undefined}
-        data-slot="select-trigger"
-        // The field's surface, text, hover and invalid border (`lib/field.ts`); open, the border is the ink.
-        className={cn(
-          "flex w-full items-center justify-between gap-2 pe-(--pad-xs) ps-(--pad-sm) text-start pointer-coarse:min-h-11",
-          FIELD_SURFACE,
-          FIELD_TEXT,
-          FIELD_HOVER,
-          "not-aria-invalid:data-[popup-open]:border-ring",
-          disabled && FIELD_OFF_NOW,
-          FOCUS_FIELD,
-          size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
-          className,
-        )}
-      >
-        <SelectPrimitive.Value data-slot="select-value" className="truncate">
-          {() => label}
-        </SelectPrimitive.Value>
-        <SelectPrimitive.Icon className="shrink-0 text-ink-mute" aria-hidden>
-          <ChevronDown className="size-4" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-      <SelectPrimitive.Portal container={container}>
-        <SelectPrimitive.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-50 outline-none">
-          <SelectPrimitive.Popup
-            ref={enter}
+      <SelectPrimitive.Control className={size === "sm" ? "inline-flex" : "w-full"}>
+        <SelectPrimitive.Trigger
+          ref={trigger}
+          tabIndex={disabled ? -1 : undefined}
+          aria-label={aria["aria-label"]}
+          aria-describedby={aria["aria-describedby"]}
+          aria-invalid={invalid || undefined}
+          data-slot="select-trigger"
+          // The field's surface, text, hover and invalid border (`lib/field.ts`); open, the border is the ink.
+          className={cn(
+            "flex w-full items-center justify-between gap-2 pe-(--pad-xs) ps-(--pad-sm) text-start pointer-coarse:min-h-11",
+            FIELD_SURFACE,
+            FIELD_TEXT,
+            FIELD_HOVER,
+            "not-aria-invalid:data-[state=open]:border-ring",
+            disabled && FIELD_OFF_NOW,
+            FOCUS_FIELD,
+            size === "sm" ? "h-(--control-sm) w-auto" : "h-(--control-md)",
+            className,
+          )}
+        >
+          <span data-slot="select-value" className="truncate">
+            {label}
+          </span>
+          <SelectPrimitive.Indicator className="shrink-0 text-ink-mute" aria-hidden>
+            <ChevronDown className="size-4" />
+          </SelectPrimitive.Indicator>
+        </SelectPrimitive.Trigger>
+      </SelectPrimitive.Control>
+      <OverlayPortal>
+        <SelectPrimitive.Positioner data-slot="select-positioner" className="z-50 outline-none">
+          <SelectPrimitive.Content
+            ref={(el) => {
+              contentRef.current = el
+              enter(el)
+            }}
             data-slot="select-content"
-            className={cn(LIST_CARD, "min-w-[max(var(--anchor-width),10rem)]")}
+            hidden={!open}
+            aria-label={aria["aria-label"]}
+            className={cn(LIST_CARD, "min-w-[max(var(--reference-width),10rem)]")}
           >
-            <SelectPrimitive.List aria-label={aria["aria-label"]}>
-              {options.map((o) => (
-                <OptionItem key={o.value} o={o} renderMark={renderMark} />
-              ))}
-              {groups?.map((g) =>
-                g.options.length ? (
-                  <SelectPrimitive.Group key={g.label} data-slot="select-group" className="mt-1 first:mt-0">
-                    <SelectPrimitive.GroupLabel data-slot="select-group-label" className={cn("flex h-(--row-height) items-center px-2 text-ink-mute", GROUP_LABEL)}>
-                      {g.label}
-                    </SelectPrimitive.GroupLabel>
-                    {g.options.map((o) => (
-                      <OptionItem key={o.value} o={o} renderMark={renderMark} />
-                    ))}
-                  </SelectPrimitive.Group>
-                ) : null,
-              )}
-            </SelectPrimitive.List>
-          </SelectPrimitive.Popup>
+            {options.map((o) => (
+              <OptionItem key={o.value} o={o} renderMark={renderMark} />
+            ))}
+            {groups?.map((g) =>
+              g.options.length ? (
+                <SelectPrimitive.ItemGroup key={g.label} data-slot="select-group" className="mt-1 first:mt-0">
+                  <SelectPrimitive.ItemGroupLabel data-slot="select-group-label" className={cn("flex h-(--row-height) items-center px-2 text-ink-mute", GROUP_LABEL)}>
+                    {g.label}
+                  </SelectPrimitive.ItemGroupLabel>
+                  {g.options.map((o) => (
+                    <OptionItem key={o.value} o={o} renderMark={renderMark} />
+                  ))}
+                </SelectPrimitive.ItemGroup>
+              ) : null,
+            )}
+          </SelectPrimitive.Content>
         </SelectPrimitive.Positioner>
-      </SelectPrimitive.Portal>
+      </OverlayPortal>
     </SelectPrimitive.Root>
   )
 }

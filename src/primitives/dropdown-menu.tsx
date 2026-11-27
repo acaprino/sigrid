@@ -1,97 +1,148 @@
-// SmoothUI (MIT) dropdown-menu 4.0.0 — adapted for @acaprino/sigrid (https://smoothui.dev/r/base-nova/dropdown-menu.json)
 // Park UI (MIT) menu 102769c — recipe translated to Tailwind for @acaprino/sigrid (https://github.com/chakra-ui/park-ui/blob/102769c/packages/preset/src/recipes/menu.ts)
 // From Park's `menu` recipe comes the form (md): the card with l3 corners and the md elevation in place of a border,
 // 4px of padding and 2px between items; items 40px tall with l2 corners and a quiet fill on the highlighted one.
-// From SmoothUI we keep the primitive (Base UI's `Menu`: Portal, Positioner, Popup, Item, Separator, SubmenuRoot) and
-// the classes of the menu card. We do not keep the item-list API (`items`): the package uses the parts
-// (`DropdownMenuTrigger`, `DropdownMenuItem`…) with the same props as before (`asChild`, `onSelect`, `variant`, `inset`,
-// `align`, `sideOffset`), so whoever uses them does not change. Removed: the spring and the staggered entrance of the items: with `animated`
-// true (off by default, never with prefers-reduced-motion) the card enters with a short fade, without a spring.
-// Behavior as before: Enter, Space and down arrow on the button open the menu with focus on the first item, the
-// arrows do not wrap from the last to the first (like Radix), Esc closes and returns focus to the button, search by
-// initial letter comes from Base UI. The button still carries `data-state="open"|"closed"`: the "visible while the menu is
-// open" rules of the rows (`data-[state=open]:`) read it.
+// Behaviour: Ark UI's Menu (`@ark-ui/react/menu`: Root, Trigger, Positioner, Content, Item, CheckboxItem,
+// RadioItemGroup, RadioItem, ItemGroup, Separator, TriggerItem). The parts stay as before (`DropdownMenuTrigger`,
+// `DropdownMenuItem`…) with the same props (`asChild`, `onSelect`, `variant`, `inset`, `align`, `sideOffset`).
+// With `animated` true (off by default, never with prefers-reduced-motion) the card enters with a short fade.
+// Enter, Space and down arrow on the button open the menu with focus on the first item, arrows do not wrap by default,
+// Esc closes and returns focus to the button, type-ahead comes from Ark UI, and the button carries `data-state="open"|"closed"`.
 import * as React from "react"
-import { Menu } from "@base-ui/react/menu"
+import { Menu } from "@ark-ui/react/menu"
 import { Check as CheckIcon, ChevronRight as ChevronRightIcon, Circle as CircleIcon } from "../internal/sigrid-icons"
 import { cn } from "../lib/utils"
 import { KEY_CAP } from "./kbd"
 import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../lib/rows"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
-import { renderWithOpenState } from "../internal/overlay"
-import { usePortalContainer } from "../internal/portal-container"
+import { OverlayPortal } from "../internal/portal"
 
-/** The open state of the menu, for the button's `data-state`, and its immediate reading for the keyboard. */
-type MenuState = { open: boolean; openRef: React.RefObject<boolean> }
-const MenuStateContext = React.createContext<MenuState | null>(null)
+type Side = "top" | "right" | "bottom" | "left"
+type Align = "start" | "center" | "end"
+type VirtualAnchor = { getBoundingClientRect: () => DOMRect | { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number } }
+type Anchor = Element | VirtualAnchor | null | undefined
 
-type DropdownMenuProps = Omit<Menu.Root.Props, "onOpenChange"> & {
-  onOpenChange?: ((open: boolean, details?: Menu.Root.ChangeEventDetails) => void) | undefined
+type ContentConfig = {
+  side: Side
+  align: Align
+  sideOffset: number
+  alignOffset?: number | undefined
+  collisionPadding?: number | undefined
+  anchor?: Anchor
+  finalFocus?: React.RefObject<HTMLElement | null> | undefined
 }
 
-function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopFocus = false, ...props }: DropdownMenuProps) {
+type MenuContextValue = {
+  setConfig: (next: ContentConfig) => void
+  registerSelect: (value: string, fn: (() => void) | undefined) => () => void
+}
+
+const MenuStateContext = React.createContext<MenuContextValue | null>(null)
+
+function placementOf(side: Side, align: Align): `${Side}` | `${Side}-start` | `${Side}-end` {
+  return align === "center" ? side : `${side}-${align}`
+}
+
+type DropdownMenuProps = {
+  open?: boolean | undefined
+  defaultOpen?: boolean | undefined
+  onOpenChange?: ((open: boolean) => void) | undefined
+  loopFocus?: boolean | undefined
+  modal?: boolean | undefined
+  children?: React.ReactNode
+}
+
+function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopFocus = false, children }: DropdownMenuProps) {
   const [inner, setInner] = React.useState(defaultOpen)
   const open = openProp ?? inner
-  const openRef = React.useRef(open)
-  openRef.current = open
-  const handleOpenChange = (next: boolean, details: Menu.Root.ChangeEventDetails) => {
-    openRef.current = next
-    if (openProp === undefined) setInner(next)
-    onOpenChange?.(next, details)
-  }
-  const state = React.useMemo(() => ({ open, openRef }), [open])
+  const [config, setConfig] = React.useState<ContentConfig>({ side: "bottom", align: "center", sideOffset: 4 })
+  const handlers = React.useRef(new Map<string, () => void>())
+
+  const setConfigStable = React.useCallback((next: ContentConfig) => {
+    setConfig((prev) =>
+      prev.side === next.side &&
+      prev.align === next.align &&
+      prev.sideOffset === next.sideOffset &&
+      prev.alignOffset === next.alignOffset &&
+      prev.collisionPadding === next.collisionPadding &&
+      prev.anchor === next.anchor &&
+      prev.finalFocus === next.finalFocus
+        ? prev
+        : next,
+    )
+  }, [])
+
+  const registerSelect = React.useCallback((value: string, fn: (() => void) | undefined) => {
+    if (!fn) return () => {}
+    handlers.current.set(value, fn)
+    return () => {
+      if (handlers.current.get(value) === fn) handlers.current.delete(value)
+    }
+  }, [])
+
+  const positioning = React.useMemo(() => {
+    const anchor = config.anchor
+    return {
+      placement: placementOf(config.side, config.align),
+      gutter: config.sideOffset,
+      ...(config.alignOffset !== undefined ? { offset: { crossAxis: config.alignOffset } } : {}),
+      ...(config.collisionPadding !== undefined ? { overflowPadding: config.collisionPadding } : {}),
+      ...(anchor
+        ? {
+            getAnchorRect: () => {
+              const rect = anchor.getBoundingClientRect()
+              return { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
+            },
+          }
+        : {}),
+    }
+  }, [config.side, config.align, config.sideOffset, config.alignOffset, config.collisionPadding, config.anchor])
+
+  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect }), [setConfigStable, registerSelect])
+
   return (
     <MenuStateContext.Provider value={state}>
-      <Menu.Root data-slot="dropdown-menu" open={open} onOpenChange={handleOpenChange} loopFocus={loopFocus} {...props} />
+      <Menu.Root
+        open={open}
+        loopFocus={loopFocus}
+        lazyMount
+        unmountOnExit
+        positioning={positioning}
+        onSelect={(details) => {
+          handlers.current.get(details.value)?.()
+        }}
+        onOpenChange={(details) => {
+          if (openProp === undefined) setInner(details.open)
+          onOpenChange?.(details.open)
+          if (!details.open && config.finalFocus?.current) {
+            const target = config.finalFocus.current
+            queueMicrotask(() => target.focus())
+          }
+        }}
+      >
+        {children}
+      </Menu.Root>
     </MenuStateContext.Provider>
   )
 }
 
-function DropdownMenuPortal({ ...props }: Menu.Portal.Props) {
-  const container = usePortalContainer()
-  return <Menu.Portal container={container} data-slot="dropdown-menu-portal" {...props} />
+function DropdownMenuPortal({ children, container }: { children: React.ReactNode; container?: HTMLElement | null | undefined }) {
+  return <OverlayPortal container={container}>{children}</OverlayPortal>
 }
 
-/** The child to render in place of the `<button>` (`asChild`) and whether it is a real `<button>`. */
-function asChildRender(asChild: boolean | undefined, children: React.ReactNode) {
-  if (!asChild || !React.isValidElement(children)) return null
-  const native = typeof children.type === "string" ? children.type === "button" : true
-  return { render: children as React.ReactElement<Record<string, unknown>>, nativeButton: native }
-}
+type DropdownMenuTriggerProps = React.ComponentProps<typeof Menu.Trigger>
 
-type DropdownMenuTriggerProps = Menu.Trigger.Props & { asChild?: boolean | undefined }
-
-function DropdownMenuTrigger({ asChild, children, onKeyDown, ...props }: DropdownMenuTriggerProps) {
-  const state = React.useContext(MenuStateContext)
-  const child = asChildRender(asChild, children)
+function DropdownMenuTrigger({ asChild, children, ...props }: DropdownMenuTriggerProps) {
   return (
-    <Menu.Trigger
-      data-slot="dropdown-menu-trigger"
-      data-state={state?.open ? "open" : "closed"}
-      {...props}
-      {...(child ?? {})}
-      onKeyDown={(event) => {
-        onKeyDown?.(event)
-        if (event.defaultPrevented || (event.key !== "Enter" && event.key !== " ")) return
-        // Like Radix: Enter and Space open from the pressed key (no browser click afterwards), with focus on the
-        // first item. Base UI opens on the "keyboard" click (`detail` 0), which here is dispatched by hand: in jsdom a
-        // `keydown` does not click, and in the browser `preventDefault` removes the native one. If the first click does not open
-        // (Base UI's handler still had a pointer pending and consumes it), a second one is dispatched.
-        event.preventDefault()
-        const wasOpen = state?.openRef.current ?? false
-        event.currentTarget.click()
-        if (!wasOpen && state && !state.openRef.current) event.currentTarget.click()
-      }}
-    >
-      {child ? undefined : children}
+    <Menu.Trigger data-slot="dropdown-menu-trigger" asChild={asChild} {...props}>
+      {children}
     </Menu.Trigger>
   )
 }
 
 /**
  * The card of a menu and of a submenu: the list's card (`LIST_CARD`) with l3 corners (Park's menu), at least 160px wide,
- * and as tall as the room the window leaves on its side (`--available-height`, Base UI's): a longer menu scrolls.
+ * and as tall as the room the window leaves on its side (`--available-height`, Ark/Popper's): a longer menu scrolls.
  */
 const CARD = cn(LIST_CARD, "max-h-(--available-height) min-w-40 origin-(--transform-origin) overflow-x-hidden rounded-lg outline-hidden")
 
@@ -100,11 +151,18 @@ function useEnter(animated: boolean | undefined) {
   return useEntrance<HTMLElement>(animated, (motion, el) => motion.enterPopup(el))
 }
 
-type DropdownMenuContentProps = Menu.Popup.Props &
-  Pick<Menu.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionPadding" | "anchor"> & {
-    /** The card enters with a short fade (off by default, never with prefers-reduced-motion). */
-    animated?: boolean | undefined
-  }
+type DropdownMenuContentProps = React.ComponentProps<"div"> & {
+  align?: Align | undefined
+  alignOffset?: number | undefined
+  side?: Side | undefined
+  sideOffset?: number | undefined
+  collisionPadding?: number | undefined
+  anchor?: Anchor
+  /** Element to restore focus to when a triggerless menu (such as `ContextMenu`) closes. */
+  finalFocus?: React.RefObject<HTMLElement | null> | undefined
+  /** The card enters with a short fade (off by default, never with prefers-reduced-motion). */
+  animated?: boolean | undefined
+}
 
 function DropdownMenuContent({
   className,
@@ -114,111 +172,150 @@ function DropdownMenuContent({
   sideOffset = 4,
   collisionPadding,
   anchor,
+  finalFocus,
   animated,
   ref,
   ...props
 }: DropdownMenuContentProps) {
-  const container = usePortalContainer()
+  const ctx = React.useContext(MenuStateContext)
+  const setConfig = ctx?.setConfig
+  React.useLayoutEffect(() => {
+    setConfig?.({ side, align, sideOffset, alignOffset, collisionPadding, anchor, finalFocus })
+  }, [setConfig, side, align, sideOffset, alignOffset, collisionPadding, anchor, finalFocus])
+
   const enter = useEnter(animated)
   const refs = useMergedRef<HTMLDivElement>(enter, ref)
   return (
-    <Menu.Portal container={container}>
-      <Menu.Positioner
-        data-slot="dropdown-menu-positioner"
-        className="z-50 outline-none"
-        align={align}
-        alignOffset={alignOffset}
-        side={side}
-        sideOffset={sideOffset}
-        collisionPadding={collisionPadding}
-        anchor={anchor}
-      >
-        <Menu.Popup
+    <OverlayPortal>
+      <Menu.Positioner data-slot="dropdown-menu-positioner" className="z-50 outline-none">
+        <Menu.Content
           data-slot="dropdown-menu-content"
-          render={renderWithOpenState}
           ref={refs}
           className={cn(CARD, className)}
           {...props}
         />
       </Menu.Positioner>
-    </Menu.Portal>
+    </OverlayPortal>
   )
 }
 
-function DropdownMenuGroup({ ...props }: Menu.Group.Props) {
-  return <Menu.Group data-slot="dropdown-menu-group" {...props} />
+function DropdownMenuGroup({ ...props }: React.ComponentProps<typeof Menu.ItemGroup>) {
+  return <Menu.ItemGroup data-slot="dropdown-menu-group" {...props} />
 }
 
 /** A row of the menu: the row of every list (`LIST_ROW`) with l2 corners, Park's menu item. */
 const ITEM = cn(
   LIST_ROW,
-  "rounded-md outline-hidden focus-visible:bg-selected/60 focus-visible:text-ink data-[inset]:ps-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+  "rounded-md outline-hidden focus-visible:bg-selected/60 focus-visible:text-ink data-[inset]:ps-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 )
 
-type DropdownMenuItemProps = Menu.Item.Props & {
+type DropdownMenuItemProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
+  value?: string | undefined
+  disabled?: boolean | undefined
+  closeOnSelect?: boolean | undefined
   inset?: boolean | undefined
   variant?: "default" | "destructive" | undefined
   /** The item was chosen (click, Enter or Space); then the menu closes. */
-  onSelect?: ((event: React.MouseEvent<HTMLElement>) => void) | undefined
+  onSelect?: ((event?: React.MouseEvent<HTMLElement>) => void) | undefined
 }
 
-function DropdownMenuItem({ className, inset, variant = "default", onSelect, onClick, ...props }: DropdownMenuItemProps) {
+function DropdownMenuItem({ className, value: valueProp, disabled, closeOnSelect, inset, variant = "default", onSelect, onClick, ...props }: DropdownMenuItemProps) {
+  const autoId = React.useId()
+  const value = valueProp ?? autoId
+  const ctx = React.useContext(MenuStateContext)
+  const onSelectRef = React.useRef(onSelect)
+  onSelectRef.current = onSelect
+
+  // Register for keyboard selection (`Menu.Root onSelect`) and guard against double firing on click.
+  const firedByClick = React.useRef(false)
+  React.useEffect(() => {
+    if (!ctx) return
+    return ctx.registerSelect(value, () => {
+      if (firedByClick.current) {
+        firedByClick.current = false
+        return
+      }
+      onSelectRef.current?.()
+    })
+  }, [ctx, value])
+
   return (
     <Menu.Item
+      value={value}
+      disabled={disabled}
+      closeOnSelect={closeOnSelect}
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
       className={cn(
         ITEM,
         "[&_svg:not([class*='text-'])]:text-muted-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:data-highlighted:bg-destructive/10 data-[variant=destructive]:data-highlighted:text-destructive data-[variant=destructive]:focus-visible:bg-destructive/10 data-[variant=destructive]:focus-visible:text-destructive data-[variant=destructive]:*:[svg]:text-destructive!",
-        className
+        className,
       )}
       onClick={(event) => {
+        if (disabled) return
         onClick?.(event)
-        onSelect?.(event)
+        if (onSelectRef.current) {
+          firedByClick.current = true
+          onSelectRef.current(event)
+          queueMicrotask(() => {
+            firedByClick.current = false
+          })
+        }
       }}
       {...props}
     />
   )
 }
 
-function DropdownMenuCheckboxItem({ className, children, ...props }: Menu.CheckboxItem.Props) {
+type DropdownMenuCheckboxItemProps = Omit<React.ComponentProps<typeof Menu.CheckboxItem>, "value"> & {
+  value?: string | undefined
+}
+
+function DropdownMenuCheckboxItem({ className, value: valueProp, children, ...props }: DropdownMenuCheckboxItemProps) {
+  const autoId = React.useId()
   return (
     <Menu.CheckboxItem
+      value={valueProp ?? autoId}
       data-slot="dropdown-menu-checkbox-item"
       className={cn(ITEM, "pe-2 ps-8", className)}
       {...props}
     >
       <span className="pointer-events-none absolute start-2 flex size-4 items-center justify-center">
-        <Menu.CheckboxItemIndicator>
+        <Menu.ItemIndicator>
           <CheckIcon className="size-4" />
-        </Menu.CheckboxItemIndicator>
+        </Menu.ItemIndicator>
       </span>
-      {children}
+      <Menu.ItemText>{children}</Menu.ItemText>
     </Menu.CheckboxItem>
   )
 }
 
-function DropdownMenuRadioGroup({ ...props }: Menu.RadioGroup.Props) {
-  return <Menu.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
+function DropdownMenuRadioGroup({ onValueChange, ...props }: Omit<React.ComponentProps<typeof Menu.RadioItemGroup>, "onValueChange"> & { onValueChange?: ((value: string) => void) | undefined }) {
+  return (
+    <Menu.RadioItemGroup
+      data-slot="dropdown-menu-radio-group"
+      onValueChange={onValueChange ? (details) => onValueChange(details.value) : undefined}
+      {...props}
+    />
+  )
 }
 
-function DropdownMenuRadioItem({ className, children, ...props }: Menu.RadioItem.Props) {
+function DropdownMenuRadioItem({ className, children, ...props }: React.ComponentProps<typeof Menu.RadioItem>) {
   return (
     <Menu.RadioItem data-slot="dropdown-menu-radio-item" className={cn(ITEM, "pe-2 ps-8", className)} {...props}>
       <span className="pointer-events-none absolute start-2 flex size-4 items-center justify-center">
-        <Menu.RadioItemIndicator>
+        <Menu.ItemIndicator>
           <CircleIcon className="size-2 fill-current" />
-        </Menu.RadioItemIndicator>
+        </Menu.ItemIndicator>
       </span>
-      {children}
+      <Menu.ItemText>{children}</Menu.ItemText>
     </Menu.RadioItem>
   )
 }
 
 /**
- * The heading of a group of items ("Move to…"): plain text, as before. It is not `Menu.GroupLabel`, which
- * exists only inside a `Menu.Group`, and here it sits directly in the card.
+ * The heading of a group of items ("Move to…"): plain text, as before.
  */
 function DropdownMenuLabel({ className, inset, ...props }: React.ComponentProps<"div"> & { inset?: boolean | undefined }) {
   return (
@@ -231,7 +328,7 @@ function DropdownMenuLabel({ className, inset, ...props }: React.ComponentProps<
   )
 }
 
-function DropdownMenuSeparator({ className, ...props }: Menu.Separator.Props) {
+function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof Menu.Separator>) {
   return <Menu.Separator data-slot="dropdown-menu-separator" className={cn("-mx-1 my-0.5 h-px bg-border", className)} {...props} />
 }
 
@@ -246,51 +343,83 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"spa
   )
 }
 
-function DropdownMenuSub({ ...props }: Menu.SubmenuRoot.Props) {
-  return <Menu.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+type DropdownMenuSubProps = {
+  open?: boolean | undefined
+  defaultOpen?: boolean | undefined
+  onOpenChange?: ((open: boolean) => void) | undefined
+  children?: React.ReactNode
+}
+
+function DropdownMenuSub({ open, defaultOpen, onOpenChange, children }: DropdownMenuSubProps) {
+  const handlers = React.useRef(new Map<string, () => void>())
+  const registerSelect = React.useCallback((value: string, fn: (() => void) | undefined) => {
+    if (!fn) return () => {}
+    handlers.current.set(value, fn)
+    return () => {
+      if (handlers.current.get(value) === fn) handlers.current.delete(value)
+    }
+  }, [])
+  const noopConfig = React.useCallback(() => {}, [])
+  const state = React.useMemo(() => ({ setConfig: noopConfig, registerSelect }), [noopConfig, registerSelect])
+  return (
+    <MenuStateContext.Provider value={state}>
+      <Menu.Root
+        {...(open !== undefined ? { open } : {})}
+        {...(defaultOpen !== undefined ? { defaultOpen } : {})}
+        lazyMount
+        unmountOnExit
+        onSelect={(details) => handlers.current.get(details.value)?.()}
+        onOpenChange={onOpenChange ? (details) => onOpenChange(details.open) : undefined}
+        positioning={{ placement: "right-start", gutter: 2 }}
+      >
+        {children}
+      </Menu.Root>
+    </MenuStateContext.Provider>
+  )
 }
 
 function DropdownMenuSubTrigger({
   className,
   inset,
+  disabled,
   children,
   ...props
-}: Menu.SubmenuTrigger.Props & { inset?: boolean | undefined }) {
+}: React.ComponentProps<"div"> & { inset?: boolean | undefined; disabled?: boolean | undefined }) {
   return (
-    <Menu.SubmenuTrigger
+    <Menu.TriggerItem
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
+      data-disabled={disabled ? "" : undefined}
+      aria-disabled={disabled ? true : undefined}
       className={cn(
         ITEM,
         ROW_POPUP_OPEN,
         "[&_svg:not([class*='text-'])]:text-muted-foreground",
-        className
+        className,
       )}
       {...props}
     >
       {children}
       <ChevronRightIcon className="ms-auto size-4" />
-    </Menu.SubmenuTrigger>
+    </Menu.TriggerItem>
   )
 }
 
 function DropdownMenuSubContent({
   className,
-  sideOffset = 2,
+  sideOffset: _sideOffset = 2,
   ...props
-}: Menu.Popup.Props & Pick<Menu.Positioner.Props, "sideOffset">) {
-  const container = usePortalContainer()
+}: React.ComponentProps<"div"> & { sideOffset?: number | undefined }) {
   return (
-    <Menu.Portal container={container}>
-      <Menu.Positioner data-slot="dropdown-menu-sub-positioner" className="z-50 outline-none" side="right" align="start" sideOffset={sideOffset}>
-        <Menu.Popup
+    <OverlayPortal>
+      <Menu.Positioner data-slot="dropdown-menu-sub-positioner" className="z-50 outline-none">
+        <Menu.Content
           data-slot="dropdown-menu-sub-content"
-          render={renderWithOpenState}
           className={cn(CARD, className)}
           {...props}
         />
       </Menu.Positioner>
-    </Menu.Portal>
+    </OverlayPortal>
   )
 }
 

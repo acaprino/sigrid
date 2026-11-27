@@ -18,3 +18,7 @@ if (typeof (globalThis as { CSS?: { escape?: unknown } }).CSS?.escape !== 'funct
 if (typeof globalThis.ResizeObserver === 'undefined') {
   Object.defineProperty(globalThis, 'ResizeObserver', { value: FakeResizeObserver, configurable: true, writable: true })
 }
+// jsdom has no `Element.prototype.scrollTo`: Ark's Select calls it when closing its list.
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollTo !== 'function') {
+  Element.prototype.scrollTo = () => {}
+}

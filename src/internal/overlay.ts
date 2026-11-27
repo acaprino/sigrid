@@ -1,4 +1,4 @@
-import { createElement, type HTMLAttributes, type ReactElement, type Ref, type RefObject } from 'react'
+import { type RefObject } from 'react'
 
 /**
  * True for a press on the bar of a window (`TitleBar`). In a desktop frame the overlays open under the bar, so a
@@ -75,14 +75,3 @@ export function restoreFocus<E extends Event>(next?: (event: E) => void, restore
     }
   }
 }
-
-/**
- * `data-state="open"|"closed"` on an overlay of the toolkit (window, sheet, menu, card), as its parts carried before
- * Base UI: an app that watches the page to know whether one of them is open reads it. Base UI sets
- * `data-open`/`data-closed`; this adds that one as well.
- */
-export const openState = (state: { open: boolean }): 'open' | 'closed' => (state.open ? 'open' : 'closed')
-
-/** The `render` of a Base UI popup drawn as a `<div>` with `data-state` (`openState`). */
-export const renderWithOpenState = (props: HTMLAttributes<HTMLElement> & { ref?: Ref<HTMLElement> | undefined }, state: { open: boolean }): ReactElement =>
-  createElement('div', { ...props, 'data-state': openState(state) })

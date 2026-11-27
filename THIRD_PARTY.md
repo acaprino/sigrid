@@ -62,6 +62,13 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/primitives/headless.ts` | `collapsible` | `@ark-ui/react/collapsible` |
 | `src/primitives/headless.ts` | `field` | `@ark-ui/react/field` |
 | `src/primitives/headless.ts` | `popover` | `@ark-ui/react/popover` |
+| `src/internal/portal.tsx` | `portal` | `@ark-ui/react/portal` |
+| `src/primitives/tooltip.tsx` | `tooltip` | `@ark-ui/react/tooltip` |
+| `src/primitives/popover.tsx` | `popover` | `@ark-ui/react/popover` |
+| `src/primitives/dropdown-menu.tsx` | `menu` | `@ark-ui/react/menu` |
+| `src/primitives/select.tsx` | `select` | `@ark-ui/react/select` |
+| `src/primitives/dialog.tsx` | `dialog` | `@ark-ui/react/dialog` |
+| `src/primitives/sheet.tsx` | `drawer` | `@ark-ui/react/drawer` |
 
 Notes:
 - `Toasts.tsx`: Ark's toaster store, its `Toaster` region and one toast machine per notice (timer, the phase in which a
@@ -375,14 +382,7 @@ for @acaprino/sigrid (<URL>)`. The test `test/provenance.test.ts` checks that th
 
 | File | Slug SmoothUI | Source |
 |---|---|---|
-| `src/primitives/dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
-| `src/components/Dialog.tsx` | `dialog` | https://smoothui.dev/r/base-nova/dialog.json |
-| `src/primitives/sheet.tsx` | `drawer` | https://smoothui.dev/r/base-nova/drawer.json |
-| `src/primitives/dropdown-menu.tsx` | `dropdown-menu` | https://smoothui.dev/r/base-nova/dropdown-menu.json |
-| `src/primitives/popover.tsx` | `popover` | https://smoothui.dev/r/base-nova/popover.json |
 | `src/components/Toasts.tsx` | `toast` | https://smoothui.dev/r/base-nova/toast.json |
-| `src/primitives/select.tsx` | `select` | https://smoothui.dev/r/base-nova/select.json |
-| `src/primitives/tooltip.tsx` | `tooltip` | https://smoothui.dev/r/base-nova/tooltip.json |
 | `src/components/empty.tsx` | `empty` | https://smoothui.dev/r/base-nova/empty.json |
 
 Notes:

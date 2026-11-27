@@ -467,9 +467,9 @@ const at = (token: string, percent: number) => `color-mix(in srgb, var(--color-$
  * in dark) at Park's alpha steps (its gray a4 9%, a6 15%, a7 19%; in dark its black a8, ~47%). In light the ring is the
  * same drop color around the edge; in dark it is the ink inside the edge (a drop of light ink would be a glow). `float`
  * is what is lifted and dragged (Park's `xl`, with a second, closer drop).
- * The finish is the toolkit's own (the owner, 2026-11-23): the edge is a crisp hairline (the ring at 15%) and the drop under
- * it is wide and faint, with a blur of about three times its offset, so a raised surface reads as lifted off the page
- * and not as resting on a smudge. The higher the surface, the wider the drop.
+ * The finish is the toolkit's own (the owner, 2026-11-23, refined for crisp cards): the edge is a quiet hairline (11%
+ * on xs/sm, 12% above) and the drop under it is wide and faint, with a blur of about three times its offset, so a
+ * raised surface reads as lifted off the page and not as resting on a smudge. The higher the surface, the wider the drop.
  */
 function elevationOf(scheme: ThemeScheme): Record<string, string> {
   if (scheme === 'light') {

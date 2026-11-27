@@ -281,12 +281,14 @@ for (const [name, modal] of modals) {
         <Toasts items={[{ id: 'x', text: 'Deleted.', undo: { onClick: noop } }]} />
       </>,
     )
-    await settle(10) // Radix starts listening after a tick
-    const toast = await screen.findByRole('button', { name: 'Undo' })
+    await settle(10)
+    const toast = await screen.findByRole('button', { name: 'Undo', hidden: true })
     click(toast)
+    await settle(10)
     expect(close).not.toHaveBeenCalled()
     // Positive check: without it the test would pass even if jsdom triggered nothing.
     click(document.body)
+    await settle(10)
     expect(close).toHaveBeenCalledTimes(1)
   })
 }

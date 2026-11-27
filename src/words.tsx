@@ -500,6 +500,9 @@ export interface Words {
     readonly field: string
     readonly operator: string
     readonly value: string
+    readonly from: string
+    readonly to: string
+    readonly rule: (position: number) => string
     readonly empty: string
     readonly opIs: string
     readonly opIsNot: string
@@ -507,6 +510,13 @@ export interface Words {
     readonly opGt: string
     readonly opLt: string
     readonly opBetween: string
+  }
+  /** What a `Metric` says to screen readers for its delta direction and trend sparkline. */
+  readonly metric: {
+    readonly up: string
+    readonly down: string
+    readonly flat: string
+    readonly trend: (label: string) => string
   }
   /** What a chart says when it has no data or describes itself to screen readers. */
   readonly chart: {
@@ -700,7 +710,7 @@ export const DEFAULT_WORDS: Words = {
     uploading: 'Uploading',
     failed: 'Upload failed',
     retry: 'Try again',
-    retryNamed: (title) => `Try uploading ${title} again`,
+    retryNamed: (title) => `Try again: ${title}`,
     overLimit: (limit) => `Over the limit of ${limit}`,
     fileOverLimit: (name, limit) => `“${name}” is over the limit of ${limit}: it was not added.`,
     filesOverLimit: (count, limit) => `${count} files are over the limit of ${limit}: they were not added.`,
@@ -862,6 +872,9 @@ export const DEFAULT_WORDS: Words = {
     field: 'Field',
     operator: 'Condition',
     value: 'Value',
+    from: 'From',
+    to: 'To',
+    rule: (position) => `Filter ${position}`,
     empty: 'No filters added yet.',
     opIs: 'is',
     opIsNot: 'is not',
@@ -869,6 +882,12 @@ export const DEFAULT_WORDS: Words = {
     opGt: 'greater than',
     opLt: 'less than',
     opBetween: 'between',
+  },
+  metric: {
+    up: 'Up',
+    down: 'Down',
+    flat: 'No change',
+    trend: (label) => `${label} trend`,
   },
   chart: {
     empty: 'No data to display',

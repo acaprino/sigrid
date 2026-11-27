@@ -107,7 +107,10 @@ test('the key of a tooltip, inside the inverted card', async () => {
       <button type="button" aria-label="Search" />
     </Tooltip>,
   )
-  act(() => screen.getByRole('button').focus())
+  await act(async () => {
+    const button = screen.getByRole('button')
+    fireEvent.pointerMove(button, { pointerType: 'mouse' })
+  })
   await settle(120)
   const hint = document.querySelector('[data-slot="tooltip-shortcut"]')
   expect(hint?.textContent).toBe('Ctrl K')

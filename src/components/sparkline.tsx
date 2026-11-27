@@ -1,6 +1,7 @@
 // A tiny inline trend line for a KPI or a table cell: pure SVG with zero external chart dependencies, styled purely
 // through the theme's tokens (`currentColor`), with no gradients and no looping animations (DESIGN.md). When `area`
-// is set, a flat translucent fill sits under the line; `highlightLast` marks the final point with a crisp dot.
+// is set, a flat translucent fill sits under the line; `highlightLast` marks the final point with a circular dot that
+// stays round at any aspect ratio via `vectorEffect="non-scaling-stroke"`.
 import { cn } from "../lib/utils"
 
 /** Token colour of the trend line: accent (default), neutral, success or danger. */
@@ -22,31 +23,43 @@ export type SparklineProps = {
   tone?: SparklineTone | undefined
   /** Draw a flat, translucent fill under the line (no gradient). Default false. */
   area?: boolean | undefined
-  /** Mark the last point with a small dot. Default false. */
+  /** Mark the last point with a crisp circular dot. Default false. */
   highlightLast?: boolean | undefined
   /** Height in pixels (default 32). */
   height?: number | undefined
+  /** Optional fixed width in pixels (useful inside a `Cluster` or table cell with `own-class` enabled). Absent: fills container width. */
+  width?: number | undefined
   className?: string | undefined
 }
 
-const WIDTH = 120
+const VIEW_WIDTH = 120
 const PAD = 3
 
 /** A lightweight inline trend line in pure SVG, suitable inside `Metric` cards and dense rows. */
-export function Sparkline({ values, label, tone = "accent", area = false, highlightLast = false, height = 32, className }: SparklineProps) {
-  const clean = values.filter((n) => Number.isFinite(n))
+export function Sparkline({ values, label, tone = "accent", area = false, highlightLast = false, height = 32, width, className }: SparklineProps) {
+  const clean: number[] = []
+  let min = Infinity
+  let max = -Infinity
+  for (const n of values) {
+    if (!Number.isFinite(n)) continue
+    clean.push(n)
+    if (n < min) min = n
+    if (n > max) max = n
+  }
   if (clean.length < 2) return null
 
-  const h = Math.max(16, height)
-  const min = Math.min(...clean)
-  const max = Math.max(...clean)
+  const h = Number.isFinite(height) ? Math.max(16, height) : 32
+  const w = width !== undefined && Number.isFinite(width) && width > 0 ? width : undefined
   const span = max - min
-  const innerW = WIDTH - PAD * 2
+  const halfMin = min / 2
+  const halfSpan = max / 2 - halfMin
+  const innerW = VIEW_WIDTH - PAD * 2
   const innerH = h - PAD * 2
 
   const points = clean.map((v, i) => {
     const x = PAD + (i / (clean.length - 1)) * innerW
-    const y = span === 0 ? h / 2 : PAD + innerH - ((v - min) / span) * innerH
+    const ratio = span === 0 ? 0.5 : Number.isFinite(span) ? (v - min) / span : halfSpan === 0 ? 0.5 : (v / 2 - halfMin) / halfSpan
+    const y = PAD + innerH - ratio * innerH
     return [Number(x.toFixed(2)), Number(y.toFixed(2))] as const
   })
 
@@ -60,14 +73,26 @@ export function Sparkline({ values, label, tone = "accent", area = false, highli
       role="img"
       aria-label={label}
       data-slot="sparkline"
-      viewBox={`0 0 ${WIDTH} ${h}`}
+      viewBox={`0 0 ${VIEW_WIDTH} ${h}`}
+      width={w}
       height={h}
       preserveAspectRatio="none"
-      className={cn("block w-full overflow-visible", TONE[tone], className)}
+      className={cn("block overflow-visible", w === undefined && "w-full", TONE[tone], className)}
     >
       {area ? <path d={fillPath} fill="currentColor" fillOpacity={0.12} stroke="none" /> : null}
       <path d={line} fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      {highlightLast ? <circle cx={last[0]} cy={last[1]} r={2.5} fill="currentColor" vectorEffect="non-scaling-stroke" /> : null}
+      {highlightLast ? (
+        // Zero-length rounded stroke stays circular under non-uniform SVG scaling (`preserveAspectRatio="none"`).
+        <path
+          data-slot="sparkline-dot"
+          d={`M${last[0]} ${last[1]} h 0.001`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={5}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      ) : null}
     </svg>
   )
 }

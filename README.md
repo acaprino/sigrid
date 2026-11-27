@@ -10,7 +10,7 @@ Sigrid is the UI system shared by a suite of React apps, ADHD first, in four lev
 3. **Assemblies** (`@acaprino/sigrid/assemblies`). Components that do a whole function together, with a state of
    their own: the command palette, a conversation and its field, a deck decided one card at a time, a tree, the
    attachments and their viewer, the look settings. Those that rest on a library an app may not need have entries of
-   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`, `/terminal`, `/code`), so an app loads only what it uses.
+   their own (`/table`, `/virtual`, `/reorder`, `/rich-text`, `/graph`, `/terminal`, `/code`, `/chart`), so an app loads only what it uses.
 4. **Applications, as examples** (`agents/examples`, and the showcase). Whole apps made of the three levels above and
    nothing else: a to-do app, a mail client, a workspace, a screen that fits. They are there to start from and to
    read; no app is part of the package's code.

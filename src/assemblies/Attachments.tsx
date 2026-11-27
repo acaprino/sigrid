@@ -158,17 +158,30 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
   const [link, setLink] = useState('')
   const listRef = useRef<HTMLUListElement>(null)
   const chooseRef = useRef<HTMLButtonElement>(null)
-  // «Remove» pressed: the id and the position of the row. When the row disappears, focus goes to whatever takes its place.
+  // «Remove» or «Try again» pressed: when the row disappears or its retry button unmounts, focus moves to a reachable button in the row or to the picker.
   const removing = useRef<{ id: string; index: number } | null>(null)
+  const retrying = useRef<{ id: string; index: number } | null>(null)
   useEffect(() => {
     const r = removing.current
-    if (!r || attachments.some((a) => a.id === r.id)) return
-    removing.current = null
-    const rows = listRef.current?.querySelectorAll<HTMLElement>(':scope > li') ?? []
-    const row = rows[Math.min(r.index, rows.length - 1)]
-    // The first reachable button: the clickable thumbnail is out of the Tab order and hidden, it must not take focus.
-    const target = row?.querySelector<HTMLElement>('button:not([tabindex="-1"])') ?? chooseRef.current
-    target?.focus()
+    if (r && !attachments.some((a) => a.id === r.id)) {
+      removing.current = null
+      const rows = listRef.current?.querySelectorAll<HTMLElement>(':scope > li') ?? []
+      const row = rows[Math.min(r.index, rows.length - 1)]
+      // The first reachable button: the clickable thumbnail is out of the Tab order and hidden, it must not take focus.
+      const target = row?.querySelector<HTMLElement>('button:not([tabindex="-1"])') ?? chooseRef.current
+      target?.focus()
+    }
+    const ret = retrying.current
+    if (ret) {
+      const current = attachments.find((a) => a.id === ret.id)
+      if (!current || current.state !== 'failed') {
+        retrying.current = null
+        const rows = listRef.current?.querySelectorAll<HTMLElement>(':scope > li') ?? []
+        const at = current ? attachments.indexOf(current) : Math.min(ret.index, rows.length - 1)
+        const target = rows[at]?.querySelector<HTMLElement>('button:not([tabindex="-1"])') ?? chooseRef.current
+        target?.focus()
+      }
+    }
   }, [attachments])
 
   // Ark's FileUpload, used for its picker and its check (`useFileChoice`): each choice is judged on its own and the
@@ -220,7 +233,7 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
             // Under the title: the detail, or the address. Always text: an `href` never becomes a link.
             const detail = a.detail ?? a.href
             const open = a.open
-            const canOpen = open !== null && a.state !== 'textOnly'
+            const canOpen = open !== null && a.state !== 'textOnly' && a.state !== 'uploading' && a.state !== 'failed'
             const thumb = a.thumbnail ? thumbnails?.[a.id] : undefined
             return (
               // A file tile is a raised surface: the xs shadow, no border (R4).
@@ -243,7 +256,15 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                     </p>
                   ) : null}
                   {a.state === 'uploading' ? (
-                    <Progress value={a.progress ?? null} size="sm" showValue valueText={a.stateLabel ?? undefined} aria-label={a.title} className="mt-1.5" />
+                    <Progress
+                      value={a.progress ?? null}
+                      countdown={a.progress != null && a.progress >= 100}
+                      size="sm"
+                      showValue
+                      valueText={a.stateLabel ?? (a.progress == null ? said.uploading : undefined)}
+                      aria-label={a.title}
+                      className="mt-1.5"
+                    />
                   ) : a.state === 'failed' ? (
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-destructive">
                       <Icon name="error" className="size-3.5 shrink-0" />
@@ -254,12 +275,20 @@ export function AttachmentsSection<A>({ attachments, onAction, onAttach, maxFile
                   ) : null}
                 </div>
                 {a.state === 'failed' && a.retry != null ? (
-                  <Button variant="outline" size="xs" aria-label={said.retryNamed(a.title)} onClick={() => onAction(a.retry!)}>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    aria-label={said.retryNamed(a.title)}
+                    onClick={() => {
+                      retrying.current = { id: a.id, index }
+                      onAction(a.retry!)
+                    }}
+                  >
                     <Icon name="refresh" className="size-3.5" />
                     {said.retry}
                   </Button>
                 ) : null}
-                {canOpen && open !== null && a.state !== 'uploading' && a.state !== 'failed' ? (
+                {canOpen && open !== null ? (
                   <Button variant="ghost" size="xs" aria-label={said.openNamed(a.title)} onClick={() => onAction(open)}>
                     {said.open}
                   </Button>

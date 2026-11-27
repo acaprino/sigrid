@@ -141,19 +141,28 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
     const from = picker.focusedValue
     const along = (((from.toDate('UTC').getUTCDay() - first.value.toDate('UTC').getUTCDay()) % 7) + 7) % 7
     picker.setFocusedValue(e.key === 'Home' ? from.subtract({ days: along }) : from.add({ days: 6 - along }))
-    // Ark moves its roving `tabIndex` to that day; focus follows it once the grid has rendered it.
-    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[data-part="table-cell-trigger"][data-focus]')?.focus({ preventScroll: true }))
+    // Ark moves its roving `tabIndex` to that day; focus follows it once the grid has rendered it, skipping outside-range cells.
+    requestAnimationFrame(() =>
+      root.current?.querySelector<HTMLElement>('[data-part="table-cell-trigger"][data-view="day"][data-focus]:not([data-outside-range])')?.focus({ preventScroll: true }),
+    )
   }
+  const firstHeadingId = React.useId()
+  const secondHeadingId = React.useId()
   const second = picker.numOfMonths > 1 ? picker.getOffset({ months: 1 }) : null
   const renderGrid = (
     weeks: typeof picker.weeks,
     visibleRange: typeof picker.visibleRange,
     ref?: React.RefObject<HTMLTableElement | null>,
     heading?: string,
+    headingId?: string,
   ) => (
     <div className="flex flex-col gap-2">
-      {heading ? <p className="text-center text-xs font-medium text-ink-soft">{heading}</p> : null}
-      <DatePicker.Table ref={ref} onKeyDown={weekEdge} className="w-full border-collapse">
+      {heading ? (
+        <p id={headingId} className="text-center text-xs font-medium text-ink-soft">
+          {heading}
+        </p>
+      ) : null}
+      <DatePicker.Table ref={ref} aria-labelledby={heading ? headingId : undefined} onKeyDown={weekEdge} className="w-full border-collapse">
         {/* Ark hides the header row from screen readers (each day says its weekday): here it stays, as in a table. */}
         <DatePicker.TableHead aria-hidden={false}>
           <DatePicker.TableRow className="flex gap-1">
@@ -168,7 +177,12 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
           {weeks.map((week, index) => (
             <DatePicker.TableRow key={index} className="mt-1 flex w-full gap-1">
               {week.map((day, column) => {
-                const again = onPressSelected && picker.getDayTableCellState({ value: day, visibleRange }).selected ? onPressSelected : undefined
+                const cellState = picker.getDayTableCellState({ value: day, visibleRange })
+                // In two-month view, leave outside-range slots empty so adjacent months never mount duplicate date IDs or double tab stops.
+                if (second && cellState.outsideRange) {
+                  return <td key={column} aria-hidden="true" className="relative aspect-square flex-1 select-none p-0" />
+                }
+                const again = onPressSelected && cellState.selected ? onPressSelected : undefined
                 return (
                   // Keyed by its place, not by its date: when the month changes the buttons stay (with other days),
                   // so the focused one is not removed from under the keyboard. Inside a modal sheet a focus that
@@ -207,8 +221,8 @@ function Calendar({ onPressSelected, className }: CalendarProps) {
         <Header view="day" />
         {second ? (
           <div className="flex flex-col gap-4 md:flex-row">
-            {renderGrid(picker.weeks, picker.visibleRange, grid, picker.visibleRangeText.start)}
-            {renderGrid(second.weeks, second.visibleRange, undefined, second.visibleRangeText.start)}
+            {renderGrid(picker.weeks, picker.visibleRange, grid, picker.visibleRangeText.start, firstHeadingId)}
+            {renderGrid(second.weeks, second.visibleRange, undefined, second.visibleRangeText.start, secondHeadingId)}
           </div>
         ) : (
           renderGrid(picker.weeks, picker.visibleRange, grid)

@@ -84,6 +84,7 @@ describe("the sheet keeps its own ref beside the caller's", () => {
     const opener = screen.getByRole('button', { name: 'Open' })
     act(() => opener.focus())
     fireEvent.click(opener)
+    await settle()
     // The caller's ref has the sheet, and the requested field has the focus right away (the sheet's own ref ran).
     expect(sheetRef.current).toBe(document.querySelector('[data-slot="sheet-content"]'))
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Name' }))

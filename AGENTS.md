@@ -65,8 +65,8 @@ copy a component of the toolkit into the app, and do not add another component l
    `/components`, `/layout` (the frame) and `/assemblies`; the main entry, `@acaprino/sigrid`, holds what does not
    draw (themes, density, words, motion, media queries). The catalogue says which entry exports each name: do not
    guess it. The table, the virtual list, the list put in order by hand, the rich text field, the graph canvas, the
-   terminal and the code view are assemblies with entries of their own (`/table`, `/virtual`, `/reorder`, `/rich-text`,
-   `/graph`, `/terminal`, `/code`; the graph also needs `@import "@acaprino/sigrid/graph.css"`; the terminal brings
+   terminal, the code view and statistical charts are assemblies with entries of their own (`/table`, `/virtual`, `/reorder`, `/rich-text`,
+   `/graph`, `/terminal`, `/code`, `/chart`; the graph also needs `@import "@acaprino/sigrid/graph.css"`; the terminal brings
    xterm's stylesheet itself, so an app imports none; a terminal keeps its keys, and the ones the app keeps are `appKeys`).
 3. Write no class of your own. The tokens are what the toolkit's parts are made of, and what a part added to the
    toolkit uses: `bg-paper`, `bg-raised`, `text-ink`, `text-ink-soft`, `text-ink-mute`,

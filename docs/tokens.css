@@ -385,6 +385,12 @@
 [data-mark-hue="18"] {
   --mark-dot: var(--color-mark-18);
 }
+[data-scheme="light"] {
+  --line-subtle: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+[data-scheme="dark"] {
+  --line-subtle: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
 :root {
   --motion-faster: 100ms;
   --motion-fast: 150ms;

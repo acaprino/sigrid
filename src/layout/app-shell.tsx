@@ -95,8 +95,8 @@ const KEEPS_ESCAPE = `${SURFACES}, [role="combobox"][aria-expanded="true"], [ari
 // A field that holds text keeps its Escape too: there it empties a search or gives up an edit.
 const TEXT_FIELD = 'textarea, input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="file"], [type="color"], [type="image"])'
 const EDITED = '[contenteditable=""], [contenteditable="true"], [contenteditable="plaintext-only"]'
-// Base UI's sentinels at the ends of a layer: the focus passes through them, it is never the person's place.
-const GUARD = "[data-base-ui-focus-guard]"
+// Focus guards at the ends of a layer: the focus passes through them, it is never the person's place.
+const GUARD = "[data-focus-guard]"
 
 /** Whether `target` is a field that holds text, or text being edited in place. */
 const holdsText = (target: EventTarget | null) =>

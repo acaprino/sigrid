@@ -1,5 +1,5 @@
-// `FilterBar` and `FilterPopover` (`@acaprino/sigrid/components`): search, quick slot, structured rules, clear-all
-// and `WordsProvider` localization.
+// `FilterBar` and `FilterPopover` (`@acaprino/sigrid/components`): search, quick slot, structured rules,
+// two-bound `between` inputs, focus recovery on rule removal, clear-all and `WordsProvider` localization.
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
@@ -19,8 +19,8 @@ describe('FilterBar', () => {
     const { rerender } = render(
       <FilterBar
         search={{ value: '', onChange: onSearch, label: 'Search orders' }}
-        quick={<Button variant="outline" size="sm">Last 7 days</Button>}
-        actions={<Button variant="outline" size="sm">Export</Button>}
+        quick={<Button variant="outline">Last 7 days</Button>}
+        actions={<Button variant="outline">Export</Button>}
         appliedCount={0}
         onClearAll={onClearAll}
       />,
@@ -42,7 +42,7 @@ describe('FilterBar', () => {
 })
 
 describe('FilterPopover', () => {
-  test('adds, edits, removes and applies filter rules and obeys WordsProvider', () => {
+  test('adds, edits, removes (preserving focus) and applies filter rules, obeying WordsProvider', () => {
     const onApply = vi.fn()
     const initial: FilterRule[] = [{ id: 'r1', field: 'title', operator: 'contains', value: 'bug' }]
 
@@ -60,13 +60,39 @@ describe('FilterPopover', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aggiungi filtro' }))
     expect(document.querySelectorAll('[data-slot="filter-rule"]')).toHaveLength(2)
 
+    // Removing the second rule returns focus to the remaining rule's remove button rather than document.body.
+    const removes = screen.getAllByRole('button', { name: 'Remove filter' })
+    fireEvent.click(removes[1]!)
+    expect(document.querySelectorAll('[data-slot="filter-rule"]')).toHaveLength(1)
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove filter' }))
+
     fireEvent.change(screen.getByDisplayValue('bug'), { target: { value: 'urgent' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Applica' }))
+    const applyBtn = screen.getByRole('button', { name: 'Applica' })
+    // Apply stays secondary so the non-modal popover never introduces a second solid primary button (R3).
+    expect(applyBtn.getAttribute('data-variant')).toBe('secondary')
+    fireEvent.click(applyBtn)
 
     expect(onApply).toHaveBeenCalledTimes(1)
     const applied = onApply.mock.calls[0]![0] as FilterRule[]
-    expect(applied).toHaveLength(2)
+    expect(applied).toHaveLength(1)
     expect(applied[0]!.value).toBe('urgent')
-    expect(applied[1]!.field).toBe('status')
+  })
+
+  test('renders both lower and upper bound inputs for the between operator on number fields', () => {
+    const onApply = vi.fn()
+    const initial: FilterRule[] = [{ id: 'r1', field: 'amount', operator: 'between', value: '10', valueEnd: '50' }]
+    render(<FilterPopover fields={FIELDS} rules={initial} onApply={onApply} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    const from = screen.getByLabelText('From') as HTMLInputElement
+    const to = screen.getByLabelText('To') as HTMLInputElement
+    expect(from.value).toBe('10')
+    expect(to.value).toBe('50')
+
+    fireEvent.change(from, { target: { value: '20' } })
+    fireEvent.change(to, { target: { value: '80' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(onApply).toHaveBeenCalledWith([{ id: 'r1', field: 'amount', operator: 'between', value: '20', valueEnd: '80' }])
   })
 })
