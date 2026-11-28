@@ -171,8 +171,13 @@ function DialogContent({
   const words = useWords()
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterDialog(el))
   const autoFocus = initialFocus === undefined
+  // Only for a dialog that has just opened: Ark composes the content's ref again at a render, so the same element
+  // comes back here while the person types in it, or while it closes after the focus went back to its opener.
+  const focused = React.useRef<Element | null>(null)
   const first = React.useCallback(
     (el: HTMLDivElement | null) => {
+      if (!el || focused.current === el) return
+      focused.current = el
       if (autoFocus) focusFirst(el)
     },
     [autoFocus],
