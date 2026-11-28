@@ -24,6 +24,7 @@
 //   run only while the focus is inside it, so two apps on one page do not both answer one key.
 import * as React from "react"
 import { FIELDS, within } from "../internal/desktop-guard"
+import { escapeLeft } from "../internal/overlay"
 import { cn } from "../lib/utils"
 import { DEFAULT_WORDS, useWords, type Words } from "../words"
 import { Kbd, ON_PHONE_HIDDEN } from "../primitives/kbd"
@@ -166,7 +167,9 @@ const CARET_KEYS = new Set(["arrowup", "arrowdown", "arrowleft", "arrowright", "
 function leftToFocus(want: Combination, event: KeyboardEvent): boolean {
   const functionKey = /^f\d{1,2}$/.test(want.key)
   const plain = !want.ctrl && !want.alt && !functionKey
-  if (plain && event.defaultPrevented) return true
+  // A key something answered is not a command's, but for an Esc a sheet declined (`closesOnEscape`): Ark marks it
+  // handled, and it is the app's.
+  if (plain && event.defaultPrevented && !escapeLeft(event)) return true
   if (within(event, SURFACES) && (plain || functionKey)) return true
   if (within(event, FIELDS)) return plain ? want.key !== "escape" || filledInInspector(event) : !functionKey && CARET_KEYS.has(want.key)
   return plain && CONTROL_KEYS.has(want.key) && within(event, CONTROLS)
