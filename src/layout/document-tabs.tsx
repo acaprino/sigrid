@@ -105,6 +105,16 @@ function DocumentTabs({ "aria-label": label, value, onValueChange, onAdd, addLab
     target?.focus()
   })
 
+  // When `value` is null or matches no enabled tab, keep the strip reachable by Tab and F6 via the first enabled tab.
+  React.useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    const triggers = Array.from(el.querySelectorAll<HTMLElement>('[data-slot="tabs-trigger"]:not(:disabled):not([aria-disabled="true"])'))
+    if (triggers.length > 0 && !triggers.some((t) => t.tabIndex === 0)) {
+      triggers[0]!.tabIndex = 0
+    }
+  })
+
   const strip = React.useMemo<Strip>(() => ({ look, value: chosen, flush, closing }), [look, chosen, flush, closing])
   const addName = addLabel ?? words.newTab
   return (
@@ -131,7 +141,7 @@ function DocumentTabs({ "aria-label": label, value, onValueChange, onAdd, addLab
         </StripContext.Provider>
         {onAdd ? (
           <>
-            <span aria-hidden="true" data-slot="document-tabs-divider" className="mx-1 h-4 w-px shrink-0 self-center bg-line" />
+            <span aria-hidden="true" data-slot="document-tabs-divider" className="mx-1 h-4 w-px shrink-0 self-center bg-ink/15" />
             <Tooltip label={addName} animated={animated}>
               <Button ref={add} data-slot="document-tabs-add" variant="ghost" size="icon-sm" aria-label={addName} animated={animated} className="self-center" onClick={onAdd}>
                 <Icon name="plus" />
@@ -221,6 +231,9 @@ function DocumentTab({ value, icon, color, closable, onClose, closeLabel, disabl
       data-slot="document-tab"
       data-value={value}
       {...(selected ? { "data-selected": "" } : {})}
+      onMouseDown={(event) => {
+        if (event.button === 1 && canClose) event.preventDefault()
+      }}
       onAuxClick={(event) => {
         if (event.button !== 1 || !canClose) return
         event.preventDefault()
@@ -245,7 +258,8 @@ function DocumentTab({ value, icon, color, closable, onClose, closeLabel, disabl
           close(true)
         }}
         // Attached, the chosen tab's surface is the item's: the tab itself takes no tint.
-        className={cn("max-w-56", canClose && "pe-8 pointer-coarse:pe-12", attached && "data-[selected]:bg-transparent data-[selected]:text-ink")}
+        // design-check-ignore-next-line dimension-value: room for the icon-xs close button (`--control-xs`) plus its 4px edge inset and 4px gap
+        className={cn("max-w-56", canClose && "pe-[calc(var(--control-xs)_+_0.5rem)] pointer-coarse:pe-12", attached && "data-[selected]:bg-transparent data-[selected]:text-ink")}
       >
         {dot ? <Dot color={dot} /> : null}
         {icon}

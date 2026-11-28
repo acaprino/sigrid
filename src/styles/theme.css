@@ -818,6 +818,8 @@ svg[data-glyph][stroke-width="2"] {
     transition-duration: var(--motion-fast);
     &[data-side="right"] { translate: 32px 0; }
     &[data-side="left"] { translate: -32px 0; }
+    &:dir(rtl)[data-side="right"] { translate: -32px 0; }
+    &:dir(rtl)[data-side="left"] { translate: 32px 0; }
     &[data-side="top"] { translate: 0 -32px; }
     &[data-side="bottom"] { translate: 0 32px; }
   }

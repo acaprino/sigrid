@@ -115,7 +115,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="top-24 translate-y-0 gap-0 overflow-hidden p-0 md:p-0">
+      <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="mt-20 self-start gap-0 overflow-hidden p-0 md:p-0">
         <DialogTitle className="sr-only">{name}</DialogTitle>
         <label className="flex min-h-12 items-center gap-2 border-b border-line px-4">
           <Icon name="search" className="size-4 text-ink-mute" />

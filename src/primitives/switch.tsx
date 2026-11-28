@@ -66,7 +66,7 @@ function Switch({ checked, defaultChecked, onCheckedChange, disabled, invalid, r
       >
         <SwitchPrimitive.Thumb
           data-slot="switch-thumb"
-          className={cn("size-4 translate-x-0.5 rounded-full bg-paper data-[state=checked]:translate-x-5.5 data-[state=checked]:bg-primary-foreground", moving && "motion-safe:transition-transform motion-safe:duration-(--motion-faster) motion-safe:ease-(--motion-ease-move)")}
+          className={cn("size-4 translate-x-0.5 rounded-full bg-paper data-[state=checked]:translate-x-5.5 data-[state=checked]:bg-primary-foreground rtl:-translate-x-0.5 rtl:data-[state=checked]:-translate-x-5.5", moving && "motion-safe:transition-transform motion-safe:duration-(--motion-faster) motion-safe:ease-(--motion-ease-move)")}
         />
       </SwitchPrimitive.Control>
       {children != null ? (

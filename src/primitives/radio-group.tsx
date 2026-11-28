@@ -85,10 +85,12 @@ function RadioGroup({
     )
     if (radios.length === 0) return
     const current = radios.indexOf(document.activeElement as HTMLInputElement)
+    const rtl = getComputedStyle(event.currentTarget).direction === "rtl"
+    const forward = key === "ArrowDown" || (rtl ? key === "ArrowLeft" : key === "ArrowRight")
     let target: HTMLInputElement | undefined
     if (key === "Home") target = radios[0]
     else if (key === "End") target = radios[radios.length - 1]
-    else if (key === "ArrowRight" || key === "ArrowDown") {
+    else if (forward) {
       target = radios[current === -1 ? 0 : (current + 1) % radios.length]
     } else {
       target = radios[current === -1 ? radios.length - 1 : (current - 1 + radios.length) % radios.length]

@@ -141,8 +141,13 @@ function Sidebar({ collapsed: collapsedProp = false, onCollapsedChange, toggle: 
     <div
       data-slot="sidebar"
       data-collapsed={rail || undefined}
-      // design-check-ignore-next-line dimension-value: the rail is one row wide (the density's row) and the sidebar's own 8px of padding on each side
-      className={cn("flex h-full shrink-0 flex-col gap-2 bg-sidebar-paper p-2 text-sm text-sidebar-ink", rail ? "w-[calc(var(--row-height)_+_1rem)]" : "w-64", narrow && "w-full", className)}
+      // design-check-ignore-next-line dimension-value: the rail is one row wide (or wide enough to align with the macOS titlebar start cell when unified) and the sidebar's own 8px of padding on each side
+      className={cn(
+        "flex h-full shrink-0 flex-col gap-2 bg-sidebar-paper p-2 text-sm text-sidebar-ink",
+        rail ? (owned ? "w-[max(calc(var(--row-height)_+_1rem),calc(var(--titlebar-start,0px)_+_var(--control-xs)_+_1rem))]" : "w-[calc(var(--row-height)_+_1rem)]") : "w-64",
+        narrow && "w-full",
+        className,
+      )}
     >
       {toggle && place === "head" ? (
         // The header's row: what the app put in `header`, then the button at its end. On the rail the header is gone,
@@ -160,12 +165,12 @@ function Sidebar({ collapsed: collapsedProp = false, onCollapsedChange, toggle: 
           {toggle}
           {header && !rail ? (
             <>
-              <span data-slot="sidebar-head-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-line" />
+              <span data-slot="sidebar-head-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-sidebar-ink/15" />
               <div data-slot="sidebar-header" className="min-w-0 flex-1">{header}</div>
             </>
           ) : null}
         </div>
-      ) : header && !rail ? (
+      ) : header && !rail && (!owned || narrow) ? (
         <div data-slot="sidebar-header" className="shrink-0">{header}</div>
       ) : null}
       {search && !rail ? <SearchField value={typed} onValueChange={setTyped} aria-label={words.sidebar.search} placeholder={words.sidebar.search} className="shrink-0" /> : null}

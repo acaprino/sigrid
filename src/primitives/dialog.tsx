@@ -29,7 +29,7 @@ type RootProps = Omit<React.ComponentProps<typeof DialogPrimitive.Root>, "onOpen
   onOpenChange?: ((open: boolean) => void) | undefined
 }
 
-function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }: RootProps) {
+function Dialog({ open: openProp, defaultOpen = false, onOpenChange, onInteractOutside, ...props }: RootProps) {
   const [inner, setInner] = React.useState(defaultOpen)
   const open = openProp ?? inner
   const [focusConfig, setFocusConfig] = React.useState<FocusConfig>({})
@@ -71,6 +71,7 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }:
   return (
     <DialogFocusContext.Provider value={setFocusStable}>
       <DialogPrimitive.Root
+        {...props}
         open={open}
         lazyMount
         unmountOnExit
@@ -80,6 +81,7 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }:
         {...(initialFocusEl ? { initialFocusEl } : {})}
         {...(finalFocusEl ? { finalFocusEl } : {})}
         onInteractOutside={(event) => {
+          onInteractOutside?.(event)
           const target = event.detail.originalEvent.target
           // A click on a notification (undoing) or on the window's title bar (moving/minimizing) does not leave the dialog.
           if (inToasts(target) || inTitleBar(target)) {
@@ -90,7 +92,6 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, ...props }:
           if (openProp === undefined) setInner(details.open)
           onOpenChange?.(details.open)
         }}
-        {...props}
       />
     </DialogFocusContext.Provider>
   )

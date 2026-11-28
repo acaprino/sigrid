@@ -35,6 +35,7 @@ type ContentConfig = {
 type MenuContextValue = {
   setConfig: (next: ContentConfig) => void
   registerSelect: (value: string, fn: (() => void) | undefined) => () => void
+  setContentEl?: ((el: HTMLDivElement | null) => void) | undefined
 }
 
 const MenuStateContext = React.createContext<MenuContextValue | null>(null)
@@ -48,15 +49,21 @@ type DropdownMenuProps = {
   defaultOpen?: boolean | undefined
   onOpenChange?: ((open: boolean) => void) | undefined
   loopFocus?: boolean | undefined
+  // Kept for caller compatibility; Ark UI menus are non-modal by default.
   modal?: boolean | undefined
   children?: React.ReactNode
 }
+
+const FOCUSABLE_OUTSIDE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable=""], [contenteditable="true"]'
 
 function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopFocus = false, children }: DropdownMenuProps) {
   const [inner, setInner] = React.useState(defaultOpen)
   const open = openProp ?? inner
   const [config, setConfig] = React.useState<ContentConfig>({ side: "bottom", align: "center", sideOffset: 4 })
   const handlers = React.useRef(new Map<string, () => void>())
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
+  const dismissedToOutsideFocus = React.useRef(false)
 
   const setConfigStable = React.useCallback((next: ContentConfig) => {
     setConfig((prev) =>
@@ -98,7 +105,10 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
     }
   }, [config.side, config.align, config.sideOffset, config.alignOffset, config.collisionPadding, config.anchor])
 
-  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect }), [setConfigStable, registerSelect])
+  const setContentEl = React.useCallback((el: HTMLDivElement | null) => {
+    contentRef.current = el
+  }, [])
+  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect, setContentEl }), [setConfigStable, registerSelect, setContentEl])
 
   return (
     <MenuStateContext.Provider value={state}>
@@ -108,15 +118,29 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
         lazyMount
         unmountOnExit
         positioning={positioning}
+        onPointerDownOutside={(event) => {
+          const target = event.detail.originalEvent.target
+          dismissedToOutsideFocus.current = target instanceof Element && target.closest(FOCUSABLE_OUTSIDE) !== null
+        }}
         onSelect={(details) => {
           handlers.current.get(details.value)?.()
         }}
         onOpenChange={(details) => {
           if (openProp === undefined) setInner(details.open)
           onOpenChange?.(details.open)
-          if (!details.open && config.finalFocus?.current) {
-            const target = config.finalFocus.current
-            queueMicrotask(() => target.focus())
+          if (!details.open) {
+            const skipOutside = dismissedToOutsideFocus.current
+            dismissedToOutsideFocus.current = false
+            const target = config.finalFocus?.current
+            const menuEl = contentRef.current
+            if (!skipOutside && target) {
+              queueMicrotask(() => {
+                if (!target.isConnected) return
+                const active = target.ownerDocument.activeElement
+                const stillHere = active === null || active === target.ownerDocument.body || active === target.ownerDocument.documentElement || (menuEl !== null && menuEl.contains(active))
+                if (stillHere) target.focus()
+              })
+            }
           }
         }}
       >
@@ -179,12 +203,25 @@ function DropdownMenuContent({
 }: DropdownMenuContentProps) {
   const ctx = React.useContext(MenuStateContext)
   const setConfig = ctx?.setConfig
+  const setContentEl = ctx?.setContentEl
   React.useLayoutEffect(() => {
     setConfig?.({ side, align, sideOffset, alignOffset, collisionPadding, anchor, finalFocus })
   }, [setConfig, side, align, sideOffset, alignOffset, collisionPadding, anchor, finalFocus])
 
+  const localRef = React.useRef<HTMLDivElement | null>(null)
   const enter = useEnter(animated)
-  const refs = useMergedRef<HTMLDivElement>(enter, ref)
+  const refs = useMergedRef<HTMLDivElement>(localRef, setContentEl, enter, ref)
+
+  // Triggerless menus (such as `ContextMenu`) carry `aria-label` without a rendered trigger element; remove Ark's
+  // dangling `aria-labelledby` IDREF so screen readers and a11y audits see a clean label.
+  React.useLayoutEffect(() => {
+    const el = localRef.current
+    if (!el || !props["aria-label"]) return
+    const labelledBy = el.getAttribute("aria-labelledby")
+    if (labelledBy && !el.ownerDocument.getElementById(labelledBy)) {
+      el.removeAttribute("aria-labelledby")
+    }
+  })
   return (
     <OverlayPortal>
       <Menu.Positioner data-slot="dropdown-menu-positioner" className="z-50 outline-none">
@@ -363,7 +400,7 @@ function DropdownMenuSub({ open, defaultOpen, onOpenChange, children }: Dropdown
   const setConfig = React.useCallback((next: ContentConfig) => {
     setGutter((prev) => (prev === next.sideOffset ? prev : next.sideOffset))
   }, [])
-  const positioning = React.useMemo(() => ({ placement: "right-start" as const, gutter }), [gutter])
+  const positioning = React.useMemo(() => ({ placement: placementOf("right", "start"), gutter }), [gutter])
   const state = React.useMemo(() => ({ setConfig, registerSelect }), [setConfig, registerSelect])
   return (
     <MenuStateContext.Provider value={state}>

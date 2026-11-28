@@ -60,26 +60,33 @@ export type ToolbarProps = {
 
 const NAV_SELECTOR = "[data-toolbar-nav]"
 
+function navItems(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(NAV_SELECTOR)).filter(
+    (item) => item.closest("[hidden], [inert]") === null,
+  )
+}
+
 function Toolbar({ size, className, children, ...props }: ToolbarProps) {
   const drag = React.useContext(TitleBarDragContext)
   const bar = React.useContext(TitleBarSizeContext)
   const own = size ?? (bar === "compact" ? "sm" : "md")
   const root = React.useRef<HTMLDivElement>(null)
 
-  // Keep a single Tab stop across the toolbar's items: the active item (or the first) gets tabIndex 0, the rest -1.
+  // Keep a single Tab stop across the toolbar's visible items: active element first, then existing tabIndex 0, then first item.
   React.useLayoutEffect(() => {
     const el = root.current
     if (!el) return
-    const items = Array.from(el.querySelectorAll<HTMLElement>(NAV_SELECTOR))
+    const items = navItems(el)
     if (items.length === 0) return
-    const current = items.find((item) => item === el.ownerDocument.activeElement || item.tabIndex === 0) ?? items[0]
+    const active = el.ownerDocument.activeElement
+    const current = items.find((item) => item === active) ?? items.find((item) => item.tabIndex === 0) ?? items[0]
     for (const item of items) item.tabIndex = item === current ? 0 : -1
   })
 
   const onFocusCapture = (event: React.FocusEvent<HTMLDivElement>) => {
     const target = (event.target as Element).closest?.(NAV_SELECTOR) as HTMLElement | null
     if (!target || !root.current?.contains(target)) return
-    for (const item of root.current.querySelectorAll<HTMLElement>(NAV_SELECTOR)) {
+    for (const item of navItems(root.current)) {
       item.tabIndex = item === target ? 0 : -1
     }
   }
@@ -90,7 +97,7 @@ function Toolbar({ size, className, children, ...props }: ToolbarProps) {
     if (key !== "ArrowRight" && key !== "ArrowLeft" && key !== "Home" && key !== "End") return
     const el = root.current
     if (!el) return
-    const items = Array.from(el.querySelectorAll<HTMLElement>(NAV_SELECTOR))
+    const items = navItems(el)
     const current = items.indexOf(el.ownerDocument.activeElement as HTMLElement)
     if (current === -1 || items.length === 0) return
     const rtl = getComputedStyle(el).direction === "rtl"
@@ -202,6 +209,7 @@ function ToolbarButton({ label, icon, shortcut, variant = "ghost", pressed, keep
       aria-label={label}
       aria-pressed={pressed}
       aria-disabled={disabled ? true : undefined}
+      tabIndex={-1}
       type={type}
       onClick={disabled ? (event) => event.preventDefault() : onClick}
       {...props}
@@ -296,6 +304,7 @@ function ToolbarTab({ value, icon, disabled, className, children }: ToolbarTabPr
       data-slot="toolbar-tab"
       data-toolbar-nav=""
       data-disabled={disabled ? "" : undefined}
+      tabIndex={-1}
       type="button"
       aria-disabled={disabled ? true : undefined}
       aria-current={current ? "page" : undefined}

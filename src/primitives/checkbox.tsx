@@ -45,6 +45,29 @@ type CheckboxNativeProps = Omit<
 const CONTROL_CLASS =
   "peer relative grid size-4.5 shrink-0 place-content-center rounded-sm after:absolute after:-inset-1.5 after:content-[''] pointer-coarse:after:-inset-4.5 border border-input not-data-disabled:data-[state=unchecked]:hover:border-ink-soft not-data-disabled:data-[state=checked]:hover:border-accent-hover not-data-disabled:data-[state=checked]:hover:bg-accent-hover not-data-disabled:data-[state=indeterminate]:hover:border-accent-hover not-data-disabled:data-[state=indeterminate]:hover:bg-accent-hover data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[invalid]:border-destructive data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground outline-hidden data-[focus-visible]:outline-solid data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-ring"
 
+function CheckPop({
+  checked,
+  toggled,
+  motion,
+  svg,
+}: {
+  checked: boolean
+  toggled: React.RefObject<boolean>
+  motion: ReturnType<typeof useMotion>
+  svg: React.RefObject<SVGSVGElement | null>
+}) {
+  const prev = React.useRef(checked)
+  React.useLayoutEffect(() => {
+    const becameChecked = checked && !prev.current
+    prev.current = checked
+    if (becameChecked && toggled.current && motion && svg.current) {
+      motion.popCheck(svg.current)
+    }
+    if (toggled.current) toggled.current = false
+  }, [checked, motion, svg, toggled])
+  return null
+}
+
 function Checkbox({
   checked,
   defaultChecked,
@@ -66,6 +89,7 @@ function Checkbox({
   const input = React.useRef<HTMLInputElement>(null)
   const inputRef = useMergedRef(input, outerRef)
   const checkSvg = React.useRef<SVGSVGElement>(null)
+  const toggled = React.useRef(false)
 
   // Without a visible label Ark still points the input at its label part (`aria-labelledby`), which is not on the page:
   // the pointer is taken off, and the name is the caller's `aria-label` or the `<label htmlFor>` elsewhere.
@@ -90,9 +114,7 @@ function Checkbox({
       {...(value !== undefined ? { value } : {})}
       {...(id !== undefined ? { ids: { hiddenInput: id } } : {})}
       onCheckedChange={(details) => {
-        if (details.checked === true && motion && checkSvg.current) {
-          motion.popCheck(checkSvg.current)
-        }
+        if (details.checked === true) toggled.current = true
         onCheckedChange?.(details.checked)
       }}
     >
@@ -101,6 +123,7 @@ function Checkbox({
           const state = api.indeterminate ? "indeterminate" : api.checked ? "checked" : "unchecked"
           return (
             <>
+              <CheckPop checked={api.checked} toggled={toggled} motion={motion} svg={checkSvg} />
               <CheckboxPrimitive.HiddenInput ref={inputRef} data-state={state} aria-checked={api.indeterminate ? "mixed" : api.checked} {...props} />
               <CheckboxPrimitive.Control data-slot="checkbox-control" className={cn(CONTROL_CLASS, className)}>
                 <CheckboxPrimitive.Indicator

@@ -596,8 +596,12 @@ function Workspace<T extends WorkspaceTab = WorkspaceTab>({
                           key={tab.id}
                           value={tab.id}
                           data-tab-id={tab.id}
-                          className={cn("max-w-56", closable && "pe-8")}
+                          // design-check-ignore-next-line dimension-value: room for the icon-xs close button (`--control-xs`) plus its 4px edge inset and 4px gap
+                          className={cn("max-w-56", closable && "pe-[calc(var(--control-xs)_+_0.5rem)]")}
                           onPointerDown={(event) => startDrag(event, tab, group)}
+                          onMouseDown={(event) => {
+                            if (event.button === 1 && closable) event.preventDefault()
+                          }}
                           onKeyDown={(event) => onTabKey(event, tab, group)}
                           onAuxClick={(event) => {
                             if (event.button !== 1 || !closable) return

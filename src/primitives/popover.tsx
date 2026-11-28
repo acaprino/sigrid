@@ -17,6 +17,7 @@ import { Popover as PopoverPrimitive } from "@ark-ui/react/popover"
 import { cn } from "../lib/utils"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
+import { inToasts } from "../internal/overlay"
 import { OverlayPortal } from "../internal/portal"
 
 type Side = "top" | "right" | "bottom" | "left"
@@ -61,10 +62,13 @@ type PopoverProps = {
 const within = (anchor: Element | null, target: EventTarget | null | undefined): boolean =>
   anchor !== null && target instanceof Node && anchor.contains(target)
 
-/** True for a press inside a nested floating overlay (a Select or Combobox listbox opened from inside the popover). */
+/** True for a press inside a nested floating overlay or notification stack opened alongside the popover. */
 const inNestedOverlay = (target: EventTarget | null | undefined): boolean =>
-  target instanceof Element &&
-  target.closest('[data-slot="select-content"], [data-slot="combobox-content"], [data-slot="dropdown-menu-content"]') !== null
+  inToasts(target) ||
+  (target instanceof Element &&
+    target.closest(
+      '[data-slot="select-content"], [data-slot="combobox-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="popover-content"]',
+    ) !== null)
 
 function Popover({ open: openProp, defaultOpen = false, onOpenChange, modal = false, anchor: given, children }: PopoverProps) {
   const [inner, setInner] = React.useState(defaultOpen)
@@ -116,11 +120,14 @@ function Popover({ open: openProp, defaultOpen = false, onOpenChange, modal = fa
   }, [openProp, onOpenChange])
 
   // When `initialFocus={false}` focus stays in the anchor (e.g. a search box outside the popover): Esc on the page
-  // still closes the card.
+  // still closes the card without closing an outer dialog/sheet or interrupting IME composition.
   React.useEffect(() => {
     if (!open || config.initialFocus !== false) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) close()
+      if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return
+      event.preventDefault()
+      event.stopPropagation()
+      close()
     }
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)

@@ -78,7 +78,18 @@ type SheetProps = Omit<React.ComponentProps<typeof SheetPrimitive.Root>, "onOpen
  * or a click outside still close it (`disablePointerDismissal` keeps it open on a click outside).
  * A click on the notifications (which sit above, outside the sheet) or on the window's title bar does not close it.
  */
-function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEscape, disablePointerDismissal = false, modal = true, ...props }: SheetProps) {
+function Sheet({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  closesOnEscape,
+  disablePointerDismissal = false,
+  modal = true,
+  onEscapeKeyDown,
+  onPointerDownOutside,
+  onFocusOutside,
+  ...props
+}: SheetProps) {
   const [inner, setInner] = React.useState(defaultOpen)
   const open = openProp ?? inner
   const [side, setSide] = React.useState<SheetSide>("right")
@@ -113,6 +124,7 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
   return (
     <SheetContext.Provider value={ctx}>
       <SheetPrimitive.Root
+        {...props}
         open={open}
         modal={modal}
         trapFocus={modal}
@@ -125,18 +137,31 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
         closeOnInteractOutside={!disablePointerDismissal}
         swipeDirection={SIDE_TO_SWIPE[side]}
         {...(initialFocusEl ? { initialFocusEl } : {})}
-        onEscapeKeyDown={() => {
-          reasonRef.current = "escape"
+        onEscapeKeyDown={(event) => {
+          onEscapeKeyDown?.(event)
+          if (closesOnEscape === undefined && !event.defaultPrevented) {
+            reasonRef.current = "escape"
+            queueMicrotask(() => {
+              if (reasonRef.current === "escape") reasonRef.current = "other"
+            })
+          }
         }}
         onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event)
           const target = event.detail.originalEvent.target
           if (inToasts(target) || inTitleBar(target)) {
             event.preventDefault()
             return
           }
-          reasonRef.current = "outside"
+          if (!disablePointerDismissal && !event.defaultPrevented) {
+            reasonRef.current = "outside"
+            queueMicrotask(() => {
+              if (reasonRef.current === "outside") reasonRef.current = "other"
+            })
+          }
         }}
         onFocusOutside={(event) => {
+          onFocusOutside?.(event)
           // A sheet beside the page stays when focus moves to the page: Tab past its last control is not a dismiss.
           if (!modal) {
             event.preventDefault()
@@ -154,7 +179,6 @@ function Sheet({ open: openProp, defaultOpen = false, onOpenChange, closesOnEsca
           if (openProp === undefined) setInner(details.open)
           onOpenChange?.(details.open, reason)
         }}
-        {...props}
       />
     </SheetContext.Provider>
   )
