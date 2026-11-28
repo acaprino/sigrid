@@ -480,9 +480,10 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   const below = (
     <>
       {tabs && !unified ? (
-        <div data-slot="app-shell-tabs" className={cn("flex min-h-(--control-md) shrink-0 items-stretch px-2 select-none", !sheet && "border-b border-line")}>
+        // The views of the app are where one goes: a navigation landmark, so that every part of the window is in one.
+        <nav data-slot="app-shell-tabs" aria-label={words.shell.views} className={cn("flex min-h-(--control-md) shrink-0 items-stretch px-2 select-none", !sheet && "border-b border-line")}>
           {tabs}
-        </div>
+        </nav>
       ) : null}
       <div data-slot="app-shell-body" className="flex min-h-0 flex-1">
         <UnifiedShellContext.Provider value={shared}>{sidebar}</UnifiedShellContext.Provider>

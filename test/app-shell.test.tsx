@@ -893,3 +893,13 @@ test('a closing inspector keeps what it showed while it slides out, then is the 
     vi.useRealTimers()
   }
 })
+
+test('the views under the bar are a navigation landmark, named by the words', () => {
+  render(
+    <AppShell contentLabel="Mail" tabs={<Toolbar aria-label="Views of mail"><button type="button">Inbox</button></Toolbar>}>
+      <p>Content</p>
+    </AppShell>,
+  )
+  const nav = screen.getByRole('navigation', { name: 'Views' })
+  expect(nav.contains(screen.getByRole('button', { name: 'Inbox' }))).toBe(true)
+})

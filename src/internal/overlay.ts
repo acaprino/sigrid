@@ -69,6 +69,23 @@ export function ignoreToasts<E extends Event>(next?: (event: E) => void) {
   }
 }
 
+/** What Ark tells a layer when a layer under it closes: the one that closes is `targetLayer`. */
+type LayerDismissRequest = { detail?: { targetLayer?: HTMLElement | undefined } | undefined; defaultPrevented: boolean; preventDefault(): void }
+
+/**
+ * For the `onRequestDismiss` of a modal window. Ark closes every layer opened after the one that closes, by their order
+ * alone: a window opened by the same click that closes a menu, a popover or a list (the menu goes when the click lands
+ * outside it, the window opens on that click) would close with them. A modal window is not a part of those: it stays.
+ * A window opened from another window still closes with it. The caller's handler, if there is one, speaks first.
+ */
+export function keepWindowOpen<E extends LayerDismissRequest>(next?: (event: E) => void) {
+  return (event: E) => {
+    next?.(event)
+    const closing = event.detail?.targetLayer
+    if (!event.defaultPrevented && closing && !closing.closest('[role="dialog"], [role="alertdialog"]')) event.preventDefault()
+  }
+}
+
 /**
  * For the `onCloseAutoFocus` of a window opened from state (without a `Trigger` that can take focus back): first the
  * caller's handler, which can decide (`preventDefault`); otherwise, focus goes to `restoreFocusTo`. Without either of

@@ -13,7 +13,7 @@ import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "./button"
-import { BACKDROP, TOASTS_ATTR, inTitleBar, inToasts } from "../internal/overlay"
+import { BACKDROP, TOASTS_ATTR, inTitleBar, inToasts, keepWindowOpen } from "../internal/overlay"
 import { OverlayPortal } from "../internal/portal"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
@@ -29,7 +29,7 @@ type RootProps = Omit<React.ComponentProps<typeof DialogPrimitive.Root>, "onOpen
   onOpenChange?: ((open: boolean) => void) | undefined
 }
 
-function Dialog({ open: openProp, defaultOpen = false, onOpenChange, onInteractOutside, ...props }: RootProps) {
+function Dialog({ open: openProp, defaultOpen = false, onOpenChange, onInteractOutside, onRequestDismiss, ...props }: RootProps) {
   const [inner, setInner] = React.useState(defaultOpen)
   const open = openProp ?? inner
   const [focusConfig, setFocusConfig] = React.useState<FocusConfig>({})
@@ -83,6 +83,7 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, onInteractO
         persistentElements={persistentElements}
         {...(initialFocusEl ? { initialFocusEl } : {})}
         {...(finalFocusEl ? { finalFocusEl } : {})}
+        onRequestDismiss={keepWindowOpen(onRequestDismiss)}
         onInteractOutside={(event) => {
           onInteractOutside?.(event)
           const target = event.detail.originalEvent.target
