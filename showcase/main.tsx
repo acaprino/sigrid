@@ -21,7 +21,7 @@ import { Archive, ArrowUpDown as ArrowDownUp, Bell, ChevronRight, CogFour as Set
 import { BACKDROP, BASE_THEME, DEFAULT_MOTION_FEEL, MOTION_EASE_NAMES, isMotionEase, type MotionEase, MotionProvider, COLORS, COLOR_NAMES, cn, TAG_COLOR, TAG_HUES, TAG_PILL, DENSITIES, DEFAULT_SHAPE, THEME_SHAPES, isThemeShape, PALETTE_COMBOS, applyDensity, applyFont, DEFAULT_FONT, applyTheme, colorTheme, contrast, tokensFor, isAccentColor, isSpotKind, isDensityId, markHueAttrs, paletteTheme, presetTone, tonePresetOf, useMotion, useMedia, WordsProvider, useWords, type DensityId, type SpotKind, type ThemeDef, type ThemeScheme, type ThemeShape, type ThemeTone, HUE_NAMES, TONE_PRESETS, grayScale, hueScale, type TonePreset } from '../src/index'
 import { Logo, Badge, Button, Avatar, Checkbox, Card as SampleCard, Cluster, Column, Dot, Heading, Separator, Text, Slider, Progress, ProgressRing, ProgressSegments, Count, Switch, Tabs, TabsContent, TabsList, TabsTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Icon, Input, Kbd, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, RadioGroup, RadioGroupItem, Select, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Shortcut, Textarea, Thumbnail, ToggleGroup, ToggleGroupItem, Tooltip, isIconName, type IconName } from '../src/primitives'
 import { FrameSurface, type FrameSurfaceHandle, type FrameSize, ConfirmDialog, Message, Reasoning, Suggestions, ToolCall, CALENDAR_WORDS, Calendar, Combobox, SearchField, CopyButton, Disclosure, InputGroup, InputGroupButton, InputGroupText, ItemList, ItemRow, OverflowList, DescriptionList, SettingRow, Steps, type StepItem, FormField, ChipsInput, DateField, DateRangeField, dayPicks, rangePicks, DateTimeField, Dialog, DurationField, Empty, Note, MarkdownBlocks, InlineMarkdown, Swatches, Toasts, type DateRange, type ToastItem } from '../src/components'
-import { AppShell, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
+import { AppShell, DocumentTab, DocumentTabs, ToolbarTab, ToolbarTabs, Inspector, DrawerButton, SidebarRow, TitleBar, Toolbar, ToolbarBrand, ToolbarButton, ToolbarGroup, ToolbarSearch, ToolbarSeparator, ToolbarSpacer, ToolbarTitle, WindowControls, Sidebar, SidebarGroup, NavItem, NavList, AppShellContext } from '../src/layout'
 import { AuthForm, type AuthMode, Lightbox, Wizard, AttachmentMarks, Chat, type ChatMessage, Conversation, PromptInput, SwipeDeck, AttachmentViewer, AttachmentsSection, ThemeGallery, ColorMatch, CommandPalette, useCommandKey, TonePresetChoice, Tree, type AttachmentView, type TreeNode } from '../src/assemblies'
 import { GuidelinesView, PhilosophyView, PracticesView } from './guide'
 import { PhoneLayouts } from './phone'
@@ -1486,6 +1486,127 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
       <div className="max-w-full overflow-x-auto p-1 pb-6">
         <div data-sample="app-shell" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
           {frames[pattern]}
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+/**
+ * The sheet frame with its one top row (`AppShell frame="sheet" top="unified"`): the sidebar's button, a hairline and the
+ * app over the sidebar, the open notes as `DocumentTabs` joined to the sheet, then room that moves the window, a tool and
+ * the window's buttons. The button at the start collapses the sidebar to its rail and stays in its place; a note is
+ * added with the `+` and closed with its cross; add enough notes and the row scrolls, with its arrow at the end. At the
+ * narrow width there is no drawer: the places are tabs at the foot and the notes take the whole row.
+ */
+function UnifiedSheet({ animated }: { animated: boolean }) {
+  const [width, setWidth] = React.useState('1040')
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [place, setPlace] = React.useState('all')
+  const [docs, setDocs] = React.useState([
+    { id: 'trip', title: 'Trip to Lisbon' },
+    { id: 'ideas', title: 'Ideas' },
+    { id: 'quote', title: 'Kitchen quote' },
+  ])
+  const [current, setCurrent] = React.useState<string | null>('trip')
+  const made = React.useRef(0)
+  const narrow = Number(width) < 620
+  const open = (count: number) => {
+    const fresh = Array.from({ length: count }, () => {
+      made.current += 1
+      return { id: `note-${made.current}`, title: `Note ${made.current}` }
+    })
+    setDocs((all) => [...all, ...fresh])
+    setCurrent(fresh[fresh.length - 1]!.id)
+  }
+  const close = (id: string) => {
+    const at = docs.findIndex((doc) => doc.id === id)
+    const rest = docs.filter((doc) => doc.id !== id)
+    setDocs(rest)
+    if (current === id) setCurrent(rest[Math.min(at, rest.length - 1)]?.id ?? null)
+  }
+  const places = [
+    { id: 'all', icon: 'all', label: 'All notes', count: 12 },
+    { id: 'travel', icon: 'globe', label: 'Travel', count: 4 },
+    { id: 'home', icon: 'folder', label: 'Home', count: 5 },
+    { id: 'archive', icon: 'archive', label: 'Archive', count: 0 },
+  ] as const
+  const note = docs.find((doc) => doc.id === current)
+  return (
+    <Section id="practices-unified-sheet" icon="layout" title="The sheet with one top row" note="AppShell frame=&quot;sheet&quot; top=&quot;unified&quot;: one row is the window's title bar. Over the sidebar, as wide as it, the button that shrinks it to the rail (always in the same place; at 700px the frame forces the rail and the button waits, disabled), a hairline and the app; then the open notes (DocumentTabs), which rise from the sheet's top line as one piece with it, room that moves the window, a tool and the window's buttons. Add notes with the plus until the row scrolls. At 390px there is no drawer: the places are tabs at the foot and the notes take the whole row.">
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
+          <ToggleGroupItem value="1040">1040</ToggleGroupItem>
+          <ToggleGroupItem value="700">700</ToggleGroupItem>
+          <ToggleGroupItem value="390">390</ToggleGroupItem>
+        </ToggleGroup>
+        <Button variant="outline" size="sm" onClick={() => open(6)}>
+          Add six notes
+        </Button>
+      </div>
+      <div className="max-w-full overflow-x-auto p-1 pb-6">
+        <div data-sample="unified-sheet" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
+          <AppShell
+            desktop
+            frame="sheet"
+            top="unified"
+            contentLabel="Notes"
+            sidebarHead={<ToolbarBrand name="Notes" />}
+            sidebarCollapsed={collapsed}
+            onSidebarCollapsedChange={setCollapsed}
+            windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}
+            topActions={
+              <Toolbar aria-label="Notes">
+                <ToolbarButton label="Search the notes" shortcut="/" icon={<Icon name="search" />} animated={animated} />
+              </Toolbar>
+            }
+            tabs={
+              <DocumentTabs aria-label="Open notes" value={current} onValueChange={setCurrent} onAdd={() => open(1)} animated={animated}>
+                {docs.map((doc) => (
+                  <DocumentTab key={doc.id} value={doc.id} onClose={() => close(doc.id)}>
+                    {doc.title}
+                  </DocumentTab>
+                ))}
+              </DocumentTabs>
+            }
+            sidebar={
+              narrow ? undefined : (
+                <Sidebar aria-label="Places" animated={animated}>
+                  <SidebarGroup label="Notes" icon={<Icon name="all" />}>
+                    {places.map((row) => (
+                      <NavItem key={row.id} current={place === row.id} onClick={() => setPlace(row.id)} icon={<Icon name={row.icon} />} end={<Count value={row.count} label="notes" reserve />}>
+                        {row.label}
+                      </NavItem>
+                    ))}
+                  </SidebarGroup>
+                </Sidebar>
+              )
+            }
+            bottomBar={
+              narrow ? (
+                <Toolbar aria-label="Places at the foot">
+                  <ToolbarTabs aria-label="Places" value={place} onValueChange={setPlace} edge="top" layout="stacked">
+                    {places.map((row) => (
+                      <ToolbarTab key={row.id} value={row.id} icon={<Icon name={row.icon} />}>
+                        {row.label}
+                      </ToolbarTab>
+                    ))}
+                  </ToolbarTabs>
+                </Toolbar>
+              ) : undefined
+            }
+          >
+            <Column gap="sm" pad="lg">
+              {note ? (
+                <>
+                  <Heading size="page">{note.title}</Heading>
+                  <Text variant="muted">Four days in May, and the train from Porto on the way back.</Text>
+                </>
+              ) : (
+                <Text variant="muted">No note is open. The plus in the row opens a new one.</Text>
+              )}
+            </Column>
+          </AppShell>
         </div>
       </div>
     </Section>
@@ -3988,7 +4109,7 @@ function App() {
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} scheme={scheme} onScheme={setScheme} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<><Shells animated={animated} scheme={scheme} onScheme={setScheme} /><UnifiedSheet animated={animated} /></>} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>

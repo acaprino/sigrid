@@ -341,7 +341,7 @@ describe('bold tabs: the line keeps clear of the edge it is near', () => {
   })
 
   test('the bar is 2px taller under the look, 46px at compact density; the compact bar and a bar without the look keep their height', () => {
-    const at = themeCss.indexOf('[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]) {')
+    const at = themeCss.indexOf('[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]):not([data-unified]) {')
     expect(at).toBeGreaterThan(-1)
     expect(themeCss.slice(at, themeCss.indexOf('}', at))).toContain('min-height: calc(var(--titlebar-height) + 0.125rem);')
     expect(themeCss).toContain('--titlebar-height: calc(var(--control-sm) + 1rem);')

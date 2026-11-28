@@ -38,7 +38,7 @@ function everything(): AppModel {
     ...STARTERS[0]!.make(),
     name: 'Every "part" & more',
     start: 'all-of-it',
-    settings: { frame: 'sheet', barSize: 'compact', sidebar: 'always', sidebarSearch: true, account: 'Anna Greco', tabs: 'wide', bottom: 'narrow', foot: 'always' },
+    settings: { frame: 'sheet', top: 'bar', barSize: 'compact', sidebar: 'always', sidebarSearch: true, account: 'Anna Greco', tabs: 'wide', bottom: 'narrow', foot: 'always' },
     shared: { bar: show(group('bar')), tabs: group('tabs'), nav: group('sidebar'), foot: show(group('footer')), bottom: group('bottom') },
     screens: [
       screen('All of it', 'all', { statusOn: true, statusItems: show(into('status')), details: 'on', actionsOn: true, content: show(content), detailsItems: content.slice(0, 12).map((node) => make(node.type as Kind, { ...node.props })), actions: show(into('actions')) }),
@@ -47,10 +47,46 @@ function everything(): AppModel {
   }
 }
 
-/** Type-checks sources as files of a folder inside the repository, with `@acaprino/sigrid` read from `src`. */
+/**
+ * The same app with the one top row of the sheet frame: every part of the bar but the app and the menu button goes to
+ * the tools at the row's end, and the tabs hold every part they take (the document tabs among the views and the
+ * buttons), each always, or only where the frame is narrow or wide.
+ */
+function everythingUnified(): AppModel {
+  const app = everything()
+  return { ...app, name: 'Every part, one row', settings: { ...app.settings, top: 'unified' }, shared: { ...app.shared, tabs: show(app.shared.tabs) } }
+}
+
+/** The tags of the JSX elements around each element of one tag in a source: its ancestors, nearest first. */
+function around(source: string, tag: string): string[][] {
+  const file = ts.createSourceFile('App.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const tagOf = (node: ts.Node) => (ts.isJsxElement(node) ? node.openingElement.tagName.getText(file) : ts.isJsxSelfClosingElement(node) ? node.tagName.getText(file) : null)
+  const found: string[][] = []
+  const visit = (node: ts.Node) => {
+    if (tagOf(node) === tag) {
+      const tags: string[] = []
+      for (let up = node.parent; up; up = up.parent) {
+        const named = tagOf(up)
+        if (named) tags.push(named)
+      }
+      found.push(tags)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(file)
+  return found
+}
+
+/**
+ * Type-checks sources as files of a folder inside the repository, with `@acaprino/sigrid` read from `src`. The paths
+ * are written with forward slashes, as TypeScript asks for them on every system (on Windows `join` gives backslashes,
+ * and a file kept under one spelling is not found under the other).
+ */
 function check(files: Record<string, string>): string[] {
-  const dir = join(root, '.export-check')
-  const names = Object.keys(files).map((file) => join(dir, file))
+  const slashes = (path: string) => path.replace(/\\/g, '/')
+  const base = slashes(root)
+  const dir = slashes(join(root, '.export-check'))
+  const names = Object.keys(files).map((file) => `${dir}/${file}`)
   const options: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ESNext,
@@ -68,17 +104,17 @@ function check(files: Record<string, string>): string[] {
   const host = ts.createCompilerHost(options)
   const read = host.readFile.bind(host)
   const exists = host.fileExists.bind(host)
-  const virtual = new Map(Object.entries(files).map(([file, text]) => [join(dir, file), text]))
-  host.readFile = (file) => virtual.get(file) ?? read(file)
-  host.fileExists = (file) => virtual.has(file) || exists(file)
+  const virtual = new Map(Object.entries(files).map(([file, text]) => [`${dir}/${file}`, text]))
+  host.readFile = (file) => virtual.get(slashes(file)) ?? read(file)
+  host.fileExists = (file) => virtual.has(slashes(file)) || exists(file)
   const folder = host.directoryExists?.bind(host)
-  host.directoryExists = (path) => path.startsWith(dir) || (folder ? folder(path) : true)
+  host.directoryExists = (path) => slashes(path).startsWith(dir) || (folder ? folder(path) : true)
   const program = ts.createProgram(names.filter((file) => /\.tsx?$/.test(file)), options, host)
   // The unused names of the toolkit's own files are not this test's business: only the exported sources are read for them.
   return ts
     .getPreEmitDiagnostics(program)
-    .filter((d) => !d.file || d.file.fileName.startsWith(dir))
-    .map((d) => `${d.file ? `${d.file.fileName.replace(root, '')}:${d.file.getLineAndCharacterOfPosition(d.start ?? 0).line + 1} ` : ''}${ts.flattenDiagnosticMessageText(d.messageText, '\n')}`)
+    .filter((d) => !d.file || slashes(d.file.fileName).startsWith(dir))
+    .map((d) => `${d.file ? `${slashes(d.file.fileName).replace(base, '')}:${d.file.getLineAndCharacterOfPosition(d.start ?? 0).line + 1} ` : ''}${ts.flattenDiagnosticMessageText(d.messageText, '\n')}`)
 }
 
 /**
@@ -91,14 +127,14 @@ function bare(): AppModel {
   return {
     ...STARTERS.find((starter) => starter.id === 'blank')!.make(),
     name: `Line one\nexport const injected = 1 //\u2028export const again = 2 //`,
-    settings: { frame: 'line', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: nasty, tabs: 'off', bottom: 'off', foot: 'off' },
+    settings: { frame: 'line', top: 'bar', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: nasty, tabs: 'off', bottom: 'off', foot: 'off' },
     shared: { bar: actions.map((action) => make('BarButton', { label: nasty, action, said: nasty })), tabs: [], nav: [], foot: [], bottom: [] },
     screens: [screen('One', 'all', { statusOn: true, statusItems: [make('FootText', { text: nasty })], content: [make('Heading', { text: nasty }), make('Text', { text: nasty }), make('Button', { label: nasty, action: 'details' }), make('Segment', { options: [{ label: 'A' }, { label: 'A' }, { label: 'A 2' }] })] })],
   }
 }
 
 test('the source of every app the editor starts from, and of every component, type-checks against the toolkit', () => {
-  const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
+  const apps: Record<string, AppModel> = { everything: everything(), 'everything-unified': everythingUnified(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
   const files: Record<string, string> = {}
   for (const [id, app] of Object.entries(apps)) {
     const made = exportFiles(app, { version: '0.0.0' })
@@ -209,7 +245,7 @@ const ELEMENT = /(?<![\w$.])<[a-z][\w-]*[\s/>]/
 const code = (source: string) => source.replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, "''")
 
 test('an exported app is made of the toolkit\'s parts only: no class, no style, no element of its own', () => {
-  const apps: Record<string, AppModel> = { everything: everything(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
+  const apps: Record<string, AppModel> = { everything: everything(), 'everything-unified': everythingUnified(), bare: bare(), ...Object.fromEntries(STARTERS.map((starter) => [starter.id, starter.make()])) }
   for (const [id, app] of Object.entries(apps)) {
     const source = code(appSource(app))
     expect(source, `${id}: a class`).not.toMatch(OWN_CLASS)
@@ -242,4 +278,123 @@ test('the table of entries the code export imports from lists every name each en
   const files = { '@acaprino/sigrid': 'src/index.ts', '@acaprino/sigrid/primitives': 'src/primitives.ts', '@acaprino/sigrid/components': 'src/components.ts', '@acaprino/sigrid/layout': 'src/layout.ts', '@acaprino/sigrid/assemblies': 'src/assemblies.ts' }
   expect(Object.keys(ENTRY_NAMES)).toEqual(Object.keys(files))
   for (const [entry, file] of Object.entries(files)) expect([...ENTRY_NAMES[entry]!].sort(), entry).toEqual(exported(file))
+})
+
+/* ———— The one top row of the sheet frame (`AppShell top="unified"`) and the document tabs ———— */
+
+test('readApp defaults missing settings.top to "bar" for backward compatibility', () => {
+  const legacy = structuredClone(STARTERS[0]!.make()) as unknown as { settings: Record<string, unknown> }
+  delete legacy.settings['top']
+  expect(readApp(legacy)!.settings.top).toBe('bar')
+  // What is not a top row is the bar too; the one row is kept.
+  expect(readApp({ ...legacy, settings: { ...legacy.settings, top: 'tall' } })!.settings.top).toBe('bar')
+  expect(readApp({ ...legacy, settings: { ...legacy.settings, top: 'unified' } })!.settings.top).toBe('unified')
+})
+
+test('the check of what is around the document tabs sees a toolbar around them', () => {
+  // Not vacuous: written inside a toolbar, the tabs have it among their ancestors; beside one, they do not.
+  expect(around('<Toolbar aria-label="Views"><Cluster><DocumentTabs value={null} onValueChange={f} /></Cluster></Toolbar>', 'DocumentTabs')).toEqual([['Cluster', 'Toolbar']])
+  expect(around('<AppShell topActions={<Toolbar aria-label="x" />} tabs={<DocumentTabs value={null} onValueChange={f} />} />', 'DocumentTabs')).toEqual([['AppShell']])
+})
+
+test('notes and unified-sheet starters export interactive zero-CSS JSX passing sigrid-check own-class', () => {
+  for (const id of ['notes', 'unified-sheet']) {
+    const starter = STARTERS.find((s) => s.id === id)!
+    expect(starter, id).toBeDefined()
+    const source = appSource(starter.make())
+    expect(source, id).toContain('top="unified"')
+    expect(source, id).toContain('DocumentTabs')
+    expect(source, id).toContain('DocumentTab')
+    // The tabs are the app's own state: a new one is added and chosen, a closed one goes.
+    expect(source, id).toMatch(/const \[docs, setDocs\] = useState<\{ id: string; title: string \}\[\]>\(/)
+    expect(source, id).toContain('onAdd={addDoc}')
+    expect(source, id).toContain('onClose={() => closeDoc(doc.id)}')
+    // Ark UI's tabs are a tablist of their own: never inside a toolbar's roving keys (Review Focus 3).
+    const docTabs = around(source, 'DocumentTabs')
+    expect(docTabs.length, id).toBeGreaterThan(0)
+    for (const tags of docTabs) expect(tags, id).not.toContain('Toolbar')
+    // sigrid-check's own-class, as the test of every exported app reads it.
+    expect(code(source), `${id}: a class`).not.toMatch(OWN_CLASS)
+    expect(code(source), `${id}: a style`).not.toMatch(STYLE)
+    expect(code(source), `${id}: an element of its own`).not.toMatch(ELEMENT)
+  }
+})
+
+test('switching Workspace starter to top="unified" routes bar actions to topActions and preserves ViewTabs in Toolbar', () => {
+  const ws = STARTERS.find((s) => s.id === 'workspace')!.make()
+  ws.settings.top = 'unified'
+  const source = appSource(ws)
+  expect(source).toContain('top="unified"')
+  expect(source).toContain('topActions=')
+  expect(source).toContain('sidebarHead=')
+  // One bar: the row. The app is its head over the sidebar, once; the menu button is the row's own button for the drawer.
+  expect(source).not.toContain('titleBar=')
+  expect(source).not.toContain('<TitleBar')
+  expect(source.match(/<ToolbarBrand/g)).toHaveLength(1)
+  expect(source).toContain('sidebarHead={<ToolbarBrand name="Workspace" />}')
+  expect(source).not.toContain('<DrawerButton')
+  expect(source).toContain('onSidebarOpen={() => setMenu(true)}')
+  expect(source).toContain('sidebarCollapsed={collapsed}')
+  expect(source).toContain('onSidebarCollapsedChange={setCollapsed}')
+  // The window's drag and buttons go to the row, as they went to the bar.
+  expect(source).toContain('dragProps={ownWindow ? DRAG_REGION : undefined}')
+  expect(source).toContain('windowControls={ownWindow ? <WindowControls {...windowControls} /> : undefined}')
+  // The views and «Commands» are the tools at the row's end, in a toolbar.
+  expect(source).toContain('label="Commands"')
+  const views = around(source, 'ToolbarTabs')
+  expect(views.length).toBeGreaterThan(0)
+  for (const tags of views) expect(tags[0]).toBe('Toolbar')
+  expect(source).toMatch(/topActions=\{[\s\S]*<Toolbar aria-label="Workspace">[\s\S]*<ToolbarTabs[\s\S]*label="Commands"/)
+})
+
+test('the one top row is the sheet frame\'s: in the line frame the app keeps its bar', () => {
+  // A saved app with the one row whose frame went back to line: a frameless window keeps its buttons and its drag.
+  const notes = STARTERS.find((s) => s.id === 'notes')!.make()
+  const line = appSource({ ...notes, settings: { ...notes.settings, frame: 'line' } })
+  for (const word of ['top', 'topActions', 'sidebarHead', 'sidebarCollapsed', 'onSidebarOpen']) expect(line, word).not.toMatch(new RegExp(`\\b${word}=`))
+  expect(line).toContain('titleBar={')
+  expect(line).toMatch(/<TitleBar[\s\S]*dragProps=\{ownWindow \? DRAG_REGION : undefined\}[\s\S]*<ToolbarBrand/)
+  // The document tabs stay the app's, under the bar, and still outside any toolbar.
+  for (const tags of around(line, 'DocumentTabs')) expect(tags).not.toContain('Toolbar')
+  // In the bar's form a tabs region with views keeps its toolbar, as before.
+  expect(appSource(STARTERS.find((s) => s.id === 'tabs')!.make())).toMatch(/tabs=\{[\s\S]*<Toolbar aria-label="Views">[\s\S]*<ToolbarTabs/)
+})
+
+test('the one top row needs a sidebar: without one the app keeps its bar and its name in it', () => {
+  // The row's head (the app) stands over the sidebar: with no sidebar there is no head, so the row would lose the name.
+  for (const id of ['blank', 'tabs', 'tabs-details', 'list-details']) {
+    const app = STARTERS.find((s) => s.id === id)!.make()
+    expect(app.settings.sidebar, id).toBe('off')
+    const source = appSource({ ...app, settings: { ...app.settings, frame: 'sheet', top: 'unified' } })
+    expect(source, id).toContain('frame="sheet"')
+    for (const word of ['top', 'topActions', 'sidebarHead', 'sidebarCollapsed', 'onSidebarOpen']) expect(source, `${id}: ${word}`).not.toMatch(new RegExp(`\\b${word}=`))
+    // Exactly as with the bar: the app's name in the title bar.
+    expect(source, id).toBe(appSource({ ...app, settings: { ...app.settings, frame: 'sheet', top: 'bar' } }))
+    const brands = around(source, 'ToolbarBrand')
+    expect(brands.length, id).toBe(1)
+    expect(brands[0], id).toEqual(['Toolbar', 'TitleBar', 'AppShell'])
+  }
+  // A sheet app with the row whose sidebar is turned off: the same, its document tabs still outside any toolbar.
+  const notes = STARTERS.find((s) => s.id === 'notes')!.make()
+  const off = appSource({ ...notes, settings: { ...notes.settings, sidebar: 'off' } })
+  expect(off).not.toMatch(/\btop=/)
+  expect(off).toMatch(/titleBar=\{[\s\S]*<TitleBar[\s\S]*<ToolbarBrand name="Notes"/)
+  for (const tags of around(off, 'DocumentTabs')) expect(tags).not.toContain('Toolbar')
+})
+
+test('a region that holds document tabs among other parts puts the tabs beside the toolbar, never in it', () => {
+  const source = appSource(everythingUnified())
+  const docTabs = around(source, 'DocumentTabs')
+  expect(docTabs.length).toBeGreaterThan(1)
+  for (const tags of docTabs) expect(tags).not.toContain('Toolbar')
+  // The other parts of the region are still in a toolbar of views.
+  for (const tags of around(source, 'ToolbarSearch')) expect(tags).toContain('Toolbar')
+  // The one row is as tall as the window's bar: the bar's size, compact in this app, is not printed (Review Focus 3).
+  expect(appSource(everything())).toMatch(/<TitleBar\s+size="compact"/)
+  expect(source).not.toContain('<TitleBar')
+  expect(source).not.toContain('size="compact"')
+  // A tabs region kept while the app has none declares nothing for its document tabs.
+  const off = everythingUnified()
+  const hidden = appSource({ ...off, settings: { ...off.settings, tabs: 'off' } })
+  expect(hidden).not.toMatch(/\bdocs\b|activeDoc|addDoc|closeDoc|DocumentTab/)
 })

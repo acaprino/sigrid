@@ -4,6 +4,7 @@
 // primitives.
 export { APP_SHELL_STEPS, AppShell, AppShellContext, Inspector, appShellLayout, useAppShell, type AppShellLayout, type AppShellProps, type AppShellSteps, type InspectorProps } from './layout/app-shell'
 export { ContentSplit, type ContentSplitProps } from './layout/content-split'
+export { DocumentTab, DocumentTabs, type DocumentTabProps, type DocumentTabsProps } from './layout/document-tabs'
 export { DrawerButton, type DrawerButtonProps } from './layout/drawer-button'
 export { NavItem, NavList, type NavItemProps, type NavListProps } from './layout/nav-list'
 export { Panel, type PanelProps } from './layout/panel'

@@ -87,6 +87,21 @@ describe('an app replaces the words, all or some', () => {
     expect(DEFAULT_WORDS.common.close).toBe('Close')
   })
 
+  test('the words of the document tabs are placeholders an app can replace one by one', () => {
+    const tabs = DEFAULT_WORDS.documentTabs
+    expect(Object.keys(tabs).sort()).toEqual(['close', 'newTab', 'scrollNext', 'scrollPrev', 'tabs'])
+    expect(tabs.tabs).toBe('Open tabs')
+    expect(tabs.newTab).toBe('New tab')
+    expect(tabs.close('Notes')).toBe('Close Notes')
+    expect(tabs.scrollNext).toBe('Scroll tabs forward')
+    expect(tabs.scrollPrev).toBe('Scroll tabs backward')
+    const merged = withWords(DEFAULT_WORDS, { documentTabs: { newTab: 'Nuova scheda', close: (title) => `Chiudi ${title}` } })
+    expect(merged.documentTabs.newTab).toBe('Nuova scheda')
+    expect(merged.documentTabs.close('Note')).toBe('Chiudi Note')
+    expect(merged.documentTabs.tabs).toBe('Open tabs')
+    expect(merged.documentTabs.scrollNext).toBe('Scroll tabs forward')
+  })
+
   test('a provider inside another replaces only what it names', () => {
     let seen = DEFAULT_WORDS
     const Probe = () => {

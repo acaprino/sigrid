@@ -293,8 +293,9 @@
 }
 /* Under a theme with bold tabs (`data-tabs="bold"`) the bar is 2px taller (46px at compact density): the line of the
    chosen view stops 3px short of the bar's edge (toolbar.tsx), and the views keep their room above it. A compact bar
-   holds no views of that kind and keeps its height. What is in the bar stays in its middle: the bar centres it. */
-[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]) {
+   holds no views of that kind and keeps its height, and so does the one top row of the sheet frame (`data-unified`),
+   whose document tabs have no such line. What is in the bar stays in its middle: the bar centres it. */
+[data-tabs="bold"] [data-slot="title-bar"]:not([data-size="compact"]):not([data-unified]) {
   min-height: calc(var(--titlebar-height) + 0.125rem);
 }
 [data-slot="title-bar"][data-window-controls] {
@@ -309,6 +310,27 @@
 [data-slot="app-shell"][data-frame="sheet"] > [data-slot="title-bar"] {
   border-bottom-width: 0;
   background-color: transparent;
+}
+/* The one top row of the sheet frame (`AppShell frame="sheet" top="unified"`, src/layout/app-shell.tsx) is that bar:
+   as tall, on the ground, moving the window from its empty parts and keeping `--titlebar-end` (with the window's
+   buttons, flush with the corner) as the bar does. Its start is the frame's own, so the cell over the sidebar lines up
+   with the sidebar under it: that cell, or the work area's part where there is none, keeps clear of the system's
+   buttons itself (`--titlebar-start`), and the sidebar's button in it never moves. A tab does not move the window,
+   up to its edges: a press on it is the tab's. */
+[data-slot="title-bar"][data-unified] {
+  padding-inline-start: 0;
+}
+[data-slot="title-bar"][data-unified] [data-slot="document-tab"] {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+/* What the app puts at the end of the row (`topActions`, a `Toolbar`) takes the room it needs, before the window's
+   buttons. A toolbar measures its own width for its steps (`@container/toolbar`), and such a box counts as empty
+   wherever its room is its content's: in this cell, which is as wide as what it holds and never shrinks, it would be
+   nothing wide and its buttons would spill over the window's. Here it is not measured (its words stay), and short of
+   room the row's tabs give way to it instead: they scroll. */
+[data-slot="title-bar"][data-unified] [data-slot="app-shell-top-actions"] > [data-slot="toolbar"] {
+  container-type: normal;
 }
 
 /* The frame of an app as the window of a program (`AppShell desktop`, src/layout/app-shell.tsx). Its chrome is

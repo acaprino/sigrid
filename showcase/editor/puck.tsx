@@ -14,13 +14,13 @@ import type { ComponentData, Config, Data, Field } from '@puckeditor/core'
 import { MotionProvider, PortalContainerProvider, applyDensity, cn } from '../../src/index'
 import { Column, Icon, Input, Page, Select, Textarea, ToggleGroup, ToggleGroupItem, type IconName } from '../../src/primitives'
 import { FormField } from '../../src/components'
-import { APP_SHELL_STEPS, appShellLayout } from '../../src/layout'
+import { APP_SHELL_STEPS, Toolbar, appShellLayout } from '../../src/layout'
 import { touchDensity } from '../phone'
-import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
+import { BOX, CATALOG, GROUPS, ICON_OPTIONS, KINDS, defOf, docTitles, openDocs, takenBy, type BuildCtx, type FieldSpec, type Kind, type Props } from './catalog'
 import { equals, flag, h, type Child, type Expr } from './ir'
 import { applyLook } from './look'
 import { hasRegion, type AppModel, type Node, type Screen } from './model'
-import { DETAILS_PROPS, bodyProps, shownWhen, visible } from './plan'
+import { DETAILS_PROPS, FRAME_OWN, bodyProps, isUnified, shownWhen, visible } from './plan'
 import { Frame, draw, type HostKind } from './render'
 
 /* ———— What the canvas is told by the editor around it ———— */
@@ -36,6 +36,12 @@ export type EditEnv = {
   /** On a narrow frame: the drawer and the panel of the details, shown over the content to be worked on. */
   menu: boolean
   details: boolean
+  /**
+   * In the sheet frame's one top row over a whole sidebar: the sidebar shrunk to its rail, and the row's button, which
+   * works on the canvas so its place can be tried in both forms.
+   */
+  collapsed: boolean
+  onCollapsed: (collapsed: boolean) => void
 }
 export const EditEnvContext = React.createContext<EditEnv | null>(null)
 const useEnv = (): EditEnv => {
@@ -243,9 +249,12 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   const when = shownWhen(props['show'])
   // A job runs only in the app; a Job can be shown running here, at an even 40%.
   const running = flag(props['preview'])
-  const scope = { screen: env.screen.id, narrow, details: env.details, busy: running, job: running ? 40 : null }
-  // A component that this width hides stays on the canvas, faint, so it can still be chosen and set.
-  const hidden = when !== null && !when.run(scope)
+  // Document tabs show the documents they open with, the first one chosen; pressing them changes nothing here.
+  const docs = kind === 'DocTabs' ? openDocs(docTitles(props)) : []
+  const scope = { screen: env.screen.id, narrow, details: env.details, busy: running, job: running ? 40 : null, docs, activeDoc: docs[0]?.id ?? null, setActiveDoc: () => {}, addDoc: () => {}, closeDoc: () => {} }
+  // A component that this width hides stays on the canvas, faint, so it can still be chosen and set; so does a part of
+  // the bar that the one top row draws itself (the app is its head, the drawer's button its own).
+  const hidden = (when !== null && !when.run(scope)) || (isUnified(env.app.settings) && FRAME_OWN.includes(kind))
   return (
     <div ref={puck.dragRef} data-part={kind} data-hidden-here={hidden ? '' : undefined} className={cn(def.box ? def.box(props) : BOX, hidden && 'opacity-40')}>
       {draw(drawn, scope)}
@@ -262,6 +271,13 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
   const layout = appShellLayout(env.width)
   const narrow = env.width < APP_SHELL_STEPS.rail
   const row = 'flex min-w-0 flex-1 items-center self-stretch'
+  // The tabs are one place to drop into: in a toolbar of views, as the app has them, unless it holds document tabs,
+  // which are a tablist of their own and never in a toolbar.
+  const docTabs = app.shared.tabs.some((node) => node.type === 'DocTabs')
+  // In the one top row the tabs and the tools at its end are as wide as what they hold: empty, they keep some room to
+  // drop into.
+  const roomy = isUnified(app.settings) ? 'min-w-16' : undefined
+  const tabs = Tabs && visible(app.settings.tabs, narrow) ? <Tabs className={cn(row, 'gap-1', roomy)} minEmptyHeight={32} /> : null
   // A screen that fits is the toolkit's `Page fit` here too: the place to drop into is its body, which gives way.
   return (
     <div data-canvas-frame="" className="h-dvh bg-paper text-ink">
@@ -272,8 +288,8 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
         screen={screen}
         host={env.host}
         narrow={narrow}
-        bar={Bar ? <Bar className={cn(row, 'gap-1')} minEmptyHeight={32} /> : null}
-        tabs={Tabs && visible(app.settings.tabs, narrow) ? <Tabs className={cn(row, 'gap-1')} minEmptyHeight={32} /> : null}
+        bar={Bar ? <Bar className={cn(row, 'gap-1', roomy)} minEmptyHeight={32} /> : null}
+        tabs={tabs && !docTabs ? <Toolbar aria-label="Views">{tabs}</Toolbar> : tabs}
         status={Status && screen.statusOn ? <Status className={cn(row, 'gap-3')} minEmptyHeight={24} /> : null}
         nav={Nav && visible(app.settings.sidebar, narrow) ? <Nav className="flex flex-col" minEmptyHeight={64} /> : null}
         foot={Foot && visible(app.settings.foot, narrow) ? <Foot className={cn(row, 'gap-3')} minEmptyHeight={20} /> : null}
@@ -303,6 +319,8 @@ function Root({ Bar, Tabs, Sidebar: Nav, Footer: Foot, Bottom, Content, Status, 
         onMenu={() => {}}
         detailsOpen={layout.inspector === 'docked' || env.details}
         onDetails={() => {}}
+        collapsed={env.collapsed}
+        onCollapsed={env.onCollapsed}
       />
     </div>
   )

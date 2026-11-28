@@ -1248,10 +1248,10 @@ comes with the package, at the version the app has installed, and most of it is 
 - `AGENTS.md`: how to build a screen with the toolkit, the rules an agent breaks most often, the check to run.
   `llms.txt` is the index of what to read.
 - `agents/catalog.json`: every component of every entry, with the props the toolkit declares and their comments.
-  `agents/examples/`: four whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
+  `agents/examples/`: five whole apps in the toolkit's frame, written by the code export of the showcase's app editor,
   which take where they run and their window from `@acaprino/sigrid/tauri`; they pass `sigrid-check`. `tasks.tsx` and
-  `mail.tsx` are in the frame with lines, `workspace.tsx` in the sheet frame (laid out as Xiox), and `triage.tsx` is a
-  screen that fits (`Page fit`).
+  `mail.tsx` are in the frame with lines, `workspace.tsx` in the sheet frame (laid out as Xiox), `notes.tsx` in the
+  sheet frame with one top row and document tabs, and `triage.tsx` is a screen that fits (`Page fit`).
   The catalogue also has the object types the props are made of (a column of the table, a notice, an option).
   `npm run agents` writes both from the source; a test fails when they fall behind it.
 - `DESIGN.md`, `docs/patterns.md`, `docs/mobile.md`, `docs/design-laws.md`: the rules and the guides, inside the

@@ -29,6 +29,7 @@ import { exportFiles, zip } from './editor/codegen'
 import { slug } from './editor/ir'
 import { LookPanel, type Look } from './editor/look'
 import { STARTERS, copyNodes, countNodes, freshScreenName, loadApp, readApp, saveApp, screen as newScreen, type AppModel, type Screen, type Settings, type Vis } from './editor/model'
+import { isUnified, overSidebar } from './editor/plan'
 import { CanvasDocument, EditEnvContext, FIELD_CONTROLS, configOf, fromData, paletteOf, rootSlots, toData, type EditEnv } from './editor/puck'
 import type { HostKind } from './editor/render'
 import { Address, Clock, HomeIndicator } from './hosts'
@@ -213,7 +214,19 @@ function AppPanel({ app, onApp, onSettings, onReplace, onSay }: { app: AppModel;
           options={[['line', 'Line'], ['sheet', 'Sheet']]}
           onChange={(frame) => onSettings({ frame })}
         />
-        <Choice label="The bar at the head" value={s.barSize} options={[['default', 'Regular'], ['compact', 'Compact']]} onChange={(barSize) => onSettings({ barSize })} />
+        {/* The one top row is the sheet frame's, over a sidebar: the line frame has no ground for it to sit on, and
+            without a sidebar the row would have no head for the app's name. Both keep their bar. */}
+        {s.frame === 'sheet' && s.sidebar !== 'off' ? (
+          <Choice
+            label="Top row"
+            about={s.top === 'unified' ? 'One row above the sheet: the sidebar’s button and the app over the sidebar, the tabs beside them joined to the sheet, the bar’s tools at its end.' : 'The bar across the window, and the tabs under it.'}
+            value={s.top}
+            options={[['bar', 'Title bar'], ['unified', 'Unified sheet']]}
+            onChange={(top) => onSettings({ top })}
+          />
+        ) : null}
+        {/* The one top row is as tall as the window's bar: its size is not a choice there. */}
+        {isUnified(s) ? null : <Choice label="The bar at the head" value={s.barSize} options={[['default', 'Regular'], ['compact', 'Compact']]} onChange={(barSize) => onSettings({ barSize })} />}
       </Group>
       <Group label="Regions">
         <p className="text-xs text-ink-mute">What every screen shares, besides the bar. Each one is a choice; the content is always there, and the details, the actions and the status row are each screen’s own.</p>
@@ -393,6 +406,7 @@ function Editor() {
   const [panelOpen, setPanelOpen] = React.useState(true)
   const [menu, setMenu] = React.useState(false)
   const [details, setDetails] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState(false)
   const [exporting, setExporting] = React.useState(false)
   const [said, setSaid] = React.useState('')
   const [find, setFind] = React.useState('')
@@ -437,6 +451,9 @@ function Editor() {
   const narrow = frameWidth < APP_SHELL_STEPS.rail
   const drawer = layout.sidebar === 'drawer' && app.settings.sidebar === 'always'
   const panelOver = layout.inspector === 'drawer' && screen.details === 'on'
+  // The one top row's button shrinks the sidebar on the canvas where the sidebar is whole (a laptop, the room there
+  // is); where the width forces the rail (a tablet) the button stays in its place, disabled.
+  const railable = overSidebar(app.settings) && layout.sidebar === 'full'
 
   const toggleRun = () => {
     // Back to editing: the canvas is made again on the screen the app was left on.
@@ -522,7 +539,7 @@ function Editor() {
       setPanelOpen(true)
     }
   }, [])
-  const env: EditEnv = { app, screen, host, width: frameWidth, touch: device === 'phone', menu: drawer && menu, details: panelOver && details }
+  const env: EditEnv = { app, screen, host, width: frameWidth, touch: device === 'phone', menu: drawer && menu, details: panelOver && details, collapsed: railable && collapsed, onCollapsed: setCollapsed }
 
   // The address of the app running: made when running starts, so going from screen to screen does not load it again.
   const runAddress = React.useMemo(() => `run.html?host=${host}&touch=${device === 'phone' ? 1 : 0}&screen=${encodeURIComponent(screenId)}`, [mode, host, device])
@@ -587,6 +604,11 @@ function Editor() {
                 {mode === 'edit' && panelOver ? (
                   <ToolbarButton label="Show the details on the canvas" pressed={details} onClick={() => setDetails(!details)}>
                     Details
+                  </ToolbarButton>
+                ) : null}
+                {mode === 'edit' && railable ? (
+                  <ToolbarButton label="Show the sidebar as a rail on the canvas" pressed={collapsed} onClick={() => setCollapsed(!collapsed)}>
+                    Rail
                   </ToolbarButton>
                 ) : null}
               </Toolbar>

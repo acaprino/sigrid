@@ -33,6 +33,17 @@
 //   large corner there. The ground is the sidebar's surface, so a light sidebar and the ground are one; a theme with a
 //   sidebar of its own colours (`data-sidebar="own"`, a dark or solid column) keeps its column on the lanes' surface.
 //   Where the sidebar is a drawer (under 620px) the sheet reaches the window's edge and has no corner.
+// The top of the sheet frame has two forms, chosen with `top`:
+// - `bar` (the default): the title bar across the window, the tabs under it, as in the line frame;
+// - `unified`: one row, flush above the sheet. At its start, over the sidebar and as wide, the button that shrinks and
+//   widens the sidebar (always at the same place, column or rail; disabled where the width forces the rail), a hairline
+//   and the app (`sidebarHead`, not on the rail); under 620px, where the sidebar is a drawer, a button that opens it.
+//   Then the tabs (a `DocumentTabs`, which rise from the sheet's top line as one piece with it, so the sheet has no
+//   corner under them), room that moves the window, the app's tools and the window's buttons. The row is the title bar
+//   of the window: as tall, moving the window from its empty parts, clear of the system's own buttons, above the layer
+//   of the overlays and first in the F6 round. The frame owns the sidebar's button and its form there
+//   (`UnifiedShellContext`): the `Sidebar` keeps no button or head of its own and follows `sidebarCollapsed`.
+//   The line frame has no such row: there `unified` is `bar`.
 // The `Sidebar` and the `Inspector` read the step from the frame (`useAppShell`), so the app passes them as they are.
 // F6 moves the focus to the next region (title bar, sidebar, content, inspector, the notices) and Shift+F6 to the one
 // before, round again, skipping a region that is absent, closed or has nothing to focus: always, with nothing for the
@@ -60,7 +71,7 @@
 import * as React from "react"
 import { useRevealAfterMount } from "../internal/reveal"
 import { motionMs } from "../internal/motion"
-import { AppShellContext, type AppShellLayout } from "../internal/frame"
+import { AppShellContext, SIDEBAR_TOGGLE, SIDEBAR_TOGGLE_INSET, UnifiedShellContext, type AppShellLayout, type UnifiedShellState } from "../internal/frame"
 import { Icon } from "../icons"
 import { cn } from "../lib/utils"
 import { FOCUS_RING, FOCUS_RING_INSET } from "../lib/focus"
@@ -70,7 +81,9 @@ import { useWords } from "../words"
 import { PortalContainerProvider, usePortalContainer } from "../internal/portal-container"
 import { Sheet, SheetContent, SheetTitle } from "../primitives/sheet"
 import { Button, QUIET_ICON } from "../primitives/button"
+import { Tooltip } from "../primitives/tooltip"
 import { TOASTS_ATTR } from "../internal/overlay"
+import { TitleBarDragContext, type TitleBarDragProps } from "./title-bar"
 
 // The regions F6 goes through, in order: inside the frame, or (the inspector shown as a drawer, a sheet, and the column
 // of notices) in a layer of the page. Docked beside the sidebar (`inspectorAt="sidebar"`), the inspector comes before
@@ -151,9 +164,12 @@ export function useAppShell(): AppShellLayout {
 const ContentContext = React.createContext<{ readonly current: HTMLElement | null } | undefined>(undefined)
 
 export type AppShellProps = {
-  /** The bar at the top (a `TitleBar`). */
+  /** The bar at the top (a `TitleBar`). Not drawn with `top="unified"`: the one top row is the bar. */
   titleBar?: React.ReactNode
-  /** Directly under the bar, across the whole window: the views of the app (a `Toolbar` of `ToolbarTabs`), when they are not in the bar. */
+  /**
+   * Directly under the bar, across the whole window: the views of the app (a `Toolbar` of `ToolbarTabs`), when they are
+   * not in the bar. With `top="unified"`: the open documents (a `DocumentTabs`), in the one top row, joined to the sheet.
+   */
   tabs?: React.ReactNode
   /** Under the bar: the last result and a summary, one line. */
   status?: React.ReactNode
@@ -187,6 +203,30 @@ export type AppShellProps = {
    * window's ground, the work area one sheet with a corner, as in Xiox.
    */
   frame?: "line" | "sheet" | undefined
+  /**
+   * The top of the sheet frame. `bar` (the default): the `titleBar` across the window and the `tabs` under it.
+   * `unified`: one row shared by the sidebar's head (its button, a hairline, `sidebarHead`) and the work area (`tabs`,
+   * room that moves the window, `topActions`, `windowControls`), flush above the sheet; it is the window's title bar and
+   * `titleBar` is not drawn. Only with `frame="sheet"`: the line frame keeps its bar.
+   */
+  top?: "bar" | "unified" | undefined
+  /** With `top="unified"`: the app (a `ToolbarBrand`), beside the sidebar's button over the sidebar. Not on the rail. */
+  sidebarHead?: React.ReactNode
+  /** With `top="unified"`: the sidebar is shrunk to its rail. The frame's button and the `Sidebar` follow it alike. */
+  sidebarCollapsed?: boolean | undefined
+  /**
+   * With `top="unified"`: the button at the start of the row, over the sidebar, asks for this; without it there is no
+   * button. Where the frame's width forces the rail (620px to 850px) the button stays in its place, disabled.
+   */
+  onSidebarCollapsedChange?: ((collapsed: boolean) => void) | undefined
+  /** With `top="unified"`, where the sidebar is a drawer (under 620px of frame): a button at the start of the row opens it. */
+  onSidebarOpen?: (() => void) | undefined
+  /** With `top="unified"`: the host's own mark of a drag region, as `TitleBar`'s `dragProps`. */
+  dragProps?: TitleBarDragProps | undefined
+  /** With `top="unified"`: the window's buttons (`WindowControls`), at the end of the row and flush with its corner. */
+  windowControls?: React.ReactNode
+  /** With `top="unified"`: the app's tools (a `Toolbar`), at the end of the row before the window's buttons. */
+  topActions?: React.ReactNode
   /** The app's own steps, all or some, in place of the recommended ones (`APP_SHELL_STEPS`); 0 switches a step off. */
   steps?: Partial<AppShellSteps> | undefined
   /** The name of the content for screen readers, and where the skip link goes. */
@@ -204,7 +244,33 @@ const STATUS_TALL = "[[data-status-strip=tall]_&]:min-h-10 [[data-status-strip=t
 // strip's text style (`STRIP`), so it takes the same size; its height stays its own.
 const STRIP_BODY_TEXT = "[[data-status-strip=tall]_&]:text-sm"
 
-function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "end", actions, footer, bottomBar, desktop = false, frame = "line", steps, contentLabel, className, children }: AppShellProps) {
+// The one top row (`top="unified"`). Its start cell is as wide as the sidebar under it (the column, or the rail of one
+// row and the sidebar's 8px on each side), and never narrower than the system's buttons (`--titlebar-start`) and the
+// sidebar's button with 16px of room beside it, which the button's place (`TOP_START_INSET`, 8px to 16px) never passes:
+// the button always fits, at every density and with a finger (`--control-xs` and `--row-height` are 44px then). On a
+// Mac the cell widens over the rail rather than the button reaching the traffic lights.
+// design-check-ignore-next-line dimension-value: the sidebar's column (w-64), or the system's buttons and the sidebar's button with 16px of room
+const TOP_START_COLUMN = "w-[max(16rem,calc(var(--titlebar-start,0px)_+_var(--control-xs)_+_1rem))]"
+// design-check-ignore-next-line dimension-value: the sidebar's rail (one row and 8px on each side), or the system's buttons and the sidebar's button with 16px of room
+const TOP_START_RAIL = "w-[max(calc(var(--row-height)_+_1rem),calc(var(--titlebar-start,0px)_+_var(--control-xs)_+_1rem))]"
+// The button's place, after the system's buttons and the same in the column and on the rail (R14): the sidebar's own
+// (`SIDEBAR_TOGGLE_INSET`, src/internal/frame.ts), over the middle of the rail's icons, never less than 8px from the
+// system's buttons nor more than 16px, so with the cell's least width above it always fits. A `Sidebar
+// toggle="head-start"` puts its button at the same place.
+// design-check-ignore-next-line dimension-value: the system's buttons, then the sidebar's place of its button
+const TOP_START_INSET = cn(SIDEBAR_TOGGLE_INSET, "ps-[calc(var(--titlebar-start,0px)_+_var(--sidebar-toggle-inset))]")
+// On a sidebar of its own colours (`data-sidebar="own"`, a dark or solid column) the start cell is the top of that column,
+// and what the app puts in it reads in the column's inks, as the sidebar's own rows do: there the page's ink is the
+// sidebar's ink and its muted ink the sidebar's muted ink, so a `ToolbarBrand` (its name, the place and the steps before
+// it) needs nothing of its own. Elsewhere (the shared sidebar, a `TitleBar`) nothing changes.
+const TOP_START_OWN = cn(
+  "in-data-[sidebar=own]:bg-sidebar-paper in-data-[sidebar=own]:text-sidebar-ink",
+  "in-data-[sidebar=own]:[--color-ink:var(--color-sidebar-ink)] in-data-[sidebar=own]:[--color-ink-soft:var(--color-sidebar-ink)] in-data-[sidebar=own]:[--color-ink-mute:var(--color-sidebar-mute)]",
+)
+/** Outside the one top row: the sidebar keeps its own button and head, and a strip of tabs its own look. */
+const NOT_UNIFIED: UnifiedShellState = { unifiedTop: false, collapsed: false, attachedTabs: false }
+
+function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "end", actions, footer, bottomBar, desktop = false, frame = "line", top = "bar", sidebarHead, sidebarCollapsed, onSidebarCollapsedChange, onSidebarOpen, dragProps, windowControls, topActions, steps, contentLabel, className, children }: AppShellProps) {
   const words = useWords()
   const root = React.useRef<HTMLDivElement>(null)
   const content = React.useRef<HTMLElement>(null)
@@ -315,20 +381,116 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   // Docked beside the sidebar only where one lies beside the work area; a drawer stays over the end of the content.
   const inspectorFirst = inspectorAt === "sidebar" && beside && layout.inspector === "docked"
   regionOrder.current = inspectorFirst ? REGIONS_INSPECTOR_FIRST : REGIONS
+  // The one top row, in the sheet frame only: the line frame has no ground for it to sit on, and keeps its bar.
+  const unified = sheet && top === "unified"
+  const collapsed = Boolean(sidebarCollapsed)
+  // The sidebar's form as the row draws it, read in the same render as the `Sidebar` reads it: the rail where the user
+  // shrank it or where the width forces it.
+  const rail = collapsed || layout.sidebar === "rail"
+  // Over a drawer, the button that opens it stands before the tabs.
+  const opens = unified && Boolean(sidebar) && layout.sidebar === "drawer" && onSidebarOpen !== undefined
+  // What the row shares with the sidebar under it and with its own tabs; everything else in the frame (the content, a
+  // frame drawn inside it) is outside the row. The tabs start where the sheet does (beside the sidebar, or across a sheet
+  // as wide as the frame) unless the drawer's button stands before them.
+  const shared = React.useMemo<UnifiedShellState>(
+    () => (unified ? { unifiedTop: true, collapsed, onCollapsedChange: onSidebarCollapsedChange, attachedTabs: true, flushStart: !opens } : NOT_UNIFIED),
+    [unified, collapsed, onSidebarCollapsedChange, opens],
+  )
+  // The row's start: over a sidebar beside the sheet, the sidebar's button (disabled where the width forces the rail),
+  // a hairline and the app; over a drawer, the button that opens it.
+  const toggle = unified && beside && onSidebarCollapsedChange ? (
+    <Tooltip label={rail ? words.sidebar.expand : words.sidebar.collapse}>
+      <button
+        type="button"
+        data-slot="sidebar-toggle"
+        aria-label={rail ? words.sidebar.expand : words.sidebar.collapse}
+        aria-expanded={!rail}
+        disabled={layout.sidebar === "rail"}
+        onClick={() => onSidebarCollapsedChange(!collapsed)}
+        // The sidebar's own button (`SIDEBAR_TOGGLE`, as sidebar.tsx draws it), on the sidebar's surface.
+        className={SIDEBAR_TOGGLE}
+      >
+        <Icon name={rail ? "sidebarOpen" : "sidebarClose"} className="size-4" />
+      </button>
+    </Tooltip>
+  ) : null
+  const head = sidebarHead && !rail ? sidebarHead : null
+  const opener = opens && onSidebarOpen ? (
+    <Tooltip label={words.sidebar.open}>
+      <Button variant="ghost" size="icon-sm" data-slot="sidebar-drawer-open" aria-label={words.sidebar.open} onClick={onSidebarOpen} className="ms-2 me-1 shrink-0 self-center">
+        <Icon name="sidebarOpen" />
+      </Button>
+    </Tooltip>
+  ) : null
+  const band = unified ? (
+    // The window's title bar (theme.css: its height, the drag, the room for the system's buttons): one bar, not the
+    // app's `titleBar` too. No stacking of its own and nothing that clips: the tabs lie 1px over the sheet's top line,
+    // above it (`DocumentTabs` attached is `relative z-10`, and the layer under the bar is positioned with no z-index),
+    // and under the overlays' layer.
+    <header
+      data-slot="title-bar"
+      data-unified=""
+      data-window-controls={windowControls ? "" : undefined}
+      {...dragProps}
+      className="flex shrink-0 cursor-default items-stretch text-ink select-none"
+    >
+      <TitleBarDragContext.Provider value={dragProps}>
+        <UnifiedShellContext.Provider value={shared}>
+          {beside ? (
+            <div
+              data-slot="app-shell-top-start"
+              {...dragProps}
+              // On a sidebar of its own colours the cell is the top of its column; on the shared one, the ground.
+              className={cn("flex shrink-0 items-center gap-2", TOP_START_OWN, TOP_START_INSET, rail ? TOP_START_RAIL : TOP_START_COLUMN)}
+            >
+              {toggle}
+              {head ? (
+                <>
+                  {toggle ? <span data-slot="app-shell-top-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-line" /> : null}
+                  <div data-slot="app-shell-top-head" {...dragProps} className="flex min-w-0 flex-1 items-center pe-2">
+                    {head}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+          {/* The work area's part, over the sheet: with no cell before it, it keeps clear of the system's buttons itself.
+              The tabs reach its foot, onto the sheet's top line; the window's buttons reach its corner. */}
+          <div data-slot="app-shell-top-work" {...dragProps} className={cn("flex min-w-0 flex-1 items-end self-stretch", !beside && "ps-(--titlebar-start)")}>
+            {opener}
+            {tabs ? (
+              <div data-slot="app-shell-top-tabs" className="flex min-w-0">
+                {tabs}
+              </div>
+            ) : null}
+            <div data-slot="app-shell-top-drag" aria-hidden="true" {...dragProps} className="min-w-2 flex-1 self-stretch" />
+            {topActions ? (
+              <div data-slot="app-shell-top-actions" {...dragProps} className={cn("flex shrink-0 items-center gap-1 self-center", windowControls ? "me-2" : null)}>
+                {topActions}
+              </div>
+            ) : null}
+            {windowControls}
+          </div>
+        </UnifiedShellContext.Provider>
+      </TitleBarDragContext.Provider>
+    </header>
+  ) : null
   // Everything under the title bar, so the overlays of a window start there.
   const below = (
     <>
-      {tabs ? (
+      {tabs && !unified ? (
         <div data-slot="app-shell-tabs" className={cn("flex min-h-(--control-md) shrink-0 items-stretch px-2 select-none", !sheet && "border-b border-line")}>
           {tabs}
         </div>
       ) : null}
       <div data-slot="app-shell-body" className="flex min-h-0 flex-1">
-        {sidebar}
+        <UnifiedShellContext.Provider value={shared}>{sidebar}</UnifiedShellContext.Provider>
         <div
           data-slot="app-shell-work"
           data-sheet={sheet ? (beside ? "beside" : "alone") : undefined}
-          className={cn("flex min-w-0 flex-1 flex-col", sheet && "overflow-hidden border-t border-line bg-paper", sheet && beside && "rounded-ss-lg border-s")}
+          // Under the tabs of the one top row the corner is square: the sheet's start edge drops straight under the
+          // strip, whichever tab is chosen or scrolled into view.
+          className={cn("flex min-w-0 flex-1 flex-col", sheet && "overflow-hidden border-t border-line bg-paper", sheet && beside && "border-s", sheet && beside && !(unified && tabs) && "rounded-ss-lg")}
         >
           {status ? (
             <div data-slot="app-shell-status" role="status" className={cn(STRIP, "min-h-(--control-sm)", STATUS_TALL, STRIP_BODY_TEXT, !sheet && "border-b border-line")}>
@@ -367,7 +529,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   )
   const regions = (
     <>
-      {titleBar}
+      {unified ? band : titleBar}
       <div data-slot="app-shell-below" className="relative flex min-h-0 flex-1 flex-col">
         {below}
         {desktop ? <div ref={setOverlays} data-slot="app-shell-overlays" className="pointer-events-none absolute inset-0 z-40" /> : null}
@@ -377,10 +539,13 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
   return (
     <AppShellContext.Provider value={layout}>
       <ContentContext.Provider value={content}>
+      {/* Outside the row and the sidebar (the content, a frame drawn inside it) nothing is in the one top row. */}
+      <UnifiedShellContext.Provider value={NOT_UNIFIED}>
       <div
         ref={root}
         data-slot="app-shell"
         data-frame={frame}
+        data-top={unified ? "unified" : "bar"}
         data-desktop={desktop ? "" : undefined}
         data-sidebar={layout.sidebar}
         data-inspector={layout.inspector}
@@ -399,6 +564,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
         {/* The provider is there from the first render, with or without its layer: the frame is never mounted twice. */}
         {desktop ? <PortalContainerProvider container={overlays ?? outer}>{regions}</PortalContainerProvider> : regions}
       </div>
+      </UnifiedShellContext.Provider>
       </ContentContext.Provider>
     </AppShellContext.Provider>
   )

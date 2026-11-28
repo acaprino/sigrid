@@ -51,8 +51,10 @@ test('the export passes the sheet frame to AppShell only when the app has it', (
 
 test('the layouts have no sidebar, and a region the app does not have is not in its source', () => {
   const layouts = STARTERS.filter((s) => s.kind === 'layout')
-  expect(layouts.map((s) => s.id)).toEqual(['tabs', 'tabs-details', 'list-details', 'blank'])
-  for (const s of layouts) {
+  expect(layouts.map((s) => s.id)).toEqual(['tabs', 'tabs-details', 'list-details', 'unified-sheet', 'blank'])
+  // But the layout of the sheet frame's one top row, which stands over a sidebar and is made of one.
+  expect(starter('unified-sheet').settings).toMatchObject({ frame: 'sheet', top: 'unified', sidebar: 'wide' })
+  for (const s of layouts.filter((one) => one.id !== 'unified-sheet')) {
     const app = s.make()
     expect(app.settings.sidebar, s.id).toBe('off')
     expect(appSource(app), s.id).not.toContain('<Sidebar')
@@ -125,4 +127,40 @@ test('in the running app «Analyze» runs the job: the status row is its progres
   expect(view.queryByRole('progressbar')).toBeNull()
   expect(status().textContent).toContain('Analysis done · 18.3 GB to clean')
   expect(analyze.disabled).toBe(false)
+})
+
+/* ———— The document tabs, running ———— */
+
+test('in the running app the document tabs are its own: the plus adds one and chooses it, a cross closes one and the one beside it is chosen', () => {
+  render(<RunApp app={starter('notes')} host="web" />)
+  const chosen = () => view.getAllByRole('tab').filter((tab) => tab.getAttribute('aria-selected') === 'true').map((tab) => tab.getAttribute('data-value') ?? tab.closest('[data-value]')?.getAttribute('data-value'))
+  const open = () => Array.from(document.querySelectorAll('[data-slot="document-tab"]')).map((tab) => tab.getAttribute('data-value'))
+  // The one top row of the sheet frame: the tabs are in it, never in a toolbar.
+  expect(document.querySelector('[data-slot="title-bar"][data-unified] [data-slot="document-tabs"]')).not.toBeNull()
+  expect(document.querySelector('[data-slot="toolbar"] [data-slot="document-tabs"]')).toBeNull()
+  expect(open()).toEqual(['trip', 'ideas'])
+  expect(chosen()).toEqual(['trip'])
+  // A new one, at the end, chosen; the screen does not change.
+  fireEvent.click(view.getByRole('button', { name: 'New tab' }))
+  expect(open()).toHaveLength(3)
+  expect(view.getByRole('tab', { name: 'Untitled' }).getAttribute('aria-selected')).toBe('true')
+  expect(view.getByRole('heading', { name: 'Trip to Lisbon' })).toBeTruthy()
+  // Closing the one in sight chooses the one before it, as it was the last.
+  fireEvent.click(view.getByRole('button', { name: 'Close Untitled' }))
+  expect(open()).toEqual(['trip', 'ideas'])
+  expect(view.getByRole('tab', { name: 'Ideas' }).getAttribute('aria-selected')).toBe('true')
+  // Closing one not in sight leaves the choice; closing the last leaves none.
+  fireEvent.click(view.getByRole('button', { name: 'Close Trip' }))
+  expect(open()).toEqual(['ideas'])
+  expect(view.getByRole('tab', { name: 'Ideas' }).getAttribute('aria-selected')).toBe('true')
+  fireEvent.click(view.getByRole('button', { name: 'Close Ideas' }))
+  expect(open()).toEqual([])
+  expect(view.getByRole('button', { name: 'New tab' })).toBeTruthy()
+  // The sidebar's button of the row shrinks the sidebar to its rail, and widens it again.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-slot="sidebar-toggle"]')!
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(false)
+  fireEvent.click(toggle)
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(true)
+  fireEvent.click(toggle)
+  expect(document.querySelector('[data-slot="sidebar"]')!.hasAttribute('data-collapsed')).toBe(false)
 })

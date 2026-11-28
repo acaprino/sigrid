@@ -10,7 +10,11 @@
 //   details, setDetails(open), toggleDetails()  the inspector: open at the start only where it is docked
 //   say(text)                 a notice at the foot of the window
 //   job, busy, runJob()       the app's job: how far it is (null when it does not run), whether it runs, the way to start it
-import { CATALOG, FITS, isKind, type BuildCtx } from './catalog'
+//   docs, activeDoc, setActiveDoc(id), addDoc(), closeDoc(id)
+//                             the documents open in tabs (a «Document tabs»): the app's own, apart from the screen
+// The frame keeps one more, which no element reads: `collapsed`, the sidebar shrunk to its rail by the button of the
+// sheet frame's one top row.
+import { CATALOG, FITS, docTitles, isKind, type BuildCtx } from './catalog'
 import { call, equals, h, isEl, isWhen, name, not, text, type Child, type El, type Expr, type StateDecl, type Val } from './ir'
 import { SHARED, hasRegion, type AppModel, type Node, type Screen, type Settings, type SharedSlot } from './model'
 
@@ -29,17 +33,52 @@ export type Plan = {
   readonly start: string
   readonly settings: Settings
   readonly screens: readonly ScreenPlan[]
+  /**
+   * What each region every screen shares holds, ready to draw. `bar`: what the toolbar of the bar holds; in the one top
+   * row, the tools at its end, without the app and the drawer's button, which the row draws itself (`FRAME_OWN`), and
+   * nothing where only room is left. `tabs`: the document tabs as they are and the other parts in toolbars of views,
+   * in their order.
+   */
   readonly shared: Readonly<Record<SharedSlot, readonly Child[]>>
   readonly states: readonly StateDecl[]
   /**
    * What the frame has to provide, because something in the app uses it. `job`: a Job is in a status row, so there is a
-   * job and its timer; `runJob`: something presses to start it.
+   * job and its timer; `runJob`: something presses to start it. `unified`: the sheet frame's one top row
+   * (`isUnified`); `sidebarCollapse`: that row stands over a sidebar, with the app as its head and the button that
+   * shrinks the sidebar (`collapsed`). `docTabs`: the titles of the documents open at the start, where the tabs hold a
+   * «Document tabs»; null where they hold none.
    */
-  readonly uses: { readonly say: boolean; readonly menu: boolean; readonly details: boolean; readonly job: boolean; readonly runJob: boolean }
+  readonly uses: {
+    readonly say: boolean
+    readonly menu: boolean
+    readonly details: boolean
+    readonly job: boolean
+    readonly runJob: boolean
+    readonly unified: boolean
+    readonly sidebarCollapse: boolean
+    readonly docTabs: readonly string[] | null
+  }
 }
 
 /** The names the frame takes for itself: a component's state is given another. */
-const RESERVED = ['screen', 'setScreen', 'go', 'menu', 'setMenu', 'details', 'setDetails', 'toggleDetails', 'narrow', 'notices', 'setNotices', 'say', 'job', 'setJob', 'busy', 'runJob', 'content', 'inspector', 'actions', 'status']
+const RESERVED = [
+  'screen', 'setScreen', 'go', 'menu', 'setMenu', 'details', 'setDetails', 'toggleDetails', 'narrow', 'notices', 'setNotices', 'say', 'job', 'setJob', 'busy', 'runJob', 'content', 'inspector', 'actions', 'status',
+  'docs', 'setDocs', 'activeDoc', 'setActiveDoc', 'addDoc', 'closeDoc', 'collapsed', 'setCollapsed',
+]
+
+/**
+ * The sheet frame's one top row (`AppShell top="unified"`): only in the sheet frame, and only over a sidebar. The line
+ * frame keeps its bar, so a window drawn by the app keeps its buttons and the room that moves it; and the row's head,
+ * the app's name, stands over the sidebar, so an app with none keeps its bar and its name in it, as with `top: 'bar'`.
+ */
+export const isUnified = (s: Pick<Settings, 'frame' | 'top' | 'sidebar'>): boolean => s.frame === 'sheet' && s.top === 'unified' && s.sidebar !== 'off'
+/** The one top row stands over a sidebar: its head is the app, beside the button that shrinks the sidebar. */
+export const overSidebar = (s: Pick<Settings, 'frame' | 'top' | 'sidebar'>): boolean => isUnified(s) && s.sidebar !== 'off'
+/** The parts of the bar the one top row draws itself: the app (its head) and the button of the drawer (its own). */
+export const FRAME_OWN: readonly string[] = ['Brand', 'MenuButton']
+/** The title of a document opened with the plus of the tabs. */
+export const NEW_DOC = 'Untitled'
+const VIEWS = { 'aria-label': 'Views' } as const
 
 export const SCREEN_NAME: Expr = { $expr: 'SCREENS[screen]', run: (scope) => (scope['SCREENS'] as Record<string, string> | undefined)?.[scope['screen'] as string] }
 /** The screen in sight has no details: `inspector` is the record of the screens that have them. */
@@ -53,7 +92,18 @@ export function shownWhen(show: unknown): Expr | null {
 export function planOf(app: AppModel): Plan {
   const states: StateDecl[] = []
   const taken = new Set(RESERVED)
-  const uses = { say: false, menu: app.settings.sidebar !== 'off', details: app.screens.some((s) => s.details === 'on'), job: app.screens.some((s) => s.statusOn && s.statusItems.some((node) => node.type === 'Job')), runJob: false }
+  // The document tabs are only in the tabs, never in a slot: the first of them says which documents are open at the start.
+  const docs = hasRegion(app.settings, 'tabs') ? app.shared.tabs.find((node) => node.type === 'DocTabs') : undefined
+  const uses = {
+    say: false,
+    menu: app.settings.sidebar !== 'off',
+    details: app.screens.some((s) => s.details === 'on'),
+    job: app.screens.some((s) => s.statusOn && s.statusItems.some((node) => node.type === 'Job')),
+    runJob: false,
+    unified: isUnified(app.settings),
+    sidebarCollapse: overSidebar(app.settings),
+    docTabs: docs ? docTitles(docs.props) : null,
+  }
   const screens = app.screens.map((s) => ({ id: s.id, name: s.name, icon: s.icon }))
   const noDetails = uses.details && app.screens.some((s) => s.details !== 'on') ? NO_DETAILS : undefined
   const known = new Set(screens.map((s) => s.id))
@@ -97,8 +147,41 @@ export function planOf(app: AppModel): Plan {
       return [when ? { $when: when, then: drawn } : drawn]
     })
 
+  // The bar's parts. In the one top row the app and the drawer's button are the row's own, and are not built; the rest
+  // are the tools at its end. The room before and after them is the row's own too (its drag room pushes them to the
+  // end), so a space at either end of the tools is left out, and where only room is left there are no tools.
+  const bar = (nodes: readonly Node[]): Child[] => {
+    if (!uses.unified) return build(nodes)
+    const tools = nodes.filter((node) => !FRAME_OWN.includes(node.type))
+    const first = tools.findIndex((node) => node.type !== 'Spacer')
+    if (first === -1) return []
+    let last = tools.length - 1
+    while (tools[last]!.type === 'Spacer') last -= 1
+    return build(tools.slice(first, last + 1))
+  }
+  // The tabs: a «Document tabs» as it is (Ark UI's tabs are a tablist of their own, never inside a toolbar's roving
+  // keys), the other parts in a toolbar of views, in the order they come. Each part is built once, in order, and told
+  // apart by its kind (a part shown at some widths only is wrapped in its condition).
+  const tabs = (nodes: readonly Node[]): Child[] => {
+    const parts = nodes.map((node) => ({ doc: node.type === 'DocTabs', drawn: build([node]) }))
+    if (!parts.some((part) => part.doc)) return [h('Toolbar', VIEWS, parts.flatMap((part) => part.drawn))]
+    const out: Child[] = []
+    let run: Child[] = []
+    for (const part of parts) {
+      if (!part.doc) {
+        run.push(...part.drawn)
+        continue
+      }
+      if (run.length > 0) out.push(h('Toolbar', VIEWS, run))
+      run = []
+      out.push(...part.drawn)
+    }
+    if (run.length > 0) out.push(h('Toolbar', VIEWS, run))
+    return out
+  }
   // A region the app does not have is not built: what is kept in it (for when it comes back) declares no state.
-  const shared = Object.fromEntries(SHARED.map((slot) => [slot, hasRegion(app.settings, slot) ? build(app.shared[slot]) : []])) as Record<SharedSlot, Child[]>
+  const region = (slot: SharedSlot): Child[] => (slot === 'bar' ? bar(app.shared.bar) : slot === 'tabs' ? tabs(app.shared.tabs) : build(app.shared[slot]))
+  const shared = Object.fromEntries(SHARED.map((slot) => [slot, hasRegion(app.settings, slot) ? region(slot) : []])) as Record<SharedSlot, Child[]>
   return {
     name: app.name,
     start: known.has(app.start) ? app.start : (screens[0]?.id ?? ''),

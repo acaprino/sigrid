@@ -5,9 +5,10 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 import { SearchField } from '../src/components'
-import { APP_SHELL_STEPS, AppShell, Inspector, NavItem, Sidebar, SidebarGroup, appShellLayout, useAppShell } from '../src/layout'
+import { APP_SHELL_STEPS, AppShell, DocumentTab, DocumentTabs, Inspector, NavItem, Sidebar, SidebarGroup, TitleBar, Toolbar, ToolbarBrand, ToolbarSearch, WindowControls, appShellLayout, useAppShell } from '../src/layout'
 import { CommandsProvider, useCommand } from '../src/assemblies'
 import { settle } from './helpers'
+import { themeCss } from './theme-tokens'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -155,6 +156,323 @@ test('the sheet has its corner and its start edge only where a sidebar lies besi
 test('a sheet frame without a sidebar has no corner either', () => {
   render(<AppShell contentLabel="Page" frame="sheet">Text</AppShell>)
   expect(document.querySelector('[data-slot="app-shell-work"]')?.getAttribute('data-sheet')).toBe('alone')
+})
+
+// `top="unified"`: in the sheet frame, one top row holds the sidebar's head (its button, a hairline, the app) and the
+// work area's tabs, drag room, actions and window buttons, above the layer the overlays open in.
+test('frame="sheet" top="unified" mounts single top band above desktop overlays, syncs sidebarCollapsed, and drops rounded-ss-lg when tabs exist', () => {
+  const onCollapsed = vi.fn()
+  const { container } = render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      desktop
+      contentLabel="Notes"
+      dragProps={{ 'data-tauri-drag-region': '' }}
+      windowControls={<WindowControls onClose={vi.fn()} />}
+      sidebarHead={<span>Notes</span>}
+      sidebarCollapsed={false}
+      onSidebarCollapsedChange={onCollapsed}
+      sidebar={<Sidebar aria-label="Places"><SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >Body</AppShell>,
+  )
+  const bar = container.querySelector('[data-slot="title-bar"]')!
+  const below = container.querySelector('[data-slot="app-shell-below"]')!
+  expect(bar.compareDocumentPosition(below) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(below.querySelector('[data-slot="app-shell-overlays"]')).not.toBeNull()
+  expect(container.querySelector('[data-slot="app-shell-work"]')?.className).not.toContain('rounded-ss-lg')
+  expect(container.querySelectorAll('[data-slot="sidebar-toggle"]')).toHaveLength(1)
+  fireEvent.click(container.querySelector('[data-slot="sidebar-toggle"]')!)
+  expect(onCollapsed).toHaveBeenCalledWith(true)
+})
+
+test('forced rail (620–849px) disables unified toggle and hides sidebarHead; narrow (<620px) omits start cell without sidebar and shows onSidebarOpen button when sidebar is drawer', () => {
+  const resize = observed()
+  const onOpen = vi.fn()
+  const { container } = render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      sidebarHead={<span>Notes</span>}
+      sidebarCollapsed={false}
+      onSidebarCollapsedChange={vi.fn()}
+      onSidebarOpen={onOpen}
+      sidebar={<Sidebar aria-label="Places"><NavItem icon={<svg />}>All</NavItem></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >Body</AppShell>,
+  )
+  // Wide, the column: the button, enabled, then the hairline and the app.
+  resize(1200)
+  expect(container.querySelector<HTMLButtonElement>('[data-slot="sidebar-toggle"]')?.disabled).toBe(false)
+  expect(container.querySelector('[data-slot="app-shell-top-divider"]')).not.toBeNull()
+  expect(container.querySelector('[data-slot="app-shell-top-head"]')?.textContent).toBe('Notes')
+  resize(768)
+  expect(container.querySelector<HTMLButtonElement>('[data-slot="sidebar-toggle"]')?.disabled).toBe(true)
+  expect(container.querySelector('[data-slot="app-shell-top-divider"]')).toBeNull()
+  expect(container.querySelector('[data-slot="app-shell-top-head"]')).toBeNull()
+  expect(container.querySelector('[data-slot="title-bar"]')?.textContent).not.toContain('Notes')
+  resize(390)
+  const openBtn = container.querySelector<HTMLButtonElement>('[data-slot="sidebar-drawer-open"]')!
+  expect(openBtn).not.toBeNull()
+  fireEvent.click(openBtn)
+  expect(onOpen).toHaveBeenCalledTimes(1)
+})
+
+test('shrunk by the user, the row keeps its button in place and enabled, names it for widening, and the sidebar follows the frame', () => {
+  const onCollapsed = vi.fn()
+  const Frame = ({ collapsed }: { collapsed: boolean }) => (
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      sidebarHead={<span>Notes</span>}
+      sidebarCollapsed={collapsed}
+      onSidebarCollapsedChange={onCollapsed}
+      // The sidebar's own prop says otherwise: in the row, the frame's choice is the one that holds.
+      sidebar={<Sidebar aria-label="Places" collapsed={!collapsed}><NavItem icon={<svg />}>All</NavItem></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >Body</AppShell>
+  )
+  const { container, rerender } = render(<Frame collapsed />)
+  const toggle = () => container.querySelector<HTMLButtonElement>('[data-slot="sidebar-toggle"]')!
+  const cell = () => container.querySelector('[data-slot="app-shell-top-start"]')!
+  // The rail, by the user's choice: the button can widen it again.
+  expect(toggle().disabled).toBe(false)
+  expect(toggle().getAttribute('aria-label')).toBe('Expand the sidebar')
+  expect(toggle().getAttribute('aria-expanded')).toBe('false')
+  expect(toggle().querySelector('[data-icon]')?.getAttribute('data-icon')).toBe('sidebarOpen')
+  // The cell is as wide as the rail under it (one row and the sidebar's 8px on each side), and holds the button alone.
+  expect(cell().className).toContain('w-[max(calc(var(--row-height)')
+  expect(container.querySelector('[data-slot="app-shell-top-head"]')).toBeNull()
+  expect(container.querySelector('[data-slot="app-shell-top-divider"]')).toBeNull()
+  expect(container.querySelector('[data-slot="sidebar"]')?.hasAttribute('data-collapsed')).toBe(true)
+  fireEvent.click(toggle())
+  expect(onCollapsed).toHaveBeenLastCalledWith(false)
+  // Widened: the same button in the same place, now to shrink it; the column's width, the hairline and the app.
+  const before = toggle()
+  rerender(<Frame collapsed={false} />)
+  expect(toggle()).toBe(before)
+  expect(toggle().getAttribute('aria-label')).toBe('Collapse the sidebar')
+  expect(toggle().getAttribute('aria-expanded')).toBe('true')
+  expect(toggle().querySelector('[data-icon]')?.getAttribute('data-icon')).toBe('sidebarClose')
+  expect(cell().className).toContain('w-[max(16rem')
+  expect(container.querySelector('[data-slot="app-shell-top-divider"]')).not.toBeNull()
+  expect(container.querySelector('[data-slot="app-shell-top-head"]')?.textContent).toBe('Notes')
+  expect(container.querySelector('[data-slot="sidebar"]')?.hasAttribute('data-collapsed')).toBe(false)
+  fireEvent.click(toggle())
+  expect(onCollapsed).toHaveBeenLastCalledWith(true)
+})
+
+test('the row\'s tabs start at the sheet\'s start edge beside the sidebar and across a sheet as wide as the frame; after the drawer\'s button they do not', () => {
+  const resize = observed()
+  // Composed with `+`: Tailwind also scans the tests (test/build.test.ts).
+  const startRoom = 'ps-' + '(--radius-lg)'
+  const noCorner = 'group-first/document-tab' + ':hidden'
+  const tabs = <DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab><DocumentTab value="ideas">Ideas</DocumentTab></DocumentTabs>
+  /** Whether the strip of the row is flush: the first tab draws no start corner, and the row keeps no room for one. */
+  const flush = () => {
+    const list = document.querySelector('[data-slot="title-bar"] [data-slot="tabs-list"]')!
+    const corner = document.querySelector('[data-slot="title-bar"] [data-slot="document-tab"][data-selected] [data-slot="document-tab-fillet"][data-side="start"]')!
+    const room = list.className.split(' ').includes(startRoom)
+    expect(corner.className.split(' ').includes(noCorner)).toBe(!room)
+    return !room
+  }
+  const sidebar = <Sidebar aria-label="Places"><NavItem icon={<svg />}>All</NavItem></Sidebar>
+  const { rerender } = render(<AppShell frame="sheet" top="unified" contentLabel="Notes" onSidebarOpen={vi.fn()} sidebar={sidebar} tabs={tabs}>Body</AppShell>)
+  resize(1200)
+  expect(flush()).toBe(true)
+  resize(768)
+  expect(flush()).toBe(true)
+  resize(390)
+  expect(document.querySelector('[data-slot="sidebar-drawer-open"]')).not.toBeNull()
+  expect(flush()).toBe(false)
+  // A drawer the app opens from elsewhere: nothing before the strip, which starts where the sheet does.
+  rerender(<AppShell frame="sheet" top="unified" contentLabel="Notes" sidebar={sidebar} tabs={tabs}>Body</AppShell>)
+  expect(flush()).toBe(true)
+  // No sidebar on a narrow frame (the phone's layout): the sheet is as wide as the frame, and so is the row.
+  rerender(<AppShell frame="sheet" top="unified" contentLabel="Notes" onSidebarOpen={vi.fn()} tabs={tabs}>Body</AppShell>)
+  expect(flush()).toBe(true)
+})
+
+test('on a sidebar of its own colours the start cell is the top of the column, and the app in it reads in the sidebar\'s inks', () => {
+  const { container } = render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      sidebarHead={<ToolbarBrand name="Notes" page={['Travel', 'Trip']} />}
+      sidebar={<Sidebar aria-label="Places"><NavItem icon={<svg />}>All</NavItem></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >Body</AppShell>,
+  )
+  const cell = container.querySelector('[data-slot="app-shell-top-start"]')!
+  // Only under `data-sidebar="own"` (a variant, composed with `+`): the cell paints the column, and inside it the ink of
+  // the page is the sidebar's ink, its muted ink the sidebar's muted ink, so a `ToolbarBrand` (its name, the place and the
+  // steps before it) reads on the column as `SidebarRow` does.
+  const own = 'in-data-[sidebar=own]' + ':'
+  expect(cell.className.split(' ')).toEqual(expect.arrayContaining([
+    own + 'bg-sidebar-paper',
+    own + 'text-sidebar-ink',
+    own + '[--color-ink' + ':var(--color-sidebar-ink)]',
+    own + '[--color-ink-soft' + ':var(--color-sidebar-ink)]',
+    own + '[--color-ink-mute' + ':var(--color-sidebar-mute)]',
+  ]))
+  for (const slot of ['toolbar-brand-name', 'toolbar-brand-page']) expect(cell.querySelector(`[data-slot="${slot}"]`)).not.toBeNull()
+  // Nowhere else: the tabs and the rest of the row keep the page's inks, and so does a `ToolbarBrand` in a `TitleBar`.
+  expect(container.querySelector('[data-slot="title-bar"]')!.className).not.toContain('--color-ink')
+  expect(container.querySelector('[data-slot="app-shell-top-work"]')!.className).not.toContain('--color-ink')
+})
+
+test('the actions at the end of the row take the room their content needs, before the window\'s buttons; short of room the tabs give way, never the page', () => {
+  render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      windowControls={<WindowControls onClose={vi.fn()} />}
+      topActions={<Toolbar aria-label="Notes"><ToolbarSearch label="Search the notes" value="" onValueChange={vi.fn()} /></Toolbar>}
+      sidebar={<Sidebar aria-label="Places"><NavItem icon={<svg />}>All</NavItem></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >
+      <Toolbar aria-label="Content tools"><ToolbarSearch label="Find" value="" onValueChange={vi.fn()} /></Toolbar>
+    </AppShell>,
+  )
+  render(<TitleBar><Toolbar aria-label="Mail"><ToolbarSearch label="Search the mail" value="" onValueChange={vi.fn()} /></Toolbar></TitleBar>)
+  const toolbar = (name: string) => screen.getByRole('toolbar', { name })
+  // A toolbar measures its own width for its steps (a container of its inline size), and such a box counts as empty
+  // where the room around it is its content's: in the row's actions it is not measured, so the cell is as wide as what
+  // it holds. Elsewhere (filling a `TitleBar`, in the content) it keeps measuring itself.
+  const css = themeCss.replace(/\/\*[\s\S]*?\*\//g, '')
+  const rule = /([^{}]*)\{\s*container-type:\s*normal;\s*\}/.exec(css)
+  expect(rule, 'the rule that stops the row\'s toolbar measuring itself').not.toBeNull()
+  const selector = rule![1]!.trim()
+  expect(toolbar('Notes').matches(selector)).toBe(true)
+  expect(toolbar('Mail').matches(selector)).toBe(false)
+  expect(toolbar('Content tools').matches(selector)).toBe(false)
+  // The flex roles that keep the geometry: the actions and the window's buttons never shrink; the tab strip shrinks (and
+  // scrolls with its arrow) down to nothing; the drag room holds only what is left, and 8px at least.
+  const work = document.querySelector('[data-slot="app-shell-top-work"]')!
+  const cell = (slot: string) => work.querySelector(`[data-slot="${slot}"]`)!.className.split(' ')
+  expect(cell('app-shell-top-actions')).toContain('shrink-0')
+  expect(cell('window-controls')).toContain('shrink-0')
+  expect(cell('app-shell-top-tabs')).toContain('min-w-0')
+  expect(cell('app-shell-top-tabs')).not.toContain('shrink-0')
+  expect(cell('app-shell-top-drag')).toEqual(expect.arrayContaining(['flex-1', 'min-w-2']))
+  expect(work.className.split(' ')).toContain('min-w-0')
+})
+
+test('under bold tabs the title bar grows 2px for the line of its views; the one top row, whose tabs have no such line, keeps its height', () => {
+  const css = themeCss.replace(/\/\*[\s\S]*?\*\//g, '')
+  const selector = /([^{}]*\[data-tabs="bold"\] \[data-slot="title-bar"\][^{}]*)\{/.exec(css)![1]!.trim()
+  render(
+    <div data-tabs="bold">
+      <TitleBar><span>Mail</span></TitleBar>
+      <TitleBar size="compact"><span>Tool</span></TitleBar>
+      <AppShell frame="sheet" top="unified" contentLabel="Notes">Body</AppShell>
+    </div>,
+  )
+  const [bar, compact, band] = Array.from(document.querySelectorAll('[data-slot="title-bar"]'))
+  expect(band!.hasAttribute('data-unified')).toBe(true)
+  expect(bar!.matches(selector)).toBe(true)
+  expect(compact!.matches(selector)).toBe(false)
+  expect(band!.matches(selector)).toBe(false)
+})
+
+test('frame="line" with top="unified" falls back cleanly to data-top="bar" and F6 cycles unified regions', () => {
+  const { container, unmount } = render(
+    <AppShell frame="line" top="unified" contentLabel="Notes" titleBar={<TitleBar><span>Mail</span></TitleBar>}>Body</AppShell>,
+  )
+  expect(container.querySelector('[data-slot="app-shell"]')?.getAttribute('data-top')).toBe('bar')
+  expect(container.querySelector('[data-slot="title-bar"]')?.textContent).toContain('Mail')
+  // The bar's own frame: one bar, the app's, and no row of the sheet frame.
+  expect(container.querySelectorAll('[data-slot="title-bar"]')).toHaveLength(1)
+  expect(container.querySelector('[data-unified]')).toBeNull()
+  unmount()
+  // In the sheet frame the one top row is the title bar of the round: F6 goes into it once (its first control, not
+  // each of its buttons in turn), then to the sidebar's current place and the content; Shift+F6 comes back to it.
+  render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      sidebarHead={<span>Notes</span>}
+      sidebarCollapsed={false}
+      onSidebarCollapsedChange={vi.fn()}
+      sidebar={<Sidebar aria-label="Places"><SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup></Sidebar>}
+      tabs={<DocumentTabs value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >Body</AppShell>,
+  )
+  const band = document.querySelector('[data-slot="title-bar"]')!
+  expect(document.querySelectorAll('[data-slot="title-bar"]')).toHaveLength(1)
+  expect(band.hasAttribute('data-unified')).toBe(true)
+  const press = (shift = false) => fireEvent.keyDown(document.activeElement ?? document.body, { key: 'F6', shiftKey: shift })
+  press()
+  expect(document.activeElement).toBe(band.querySelector('[data-slot="sidebar-toggle"]'))
+  press()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'All notes' }))
+  press()
+  expect(document.activeElement).toBe(screen.getByRole('main', { name: 'Notes' }))
+  press(true)
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'All notes' }))
+  press(true)
+  expect(document.activeElement).toBe(band.querySelector('[data-slot="sidebar-toggle"]'))
+  // From the band, Shift+F6 goes round to the last region the frame has.
+  press(true)
+  expect(document.activeElement).toBe(screen.getByRole('main', { name: 'Notes' }))
+})
+
+test('the unified top row moves the window from its empty parts, ends with the window buttons, and joins only its own tabs to the sheet', () => {
+  render(
+    <AppShell
+      frame="sheet"
+      top="unified"
+      contentLabel="Notes"
+      titleBar={<TitleBar><span>Ignored</span></TitleBar>}
+      dragProps={{ 'data-tauri-drag-region': '' }}
+      windowControls={<WindowControls onClose={vi.fn()} />}
+      topActions={<button type="button">Share</button>}
+      sidebar={<Sidebar aria-label="Places"><NavItem icon={<svg />}>All</NavItem></Sidebar>}
+      tabs={<DocumentTabs aria-label="Open notes" value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}
+    >
+      <DocumentTabs aria-label="Sections" value="a" onValueChange={vi.fn()}><DocumentTab value="a">A</DocumentTab></DocumentTabs>
+      {/* A sidebar of something drawn in the content (a sample): not the row's, it keeps its own button. */}
+      <Sidebar aria-label="Sample" onCollapsedChange={vi.fn()}><NavItem icon={<svg />}>One</NavItem></Sidebar>
+    </AppShell>,
+  )
+  const band = document.querySelector('[data-slot="title-bar"]')!
+  // One bar: the row, not the app's `titleBar` too.
+  expect(document.querySelectorAll('[data-slot="title-bar"]')).toHaveLength(1)
+  expect(band.textContent).not.toContain('Ignored')
+  expect(band.hasAttribute('data-tauri-drag-region')).toBe(true)
+  expect(band.hasAttribute('data-window-controls')).toBe(true)
+  expect(band.querySelector('[data-slot="app-shell-top-drag"]')?.hasAttribute('data-tauri-drag-region')).toBe(true)
+  // In order: the tabs, the room that moves the window, the actions, the window's buttons at the end.
+  const work = band.querySelector('[data-slot="app-shell-top-work"]')!
+  expect([...work.children].map((el) => el.getAttribute('data-slot'))).toEqual(['app-shell-top-tabs', 'app-shell-top-drag', 'app-shell-top-actions', 'window-controls'])
+  // Its tabs sit in the row and join the sheet; a strip of the content keeps its own look; no strip under the row.
+  expect(screen.getByRole('tablist', { name: 'Open notes' }).closest('[data-slot="document-tabs"]')?.getAttribute('data-appearance')).toBe('attached')
+  expect(screen.getByRole('tablist', { name: 'Sections' }).closest('[data-slot="document-tabs"]')?.getAttribute('data-appearance')).toBe('pill')
+  expect(screen.getByRole('main').querySelector('[data-slot="sidebar-collapse"]')).not.toBeNull()
+  expect(document.querySelector('[data-slot="app-shell-tabs"]')).toBeNull()
+  expect(document.querySelector('[data-slot="app-shell"]')?.getAttribute('data-top')).toBe('unified')
+})
+
+test('top="bar" is the default: the frame keeps its bar and its strip of tabs, and a strip there keeps its own look', () => {
+  render(
+    <AppShell frame="sheet" contentLabel="Notes" titleBar={<TitleBar><span>Mail</span></TitleBar>} sidebar={<Sidebar aria-label="Places" onCollapsedChange={vi.fn()}><NavItem icon={<svg />}>All</NavItem></Sidebar>} tabs={<DocumentTabs aria-label="Open notes" value="trip" onValueChange={vi.fn()}><DocumentTab value="trip">Trip</DocumentTab></DocumentTabs>}>
+      Body
+    </AppShell>,
+  )
+  expect(document.querySelector('[data-slot="app-shell"]')?.getAttribute('data-top')).toBe('bar')
+  expect(document.querySelector('[data-slot="title-bar"]')?.textContent).toBe('Mail')
+  expect(document.querySelector('[data-slot="app-shell-tabs"]')).not.toBeNull()
+  expect(screen.getByRole('tablist', { name: 'Open notes' }).closest('[data-slot="document-tabs"]')?.getAttribute('data-appearance')).toBe('pill')
+  expect(document.querySelector('[data-slot="app-shell-work"]')?.className).toContain('rounded-ss-lg')
+  // The sidebar keeps its own button.
+  expect(document.querySelector('[data-slot="sidebar-collapse"]')).not.toBeNull()
+  expect(document.querySelector('[data-slot="sidebar-toggle"]')).toBeNull()
 })
 
 // `inspectorAt`: the docked inspector at the end of the frame (the default), or beside the sidebar, before the content.

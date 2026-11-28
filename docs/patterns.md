@@ -80,6 +80,68 @@ A `Panel` lays out a region inside: a header with the title, a line that says ho
 whole panel at its end (a filter); a row of tools under it (a search); a body that alone scrolls; a foot that stays in
 sight, with a line above it. It paints nothing: it lies on the surface of the region that holds it.
 
+## The sheet with one top row, and document tabs
+
+For an app whose person keeps several things open (notes, files, documents) the sheet frame has a second top, chosen
+with `top="unified"`. There is no separate title bar: one row, flush above the sheet, is the window's title bar, and
+the open things are tabs that rise from the sheet's top line as one piece with it. The gallery shows it: view
+Practices, section «The sheet with one top row»; the app editor starts it as the `Notes` app and the «One top row»
+layout.
+
+- The row is shared. At its start, over the sidebar and as wide as it, stand the button that shrinks and widens the
+  sidebar, a hairline and the app (`sidebarHead`, a `ToolbarBrand`). After it come the open things (`tabs`, a
+  `DocumentTabs`), room that moves the window, the app's tools (`topActions`, a `Toolbar`) and the window's buttons
+  (`windowControls`), at the end of the row and flush with its corner. `titleBar` is not drawn: with `top="unified"` the
+  row is the bar. In a window of its own pass `dragProps` too, as for `TitleBar`; on the web pass neither.
+- The frame owns the sidebar's button and its form. The app keeps the state (`sidebarCollapsed`,
+  `onSidebarCollapsedChange`) and passes the `Sidebar` as it is: inside this row the sidebar draws no button or head of
+  its own and follows the frame. The button is always in the same place, in the column and on the rail (R14); where
+  the width forces the rail (620px to 850px) it stays there, disabled, and on the rail the app's name is not drawn.
+- `top="unified"` takes effect only with `frame="sheet"`. With `frame="line"` the frame draws the ordinary bar and
+  ignores `windowControls`, `dragProps`, `topActions` and `sidebarHead`: do not pair them. The row is for an app with
+  a sidebar, which it shares the row with (the app editor offers it only then); an app without one keeps the ordinary
+  bar with its `ToolbarBrand`.
+- The row is the first stop of F6, above the layers of what opens, so the window stays movable and closable while a
+  dialog is open.
+
+`DocumentTabs` is the strip of open documents, with a `DocumentTab` for each (a title, an `Icon`, a `color` as the
+8px dot of R10). Its `value` is the tab shown (`null` when none is), `onValueChange` chooses another, `onAdd` is the
+`+` after the strip (without it there is none) and a tab with `onClose` has its cross. The app keeps the list, and
+removes the tab and chooses the one shown next when `onClose` is called; the focus goes to the tab beside it, or to
+the `+` when none is left. A tab closes with its cross, a middle press or Delete, and a tab that must stay open is
+`closable={false}`.
+
+- Where the row of tabs is longer than its room, it scrolls and its arrow forward appears at the end. After the tabs
+  stand, always in this order and never moving: the arrow (disabled while nothing overflows), a hairline and the `+`.
+  The same arrows are `TabsList overflow="buttons"` of the plain `Tabs`.
+- Inside `top="unified"` the tab shown is cut from the sheet below it, with its top corners rounded and two small
+  curves into the sheet's top line; the other tabs are quiet text on the ground. Anywhere else the strip takes the
+  tint of a selection, as `Tabs`; `appearance` chooses either by hand.
+- The words of the strip («Open tabs», «New tab», «Close Trip», the arrows) are `useWords().documentTabs`; an app in
+  another language passes its own with `WordsProvider`.
+- Known limit: the strip is made on the Ark-based `Tabs`, and these do not mirror in a page written from the right yet,
+  because no Ark `LocaleProvider` passes the page's direction: Ark writes `dir="ltr"` on every strip. In such a page
+  the row mirrors (the sidebar's button and the app go to the right) but the strip stays an island written from the
+  left: its tabs, arrows, hairline and `+` keep their order, so the `+` stands next to the cell over the sidebar and
+  the first tab at the far end, away from the sheet's start edge. With the first tab shown, its corner on the start
+  side is left out as if it stood at that edge, so a square foot shows in the middle of the row. The fix is the
+  toolkit's, for every Ark-based part at once (a bridge that passes the page's direction to Ark); until then do not
+  count on a mirrored strip.
+
+A phone has no room for a sidebar beside the row, and a drawer for four places is one tap more than tabs at the foot.
+So the recommended form, for two to five places, has no drawer:
+
+- Pass the `sidebar` only where the frame is wide, and the places as a `ToolbarTabs` in `bottomBar` (`edge="top"`,
+  `layout="stacked"`: the icon over the word) where it is narrow. Never both: one place for the places on one screen.
+- Under 620px the open things then take the whole row, with no sidebar button; the sheet reaches the window's edge,
+  joined to the tab shown, and the strip keeps its `+` and its arrow.
+- An app of six places or more keeps the drawer: it passes `sidebar` at every width and `onSidebarOpen`, and the row
+  starts with the button that opens it, then the strip; it has no `bottomBar` then.
+- With a finger the tabs, the crosses and the `+` are 44px, by themselves.
+
+For the sidebar outside this row, `Sidebar toggle="head-start"` is the same arrangement made by the sidebar itself:
+the button first, at a start offset that is the same in the column and on the rail, then a hairline and the header.
+
 ## The title bar and its toolbar
 
 - Start the bar with the app (`ToolbarBrand`): a square in the accent with the initial of its name, and the name. It

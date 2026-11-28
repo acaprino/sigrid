@@ -3,10 +3,12 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { NavItem, Sidebar, SidebarGroup, SidebarRow } from '../src/layout'
+import { DENSITIES } from '../src/density'
+import { AppShell, NavItem, Sidebar, SidebarGroup, SidebarRow } from '../src/layout'
 import { AppShellContext } from '../src/layout/app-shell'
+import { UnifiedShellContext } from '../src/internal/frame'
 import { Count } from '../src/primitives'
-import { flush } from './helpers'
+import { classes, flush } from './helpers'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -226,4 +228,128 @@ test('where there is no button, the head changes nothing: no onCollapsedChange, 
   expect(document.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
   expect(document.querySelector('[data-slot="sidebar-head"]')).toBeNull()
   expect(order()).toEqual(['sidebar-nav'])
+})
+
+test('toggle="head-start" places the toggle before the divider and header at a fixed start offset', () => {
+  const onCollapsed = vi.fn()
+  const { container, rerender } = render(
+    <Sidebar aria-label="Main" toggle="head-start" header={<span>Notes</span>} collapsed={false} onCollapsedChange={onCollapsed}>
+      <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
+    </Sidebar>,
+  )
+  const head = container.querySelector('[data-slot="sidebar-head"]')!
+  const children = Array.from(head.children)
+  expect(children[0]?.tagName).toBe('BUTTON')
+  expect(children[0]?.getAttribute('data-slot')).toBe('sidebar-collapse')
+  expect(head.querySelector('[data-slot="sidebar-head-divider"]')).not.toBeNull()
+  expect(head.textContent).toContain('Notes')
+  // One start, read in place below (the test after this one): its value is the frame's row's.
+  const expandedStart = head.className.split(' ').filter((c) => c.startsWith('ps-'))
+  expect(expandedStart).toHaveLength(1)
+  rerender(
+    <Sidebar aria-label="Main" toggle="head-start" header={<span>Notes</span>} collapsed onCollapsedChange={onCollapsed}>
+      <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
+    </Sidebar>,
+  )
+  const railHead = container.querySelector('[data-slot="sidebar-head"]')!
+  expect(railHead.querySelector('button')).not.toBeNull()
+  expect(railHead.textContent).not.toContain('Notes')
+  expect(railHead.querySelector('[data-slot="sidebar-head-divider"]')).toBeNull()
+  // The same start offset on the rail as in the column: the toggle does not move.
+  expect(railHead.className.split(' ').filter((c) => c.startsWith('ps-'))).toEqual(expandedStart)
+  expect(railHead.className.split(' ')).not.toContain('justify-center')
+  fireEvent.click(railHead.querySelector('button')!)
+  expect(onCollapsed).toHaveBeenCalledWith(false)
+})
+
+/**
+ * Where a box starts what it holds, in px from its own edge, as a browser computes its classes: a `--sidebar-toggle-inset`
+ * it declares, then its one `ps-` (a step of the spacing scale, or a value in brackets), with the measures of a density.
+ * jsdom computes none of it.
+ */
+function startOf(el: Element, measures: Record<string, number>): number {
+  const value = (raw: string, vars: Record<string, number>): number => {
+    const expr = raw
+      .replaceAll('_', ' ')
+      .replace(/var\((--[\w-]+)(?:,([^)]*))?\)/g, (_, name: string, fallback?: string) => String(vars[name] ?? parseFloat(fallback ?? 'NaN')))
+      .replace(/(\d*\.?\d+)rem/g, (_, n: string) => String(Number(n) * 16))
+      .replace(/(\d*\.?\d+)px/g, '$1')
+    return Function('clamp', 'calc', `return (${expr})`)((lo: number, v: number, hi: number) => Math.min(Math.max(v, lo), hi), (v: number) => v) as number
+  }
+  const cls = classes(el)
+  const vars = { ...measures }
+  const declare = '[--sidebar-toggle-inset:'
+  const declared = cls.find((c) => c.startsWith(declare))
+  if (declared) vars['--sidebar-toggle-inset'] = value(declared.slice(declare.length, -1), vars)
+  const starts = cls.filter((c) => c.startsWith('ps-'))
+  expect(starts).toHaveLength(1)
+  const start = starts[0]!
+  return start.startsWith('ps-[') ? value(start.slice(4, -1), vars) : Number(start.slice(3)) * 4
+}
+
+test('toggle="head-start": the button is where the frame\'s row puts it, over the middle of the rail\'s icons and inside the rail, at every density and with a finger', () => {
+  const places = <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
+  const own = (collapsed: boolean) => (
+    <Sidebar aria-label="Main" toggle="head-start" header={<span>Notes</span>} collapsed={collapsed} onCollapsedChange={vi.fn()}>{places}</Sidebar>
+  )
+  const { container, rerender, unmount } = render(own(false))
+  // The head row lies inside the sidebar's own 8px.
+  expect(classes(container.querySelector('[data-slot="sidebar"]'))).toContain('p-2')
+  const column = container.querySelector('[data-slot="sidebar-head"]')!.cloneNode() as Element
+  const button = container.querySelector('[data-slot="sidebar-collapse"]')!.cloneNode() as Element
+  rerender(own(true))
+  const rail = container.querySelector('[data-slot="sidebar-head"]')!.cloneNode() as Element
+  unmount()
+  // The frame's row over a sidebar: its start cell starts at the sidebar's outer edge.
+  const frame = render(
+    <AppShell frame="sheet" top="unified" contentLabel="Notes" sidebarCollapsed={false} onSidebarCollapsedChange={vi.fn()} sidebar={<Sidebar aria-label="Places">{places}</Sidebar>}>Body</AppShell>,
+  )
+  const cell = frame.container.querySelector('[data-slot="app-shell-top-start"]')!
+  const fingers = [false, true]
+  for (const density of DENSITIES) {
+    for (const finger of fingers) {
+      // With a finger a row and the smallest control are 44px at least (theme.css), and so is the button.
+      const row = finger ? Math.max(44, density.row.height) : density.row.height
+      const size = finger ? Math.max(44, density.control.xs) : density.control.xs
+      const measures = { '--row-height': row, '--control-xs': size, '--titlebar-start': 0 }
+      const where = `${density.id}${finger ? ', finger' : ''}`
+      // From the sidebar's outer edge: its 8px, then the head row's start.
+      const start = 8 + startOf(column, measures)
+      expect(8 + startOf(rail, measures), where).toBe(start)
+      expect(startOf(cell, measures), where).toBe(start)
+      // Over the middle of the rail (one row and the sidebar's 8px on each side), and inside it.
+      expect(start + size / 2, where).toBe((row + 16) / 2)
+      expect(start, where).toBeGreaterThanOrEqual(8)
+      expect(start + size, where).toBeLessThanOrEqual(8 + row)
+    }
+  }
+  // One button, the same wherever it is drawn.
+  expect(classes(button)).toEqual(classes(frame.container.querySelector('[data-slot="sidebar-toggle"]')))
+})
+
+test('Sidebar suppresses its own toggle and follows UnifiedShellContext.collapsed when unifiedTop is true', () => {
+  const { container } = render(
+    <UnifiedShellContext.Provider value={{ unifiedTop: true, collapsed: true, onCollapsedChange: vi.fn(), attachedTabs: true }}>
+      <Sidebar aria-label="Main" onCollapsedChange={vi.fn()} header={<span>Notes</span>}>
+        <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
+      </Sidebar>
+    </UnifiedShellContext.Provider>,
+  )
+  expect(container.querySelector('[data-slot="sidebar"]')?.hasAttribute('data-collapsed')).toBe(true)
+  expect(container.querySelector('[data-slot="sidebar-toggle"]')).toBeNull()
+  expect(container.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
+  expect(container.querySelector('[data-slot="sidebar-head"]')).toBeNull()
+})
+
+test('with unifiedTop and collapsed false the sidebar is a column, with no toggle of its own, even with toggle="head-start"', () => {
+  const { container } = render(
+    <UnifiedShellContext.Provider value={{ unifiedTop: true, collapsed: false, onCollapsedChange: vi.fn(), attachedTabs: false }}>
+      <Sidebar aria-label="Main" collapsed toggle="head-start" onCollapsedChange={vi.fn()}>
+        <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
+      </Sidebar>
+    </UnifiedShellContext.Provider>,
+  )
+  expect(container.querySelector('[data-slot="sidebar"]')?.hasAttribute('data-collapsed')).toBe(false)
+  expect(container.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
+  expect(container.querySelector('[data-slot="sidebar-head"]')).toBeNull()
 })

@@ -11,6 +11,7 @@ The paths are relative to the root of the package (in an app: node_modules/@acap
 - [agents/examples/tasks.tsx](agents/examples/tasks.tsx): a to-do app in the toolkit's frame
 - [agents/examples/mail.tsx](agents/examples/mail.tsx): a mail client in the toolkit's frame
 - [agents/examples/workspace.tsx](agents/examples/workspace.tsx): a workspace laid out as Xiox, in the sheet frame
+- [agents/examples/notes.tsx](agents/examples/notes.tsx): a notes app in the sheet frame, with one top row and document tabs
 - [agents/examples/triage.tsx](agents/examples/triage.tsx): a screen that fits, whose page never scrolls
 - [agents/examples/signup.tsx](agents/examples/signup.tsx): signing in or up, then a first setup one step at a time
 

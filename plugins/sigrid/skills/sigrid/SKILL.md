@@ -22,8 +22,9 @@ installed, say so and stop: do not write from memory.
 2. `agents/catalog.json`: look up every component you are about to use, and its props. It is large: search it for
    the component's name instead of reading it whole.
 3. For a new screen, `docs/patterns.md` and one of `agents/examples/*.tsx` (`tasks.tsx` and `mail.tsx` in the frame
-   with lines, `workspace.tsx` in the sheet frame, `triage.tsx` a screen that fits); for a phone, `docs/mobile.md`;
-   to design or review a screen, `docs/design-laws.md`.
+   with lines, `workspace.tsx` in the sheet frame, `notes.tsx` in the sheet frame with one top row and document tabs,
+   `triage.tsx` a screen that fits); for a phone, `docs/mobile.md`; to design or review a screen,
+   `docs/design-laws.md`.
 4. `DESIGN.md` when a rule is in doubt (R1 to R14, tokens, each component's form).
 5. `README.md` for the setup, the themes, the density, the words, the icons and the entries of the package.
 

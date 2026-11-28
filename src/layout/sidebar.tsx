@@ -3,7 +3,10 @@
 // - shrunk to a rail (`collapsed`) each row shows its icon alone, with its name as a hint beside it and still as its
 //   name for screen readers; the button at the foot shrinks and widens it (`onCollapsedChange`), or, with
 //   `toggle="head"`, the button at the end of the header's row (the name of the list, its count and the button on one
-//   row; on the rail the button alone, at the top);
+//   row; on the rail the button alone, at the top), or, with `toggle="head-start"`, the button first, at a start offset
+//   that is the same on the rail and in the column, then a hairline and the header (the rail keeps the button alone);
+//   inside an `AppShell frame="sheet"` that draws the one top row (`UnifiedShellContext`) the sidebar has no button
+//   and no head of its own: the frame's button shrinks it and the sidebar follows the frame's `collapsed`;
 // - groups (`SidebarGroup`): a heading with its icon (R6) and, if `collapsible`, an arrow that turns as the group opens;
 //   the rows a user reaches most are simply the first group («Favorites»);
 // - a search box at the top (`search`) hides, as the user types, the rows whose name does not hold the text, and the
@@ -25,6 +28,7 @@ import { NARROW, useMedia } from "../internal/media"
 import { useMotion } from "../internal/motion"
 import { useReveal } from "../internal/reveal"
 import { useWords } from "../words"
+import { SIDEBAR_TOGGLE, SIDEBAR_TOGGLE_INSET, UnifiedShellContext } from "../internal/frame"
 import { AppShellContext } from "./app-shell"
 import { COUNT_PILL, COUNT_PILL_ON_SIDEBAR, NavContext, ToneContext } from "./nav-list"
 import { SearchField } from "../components/search-field"
@@ -41,10 +45,12 @@ export type SidebarProps = {
   /**
    * Where that button is. `foot` (the default): alone at the foot, under the groups. `head`: at the end of the header's
    * row, beside `header` (a `SidebarRow` with the name of the list and its `Count`); with no `header` the row holds the
-   * button alone; on the rail it is at the top, centred. Where there is no button (no `onCollapsedChange`, the drawer,
-   * a rail the frame's width forces) it changes nothing.
+   * button alone; on the rail it is at the top, centred. `head-start`: the button first in that row, at one fixed offset
+   * from the start (so it does not move when the sidebar shrinks), then a hairline and `header`; on the rail the button
+   * alone, at the same place. Where there is no button (no `onCollapsedChange`, the drawer, a rail the frame's width
+   * forces, a frame that draws the top row itself) it changes nothing.
    */
-  toggle?: "foot" | "head" | undefined
+  toggle?: "foot" | "head" | "head-start" | undefined
   /**
    * Where the sidebar is a drawer, the drawer is open: inside an `AppShell` under 620px of frame, alone under 860px of
    * screen. Where it is a column or a rail, it is always there and this is not read.
@@ -75,8 +81,19 @@ const CONTROL = cn(
   FOCUS_RING_INSET,
 )
 
-function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot", open = false, onOpenChange, header, footer, search = false, animated, className, children, ...props }: SidebarProps) {
+// The head row with the button first (`toggle="head-start"`): it starts where the frame's one top row puts the button
+// (`SIDEBAR_TOGGLE_INSET`, from the sidebar's outer edge, over the middle of the rail's icons) less the sidebar's own
+// 8px, so the button is at one place in the column and on the rail, inside the rail at every density and with a finger.
+// design-check-ignore-next-line dimension-value: the frame's place of the sidebar's button less the sidebar's own 8px
+const HEAD_START = cn(SIDEBAR_TOGGLE_INSET, "ps-[calc(var(--sidebar-toggle-inset)_-_0.5rem)]")
+
+function Sidebar({ collapsed: collapsedProp = false, onCollapsedChange, toggle: place = "foot", open = false, onOpenChange, header, footer, search = false, animated, className, children, ...props }: SidebarProps) {
   const words = useWords()
+  // A frame that draws the one top row owns the button and the sidebar's form: the sidebar follows it and keeps no
+  // button or head of its own.
+  const unified = React.useContext(UnifiedShellContext)
+  const owned = unified?.unifiedTop === true
+  const collapsed = owned ? unified.collapsed : collapsedProp
   // Inside an `AppShell` the frame's own width decides (a rail from 620px to 850px, a drawer under 620px); alone, the
   // screen does (a drawer under 860px).
   const shell = React.useContext(AppShellContext)
@@ -101,7 +118,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
   const rows = React.useMemo(() => ({ rail, query, mark: motion ? { Highlight: motion.Highlight, id: `${markId}-${rail ? "rail" : "column"}` } : null }), [rail, query, motion, markId])
   // One icon at the foot, at its end on the column and in the middle of the rail: the name is a hint and the button's name, not
   // a line of text that takes a row of the sidebar.
-  const toggle = onCollapsedChange && !narrow && !forced ? (
+  const toggle = onCollapsedChange && !narrow && !forced && !owned ? (
     <Tooltip label={rail ? words.sidebar.expand : words.sidebar.collapse} side="right" animated={animated}>
       <button
         type="button"
@@ -110,10 +127,10 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
         aria-expanded={!rail}
         onClick={() => onCollapsedChange(!collapsed)}
         className={cn(
-          "flex size-(--control-xs) shrink-0 items-center justify-center rounded-md text-sidebar-mute pointer-coarse:size-11 hover:bg-sidebar-selected/70 hover:text-sidebar-selected-ink",
-          FOCUS_RING_INSET,
+          // The one button of the sidebar, the frame's top row's too (src/internal/frame.ts).
+          SIDEBAR_TOGGLE,
           // At the foot it is a line of the column: in its middle on the rail, at its end otherwise. At the head the row places it.
-          place === "head" ? null : rail ? "self-center" : "self-end",
+          place === "foot" ? (rail ? "self-center" : "self-end") : null,
         )}
       >
         {rail ? <Icon name="sidebarOpen" className="size-4" /> : <Icon name="sidebarClose" className="size-4" />}
@@ -135,6 +152,18 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
         <div data-slot="sidebar-head" className={cn("flex shrink-0 items-center gap-1 [&_[data-slot=sidebar-row]]:font-semibold", COUNT_PILL, COUNT_PILL_ON_SIDEBAR, rail ? "justify-center" : "justify-end")}>
           {header && !rail ? <div data-slot="sidebar-header" className="min-w-0 flex-1">{header}</div> : null}
           {toggle}
+        </div>
+      ) : toggle && place === "head-start" ? (
+        // The same row, the button first: at one start offset on the rail and in the column (`HEAD_START`), so it does not
+        // move when the sidebar shrinks. Then a hairline and what the app put in `header`; on the rail the button alone.
+        <div data-slot="sidebar-head" className={cn("flex shrink-0 items-center gap-2 [&_[data-slot=sidebar-row]]:font-semibold", HEAD_START, COUNT_PILL, COUNT_PILL_ON_SIDEBAR)}>
+          {toggle}
+          {header && !rail ? (
+            <>
+              <span data-slot="sidebar-head-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-line" />
+              <div data-slot="sidebar-header" className="min-w-0 flex-1">{header}</div>
+            </>
+          ) : null}
         </div>
       ) : header && !rail ? (
         <div data-slot="sidebar-header" className="shrink-0">{header}</div>
@@ -162,7 +191,7 @@ function Sidebar({ collapsed = false, onCollapsedChange, toggle: place = "foot",
         ) : null}
       </nav>
       {footer && !rail ? <div data-slot="sidebar-footer" className="shrink-0">{footer}</div> : null}
-      {place === "head" ? null : toggle}
+      {place === "foot" ? toggle : null}
     </div>
   )
   if (narrow) {

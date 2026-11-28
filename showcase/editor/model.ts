@@ -33,7 +33,13 @@ export type Settings = {
    * (the bar and the sidebar on the window's ground, the work one sheet with a corner).
    */
   frame: 'line' | 'sheet'
-  /** `compact`: the thin caption of a classic desktop program. */
+  /**
+   * The top of the sheet frame (`AppShell top`): `bar`, the bar across the window; `unified`, one row flush above the
+   * sheet, with the sidebar's button and the app over the sidebar, the tabs beside them joined to the sheet, and the
+   * bar's tools at its end. The line frame has no such row: there it is the bar.
+   */
+  top: 'bar' | 'unified'
+  /** `compact`: the thin caption of a classic desktop program. Not in the one top row, whose height is the window's. */
   barSize: 'default' | 'compact'
   sidebar: Vis
   sidebarSearch: boolean
@@ -106,7 +112,7 @@ export function copyNodes(nodes: readonly Node[]): Node[] {
 
 export const isNodes = (value: unknown): value is Node[] => Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === 'object' && item !== null && typeof (item as Node).type === 'string' && typeof (item as Node).props === 'object')
 
-const SETTINGS: Settings = { frame: 'line', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: '', tabs: 'off', bottom: 'off', foot: 'off' }
+const SETTINGS: Settings = { frame: 'line', top: 'bar', barSize: 'default', sidebar: 'off', sidebarSearch: false, account: '', tabs: 'off', bottom: 'off', foot: 'off' }
 const NO_SHARED = (): Record<SharedSlot, Node[]> => ({ bar: [], tabs: [], nav: [], foot: [], bottom: [] })
 
 /* ———— Apps to start from ———— */
@@ -287,7 +293,64 @@ function workspace(): AppModel {
   }
 }
 
-/* The layouts: few components, no sidebar, each a way to lay a screen out. */
+function notes(): AppModel {
+  const place = (label: string, icon: IconName, to: string, count = 0) => make('NavItem', { label, icon, count, action: `go:${to}` })
+  const list = (label: string, rows: { title: string; line: string; fact: string }[]) => make('List', { label, rows: rows.map((row) => ({ ...row, unread: false })), chosen: true, action: 'none' })
+  return {
+    version: 1,
+    name: 'Notes',
+    look: structuredClone(START_LOOK),
+    start: 'all-notes',
+    // The sheet frame with its one top row: the sidebar's button and the app over the places, the open notes as tabs
+    // joined to the sheet, the search at the row's end. On a phone the places are tabs at the foot (no drawer: four
+    // places fit there) and the open notes take the whole row.
+    settings: { ...SETTINGS, frame: 'sheet', top: 'unified', sidebar: 'wide', bottom: 'narrow', tabs: 'always' },
+    shared: {
+      ...NO_SHARED(),
+      bar: [make('Brand', { page: 'none' }), make('Spacer'), make('BarSearch', { label: 'Search the notes', shortcut: '/' })],
+      tabs: [make('DocTabs', { tabs: [{ label: 'Trip' }, { label: 'Ideas' }] })],
+      nav: [make('NavGroup', { items: [place('All notes', 'all', 'all-notes', 12), place('Travel', 'globe', 'travel', 4), place('Home', 'folder', 'home', 5), place('Archive', 'archive', 'archive')] })],
+      bottom: [make('BottomTabs')],
+    },
+    screens: [
+      screen('All notes', 'all', {
+        width: 'prose',
+        details: 'on',
+        detailsTitle: 'Note',
+        content: [
+          make('Heading', { text: 'Trip to Lisbon', level: 'page' }),
+          make('Text', { text: 'Four days in May, and the train from Porto on the way back.', tone: 'mute' }),
+          make('Markdown', { text: '**Before leaving**\n\n- [x] Book the flight\n- [ ] Book the train back from Porto\n- [ ] Ask Marta about the tram passes' }),
+        ],
+        detailsItems: [make('Field', { label: 'Title', placeholder: 'Trip to Lisbon' }), make('Choice', { label: 'Folder', options: [{ label: 'Travel' }, { label: 'Home' }, { label: 'Archive' }] }), make('Day', { label: 'Reminder' })],
+      }),
+      screen('Travel', 'globe', {
+        pad: 'sm',
+        width: 'full',
+        content: [
+          list('Notes in Travel', [
+            { title: 'Trip to Lisbon', line: 'Four days in May', fact: 'Today' },
+            { title: 'Packing list', line: 'Chargers, the adapter, the rain jacket', fact: 'Mon' },
+            { title: 'Hotels in Porto', line: 'Two near the station', fact: 'Apr 2' },
+          ]),
+        ],
+      }),
+      screen('Home', 'folder', {
+        pad: 'sm',
+        width: 'full',
+        content: [
+          list('Notes in Home', [
+            { title: 'Kitchen quote', line: 'The second version, from Marta Riva', fact: 'Fri' },
+            { title: 'Plants to repot', line: 'The fig and the two ferns', fact: 'Mar 28' },
+          ]),
+        ],
+      }),
+      screen('Archive', 'archive', { content: [make('Empty', { title: 'Nothing archived', about: 'A note you archive is kept here, out of the way.' })] }),
+    ],
+  }
+}
+
+/* The layouts: few components, each a way to lay a screen out. Only the one top row has a sidebar: it is made of one. */
 
 function tabsOnly(): AppModel {
   return {
@@ -401,6 +464,29 @@ function triage(): AppModel {
   }
 }
 
+function unifiedSheet(): AppModel {
+  return {
+    version: 1,
+    name: 'My app',
+    look: structuredClone(START_LOOK),
+    start: 'home',
+    // The sheet frame's one top row: the sidebar's button and the app over the places, the open documents as tabs
+    // joined to the sheet. On a phone the places are tabs at the foot and the documents take the whole row.
+    settings: { ...SETTINGS, frame: 'sheet', top: 'unified', sidebar: 'wide', bottom: 'narrow', tabs: 'always' },
+    shared: {
+      ...NO_SHARED(),
+      bar: [make('Brand', { page: 'none' }), make('Spacer')],
+      tabs: [make('DocTabs')],
+      nav: [make('NavGroup', { items: [make('NavItem', { label: 'Home', icon: 'all', action: 'go:home' }), make('NavItem', { label: 'Settings', icon: 'settings', action: 'go:settings' })] })],
+      bottom: [make('BottomTabs')],
+    },
+    screens: [
+      screen('Home', 'all', { content: [make('Heading', { text: 'Home', level: 'page' }), make('Text', { text: 'The document of the tab chosen above.' })] }),
+      screen('Settings', 'settings', { width: 'prose', content: [make('Heading', { text: 'Settings', level: 'section' }), make('Stack', { gap: 'none', items: [make('Setting', { label: 'Notices' })] })] }),
+    ],
+  }
+}
+
 function blank(): AppModel {
   return { version: 1, name: 'My app', look: structuredClone(START_LOOK), start: 'home', settings: { ...SETTINGS }, shared: { ...NO_SHARED(), bar: [make('Brand'), make('Spacer')] }, screens: [screen('Home', 'all')] }
 }
@@ -416,9 +502,17 @@ export const STARTERS: readonly Starter[] = [
     make: workspace,
   },
   { id: 'triage', name: 'Triage', kind: 'app', about: 'Sorting what came in, one item at a time, on one screen whose page never scrolls: how many are left in the row under the bar, a two-state switch and the item in a body that gives way, the answers at the foot.', make: triage },
+  {
+    id: 'notes',
+    name: 'Notes',
+    kind: 'app',
+    about: 'A notes app in the sheet frame with its one top row: the places in a sidebar, the open notes as tabs joined to the sheet (a plus adds one, a cross closes it), the search at the row’s end, a note with its details; on a phone the places are tabs at the foot.',
+    make: notes,
+  },
   { id: 'tabs', name: 'Tabs', kind: 'layout', about: 'No sidebar: three screens as tabs under the bar, at the foot on a phone.', make: tabsOnly },
   { id: 'tabs-details', name: 'Tabs and details', kind: 'layout', about: 'No sidebar: views as tabs under the bar, a list, and the details of the row chosen beside it.', make: tabsDetails },
   { id: 'list-details', name: 'List and details', kind: 'layout', about: 'No sidebar and no tabs: one list, the details of the row chosen beside it, the actions under it.', make: listDetails },
+  { id: 'unified-sheet', name: 'One top row', kind: 'layout', about: 'The sheet frame with one row at its top: the sidebar’s button and the app over a sidebar, the open documents as tabs joined to the sheet; on a phone the places are tabs at the foot.', make: unifiedSheet },
   { id: 'blank', name: 'Blank', kind: 'layout', about: 'A bar with the name of the app and one empty screen.', make: blank },
 ]
 
@@ -487,6 +581,8 @@ export function readApp(value: unknown): AppModel | null {
     settings: {
       // An app saved before the frame had two forms has the line one.
       frame: settings['frame'] === 'sheet' ? 'sheet' : 'line',
+      // An app saved before the sheet frame had two tops has the bar.
+      top: settings['top'] === 'unified' ? 'unified' : 'bar',
       barSize: settings['barSize'] === 'compact' ? 'compact' : 'default',
       sidebar: oneOf(settings['sidebar'], VIS),
       sidebarSearch: flag(settings['sidebarSearch']),

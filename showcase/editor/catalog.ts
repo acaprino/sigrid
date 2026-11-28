@@ -220,6 +220,24 @@ export const CATALOG = {
     box: () => 'flex shrink-0 self-stretch',
     build: (p, ctx) => tabs(p, ctx, {}),
   },
+  DocTabs: {
+    label: 'Document tabs',
+    icon: 'file',
+    group: 'Bar',
+    about: 'The documents open in the app, as tabs: a press moves between them, a cross closes one, a plus opens a new one. In the one top row of the sheet frame they are joined to the sheet.',
+    into: ['tabs'],
+    fields: {
+      tabs: { kind: 'rows', label: 'Open at the start', named: 'label', of: { label: { kind: 'text', label: 'Title' } }, fresh: { label: 'Untitled' } },
+      closable: { kind: 'toggle', label: 'A cross closes a tab' },
+      addable: { kind: 'toggle', label: 'A plus opens a new tab' },
+    },
+    fresh: { tabs: [{ label: 'Draft' }, { label: 'Notes' }], closable: true, addable: true },
+    // Attached to the sheet, the tabs reach the foot of their row.
+    box: () => 'flex min-w-0 shrink items-end self-stretch',
+    // The documents are the app's own state, as its notices and its job are (plan.ts): `docs`, the one in sight
+    // `activeDoc`, and the ways to add and close one. Never in a toolbar: Ark UI's tabs are a tablist of their own.
+    build: (p) => h('DocumentTabs', { value: name('activeDoc'), onValueChange: name('setActiveDoc'), onAdd: flag(p['addable']) ? name('addDoc') : undefined }, flag(p['closable']) ? OPEN_DOCS_CLOSING : OPEN_DOCS),
+  },
   BottomTabs: {
     label: 'Tabs at the foot',
     icon: 'moveDown',
@@ -814,6 +832,32 @@ function tabs(p: Props, ctx: BuildCtx, placing: { edge?: 'top'; layout?: 'stacke
   const view = ctx.state('view', options[0]?.value ?? '')
   return h('ToolbarTabs', { 'aria-label': 'Views', value: view.value, onValueChange: view.set, ...look }, options.map((option, at) => h('ToolbarTab', { value: option.value, icon: stacked ? icon(views[at]?.['icon']) : undefined }, option.label)))
 }
+
+/** A document open in a tab of the app's: what tells it apart, and its title. */
+export type Doc = { readonly id: string; readonly title: string }
+
+/** The titles of the tabs a «Document tabs» opens with; a tab with no title is «Untitled». */
+export const docTitles = (p: Props): string[] => list(p['tabs']).map((row) => text(row['label']) || 'Untitled')
+
+/** The documents open at the start, each with an id of its own: «Trip» is `trip`, a second «Trip» `trip-2`. */
+export const openDocs = (titles: readonly string[]): Doc[] => named(titles.map((label) => ({ label }))).map(({ value, label }) => ({ id: value, title: label }))
+
+/**
+ * A tab for each open document (`docs`): in the export a `map` over them, on the run page and the canvas the same tabs
+ * as elements. Where a tab can close, its cross asks `closeDoc`.
+ */
+function openDocTabs(closing: boolean): Expr {
+  const close = closing ? ' onClose={() => closeDoc(doc.id)}' : ''
+  return {
+    $expr: ['docs.map((doc) => (', `  <DocumentTab key={doc.id} value={doc.id}${close}>`, '    {doc.title}', '  </DocumentTab>', '))'].join('\n'),
+    run: (scope) =>
+      ((scope['docs'] as readonly Doc[] | undefined) ?? []).map((doc) =>
+        h('DocumentTab', { key: doc.id, value: doc.id, onClose: closing ? { $expr: '', run: () => () => (scope['closeDoc'] as ((id: string) => void) | undefined)?.(doc.id) } : undefined }, doc.title),
+      ),
+  }
+}
+const OPEN_DOCS = openDocTabs(false)
+const OPEN_DOCS_CLOSING = openDocTabs(true)
 
 /** The item a job is on: one of its items, by how far it is. */
 function itemAt(items: readonly string[]): Expr {

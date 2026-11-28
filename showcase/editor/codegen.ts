@@ -6,9 +6,10 @@
 import { DENSITIES } from '../../src/index'
 import { byEntry } from './entries'
 import { TAURI_PERMISSIONS } from '../../tauri/permissions'
+import { openDocs } from './catalog'
 import { isEl, isExpr, isJson, isSlot, isWhen, h, lit, name, not, slug, type Child, type El, type Expr, type Val, type When } from './ir'
 import type { AppModel, Vis } from './model'
-import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, SCREEN_NAME, planOf, screenBody, type Plan } from './plan'
+import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, NEW_DOC, SCREEN_NAME, planOf, screenBody, type Plan } from './plan'
 
 export type ExportFile = { readonly path: string; readonly text: string }
 
@@ -174,20 +175,28 @@ function region(vis: Vis, el: El): Val | When {
 function frameSource(plan: Plan): El {
   const s = plan.settings
   const account = s.account ? h('SidebarRow', { leading: h('Avatar', { name: s.account, size: 'xs', decorative: true }) }, s.account) : undefined
+  // The bar of the window, or the sheet frame's one top row, which is the bar: then the drag and the window's buttons
+  // are the row's, the app is its head over the sidebar, the drawer's button its own, and the bar's tools go to its end.
+  const unified = plan.uses.unified
+  const head = plan.uses.sidebarCollapse
+  const drag = raw('ownWindow ? DRAG_REGION : undefined')
+  const controls = raw('ownWindow ? <WindowControls {...windowControls} /> : undefined')
+  // The tabs as the plan made them: one toolbar of views, or the document tabs beside the toolbars of the other parts.
+  const tabs = plan.shared.tabs.length === 1 && isEl(plan.shared.tabs[0]) ? plan.shared.tabs[0] : h('Fragment', null, plan.shared.tabs)
   const props: Record<string, Val | When> = {
     desktop: name('ownWindow'),
     frame: s.frame === 'sheet' ? 'sheet' : undefined,
+    top: unified ? 'unified' : undefined,
     contentLabel: SCREEN_NAME,
-    titleBar: h(
-      'TitleBar',
-      {
-        size: s.barSize === 'compact' ? 'compact' : undefined,
-        dragProps: raw('ownWindow ? DRAG_REGION : undefined'),
-        windowControls: raw('ownWindow ? <WindowControls {...windowControls} /> : undefined'),
-      },
-      h('Toolbar', { 'aria-label': plan.name }, plan.shared.bar),
-    ),
-    tabs: region(s.tabs, h('Toolbar', { 'aria-label': 'Views' }, plan.shared.tabs)),
+    titleBar: unified ? undefined : h('TitleBar', { size: s.barSize === 'compact' ? 'compact' : undefined, dragProps: drag, windowControls: controls }, h('Toolbar', { 'aria-label': plan.name }, plan.shared.bar)),
+    sidebarHead: head ? h('ToolbarBrand', { name: plan.name }) : undefined,
+    sidebarCollapsed: head ? name('collapsed') : undefined,
+    onSidebarCollapsedChange: head ? name('setCollapsed') : undefined,
+    onSidebarOpen: unified && s.sidebar === 'always' ? raw('() => setMenu(true)') : undefined,
+    dragProps: unified ? drag : undefined,
+    windowControls: unified ? controls : undefined,
+    topActions: unified && plan.shared.bar.length > 0 ? h('Toolbar', { 'aria-label': plan.name }, plan.shared.bar) : undefined,
+    tabs: region(s.tabs, tabs),
     status: plan.screens.some((screen) => screen.status) ? raw('status[screen]') : undefined,
     sidebar: region(s.sidebar, h('Sidebar', { 'aria-label': 'Places', open: name('menu'), onOpenChange: name('setMenu'), search: s.sidebarSearch ? true : undefined, footer: account }, plan.shared.nav)),
     inspector: plan.uses.details ? raw('inspector[screen]') : undefined,
@@ -236,6 +245,30 @@ export function appSource(app: AppModel): string {
   if (menu) head.push('  const [menu, setMenu] = useState(false)')
   if (plan.uses.details) head.push('  // The details start open only where they are docked beside the content: on a narrow frame they would cover it.', "  const [details, setDetails] = useState(() => window.matchMedia('(min-width: 1000px)').matches)")
   if (plan.uses.say) head.push('  const [notices, setNotices] = useState<ToastItem[]>([])')
+  if (plan.uses.sidebarCollapse) head.push("  // The sidebar shrunk to its rail by the button of the one top row, or whole.", '  const [collapsed, setCollapsed] = useState(false)')
+  if (plan.uses.docTabs) {
+    // render.tsx keeps the same state, and the same two ways to change it.
+    const docs = openDocs(plan.uses.docTabs)
+    const start = `  const [docs${used('addDoc') || used('closeDoc') ? ', setDocs' : ''}] = useState<{ id: string; title: string }[]>(`
+    const initial = literalLines(docs, 1, WIDTH - start.length - 1)
+    head.push(
+      "  // The documents open in tabs, and the one in sight: the app's own, apart from the screen.",
+      ...initial.map((line, at) => (at === 0 ? start + line : line) + (at === initial.length - 1 ? ')' : '')),
+      `  const [activeDoc, setActiveDoc] = useState<string | null>(${lit(docs[0]?.id ?? null)})`,
+    )
+    if (used('addDoc')) head.push('  const addDoc = () => {', '    const id = crypto.randomUUID()', `    setDocs((list) => [...list, { id, title: ${lit(NEW_DOC)} }])`, '    setActiveDoc(id)', '  }')
+    if (used('closeDoc')) {
+      head.push(
+        '  // A tab that closes: if it was the one in sight, the one beside it is, the next or else the one before.',
+        '  const closeDoc = (id: string) => {',
+        '    const at = docs.findIndex((doc) => doc.id === id)',
+        '    const left = docs.filter((doc) => doc.id !== id)',
+        '    setDocs(left)',
+        '    if (activeDoc === id) setActiveDoc(left[Math.min(at, left.length - 1)]?.id ?? null)',
+        '  }',
+      )
+    }
+  }
   if (plan.uses.job) {
     head.push(
       '  // The job of the app: how far it is, in percent, while it runs; null when it does not.',
@@ -261,6 +294,8 @@ export function appSource(app: AppModel): string {
   const parts = new Set<string>(['useMedia', 'useDesktopGuard', 'WindowControls'])
   for (const tag of tags) if (tag !== 'Fragment') parts.add(tag)
   if (plan.uses.say) parts.add('Toasts')
+  // A tab for each open document is written in a `map`, where the tags of the elements are not read.
+  if (plan.uses.docTabs) parts.add('DocumentTab')
   const names = [...parts].sort((a, b) => a.localeCompare(b))
   if (plan.uses.say) names.push('type ToastItem')
   const react = ['useState', ...(plan.uses.job ? ['useEffect'] : [])].sort()

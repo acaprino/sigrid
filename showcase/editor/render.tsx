@@ -6,10 +6,11 @@ import * as Sigrid from './all'
 import { BOTTOM_BAR_ROOM_VAR, useDesktopGuard, useMedia } from '../../src/index'
 import { Avatar, Column } from '../../src/primitives'
 import { Toasts, type ToastItem } from '../../src/components'
-import { AppShell, AppShellContext, Inspector, Sidebar, SidebarRow, TitleBar, Toolbar, WindowControls, type AppShellLayout } from '../../src/layout'
+import { AppShell, AppShellContext, Inspector, Sidebar, SidebarRow, TitleBar, Toolbar, ToolbarBrand, WindowControls, type AppShellLayout } from '../../src/layout'
+import { openDocs, type Doc } from './catalog'
 import { isEl, isExpr, isJson, isSlot, isWhen, type Child, type Scope, type Val } from './ir'
 import type { AppModel, Settings } from './model'
-import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, planOf, screenBody, visible, type ScreenPlan } from './plan'
+import { DETAILS_PROPS, JOB_STEP, JOB_TICK_MS, NEW_DOC, isUnified, overSidebar, planOf, screenBody, visible, type ScreenPlan } from './plan'
 
 /** Under this width of the frame the sidebar is a drawer: the app is laid out as on a phone. */
 export const NARROW_PX = Sigrid.APP_SHELL_STEPS.rail
@@ -29,7 +30,11 @@ export function draw(child: Child, scope: Scope, key?: React.Key): React.ReactNo
   if (typeof child === 'string' || typeof child === 'number') return child
   if (isWhen(child)) return child.$when.run(scope) ? draw(child.then, scope, key) : null
   if (isSlot(child)) return React.createElement(child.$slot, { ...child.props, key })
-  if (isExpr(child)) return child.run(scope) as React.ReactNode
+  if (isExpr(child)) {
+    const value = child.run(scope)
+    // An expression that makes elements (a tab for each open document) is drawn as the elements it makes.
+    return Array.isArray(value) ? value.map((made: Child, at) => draw(made, scope, at)) : (value as React.ReactNode)
+  }
   const tag = tagOf(child.tag)
   if (!tag) return null
   const props: Record<string, unknown> = { key }
@@ -47,7 +52,11 @@ export type FrameProps = {
   screen: Pick<ScreenPlan, 'id' | 'name' | 'detailsTitle'>
   host: HostKind
   narrow: boolean
-  /** What each region holds. Null: the region is not there. */
+  /**
+   * What each region holds. Null: the region is not there. `bar` is what the toolbar of the bar holds (in the one top
+   * row, the tools at its end); `tabs` is drawn as it is, its toolbars made by the caller (plan.ts: never one around
+   * the document tabs).
+   */
   bar: React.ReactNode
   tabs: React.ReactNode | null
   status: React.ReactNode | null
@@ -61,6 +70,9 @@ export type FrameProps = {
   onMenu: (open: boolean) => void
   detailsOpen: boolean
   onDetails: (open: boolean) => void
+  /** In the one top row over a sidebar: the sidebar is shrunk to its rail, and the row's button asks to change it. */
+  collapsed?: boolean | undefined
+  onCollapsed?: ((collapsed: boolean) => void) | undefined
   animated?: boolean | undefined
   /**
    * On the canvas: how the frame is laid out at its width. There the drawer and the panel of the details are drawn in
@@ -71,10 +83,16 @@ export type FrameProps = {
 
 const DOCKED: AppShellLayout = { sidebar: 'full', inspector: 'docked' }
 
-export function Frame({ name, settings, screen, host, narrow, bar, tabs, status, nav, foot, bottom, content, details, actions, menu, onMenu, detailsOpen, onDetails, animated, edit }: FrameProps) {
+export function Frame({ name, settings, screen, host, narrow, bar, tabs, status, nav, foot, bottom, content, details, actions, menu, onMenu, detailsOpen, onDetails, collapsed, onCollapsed, animated, edit }: FrameProps) {
   // A window of its own on a computer: the app draws the window's bar. On a phone the system draws everything.
   const ownWindow = host === 'native' && !narrow
   const [maximized, setMaximized] = React.useState(false)
+  const drag = ownWindow ? { 'data-tauri-drag-region': '' } : undefined
+  const controls = ownWindow ? <WindowControls maximized={maximized} onMinimize={() => {}} onMaximizeToggle={() => setMaximized(!maximized)} onClose={() => {}} /> : undefined
+  // The sheet frame's one top row (codegen.ts prints the same): it is the window's bar, so it takes the drag and the
+  // window's buttons; the app is its head over the sidebar, and the bar's tools go to its end.
+  const unified = isUnified(settings)
+  const head = overSidebar(settings)
   const sidebar = nav ? (
     <Sidebar
       aria-label="Places"
@@ -98,17 +116,23 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, status,
       className="h-full"
       desktop={ownWindow}
       frame={settings.frame === 'sheet' ? 'sheet' : undefined}
+      top={unified ? 'unified' : undefined}
       contentLabel={screen.name}
       titleBar={
-        <TitleBar
-          size={settings.barSize}
-          dragProps={ownWindow ? { 'data-tauri-drag-region': '' } : undefined}
-          windowControls={ownWindow ? <WindowControls maximized={maximized} onMinimize={() => {}} onMaximizeToggle={() => setMaximized(!maximized)} onClose={() => {}} /> : undefined}
-        >
-          <Toolbar aria-label={name}>{bar}</Toolbar>
-        </TitleBar>
+        unified ? undefined : (
+          <TitleBar size={settings.barSize} dragProps={drag} windowControls={controls}>
+            <Toolbar aria-label={name}>{bar}</Toolbar>
+          </TitleBar>
+        )
       }
-      tabs={tabs ? <Toolbar aria-label="Views">{tabs}</Toolbar> : undefined}
+      sidebarHead={head ? <ToolbarBrand name={name} /> : undefined}
+      sidebarCollapsed={head ? collapsed : undefined}
+      onSidebarCollapsedChange={head ? onCollapsed : undefined}
+      onSidebarOpen={unified && settings.sidebar === 'always' ? () => onMenu(true) : undefined}
+      dragProps={unified ? drag : undefined}
+      windowControls={unified ? controls : undefined}
+      topActions={unified && bar ? <Toolbar aria-label={name}>{bar}</Toolbar> : undefined}
+      tabs={tabs ?? undefined}
       status={status ?? undefined}
       sidebar={
         !edit || !sidebar ? (
@@ -118,6 +142,9 @@ export function Frame({ name, settings, screen, host, narrow, bar, tabs, status,
             <div data-edit-overlay="sidebar" className="absolute inset-y-0 left-0 z-30 flex shadow-lg">
               <AppShellContext.Provider value={DOCKED}>{sidebar}</AppShellContext.Provider>
             </div>
+          ) : unified ? (
+            // The drawer is closed, but the app has it: the one top row keeps its button to open it in place.
+            <React.Fragment />
           ) : undefined
         ) : (
           sidebar
@@ -182,6 +209,11 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
     const timer = setTimeout(() => setJob(job >= 100 ? null : Math.min(100, job + JOB_STEP)), JOB_TICK_MS)
     return () => clearTimeout(timer)
   }, [job])
+  // The sidebar shrunk to its rail by the button of the one top row, and the documents open in tabs and the one in
+  // sight (codegen.ts writes the same): the app's own, apart from the screen.
+  const [collapsed, setCollapsed] = React.useState(false)
+  const [docs, setDocs] = React.useState<readonly Doc[]>(() => openDocs(plan.uses.docTabs ?? []))
+  const [activeDoc, setActiveDoc] = React.useState<string | null>(() => openDocs(plan.uses.docTabs ?? [])[0]?.id ?? null)
   const count = React.useRef(0)
   const root = React.useRef<HTMLDivElement>(null)
   const narrow = useMedia(`(width < ${NARROW_PX}px)`)
@@ -216,6 +248,22 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
     job,
     busy: job !== null,
     runJob: () => setJob(0),
+    docs,
+    activeDoc,
+    setActiveDoc,
+    addDoc: () => {
+      // A colon is in no id of a title (`trip`), so a new document never takes the id of one open at the start.
+      const id = `doc:${(count.current += 1)}`
+      setDocs((list) => [...list, { id, title: NEW_DOC }])
+      setActiveDoc(id)
+    },
+    // A tab that closes: if it was the one in sight, the one beside it is, the next or else the one before.
+    closeDoc: (id: string) => {
+      const at = docs.findIndex((doc) => doc.id === id)
+      const left = docs.filter((doc) => doc.id !== id)
+      setDocs(left)
+      if (activeDoc === id) setActiveDoc(left[Math.min(at, left.length - 1)]?.id ?? null)
+    },
     inspector: Object.fromEntries(plan.screens.map((s) => [s.id, s.details !== null])),
   }
   for (const state of plan.states) {
@@ -223,6 +271,8 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
     scope[state.setter] = (next: unknown) => setValues((now) => ({ ...now, [state.name]: next }))
   }
   const region = (slot: 'tabs' | 'nav' | 'foot' | 'bottom', vis: Settings['sidebar']) => (visible(vis, narrow) ? <>{drawAll(plan.shared[slot], scope)}</> : null)
+  // In the one top row a bar with no tools is no tools at its end (plan.ts).
+  const bar = plan.shared.bar.length > 0 ? drawAll(plan.shared.bar, scope) : null
   return (
     <div ref={root} className="h-full">
       <Frame
@@ -232,7 +282,7 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
         host={host}
         narrow={narrow}
         animated={app.look.animated}
-        bar={drawAll(plan.shared.bar, scope)}
+        bar={bar}
         tabs={region('tabs', plan.settings.tabs)}
         status={screen.status ? <>{drawAll(screen.status, scope)}</> : null}
         nav={region('nav', plan.settings.sidebar)}
@@ -245,6 +295,8 @@ export function RunApp({ app, host, screen: asked, onScreen }: RunAppProps) {
         onMenu={setMenu}
         detailsOpen={details}
         onDetails={setDetails}
+        collapsed={collapsed}
+        onCollapsed={setCollapsed}
       />
       {plan.uses.say ? <Toasts items={notices} durationMs={5000} onDismiss={(id) => setNotices((list) => list.filter((n) => n.id !== id))} animated={app.look.animated} /> : null}
     </div>

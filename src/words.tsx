@@ -523,6 +523,18 @@ export interface Words {
     readonly empty: string
     readonly seriesSummary: (series: number, points: number) => string
   }
+  /** What the tab strip of a `DocumentTabs` says by itself. */
+  readonly documentTabs: {
+    /** The name of the strip of open tabs. */
+    readonly tabs: string
+    /** The name of the button that opens a new tab. */
+    readonly newTab: string
+    /** The name of the button that closes a tab, from the tab's title. */
+    readonly close: (title: string) => string
+    /** The names of the two arrows that scroll a strip too long for its room. */
+    readonly scrollNext: string
+    readonly scrollPrev: string
+  }
 }
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`)
@@ -892,6 +904,13 @@ export const DEFAULT_WORDS: Words = {
   chart: {
     empty: 'No data to display',
     seriesSummary: (series, points) => `${plural(series, 'series', 'series')}, ${plural(points, 'point', 'points')}`,
+  },
+  documentTabs: {
+    tabs: 'Open tabs',
+    newTab: 'New tab',
+    close: (title) => `Close ${title}`,
+    scrollNext: 'Scroll tabs forward',
+    scrollPrev: 'Scroll tabs backward',
   },
 }
 
