@@ -39,6 +39,7 @@ function FormField({ label, help, error, required, id, className, children }: Fo
   const controlId = id ?? children.props.id ?? own
   const hasError = shown(error)
   const hasHelp = !hasError && shown(help)
+  const labelId = `${controlId}-label`
   const noteId = `${controlId}-note`
   const described = [children.props["aria-describedby"], hasError || hasHelp ? noteId : undefined].filter(Boolean).join(" ")
   return (
@@ -49,7 +50,7 @@ function FormField({ label, help, error, required, id, className, children }: Fo
       // (the control border under a theme with strong control borders, `ThemeDef.controls`).
       className={cn("flex flex-col gap-1.5 [&[data-invalid]_[aria-invalid=true]]:border-line [[data-controls=strong]_&[data-invalid]_[aria-invalid=true]]:border-input", className)}
     >
-      <label data-slot="field-label" htmlFor={controlId} className="flex items-center gap-0.5 text-start text-sm font-medium text-ink select-none">
+      <label id={labelId} data-slot="field-label" htmlFor={controlId} className="flex items-center gap-0.5 text-start text-sm font-medium text-ink select-none">
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
       </label>

@@ -90,14 +90,28 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
   const label = all.find((o) => o.value === value)?.label ?? placeholder ?? ""
   const ids = React.useMemo(() => (id ? { trigger: id } : undefined), [id])
 
-  // Without an internal `Select.Label`, remove Ark's dangling `aria-labelledby` so `aria-label` names trigger and listbox.
+  // Without an internal `Select.Label`, wire an external `<label for={id}>` via `aria-labelledby` (buttons are not
+  // native labelable controls) or remove Ark's dangling `aria-labelledby` so `aria-label` names trigger and listbox.
   // Also omit `aria-invalid="false"` when valid so callers checking attribute presence match native fields.
   React.useLayoutEffect(() => {
-    if (aria["aria-label"]) {
-      trigger.current?.removeAttribute("aria-labelledby")
-      contentRef.current?.removeAttribute("aria-labelledby")
+    const trig = trigger.current
+    if (trig) {
+      if (aria["aria-label"]) {
+        trig.removeAttribute("aria-labelledby")
+        contentRef.current?.removeAttribute("aria-labelledby")
+      } else if (id) {
+        const external = trig.ownerDocument.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(id)}"]`)
+        if (external) {
+          if (!external.id) external.id = `${id}-label`
+          trig.setAttribute("aria-labelledby", external.id)
+          contentRef.current?.setAttribute("aria-labelledby", external.id)
+        } else {
+          const cur = trig.getAttribute("aria-labelledby")
+          if (cur && !trig.ownerDocument.getElementById(cur)) trig.removeAttribute("aria-labelledby")
+        }
+      }
+      if (!invalid) trig.removeAttribute("aria-invalid")
     }
-    if (!invalid) trigger.current?.removeAttribute("aria-invalid")
   })
 
   return (

@@ -36,6 +36,7 @@ type MenuContextValue = {
   setConfig: (next: ContentConfig) => void
   registerSelect: (value: string, fn: (() => void) | undefined) => () => void
   setContentEl?: ((el: HTMLDivElement | null) => void) | undefined
+  close?: (() => void) | undefined
 }
 
 const MenuStateContext = React.createContext<MenuContextValue | null>(null)
@@ -108,7 +109,26 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
   const setContentEl = React.useCallback((el: HTMLDivElement | null) => {
     contentRef.current = el
   }, [])
-  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect, setContentEl }), [setConfigStable, registerSelect, setContentEl])
+  const restoreFocus = React.useCallback(() => {
+    const skipOutside = dismissedToOutsideFocus.current
+    dismissedToOutsideFocus.current = false
+    const target = config.finalFocus?.current
+    const menuEl = contentRef.current
+    if (!skipOutside && target) {
+      queueMicrotask(() => {
+        if (!target.isConnected) return
+        const active = target.ownerDocument.activeElement
+        const stillHere = active === null || active === target.ownerDocument.body || active === target.ownerDocument.documentElement || (menuEl !== null && menuEl.contains(active))
+        if (stillHere) target.focus()
+      })
+    }
+  }, [config.finalFocus])
+  const close = React.useCallback(() => {
+    if (openProp === undefined) setInner(false)
+    onOpenChange?.(false)
+    restoreFocus()
+  }, [openProp, onOpenChange, restoreFocus])
+  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect, setContentEl, close }), [setConfigStable, registerSelect, setContentEl, close])
 
   return (
     <MenuStateContext.Provider value={state}>
@@ -117,6 +137,7 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
         loopFocus={loopFocus}
         lazyMount
         unmountOnExit
+        immediate
         positioning={positioning}
         onPointerDownOutside={(event) => {
           const target = event.detail.originalEvent.target
@@ -128,20 +149,7 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
         onOpenChange={(details) => {
           if (openProp === undefined) setInner(details.open)
           onOpenChange?.(details.open)
-          if (!details.open) {
-            const skipOutside = dismissedToOutsideFocus.current
-            dismissedToOutsideFocus.current = false
-            const target = config.finalFocus?.current
-            const menuEl = contentRef.current
-            if (!skipOutside && target) {
-              queueMicrotask(() => {
-                if (!target.isConnected) return
-                const active = target.ownerDocument.activeElement
-                const stillHere = active === null || active === target.ownerDocument.body || active === target.ownerDocument.documentElement || (menuEl !== null && menuEl.contains(active))
-                if (stillHere) target.focus()
-              })
-            }
-          }
+          if (!details.open) restoreFocus()
         }}
       >
         {children}
@@ -230,6 +238,13 @@ function DropdownMenuContent({
           ref={refs}
           className={cn(CARD, className)}
           {...props}
+          onKeyDown={(event) => {
+            props.onKeyDown?.(event)
+            if (event.key === "Escape" && !event.defaultPrevented && !event.nativeEvent.isComposing) {
+              event.preventDefault()
+              ctx?.close?.()
+            }
+          }}
         />
       </Menu.Positioner>
     </OverlayPortal>

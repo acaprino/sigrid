@@ -1,6 +1,6 @@
 // The preview of an attachment (`AttachmentViewer`; how an app opens it is tested in the app's package): the state (downloading, error, ready), the pages with their measures,
 // stepped zoom, the original button and the request for pages. The package does not open the document.
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AttachmentViewer, VIEWER_ZOOMS, type AttachmentViewerProps } from '../src/assemblies/AttachmentViewer'
 
@@ -117,10 +117,10 @@ describe('AttachmentViewer', () => {
     expect(onOpenOriginal).toHaveBeenCalledTimes(1)
   })
 
-  it('closed it draws nothing; the X of the sheet closes', () => {
+  it('closed it draws nothing; the X of the sheet closes', async () => {
     const { onOpenChange, unmount } = viewer()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
     unmount()
     render(<AttachmentViewer open={false} onOpenChange={() => {}} title="hidden.pdf" status={{ kind: 'ready' }} pages={[A4]} />)
     expect(screen.queryByText('hidden.pdf')).toBeNull()

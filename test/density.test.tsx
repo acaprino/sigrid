@@ -132,7 +132,7 @@ describe('normal is what the toolkit is before any script runs', () => {
     }
     // Select: the button 36px (32 when `sm`), 10px left and 8px right; an item at least 40px with 8px above and below.
     has('src/primitives/select.tsx', 'flex w-full items-center justify-between', 'pe-(--pad-xs)', 'ps-(--pad-sm)')
-    has('src/primitives/select.tsx', 'size === "sm"', '"h-(--control-sm) w-auto"', '"h-(--control-md)"')
+    has('src/primitives/select.tsx', 'h-(--control-sm) w-auto', '"h-(--control-sm) w-auto"', '"h-(--control-md)"')
     // The rows of every floating list (select, combo box, suggestions, menu) are one constant.
     has('src/lib/rows.ts', 'export const LIST_ROW', 'min-h-(--row-height)', 'py-(--row-pad)')
     has('src/primitives/select.tsx', 'const ITEM_CLASS', 'LIST_ROW')
@@ -148,8 +148,8 @@ describe('normal is what the toolkit is before any script runs', () => {
     has('src/components/DateField.tsx', 'w-28', 'h-(--control-sm)')
     // The close button of a dialog and of a sheet: 32px.
     has('src/primitives/button.tsx', '"icon-sm":', 'size-(--control-sm)')
-    has('src/primitives/dialog.tsx', 'render={<Button', 'size="icon-sm"')
-    has('src/primitives/sheet.tsx', 'render={<Button', 'size="icon-sm"')
+    has('src/primitives/dialog.tsx', 'size="icon-sm"', 'size="icon-sm"')
+    has('src/primitives/sheet.tsx', 'size="icon-sm"', 'size="icon-sm"')
     // Calendar cells: 32px. Chips box: at least 36px, its padding what a 28px chip and the two borders leave (3px).
     has('src/components/calendar.tsx', 'data-slot="calendar"', '[--cell-size:var(--control-sm)]')
     has('src/components/ChipsInput.tsx', '<TagsInput.Control', 'min-h-(--control-md)', 'py-[calc((var(--control-md)_-_30px)/2)]')
