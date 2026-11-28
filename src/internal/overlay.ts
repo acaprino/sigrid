@@ -7,6 +7,15 @@ import { type RefObject } from 'react'
 export const inTitleBar = (target: EventTarget | null | undefined): boolean =>
   typeof (target as Element | null | undefined)?.closest === 'function' && (target as Element).closest('[data-slot="title-bar"]') !== null
 
+/**
+ * An Esc that a layer heard and declined: a sheet beside the page whose `closesOnEscape` answered false. Ark's layer
+ * marks every Esc it hears as handled (`preventDefault`), the declined one too; this tells the app's commands that the
+ * key is still theirs (`useCommand` on Escape), as `closesOnEscape` promises.
+ */
+const ESCAPES_LEFT = new WeakSet<Event>()
+export const leaveEscape = (event: Event): void => void ESCAPES_LEFT.add(event)
+export const escapeLeft = (event: Event): boolean => ESCAPES_LEFT.has(event)
+
 /** Marks the stack of notices: it lets a modal window recognize it (see `ignoreToasts`). */
 export const TOASTS_ATTR = 'data-toasts'
 

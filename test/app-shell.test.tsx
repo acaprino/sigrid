@@ -690,6 +690,37 @@ test('as a drawer, Escape with the focus elsewhere is not for the inspector; clo
   expect(document.activeElement).toBe(button('Second message'))
 })
 
+test('as a drawer, Escape with the focus elsewhere is the app\'s: its command on Escape runs, and the inspector stays', async () => {
+  const resize = observed()
+  const seen: boolean[] = []
+  const run = vi.fn()
+  render(
+    <CommandsProvider>
+      <CloseCommand run={run} />
+      <Details start={false} onChange={(open) => seen.push(open)} />
+    </CommandsProvider>,
+  )
+  resize(900)
+  focus(button('First message'))
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Second message'))
+  fireEvent.keyDown(button('Second message'), { key: 'Escape' })
+  await settle(120)
+  expect(run).toHaveBeenCalledTimes(1)
+  expect(seen).toEqual([])
+  expect(screen.getByRole('dialog', { name: 'Details' })).toBeTruthy()
+  // With the focus in it, Escape is the inspector's: it closes, and the app's command does not run as well.
+  fireEvent.click(button('First message'))
+  await settle(120)
+  focus(button('Edit'))
+  await settle(120)
+  fireEvent.keyDown(button('Edit'), { key: 'Escape' })
+  await settle(120)
+  expect(seen).toEqual([false])
+  expect(run).toHaveBeenCalledTimes(1)
+})
+
 test('as a drawer, Escape in a field of the content stays with the field and the app: the inspector stays open', async () => {
   const resize = observed()
   const seen: boolean[] = []

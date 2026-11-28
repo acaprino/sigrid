@@ -12,7 +12,7 @@ import { cn } from "../lib/utils"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../internal/motion"
-import { BACKDROP, inTitleBar, inToasts } from "../internal/overlay"
+import { BACKDROP, inTitleBar, inToasts, leaveEscape } from "../internal/overlay"
 import { useMergedRef } from "../lib/refs"
 import { OverlayPortal } from "../internal/portal"
 
@@ -139,6 +139,9 @@ function Sheet({
         {...(initialFocusEl ? { initialFocusEl } : {})}
         onEscapeKeyDown={(event) => {
           onEscapeKeyDown?.(event)
+          // Asked, and the answer was no (an answer yes closed the sheet in the listener above, and marked the key
+          // handled): Ark marks the key handled all the same, so the app's commands are told it is theirs.
+          if (closesOnEscape !== undefined && !event.defaultPrevented && !latest.current.closesOnEscape?.()) leaveEscape(event)
           if (closesOnEscape === undefined && !event.defaultPrevented) {
             reasonRef.current = "escape"
             // Zag dispatches `onOpenChange` in a microtask; clear only on the next macrotask if it did not close.
