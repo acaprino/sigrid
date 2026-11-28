@@ -1,6 +1,6 @@
 // `FilterBar` and `FilterPopover` (`@acaprino/sigrid/components`): search, quick slot, structured rules,
 // two-bound `between` inputs, focus recovery on rule removal, clear-all and `WordsProvider` localization.
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import { WordsProvider } from '../src'
 import { Button } from '../src/primitives'
@@ -42,7 +42,7 @@ describe('FilterBar', () => {
 })
 
 describe('FilterPopover', () => {
-  test('adds, edits, removes (preserving focus) and applies filter rules, obeying WordsProvider', () => {
+  test('adds, edits, removes (preserving focus) and applies filter rules, obeying WordsProvider', async () => {
     const onApply = vi.fn()
     const initial: FilterRule[] = [{ id: 'r1', field: 'title', operator: 'contains', value: 'bug' }]
 
@@ -56,7 +56,7 @@ describe('FilterPopover', () => {
     expect(trigger.textContent).toContain('1')
     fireEvent.click(trigger)
 
-    expect(screen.getByDisplayValue('bug')).toBeTruthy()
+    await waitFor(() => expect(screen.getByDisplayValue('bug')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Aggiungi filtro' }))
     expect(document.querySelectorAll('[data-slot="filter-rule"]')).toHaveLength(2)
 
@@ -78,13 +78,13 @@ describe('FilterPopover', () => {
     expect(applied[0]!.value).toBe('urgent')
   })
 
-  test('renders both lower and upper bound inputs for the between operator on number fields', () => {
+  test('renders both lower and upper bound inputs for the between operator on number fields', async () => {
     const onApply = vi.fn()
     const initial: FilterRule[] = [{ id: 'r1', field: 'amount', operator: 'between', value: '10', valueEnd: '50' }]
     render(<FilterPopover fields={FIELDS} rules={initial} onApply={onApply} />)
 
     fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
-    const from = screen.getByLabelText('From') as HTMLInputElement
+    const from = (await screen.findByLabelText('From')) as HTMLInputElement
     const to = screen.getByLabelText('To') as HTMLInputElement
     expect(from.value).toBe('10')
     expect(to.value).toBe('50')

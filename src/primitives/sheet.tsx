@@ -141,9 +141,10 @@ function Sheet({
           onEscapeKeyDown?.(event)
           if (closesOnEscape === undefined && !event.defaultPrevented) {
             reasonRef.current = "escape"
-            queueMicrotask(() => {
+            // Zag dispatches `onOpenChange` in a microtask; clear only on the next macrotask if it did not close.
+            setTimeout(() => {
               if (reasonRef.current === "escape") reasonRef.current = "other"
-            })
+            }, 0)
           }
         }}
         onPointerDownOutside={(event) => {
@@ -155,9 +156,9 @@ function Sheet({
           }
           if (!disablePointerDismissal && !event.defaultPrevented) {
             reasonRef.current = "outside"
-            queueMicrotask(() => {
+            setTimeout(() => {
               if (reasonRef.current === "outside") reasonRef.current = "other"
-            })
+            }, 0)
           }
         }}
         onFocusOutside={(event) => {

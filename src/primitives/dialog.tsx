@@ -64,8 +64,11 @@ function Dialog({ open: openProp, defaultOpen = false, onOpenChange, onInteractO
         : undefined
 
   const persistentElements = React.useMemo(
-    () => [() => document.querySelector<HTMLElement>(`[${TOASTS_ATTR}]`)],
-    [],
+    () =>
+      open && typeof document !== "undefined" && document.querySelector(`[${TOASTS_ATTR}]`)
+        ? [() => document.querySelector<HTMLElement>(`[${TOASTS_ATTR}]`)]
+        : undefined,
+    [open],
   )
 
   return (
