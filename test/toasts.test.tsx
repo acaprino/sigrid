@@ -263,9 +263,7 @@ test('inline toasts keep the page layer, they are not on top of anything', () =>
 })
 
 // A modal window closes with a click outside; a click on a notice (which sits above, outside the window) does not, or
-// «Undo» would also close the sheet. Radix listens to `pointerdown` on the document (after a `setTimeout` of 0 ms) and
-// for the main button defers the dismissal to the `click`: here the whole sequence of a click is dispatched, on every
-// window of the package, and we check whether the window asks to close.
+// «Undo» would also close the sheet. Wait for Ark's deferred outside listeners before dispatching a complete click.
 const click = (el: Element) => {
   for (const type of ['pointerDown', 'mouseDown', 'pointerUp', 'mouseUp', 'click'] as const) fireEvent[type](el, { button: 0 })
 }
@@ -281,7 +279,9 @@ for (const [name, modal] of modals) {
         <Toasts items={[{ id: 'x', text: 'Deleted.', undo: { onClick: noop } }]} />
       </>,
     )
-    await settle(10)
+    await act(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
     const toast = await screen.findByRole('button', { name: 'Undo', hidden: true })
     click(toast)
     await settle(10)
