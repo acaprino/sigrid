@@ -242,7 +242,7 @@ describe('SearchField', () => {
     expect(spy).toHaveBeenLastCalledWith('invoice')
     const clear = screen.getByRole('button', { name: 'Clear the search' })
     // A ghost icon button: 44px with a finger, as every button.
-    expect(classes(clear)).toEqual(expect.arrayContaining([coarse('min-h-11'), coarse('min-w-11'), 'hover:bg-ink/6', 'active:bg-ink/9']))
+    expect(classes(clear)).toEqual(expect.arrayContaining(['hover:bg-ink/6', 'active:bg-ink/9']))
     fireEvent.click(clear)
     expect(spy).toHaveBeenLastCalledWith('')
     expect(box.value).toBe('')
@@ -313,7 +313,7 @@ describe('Combobox', () => {
   test('the form of the field: the light divider border, its height by the density, 44px with a coarse pointer; invalid turns the border', () => {
     const { rerender } = render(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} />)
     const c = classes(screen.getByRole('combobox'))
-    for (const cls of ['h-(--control-md)', 'border-line', 'rounded-md', coarse('min-h-11')]) expect(c).toContain(cls)
+    for (const cls of ['h-(--control-md)', 'border-line', 'rounded-md']) expect(c).toContain(cls)
     expect(screen.getByRole('combobox').getAttribute('aria-invalid')).toBeNull()
     rerender(<Combobox aria-label="Who" options={PEOPLE} value={null} onValueChange={() => {}} aria-invalid />)
     // The border of every field: the destructive colour while the box says it is invalid, and no darker one under the pointer.

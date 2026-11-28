@@ -169,7 +169,9 @@ by default, and every app turns it on: no app has interface code of its own (the
 ## Work on the toolkit itself
 
 In the repository of the toolkit: `npm run design:lint`, `npm run design:check`, `npm run typecheck`,
-`npm run showcase:typecheck`, `npm run typecheck:test`, `npm test`, `npm run build`. After a change to a component's props or comments run
+`npm run showcase:typecheck`, `npm run typecheck:test`, `npm test`, `npm run build`. No test checks a class, a measure or
+a colour (the owner, 2026-11-28): a test is for what a part does (keys, focus, values, states, what is announced), and
+the look is checked in a browser, at 390px too. After a change to a component's props or comments run
 `npm run agents`, which writes `agents/` again (a test fails if it is behind); where nothing may be compiled, take `agents/`
 from the artifact `agents` that a failed CI run keeps. A part goes in the folder and the entry of its level
 (`src/primitives`, `src/components`, `src/layout`, `src/assemblies`), imports from no level after it
