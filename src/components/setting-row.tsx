@@ -2,7 +2,8 @@
 // the start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them
 // reads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)
 // has no control: the whole row is the button, with a chevron at its end.
-// It is at least 48px tall, and 44px with a finger at any density. The control names itself (`aria-label` with the
+// It is at least 48px tall, and 44px with a finger at any density. Where the control does not fit beside the words it goes
+// under them, never over them. The control names itself (`aria-label` with the
 // row's name): the row only lays it out.
 import type * as React from "react"
 import { Icon } from "../icons"
@@ -22,11 +23,16 @@ export type SettingRowProps = {
 
 // 48px: room for a name and the line under it. (Taller than the 44px a finger needs, so no rule for a finger.)
 const ROW = "flex min-h-12 w-full min-w-0 items-center justify-between gap-4 border-b border-line py-2 text-start text-sm text-ink"
+// A row with a control wraps: where the words and the control do not fit side by side (a narrow window, a wide control: a
+// group of radios, a badge and a button), the control goes under the words instead of running into them. The words keep
+// at least 10rem before it does.
+const WRAPS = "flex-wrap gap-y-2"
+const WORDS_KEEP = "flex-1 basis-40"
 
 /** One choice of a settings page: the name at the start, the control at the end. */
 function SettingRow({ label, description, control, onClick }: SettingRowProps) {
   const words = (
-    <span data-slot="setting-row-words" className="flex min-w-0 flex-col">
+    <span data-slot="setting-row-words" className={cn("flex min-w-0 flex-col", control ? WORDS_KEEP : undefined)}>
       <span>{label}</span>
       {description ? <span className="text-xs text-ink-mute">{description}</span> : null}
     </span>
@@ -41,7 +47,7 @@ function SettingRow({ label, description, control, onClick }: SettingRowProps) {
     )
   }
   return (
-    <div data-slot="setting-row" className={ROW}>
+    <div data-slot="setting-row" className={cn(ROW, WRAPS)}>
       {words}
       {control}
     </div>

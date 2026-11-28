@@ -6463,7 +6463,7 @@
     },
     {
      "file": "src/components/setting-row.tsx",
-     "about": "A choice of a settings page (docs/patterns.md, «Sidebar and page»): its name, and a line under it if it needs one, at\nthe start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them\nreads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)\nhas no control: the whole row is the button, with a chevron at its end.\nIt is at least 48px tall, and 44px with a finger at any density. The control names itself (`aria-label` with the\nrow's name): the row only lays it out.",
+     "about": "A choice of a settings page (docs/patterns.md, «Sidebar and page»): its name, and a line under it if it needs one, at\nthe start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them\nreads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)\nhas no control: the whole row is the button, with a chevron at its end.\nIt is at least 48px tall, and 44px with a finger at any density. Where the control does not fit beside the words it goes\nunder them, never over them. The control names itself (`aria-label` with the\nrow's name): the row only lays it out.",
      "components": [
       {
        "name": "SettingRow",
