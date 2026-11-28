@@ -95,7 +95,7 @@ export function motionMs(ms: number): number {
 }
 
 /**
- * The toolkit's spring, for what changes place or size after a gesture (a sheet of a `SheetStack` rising, the pill
+ * The toolkit's spring, for what changes place or size after a gesture (a sheet of a `SheetPile` rising, the pill
  * under the chosen item): nearly critically damped, so it settles with an overshoot of about one part in a hundred and
  * never bounces. The owner's rule of 2026-11-28 (before it the toolkit had no springs).
  */

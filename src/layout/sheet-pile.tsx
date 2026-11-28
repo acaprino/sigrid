@@ -1,11 +1,11 @@
-// A stack of sheets: a few pages of one flow (the steps of a sequence, the sides of a thing) of which one is open and
+// A pile of sheets: a few pages of one flow (the steps of a sequence, the sides of a thing) of which one is open and
 // the others wait at the foot as their heads, each with its name, a line of what is in it and a count. A press on a
 // head brings that sheet up: it rises from its place at the foot and becomes the page, the page that was open fades
 // where it is and its head takes a place at the foot. For two to four pages a person moves between many times a
 // session, on a phone above all; more pages, or pages people rarely visit, are a `NavList` or `Tabs`.
 //
 // The app keeps which page is open (`value`) and draws it as the children. The rise is a view transition of the
-// browser on the toolkit's spring (theme.css, «SheetStack»): only with motion on and not reduced, and only where the
+// browser on the toolkit's spring (theme.css, «SheetPile»): only with motion on and not reduced, and only where the
 // browser has view transitions; otherwise the page changes at once. The heads are buttons of a `nav`; the page is a
 // region named by its head.
 import * as React from "react"
@@ -15,7 +15,7 @@ import { useMotionAllowed } from "../internal/motion"
 import { cn } from "../lib/utils"
 import { Count } from "../primitives/count"
 
-export type SheetStackItem = {
+export type SheetPileItem = {
   value: string
   /** The page's name: one or two words. */
   title: React.ReactNode
@@ -27,11 +27,11 @@ export type SheetStackItem = {
   count?: number | undefined
 }
 
-export type SheetStackProps = {
+export type SheetPileProps = {
   /** Name of the heads for screen readers («Steps»). */
   "aria-label": string
   /** The pages, in their order: the heads at the foot keep it. */
-  items: readonly SheetStackItem[]
+  items: readonly SheetPileItem[]
   /** The open page. A value that is none of the items' (a page outside the flow) leaves every head at the foot. */
   value: string
   onValueChange: (value: string) => void
@@ -43,11 +43,11 @@ export type SheetStackProps = {
 }
 
 /** The marks of a rise, on the document root while it runs: theme.css reads them. */
-const MOVING = "data-sheet-stack"
+const MOVING = "data-sheet-pile"
 
 type Rise = { rise: string; sink: string | null; covered: boolean }
 
-function SheetStack({ "aria-label": label, items, value, onValueChange, children, animated, className }: SheetStackProps) {
+function SheetPile({ "aria-label": label, items, value, onValueChange, children, animated, className }: SheetPileProps) {
   const allowed = useMotionAllowed(animated)
   const id = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
   const [move, setMove] = React.useState<Rise | null>(null)
@@ -79,26 +79,26 @@ function SheetStack({ "aria-label": label, items, value, onValueChange, children
     move === null ? undefined : value === move.rise ? mark(name(value), "sigrid-sheet sigrid-sheet-rising") : value === move.sink ? mark(`sheet-${id}-left`, "sigrid-sheet-left") : undefined
 
   return (
-    <div data-slot="sheet-stack" className={cn("flex min-h-0 flex-1 flex-col", className)}>
+    <div data-slot="sheet-pile" className={cn("flex min-h-0 flex-1 flex-col", className)}>
       <div
         role="region"
         aria-label={open && typeof open.title === "string" ? open.title : undefined}
-        data-slot="sheet-stack-page"
+        data-slot="sheet-pile-page"
         style={pageMark}
         className="min-h-0 flex-1 overflow-y-auto bg-paper"
       >
         {children}
       </div>
-      <nav aria-label={label} data-slot="sheet-stack-heads" className="flex shrink-0 flex-col">
+      <nav aria-label={label} data-slot="sheet-pile-heads" className="flex shrink-0 flex-col">
         {heads.map((item, index) => (
           <button
             key={item.value}
             type="button"
-            data-slot="sheet-stack-head"
+            data-slot="sheet-pile-head"
             style={move === null ? undefined : mark(name(item.value), cn("sigrid-sheet", move.rise === item.value && "sigrid-sheet-rising", move.rise === item.value && move.covered && "sigrid-sheet-covered"))}
             onClick={() => pick(item.value)}
             className={cn(
-              "flex min-h-14 items-center gap-3 rounded-t-lg border-t border-line bg-raised px-4 py-2 text-start text-ink outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-ink-mute",
+              "flex min-h-14 items-center gap-3 rounded-t-lg border-t border-line bg-raised px-4 py-2 text-start text-ink outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-ink-mute",
               // Each head lies a little on the one before it, as sheets in a pile do.
               index > 0 && "-mt-1.5",
             )}
@@ -121,4 +121,4 @@ function mark(name: string, classes: string): React.CSSProperties {
   return { viewTransitionName: name, viewTransitionClass: classes } as React.CSSProperties
 }
 
-export { SheetStack }
+export { SheetPile }

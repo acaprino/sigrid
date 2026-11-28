@@ -689,7 +689,7 @@ svg[data-glyph][stroke-width="2"] {
   --motion-ease-enter: cubic-bezier(0, 0, 0, 1);
   --motion-ease-leave: cubic-bezier(0.8, 0, 0.78, 1);
   --motion-ease-move: cubic-bezier(0.33, 0, 0.67, 1);
-  /* The toolkit's spring (`MOTION_SPRING`: stiffness 300, damping 28) as a curve and its time: for what changes place. */
+  /* The toolkit's spring (`MOTION_SPRING`) as a curve and its time: for what changes place. */
   --motion-spring: linear(0, 0.045, 0.15, 0.283, 0.42, 0.548, 0.662, 0.756, 0.832, 0.89, 0.934, 0.965, 0.986, 1, 1.008, 1.012, 1.013, 1.013, 1.012, 1.01, 1);
   --motion-spring-ms: 378ms;
 }
@@ -869,15 +869,15 @@ svg[data-glyph][stroke-width="2"] {
     transition: opacity var(--motion-fast) var(--motion-ease-leave);
   }
 
-  /* SheetStack: a sheet rising (a view transition the part starts only with motion on; it marks the root while it
+  /* SheetPile: a sheet rising (a view transition the part starts only with motion on; it marks the root while it
      runs, and its sheets with the classes below). One motion: the sheet pressed rises from its head on the toolkit's
      spring and unveils its page (its box grows, clipped, the page's top travelling on its top edge) over the page
      left, which fades where it is; a head that arrives at the foot comes up into its place; the frame behind changes
      at once, so nothing shows through between the two pages. */
-  :root[data-sheet-stack]::view-transition-old(root) {
+  :root[data-sheet-pile]::view-transition-old(root) {
     display: none;
   }
-  :root[data-sheet-stack]::view-transition-new(root) {
+  :root[data-sheet-pile]::view-transition-new(root) {
     animation: none;
   }
   ::view-transition-group(*.sigrid-sheet) {
@@ -901,19 +901,19 @@ svg[data-glyph][stroke-width="2"] {
     animation: surface-leave var(--motion-faster) var(--motion-ease-leave) both;
   }
   ::view-transition-new(*.sigrid-sheet-rising) {
-    animation: sheet-stack-in var(--motion-fast) var(--motion-ease-enter) 50ms both;
+    animation: sheet-pile-in var(--motion-fast) var(--motion-ease-enter) calc(var(--motion-faster) / 2) both;
   }
   ::view-transition-new(*.sigrid-sheet):only-child {
-    animation: sheet-stack-head var(--motion-spring-ms) var(--motion-spring) both;
+    animation: sheet-pile-head var(--motion-spring-ms) var(--motion-spring) both;
   }
   ::view-transition-old(*.sigrid-sheet-left) {
     animation: surface-leave var(--motion-faster) var(--motion-ease-leave) both;
   }
 }
-@keyframes sheet-stack-in {
+@keyframes sheet-pile-in {
   from { opacity: 0; }
 }
-@keyframes sheet-stack-head {
+@keyframes sheet-pile-head {
   from { translate: 0 100%; }
 }
 @media (prefers-reduced-motion: no-preference) {

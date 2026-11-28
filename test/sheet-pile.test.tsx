@@ -1,8 +1,8 @@
-// `SheetStack`: the open page above, the other pages as heads at the foot; a press on a head asks for that page.
+// `SheetPile`: the open page above, the other pages as heads at the foot; a press on a head asks for that page.
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import { MOTION_SPRING, springEasing } from '../src'
-import { SheetStack } from '../src/layout'
+import { SheetPile } from '../src/layout'
 
 const ITEMS = [
   { value: 'capture', title: 'Capture', description: 'Empty your head' },
@@ -12,9 +12,9 @@ const ITEMS = [
 
 test('the open page is a region named by its head; the others wait at the foot, in their order', () => {
   render(
-    <SheetStack aria-label="Steps" items={ITEMS} value="decide" onValueChange={() => {}}>
+    <SheetPile aria-label="Steps" items={ITEMS} value="decide" onValueChange={() => {}}>
       <p>the page</p>
-    </SheetStack>,
+    </SheetPile>,
   )
   expect(within(screen.getByRole('region', { name: 'Decide' })).getByText('the page')).toBeTruthy()
   const heads = within(screen.getByRole('navigation', { name: 'Steps' })).getAllByRole('button')
@@ -24,9 +24,9 @@ test('the open page is a region named by its head; the others wait at the foot, 
 test('a press on a head asks for its page; a count is shown only above zero', () => {
   const onValueChange = vi.fn()
   render(
-    <SheetStack aria-label="Steps" items={ITEMS} value="capture" onValueChange={onValueChange}>
+    <SheetPile aria-label="Steps" items={ITEMS} value="capture" onValueChange={onValueChange}>
       <p>the page</p>
-    </SheetStack>,
+    </SheetPile>,
   )
   const [decide, todo] = within(screen.getByRole('navigation', { name: 'Steps' })).getAllByRole('button')
   expect(decide!.textContent).toContain('3')
@@ -37,9 +37,9 @@ test('a press on a head asks for its page; a count is shown only above zero', ()
 
 test('a page outside the items leaves every head at the foot', () => {
   render(
-    <SheetStack aria-label="Steps" items={ITEMS} value="elsewhere" onValueChange={() => {}}>
+    <SheetPile aria-label="Steps" items={ITEMS} value="elsewhere" onValueChange={() => {}}>
       <p>the page</p>
-    </SheetStack>,
+    </SheetPile>,
   )
   expect(within(screen.getByRole('navigation', { name: 'Steps' })).getAllByRole('button')).toHaveLength(3)
 })
