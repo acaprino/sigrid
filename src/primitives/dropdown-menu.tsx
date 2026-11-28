@@ -310,9 +310,11 @@ function DropdownMenuItem({ className, value: valueProp, disabled, closeOnSelect
         if (onSelectRef.current) {
           firedByClick.current = true
           onSelectRef.current(event)
-          queueMicrotask(() => {
+          // Ark tells `Menu.Root onSelect` of the same choice from a microtask that may be queued after this one: the
+          // guard lasts until the next task, after every microtask of the click, so the choice runs once.
+          setTimeout(() => {
             firedByClick.current = false
-          })
+          }, 0)
         }
       }}
       {...props}
