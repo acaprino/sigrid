@@ -26,19 +26,6 @@ describe('hit areas: 24px on every pointer, 44px on a coarse one, same look on a
     expect(DENSITY_LIMITS.control.min).toBeGreaterThanOrEqual(24)
   })
 
-  test('on a coarse pointer a Button and an Input are at least 44px (11)', () => {
-    render(
-      <>
-        <Button>x</Button>
-        <Input aria-label="field" />
-      </>,
-    )
-    for (const el of [screen.getByRole('button'), screen.getByLabelText('field')]) {
-      expect(classes(el)).toContain(v(COARSE, 'min-h-11'))
-    }
-    expect(classes(screen.getByRole('button'))).toContain(v(COARSE, 'min-w-11'))
-  })
-
   test('the checkbox keeps its 18px look (Park sm) and grows its hit area with a pseudo-element: 24px, 44px on coarse', () => {
     const { container } = render(<Checkbox aria-label="Complete: x" checked={false} onCheckedChange={noop} />)
     expect(screen.getByRole('checkbox', { name: 'Complete: x' })).toBeTruthy()

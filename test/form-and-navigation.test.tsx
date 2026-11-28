@@ -210,7 +210,6 @@ describe('Tabs', () => {
     const c = classes(tab('Mail'))
     expect(c).toContain('data-[selected]:bg-selected')
     expect(c).toContain('data-[selected]:text-selected-ink')
-    expect(c).toContain(coarse('min-h-11'))
     expect(c.some((x) => /border-b|after:|before:/.test(x))).toBe(false)
   })
 })

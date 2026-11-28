@@ -1183,7 +1183,7 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   border or shadow, plain key hints and tabular counts, icons from the one set, radii 2/4/6 (a theme may be `soft` 4/6/10 or `round` 6/10/14: `ThemeDef.shape`), text sizes 12 to 16px for the controls and 18, 20 and 24px for an app's titles, heights 36/32/28 at normal density, 2px accent focus ring, data colours as dots, the Vivid tone by default, undo in time order, an Advanced fold in each settings section, shared controls that never move…), the approved
   references (Ark UI for behaviour, Park UI for form) and the open questions. Read it before a UI change.
 - `docs/patterns.md`: how to put the parts together into a whole screen (the frame and its regions, the title bar,
-  which form of navigation, four screens to start from, narrow windows). Recommendations, not rules: the showcase
+  which form of navigation, five screens to start from, narrow windows). Recommendations, not rules: the showcase
   shows each one live under «Layout patterns», in the Practices view.
 - `docs/mobile.md`: the system on a phone. The idea (the same app in one column, one job on each screen, act at the
   foot, undo and do not ask), what the toolkit does by itself (44px with a finger, 16px fields, the drawer, the date
@@ -1200,8 +1200,10 @@ What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Te
   and on a phone, in a browser tab and as a native app in Tauri (`?view=examples&device=phone&host=native`), and a
   desktop workspace for terminal agents (Shinatama), as a native app on a computer only, whose missing parts are marked
   `GAP:` in `showcase/shinatama.tsx`, and a cleaner for Windows (Xiox) in the sheet frame (`AppShell frame="sheet"`),
-  also a native app on a computer only: sketches with made-up content and each app's own theme, with what the host
-  changes and what it does not. `npm run showcase`
+  also a native app on a computer only; after them a notebook (Notes, no app of the suite) in the sheet frame with its
+  one top row (`top="unified"`, the open notes as `DocumentTabs`), in the four hosts: sketches with made-up content and
+  each app's own theme, with what the host changes and what it does not. The one top row is also the «Documents»
+  pattern of the layout gallery, and `DocumentTabs` has a section in Components. `npm run showcase`
   serves it (Vite, development only, not part of the package);
   `?view=guidelines&theme=amber-bold&scheme=dark&density=compact&open=menu&animated=1` picks the view, the theme (`base`,
   or a palette built from one colour, `<colour>-<combination>`) and the density (`compact`, `normal` or `large`;

@@ -95,26 +95,6 @@ describe("the sheet keeps its own ref beside the caller's", () => {
   })
 })
 
-describe('the field surface is one, and the fields follow Input', () => {
-  test('the labels field and the select write 16px below 860px, as Input does, so iOS does not zoom', async () => {
-    render(<Input aria-label="Plain" />)
-    const input = classes(screen.getByRole('textbox', { name: 'Plain' }))
-    expect(input).toEqual(expect.arrayContaining(['text-base', 'md:text-sm']))
-    render(
-      <>
-        <label htmlFor="tags">Labels</label>
-        <ChipsInput id="tags" value={[]} onChange={() => {}} />
-      </>,
-    )
-    const box = classes(screen.getByRole('textbox', { name: 'Labels' }))
-    expect(box).toEqual(expect.arrayContaining(['text-base', 'md:text-sm']))
-    expect(box).not.toContain('text-sm')
-    render(<Select aria-label="Status" options={[{ value: 'a', label: 'A' }]} value="a" onValueChange={() => {}} />)
-    const trigger = classes(screen.getByRole('combobox', { name: 'Status' }))
-    expect(trigger).toEqual(expect.arrayContaining(['text-base', 'md:text-sm']))
-    expect(trigger).not.toContain('text-sm')
-  })
-})
 
 describe('a long submenu scrolls like the menu', () => {
   test('the submenu card is as tall as the room the window leaves, and scrolls', async () => {

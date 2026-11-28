@@ -43,7 +43,7 @@ export type RichTextFieldProps = {
 }
 
 const TEXT = cn(
-  'min-h-24 px-(--pad-sm) py-2 text-base text-ink outline-none md:text-sm',
+  'min-h-24 px-(--pad-sm) py-2 text-sm text-ink outline-none',
   '[&_p+p]:mt-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li+li]:mt-1 [&_ul]:my-2 [&_ol]:my-2',
   '[&_blockquote]:my-2 [&_blockquote]:border-s-2 [&_blockquote]:border-line [&_blockquote]:ps-3 [&_blockquote]:text-ink-soft',
 )

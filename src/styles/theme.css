@@ -240,12 +240,15 @@
    its id as `data-density`. Here they become the tokens the components use: the three control heights, the three side
    paddings of a control, and the least height and the padding of a list or menu row. The value after the comma is
    `normal`, for the first paint and for a page that never sets a density (test/density.test.ts keeps it equal to the
-   preset). With a coarse pointer a control and a row are never shorter than `--touch-target`, whatever the density
-   asks: the floor is here, above every definition, and a density that asks for more gets more on touch as well.
+   preset). With a coarse pointer a row is never shorter than `--touch-target` and a control never shorter than
+   `--touch-control`, whatever the density asks: the floors are here, above every definition, and a density that asks
+   for more gets more on touch as well. A control is not drawn `--touch-target` tall (the owner, 2026-11-28: it took
+   room for nothing): what a finger presses is that large, around it (`.touch-area`, below).
    An element with `data-density` (a preview) computes its own tokens from the measures written on it. */
 @layer theme {
   :root {
     --touch-target: 44px;
+    --touch-control: 36px;
   }
   :where(:root, [data-density]) {
     --control-md: var(--density-control-md, 36px);
@@ -259,10 +262,29 @@
   }
   @media (pointer: coarse) {
     :where(:root, [data-density]) {
-      --control-md: max(var(--touch-target), var(--density-control-md, 36px));
-      --control-sm: max(var(--touch-target), var(--density-control-sm, 32px));
-      --control-xs: max(var(--touch-target), var(--density-control-xs, 28px));
+      --control-md: max(var(--touch-control), var(--density-control-md, 36px));
+      --control-sm: max(var(--touch-control), var(--density-control-sm, 32px));
+      --control-xs: max(var(--touch-control), var(--density-control-xs, 28px));
       --row-height: max(var(--touch-target), var(--density-row-height, 40px));
+    }
+  }
+}
+
+/* What a finger presses (`touch-area` on a button, a select, a segment, a tab): with a coarse pointer the control keeps
+   its height and an area of `--touch-target` is laid around its middle, where it is smaller than that; a control
+   already that large gets nothing. In the base layer, so a control that is placed (`absolute`, `sticky`) stays so.
+   Not for a text field: an `<input>` has no such area, and is pressed where it is drawn.
+   shortcut: two controls nearer than 8px share the strip between them, which goes to the later one; give them the gap. */
+@layer base {
+  @media (pointer: coarse) {
+    .touch-area {
+      position: relative;
+    }
+    .touch-area::after {
+      content: "";
+      position: absolute;
+      inset-block: min(0px, calc((100% - var(--touch-target)) / 2));
+      inset-inline: min(0px, calc((100% - var(--touch-target)) / 2));
     }
   }
 }

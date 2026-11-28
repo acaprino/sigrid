@@ -173,7 +173,7 @@ test('a link in a line: no side padding, the height of its line, 24px at least a
     </>,
   )
   const inline = screen.getByRole('button', { name: 'billing-service' }).className.split(/\s+/)
-  expect(inline).toEqual(expect.arrayContaining(['h-auto', 'min-h-6', 'px-0', 'min-w-0', 'max-w-full', 'shrink', 'justify-start', 'underline', 'pointer-coarse:min-h-11', 'pointer-coarse:min-w-11']))
+  expect(inline).toEqual(expect.arrayContaining(['h-auto', 'min-h-6', 'px-0', 'min-w-0', 'max-w-full', 'shrink', 'justify-start', 'underline']))
   for (const c of ['shrink-0', 'justify-center', 'h-(--control-md)', 'px-(--pad-md)']) expect(inline).not.toContain(c)
   const before = screen.getByRole('button', { name: 'as before' }).className.split(/\s+/)
   expect(before).toEqual(expect.arrayContaining(['shrink-0', 'justify-center', 'h-(--control-md)', 'px-(--pad-md)']))

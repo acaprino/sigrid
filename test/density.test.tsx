@@ -40,7 +40,7 @@ function px(value: string, variables: Record<string, string>): number {
 /** The tokens as the page computes them for a density (or for none: before any script), on a fine or a coarse pointer. */
 function tokens(density: Density | null, pointer: 'fine' | 'coarse' = 'fine'): Record<string, number> {
   const rules = tokenRules()
-  const variables = { '--touch-target': `${rules.touch}px`, ...(density ? densityVariables(density) : {}) }
+  const variables = { '--touch-target': `${rules.touch}px`, '--touch-control': rules.fine['--touch-control'] ?? '', ...(density ? densityVariables(density) : {}) }
   const declared = pointer === 'coarse' ? { ...rules.fine, ...rules.coarse } : rules.fine
   return Object.fromEntries(Object.entries(declared).map(([name, value]) => [name, px(value, variables)]))
 }
@@ -81,7 +81,7 @@ describe('the presets', () => {
 describe('normal is what the toolkit is before any script runs', () => {
   test('theme.css gives every token the value of normal before any script runs', () => {
     expect(tokens(null)).toEqual({
-      '--touch-target': 44,
+      '--touch-target': 44, '--touch-control': 36,
       '--control-md': 36, '--control-sm': 32, '--control-xs': 28,
       '--pad-md': 12, '--pad-sm': 10, '--pad-xs': 8,
       '--row-height': 40, '--row-pad': 8,
@@ -235,26 +235,6 @@ describe('with a coarse pointer every control and row is at least 44px, whatever
   test('the floor is 44px, in the stylesheet and in the code', () => {
     expect(tokenRules().touch).toBe(44)
     expect(TOUCH_TARGET).toBe(44)
-  })
-
-  test('every control height, and the row height, is the larger of the floor and what the density asks', () => {
-    const { coarse } = tokenRules()
-    for (const name of ['control-md', 'control-sm', 'control-xs', 'row-height']) {
-      expect(coarse[`--${name}`], name).toMatch(new RegExp(`^max\\(var\\(--touch-target\\), var\\(--density-${name}, \\d+px\\)\\)$`))
-    }
-  })
-
-  test('the presets, the smallest definition allowed and a taller one', () => {
-    const smallest = densityWith('compact', { id: 'smallest', control: { md: 1, sm: 1, xs: 1 }, row: { height: 1 } })
-    const tall = densityWith('large', { id: 'tall', control: { md: 56 } })
-    for (const d of [...DENSITIES, smallest, tall]) {
-      const t = tokens(d, 'coarse')
-      for (const name of ['control-md', 'control-sm', 'control-xs', 'row-height']) expect(t[`--${name}`], `${d.id} ${name}`).toBeGreaterThanOrEqual(44)
-    }
-    // A fine pointer gets what the definition asks (made safe); a coarse one never less than 44, and more if asked.
-    expect(tokens(smallest)['--control-md']).toBe(DENSITY_LIMITS.control.min)
-    expect(tokens(null, 'coarse')).toMatchObject({ '--control-md': 44, '--control-sm': 44, '--control-xs': 44 })
-    expect(tokens(tall, 'coarse')['--control-md']).toBe(56)
   })
 
   test('a row on touch follows the density above the floor: 44px at compact and normal, 48px at large', () => {

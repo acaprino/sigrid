@@ -5,7 +5,8 @@ suite's apps (Imago's frame is their source): nothing here is checked by a progr
 otherwise. The owner's rules R1 to R14 (`DESIGN.md`) are a separate matter: those are checked.
 
 The gallery shows every pattern live, at the widths where the frame changes: `npm run showcase`, view
-Practices, section «Layout patterns». The parts are optimized for these layouts, and work outside them too.
+Practices, section «Layout patterns». Its last pattern, «Documents», is the sheet with one top row. The parts are
+optimized for these layouts, and work outside them too.
 
 The app editor of the showcase (`/builder.html`) is these patterns as a tool: an app is made by dragging parts into the
 regions of the frame, each region takes only what the table below puts there, and the result runs and is exported as
@@ -85,8 +86,8 @@ sight, with a line above it. It paints nothing: it lies on the surface of the re
 For an app whose person keeps several things open (notes, files, documents) the sheet frame has a second top, chosen
 with `top="unified"`. There is no separate title bar: one row, flush above the sheet, is the window's title bar, and
 the open things are tabs that rise from the sheet's top line as one piece with it. The gallery shows it: view
-Practices, section «The sheet with one top row»; the app editor starts it as the `Notes` app and the «One top row»
-layout.
+Practices, «Layout patterns», the «Documents» pattern; view Examples, section «Notes», a whole app in its four hosts;
+view Components, section «DocumentTabs». The app editor starts it as the `Notes` app and the «One top row» layout.
 
 - The row is shared. At its start, over the sidebar and as wide as it, stand the button that shrinks and widens the
   sidebar, a hairline and the app (`sidebarHead`, a `ToolbarBrand`). After it come the open things (`tabs`, a
@@ -122,9 +123,12 @@ the `+` when none is left. A tab closes with its cross, a middle press or Delete
 - Written from the right, an app sets `<html dir="rtl">` (with its `lang`) and nothing else: `AppShell` gives the
   page's direction to every Ark-based part it holds (the strip, the tabs, menus, selects and what opens over the
   frame), and follows it while the app is open. The strip then mirrors with the row: from the sheet's start edge its
-  tabs, the arrow, the hairline and the `+`, and the arrow forward steps toward the left. A part outside an
+  tabs, the arrow, the hairline and the `+`, and the arrow forward steps toward the left. The notices (`Toasts`) and
+  the `CommandPalette` an app puts beside its `AppShell` follow the page by themselves. Any other part outside an
   `AppShell`, or a subtree written the other way from its page (whose element carries that `dir` too), takes its
-  direction from a `DirectionProvider` (`@acaprino/sigrid`).
+  direction from a `DirectionProvider` (`@acaprino/sigrid`). A `DirectionProvider` without `dir` (the one `AppShell`
+  mounts, and those of the notices and the palette) follows the nearest one above that has a `dir`, else the page: so
+  `<DirectionProvider dir="rtl">` around an `AppShell` turns the whole frame.
 
 A phone has no room for a sidebar beside the row, and a drawer for four places is one tap more than tabs at the foot.
 So the recommended form, for two to five places, has no drawer:
@@ -203,11 +207,12 @@ more than seven. A command that cannot run now stays in the list, dimmed, so the
 | Rail of icons | The same places, when the content needs the width | `Sidebar collapsed`; the frame does it by itself from 620px to 850px |
 | Drawer | A narrow window or a phone | `Sidebar` with `open`; the frame does it under 620px |
 | Tabs: in the bar, under it, or at the foot | Up to five views of the same weight | `ToolbarTabs` (see above) |
+| Document tabs | Things the person opens, closes and moves between (notes, files, pages) | `DocumentTabs`, in the sheet frame's one top row (see above) |
 
 Recommended: every row has an icon (R6) so the rail needs no second design; the rows used most are the first group; a
 count is a pill at the end of the row (R5).
 
-## Four screens to start from
+## Five screens to start from
 
 **List and detail.** For things to read and act on: mail, tasks, files. The sidebar says where, the content is the
 list (`ItemList`, `ItemRow`: a title, a line under it, a fact at the end, a dot for unread), the inspector shows the
@@ -256,6 +261,13 @@ the bar. On a narrow window show one lane at a time, chosen from a `ToggleGroup`
 actions with the main one first. It is the screen where the accent has the least to compete with. A focus screen that
 must fit one screen with no scrolling (sort, triage) is a `Page fit`: the head (a switch, a count) and the foot (the
 answers) keep their height and the body between them gives way and scrolls inside itself, never the document.
+
+**Documents.** For several things kept open: notes, files, pages. The sheet frame with its one top row (above, «The
+sheet with one top row, and document tabs»): the places in the sidebar, the open things as `DocumentTabs` in the row,
+the things of the place as a column of the content with the one in sight beside it (`ContentSplit`). On a phone the
+places are tabs at the foot, the list is the screen and the thing chosen takes its place, with the way back among the
+row's tools (`ToolbarButton absent` where the list is in sight) and its action under it. The gallery shows a notebook
+made so: view Examples, section «Notes».
 
 ## A page of reading, and the home of a wiki
 
@@ -354,8 +366,9 @@ const controls = useWindowControls({ enabled: ownWindow, onError: (what, error) 
 `useZoom` gives the window Ctrl with + - 0 and the wheel; `useSnapLayouts` and `useWindowTheme` are opt-in, with the
 names of the app's own native commands; `TAURI_PERMISSIONS` lists what the app's capability file grants.
 
-The gallery shows the same app with and without these switches: view Examples, where a to-do list and a mail client
-are drawn in a browser tab and in a Tauri window, on a computer and on a phone, with a table of what the host changes.
+The gallery shows the same app with and without these switches: view Examples, where a to-do list, a mail client and
+a notebook (the sheet with one top row, whose row is the window's bar) are drawn in a browser tab and in a Tauri
+window, on a computer and on a phone, with a table of what the host changes.
 
 What the page cannot do is the host's: a transparent window with no white flash, the place and size of the window
 kept between runs, a minimum width (500px is Imago's), navigation limited to the app's origin, and recovery when the

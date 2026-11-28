@@ -19,6 +19,7 @@ import { GROUP_LABEL, ROW_HIGHLIGHT } from "../lib/rows"
 import { useWords } from "../words"
 import { CommandsContext, PALETTE_COMMAND, useCommands } from "./commands"
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog"
+import { DirectionProvider } from "../internal/direction"
 
 export type Command = {
   id: string
@@ -114,6 +115,8 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
     setActive(usable[(at + step + usable.length) % usable.length]!)
   }
   return (
+    // Often put beside the app's `AppShell` (in its `CommandsProvider`): it takes the page's direction itself.
+    <DirectionProvider>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="mt-20 self-start gap-0 overflow-hidden p-0 md:p-0">
         <DialogTitle className="sr-only">{name}</DialogTitle>
@@ -149,7 +152,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
             }}
             // The field has the focus for as long as the palette is open: the caret shows it, and the row it acts on
             // is highlighted under it.
-            className="min-w-0 flex-1 bg-transparent py-3 text-base text-ink outline-none placeholder:text-ink-mute md:text-sm"
+            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-ink outline-none placeholder:text-ink-mute"
           />
         </label>
         <div ref={list} id={`${id}-list`} role="listbox" aria-label={name} data-slot="command-palette-list" className="flex max-h-80 flex-col gap-0.5 overflow-y-auto p-1">
@@ -189,6 +192,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
         </div>
       </DialogContent>
     </Dialog>
+    </DirectionProvider>
   )
 }
 

@@ -180,7 +180,7 @@ describe('bold tabs: the segment', () => {
       for (const cls of ['rounded-sm', 'border', 'border-transparent', PRESSED + 'font-bold', PRESSED + 'shadow-none', PRESSED + 'border-accent' + '/55', PRESSED + 'bg-accent' + '/16', PRESSED + HOVER + 'bg-accent' + '/16']) expect(c, cls).toContain(BOLD + cls)
       // Shorter by the track's padding, so the track stays a control tall; 44px with a finger as before.
       expect(c.some((cls) => cls.startsWith(BOLD + 'h-[calc(var(--control-md)'))).toBe(true)
-      expect(c).toEqual(expect.arrayContaining(['pointer-coarse' + ':min-h-11', 'font-medium', 'text-ink-mute', 'disabled' + ':opacity-50']))
+      expect(c).toEqual(expect.arrayContaining(['font-medium', 'text-ink-mute', 'disabled' + ':opacity-50']))
     }
     expect(screen.getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe('true')
   })

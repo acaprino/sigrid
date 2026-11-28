@@ -414,8 +414,6 @@ test('renders R10 color Dot alongside top accent bar and applies the 44px coarse
   // The dot is drawn in the theme's shade of the colour named: amber is the fifth of the palette.
   expect(container.querySelector('[data-slot="dot"]')?.getAttribute('data-mark-hue')).toBe('5')
   expect(container.querySelector('[data-slot="document-tab-accent"]')).not.toBeNull()
-  // Tailwind also scans `test/`: a variant and its class are joined with `+` (test/build.test.ts).
-  expect(container.querySelector('[data-slot="tabs-trigger"]')?.className).toContain('pointer-coarse' + ':min-h-11')
   const css = themeCss
   expect(css).toContain('[data-material="glass"]')
   expect(css).toContain('[data-slot="document-tab"][data-selected]')

@@ -123,6 +123,7 @@ Navigation:
 |---|---|---|
 | Two to five views of the same weight | Tabs at the foot, an icon over a word | `AppShell`'s `bottomBar`, `ToolbarTabs` with `edge="top"` and `layout="stacked"` |
 | Six places or more, or places with counts | The drawer, opened from the first button of the bar | `Sidebar` with `open`; show the button where `useAppShell().sidebar === 'drawer'` |
+| Things kept open as tabs (notes, files), and two to five places | The open things in the row at the head, the places as tabs at the foot, no drawer | `AppShell frame="sheet" top="unified"` with no `sidebar` under 620px, `DocumentTabs`, `bottomBar` (`docs/patterns.md`, «The sheet with one top row, and document tabs») |
 | A place inside a place (a task of a list) | A page, with the way back in the bar by its name | Swap the content; `ToolbarButton keepWord` |
 
 One place for the views on one screen: never tabs at the foot and a drawer that list the same places.

@@ -46,7 +46,7 @@ export type Density = DensityId | DensityDef
 
 export const DEFAULT_DENSITY: DensityId = 'normal'
 
-/** The least height of a control or a row with a coarse pointer, whatever the density (`--touch-target` in `theme.css`). */
+/** The least height of a row, and of the area a control is pressed in, with a coarse pointer, whatever the density (`--touch-target` in `theme.css`). */
 export const TOUCH_TARGET = 44
 
 /**

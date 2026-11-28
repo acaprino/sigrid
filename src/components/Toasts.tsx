@@ -27,6 +27,7 @@ import { Toast, Toaster, createToaster, useToastContext } from '@ark-ui/react/to
 import { Button } from '../primitives/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
 import { useMotion } from '../internal/motion'
+import { DirectionProvider } from '../internal/direction'
 import { cn } from '../lib/utils'
 import { KEY_CAP } from '../primitives/kbd'
 import { useWords } from '../words'
@@ -526,5 +527,10 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
  */
 export function Toasts({ items, max = COLUMN_MAX, inline = false, durationMs, onDismiss, animated }: ToastsProps) {
   const motion = useMotion(animated)
-  return <Column items={items} max={Math.max(1, Math.min(max, COLUMN_MAX))} inline={inline} durationMs={durationMs} onDismiss={onDismiss} motion={motion} />
+  // An app puts its notices beside its `AppShell`: they take the page's direction (or a `dir` given above) themselves.
+  return (
+    <DirectionProvider>
+      <Column items={items} max={Math.max(1, Math.min(max, COLUMN_MAX))} inline={inline} durationMs={durationMs} onDismiss={onDismiss} motion={motion} />
+    </DirectionProvider>
+  )
 }

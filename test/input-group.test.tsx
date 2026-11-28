@@ -11,7 +11,7 @@ describe('InputGroup', () => {
     const { container } = render(<InputGroup aria-label="Site" start={<InputGroupText>https://</InputGroupText>} end={<InputGroupText>.com</InputGroupText>} />)
     const group = slot(container, 'input-group')
     const input = screen.getByRole('textbox', { name: 'Site' })
-    expect(classes(group)).toEqual(expect.arrayContaining(['border', 'border-line', 'rounded-md', 'h-(--control-md)', 'pointer-coarse:min-h-11']))
+    expect(classes(group)).toEqual(expect.arrayContaining(['border', 'border-line', 'rounded-md', 'h-(--control-md)']))
     expect(classes(group).some((c) => c.startsWith('shadow'))).toBe(false)
     expect(classes(input).some((c) => c.startsWith('border') || c.startsWith('rounded'))).toBe(false)
     // The ring is the group's, while the text has the keyboard focus: the input draws none of its own.
@@ -85,7 +85,6 @@ describe('InputGroup', () => {
     expect(show.getAttribute('data-variant')).toBe('ghost')
     expect(show.getAttribute('aria-pressed')).toBe('false')
     expect(show.getAttribute('type')).toBe('button')
-    expect(classes(show)).toContain('pointer-coarse:min-h-11')
   })
 
   test('disabled: the input and the buttons of the group are off, and the group fades once', () => {

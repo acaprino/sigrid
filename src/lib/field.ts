@@ -14,11 +14,15 @@ export const STRONG_BORDER = '[:where([data-controls=strong])_&]:border-input'
 /** The surface: l2 corners, the light divider border (as an outline button) and no fill; the control border under `controls: 'strong'`. */
 export const FIELD_SURFACE = `rounded-md border border-line bg-transparent ${STRONG_BORDER}`
 
-/** The height of a one-line field: a control tall (`--control-md`), 44px with a finger. */
-export const FIELD_HEIGHT = 'h-(--control-md) pointer-coarse:min-h-11'
+/** The height of a one-line field: a control tall (`--control-md`), with a finger too (a text field has no area around it). */
+export const FIELD_HEIGHT = 'h-(--control-md)'
 
-/** The text: 14px, and 16px below 860px so iOS does not zoom the page when the field takes the focus. The placeholder is muted. */
-export const FIELD_TEXT = 'text-base md:text-sm placeholder:text-muted-foreground'
+/**
+ * The text: 14px at every width, as the labels beside it (the owner, 2026-11-28). The placeholder is muted.
+ * shortcut: Safari on iOS zooms the page when a field under 16px takes the focus; an app that runs there asks for
+ * `maximum-scale=1` in its viewport meta, or this goes back to 16px below `md`.
+ */
+export const FIELD_TEXT = 'text-sm placeholder:text-muted-foreground'
 
 /**
  * Under the pointer the border goes one step darker (the field answers before it is pressed); invalid, it is the

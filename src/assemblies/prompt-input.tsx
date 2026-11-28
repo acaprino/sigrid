@@ -104,7 +104,7 @@ function PromptInput({ value, defaultValue = "", onValueChange, onSubmit, busy =
         disabled={disabled}
         autoFocus={autoFocus}
         // Eight lines of 20px and the padding, then it scrolls.
-        className={cn("field-sizing-content max-h-44 w-full resize-none bg-transparent px-(--pad-sm) py-2 text-ink outline-hidden pointer-coarse:min-h-11 disabled:cursor-not-allowed", FIELD_TEXT)}
+        className={cn("field-sizing-content max-h-44 w-full resize-none bg-transparent px-(--pad-sm) py-2 text-ink outline-hidden disabled:cursor-not-allowed", FIELD_TEXT)}
         onChange={(event) => set(event.target.value)}
         onKeyDown={(event) => {
           // A composition in progress owns Enter (it confirms a candidate); Safari says so only with the key code 229.

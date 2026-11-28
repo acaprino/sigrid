@@ -42,7 +42,7 @@ through `Icon`), the same in every app, and the user does not choose another.
 | Which component there is, the entry it is imported from, its props and what each is for | `agents/catalog.json` (written from the source, one list for each entry of the package: file, what it is, components and their props, the object types those props are made of) |
 | A whole app in the frame, to start from | `agents/examples/tasks.tsx`, `agents/examples/mail.tsx`, `agents/examples/workspace.tsx` (the sheet frame), `agents/examples/notes.tsx` (the sheet frame with one top row and document tabs), `agents/examples/triage.tsx` (a screen that fits), `agents/examples/signup.tsx` (signing in or up, then a path of steps) |
 | The rules (R1 to R14), the tokens and what each component looks like | `DESIGN.md` |
-| How to lay out a screen: the frame, its regions, four screens to start from | `docs/patterns.md` |
+| How to lay out a screen: the frame, its regions, five screens to start from | `docs/patterns.md` |
 | How to design and review a screen: twenty laws of use, and what is Sigrid's own | `docs/design-laws.md` |
 | What changes on a phone, and what does not | `docs/mobile.md` |
 | Setup, themes, density, words, icons, the entries of the package | `README.md` |
@@ -169,7 +169,9 @@ by default, and every app turns it on: no app has interface code of its own (the
 ## Work on the toolkit itself
 
 In the repository of the toolkit: `npm run design:lint`, `npm run design:check`, `npm run typecheck`,
-`npm run showcase:typecheck`, `npm run typecheck:test`, `npm test`, `npm run build`. After a change to a component's props or comments run
+`npm run showcase:typecheck`, `npm run typecheck:test`, `npm test`, `npm run build`. No test checks a class, a measure or
+a colour (the owner, 2026-11-28): a test is for what a part does (keys, focus, values, states, what is announced), and
+the look is checked in a browser, at 390px too. After a change to a component's props or comments run
 `npm run agents`, which writes `agents/` again (a test fails if it is behind); where nothing may be compiled, take `agents/`
 from the artifact `agents` that a failed CI run keeps. A part goes in the folder and the entry of its level
 (`src/primitives`, `src/components`, `src/layout`, `src/assemblies`), imports from no level after it
