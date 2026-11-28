@@ -291,9 +291,13 @@ function SheetContent({
         return
       }
       if (!before.current) before.current = el.ownerDocument.activeElement
-      const initial = latest.current.initialFocus
-      if (initial && typeof initial === "object") initial.current?.focus()
-      if (entered.current !== el) latest.current.motion?.enterSheet(el, side)
+      // Only for a sheet that has just opened: Ark composes the content's ref again at a render, so the same element
+      // comes back here while the person types in it, and the focus must stay where they put it.
+      if (entered.current !== el) {
+        const initial = latest.current.initialFocus
+        if (initial && typeof initial === "object") initial.current?.focus()
+        latest.current.motion?.enterSheet(el, side)
+      }
       entered.current = el
     },
     [side],
