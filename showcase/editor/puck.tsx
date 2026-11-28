@@ -252,11 +252,13 @@ function Part({ kind, puck, ...props }: Props & { kind: Kind; puck: { dragRef: (
   // Document tabs show the documents they open with, the first one chosen; pressing them changes nothing here.
   const docs = kind === 'DocTabs' ? openDocs(docTitles(props)) : []
   const scope = { screen: env.screen.id, narrow, details: env.details, busy: running, job: running ? 40 : null, docs, activeDoc: docs[0]?.id ?? null, setActiveDoc: () => {}, addDoc: () => {}, closeDoc: () => {} }
-  // A component that this width hides stays on the canvas, faint, so it can still be chosen and set; so does a part of
-  // the bar that the one top row draws itself (the app is its head, the drawer's button its own).
-  const hidden = (when !== null && !when.run(scope)) || (isUnified(env.app.settings) && FRAME_OWN.includes(kind))
+  // A component that this width hides stays on the canvas, faint, so it can still be chosen and set; a part of the bar
+  // that the one top row draws itself (the app is its head, the drawer's button its own) is kept in the outline and not
+  // drawn at the row's end, where it would look like a second brand.
+  const frameOwn = isUnified(env.app.settings) && FRAME_OWN.includes(kind)
+  const hidden = when !== null && !when.run(scope)
   return (
-    <div ref={puck.dragRef} data-part={kind} data-hidden-here={hidden ? '' : undefined} className={cn(def.box ? def.box(props) : BOX, hidden && 'opacity-40')}>
+    <div ref={puck.dragRef} data-part={kind} data-hidden-here={hidden || frameOwn ? '' : undefined} className={cn(def.box ? def.box(props) : BOX, frameOwn ? 'hidden' : hidden && 'opacity-40')}>
       {draw(drawn, scope)}
     </div>
   )

@@ -9,7 +9,7 @@ export const ENTRY_NAMES: Readonly<Record<string, readonly string[]>> = {
     'contrast', 'copyTheme', 'DARK_DEPTHS', 'DARK_TINTS', 'DEFAULT_DARK_DEPTH', 'DEFAULT_DARK_TINT',
     'DEFAULT_DENSITY', 'DEFAULT_FONT', 'DEFAULT_MOTION_FEEL', 'DEFAULT_SHAPE', 'DEFAULT_TONE_INTENSITY',
     'DEFAULT_TONE_LIGHT', 'DEFAULT_WORDS', 'DENSITIES', 'DENSITY_LIMITS', 'DENSITY_VARIABLES', 'densityById',
-    'densityOf', 'densityVariables', 'densityWith', 'duoTheme', 'fit', 'FIXED', 'FONT_VARIABLE', 'fontById', 'FONTS',
+    'densityOf', 'densityVariables', 'densityWith', 'DirectionProvider', 'duoTheme', 'fit', 'FIXED', 'FONT_VARIABLE', 'fontById', 'FONTS',
     'grayScale', 'guardDesktop', 'HARMONIES', 'hasMarkdown', 'HEADING_FONT_VARIABLE', 'HEADING_WEIGHT_VARIABLE', 'HUE_NAMES', 'hueColor', 'hueScale', 'ignoreToasts', 'isAccentColor', 'isBrowserKey', 'isDensityId',
     'isFontId', 'isHueName', 'isMotionEase', 'isSpotKind', 'isThemeRadii', 'isThemeShape', 'kindIcon', 'kindLabel', 'limitLabel',
     'loadMotion', 'luminance', 'markdownHeadings', 'markHueAttrs', 'MAX_FILE_BYTES', 'MOTION_EASE_NAMES', 'MOTION_EASES', 'MOTION_PACE',

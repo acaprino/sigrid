@@ -4,6 +4,7 @@
 import * as React from 'react'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+import { DirectionProvider } from '../src'
 import { Tree, type TreeNode } from '../src/assemblies'
 
 const FILES: readonly TreeNode[] = [
@@ -130,20 +131,46 @@ describe('the app\'s keys', () => {
 })
 
 describe('keys in a language written from the right', () => {
-  test('Left opens a branch and Right closes it', async () => {
-    const real = window.getComputedStyle.bind(window)
-    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element, pseudo?: string | null) => {
-      const style = real(el, pseudo)
-      return new Proxy(style, { get: (target, key) => (key === 'direction' ? 'rtl' : Reflect.get(target, key)) })
-    })
-    render(<Tree aria-label="Files" nodes={FILES} />)
+  // The page is written from the right and Ark is told so (the `DirectionProvider` an `AppShell` mounts by itself):
+  // Ark reads the arrows in that direction, and the tree turns none of them again.
+  afterEach(() => document.documentElement.removeAttribute('dir'))
+  const fromTheRight = (tree: React.ReactNode) => {
+    document.documentElement.setAttribute('dir', 'rtl')
+    return render(<DirectionProvider>{tree}</DirectionProvider>)
+  }
+
+  test('Left opens a branch, once, and Right closes it', async () => {
+    fromTheRight(<Tree aria-label="Files" nodes={FILES} />)
+    expect(screen.getByRole('tree').getAttribute('dir')).toBe('rtl')
     await focus(item('src'))
-    await press('ArrowRight')
-    expect(item('src').getAttribute('aria-expanded')).toBe('false')
     await press('ArrowLeft')
     await waitFor(() => expect(item('src').getAttribute('aria-expanded')).toBe('true'))
+    // Opened and not gone in: the key was taken once, not turned twice.
+    expect(document.activeElement).toBe(item('src'))
     await press('ArrowRight')
     await waitFor(() => expect(item('src').getAttribute('aria-expanded')).toBe('false'))
+    // On a closed branch at the top, Right (the way out) opens nothing.
+    await press('ArrowRight')
+    await press('ArrowLeft')
+    await waitFor(() => expect(item('src').getAttribute('aria-expanded')).toBe('true'))
+    expect(document.activeElement).toBe(item('src'))
+  })
+
+  test('a branch that loads takes no second request: Left (the way in) or Enter again neither ask again nor give up the first', async () => {
+    const calls: { signal: AbortSignal; resolve: (nodes: readonly TreeNode[]) => void }[] = []
+    const load = vi.fn((_node: TreeNode, signal: AbortSignal) => new Promise<readonly TreeNode[]>((resolve) => void calls.push({ signal, resolve })))
+    fromTheRight(<Tree aria-label="Files" nodes={[{ id: 'remote', name: 'remote', hasChildren: true }, FILES[1]!]} loadChildren={load} />)
+    await focus(item('remote'))
+    await press('ArrowLeft')
+    await waitFor(() => expect(item('remote').getAttribute('aria-busy')).toBe('true'))
+    expect(load).toHaveBeenCalledTimes(1)
+    await press('ArrowLeft')
+    await press('Enter')
+    await step(() => calls[0]!.resolve([{ id: 'remote/notes.txt', name: 'notes.txt' }]))
+    await waitFor(() => expect(item('remote').getAttribute('aria-expanded')).toBe('true'))
+    expect(item('notes.txt')).toBeTruthy()
+    expect(load).toHaveBeenCalledTimes(1)
+    expect(calls[0]!.signal.aborted).toBe(false)
   })
 })
 

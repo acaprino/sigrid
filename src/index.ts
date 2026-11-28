@@ -13,6 +13,7 @@ export { HUE_NAMES, grayScale, hueColor, hueScale, isHueName, namedTheme, type H
 export { HARMONIES, accentSuggestions, duoTheme, pageTint, type AccentSuggestion, type DuoPick, type Harmony } from './harmony'
 export { APP_HEIGHT_VAR, useAppHeight } from './internal/app-height'
 export { guardDesktop, isBrowserKey, useDesktopGuard, type DesktopGuardOptions } from './internal/desktop-guard'
+export { DirectionProvider } from './internal/direction'
 export { MAX_FILE_BYTES, limitLabel, overLimitNotice, payloadFromDataTransfer, useDropTarget, withinLimit, type AttachPayload, type DropPayload, type DropTarget } from './internal/drop'
 export { useEdgeAutoScroll } from './internal/edge-scroll'
 export { kindIcon, kindLabel, type AttachmentKind, type ItemKind } from './internal/kinds'

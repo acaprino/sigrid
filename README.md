@@ -79,13 +79,11 @@ to `@acaprino/sigrid`. Point local dependencies and Tailwind source paths at you
 
 ## What the toolkit rests on
 
-1. **Behaviour: two libraries, each for what it does best.** **Base UI** (`@base-ui/react`, pinned to 1.9.0) carries
-   the basic controls and the surfaces that open: dialog, sheet, select, popover, menu, tooltip, toolbar, checkbox, radio group,
-   toggle group, input; `Collapsible`, `Field` and `PopoverPrimitive` are re-exported so an app composes them with the
-   toolkit's single copy. **Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component, carries the
-   richer parts Base UI does not have: notices, date picker, tags input, file upload, combobox, slider, switch, tabs,
-   avatar. The split is meant to stay (the owner's decision of 2026-11-22): a control moves from one to the other only
-   when it is rewritten anyway, or when a defect comes from the two living together.
+1. **Behaviour: one headless library.** **Ark UI** (`@ark-ui/react`, pinned to 5.39.3), imported component by component,
+   carries state, keyboard navigation, focus management and ARIA across all primitives and components: dialog, sheet (drawer),
+   select, popover, menu, tooltip, checkbox, radio group, toggle group, field, collapsible, notices, date picker, tags input,
+   file upload, combobox, slider, switch, tabs, tree and avatar; `Collapsible`, `Field` and `PopoverPrimitive` are re-exported
+   so an app composes them with the toolkit's single copy. `Toolbar` uses native WAI-ARIA roving tabindex.
 2. **Form: Park UI's recipes**, translated by hand to Tailwind classes (Park is not installed): sizes, variants, corner
    levels and elevation of every primitive in `src/primitives/`.
 3. **Motion on Fluent 2's tokens**: short tweens with Microsoft Fluent 2's durations and curves (100 to 200 ms; entering
@@ -350,7 +348,7 @@ selection tint, the chosen row the whole tint and the short accent bar at its st
 chosen row when it is in sight); Down and Up move, Right opens a branch and then goes in, Left closes it and then goes
 out, Home and End reach the ends, the first letters typed reach a name, `*` opens the branches beside the row, Enter,
 Space or a press choose (and open or close a branch); Enter, Space, Right and Left with Shift, Ctrl, Alt or Meta held are
-not the tree's, and Right and Left swap in a language written from the right. `onOpen` hears Enter or a double press on a row (open the file,
+not the tree's, and Right and Left swap in a language written from the right (in an `AppShell`, or under a `DirectionProvider`). `onOpen` hears Enter or a double press on a row (open the file,
 enter the folder) besides the choice, and does not open or close a branch (Right, Left and a press do); `followFocus` makes the choice follow the arrows
 (`onSelect` once for each), for a tree beside its details; `onKeyDown(event, id)` is asked first about a key on a row
 (`j` and `k` that move the choice, Delete: `preventDefault()` makes the tree do nothing with it) and `typeahead={false}`
@@ -718,8 +716,8 @@ Each name is exported by one entry, the one of its level (`agents/catalog.json` 
 list below goes by what a part is for, and names parts of every level):
 
 - `.`: the ground, with nothing that draws: the theme engine and catalog, the colour palette, the density, `cn`, the
-  words (`WordsProvider`), the Motion loader (`MotionProvider`), Markdown as data, drop payloads, media queries and
-  overlay layers.
+  words (`WordsProvider`), the Motion loader (`MotionProvider`), the direction of writing (`DirectionProvider`),
+  Markdown as data, drop payloads, media queries and overlay layers.
 - `/primitives`: `Button`, `Input`, `Textarea`, `Checkbox`, `Select`, `Switch`, `Slider`, `RadioGroup*`,
   `ToggleGroup*`, `Tabs*`, `Sheet*`, `DialogRoot`/`Dialog*` parts, `DropdownMenu*`, `Popover*`, `Tooltip`, `Kbd`,
   `Badge`, `Count`, `Avatar`, `Logo`, `Progress*`, `Table*`, `Card`, `Heading`, `Dot`, `Separator`, `Thumbnail`, `Icon`, and
@@ -738,7 +736,8 @@ list below goes by what a part is for, and names parts of every level):
 What the parts are, whatever their entry: the primitives (`Button`, `Input`, `Textarea`,
   `Checkbox`, `Select`, `Sheet*`, `DialogRoot`/`Dialog*`, `DropdownMenu*`, `Popover*`, `RadioGroup*`, `ToggleGroup*`,
   `Tooltip`, `Kbd`, `Empty`, `Badge`, `Logo` (below), `Calendar`, `DateRangeField`, `Switch`, `Tabs*`, `FormField`, `Count`, `Steps`, `Progress`/`ProgressRing`/`ProgressSegments`, `NavList`/`NavItem`, the layout parts (`Column` (with `fill`: as tall as its region, so a part of it that fills takes what the others leave), `Cluster`, `Split`, `Grid`, `Spacer`, `Section`, `ScrollArea`, `Page` (with `fit`: one screen exactly), `Text`: every space a step of the scale, no class or style taken, so an app writes none), the parts a screen is composed of beside them (`Card`, a group on a surface of its own, raised or on the quiet fill; `Heading`, the title of a page, a section, a card or a group; `Dot`, a colour or a state as an 8px dot; `Separator`, a hairline between groups; `DescriptionList`, the facts of one thing as names and values; `SettingRow`, a choice of a settings page; `SidebarRow`, a row of the sidebar's head or foot; `DrawerButton`, the button that opens the sidebar where it is a drawer), `Sidebar`/`SidebarGroup`, `Toolbar*`, `TitleBar`, `WindowControls`, `AppShell`, `Inspector`, `CommandPalette` with its registry (`CommandsProvider`, `useCommand`, `useCommands`), `ItemList`/`ItemRow` (with `control`, one control beside the row's button: a task one ticks and opens; and `facts`, the short facts under its title), `ContentSplit` (two panes in the content: a column with the list, the thing chosen beside it, one at a time where the two do not fit), `SplitPane` (the same two panes with a divider the person moves: pointer, arrows, Home and End, a double press to put it back; the size is kept by the app or under a `storageKey`), `Tree` (nested rows, below), `Note` (a message that stays in the page, in four tones, below), `OverflowList` (one line of details: what does not fit is cut from the end and counted, «+2»), `Table`/`TableRow`/`TableCell` and the other parts of a table, `Slider`, `SearchField`, `Disclosure` (one row that opens in place what few people need), `CopyButton` (it copies a text and says so in place: a check and «Copied» for two seconds), `InputGroup` with `InputGroupText` and `InputGroupButton` (a field with words, an icon or a small button inside its border), `Combobox`, `Avatar`, `FrameSurface` (a box that shows the pictures an app pushes to it, JPEG bytes or bitmaps, whole or letterboxed, and tells the app its size once it holds still and the pointer, wheel, keys and paste on it, with the point in the picture)), the surfaces (`Dialog`, with `width` `md`, `lg` or `xl` for a centred window that needs more room than a name or a confirmation, `Toasts`), `PortalContainerProvider`
-  (where overlays mount for part of an app drawn in another document), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
+  (where overlays mount for part of an app drawn in another document), `DirectionProvider` (the direction of writing
+  of the Ark-based parts outside an `AppShell`, which follows the page's `<html dir>` by itself), the generic fields and helpers (`DateField`, `DurationField`, `ChipsInput`, `Swatches`, `AttachmentsSection`,
   `AttachmentViewer`, `Thumbnail`, Markdown, drop payloads, media queries, overlay layers), the parts of a conversation
   (`Conversation`, `Message`, `PromptInput`, `Suggestions`, `Reasoning`, `ToolCall`), `SwipeDeck`, and the Motion loader.
   Where a piece needs an app's word or default, it takes a parameter (`Select`'s `renderMark`, the date fields'

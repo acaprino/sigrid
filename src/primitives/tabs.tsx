@@ -82,11 +82,11 @@ export type TabsListProps = {
   scroll?: boolean | undefined
   /**
    * How a row that scrolls says there is more. `shade` (the default): with `scroll`, its edges fade where it goes on.
-   * `buttons`: the row scrolls (with or without `scroll`) and an arrow after it steps forward by three quarters of the
-   * row, toward the end of the line (to the left in a language written from the right). The arrow keeps its slot,
-   * disabled, when there is no more: what comes after the row never moves (R14). Scrolled away from the start, an arrow
-   * back appears before it. The arrows are for the pointer and out of the Tab order: the keys move through the tabs,
-   * which come into sight.
+   * `buttons`: the row scrolls (with or without `scroll`) and two arrows after it step backward and forward by three
+   * quarters of the row, along the line (reversed in a language written from the right). Both arrows keep their fixed
+   * slots, disabled when there is nothing further in that direction: neither the row nor what comes after it moves
+   * (R14). The arrows are for the pointer and out of the Tab order: the keys move through the tabs, which come into
+   * sight.
    */
   overflow?: "shade" | "buttons" | undefined
   className?: string | undefined
@@ -231,22 +231,21 @@ function TabsList({ className, children, scroll = false, overflow = "shade", ...
   return (
     <div data-slot="tabs-overflow" className="flex min-w-0 items-stretch">
       {row}
-      {edges.prev ? (
-        <Tooltip label={words.scrollPrev}>
-          <Button
-            data-slot="tabs-scroll-prev"
-            variant="ghost"
-            size="icon-xs"
-            tabIndex={-1}
-            aria-label={words.scrollPrev}
-            className="self-center"
-            onMouseDown={keepFocus}
-            onClick={() => step(false)}
-          >
-            <Icon name="back" className={mirror} />
-          </Button>
-        </Tooltip>
-      ) : null}
+      <Tooltip label={words.scrollPrev}>
+        <Button
+          data-slot="tabs-scroll-prev"
+          variant="ghost"
+          size="icon-xs"
+          tabIndex={-1}
+          aria-label={words.scrollPrev}
+          disabled={!edges.prev}
+          className="self-center"
+          onMouseDown={keepFocus}
+          onClick={() => step(false)}
+        >
+          <Icon name="back" className={mirror} />
+        </Button>
+      </Tooltip>
       <Tooltip label={words.scrollNext}>
         <Button
           data-slot="tabs-scroll-next"

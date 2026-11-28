@@ -213,7 +213,7 @@ test('from the left, the arrow steps right; scrolled away from the start an arro
   // The arrows say there is more: the faded edges are not drawn as well.
   expect(list.hasAttribute('data-scroll-shade')).toBe(false)
   expect(list.className).toMatch(/overflow-x-auto/)
-  expect(container.querySelector('[data-slot="tabs-scroll-prev"]')).toBeNull()
+  expect(container.querySelector<HTMLButtonElement>('[data-slot="tabs-scroll-prev"]')?.disabled).toBe(true)
   let scrollBy = overflowing(list)
   // A press on an arrow does not take the focus (it is out of the Tab order).
   expect(fireEvent.mouseDown(container.querySelector('[data-slot="tabs-scroll-next"]')!)).toBe(false)
@@ -221,7 +221,7 @@ test('from the left, the arrow steps right; scrolled away from the start an arro
   expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 150 }))
   scrollBy = overflowing(list, 100)
   const prev = container.querySelector<HTMLButtonElement>('[data-slot="tabs-scroll-prev"]')!
-  expect(prev).not.toBeNull()
+  expect(prev.disabled).toBe(false)
   expect(fireEvent.mouseDown(prev)).toBe(false)
   expect(prev.compareDocumentPosition(container.querySelector('[data-slot="tabs-scroll-next"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   fireEvent.click(prev)
@@ -380,7 +380,7 @@ test('the room at the row\'s edges is part of the edge: at rest the arrow back i
     const list = screen.getByRole('tablist', { name: 'Files' })
     const sign = rtl ? -1 : 1
     const where = rtl ? 'rtl' : 'ltr'
-    const prev = () => container.querySelector('[data-slot="tabs-scroll-prev"]')
+    const prev = () => container.querySelector<HTMLButtonElement>('[data-slot="tabs-scroll-prev"]')!
     const next = () => container.querySelector<HTMLButtonElement>('[data-slot="tabs-scroll-next"]')!
     // The row runs 8px + 500px + 12px: 320px to scroll.
     laidOut(list, { start: 8, end: 12, rtl })
@@ -390,10 +390,10 @@ test('the room at the row\'s edges is part of the edge: at rest the arrow back i
     }
     // Scrolled within the start room only: the first tab is whole, there is nothing to go back to.
     scrollTo(6)
-    expect(prev(), where).toBeNull()
+    expect(prev().disabled, where).toBe(true)
     expect(next().disabled, where).toBe(false)
     scrollTo(20)
-    expect(prev(), where).not.toBeNull()
+    expect(prev().disabled, where).toBe(false)
     // 10px left to scroll, inside the 12px end room: the last tab is whole, there is nothing further.
     scrollTo(310)
     expect(next().disabled, where).toBe(true)

@@ -6,7 +6,8 @@
 // reach the first and the last row in sight, the first letters of a name reach it, `*` opens the branches beside the
 // row; Enter, Space or a press choose a row, and on a branch also open or close it (with `onOpen`, Enter asks the app and
 // does not fold: Right and Left do). One row is chosen, never several. In a language written from the right, Right and
-// Left swap. Enter, Space, Right and Left with Shift, Ctrl, Alt or Meta held are not the tree's.
+// Left swap (Ark does it, in the direction it is given: `DirectionProvider`, which `AppShell` mounts). Enter, Space,
+// Right and Left with Shift, Ctrl, Alt or Meta held are not the tree's.
 // The row that has the focus is the `treeitem` itself, with its level, whether it is open and whether it is chosen: on a
 // branch Ark's control is made the `treeitem`, and the rows it holds are its `group` (`aria-owns`). A closed branch's
 // rows are not in the page.
@@ -457,8 +458,6 @@ function Tree({
   const [focus, setFocus] = React.useState<string | null>(null)
   // The row that has the focus in the page now, whoever gave it (a key, a press, the app), or none when it is not in the tree.
   const [has, setHas] = React.useState<string | null>(null)
-  // A key sent again with Right and Left swapped, which the tree must not swap a second time.
-  const swapping = React.useRef(false)
   // `virtual`: where the box is scrolled to, how tall it is, and how tall a row is (read from the first one drawn).
   const box = React.useRef<HTMLDivElement>(null)
   const holder = React.useRef<HTMLDivElement>(null)
@@ -811,7 +810,7 @@ function Tree({
         }}
         hidden={shown.length === 0 || undefined}
         onKeyDown={(event) => {
-          if (event.nativeEvent.isComposing || swapping.current) return
+          if (event.nativeEvent.isComposing) return
           const target = event.target instanceof Element ? event.target : null
           const id = target?.closest<HTMLElement>("[data-part=branch-control], [data-part=item], [role=treeitem]")?.dataset.value
           // The app's keys first: what it takes with `preventDefault()`, the tree leaves alone (Ark does the same).
@@ -833,22 +832,12 @@ function Tree({
             asked(event.target)
             return
           }
-          // Where the text runs from the right, the key that goes in is Left: Ark does not know it, so the tree says the key it
-          // means (Ark's own `dir` is its locale's, not the page's).
-          const goes = (key === "ArrowLeft" || key === "ArrowRight") && target !== null && getComputedStyle(target).direction === "rtl" ? (key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft") : key
-          // A branch that loads takes no second opening: Enter and Right are left to nothing (Ark would ask again).
-          if ((key === "Enter" || goes === "ArrowRight") && id !== undefined && target?.closest("[data-part=branch-control]") && pending.current.has(id)) {
+          // The key that goes in is Right, or Left where the tree is written from the right: Ark reads the arrows in the
+          // `dir` it writes on the tree (the page's, `DirectionProvider`), and the tree reads the same one.
+          const goesIn = event.currentTarget.dir === "rtl" ? "ArrowLeft" : "ArrowRight"
+          // A branch that loads takes no second opening: Enter and the key that goes in are left to nothing (Ark would ask again).
+          if ((key === "Enter" || key === goesIn) && id !== undefined && target?.closest("[data-part=branch-control]") && pending.current.has(id)) {
             event.preventDefault()
-            return
-          }
-          if (goes !== key && target !== null) {
-            event.preventDefault()
-            swapping.current = true
-            try {
-              target.dispatchEvent(new KeyboardEvent("keydown", { key: goes, bubbles: true, cancelable: true }))
-            } finally {
-              swapping.current = false
-            }
             return
           }
           // Ark keeps `a` for Cmd+A (choose all, which a tree of one choice does not do), so a plain `a` reaches no

@@ -341,10 +341,10 @@ test('Sidebar suppresses its own toggle and follows UnifiedShellContext.collapse
   expect(container.querySelector('[data-slot="sidebar-head"]')).toBeNull()
 })
 
-test('with unifiedTop and collapsed false the sidebar is a column, with no toggle of its own, even with toggle="head-start"', () => {
+test('with unifiedTop and collapsed false the sidebar is a column, with no toggle or header of its own, even with toggle="head-start"', () => {
   const { container } = render(
     <UnifiedShellContext.Provider value={{ unifiedTop: true, collapsed: false, onCollapsedChange: vi.fn(), attachedTabs: false }}>
-      <Sidebar aria-label="Main" collapsed toggle="head-start" onCollapsedChange={vi.fn()}>
+      <Sidebar aria-label="Main" collapsed toggle="head-start" header={<span>Notes</span>} onCollapsedChange={vi.fn()}>
         <SidebarGroup label="Places"><NavItem icon={<svg />} current>All notes</NavItem></SidebarGroup>
       </Sidebar>
     </UnifiedShellContext.Provider>,
@@ -352,4 +352,5 @@ test('with unifiedTop and collapsed false the sidebar is a column, with no toggl
   expect(container.querySelector('[data-slot="sidebar"]')?.hasAttribute('data-collapsed')).toBe(false)
   expect(container.querySelector('[data-slot="sidebar-collapse"]')).toBeNull()
   expect(container.querySelector('[data-slot="sidebar-head"]')).toBeNull()
+  expect(container.querySelector('[data-slot="sidebar-header"]')).toBeNull()
 })

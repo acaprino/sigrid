@@ -5,7 +5,8 @@
 // border are the ink (the accent is kept for the primary action, R2), the thumb is the paper with no shadow (R4: a
 // bordered control has no shadow). The thumb's area is 44px with a coarse pointer.
 // Behaviour: Ark UI's Slider, one thumb (`role="slider"`): Left and Right move by `step`, PageUp and PageDown by ten
-// steps, Home and End go to the ends; Up and Down act as Right and Left, as the ARIA pattern has it. No animation: the
+// steps, Home and End go to the ends; Up and Down grow and shrink it, as the ARIA pattern has it. Written from the right
+// (the direction Ark is given, `DirectionProvider`) the slider fills from the right and Left grows it. No animation: the
 // thumb follows the pointer.
 import * as React from "react"
 import { Slider as SliderPrimitive } from "@ark-ui/react/slider"
@@ -26,9 +27,13 @@ export type SliderProps = {
   className?: string | undefined
 }
 
-/** Up and Down act as Right and Left: the key Ark knows, sent again from the thumb. */
+/**
+ * Up and Down grow and shrink the value: sent again from the thumb as the arrow Ark knows for that, which is Left for
+ * growing where the slider is written from the right (Ark reads its arrows in its own `dir`, the one on the thumb).
+ */
 function vertical(event: React.KeyboardEvent<HTMLDivElement>) {
-  const key = event.key === "ArrowUp" ? "ArrowRight" : event.key === "ArrowDown" ? "ArrowLeft" : undefined
+  const rtl = event.currentTarget.dir === "rtl"
+  const key = event.key === "ArrowUp" ? (rtl ? "ArrowLeft" : "ArrowRight") : event.key === "ArrowDown" ? (rtl ? "ArrowRight" : "ArrowLeft") : undefined
   if (!key) return
   event.preventDefault()
   event.stopPropagation()

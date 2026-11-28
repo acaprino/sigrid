@@ -79,6 +79,7 @@ import { useAppHeight, visibleHeight } from "../internal/app-height"
 import { BOTTOM_BAR_ROOM_VAR } from "../internal/overlay"
 import { useWords } from "../words"
 import { PortalContainerProvider, usePortalContainer } from "../internal/portal-container"
+import { DirectionProvider } from "../internal/direction"
 import { Sheet, SheetContent, SheetTitle } from "../primitives/sheet"
 import { Button, QUIET_ICON } from "../primitives/button"
 import { Tooltip } from "../primitives/tooltip"
@@ -446,7 +447,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
               {toggle}
               {head ? (
                 <>
-                  {toggle ? <span data-slot="app-shell-top-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-line" /> : null}
+                  {toggle ? <span data-slot="app-shell-top-divider" aria-hidden="true" className="h-4 w-px shrink-0 bg-ink/15" /> : null}
                   <div data-slot="app-shell-top-head" {...dragProps} className="flex min-w-0 flex-1 items-center pe-2">
                     {head}
                   </div>
@@ -537,6 +538,8 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
     </>
   )
   return (
+    // The page's direction for every Ark-based part the frame holds, those that open over it among them.
+    <DirectionProvider>
     <AppShellContext.Provider value={layout}>
       <ContentContext.Provider value={content}>
       {/* Outside the row and the sidebar (the content, a frame drawn inside it) nothing is in the one top row. */}
@@ -567,6 +570,7 @@ function AppShell({ titleBar, tabs, status, sidebar, inspector, inspectorAt = "e
       </UnifiedShellContext.Provider>
       </ContentContext.Provider>
     </AppShellContext.Provider>
+    </DirectionProvider>
   )
 }
 

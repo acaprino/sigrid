@@ -1547,14 +1547,14 @@ function UnifiedSheet({ animated }: { animated: boolean }) {
       <div className="max-w-full overflow-x-auto p-1 pb-6">
         <div data-sample="unified-sheet" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
           <AppShell
-            desktop
+            desktop={!narrow}
             frame="sheet"
             top="unified"
             contentLabel="Notes"
             sidebarHead={<ToolbarBrand name="Notes" />}
             sidebarCollapsed={collapsed}
             onSidebarCollapsedChange={setCollapsed}
-            windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}
+            windowControls={narrow ? undefined : <WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}
             topActions={
               <Toolbar aria-label="Notes">
                 <ToolbarButton label="Search the notes" shortcut="/" icon={<Icon name="search" />} animated={animated} />

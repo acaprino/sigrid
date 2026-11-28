@@ -5,13 +5,11 @@ behaviour of the components rests on a headless library, the form comes from Par
 durations and curves from Fluent 2's tokens, the motion code and the rest of the look are ours, on top of SmoothUI pieces copied into the package and adapted. An app's product components (in the
 app's own package, with its own `THIRD_PARTY.md`) are not listed here.
 
-- **Ark UI** and **Base UI** (`@ark-ui/react`, `@base-ui/react`, npm dependencies) are the base for behaviour: state,
-  keyboard, focus, ARIA. Base UI carries the basic controls and the surfaces that open (dialog, sheet, select, popover,
-  menu, tooltip, toolbar, checkbox, radio group, toggle group, input, and the re-exported collapsible and field); Ark UI the
-  richer parts Base UI does not have (notices, date field and calendar, labels field, upload zone, combobox, slider,
-  switch, tabs, avatar). The split is meant to stay (the owner's decision of 2026-11-22: moving the rest onto Ark would
-  change the structure of controls that work and are tested, for nothing a user would see). A control moves from one
-  to the other only when it is rewritten anyway, or when a defect comes from the two living together.
+- **Ark UI** (`@ark-ui/react`, npm dependency) is the single base for behaviour: state, keyboard, focus, ARIA across
+  all primitives and interactive components (dialog, sheet/drawer, select, popover, menu, tooltip, checkbox, radio group,
+  toggle group, field, collapsible, notices, date field and calendar, labels field, upload zone, combobox, slider,
+  switch, tabs, tree, avatar, plus the re-exported collapsible, field and popover primitives). `Toolbar` uses native
+  WAI-ARIA roving tabindex. `@base-ui/react` has been removed.
 - **Park UI** for the form (2026-11-19, the owner's choice: Park's native look, not compact): sizes, variants, states,
   corner levels and elevation follow Park's recipes, translated by hand to Tailwind classes. Park itself is Panda CSS
   only and is **not installed**. Colors stay the theme engine's, never Park's palettes.
@@ -63,6 +61,7 @@ The test `test/provenance.test.ts` checks the pinned versions and that this list
 | `src/primitives/headless.ts` | `field` | `@ark-ui/react/field` |
 | `src/primitives/headless.ts` | `popover` | `@ark-ui/react/popover` |
 | `src/internal/portal.tsx` | `portal` | `@ark-ui/react/portal` |
+| `src/internal/direction.tsx` | `locale` | `@ark-ui/react/locale` |
 | `src/primitives/tooltip.tsx` | `tooltip` | `@ark-ui/react/tooltip` |
 | `src/primitives/popover.tsx` | `popover` | `@ark-ui/react/popover` |
 | `src/primitives/dropdown-menu.tsx` | `menu` | `@ark-ui/react/menu` |
@@ -84,7 +83,13 @@ Notes:
   are compared ignoring case, a chip is not edited in place.
 - `primitives/switch.tsx`: Ark's Switch (a hidden checkbox inside a `<label>`, with the `switch` role given here). The thumb
   slides with a CSS transition, only with `animated`.
-- `primitives/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as Right and Left.
+- `primitives/slider.tsx`: Ark's Slider with one thumb. Up and Down are sent again as the arrow that grows or shrinks
+  the value in the slider's direction (Right and Left, or Left and Right where it is written from the right).
+- `primitives/toggle-group.tsx`: Ark's ToggleGroup, whose arrows (zag's toggle-group 1.45.0) are read as from the left
+  whatever its `dir`: where it is written from the right, Left and Right are sent again swapped.
+- `internal/direction.tsx`: Ark's `LocaleProvider`, the one way Ark takes a direction (`DirectionProvider`, which
+  `AppShell` mounts): the page's direction, given as Ark's default `en-US` from the left and, from the right, as the
+  page's `lang` when it is a language written from the right or else `ar`.
 - `primitives/avatar.tsx`: Ark's Avatar, for the initials shown until the picture loads and again if it fails.
 - `components/combobox.tsx`: Ark's Combobox (filtering as the user types, the list, its keyboard). The list is not moved to
   a portal; the options are filtered here unless the caller answers `onQuery`.

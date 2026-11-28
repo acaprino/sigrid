@@ -6,7 +6,7 @@
 // (`Highlight` in `motion-impl`, `MOTION.slide`). The group only chooses: it shows no panels.
 // Behaviour: Ark UI's ToggleGroup (`@ark-ui/react/toggle-group`, with `multiple` so the root carries `role="group"`
 // and items carry `aria-pressed`, kept single-choice here so the already pressed button never turns off, with a single
-// tab stop and arrow navigation).
+// tab stop and arrow navigation; written from the right, Left goes to the next item).
 // The group is as wide as its items, wherever it is put (in a pile that stretches its parts, too); with `fill` it is as
 // wide as its place and its items share it equally, as two halves of a switch on a phone, so neither grows when pressed.
 import * as React from "react"
@@ -39,10 +39,27 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
   const motion = useMotion(animated)
   const id = React.useId()
   const group = React.useMemo(() => ({ value, motion, id, fill }), [value, motion, id, fill])
+  // shortcut: Ark's ToggleGroup (zag's toggle-group 1.45.0) reads its arrows as from the left whatever its `dir`, so
+  // where it is written from the right Left and Right are sent again from the item, swapped. Upgrade: when Ark reads them
+  // in its `dir`, test/direction.test.tsx sees them turned twice; then this goes.
+  const swapping = React.useRef(false)
+  const mirrored = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (swapping.current || event.currentTarget.dir !== "rtl" || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return
+    event.preventDefault()
+    event.stopPropagation()
+    const { shiftKey, ctrlKey, altKey, metaKey } = event
+    swapping.current = true
+    try {
+      event.target.dispatchEvent(new KeyboardEvent("keydown", { key: event.key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft", shiftKey, ctrlKey, altKey, metaKey, bubbles: true, cancelable: true }))
+    } finally {
+      swapping.current = false
+    }
+  }
   return (
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       multiple
+      onKeyDownCapture={mirrored}
       value={[value]}
       onValueChange={(details) => {
         // A click on the already pressed item would turn it off: in a single-choice group that one stays.

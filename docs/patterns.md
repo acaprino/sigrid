@@ -119,14 +119,12 @@ the `+` when none is left. A tab closes with its cross, a middle press or Delete
   tint of a selection, as `Tabs`; `appearance` chooses either by hand.
 - The words of the strip («Open tabs», «New tab», «Close Trip», the arrows) are `useWords().documentTabs`; an app in
   another language passes its own with `WordsProvider`.
-- Known limit: the strip is made on the Ark-based `Tabs`, and these do not mirror in a page written from the right yet,
-  because no Ark `LocaleProvider` passes the page's direction: Ark writes `dir="ltr"` on every strip. In such a page
-  the row mirrors (the sidebar's button and the app go to the right) but the strip stays an island written from the
-  left: its tabs, arrows, hairline and `+` keep their order, so the `+` stands next to the cell over the sidebar and
-  the first tab at the far end, away from the sheet's start edge. With the first tab shown, its corner on the start
-  side is left out as if it stood at that edge, so a square foot shows in the middle of the row. The fix is the
-  toolkit's, for every Ark-based part at once (a bridge that passes the page's direction to Ark); until then do not
-  count on a mirrored strip.
+- Written from the right, an app sets `<html dir="rtl">` (with its `lang`) and nothing else: `AppShell` gives the
+  page's direction to every Ark-based part it holds (the strip, the tabs, menus, selects and what opens over the
+  frame), and follows it while the app is open. The strip then mirrors with the row: from the sheet's start edge its
+  tabs, the arrow, the hairline and the `+`, and the arrow forward steps toward the left. A part outside an
+  `AppShell`, or a subtree written the other way from its page (whose element carries that `dir` too), takes its
+  direction from a `DirectionProvider` (`@acaprino/sigrid`).
 
 A phone has no room for a sidebar beside the row, and a drawer for four places is one tap more than tabs at the foot.
 So the recommended form, for two to five places, has no drawer:

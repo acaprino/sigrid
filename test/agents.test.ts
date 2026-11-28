@@ -144,7 +144,7 @@ describe('the documents for agents', () => {
     expect(manifest.name).toBe(plugin.name)
     expect(manifest.name).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
     const skill = read(`${plugin.source.slice(2)}/skills/sigrid/SKILL.md`)
-    const front = /^---\n([\s\S]*?)\n---\n/.exec(skill)
+    const front = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(skill)
     expect(front).not.toBeNull()
     expect(front![1]).toMatch(/^name: sigrid$/m)
     const description = /^description: (.+)$/m.exec(front![1]!)?.[1] ?? ''
