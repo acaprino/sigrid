@@ -2468,6 +2468,23 @@
       },
       {
        "name": "DropdownMenuTrigger",
+       "props": [
+        {
+         "name": "hint",
+         "type": "string",
+         "doc": "The hint of an icon-only button that opens the menu (a `Tooltip` with this label). Give it here, never as a `Tooltip` around the trigger: both would write their own id on the button, and the menu would lose its name and the button to give the focus back to."
+        },
+        {
+         "name": "hintShortcut",
+         "type": "string",
+         "doc": "The key that opens the menu, after the hint."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ],
        "passesOn": true
       }
      ]
@@ -3144,6 +3161,18 @@
       },
       {
        "name": "PopoverTrigger",
+       "props": [
+        {
+         "name": "hint",
+         "type": "string",
+         "doc": "The hint of an icon-only button that opens the popover (a `Tooltip` with this label). Give it here, never as a `Tooltip` around the trigger: both would write their own id on the button and the popover would lose it."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The hint fades in (off by default, never with prefers-reduced-motion)."
+        }
+       ],
        "passesOn": true
       }
      ],
@@ -4232,6 +4261,11 @@
          "name": "animated",
          "type": "boolean",
          "doc": "The card fades in quickly (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "triggerId",
+         "type": "string",
+         "doc": "The button's id, when another part owns the same button (the trigger of a menu or a popover): both find it by this id. Without it each would write its own id on the button and one of them would lose it. A menu's or a popover's `hint` passes it; an app does not need it."
         },
         {
          "name": "className",

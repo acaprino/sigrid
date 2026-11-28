@@ -33,6 +33,12 @@ export type TooltipProps = {
   delay?: number | undefined
   /** The card fades in quickly (off by default, never with prefers-reduced-motion). */
   animated?: boolean | undefined
+  /**
+   * The button's id, when another part owns the same button (the trigger of a menu or a popover): both find it by
+   * this id. Without it each would write its own id on the button and one of them would lose it. A menu's or a
+   * popover's `hint` passes it; an app does not need it.
+   */
+  triggerId?: string | undefined
   className?: string | undefined
 }
 
@@ -40,7 +46,7 @@ export type TooltipProps = {
  * The hint of an icon-only button: it repeats its name on pointer hover and on focus.
  * The button stays the same as before (same `aria-label`, same Tab), without `title`.
  */
-function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, delay = TOOLTIP_DELAY_MS, animated, className }: TooltipProps) {
+function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, delay = TOOLTIP_DELAY_MS, animated, triggerId, className }: TooltipProps) {
   const enter = useEntrance<HTMLDivElement>(animated, (motion, el) => motion.enterTooltip(el))
   const positioning = React.useMemo(
     () => ({ placement: side, gutter: sideOffset, overflowPadding: 8 }),
@@ -48,6 +54,7 @@ function Tooltip({ label, shortcut, children, side = "bottom", sideOffset = 6, d
   )
   return (
     <TooltipPrimitive.Root
+      {...(triggerId !== undefined ? { ids: { trigger: triggerId } } : {})}
       openDelay={delay}
       closeDelay={0}
       interactive={false}
