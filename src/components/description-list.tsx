@@ -1,7 +1,8 @@
 // The facts of one thing as names and values, in two columns: the names in the muted ink at the start, the values in
 // the ink beside them, one fact a line (the details of an item in an inspector: its name, its level, its path). It is a
 // `<dl>`, so a screen reader reads each name with its value. A value that is code, a path or an id is set in the
-// monospace face and broken anywhere, so a long one wraps in a narrow inspector instead of widening it.
+// monospace face and broken anywhere, so a long one wraps in a narrow inspector instead of widening it. Any other value
+// with no place to break (an email, a long name) breaks where it must rather than run past the edge.
 import * as React from "react"
 import { cn } from "../lib/utils"
 
@@ -30,7 +31,7 @@ function DescriptionList({ items, "aria-label": label }: DescriptionListProps) {
         item ? (
           <React.Fragment key={at}>
             <dt className="text-ink-mute">{item.name}</dt>
-            <dd className={cn("m-0 min-w-0 text-ink", item.code && "font-mono text-xs break-all")}>{item.value}</dd>
+            <dd className={cn("m-0 min-w-0 text-ink wrap-anywhere", item.code && "font-mono text-xs break-all")}>{item.value}</dd>
           </React.Fragment>
         ) : null,
       )}

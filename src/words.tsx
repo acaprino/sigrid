@@ -210,6 +210,8 @@ export interface Words {
   readonly shell: {
     /** The link, shown on keyboard focus, that jumps over the bars to the content of an `AppShell`. */
     readonly skip: string
+    /** The name of the navigation that holds the views of the app, under the bar of an `AppShell` (`tabs`). */
+    readonly views: string
   }
   /** The names of the buttons of a window (`WindowControls`). */
   readonly window: {
@@ -282,6 +284,8 @@ export interface Words {
     readonly openOriginal: string
   }
   readonly table: {
+    /** The name of the box of a table that scrolls sideways, when the table has no `aria-label` of its own. */
+    readonly region: string
     /** The name of the button in a column's heading that sorts by it («Sort by Size»). */
     readonly sortBy: (column: string) => string
     /** What a table says when it has no rows. */
@@ -677,6 +681,7 @@ export const DEFAULT_WORDS: Words = {
   },
   shell: {
     skip: 'Skip to the content',
+    views: 'Views',
   },
   window: {
     minimize: 'Minimize',
@@ -736,6 +741,7 @@ export const DEFAULT_WORDS: Words = {
     openOriginal: 'Open the original',
   },
   table: {
+    region: 'Table',
     sortBy: (column) => `Sort by ${column}`,
     empty: 'Nothing to show',
     selectAll: 'Select all',

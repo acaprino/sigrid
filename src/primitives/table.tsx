@@ -14,6 +14,8 @@ import * as React from "react"
 import { cn } from "../lib/utils"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { ROW_HOVER } from "../lib/rows"
+import { useMergedRef } from "../lib/refs"
+import { useWords } from "../words"
 
 export type TableProps = React.ComponentProps<"table"> & {
   /** The classes of the box around the table, which scrolls: its height, where the rows are many. */
@@ -22,9 +24,38 @@ export type TableProps = React.ComponentProps<"table"> & {
   containerRef?: React.Ref<HTMLDivElement> | undefined
 }
 
+/**
+ * Whether the box scrolls sideways, followed as its size or its content changes. A box that scrolls is a region with a
+ * name that the keyboard reaches, so that the columns past its edge can be read without a pointer (WCAG 2.1.1); one
+ * that fits is left out of the tab order.
+ */
+function useScrollsSideways(box: React.RefObject<HTMLDivElement | null>) {
+  const [scrolls, setScrolls] = React.useState(false)
+  React.useLayoutEffect(() => {
+    const el = box.current
+    if (!el || typeof ResizeObserver === "undefined") return
+    const measure = () => setScrolls(el.scrollWidth > el.clientWidth + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    return () => observer.disconnect()
+  }, [box])
+  return scrolls
+}
+
 function Table({ className, containerClassName, containerRef, ...props }: TableProps) {
+  const words = useWords().table
+  const box = React.useRef<HTMLDivElement | null>(null)
+  const ref = useMergedRef(box, containerRef)
+  const scrolls = useScrollsSideways(box)
   return (
-    <div ref={containerRef} data-slot="table-container" className={cn("relative w-full overflow-auto", containerClassName)}>
+    <div
+      ref={ref}
+      data-slot="table-container"
+      {...(scrolls ? { role: "region", tabIndex: 0, "aria-label": props["aria-label"] ?? words.region } : {})}
+      className={cn("relative w-full overflow-auto", scrolls && FOCUS_RING_INSET, containerClassName)}
+    >
       <table data-slot="table" className={cn("w-full border-collapse text-sm text-ink-soft", className)} {...props} />
     </div>
   )

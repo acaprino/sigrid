@@ -12,7 +12,7 @@ import { cn } from "../lib/utils"
 import { useWords } from "../words"
 import { Button, QUIET_ICON } from "./button"
 import { useMotion } from "../internal/motion"
-import { BACKDROP, inTitleBar, inToasts, leaveEscape } from "../internal/overlay"
+import { BACKDROP, inTitleBar, inToasts, keepWindowOpen, leaveEscape } from "../internal/overlay"
 import { useMergedRef } from "../lib/refs"
 import { OverlayPortal } from "../internal/portal"
 
@@ -88,6 +88,7 @@ function Sheet({
   onEscapeKeyDown,
   onPointerDownOutside,
   onFocusOutside,
+  onRequestDismiss,
   ...props
 }: SheetProps) {
   const [inner, setInner] = React.useState(defaultOpen)
@@ -125,6 +126,8 @@ function Sheet({
     <SheetContext.Provider value={ctx}>
       <SheetPrimitive.Root
         {...props}
+        // A modal sheet is a window: a menu that closes under it does not take it along. A panel is not.
+        onRequestDismiss={modal ? keepWindowOpen(onRequestDismiss) : onRequestDismiss}
         open={open}
         modal={modal}
         trapFocus={modal}

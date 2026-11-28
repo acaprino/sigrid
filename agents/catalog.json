@@ -1428,7 +1428,7 @@
         },
         {
          "name": "shell",
-         "type": "{ readonly skip: string; }",
+         "type": "{ readonly skip: string; readonly views: string; }",
          "required": true
         },
         {
@@ -1464,7 +1464,7 @@
         },
         {
          "name": "table",
-         "type": "{ readonly sortBy: (column: string) => string; readonly empty: string; readonly selectAll: string; readonly selectRow: string; readonly select: string; readonly unfold: string; readonly fold: string;…",
+         "type": "{ readonly region: string; readonly sortBy: (column: string) => string; readonly empty: string; readonly selectAll: string; readonly selectRow: string; readonly select: string; readonly unfold: strin…",
          "required": true
         },
         {
@@ -1643,7 +1643,7 @@
         },
         {
          "name": "shell",
-         "type": "Partial<{ readonly skip: string; }>"
+         "type": "Partial<{ readonly skip: string; readonly views: string; }>"
         },
         {
          "name": "window",
@@ -1672,7 +1672,7 @@
         },
         {
          "name": "table",
-         "type": "Partial<{ readonly sortBy: (column: string) => string; readonly empty: string; readonly selectAll: string; readonly selectRow: string; readonly select: string; readonly unfold: string; readonly fold:…"
+         "type": "Partial<{ readonly region: string; readonly sortBy: (column: string) => string; readonly empty: string; readonly selectAll: string; readonly selectRow: string; readonly select: string; readonly unfol…"
         },
         {
          "name": "graph",
@@ -5010,7 +5010,7 @@
     },
     {
      "file": "src/components/description-list.tsx",
-     "about": "The facts of one thing as names and values, in two columns: the names in the muted ink at the start, the values in\nthe ink beside them, one fact a line (the details of an item in an inspector: its name, its level, its path). It is a\n`<dl>`, so a screen reader reads each name with its value. A value that is code, a path or an id is set in the\nmonospace face and broken anywhere, so a long one wraps in a narrow inspector instead of widening it.",
+     "about": "The facts of one thing as names and values, in two columns: the names in the muted ink at the start, the values in\nthe ink beside them, one fact a line (the details of an item in an inspector: its name, its level, its path). It is a\n`<dl>`, so a screen reader reads each name with its value. A value that is code, a path or an id is set in the\nmonospace face and broken anywhere, so a long one wraps in a narrow inspector instead of widening it. Any other value\nwith no place to break (an email, a long name) breaks where it must rather than run past the edge.",
      "components": [
       {
        "name": "DescriptionList",
@@ -6463,7 +6463,7 @@
     },
     {
      "file": "src/components/setting-row.tsx",
-     "about": "A choice of a settings page (docs/patterns.md, «Sidebar and page»): its name, and a line under it if it needs one, at\nthe start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them\nreads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)\nhas no control: the whole row is the button, with a chevron at its end.\nIt is at least 48px tall, and 44px with a finger at any density. The control names itself (`aria-label` with the\nrow's name): the row only lays it out.",
+     "about": "A choice of a settings page (docs/patterns.md, «Sidebar and page»): its name, and a line under it if it needs one, at\nthe start; its control at the end (a `Switch`, a `ToggleGroup`, a `Select`); a hairline under it, so a page of them\nreads as one list. The choice takes effect at once: no Save. A row that opens more (a page of its own, «Advanced»)\nhas no control: the whole row is the button, with a chevron at its end.\nIt is at least 48px tall, and 44px with a finger at any density. Where the control does not fit beside the words it goes\nunder them, never over them. The control names itself (`aria-label` with the\nrow's name): the row only lays it out.",
      "components": [
       {
        "name": "SettingRow",
