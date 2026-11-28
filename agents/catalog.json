@@ -537,6 +537,12 @@
          "doc": "A movement of `MOTION` under the feel in use (`applyMotionFeel`): its time at the app's pace, on the app's curve. With the `fluent` feel at the toolkit's own pace its values are `MOTION`'s own."
         },
         {
+         "name": "spring",
+         "type": "() => { type: \"spring\"; stiffness: number; damping: number; mass: number; }",
+         "required": true,
+         "doc": "The toolkit's spring as Motion takes it (`MOTION_SPRING`): for what changes place or size after a gesture."
+        },
+        {
          "name": "NoticeCard",
          "type": "({ y, enter, still, leaving, beyond, ...props }: Omit<HTMLMotionProps<\"div\">, \"initial\" | \"animate\" | \"exit\" | \"transition\"> & { y: number; enter: boolean; still?: boolean; leaving: NoticeLeaving; be…",
          "required": true,
@@ -544,25 +550,25 @@
         },
         {
          "name": "Notices",
-         "type": "({ children }: { children: ReactNode; }) => React.JSX.Element",
+         "type": "({ children }: { children: ReactNode; }) => JSX.Element",
          "required": true,
          "doc": "Motion's features for `NoticeCard`: the column is rendered by Ark's `Toaster`, so the provider goes around it."
         },
         {
          "name": "Presence",
-         "type": "({ children, pop }: { children: ReactNode; pop?: boolean; }) => React.JSX.Element",
+         "type": "({ children, pop }: { children: ReactNode; pop?: boolean; }) => JSX.Element",
          "required": true,
          "doc": "The elements with an exit animation. `initial={false}`: what is already there at mount does not move (no animation on load). `reducedMotion=\"user\"`: a second defense besides `useMotion`."
         },
         {
          "name": "ListItem",
-         "type": "({ ref, enter, className, children }: { ref?: React.Ref<HTMLLIElement>; enter: boolean; className?: string; children: (leaving: boolean) => ReactNode; }) => React.JSX.Element",
+         "type": "({ ref, enter, className, children }: { ref?: Ref<HTMLLIElement>; enter: boolean; className?: string; children: (leaving: boolean) => ReactNode; }) => JSX.Element",
          "required": true,
          "doc": "An item of an animated list, direct child of `Presence pop` (it passes the `ref` on: `popLayout` measures it). `enter` false for what was already there or arrived with the first load: it does not come in animated (INV-002). While it leaves it is `inert` and `children` is told so."
         },
         {
          "name": "Leaving",
-         "type": "({ children }: { children: (leaving: boolean) => ReactNode; }) => React.JSX.Element",
+         "type": "({ children }: { children: (leaving: boolean) => ReactNode; }) => JSX.Element",
          "required": true,
          "doc": "Tells whether the child of `Presence` it sits in is leaving. A removed notice or item stays in the DOM for the duration of the exit (100-200 ms) with the handlers of the last render: whoever uses it must make the element inert (`inert`) and not let clicks through, otherwise a double click on «Cancel» or «Sort» would act twice."
         },
@@ -621,25 +627,25 @@
         },
         {
          "name": "Highlight",
-         "type": "({ id, className }: { id: string; className?: string; }) => React.JSX.Element",
+         "type": "({ id, className }: { id: string; className?: string; }) => JSX.Element",
          "required": true,
          "doc": "The pill under the chosen item of a group. Rendered inside the chosen item only; when the choice changes Motion carries it from the old item to the new one (`layoutId`). On mount it is simply there. It moves for that alone (`layoutDependency` never changes): when its item changes place or size because another came or went, or the group was resized, it is drawn where the item is, at once, and never trails it."
         },
         {
          "name": "Turn",
-         "type": "({ open, children }: { open: boolean; children: ReactNode; }) => React.JSX.Element",
+         "type": "({ open, children }: { open: boolean; children: ReactNode; }) => JSX.Element",
          "required": true,
          "doc": "One arrow that turns a quarter when its group opens."
         },
         {
          "name": "HoverHighlight",
-         "type": "({ container, selector, className, as }: { container: HTMLElement | null; selector: string; className?: string; as?: \"div\" | \"li\"; }) => React.JSX.Element",
+         "type": "({ container, selector, className, as }: { container: HTMLElement | null; selector: string; className?: string; as?: \"div\" | \"li\"; }) => JSX.Element",
          "required": true,
          "doc": "One hover background for the whole container: it appears at once on the first row, glides with the pointer from row to row (`MOTION.follow`) and fades when the pointer leaves. Only its transform moves: it takes the place and the size of the new row at once, and is carried there from where and how large it was seen (a translation from the container's corner, a scale from its own). So it also glides between rows of different heights, without animating a size, and it has the corners of the row it is under. The rows are found by `selector` (delegation: no handler per row); `container` must be positioned. A mouse or a pen: a finger has no hover. It never takes the pointer from the rows under it. It follows its row: when rows come or go, or the list is resized, it is measured again, and it is gone with a row that left; when anything scrolls the list under a still pointer it fades, since the row is no longer under the pointer. `as` is the element it is drawn as: `li` inside a `<ul>` or an `<ol>`, which may hold nothing else."
         },
         {
          "name": "m",
-         "type": "(<Props, TagName extends keyof DOMMotionComponents | string = \"div\">(Component: TagName | string | React.ComponentType<Props>, { forwardMotionProps, type }?: MotionComponentOptions, preloadedFeatures…",
+         "type": "(<Props, TagName extends keyof DOMMotionComponents | string = \"div\">(Component: TagName | string | ComponentType<Props>, { forwardMotionProps, type }?: MotionComponentOptions, preloadedFeatures?: Fea…",
          "required": true
         },
         {
@@ -725,10 +731,12 @@
       "MOTION_EASE_NAMES",
       "MOTION_EASES",
       "MOTION_PACE",
+      "MOTION_SPRING",
       "MotionEase",
       "motionFeel",
       "motionVariables",
       "preloadMotion",
+      "springEasing",
       "useMotion"
      ]
     },
@@ -7418,6 +7426,91 @@
      ],
      "also": [
       "PanelProps"
+     ]
+    },
+    {
+     "file": "src/layout/sheet-pile.tsx",
+     "about": "A pile of sheets: a few pages of one flow (the steps of a sequence, the sides of a thing) of which one is open and\nthe others wait at the foot as their heads, each with its name, a line of what is in it and a count. A press on a\nhead brings that sheet up: it rises from its place at the foot and becomes the page, the page that was open fades\nwhere it is and its head takes a place at the foot. For two to four pages a person moves between many times a\nsession, on a phone above all; more pages, or pages people rarely visit, are a `NavList` or `Tabs`.\n\nThe app keeps which page is open (`value`) and draws it as the children. The rise is a view transition of the\nbrowser on the toolkit's spring (theme.css, «SheetPile»): only with motion on and not reduced, and only where the\nbrowser has view transitions; otherwise the page changes at once. The heads are buttons of a `nav`; the page is a\nregion named by its head.",
+     "components": [
+      {
+       "name": "SheetPile",
+       "props": [
+        {
+         "name": "aria-label",
+         "type": "string",
+         "required": true,
+         "doc": "Name of the heads for screen readers («Steps»)."
+        },
+        {
+         "name": "items",
+         "type": "readonly SheetPileItem[]",
+         "required": true,
+         "doc": "The pages, in their order: the heads at the foot keep it."
+        },
+        {
+         "name": "value",
+         "type": "string",
+         "required": true,
+         "doc": "The open page. A value that is none of the items' (a page outside the flow) leaves every head at the foot."
+        },
+        {
+         "name": "onValueChange",
+         "type": "(value: string) => void",
+         "required": true
+        },
+        {
+         "name": "children",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The open page."
+        },
+        {
+         "name": "animated",
+         "type": "boolean",
+         "doc": "The sheet pressed rises on the toolkit's spring (off by default, never with prefers-reduced-motion)."
+        },
+        {
+         "name": "className",
+         "type": "string"
+        }
+       ]
+      }
+     ],
+     "types": [
+      {
+       "name": "SheetPileItem",
+       "fields": [
+        {
+         "name": "value",
+         "type": "string",
+         "required": true
+        },
+        {
+         "name": "title",
+         "type": "React.ReactNode",
+         "required": true,
+         "doc": "The page's name: one or two words."
+        },
+        {
+         "name": "description",
+         "type": "React.ReactNode",
+         "doc": "One line of what waits in it («3 thoughts wait for a place»): cut with an ellipsis."
+        },
+        {
+         "name": "icon",
+         "type": "React.ReactNode",
+         "doc": "An icon before the name."
+        },
+        {
+         "name": "count",
+         "type": "number",
+         "doc": "How many things wait in it; nothing is drawn at zero."
+        }
+       ]
+      }
+     ],
+     "also": [
+      "SheetPileProps"
      ]
     },
     {

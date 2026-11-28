@@ -17,6 +17,8 @@ describe('the feel of the motion', () => {
       '--motion-ease-enter': 'cubic-bezier(0, 0, 0, 1)',
       '--motion-ease-leave': 'cubic-bezier(0.8, 0, 0.78, 1)',
       '--motion-ease-move': 'cubic-bezier(0.33, 0, 0.67, 1)',
+      '--motion-spring': 'linear(0, 0.045, 0.15, 0.283, 0.42, 0.548, 0.662, 0.756, 0.832, 0.89, 0.934, 0.965, 0.986, 1, 1.008, 1.012, 1.013, 1.013, 1.012, 1.01, 1)',
+      '--motion-spring-ms': '378ms',
     })
   })
 
@@ -32,7 +34,8 @@ describe('the feel of the motion', () => {
   })
 
   test('a chosen curve is the one of every movement; `fluent` keeps one for each kind', () => {
-    expect(new Set(Object.values(motionVariables({ ease: 'ease-out', pace: 1 })).slice(3))).toEqual(new Set(['cubic-bezier(0, 0, 0.58, 1)']))
+    // The spring keeps its own curve under every feel (the last two variables).
+    expect(new Set(Object.values(motionVariables({ ease: 'ease-out', pace: 1 })).slice(3, 6))).toEqual(new Set(['cubic-bezier(0, 0, 0.58, 1)']))
     const fluent = motionVariables({ ease: 'fluent', pace: 1 })
     expect([fluent['--motion-ease-enter'], fluent['--motion-ease-leave'], fluent['--motion-ease-move']]).toEqual(['cubic-bezier(0, 0, 0, 1)', 'cubic-bezier(0.8, 0, 0.78, 1)', 'cubic-bezier(0.33, 0, 0.67, 1)'])
   })

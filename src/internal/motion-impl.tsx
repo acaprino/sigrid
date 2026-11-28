@@ -36,7 +36,7 @@ import { animate, hover, press } from 'motion'
 import { animate as animateStyle } from 'motion/mini'
 import { AnimatePresence, LazyMotion, MotionConfig, domMax, m, useIsPresent, type HTMLMotionProps } from 'motion/react'
 
-import { motionCurve, motionMs, type MotionKind } from './motion'
+import { MOTION_SPRING, motionCurve, motionMs, type MotionKind } from './motion'
 
 export { m }
 
@@ -121,6 +121,11 @@ export function tr(name: keyof typeof MOTION): Movement {
 
 /** A duration of the toolkit, in milliseconds, at the pace in use. */
 export const paced = motionMs
+
+/** The toolkit's spring as Motion takes it (`MOTION_SPRING`): for what changes place or size after a gesture. */
+export function spring(): { type: 'spring'; stiffness: number; damping: number; mass: number } {
+  return { type: 'spring', ...MOTION_SPRING }
+}
 
 /**
  * How far a thing travels as it enters, in pixels on the 4px grid: the larger the surface, the longer the way, and
@@ -452,7 +457,7 @@ export function enterTooltip(el: Element, anchor?: Element | null): void {
 export function Highlight({ id, className }: { id: string; className?: string }) {
   return (
     <Motion>
-      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} layoutDependency={id} transition={tr('slide')} className={className} />
+      <m.span aria-hidden="true" data-slot="highlight" layoutId={id} layoutDependency={id} transition={spring()} className={className} />
     </Motion>
   )
 }
