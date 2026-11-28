@@ -1,8 +1,8 @@
 // The toolkit's showcase, built with the toolkit's own frame (`AppShell`) as docs/patterns.md recommends. Five views,
 // as tabs in the bar (`?view=philosophy|guidelines|practices|components|examples`): the philosophy, the guidelines and
 // the practices of the design system (guide.tsx, with the phone layouts of docs/mobile.md in phone.tsx), every
-// exported component, in its variants, sizes and states (this file), and two whole apps in their four hosts
-// (examples.tsx). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
+// exported component, in its variants, sizes and states (this file), and whole apps in their hosts, each frame of
+// the toolkit among them (examples.tsx). «Look», at the end of the bar, holds the theme, shape, density and animations; the moon switches the
 // scheme. All of them are also in the address: `?theme=amber-bold&scheme=dark&shape=sharp&density=compact`.
 // The themes are the toolkit's own baseline (`base`) and palettes it builds from one colour (`<colour>-<combination>`,
 // such as `blue-clean`): an app's themes live in the app. Motion is on initially. `?animated=0` switches it off. Hover,
@@ -33,7 +33,7 @@ import { Workspaces } from './workspace'
 import { HoverFollow, PopoverAnchor, type DialogWidth, type SheetWidth } from '../src/primitives'
 import { ContentSplit, SplitPane } from '../src/layout'
 import { VirtualList } from '../src/virtual'
-import { Cell, Code, Go, Page, Row, Section, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
+import { Cell, Code, Go, Page, Row, Section, See, VIEWS, isViewId, viewOfId, type ViewId } from './parts'
 
 /* ———— The address ———— */
 
@@ -171,6 +171,7 @@ const COMPONENT_TITLES: Readonly<Record<string, string>> = {
   "nav-list": "NavList and Count",
   "sidebar": "Sidebar",
   "toolbar": "Toolbar, TitleBar and WindowControls",
+  "document-tabs": "DocumentTabs",
   "chat": "Chat, Conversation, Message, PromptInput, Suggestions, Reasoning, ToolCall",
   "wizard": "Wizard",
   "auth-form": "AuthForm",
@@ -203,7 +204,7 @@ const COMPONENT_GROUPS: readonly Group[] = [
   { label: 'Ground', icon: 'appearance', ids: ['palettes', 'tokens', 'hue-scales', 'theme-gallery'] },
   { label: 'Primitives', icon: 'package', ids: ['layout', 'button', 'toggle-group', 'badge', 'kbd', 'theme-hooks', 'input', 'select', 'checkbox', 'radio', 'switch', 'tabs', 'menu', 'popover', 'overlays', 'progress', 'table'] },
   { label: 'Components', icon: 'layers', ids: ['composition', 'composition-panes', 'frame-surface', 'form-field', 'pickers', 'date', 'fields', 'steps', 'toasts', 'empty', 'note', 'confirm', 'overflow-list', 'markdown'] },
-  { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar'] },
+  { label: 'Frame', icon: 'layout', ids: ['nav-list', 'sidebar', 'toolbar', 'document-tabs'] },
   { label: 'Assemblies', icon: 'structure', ids: ['chat', 'wizard', 'auth-form', 'lightbox', 'swipe-deck', 'tree', 'attachments', 'virtual-list', 'reorder', 'rich-text', 'graph', 'workspace', 'terminal', 'code'] },
   { label: 'Motion', icon: 'animations', ids: ['motion-feel', 'motion-open', 'motion-surfaces', 'motion-choices', 'hover', 'motion-pieces'] },
 ]
@@ -1124,6 +1125,7 @@ const PATTERNS = {
   page: { name: 'Sidebar and page', advice: 'For settings and documents. One column of text no wider than 65 characters; each choice is a row with its control at the end; the rest sits under Advanced.' },
   board: { name: 'Board', advice: 'For work that moves through stages. Lanes on the quiet fill, cards raised with the smallest shadow, a data colour as a dot; the views are tabs: in the bar after the app as in Xiox, under the bar, in a bottom bar on a narrow window, or small in the status bar.' },
   focus: { name: 'Focus', advice: 'For one thing at a time. No sidebar and no inspector: what to do, how many are left, and the way out.' },
+  documents: { name: 'Documents', advice: 'For several things kept open (notes, files, pages). The sheet frame with one top row (AppShell frame="sheet" top="unified"): the row is the title bar of the window. Over the sidebar, as wide as it, the button that shrinks it to the rail (always in the same place; at 700px the frame forces the rail and the button waits, disabled) and the app; then the open notes (DocumentTabs), which rise from the sheet as one piece with it, room that moves the window, the tools and the buttons of the window. Add notes with the plus until the row scrolls. At 480px there is no drawer: the places are tabs at the foot and the notes take the row.' },
 } as const
 type PatternId = keyof typeof PATTERNS
 
@@ -1154,6 +1156,29 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
   const [palette, setPalette] = React.useState(false)
   const [barStyle, setBarStyle] = React.useState<'regular' | 'compact' | 'classic'>('regular')
   useCommandKey(() => setPalette(true))
+  // The Documents pattern: the notes open in tabs and the one in sight. A note is added with the `+` and closed with
+  // its cross; enough of them and the row scrolls, with its arrows in their place.
+  const [docs, setDocs] = React.useState([
+    { id: 'trip', title: 'Trip to Lisbon' },
+    { id: 'ideas', title: 'Ideas' },
+    { id: 'quote', title: 'Kitchen quote' },
+  ])
+  const [doc, setDoc] = React.useState<string | null>('trip')
+  const made = React.useRef(0)
+  const openDoc = () => {
+    made.current += 1
+    const fresh = { id: `note-${made.current}`, title: `Note ${made.current}` }
+    setDocs((all) => [...all, fresh])
+    setDoc(fresh.id)
+  }
+  const closeDoc = (id: string) => {
+    const at = docs.findIndex((one) => one.id === id)
+    const rest = docs.filter((one) => one.id !== id)
+    setDocs(rest)
+    if (doc === id) setDoc(rest[Math.min(at, rest.length - 1)]?.id ?? null)
+  }
+  // Under the frame's own step there is no sidebar to draw: the places are tabs at the foot.
+  const narrow = Number(width) < 620
   // The scheme's commands as `useSchemeCommands` declares them in an app: its words, icons and checks. The hook is not
   // mounted here: it would put a second scheme on the page's root, which the showcase keeps itself (the moon,
   // `?scheme=`), light or dark. So the rows act on the showcase's scheme, and «System theme» puts the system's now.
@@ -1192,24 +1217,27 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
       {groups}
     </Sidebar>
   )
+  // Declared inside the frame's bar (or its one top row), so it opens under it as every overlay of a desktop window.
+  const commands = (
+    <CommandPalette
+      open={palette}
+      onOpenChange={setPalette}
+      animated={animated}
+      commands={[
+        { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
+        ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
+        ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
+        ...schemeCommands,
+      ]}
+    />
+  )
   const bar = (title: string, items: React.ReactNode) => (
     <TitleBar size={barStyle === 'regular' ? 'default' : 'compact'} windowControls={<WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}>
       <Toolbar aria-label={title}>
         {pattern === 'focus' ? null : <DrawerButton onOpen={() => setMenu(true)} />}
         {items}
       </Toolbar>
-      {/* Inside the frame, so it opens under the title bar as every overlay of a desktop window. */}
-      <CommandPalette
-        open={palette}
-        onOpenChange={setPalette}
-        animated={animated}
-        commands={[
-          { id: 'find', label: 'Search in this view', shortcut: 'Ctrl F', onSelect: () => {} },
-          ...(Object.keys(PATTERNS) as PatternId[]).map((id, i) => ({ id, label: `Go to ${PATTERNS[id].name}`, group: 'Go to', shortcut: String(i + 1), onSelect: () => setPattern(id) })),
-          ...['1040', '900', '700', '480'].map((w) => ({ id: `w${w}`, label: `Frame ${w}px wide`, group: 'Width', keywords: 'size narrow', onSelect: () => setWidth(w) })),
-          ...schemeCommands,
-        ]}
-      />
+      {commands}
     </TitleBar>
   )
   const frames: Record<PatternId, React.ReactNode> = {
@@ -1434,9 +1462,72 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
         </div>
       </AppShell>
     ),
+    documents: (
+      <AppShell
+        desktop={!narrow}
+        frame="sheet"
+        top="unified"
+        contentLabel="Notes"
+        sidebarHead={<ToolbarBrand name="Notes" />}
+        sidebarCollapsed={collapsed}
+        onSidebarCollapsedChange={setCollapsed}
+        windowControls={narrow ? undefined : <WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}
+        topActions={
+          <>
+            {/* On a narrow frame the row is the notes': the tool keeps its icon and gives up its word. */}
+            <Toolbar aria-label="Notes">{narrow ? <ToolbarButton label="Commands" icon={<Terminal aria-hidden="true" />} onClick={() => setPalette(true)} animated={animated} /> : commandsButton}</Toolbar>
+            {commands}
+          </>
+        }
+        tabs={
+          <DocumentTabs aria-label="Open notes" value={doc} onValueChange={setDoc} onAdd={openDoc} addLabel="New note" animated={animated}>
+            {docs.map((one) => (
+              <DocumentTab key={one.id} value={one.id} onClose={() => closeDoc(one.id)}>
+                {one.title}
+              </DocumentTab>
+            ))}
+          </DocumentTabs>
+        }
+        sidebar={
+          narrow ? undefined : (
+            <Sidebar aria-label="Places" animated={animated}>
+              <SidebarGroup label="Notes" icon={<Icon name="all" />}>
+                {row('all', 'all', 'All notes', 12)}
+                {row('travel', 'globe', 'Travel', 4)}
+                {row('home', 'folder', 'Home', 5)}
+                {row('archive', 'archive', 'Archive')}
+              </SidebarGroup>
+            </Sidebar>
+          )
+        }
+        bottomBar={
+          narrow ? (
+            <Toolbar aria-label="Places at the foot">
+              <ToolbarTabs aria-label="Places" value={place} onValueChange={setPlace} edge="top" layout="stacked">
+                <ToolbarTab value="all" icon={<Icon name="all" />}>All notes</ToolbarTab>
+                <ToolbarTab value="travel" icon={<Icon name="globe" />}>Travel</ToolbarTab>
+                <ToolbarTab value="home" icon={<Icon name="folder" />}>Home</ToolbarTab>
+                <ToolbarTab value="archive" icon={<Icon name="archive" />}>Archive</ToolbarTab>
+              </ToolbarTabs>
+            </Toolbar>
+          ) : undefined
+        }
+      >
+        <Column gap="sm" pad="lg">
+          {doc ? (
+            <>
+              <Heading size="page">{docs.find((one) => one.id === doc)?.title}</Heading>
+              <Text variant="muted">Four days in May, and the train from Porto on the way back.</Text>
+            </>
+          ) : (
+            <Text variant="muted">No note is open. The plus in the row opens a new one.</Text>
+          )}
+        </Column>
+      </AppShell>
+    ),
   }
   return (
-    <Section id="patterns" icon="column" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps. The frames here are desktop ones: what opens over them (the inspector's panel, the sidebar's drawer, a menu) stays under their title bar.">
+    <Section id="patterns" icon="column" title="Layout patterns" note="Complete screens made only of the toolkit's parts, to start from: recommendations, not rules (docs/patterns.md). Each sits in the one frame (AppShell), which measures its own width: from 1000px the inspector is docked, under it a panel over the content; from 850px the sidebar is whole, from 620px a rail, under 620px a drawer opened from the bar. An app can pass its own steps. The last one, Documents, is the frame's second form with its one top row (frame=&quot;sheet&quot; top=&quot;unified&quot;). The frames here are desktop ones: what opens over them (the inspector's panel, the sidebar's drawer, a menu) stays under their title bar.">
       <div className="flex flex-wrap items-center gap-3">
         <ToggleGroup aria-label="Pattern" value={pattern} onValueChange={(v) => v && setPattern(v as PatternId)} animated={animated}>
           {(Object.keys(PATTERNS) as PatternId[]).map((id) => (
@@ -1459,10 +1550,11 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
           <ToggleGroupItem value="700">700</ToggleGroupItem>
           <ToggleGroupItem value="480">480</ToggleGroupItem>
         </ToggleGroup>
+        {/* The Documents pattern has no bar of its own (the one top row is the bar): the choice keeps its place, off. */}
         <ToggleGroup aria-label="Style of the bar" value={barStyle} onValueChange={(v) => v && setBarStyle(v as typeof barStyle)} animated={animated}>
-          <ToggleGroupItem value="regular">Regular bar</ToggleGroupItem>
-          <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
-          <ToggleGroupItem value="classic">Classic menus</ToggleGroupItem>
+          <ToggleGroupItem value="regular" disabled={pattern === 'documents'}>Regular bar</ToggleGroupItem>
+          <ToggleGroupItem value="compact" disabled={pattern === 'documents'}>Compact</ToggleGroupItem>
+          <ToggleGroupItem value="classic" disabled={pattern === 'documents'}>Classic menus</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup
           aria-label="Where the views are"
@@ -1492,123 +1584,113 @@ function Shells({ animated, scheme, onScheme }: { animated: boolean; scheme: The
   )
 }
 
-/**
- * The sheet frame with its one top row (`AppShell frame="sheet" top="unified"`): the sidebar's button, a hairline and the
- * app over the sidebar, the open notes as `DocumentTabs` joined to the sheet, then room that moves the window, a tool and
- * the window's buttons. The button at the start collapses the sidebar to its rail and stays in its place; a note is
- * added with the `+` and closed with its cross; add enough notes and the row scrolls, with its arrow at the end. At the
- * narrow width there is no drawer: the places are tabs at the foot and the notes take the whole row.
- */
-function UnifiedSheet({ animated }: { animated: boolean }) {
-  const [width, setWidth] = React.useState('1040')
-  const [collapsed, setCollapsed] = React.useState(false)
-  const [place, setPlace] = React.useState('all')
-  const [docs, setDocs] = React.useState([
-    { id: 'trip', title: 'Trip to Lisbon' },
-    { id: 'ideas', title: 'Ideas' },
-    { id: 'quote', title: 'Kitchen quote' },
-  ])
-  const [current, setCurrent] = React.useState<string | null>('trip')
+/** The open documents of a sample strip: the list, the one in sight, and what the `+` and a cross do. */
+function useOpenDocs(titles: readonly string[]) {
+  const [docs, setDocs] = React.useState(() => titles.map((title, at) => ({ id: `doc-${at}`, title })))
+  const [value, setValue] = React.useState<string | null>('doc-0')
   const made = React.useRef(0)
-  const narrow = Number(width) < 620
-  const open = (count: number) => {
-    const fresh = Array.from({ length: count }, () => {
-      made.current += 1
-      return { id: `note-${made.current}`, title: `Note ${made.current}` }
-    })
-    setDocs((all) => [...all, ...fresh])
-    setCurrent(fresh[fresh.length - 1]!.id)
+  const add = () => {
+    made.current += 1
+    const fresh = { id: `new-${made.current}`, title: `Note ${made.current}` }
+    setDocs((all) => [...all, fresh])
+    setValue(fresh.id)
   }
+  // The app removes the tab and chooses the one shown next: the one beside it, the next or else the one before.
   const close = (id: string) => {
     const at = docs.findIndex((doc) => doc.id === id)
     const rest = docs.filter((doc) => doc.id !== id)
     setDocs(rest)
-    if (current === id) setCurrent(rest[Math.min(at, rest.length - 1)]?.id ?? null)
+    if (value === id) setValue(rest[Math.min(at, rest.length - 1)]?.id ?? null)
   }
-  const places = [
-    { id: 'all', icon: 'all', label: 'All notes', count: 12 },
-    { id: 'travel', icon: 'globe', label: 'Travel', count: 4 },
-    { id: 'home', icon: 'folder', label: 'Home', count: 5 },
-    { id: 'archive', icon: 'archive', label: 'Archive', count: 0 },
-  ] as const
-  const note = docs.find((doc) => doc.id === current)
+  return { docs, value, setValue, add, close }
+}
+
+/**
+ * The strip of open documents, by itself and in the frame it was made for. Outside a frame the chosen tab takes the
+ * tint of a selection; in the sheet frame's one top row it is cut from the sheet below it.
+ */
+function DocumentTabsSample({ animated }: { animated: boolean }) {
+  const plain = useOpenDocs(['Trip to Lisbon', 'Ideas', 'Kitchen quote'])
+  const long = useOpenDocs(['Trip to Lisbon', 'Packing list', 'Hotels in Porto', 'Ideas', 'Kitchen quote', 'Plants to repot', 'Minutes', 'Price list'])
+  const joined = useOpenDocs(['Trip to Lisbon', 'Ideas', 'Kitchen quote'])
+  const [kept, setKept] = React.useState('home')
+  const [collapsed, setCollapsed] = React.useState(false)
   return (
-    <Section id="practices-unified-sheet" icon="layout" title="The sheet with one top row" note="AppShell frame=&quot;sheet&quot; top=&quot;unified&quot;: one row is the window's title bar. Over the sidebar, as wide as it, the button that shrinks it to the rail (always in the same place; at 700px the frame forces the rail and the button waits, disabled), a hairline and the app; then the open notes (DocumentTabs), which rise from the sheet's top line as one piece with it, room that moves the window, a tool and the window's buttons. Add notes with the plus until the row scrolls. At 390px there is no drawer: the places are tabs at the foot and the notes take the whole row.">
-      <div className="flex flex-wrap items-center gap-3">
-        <ToggleGroup aria-label="Width of the frame" value={width} onValueChange={(v) => v && setWidth(v)} animated={animated}>
-          <ToggleGroupItem value="1040">1040</ToggleGroupItem>
-          <ToggleGroupItem value="700">700</ToggleGroupItem>
-          <ToggleGroupItem value="390">390</ToggleGroupItem>
-        </ToggleGroup>
-        <Button variant="outline" size="sm" onClick={() => open(6)}>
-          Add six notes
-        </Button>
-      </div>
-      <div className="max-w-full overflow-x-auto p-1 pb-6">
-        <div data-sample="unified-sheet" style={{ width: `${width}px` }} className="h-112 overflow-hidden rounded-lg shadow-lg">
+    <Section id="document-tabs" title="DocumentTabs" note="The strip of open documents: tabs the person opens, closes and moves between, as in a browser or an editor. A tab closes with its cross, a middle press or Delete, and the focus goes to the tab beside it; the plus opens a new one. After the tabs stand, always in this order and never moving (R14), the arrows of a row too long for its room, a hairline and the plus. Outside a frame the chosen tab has the tint of a selection, as Tabs; in the sheet frame's one top row (AppShell frame=&quot;sheet&quot; top=&quot;unified&quot;) it rises from the sheet as one piece with it. A whole app in that frame is in Examples, «Notes».">
+      <Row label="open, close, add">
+        <DocumentTabs aria-label="Open notes" value={plain.value} onValueChange={plain.setValue} onAdd={plain.add} addLabel="New note" animated={animated}>
+          {plain.docs.map((doc) => (
+            <DocumentTab key={doc.id} value={doc.id} onClose={() => plain.close(doc.id)}>
+              {doc.title}
+            </DocumentTab>
+          ))}
+        </DocumentTabs>
+      </Row>
+      <Row label="an icon, a colour, one that stays, one off">
+        <DocumentTabs aria-label="Kinds of tab" value={kept} onValueChange={setKept}>
+          <DocumentTab value="home" icon={<Icon name="folder" />} closable={false}>
+            Home
+          </DocumentTab>
+          <DocumentTab value="quote" color="amber" onClose={() => {}}>
+            Kitchen quote
+          </DocumentTab>
+          <DocumentTab value="trip" icon={<Icon name="globe" />} onClose={() => {}}>
+            Trip to Lisbon
+          </DocumentTab>
+          <DocumentTab value="locked" disabled>
+            Locked
+          </DocumentTab>
+        </DocumentTabs>
+      </Row>
+      <Row label="a row too long">
+        <div data-sample="document-tabs-long" className="w-112 max-w-full">
+          <DocumentTabs aria-label="Many open notes" value={long.value} onValueChange={long.setValue} onAdd={long.add} addLabel="New note" animated={animated}>
+            {long.docs.map((doc) => (
+              <DocumentTab key={doc.id} value={doc.id} onClose={() => long.close(doc.id)}>
+                {doc.title}
+              </DocumentTab>
+            ))}
+          </DocumentTabs>
+        </div>
+      </Row>
+      <Row label="joined to the sheet">
+        <div data-sample="document-tabs-sheet" className="h-56 w-180 max-w-full overflow-hidden rounded-lg shadow-lg">
           <AppShell
-            desktop={!narrow}
             frame="sheet"
             top="unified"
             contentLabel="Notes"
             sidebarHead={<ToolbarBrand name="Notes" />}
             sidebarCollapsed={collapsed}
             onSidebarCollapsedChange={setCollapsed}
-            windowControls={narrow ? undefined : <WindowControls onMinimize={() => {}} onMaximizeToggle={() => {}} onClose={() => {}} />}
-            topActions={
-              <Toolbar aria-label="Notes">
-                <ToolbarButton label="Search the notes" shortcut="/" icon={<Icon name="search" />} animated={animated} />
-              </Toolbar>
-            }
             tabs={
-              <DocumentTabs aria-label="Open notes" value={current} onValueChange={setCurrent} onAdd={() => open(1)} animated={animated}>
-                {docs.map((doc) => (
-                  <DocumentTab key={doc.id} value={doc.id} onClose={() => close(doc.id)}>
+              <DocumentTabs aria-label="Open notes in the sheet" value={joined.value} onValueChange={joined.setValue} onAdd={joined.add} addLabel="New note" animated={animated}>
+                {joined.docs.map((doc) => (
+                  <DocumentTab key={doc.id} value={doc.id} onClose={() => joined.close(doc.id)}>
                     {doc.title}
                   </DocumentTab>
                 ))}
               </DocumentTabs>
             }
             sidebar={
-              narrow ? undefined : (
-                <Sidebar aria-label="Places" animated={animated}>
-                  <SidebarGroup label="Notes" icon={<Icon name="all" />}>
-                    {places.map((row) => (
-                      <NavItem key={row.id} current={place === row.id} onClick={() => setPlace(row.id)} icon={<Icon name={row.icon} />} end={<Count value={row.count} label="notes" reserve />}>
-                        {row.label}
-                      </NavItem>
-                    ))}
-                  </SidebarGroup>
-                </Sidebar>
-              )
-            }
-            bottomBar={
-              narrow ? (
-                <Toolbar aria-label="Places at the foot">
-                  <ToolbarTabs aria-label="Places" value={place} onValueChange={setPlace} edge="top" layout="stacked">
-                    {places.map((row) => (
-                      <ToolbarTab key={row.id} value={row.id} icon={<Icon name={row.icon} />}>
-                        {row.label}
-                      </ToolbarTab>
-                    ))}
-                  </ToolbarTabs>
-                </Toolbar>
-              ) : undefined
+              <Sidebar aria-label="Places of the sample" animated={animated}>
+                <SidebarGroup label="Notes" icon={<Icon name="all" />}>
+                  <NavItem current icon={<Icon name="all" />}>
+                    All notes
+                  </NavItem>
+                  <NavItem icon={<Icon name="archive" />}>Archive</NavItem>
+                </SidebarGroup>
+              </Sidebar>
             }
           >
             <Column gap="sm" pad="lg">
-              {note ? (
-                <>
-                  <Heading size="page">{note.title}</Heading>
-                  <Text variant="muted">Four days in May, and the train from Porto on the way back.</Text>
-                </>
-              ) : (
-                <Text variant="muted">No note is open. The plus in the row opens a new one.</Text>
-              )}
+              <Text variant="muted">{joined.value ? 'The chosen tab and the sheet are one surface.' : 'No note is open. The plus opens a new one.'}</Text>
             </Column>
           </AppShell>
         </div>
-      </div>
+        <See view="practices" id="patterns">
+          The whole frame: Layout patterns, Documents
+        </See>
+      </Row>
     </Section>
   )
 }
@@ -3967,6 +4049,7 @@ function App() {
     'overflow-list': <OverflowLists />,
     markdown: <Content />,
     'nav-list': <Navigation />,
+    'document-tabs': <DocumentTabsSample animated={animated} />,
     sidebar: <SidebarSample animated={animated} />,
     toolbar: <Toolbars animated={animated} />,
     chat: <ChatParts />,
@@ -4109,7 +4192,7 @@ function App() {
             {/* The gallery's own samples are standalone: a Sidebar sample follows the screen, not this frame. */}
             <AppShellContext.Provider value={undefined}>
               <div className="relative mx-auto w-full max-w-6xl px-4 pb-24 md:px-6">
-                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<><Shells animated={animated} scheme={scheme} onScheme={setScheme} /><UnifiedSheet animated={animated} /></>} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
+                {view === 'philosophy' ? <PhilosophyView /> : view === 'guidelines' ? <GuidelinesView /> : view === 'practices' ? <PracticesView gallery={<Shells animated={animated} scheme={scheme} onScheme={setScheme} />} phones={<PhoneLayouts animated={animated} density={density} />} /> : view === 'examples' ? <ExamplesView animated={animated} density={density} look={{ scheme, shape }} /> : components}
               </div>
             </AppShellContext.Provider>
           </AppShell>

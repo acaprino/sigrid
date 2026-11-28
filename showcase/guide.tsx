@@ -703,10 +703,10 @@ const AVOID = [
   'Empty regions kept for symmetry. A frame with three regions is a good frame.',
 ]
 
-/** The practices, with the layout gallery (`gallery`) where docs/patterns.md puts the four screens to start from. */
+/** The practices, with the layout gallery (`gallery`) where docs/patterns.md puts the five screens to start from. */
 export function PracticesView({ gallery, phones }: { gallery: React.ReactNode; phones: React.ReactNode }) {
   return (
-    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The four screens to start from are shown live, at the widths where the frame changes, and seven more as one small app in a frame as wide as a phone.">
+    <Page title="Practices" lead="How to put the parts together into a whole screen. These are recommendations, drawn from what works in the suite's apps: nothing here is checked by a program, and an app that has a reason does otherwise. The five screens to start from are shown live, at the widths where the frame changes, and seven more as one small app in a frame as wide as a phone.">
       <Section id="practices-frame" icon="layout" title="Start from the one frame" note="Use AppShell for the window of an app and fill in only the regions it needs. This showcase is built with it.">
         <Anatomy />
         <Table caption="The regions of the frame" head={['Region', 'Put there', 'Leave out when']} rows={REGIONS} />
@@ -717,6 +717,27 @@ export function PracticesView({ gallery, phones }: { gallery: React.ReactNode; p
             <>Show the button that opens the sidebar only where the sidebar is a drawer (<Code>useAppShell().sidebar === 'drawer'</Code>).</>,
           ]}
         />
+      </Section>
+      <Section id="practices-forms" icon="layout" title="Two forms of the frame, and the one top row" note="The same regions and the same steps in both forms; frame chooses one. The sheet has a second top for an app whose person keeps several things open.">
+        <Lines
+          items={[
+            'Lines, the default: one surface, the page, with a line between the regions.',
+            <>The sheet (<Code>{'frame="sheet"'}</Code>): the title bar and the sidebar on the window&apos;s ground, the work area one sheet with a corner. As Xiox does it: the views as tabs in the bar, the status row at the head of the sheet, the content a Panel, the actions at its foot.</>,
+            <>The sheet with one top row (<Code>{'top="unified"'}</Code>): no separate title bar. Over the sidebar its button, always in the same place (R14), and the app; then the open things as DocumentTabs, which rise from the sheet as one piece with it, room that moves the window, the tools and the window&apos;s buttons.</>,
+            'On a phone that row has no drawer: the places are tabs at the foot and the open things take the whole row. An app of six places or more keeps the drawer, and has no tabs at the foot.',
+          ]}
+        />
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <See view="examples" id="examples-xiox">
+            Xiox, in the sheet frame
+          </See>
+          <See view="examples" id="examples-notes">
+            Notes, with one top row
+          </See>
+          <See view="components" id="document-tabs">
+            DocumentTabs
+          </See>
+        </div>
       </Section>
       <Section id="practices-bar" icon="settings" title="The title bar and its toolbar" note="The bar above this page follows them: the app, the four views as tabs, room, then two switches. On a narrow window the tabs move to the foot, as the practices below say.">
         <Lines items={BAR_ADVICE} />
@@ -730,6 +751,7 @@ export function PracticesView({ gallery, phones }: { gallery: React.ReactNode; p
             ['Rail of icons', 'The same places, when the content needs the width', `Sidebar collapsed; the frame does it by itself from ${APP_SHELL_STEPS.rail}px to ${APP_SHELL_STEPS.sidebar}px`],
             ['Drawer', 'A narrow window or a phone', `Sidebar with open; the frame does it under ${APP_SHELL_STEPS.rail}px`],
             ['Tabs', 'Up to five views of the same weight', 'ToolbarTabs: in the bar, under it, or at the foot'],
+            ['Document tabs', 'Things the person opens, closes and moves between: notes, files, pages', "DocumentTabs, in the sheet frame's one top row"],
           ]}
         />
       </Section>

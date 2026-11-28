@@ -1,15 +1,17 @@
 // The Examples view of the showcase: four apps of the suite as they would be made with the toolkit, two of them in each of
 // their four hosts (a computer or a phone, a browser tab or a native app in Tauri), the other two as a native app on a
-// computer. They are sketches with made-up content, close to the real apps and not copies of them: what they show is
-// which parts make a whole app (`AppShell` and its regions, the bar, the lists, what opens), and what changes with the
-// host and what does not. The apps are in ethel.tsx, qamille.tsx, shinatama.tsx and xiox.tsx, the hosts in hosts.tsx;
-// nothing here is part of the package, and the toolkit itself still knows no app.
-// `?device=phone&host=native` opens both examples in that host.
+// computer; then Notes, a notebook made up for the sheet frame with its one top row, in the four hosts, and a signup
+// written by hand. They are sketches with made-up content, close to the real apps and not copies of them: what they
+// show is which parts make a whole app (`AppShell` and its regions, the bar, the lists, what opens), and what changes
+// with the host and what does not. The apps are in ethel.tsx, qamille.tsx, shinatama.tsx, xiox.tsx and notes.tsx, the
+// hosts in hosts.tsx; nothing here is part of the package, and the toolkit itself still knows no app.
+// `?device=phone&host=native` opens the examples that have four hosts in that host.
 import * as React from 'react'
 import { type DensityId } from '../src/index'
 import { ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { Ethel } from './ethel'
 import { HOSTS, type AppProps, type Device, type HostKind, type Look } from './hosts'
+import { Notes } from './notes'
 import { Code, Page, Section } from './parts'
 import { Qamille } from './qamille'
 import { Shinatama } from './shinatama'
@@ -70,7 +72,7 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
   return (
     <Page
       title="Examples"
-      lead="Four apps of the suite as they would be made with the toolkit: Ethel, a to-do list, Qamille, a mail client, Shinatama, a workspace for terminal agents, and Xiox, a cleaner. Ethel and Qamille on a computer and on a phone, in a browser tab and as a native app in Tauri; Shinatama and Xiox only as a native app on a computer. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
+      lead="Four apps of the suite as they would be made with the toolkit: Ethel, a to-do list, Qamille, a mail client, Shinatama, a workspace for terminal agents, and Xiox, a cleaner. Ethel and Qamille on a computer and on a phone, in a browser tab and as a native app in Tauri; Shinatama and Xiox only as a native app on a computer. After them Notes, a notebook made up for the sheet frame with its one top row. They are sketches with made-up content, close to the real apps and not copies of them: they show which parts make a whole app, and what changes with the host."
     >
       <Section id="examples-ethel" icon="tasks" title="Ethel, a to-do list" note="One list to get through, one task at a time. On a computer the lists are the sidebar and the task chosen is in the inspector; on a phone the views are tabs at the foot, a task is a page, and adding is a sheet from the foot.">
         <Example name="Ethel" animated={animated} density={density} look={look} app={Ethel} caveat={{ phone: 'Ethel today is a Windows program and an installable web app: the phone in Tauri is drawn as it would be.' }} />
@@ -83,10 +85,13 @@ export function ExamplesView({ animated, density, look }: { animated: boolean; d
           <Shinatama animated={animated} density={density} look={look} />
         </div>
       </Section>
-      <Section id="examples-xiox" icon="layout" title="Xiox, a cleaner: the sheet frame" note="The frame in its second form (AppShell frame=&quot;sheet&quot;): the title bar and the sidebar on the window's ground, the work area one sheet with a corner. The sections are tabs in the bar, the list is a Panel with its filter and its search, the details are the inspector, the actions and the keys are at the foot. The other examples use the default form, with lines.">
+      <Section id="examples-xiox" icon="layout" title="Xiox, a cleaner: the sheet frame" note="The frame in its second form (AppShell frame=&quot;sheet&quot;): the title bar and the sidebar on the window's ground, the work area one sheet with a corner. The sections are tabs in the bar, the list is a Panel with its filter and its search, the details are the inspector, the actions and the keys are at the foot. Here the bar is a row of its own across the window (top=&quot;bar&quot;); Notes, the next example, is the same frame with one top row.">
         <div className="max-w-full overflow-x-auto p-1 pb-6">
           <Xiox animated={animated} density={density} look={look} />
         </div>
+      </Section>
+      <Section id="examples-notes" icon="file" title="Notes, a notebook: the sheet with one top row" note="The sheet frame with one row at its top (AppShell frame=&quot;sheet&quot; top=&quot;unified&quot;), for an app of documents open side by side. The row is the window's bar: over the sidebar its button, which stays in its place when the sidebar shrinks to the rail, and the app; then the open notes as tabs that rise from the sheet (DocumentTabs: the plus opens a new one, the cross closes it), room that moves the window, the tools and the window's buttons. The places are the sidebar, the notes of a place a column beside the one in sight. On a phone there is no drawer: the places are tabs at the foot, the open notes take the whole row, and the list is the screen until a note is chosen. Notes is made up for this frame: it is not an app of the suite.">
+        <Example name="Notes" animated={animated} density={density} look={look} app={Notes} />
       </Section>
       <Section id="examples-signup" icon="account" title="Signup: the form, a path of steps, a question" note="An app written by hand with the assemblies of the flows a person goes through: AuthForm to sign in or up (or to ask for a link), a Wizard for the three questions of a first setup with a plan chosen among ChoiceCards, and a ConfirmDialog before the one thing that cannot be undone. No class of its own. The same file goes out with the package (agents/examples/signup.tsx).">
         <div className="max-w-full overflow-x-auto p-1 pb-6">
