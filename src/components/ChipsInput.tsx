@@ -159,7 +159,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
     tags.setInputValue('')
     e.currentTarget.value = ''
   }
-  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className={cn('min-w-24 flex-1 bg-transparent px-1 py-0.5 outline-none', FIELD_TEXT)} />
+  const input = <TagsInput.Input onKeyDown={onKeyDown} onInput={onInput} onBlur={onBlur} className={cn('min-w-12 flex-1 bg-transparent px-1 py-0.5 outline-none', FIELD_TEXT)} />
   return (
     // design-check-ignore-next-line dimension-value: Park's md tags-input padding (5px), so a row of 28px chips with the 1px border makes a 40px field; with the density it is half of what the control height leaves (30px: the chip and the two borders)
     <TagsInput.Control className={cn(FIELD_SURFACE, 'flex min-h-(--control-md) w-full flex-wrap items-center gap-1.5 px-1.5 py-[calc((var(--control-md)_-_30px)/2)]', FIELD_HOVER_DATA, FOCUS_WITHIN_FIELD)}>
@@ -187,7 +187,7 @@ function Box({ value, onChange, typed, display, invalid, split, dot = true }: Pi
               <TagsInput.ItemText>{name}</TagsInput.ItemText>
               {wrong ? <span className="sr-only">, {words.invalid}</span> : null}
               <Tooltip label={removeName(name)}>
-                <TagsInput.ItemDeleteTrigger className={cn("relative flex size-5 items-center justify-center rounded-sm text-ink-mute after:absolute after:-inset-1 after:content-[''] pointer-coarse:size-11 hover:bg-ink/9 hover:text-ink", FOCUS_RING)}>
+                <TagsInput.ItemDeleteTrigger className={cn("relative flex size-5 items-center justify-center rounded-sm text-ink-mute after:absolute after:-inset-1 after:content-[''] pointer-coarse:after:-inset-3 hover:bg-ink/9 hover:text-ink", FOCUS_RING)}>
                   <Icon name="close" className="size-3.5" />
                 </TagsInput.ItemDeleteTrigger>
               </Tooltip>
