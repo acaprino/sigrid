@@ -152,7 +152,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
             }}
             // The field has the focus for as long as the palette is open: the caret shows it, and the row it acts on
             // is highlighted under it.
-            className="min-w-0 flex-1 bg-transparent py-3 text-base text-ink outline-none placeholder:text-ink-mute md:text-sm"
+            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-ink outline-none placeholder:text-ink-mute"
           />
         </label>
         <div ref={list} id={`${id}-list`} role="listbox" aria-label={name} data-slot="command-palette-list" className="flex max-h-80 flex-col gap-0.5 overflow-y-auto p-1">

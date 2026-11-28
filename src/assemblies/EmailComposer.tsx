@@ -73,7 +73,7 @@ export type EmailComposerProps = {
 
 const SEPARATORS = [',', ';', ' '] as const
 const ROW = 'flex min-w-0 items-start gap-2'
-const NAME = 'flex min-h-(--control-md) w-16 shrink-0 items-center text-sm text-ink-mute pointer-coarse:min-h-11'
+const NAME = 'flex min-h-(--control-md) w-16 shrink-0 items-center text-sm text-ink-mute'
 
 /** A message of mail being written: to whom, the subject, a text with a little form, and the button that sends it. */
 function EmailComposer({ value, onChange, onSend, onDiscard, sending = false, label, from, contacts, onQuery, display, attachments, tools, className }: EmailComposerProps) {

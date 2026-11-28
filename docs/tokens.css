@@ -217,6 +217,7 @@
 }
 :root {
   --touch-target: 44px;
+  --touch-control: 36px;
 }
 :where(:root, [data-density]) {
   --control-md: var(--density-control-md, 36px);
@@ -230,9 +231,9 @@
 }
 @media (pointer: coarse) {
   :where(:root, [data-density]) {
-    --control-md: max(var(--touch-target), var(--density-control-md, 36px));
-    --control-sm: max(var(--touch-target), var(--density-control-sm, 32px));
-    --control-xs: max(var(--touch-target), var(--density-control-xs, 28px));
+    --control-md: max(var(--touch-control), var(--density-control-md, 36px));
+    --control-sm: max(var(--touch-control), var(--density-control-sm, 32px));
+    --control-xs: max(var(--touch-control), var(--density-control-xs, 28px));
     --row-height: max(var(--touch-target), var(--density-row-height, 40px));
   }
 }

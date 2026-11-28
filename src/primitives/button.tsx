@@ -33,7 +33,7 @@ import { SwapLabel } from "../internal/swap-label"
 
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap pointer-coarse:min-h-11 pointer-coarse:min-w-11 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80 hover:[&_svg]:opacity-100 focus-visible:[&_svg]:opacity-100 aria-pressed:[&_svg]:opacity-100 [&_svg:not([class*='size-'])]:size-4",
+    "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap touch-area disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-pressed:bg-selected aria-pressed:text-selected-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80 hover:[&_svg]:opacity-100 focus-visible:[&_svg]:opacity-100 aria-pressed:[&_svg]:opacity-100 [&_svg:not([class*='size-'])]:size-4",
     FOCUS_RING
   ),
   {
@@ -59,7 +59,7 @@ const buttonVariants = cva(
         link: "text-ink underline decoration-ink-mute underline-offset-2 hover:decoration-current",
       },
       size: {
-        // A control is 36px tall (44px with a finger, from the base classes). The heights and the side padding are the
+        // A control is 36px tall, with a finger too: what is pressed is 44px around it (`touch-area`, from the base classes). The heights and the side padding are the
         // density tokens (`src/density.ts`): 36/32/28px and 12/10/8px at `normal`.
         default: "h-(--control-md) min-w-(--control-md) px-(--pad-md)",
         // Park xs and sm: only inside a dense row.

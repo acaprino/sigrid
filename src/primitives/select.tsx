@@ -141,7 +141,7 @@ function Select<O extends SelectOption = SelectOption>({ options, value, onValue
           data-slot="select-trigger"
           // The field's surface, text, hover and invalid border (`lib/field.ts`); open, the border is the ink.
           className={cn(
-            "flex w-full items-center justify-between gap-2 pe-(--pad-xs) ps-(--pad-sm) text-start pointer-coarse:min-h-11",
+            "flex w-full items-center justify-between gap-2 pe-(--pad-xs) ps-(--pad-sm) text-start touch-area",
             FIELD_SURFACE,
             FIELD_TEXT,
             FIELD_HOVER,

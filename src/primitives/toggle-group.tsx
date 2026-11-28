@@ -92,7 +92,7 @@ const PILL_BOLD = "[[data-tabs=bold]_&]:-inset-px [[data-tabs=bold]_&]:border [[
 
 const ITEM = cn(
   // Park's segment item, md: 40px, 14px medium text; the chosen one is a raised sheet with the xs elevation.
-  "inline-flex h-(--control-md) min-w-(--control-md) items-center justify-center gap-2 rounded-lg px-(--pad-md) text-sm font-medium text-ink-mute pointer-coarse:h-auto pointer-coarse:min-h-11 hover:text-ink data-[state=on]:hover:bg-raised",
+  "inline-flex h-(--control-md) min-w-(--control-md) items-center justify-center gap-2 rounded-lg px-(--pad-md) text-sm font-medium text-ink-mute touch-area hover:text-ink data-[state=on]:hover:bg-raised",
   FOCUS_RING,
   "data-[state=on]:bg-raised data-[state=on]:font-semibold data-[state=on]:text-ink data-[state=on]:shadow-xs",
   "disabled:pointer-events-none disabled:opacity-50"

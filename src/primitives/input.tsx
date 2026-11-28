@@ -7,9 +7,8 @@ import { FIELD_HEIGHT, FIELD_HOVER, FIELD_OFF, FIELD_SURFACE, FIELD_TEXT } from 
 
 // The form is Park's `input` recipe, md size and outline variant: 40px tall, l2 corners, 12px of side padding, no fill.
 // Park's border is its gray step 7, lighter than 3:1: here it stays `border-input` (>= 3:1 on every background,
-// contrast test). The text is 14px (16px below 860px, so iOS does not zoom the page on focus).
-// Border `border-input`, the toolkit's focus ring (`lib/focus.ts`, R8), no automatic motion, `pointer-coarse:min-h-11`
-// for 44 px touch targets, no forced default `type`. The parts every field shares are in `lib/field.ts`.
+// contrast test). The text is 14px at every width. The border is every field's (`lib/field.ts`), the
+// toolkit's focus ring (`lib/focus.ts`, R8), no automatic motion, the same height with a finger, no forced default `type`. The parts every field shares are in `lib/field.ts`.
 const INPUT_CLASS = cn(
   FIELD_SURFACE,
   FIELD_HEIGHT,
