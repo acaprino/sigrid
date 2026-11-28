@@ -165,9 +165,10 @@ function useOverflow(list: React.RefObject<HTMLElement | null>, on: boolean) {
     window.addEventListener("resize", measure)
     const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure)
     resize?.observe(el)
-    // A tab that changes by itself (its title), without the row being drawn again.
+    // A tab that changes by itself (its title), without the row being drawn again; and the row's `dir`, which Ark writes
+    // again when the page turns (`DirectionProvider`) without this list being drawn again.
     const changes = typeof MutationObserver === "undefined" ? null : new MutationObserver(measure)
-    changes?.observe(el, { childList: true, subtree: true, characterData: true })
+    changes?.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["dir"] })
     return () => {
       el.removeEventListener("scroll", measure)
       window.removeEventListener("resize", measure)

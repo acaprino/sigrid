@@ -50,6 +50,7 @@
 import * as React from "react"
 import { TreeView as TreeViewPrimitive, createTreeCollection, useTreeViewNodeContext } from "@ark-ui/react/tree-view"
 import { cn, isEmptyNode } from "../lib/utils"
+import { resendKey } from "../lib/keys"
 import { FOCUS_RING_INSET } from "../lib/focus"
 import { ROW_CHOSEN, ROW_HOVER } from "../lib/rows"
 import { useMotion, useMotionAllowed, type MotionImpl } from "../internal/motion"
@@ -844,7 +845,7 @@ function Tree({
           // name: it is sent again as `A`, which the first letters typed read the same, ignoring case.
           if (key !== "a" || command) return
           event.preventDefault()
-          event.target.dispatchEvent(new KeyboardEvent("keydown", { key: "A", bubbles: true, cancelable: true }))
+          resendKey(event.target, "A", event)
         }}
         className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
       >

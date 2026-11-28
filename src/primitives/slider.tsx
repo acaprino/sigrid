@@ -11,6 +11,7 @@
 import * as React from "react"
 import { Slider as SliderPrimitive } from "@ark-ui/react/slider"
 import { cn } from "../lib/utils"
+import { resendKey } from "../lib/keys"
 import { FOCUS_RING } from "../lib/focus"
 
 export type SliderProps = {
@@ -37,7 +38,7 @@ function vertical(event: React.KeyboardEvent<HTMLDivElement>) {
   if (!key) return
   event.preventDefault()
   event.stopPropagation()
-  event.currentTarget.dispatchEvent(new KeyboardEvent("keydown", { key, shiftKey: event.shiftKey, bubbles: true, cancelable: true }))
+  resendKey(event.currentTarget, key, event)
 }
 
 function Slider({ value, onValueChange, min, max, step = 1, disabled, className, ...aria }: SliderProps) {

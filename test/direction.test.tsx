@@ -8,6 +8,9 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { DirectionProvider } from '../src'
+import { RTL_SCRIPTS } from '../src/internal/direction'
+import { CommandPalette } from '../src/assemblies'
+import { Toasts } from '../src/components'
 import { AppShell, DocumentTab, DocumentTabs, NavItem, Sidebar } from '../src/layout'
 import { Slider, Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '../src/primitives'
 import { settle } from './helpers'
@@ -73,6 +76,29 @@ describe('an AppShell follows the page', () => {
     await act(async () => document.documentElement.removeAttribute('dir'))
     await waitFor(() => expect(list().getAttribute('dir')).toBe('ltr'))
   })
+
+  test('live: the arrows of a row of tabs too long for its room turn with the row, and back', async () => {
+    const { container } = render(
+      <AppShell contentLabel="Notes">
+        <Tabs value="a" onValueChange={vi.fn()}>
+          <TabsList aria-label="Filters" overflow="buttons">
+            <TabsTrigger value="a">All</TabsTrigger>
+            <TabsTrigger value="b">Open</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </AppShell>,
+    )
+    const icons = () => ['tabs-scroll-prev', 'tabs-scroll-next'].map((slot) => container.querySelector(`[data-slot="${slot}"] svg`)?.getAttribute('class') ?? '')
+    expect(icons().some((c) => c.includes('-scale-x-100'))).toBe(false)
+    await act(async () => page('rtl'))
+    await waitFor(() => expect(screen.getByRole('tablist', { name: 'Filters' }).getAttribute('dir')).toBe('rtl'))
+    // Nothing else changed (no scroll, no resize, no tab): the row's new `dir` alone is measured.
+    await waitFor(() => {
+      for (const c of icons()) expect(c).toContain('-scale-x-100')
+    })
+    await act(async () => page('ltr'))
+    await waitFor(() => expect(icons().some((c) => c.includes('-scale-x-100'))).toBe(false))
+  })
 })
 
 describe('DirectionProvider, for the parts outside a frame', () => {
@@ -87,6 +113,15 @@ describe('DirectionProvider, for the parts outside a frame', () => {
   test('with dir="ltr", a subtree stays left to right in a page written from the right, inside an AppShell too', () => {
     page('rtl')
     render(<AppShell contentLabel="Notes"><DirectionProvider dir="ltr"><Panels /></DirectionProvider></AppShell>)
+    expect(screen.getByRole('tablist', { name: 'Panels' }).getAttribute('dir')).toBe('ltr')
+  })
+
+  test('around an AppShell, a dir is the frame\'s too: a provider without dir follows the nearest one with a dir, else the page', () => {
+    const { unmount } = render(<DirectionProvider dir="rtl"><AppShell contentLabel="Notes"><Panels /></AppShell></DirectionProvider>)
+    expect(screen.getByRole('tablist', { name: 'Panels' }).getAttribute('dir')).toBe('rtl')
+    unmount()
+    page('rtl')
+    render(<DirectionProvider dir="ltr"><DirectionProvider><AppShell contentLabel="Notes"><Panels /></AppShell></DirectionProvider></DirectionProvider>)
     expect(screen.getByRole('tablist', { name: 'Panels' }).getAttribute('dir')).toBe('ltr')
   })
 
@@ -123,6 +158,17 @@ describe('DirectionProvider, for the parts outside a frame', () => {
     }
   })
 
+  test('each script the bridge takes as written from the right is one Ark reads so: the page\'s language is passed on, and Ark says rtl', async () => {
+    const scripts = [...RTL_SCRIPTS]
+    expect(scripts.length).toBeGreaterThan(0)
+    page('rtl')
+    render(<DirectionProvider><Given /></DirectionProvider>)
+    for (const script of scripts) {
+      await act(async () => document.documentElement.setAttribute('lang', `und-${script}`))
+      await waitFor(() => expect(given(), script).toBe(`und-${script} rtl`))
+    }
+  })
+
   test('a page made right to left by its stylesheet counts: the direction is the one the browser computes', async () => {
     const style = document.createElement('style')
     style.textContent = 'html.mirrored { direction: rtl; }'
@@ -136,6 +182,34 @@ describe('DirectionProvider, for the parts outside a frame', () => {
       document.documentElement.classList.remove('mirrored')
       style.remove()
     }
+  })
+})
+
+describe('the parts an app puts beside its AppShell follow the page by themselves', () => {
+  test('Toasts beside the frame, in a page written from the right: the region and its notices are right to left', async () => {
+    page('rtl')
+    render(
+      <>
+        <AppShell contentLabel="Notes">Body</AppShell>
+        <Toasts items={[{ id: 'saved', text: 'Saved' }]} />
+      </>,
+    )
+    await settle()
+    expect(screen.getByRole('status', { name: 'Notices' }).getAttribute('dir')).toBe('rtl')
+    // A notice writes no `dir` of its own: it is written the region's way.
+    expect(getComputedStyle(screen.getByText('Saved').closest('[data-part="root"]')!).direction).toBe('rtl')
+  })
+
+  test('the command palette beside the frame, in a page written from the right: its window is right to left', async () => {
+    page('rtl')
+    render(
+      <>
+        <AppShell contentLabel="Notes">Body</AppShell>
+        <CommandPalette open onOpenChange={vi.fn()} commands={[{ id: 'find', label: 'Search', onSelect: vi.fn() }]} />
+      </>,
+    )
+    await settle()
+    expect(screen.getByRole('dialog').getAttribute('dir')).toBe('rtl')
   })
 })
 

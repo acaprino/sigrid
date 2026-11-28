@@ -7,6 +7,7 @@ import { AttachmentMarks, AttachmentsSection } from '../src/assemblies/Attachmen
 import { limitLabel, MAX_FILE_BYTES, payloadFromDataTransfer, withinLimit } from '../src/internal/drop'
 import { Swatches } from '../src/components/Swatches'
 import { splitLines, useEdgeAutoScroll } from '../src'
+import { resendKey } from '../src/lib/keys'
 import { dt } from './helpers'
 
 // The normalized payload (plan 2C): files, then a link, then text. Before, there was `{ text?, urls?, files? }` all together.
@@ -198,4 +199,28 @@ test('a drag within 48px of the left or right edge scrolls the element sideways,
   unmount()
   dragOver(147)
   expect(row.scrollLeft).toBe(100)
+})
+
+// A key sent again under another name (the slider's Up, the toggle group's arrows from the right, the tree's `a`): one
+// helper for the three, with the modifiers of the key it stands for.
+test('resendKey sends a keydown that bubbles and can be stopped, from the element, with the four modifiers of the key it stands for', () => {
+  const box = document.createElement('div')
+  const button = document.createElement('button')
+  box.append(button)
+  document.body.append(box)
+  const heard: KeyboardEvent[] = []
+  box.addEventListener('keydown', (event) => heard.push(event))
+  const from = { shiftKey: true, ctrlKey: false, altKey: true, metaKey: false }
+  expect(resendKey(button, 'ArrowRight', from)).toBe(true)
+  expect(heard).toHaveLength(1)
+  const [sent] = heard
+  expect(sent!.target).toBe(button)
+  expect(sent!.key).toBe('ArrowRight')
+  expect([sent!.shiftKey, sent!.ctrlKey, sent!.altKey, sent!.metaKey]).toEqual([true, false, true, false])
+  expect(sent!.cancelable).toBe(true)
+  // A listener that takes it says so.
+  box.addEventListener('keydown', (event) => event.preventDefault())
+  expect(resendKey(button, 'A', { shiftKey: false, ctrlKey: true, altKey: false, metaKey: true })).toBe(false)
+  expect([heard[1]!.ctrlKey, heard[1]!.metaKey]).toEqual([true, true])
+  box.remove()
 })

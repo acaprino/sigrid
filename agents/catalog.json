@@ -342,7 +342,7 @@
      "components": [
       {
        "name": "DirectionProvider",
-       "doc": "The direction of writing of the Ark-based parts under it (their keys, where they open, how they slide): with no `dir`, the page's, followed as `<html dir>` and `lang` change; with `dir`, that one. `AppShell` already mounts one that follows the page: this is for the parts outside a frame, and for a subtree written the other way from its page, whose element also carries that `dir` (for its text and its logical sides: this sets no attribute).",
+       "doc": "The direction of writing of the Ark-based parts under it (their keys, where they open, how they slide): with `dir`, that one; with no `dir`, the one of the nearest `DirectionProvider` above that has a `dir`, else the page's, followed as `<html dir>` and `lang` change. `AppShell` already mounts one without `dir`, so `<DirectionProvider dir=\"rtl\">` around an `AppShell` turns the frame too. This is for the parts outside a frame, and for a subtree written the other way from its page, whose element also carries that `dir` (for its text and its logical sides: this sets no attribute).",
        "props": [
         {
          "name": "dir",

@@ -122,9 +122,12 @@ the `+` when none is left. A tab closes with its cross, a middle press or Delete
 - Written from the right, an app sets `<html dir="rtl">` (with its `lang`) and nothing else: `AppShell` gives the
   page's direction to every Ark-based part it holds (the strip, the tabs, menus, selects and what opens over the
   frame), and follows it while the app is open. The strip then mirrors with the row: from the sheet's start edge its
-  tabs, the arrow, the hairline and the `+`, and the arrow forward steps toward the left. A part outside an
+  tabs, the arrow, the hairline and the `+`, and the arrow forward steps toward the left. The notices (`Toasts`) and
+  the `CommandPalette` an app puts beside its `AppShell` follow the page by themselves. Any other part outside an
   `AppShell`, or a subtree written the other way from its page (whose element carries that `dir` too), takes its
-  direction from a `DirectionProvider` (`@acaprino/sigrid`).
+  direction from a `DirectionProvider` (`@acaprino/sigrid`). A `DirectionProvider` without `dir` (the one `AppShell`
+  mounts, and those of the notices and the palette) follows the nearest one above that has a `dir`, else the page: so
+  `<DirectionProvider dir="rtl">` around an `AppShell` turns the whole frame.
 
 A phone has no room for a sidebar beside the row, and a drawer for four places is one tap more than tabs at the foot.
 So the recommended form, for two to five places, has no drawer:

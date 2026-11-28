@@ -19,6 +19,7 @@ import { GROUP_LABEL, ROW_HIGHLIGHT } from "../lib/rows"
 import { useWords } from "../words"
 import { CommandsContext, PALETTE_COMMAND, useCommands } from "./commands"
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog"
+import { DirectionProvider } from "../internal/direction"
 
 export type Command = {
   id: string
@@ -114,6 +115,8 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
     setActive(usable[(at + step + usable.length) % usable.length]!)
   }
   return (
+    // Often put beside the app's `AppShell` (in its `CommandsProvider`): it takes the page's direction itself.
+    <DirectionProvider>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} animated={animated} data-slot="command-palette" className="mt-20 self-start gap-0 overflow-hidden p-0 md:p-0">
         <DialogTitle className="sr-only">{name}</DialogTitle>
@@ -189,6 +192,7 @@ function CommandPalette({ open: openProp, onOpenChange: onOpenChangeProp, comman
         </div>
       </DialogContent>
     </Dialog>
+    </DirectionProvider>
   )
 }
 

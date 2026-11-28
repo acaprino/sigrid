@@ -12,6 +12,7 @@
 import * as React from "react"
 import { ToggleGroup as ToggleGroupPrimitive } from "@ark-ui/react/toggle-group"
 import { cn } from "../lib/utils"
+import { resendKey } from "../lib/keys"
 import { FOCUS_RING } from "../lib/focus"
 import { useMotion } from "../internal/motion"
 import { steadyLabel } from "../internal/steady-label"
@@ -40,17 +41,18 @@ function ToggleGroup<Value extends string>({ value, onValueChange, className, ch
   const id = React.useId()
   const group = React.useMemo(() => ({ value, motion, id, fill }), [value, motion, id, fill])
   // shortcut: Ark's ToggleGroup (zag's toggle-group 1.45.0) reads its arrows as from the left whatever its `dir`, so
-  // where it is written from the right Left and Right are sent again from the item, swapped. Upgrade: when Ark reads them
-  // in its `dir`, test/direction.test.tsx sees them turned twice; then this goes.
+  // where it is written from the right Left and Right are sent again from the item, swapped. Limit of the shim: the key
+  // pressed is stopped in the capture phase and the one sent again is untrusted, with the key and the four modifiers
+  // only (`resendKey`: no `code`, `repeat` or `location`); a listener above the group hears the swapped key, not the
+  // one pressed. Upgrade: when Ark reads them in its `dir`, test/direction.test.tsx sees them turned twice; then this goes.
   const swapping = React.useRef(false)
   const mirrored = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (swapping.current || event.currentTarget.dir !== "rtl" || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return
     event.preventDefault()
     event.stopPropagation()
-    const { shiftKey, ctrlKey, altKey, metaKey } = event
     swapping.current = true
     try {
-      event.target.dispatchEvent(new KeyboardEvent("keydown", { key: event.key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft", shiftKey, ctrlKey, altKey, metaKey, bubbles: true, cancelable: true }))
+      resendKey(event.target, event.key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft", event)
     } finally {
       swapping.current = false
     }
