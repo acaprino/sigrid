@@ -94,6 +94,30 @@ export function motionMs(ms: number): number {
   return Math.round(ms * feel.pace)
 }
 
+/**
+ * The toolkit's spring, for what changes place or size after a gesture (a sheet of a `SheetStack` rising, the pill
+ * under the chosen item): nearly critically damped, so it settles with an overshoot of about one part in a hundred and
+ * never bounces. The owner's rule of 2026-11-28 (before it the toolkit had no springs).
+ */
+export const MOTION_SPRING = { stiffness: 300, damping: 28, mass: 1 } as const
+
+/** How many points the spring's curve has in CSS, after its start. */
+const SPRING_STEPS = 20
+
+/**
+ * A spring as CSS can play it: its curve as a `linear()` easing and the time it takes to come within half a part in a
+ * hundred of its end, in milliseconds. The same spring Motion plays by script (`spring()` of the Motion chunk).
+ */
+export function springEasing(spring: { stiffness: number; damping: number; mass: number } = MOTION_SPRING): { ms: number; linear: string } {
+  const w = Math.sqrt(spring.stiffness / spring.mass)
+  const z = spring.damping / (2 * Math.sqrt(spring.stiffness * spring.mass))
+  const wd = w * Math.sqrt(Math.max(0, 1 - z * z))
+  const at = (t: number) => (z < 1 ? 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + ((z * w) / wd) * Math.sin(wd * t)) : 1 - Math.exp(-w * t) * (1 + w * t))
+  const seconds = Math.log(200) / (Math.min(z, 1) * w)
+  const points = Array.from({ length: SPRING_STEPS + 1 }, (_, i) => (i === SPRING_STEPS ? 1 : Number(at((seconds * i) / SPRING_STEPS).toFixed(3))))
+  return { ms: Math.round(seconds * 1000), linear: `linear(${points.join(', ')})` }
+}
+
 /** The CSS variables the stylesheet's own movements read (theme.css), for a feel. */
 export function motionVariables(of: MotionFeel): Record<string, string> {
   const curve = (kind: MotionKind) => `cubic-bezier(${(of.ease === 'fluent' ? FLUENT_BY_KIND[kind] : MOTION_EASES[of.ease]).join(', ')})`
@@ -105,6 +129,9 @@ export function motionVariables(of: MotionFeel): Record<string, string> {
     '--motion-ease-enter': curve('enter'),
     '--motion-ease-leave': curve('leave'),
     '--motion-ease-move': curve('move'),
+    // The spring keeps its own curve under every feel; only the pace stretches it.
+    '--motion-spring': springEasing().linear,
+    '--motion-spring-ms': ms(springEasing().ms),
   }
 }
 

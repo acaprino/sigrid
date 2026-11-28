@@ -98,7 +98,10 @@ The whole list is in `DESIGN.md`. These are the ones an agent breaks first.
   new rows of an animated `ItemList`), and only when the app turned it on (`animated`, or `MotionProvider`); never a
   loop; everything works with it off. How it moves is the app's choice, once for the whole page: the curve (`fluent` at first, or
   `ease-in-out`, `ease`, `ease-in`, `ease-out`) and the pace, with `applyMotionFeel` or `MotionProvider`'s `ease` and
-  `pace`. No part writes a time or a curve of its own.
+  `pace`. No part writes a time or a curve of its own. What changes place or size after a gesture (a sheet of a
+  `SheetStack` rising, the pill under the chosen item) moves on the toolkit's one spring (`MOTION_SPRING`, in CSS
+  `--motion-spring` and `--motion-spring-ms`): calm, with no bounce to see. What appears, leaves or changes colour
+  stays on the short tweens.
 - Every navigation row, section heading and menu entry has an icon from `Icon`, by one of Sigrid's names, and an
   empty slot where there is none (R6). The logo of a service, a framework or a library is content, not an icon: it is
   a `Logo` (or the `image` of a `TreeNode` or a `GraphNode`), with one of Sigrid's icons as its fallback, and never

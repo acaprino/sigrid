@@ -17,6 +17,8 @@ describe('the feel of the motion', () => {
       '--motion-ease-enter': 'cubic-bezier(0, 0, 0, 1)',
       '--motion-ease-leave': 'cubic-bezier(0.8, 0, 0.78, 1)',
       '--motion-ease-move': 'cubic-bezier(0.33, 0, 0.67, 1)',
+      '--motion-spring': 'linear(0, 0.045, 0.15, 0.283, 0.42, 0.548, 0.662, 0.756, 0.832, 0.89, 0.934, 0.965, 0.986, 1, 1.008, 1.012, 1.013, 1.013, 1.012, 1.01, 1)',
+      '--motion-spring-ms': '378ms',
     })
   })
 

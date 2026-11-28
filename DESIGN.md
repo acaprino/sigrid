@@ -68,7 +68,7 @@ x-zsd:
       - "Park UI native form: controls are 36px (normal density; its 40px md is large), 14px text; the light sidebar is the default, the dark column an option."
       - "Checkbox, radio and switch boundaries keep 3:1; fields and outline buttons use the light divider (owner, 2026-11-22); 3:1 if `controls` is strong."
       - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light, light in dark."
-      - "Motion: short Fluent 2 tweens, on a gesture or live data, app-enabled, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
+      - "Motion: Fluent 2 tweens and one calm spring, on a gesture or live data, app-enabled; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
       - "Coarse pointer: a control is 36px or more in a 44px target; a text field is its own height; a row is 44px or more (owner, 2026-11-28)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
