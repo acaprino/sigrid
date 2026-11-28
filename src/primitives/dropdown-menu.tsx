@@ -16,6 +16,7 @@ import { GROUP_LABEL, LIST_CARD, LIST_ROW, ROW_POPUP_OPEN } from "../lib/rows"
 import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
 import { OverlayPortal } from "../internal/portal"
+import { Tooltip } from "./tooltip"
 
 type Side = "top" | "right" | "bottom" | "left"
 type Align = "start" | "center" | "end"
@@ -37,6 +38,8 @@ type MenuContextValue = {
   registerSelect: (value: string, fn: (() => void) | undefined) => () => void
   setContentEl?: ((el: HTMLDivElement | null) => void) | undefined
   close?: (() => void) | undefined
+  /** The id of the menu's button, shared with its hint (`DropdownMenuTrigger hint`). */
+  triggerId?: string | undefined
 }
 
 const MenuStateContext = React.createContext<MenuContextValue | null>(null)
@@ -65,6 +68,7 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
   const handlers = React.useRef(new Map<string, () => void>())
   const contentRef = React.useRef<HTMLDivElement | null>(null)
   const dismissedToOutsideFocus = React.useRef(false)
+  const triggerId = `menu-trigger-${React.useId()}`
 
   const setConfigStable = React.useCallback((next: ContentConfig) => {
     setConfig((prev) =>
@@ -128,11 +132,12 @@ function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, loopF
     onOpenChange?.(false)
     restoreFocus()
   }, [openProp, onOpenChange, restoreFocus])
-  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect, setContentEl, close }), [setConfigStable, registerSelect, setContentEl, close])
+  const state = React.useMemo(() => ({ setConfig: setConfigStable, registerSelect, setContentEl, close, triggerId }), [setConfigStable, registerSelect, setContentEl, close, triggerId])
 
   return (
     <MenuStateContext.Provider value={state}>
       <Menu.Root
+        ids={{ trigger: triggerId }}
         open={open}
         loopFocus={loopFocus}
         lazyMount
@@ -162,13 +167,31 @@ function DropdownMenuPortal({ children, container }: { children: React.ReactNode
   return <OverlayPortal container={container}>{children}</OverlayPortal>
 }
 
-type DropdownMenuTriggerProps = React.ComponentProps<typeof Menu.Trigger>
+type DropdownMenuTriggerProps = React.ComponentProps<typeof Menu.Trigger> & {
+  /**
+   * The hint of an icon-only button that opens the menu (a `Tooltip` with this label). Give it here, never as a
+   * `Tooltip` around the trigger: both would write their own id on the button, and the menu would lose its name and
+   * the button to give the focus back to.
+   */
+  hint?: string | undefined
+  /** The key that opens the menu, after the hint. */
+  hintShortcut?: string | undefined
+  /** The hint fades in (off by default, never with prefers-reduced-motion). */
+  animated?: boolean | undefined
+}
 
-function DropdownMenuTrigger({ asChild, children, ...props }: DropdownMenuTriggerProps) {
-  return (
+function DropdownMenuTrigger({ asChild, children, hint, hintShortcut, animated, ...props }: DropdownMenuTriggerProps) {
+  const ctx = React.useContext(MenuStateContext)
+  const trigger = (
     <Menu.Trigger data-slot="dropdown-menu-trigger" asChild={asChild} {...props}>
       {children}
     </Menu.Trigger>
+  )
+  if (hint === undefined) return trigger
+  return (
+    <Tooltip label={hint} shortcut={hintShortcut} animated={animated} triggerId={ctx?.triggerId}>
+      {trigger}
+    </Tooltip>
   )
 }
 
@@ -345,19 +368,29 @@ function DropdownMenuCheckboxItem({ className, value: valueProp, children, ...pr
   )
 }
 
-function DropdownMenuRadioGroup({ onValueChange, ...props }: Omit<React.ComponentProps<typeof Menu.RadioItemGroup>, "onValueChange"> & { onValueChange?: ((value: string) => void) | undefined }) {
+/**
+ * The value an empty choice («No filter», `""`) has inside Ark, which takes `""` for no value at all: the arrows would
+ * stop on it and Enter would choose nothing. The app never sees it.
+ */
+const EMPTY_CHOICE = "sigrid-empty-choice"
+const inside = (value: string | undefined) => (value === "" ? EMPTY_CHOICE : value)
+const outside = (value: string) => (value === EMPTY_CHOICE ? "" : value)
+
+function DropdownMenuRadioGroup({ onValueChange, value, defaultValue, ...props }: Omit<React.ComponentProps<typeof Menu.RadioItemGroup>, "onValueChange"> & { onValueChange?: ((value: string) => void) | undefined }) {
   return (
     <Menu.RadioItemGroup
       data-slot="dropdown-menu-radio-group"
-      onValueChange={onValueChange ? (details) => onValueChange(details.value) : undefined}
+      {...(value !== undefined ? { value: inside(value) } : {})}
+      {...(defaultValue !== undefined ? { defaultValue: inside(defaultValue) } : {})}
+      onValueChange={onValueChange ? (details) => onValueChange(outside(details.value)) : undefined}
       {...props}
     />
   )
 }
 
-function DropdownMenuRadioItem({ className, children, ...props }: React.ComponentProps<typeof Menu.RadioItem>) {
+function DropdownMenuRadioItem({ className, children, value, ...props }: React.ComponentProps<typeof Menu.RadioItem>) {
   return (
-    <Menu.RadioItem data-slot="dropdown-menu-radio-item" className={cn(ITEM, "pe-2 ps-8", className)} {...props}>
+    <Menu.RadioItem data-slot="dropdown-menu-radio-item" value={inside(value) ?? value} className={cn(ITEM, "pe-2 ps-8", className)} {...props}>
       <span className="pointer-events-none absolute start-2 flex size-4 items-center justify-center">
         <Menu.ItemIndicator>
           <CircleIcon className="size-2 fill-current" />

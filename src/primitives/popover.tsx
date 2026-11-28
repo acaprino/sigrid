@@ -19,6 +19,7 @@ import { useEntrance } from "../internal/motion"
 import { useMergedRef } from "../lib/refs"
 import { inToasts } from "../internal/overlay"
 import { OverlayPortal } from "../internal/portal"
+import { Tooltip } from "./tooltip"
 
 type Side = "top" | "right" | "bottom" | "left"
 type Align = "start" | "center" | "end"
@@ -36,6 +37,8 @@ type PopoverState = {
   open: boolean
   setAnchor: (el: Element | null) => void
   setConfig: (next: ContentConfig) => void
+  /** The id of the popover's button, shared with its hint (`PopoverTrigger hint`). */
+  triggerId: string
 }
 
 const PopoverStateContext = React.createContext<PopoverState | null>(null)
@@ -112,7 +115,8 @@ function Popover({ open: openProp, defaultOpen = false, onOpenChange, modal = fa
     )
   }, [])
 
-  const state = React.useMemo(() => ({ open, setAnchor, setConfig: setConfigStable }), [open, setConfigStable])
+  const triggerId = `popover-trigger-${React.useId()}`
+  const state = React.useMemo(() => ({ open, setAnchor, setConfig: setConfigStable, triggerId }), [open, setConfigStable, triggerId])
 
   const close = React.useCallback(() => {
     if (openProp === undefined) setInner(false)
@@ -136,6 +140,7 @@ function Popover({ open: openProp, defaultOpen = false, onOpenChange, modal = fa
   return (
     <PopoverStateContext.Provider value={state}>
       <PopoverPrimitive.Root
+        ids={{ trigger: triggerId }}
         open={open}
         modal={modal}
         autoFocus={config.initialFocus !== false}
@@ -159,13 +164,28 @@ function Popover({ open: openProp, defaultOpen = false, onOpenChange, modal = fa
   )
 }
 
-type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger>
+type PopoverTriggerProps = React.ComponentProps<typeof PopoverPrimitive.Trigger> & {
+  /**
+   * The hint of an icon-only button that opens the popover (a `Tooltip` with this label). Give it here, never as a
+   * `Tooltip` around the trigger: both would write their own id on the button and the popover would lose it.
+   */
+  hint?: string | undefined
+  /** The hint fades in (off by default, never with prefers-reduced-motion). */
+  animated?: boolean | undefined
+}
 
-function PopoverTrigger({ asChild, children, ...props }: PopoverTriggerProps) {
-  return (
+function PopoverTrigger({ asChild, children, hint, animated, ...props }: PopoverTriggerProps) {
+  const ctx = React.useContext(PopoverStateContext)
+  const trigger = (
     <PopoverPrimitive.Trigger data-slot="popover-trigger" asChild={asChild} {...props}>
       {children}
     </PopoverPrimitive.Trigger>
+  )
+  if (hint === undefined) return trigger
+  return (
+    <Tooltip label={hint} animated={animated} triggerId={ctx?.triggerId}>
+      {trigger}
+    </Tooltip>
   )
 }
 
