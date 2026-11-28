@@ -62,7 +62,7 @@ function SheetStack({ "aria-label": label, items, value, onValueChange, children
       return
     }
     // A head that is not the last one at the foot is partly under the next: it rises from behind it.
-    const rise: Rise = { rise: next, sink: open ? value : null, covered: heads.at(-1)?.value !== next }
+    const rise: Rise = { rise: next, sink: open ? value : null, covered: heads[heads.length - 1]?.value !== next }
     const root = document.documentElement
     // The names are on the old page before the browser takes its picture.
     flushSync(() => setMove(rise))

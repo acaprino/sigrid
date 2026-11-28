@@ -50,6 +50,6 @@ test("the toolkit's spring settles in under 400 ms and overshoots by less than t
   expect(ms).toBeGreaterThan(300)
   expect(ms).toBeLessThan(400)
   expect(points[0]).toBe(0)
-  expect(points.at(-1)).toBe(1)
+  expect(points[points.length - 1]).toBe(1)
   expect(Math.max(...points)).toBeLessThan(1.02)
 })
