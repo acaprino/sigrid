@@ -20,12 +20,15 @@
 // - the time is Ark's, but it starts over: while the pointer is on the column or focus is inside it no notice counts
 //   down (`duration` Infinity), and when it is left each one is rearmed from the start;
 // - Esc does not close a notice on its own: only `durationMs` (which calls `onDismiss`), a notice past `COLUMN_MAX` or the caller.
+// - the column floats in the layer of the overlays (`OverlayPortal`), not inside the page: a modal window hides the page
+//   from assistive technology and leaves a live region of that layer alone, so a notice told while it is open is read.
 // Motion: with `animated` the notices move with the list transition (`NOTICES` in `motion-impl`); without it, or with
 // prefers-reduced-motion, the same places are plain styles and nothing moves.
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Toast, Toaster, createToaster, useToastContext } from '@ark-ui/react/toast'
 import { Button } from '../primitives/button'
 import { TOASTS_ATTR, TOASTS_LAYER, TOASTS_ROOM_VAR } from '../internal/overlay'
+import { OverlayPortal } from '../internal/portal'
 import { useMotion } from '../internal/motion'
 import { DirectionProvider } from '../internal/direction'
 import { cn } from '../lib/utils'
@@ -517,7 +520,11 @@ function Column({ items, max, inline, durationMs, onDismiss, motion }: { items: 
       {(toast) => <Notice id={toast.id ?? ''} />}
     </Toaster>
   )
-  return <ColumnContext.Provider value={state}>{motion ? <motion.Notices>{column}</motion.Notices> : column}</ColumnContext.Provider>
+  // The column floats in the layer of the overlays, not inside the page: a modal window hides everything outside it
+  // from assistive technology (Ark's `aria-hidden` on the page), but leaves a live region of that layer alone, so a
+  // notice told while a dialog is open is still read. In flow (`inline`) it stays where it is written.
+  const placed = inline ? column : <OverlayPortal>{column}</OverlayPortal>
+  return <ColumnContext.Provider value={state}>{motion ? <motion.Notices>{placed}</motion.Notices> : placed}</ColumnContext.Provider>
 }
 
 /**

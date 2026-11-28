@@ -242,8 +242,10 @@ test('a toast that leaves items before its time is never dismissed', async () =>
 // The real test (elementFromPoint with a real overlay) is in the browser; here the structure and Radix's behavior.
 
 test('the toast layer is above every overlay of the package', async () => {
-  const status = render(<Toasts items={[{ id: 'x', text: 'Deleted.' }]} />).container.querySelector('[role="status"]')!
+  // The column is in the layer of the overlays, outside the container the page is rendered in.
+  render(<Toasts items={[{ id: 'x', text: 'Deleted.' }]} />)
   await settle()
+  const status = screen.getByRole('status', { name: 'Notices' })
   const toastZ = Number(/(?:^|\s)z-\[(\d+)\]/.exec(status.className)?.[1])
   expect(Number.isFinite(toastZ), 'the notices layer has a z-index').toBe(true)
   // The maximum z-index of windows, sheets, menus and popovers: read from the sources, so a new layer does not silently overtake it.
@@ -292,6 +294,25 @@ for (const [name, modal] of modals) {
     expect(close).toHaveBeenCalledTimes(1)
   })
 }
+
+test('a notice told while a modal window is open is still read: the window hides the page, not the notices', async () => {
+  // The notices are written beside the page (the container `render` makes, as an app's root); the window opens in
+  // the layer of the overlays. Ark hides everything outside the window from assistive technology.
+  render(
+    <>
+      <button type="button">A control of the page</button>
+      <Dialog open onOpenChange={noop} title="Area name" />
+      <Toasts items={[{ id: 'x', text: 'Deleted.', undo: { onClick: noop } }]} />
+    </>,
+  )
+  await act(async () => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  })
+  // The page is hidden (the check that the window did hide something), the notices and their Undo are not.
+  expect(screen.queryByRole('button', { name: 'A control of the page' })).toBeNull()
+  expect(screen.getByRole('status', { name: 'Notices' }).textContent).toContain('Deleted.')
+  expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy()
+})
 
 test('ignoreToasts: the handler of the caller speaks first and may decide, a toast target is ignored, others are not', () => {
   const toast = document.createElement('div')
