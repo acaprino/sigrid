@@ -72,7 +72,7 @@ export function spotOf(pick: Pick<ColorThemePick, 'color' | 'spot'>): string | u
 
 /**
  * The theme the engine builds a colour theme's tokens from: neutral grays in both schemes and in every tone (the theme
- * has no chroma of its own, so no tone tints the sidebar; `hue` only turns the user's colours, as in every theme). The
+ * has no chroma of its own, and no tone moves a surface; `hue` only turns the user's colours, as in every theme). The
  * sidebar is the ground, a step below the page in both schemes (about 1.07:1 in light and 1.09:1 in dark with the tone as designed); the
  * sheets are a step above the page: pure white in light, and only there, on a near-white page about as light as the
  * catalog's, which does not glare; in dark the catalog's anthracite. The colour is in the buttons and the selection,

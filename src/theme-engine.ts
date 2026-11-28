@@ -190,7 +190,8 @@ export const DEFAULT_TONE_LIGHT: (typeof TONE_LIGHTS)[number] = 'theme'
 /**
  * The three tones the settings offer (owner, 2026-11-20: «tonalità dei colori, magari solo tra 3 preset»; then «cambiando
  * tono non vedo cambiamenti»): Calm, Balanced (as the theme was designed) and Vivid (the default, R11). Each one moves the
- * accents, the selection, the data colours and the tint of the sidebar, so the three read apart at a glance.
+ * accents, the selection and the data colours, so the three read apart at a glance. No tone moves a surface: the page,
+ * the sidebar, the lanes and the sheets are the theme's grays in every tone, as the text and the lines are.
  */
 export const TONE_PRESETS = ['calm', 'balanced', 'vivid'] as const
 export type TonePreset = (typeof TONE_PRESETS)[number]
@@ -232,23 +233,23 @@ export function themeTone(value: unknown): ThemeTone | null {
 
 /**
  * A tone as numbers: `k` multiplies the chroma, `d` moves the lightness, `lift` raises a fill that gets more saturated,
- * `surface` multiplies the tint of the sidebar and the lanes (the large areas, where a tone is seen first).
+ * `depth` is how far the selected item sits from the surface under it. The surfaces themselves are not a tone's.
  */
 interface Shift {
   readonly on: boolean
   readonly k: number
   readonly d: number
   readonly lift: number
-  readonly surface: number
+  readonly depth: number
 }
-const NO_SHIFT: Shift = { on: false, k: 1, d: 0, lift: 0, surface: 1 }
+const NO_SHIFT: Shift = { on: false, k: 1, d: 0, lift: 0, depth: 1 }
 const INTENSITY = { faded: [0.45, 0, 0.3], soft: [0.7, 0, 0.6], bright: [1.3, 0.03, 1.6], vivid: [1.7, 0.06, 2.2] } as const
 function shiftOf(tone: ThemeTone | null): Shift {
   const light = tone?.light ?? DEFAULT_TONE_LIGHT
   const intensity = tone?.intensity ?? DEFAULT_TONE_INTENSITY
   if (intensity === 'theme' && light === 'theme') return NO_SHIFT
-  const [k, lift, surface] = intensity === 'theme' ? [1, 0, 1] : INTENSITY[intensity]
-  return { on: true, k, lift, surface, d: light === 'lighter' ? 0.06 : light === 'darker' ? -0.07 : 0 }
+  const [k, lift, depth] = intensity === 'theme' ? [1, 0, 1] : INTENSITY[intensity]
+  return { on: true, k, lift, depth, d: light === 'lighter' ? 0.06 : light === 'darker' ? -0.07 : 0 }
 }
 
 /**
@@ -400,14 +401,14 @@ function startOf(t: ThemeDef, scheme: ThemeScheme, tone: Shift = NO_SHIFT) {
       // The page is a cool near-white in every theme and the sheets a step lighter, never pure white, which glares (the
       // owner's decisions of 2026-11-19 and 2026-11-22); the theme's tint sits in the sidebar and the lanes, a clear
       // step below the page.
-      raised: fromHex('#fdfefe'), paper: PAPER_LIGHT, paper2: g(0.95, 1.3 * tone.surface), line: g(0.895), input: g(0.63),
+      raised: fromHex('#fdfefe'), paper: PAPER_LIGHT, paper2: g(0.95, 1.3), line: g(0.895), input: g(0.63),
       ink: g(0.2, 1.5), inkSoft: g(0.36, 1.5), inkMute: g(0.5, 1.2),
       // The accent as text is step 11 of the palette; step 12 is the stronger text step, taken where 11 falls short.
       accent, accentStrong: mono ? ok(0.2, 0, 0) : ok(0.39, ac, ah), fill: plain ?? accent, onFill: plain ? labelOn(plain, ok(1, 0, 0)) : ok(1, 0, 0), accentSoft: ok(0.94, mono ? 0 : tint(strong ? 0.045 : 0.032), ah),
       selected: mono ? ok(0.9, 0, 0) : ok(0.915, tint(strong ? 0.062 : 0.046), sh), selectedInk: mono ? ok(0.2, 0, 0) : ok(0.39, sc, sh),
       // The solid sidebar is dark enough for the user's colors to hold 3:1 on it and on the light page at once.
-      // The tone tints the sidebar too: Calm takes it toward gray, Vivid gives it the theme's colour (owner, 2026-11-20).
-      sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4 * tone.surface, 0.018), t.hue) : belowPage(g(0.946, 1.7 * tone.surface)),
+      // The sidebar is one of the theme's grays, the most tinted of them: no tone moves it.
+      sidebar: column ? bar(0.205, 0.008) : full ? ok(0.215, Math.max(t.chroma * 2.4, 0.018), t.hue) : belowPage(g(0.946, 1.7)),
       barInk: column ? bar(0.87, 0.008) : ok(0.95, 0.008, t.hue), barMute: column ? bar(0.71, 0.012) : ok(0.77, 0.012, t.hue),
       barSelected: column ? bar(0.29, 0.012) : ok(0.35, 0.036, t.hue), barSelectedInk: ok(1, 0, 0),
       barAccent: mono ? ok(0.93, 0, 0) : ok(0.8, Math.min(ac * 1.2, 0.13), ah), barAccentInk: ok(0.22, mono ? 0 : 0.03, ah),
@@ -671,28 +672,13 @@ export function tokensFor(theme: ThemeDef, scheme: ThemeScheme, tone?: ThemeTone
   const full = theme.sidebar === 'piena' || column
   // The default tone (R11) moves the theme's accent, never the user's own: the color they picked is the fill.
   const chosen = themeTone(tone)
-  // The tint of the sidebar and the lanes follows the tone in any case: with the page left to the theme, it stays the theme's.
-  const shift = custom ? { ...shiftOf({ intensity: chosen?.intensity ?? 'theme', light: chosen?.light ?? 'theme' }), surface: shiftOf(chosen).surface } : shiftOf(chosen)
+  // The depth of the selection follows the tone in any case: with the user's own colour, the rest of the tone is the theme's.
+  const shift = custom ? { ...shiftOf({ intensity: chosen?.intensity ?? 'theme', light: chosen?.light ?? 'theme' }), depth: shiftOf(chosen).depth } : shiftOf(chosen)
   const s = startOf(theme, scheme, shift)
-  // The main canvas stays quiet. Give the sidebar, lanes and selections a tonal scale before
-  // computing readable inks. Chroma alone barely moves a gray and can clip on saturated colors.
-  const strength = shift.surface - 1
-  if (theme.accent[0] > 0) {
-    const ground = (base: Oklch) => {
-      // The generated light surfaces already reach the limit for the fixed red on hover.
-      // Use that existing surface as the vivid end, with lighter steps toward the canvas.
-      if (light && !theme.surfaces) return { ...base, L: Math.min(s.paper.L - 0.006, base.L + 0.020 * (2.2 - shift.surface)) }
-      const hue = base.C > 0.004 ? base.h : theme.hue
-      const tint = Math.min(0.022, theme.chroma * 1.6)
-      const chroma = strength < 0 ? base.C * shift.surface : base.C + tint * strength
-      return ok(Math.min(s.paper.L - 0.008, base.L - 0.022 * strength), chroma, hue)
-    }
-    s.paper2 = ground(s.paper2)
-    if (!column) s.sidebar = ground(s.sidebar)
-    // Keep dark selections below the level where their muted labels would erase the text hierarchy.
-    const emphasis = light ? -0.045 * strength : 0.043 * (shift.surface - 2.2)
-    s.selected = { ...s.selected, L: s.selected.L + emphasis }
-  }
+  // The surfaces are the theme's in every tone. A stronger tone sets the selected item further from the surface under
+  // it; a calmer one fades its colour and leaves it where it is in light, so it never rises to the sidebar's level.
+  // Dark selections stay below the level where their muted labels would erase the text hierarchy.
+  if (theme.accent[0] > 0) s.selected = { ...s.selected, L: s.selected.L + (light ? -0.045 * Math.max(shift.depth - 1, 0) : 0.043 * (shift.depth - 2.2)) }
   const corrected = new Set<string>()
   const hex = (c: Oklch) => toHex(c)
 

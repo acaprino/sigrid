@@ -9364,7 +9364,7 @@
       },
       {
        "name": "TonePreview",
-       "doc": "What a tone changes, side by side: the sidebar's tint and its selected row, four data colours and the filled button.",
+       "doc": "What a tone changes, side by side: the selected row on the sidebar (which no tone moves), four data colours and the filled button.",
        "props": [
         {
          "name": "pick",

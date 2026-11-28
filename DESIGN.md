@@ -35,7 +35,7 @@ x-zsd:
       - "Approved previews of 2026-11-20 after their review: one for each app and the catalogue toolkit-catalogo.html."
       - "Owner rules since 2026-11-20 (R1 to R14)."
       - "Owner revision of 2026-11-20: the neutral look read as dull, with no accent to guide the ADHD eye; R1, R2 and R6 changed; default tone, toast stack and undo order added."
-      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; tone presets also tint the sidebar; icons are one set, Lucide (owner, 2026-11-23)."
+      - "Owner revision of 2026-11-20: the colours belong to the app: the toolkit keeps the engine, the palettes from one base colour, the three tone presets, the look controls and a gray baseline; tone presets tinted the sidebar until 2026-11-28; icons are one set, Lucide (owner, 2026-11-23)."
   preferences:
     must-use:
       - "Identity: calm neutral surfaces and one accent that means «act here» or «this is on»; one row highlight and one group heading in every list; red only for danger. Elegant and modern, made for an ADHD eye: what matters first, one primary action, state always in sight."
@@ -45,7 +45,7 @@ x-zsd:
       - "R4: inputs and outline buttons use a border; raised surfaces use a shadow."
       - "R5: counts are tabular numbers, pills on a navigation row (accent on the chosen one); key hints are plain 12px text (caps if `keys` is boxed), hidden at phone widths."
       - "R6: icons are visual anchors: every navigation item, section heading, menu entry and settings group has an icon from Sigrid Icons; an empty slot keeps alignment."
-      - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance."
+      - "R11: the default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection and the data colours, never a surface, so the three read apart at a glance."
       - "R12: toasts stack up to ten; Z, outside a text field, undoes the newest action still undoable, and each further Z undoes the one before, in time order."
       - "R13: every settings section shows only its essential choices; the rest sits under its own Advanced fold, closed by default."
       - "R14: controls every page shares keep their place, above all on a phone."
