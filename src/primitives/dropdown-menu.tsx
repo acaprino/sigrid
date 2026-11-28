@@ -376,12 +376,11 @@ const EMPTY_CHOICE = "sigrid-empty-choice"
 const inside = (value: string | undefined) => (value === "" ? EMPTY_CHOICE : value)
 const outside = (value: string) => (value === EMPTY_CHOICE ? "" : value)
 
-function DropdownMenuRadioGroup({ onValueChange, value, defaultValue, ...props }: Omit<React.ComponentProps<typeof Menu.RadioItemGroup>, "onValueChange"> & { onValueChange?: ((value: string) => void) | undefined }) {
+function DropdownMenuRadioGroup({ onValueChange, value, ...props }: Omit<React.ComponentProps<typeof Menu.RadioItemGroup>, "onValueChange"> & { onValueChange?: ((value: string) => void) | undefined }) {
   return (
     <Menu.RadioItemGroup
       data-slot="dropdown-menu-radio-group"
       {...(value !== undefined ? { value: inside(value) } : {})}
-      {...(defaultValue !== undefined ? { defaultValue: inside(defaultValue) } : {})}
       onValueChange={onValueChange ? (details) => onValueChange(outside(details.value)) : undefined}
       {...props}
     />
