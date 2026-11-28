@@ -70,7 +70,7 @@ x-zsd:
       - "Toasts: a column, ten at most (R12), the newest at the bottom; the oldest leaves from the top; an error stays until closed; inverted: dark in light, light in dark."
       - "Motion: short Fluent 2 tweens, on a gesture or live data, app-enabled, no springs; with motion on, colours ease in 100ms; all works with motion off or reduced."
       - "Colours come only from the theme engine; Park and Radix 12-step palettes are the target palette system; user themes follow the same curves."
-      - "Coarse pointer: a control is 36px or more with a 44px target around it; a text field is its own height; a row is 44px or more (owner, 2026-11-28)."
+      - "Coarse pointer: a control is 36px or more in a 44px target; a text field is its own height; a row is 44px or more (owner, 2026-11-28)."
       - "Exception to R10 (approved): the colour picker shows 24px filled swatches; there the colour is the content."
       - "One backdrop for every overlay that dims: the drop colour at 40%."
       - "Three font roles: the interface, the titles (`applyHeadingFont`), inline code."
@@ -460,7 +460,7 @@ Eighteen user colours and eight label pairs come from the engine. Show them as d
 
 - `title-lg`, `title-md`, `title-sm`: Use for an app's page, section and card titles.
 - `headline-md`: Use for dialog, sheet and empty-state titles.
-- `body-lg`: Not used by the toolkit since field text is `body-md` at every width (owner, 2026-11-28).
+- `body-lg`: Unused: fields use `body-md` at every width (owner, 2026-11-28).
 - `body-md`: Use for body text, menu items and field text.
 - `body-sm`: Use for dates and counts beside a title.
 - `label-md`: Use for button and segment labels.
@@ -475,7 +475,7 @@ Use the `xs` to `section` spacing steps. Controls use `control-md`; dense rows `
 
 ### Responsive behavior
 
-Below `x-zsd.breakpoints.md` the sidebar becomes a drawer. With a coarse pointer rows grow to `touch-target` and a control keeps its height inside a `touch-target` hit area. Key hints hide on a phone.
+Below `x-zsd.breakpoints.md` the sidebar becomes a drawer. With a coarse pointer rows grow to `touch-target`; a control keeps its height in a `touch-target` hit area. Key hints hide on a phone.
 
 ## Elevation & Depth
 
