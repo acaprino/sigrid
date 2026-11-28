@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The toolkit rests on Ark UI for behaviour (with Base UI under the basic controls and the surfaces that open), on Park UI's recipes for
 // form and on SmoothUI for part of the look; the motion is its own code on Fluent 2's token values: INV-007 (provenance and dependencies) and
-// INV-008 (no decorative components, no infinite motion, no springs). An app's product package
+// INV-008 (no decorative components, no infinite motion, one calm spring and no other). An app's product package
 // has its own provenance test for its product components.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -338,7 +338,7 @@ describe('TanStack Table, TanStack Virtual, dnd-kit, TipTap, React Flow, xterm a
   })
 })
 
-describe('INV-008: no decorative component, no infinite motion, no springs', () => {
+describe('INV-008: no decorative component, no infinite motion, one calm spring and no other', () => {
   const DECORATIVE = /orb|shimmer|loader|glow|tilt|text-effect|cursor|marquee|aurora|matrix|scramble|particles|magnetic|dock/i
 
   test('no decorative SmoothUI component is copied', () => {
@@ -352,9 +352,12 @@ describe('INV-008: no decorative component, no infinite motion, no springs', () 
     expect(offenders.map(rel)).toEqual([])
   })
 
-  test('no spring anywhere, and no code or link from Unlumen UI', () => {
-    const offenders = codeFiles.filter((f) => /type:\s*['"]spring['"]|stiffness|unlumen/i.test(readFileSync(f, 'utf8')))
-    expect(offenders.map(rel)).toEqual([])
+  test("one spring, the toolkit's own, and no code or link from Unlumen UI", () => {
+    // The owner's rule of 2026-11-28: what changes place moves on `MOTION_SPRING` (defined in motion.ts, given to
+    // Motion by the Motion chunk). No part writes a spring of its own.
+    const offenders = codeFiles.filter((f) => /type:\s*['"]spring['"]|stiffness/i.test(readFileSync(f, 'utf8')))
+    expect(offenders.map(rel).sort()).toEqual(['src/internal/motion-impl.tsx', 'src/internal/motion.ts'])
+    expect(codeFiles.filter((f) => /unlumen/i.test(readFileSync(f, 'utf8'))).map(rel)).toEqual([])
   })
 
   test('motion is imported only by the Motion chunk (INV-006)', () => {

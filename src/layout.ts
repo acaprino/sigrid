@@ -6,6 +6,7 @@ export { APP_SHELL_STEPS, AppShell, AppShellContext, Inspector, appShellLayout, 
 export { ContentSplit, type ContentSplitProps } from './layout/content-split'
 export { DocumentTab, DocumentTabs, type DocumentTabProps, type DocumentTabsProps } from './layout/document-tabs'
 export { DrawerButton, type DrawerButtonProps } from './layout/drawer-button'
+export { SheetPile, type SheetPileItem, type SheetPileProps } from './layout/sheet-pile'
 export { NavItem, NavList, type NavItemProps, type NavListProps } from './layout/nav-list'
 export { Panel, type PanelProps } from './layout/panel'
 export { Sidebar, SidebarGroup, type SidebarGroupProps, type SidebarProps } from './layout/sidebar'

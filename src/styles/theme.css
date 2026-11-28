@@ -689,6 +689,9 @@ svg[data-glyph][stroke-width="2"] {
   --motion-ease-enter: cubic-bezier(0, 0, 0, 1);
   --motion-ease-leave: cubic-bezier(0.8, 0, 0.78, 1);
   --motion-ease-move: cubic-bezier(0.33, 0, 0.67, 1);
+  /* The toolkit's spring (`MOTION_SPRING`) as a curve and its time: for what changes place. */
+  --motion-spring: linear(0, 0.045, 0.15, 0.283, 0.42, 0.548, 0.662, 0.756, 0.832, 0.89, 0.934, 0.965, 0.986, 1, 1.008, 1.012, 1.013, 1.013, 1.012, 1.01, 1);
+  --motion-spring-ms: 378ms;
 }
 /* While a theme or a scheme is being put on (`applyTheme` marks the root for two frames), nothing eases: every colour
    changes on the same frame, instead of the controls fading after the page has already changed. */
@@ -865,6 +868,53 @@ svg[data-glyph][stroke-width="2"] {
   :where(:root[data-motion]) [data-slot="sheet-overlay"][data-state="closed"] {
     transition: opacity var(--motion-fast) var(--motion-ease-leave);
   }
+
+  /* SheetPile: a sheet rising (a view transition the part starts only with motion on; it marks the root while it
+     runs, and its sheets with the classes below). One motion: the sheet pressed rises from its head on the toolkit's
+     spring and unveils its page (its box grows, clipped, the page's top travelling on its top edge) over the page
+     left, which fades where it is; a head that arrives at the foot comes up into its place; the frame behind changes
+     at once, so nothing shows through between the two pages. */
+  :root[data-sheet-pile]::view-transition-old(root) {
+    display: none;
+  }
+  :root[data-sheet-pile]::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(*.sigrid-sheet) {
+    overflow: clip;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation-duration: var(--motion-spring-ms);
+    animation-timing-function: var(--motion-spring);
+  }
+  /* The rising sheet is opaque while its page fades in on it, in front of the head it covered; one that another head
+     covered rises from behind it, cut where it was covered. */
+  ::view-transition-group(*.sigrid-sheet-rising) {
+    background: var(--color-paper);
+  }
+  ::view-transition-group(*.sigrid-sheet-rising:not(.sigrid-sheet-covered)) {
+    z-index: 1;
+  }
+  ::view-transition-old(*.sigrid-sheet-covered) {
+    clip-path: inset(0 0 6px 0);
+  }
+  ::view-transition-old(*.sigrid-sheet) {
+    animation: surface-leave var(--motion-faster) var(--motion-ease-leave) both;
+  }
+  ::view-transition-new(*.sigrid-sheet-rising) {
+    animation: sheet-pile-in var(--motion-fast) var(--motion-ease-enter) calc(var(--motion-faster) / 2) both;
+  }
+  ::view-transition-new(*.sigrid-sheet):only-child {
+    animation: sheet-pile-head var(--motion-spring-ms) var(--motion-spring) both;
+  }
+  ::view-transition-old(*.sigrid-sheet-left) {
+    animation: surface-leave var(--motion-faster) var(--motion-ease-leave) both;
+  }
+}
+@keyframes sheet-pile-in {
+  from { opacity: 0; }
+}
+@keyframes sheet-pile-head {
+  from { translate: 0 100%; }
 }
 @media (prefers-reduced-motion: no-preference) {
   [data-scroll-shade] {
