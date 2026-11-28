@@ -70,6 +70,9 @@ test('choosing an entry runs it and closes the menu; the menu is told it opened 
   expect(run).toHaveBeenCalledTimes(1)
   await waitFor(() => expect(menu()).toBeNull())
   expect(changed).toHaveBeenLastCalledWith(false)
+  // Once, also after Ark's own report of the choice (a microtask later): a toggle must not undo itself.
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(run).toHaveBeenCalledTimes(1)
 })
 
 test('the entries are read when the menu opens, so it says what the thing is now', async () => {
