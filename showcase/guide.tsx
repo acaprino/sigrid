@@ -420,7 +420,7 @@ export function GuidelinesView() {
             One solid primary button on each screen, and a solid red one to delete. Other actions are outline or text buttons.
           </Rule>
           <Rule id="R11" title="Tone" see={<See view="components" id="palettes">See the three tones</See>}>
-            The default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection, the data colours and the tint of the sidebar and lanes, so the three read apart at a glance.
+            The default tone is Vivid: accent fills, selection and data colours more saturated. The settings offer Calm, Balanced and Vivid; each moves the accents, the selection and the data colours, never a surface, so the three read apart at a glance.
           </Rule>
         </Rules>
       </Section>

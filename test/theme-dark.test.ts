@@ -50,10 +50,10 @@ describe('without the parameters nothing moves', () => {
     const neutro = tokensFor({ ...def('neutro'), dark: NEUTRAL }, 'dark', AS_CHOSEN).colors
     expect([neutro['paper'], neutro['sidebar-paper'], neutro['paper-2'], neutro['raised'], neutro['line'], neutro['input'], neutro['selected'], neutro['accent-soft'], neutro['ink-mute']])
       .toEqual(['#1e1e1e', '#171717', '#171717', '#2a2a2a', '#353535', '#747474', '#0c2927', '#0c3230', '#b2b1af'])
-    // In the default tone the sidebar takes the theme's tint, as before.
+    // In the default tone the sidebar is the ladder's too: no tone moves a surface.
     const notte = tokensFor({ ...def('notte'), dark: NEUTRAL }, 'dark').colors
     expect([notte['paper'], notte['sidebar-paper'], notte['raised'], notte['line'], notte['selected'], notte['accent-soft'], notte['ink-mute']])
-      .toEqual(['#1e1e1e', '#0b121b', '#2a2a2a', '#353535', '#492600', '#422200', '#afb1b4'])
+      .toEqual(['#1e1e1e', '#171717', '#2a2a2a', '#353535', '#492600', '#422200', '#afb1b4'])
     // The solid sidebar and Ink.
     const solid = tokensFor({ ...def('ultravioletto'), dark: NEUTRAL }, 'dark', AS_CHOSEN).colors
     expect([solid['paper'], solid['sidebar-paper'], solid['paper-2'], solid['selected']]).toEqual(['#1e1e1e', '#111014', '#171717', '#2a1747'])

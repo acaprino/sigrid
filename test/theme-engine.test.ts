@@ -35,7 +35,7 @@ const SCHEMES = ['light', 'dark'] as const
 const CASES = THEMES.flatMap((t) => SCHEMES.map((scheme) => [`${t.id} ${scheme === 'light' ? 'light' : 'dark'}`, t.id, scheme] as const))
 const AA = 4.5
 
-test('adjacent tones have distinct surface lightness after rendering in both schemes', () => {
+test('no tone moves a surface; adjacent tones set the selection and the fill apart, in both schemes', () => {
   const presets = THEMES.filter(t => ['neutro', 'nord', 'catppuccin', 'rosepine', 'everforest'].includes(t.id))
   const generated = PALETTE_COMBOS.map(combo => paletteTheme({ seed: '#ee832e', combo }))
   for (const theme of [...presets, ...generated]) for (const scheme of SCHEMES) {
@@ -43,9 +43,10 @@ test('adjacent tones have distinct surface lightness after rendering in both sch
     for (const [low, high] of [[steps[0]!, steps[1]!], [steps[1]!, steps[2]!]] as const) {
       const lightness = (c: Record<string, string>, role: string) => fromHex(c[role]!).L
       const name = theme.label + ' ' + scheme
-      expect(lightness(low, 'sidebar-paper') - lightness(high, 'sidebar-paper'), name).toBeGreaterThan(0.01)
+      for (const role of ['paper', 'paper-2', 'sidebar-paper', 'raised']) expect(low[role], `${name} ${role}`).toBe(high[role])
+      // In light a calmer tone fades the selection and leaves it at its level, a clear step from the sidebar.
       const selectionStep = lightness(high, 'selected') - lightness(low, 'selected')
-      expect(scheme === 'light' ? -selectionStep : selectionStep, name).toBeGreaterThan(0.025)
+      if (scheme === 'dark' || high === steps[2]) expect(scheme === 'light' ? -selectionStep : selectionStep, name).toBeGreaterThan(0.025)
       expect(low['primary'], name).not.toBe(high['primary'])
     }
     for (const c of steps) {
@@ -584,12 +585,8 @@ describe('the user\'s own theme', () => {
       for (let i = 1; i < steps.length; i++) expect(saturation[i]!, `${scheme}: marks, step ${i}`).toBeGreaterThan(saturation[i - 1]!)
       expect(chroma(at('vivid').colors['primary']!), `${scheme}: fill`).toBeGreaterThan(chroma(at('faded').colors['primary']!))
       expect(chroma(at('vivid').colors['selected']!), `${scheme}: selected item`).toBeGreaterThan(chroma(at('faded').colors['selected']!))
-      for (const k of ['paper', 'raised', 'ink', 'line']) expect(at('vivid').colors[k], k).toBe(at().colors[k])
-      // The sidebar and lanes deepen in both schemes. Even a near-gray has visible steps.
-      for (const k of ['paper-2', 'sidebar-paper']) {
-        if (scheme === 'light') expect(chroma(at('vivid').colors[k]!), k).toBeGreaterThan(chroma(at('faded').colors[k]!))
-        expect(luminance(at('vivid').colors[k]!), k).toBeLessThan(luminance(at('faded').colors[k]!))
-      }
+      // The surfaces are the theme's in every tone: the sidebar and the lanes as the page and the sheets.
+      for (const k of ['paper', 'paper-2', 'sidebar-paper', 'raised', 'ink', 'line']) for (const tk of steps) expect(tk.colors[k], k).toBe(at().colors[k])
     }
   })
 

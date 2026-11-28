@@ -83,7 +83,7 @@ export const PaletteStrip = memo(
   (a, b) => samePick(a.pick, b.pick),
 )
 
-/** What a tone changes, side by side: the sidebar's tint and its selected row, four data colours and the filled button. */
+/** What a tone changes, side by side: the selected row on the sidebar (which no tone moves), four data colours and the filled button. */
 export const TonePreview = memo(
   function TonePreview({ pick }: { pick: ThemePick }) {
     return (
